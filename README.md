@@ -452,3 +452,20 @@ Edit mode now adds a CSS-only widget wiggle/dance and highlighted contour.
 - Widgets use staggered animation delays.
 - Dragging/resizing pauses the dance.
 - `prefers-reduced-motion` disables the animation.
+
+
+## Rerender cleanup pass
+
+Reduced unnecessary full Shadow DOM renders.
+
+Converted to targeted DOM/CSS updates:
+- screensaver preview toggle;
+- screensaver nowbar toggle;
+- screensaver clock variant change;
+- window resize runtime layout attribute sync.
+
+Full `render()` is still kept for:
+- initial mount;
+- new hass assignment;
+- reset grid;
+- structural recovery when styled grid units mismatch.
