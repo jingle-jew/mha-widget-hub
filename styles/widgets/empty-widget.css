@@ -14,3 +14,99 @@
   opacity: var(--mha-widget-reflection-opacity, 0);
   mix-blend-mode: screen;
 }
+
+/* WIDGET INNER LINE REMOVAL
+ * The former inner border line is removed visually.
+ * Its old inset becomes the widget inner layout padding below.
+ */
+.mha-widget::before {
+  display: none;
+}
+
+/* Widget internal grid restart + polish
+ *
+ * A widget's internal layout mirrors its global unit count:
+ * - 1x4 widget => 1 internal column x 4 internal rows
+ * - 2x4 widget => 2 internal columns x 4 internal rows = 8 internal units
+ * - 4x2 widget => 4 internal columns x 2 internal rows
+ *
+ * Important:
+ * CSS grid cells inside a wide widget are often rectangular.
+ * Reusable icons must not stretch to the whole rectangular cell.
+ *
+ * So each internal cell becomes a centering area, and reusable icon content
+ * gets a square size based on the smaller side of the cell.
+ */
+.mha-widget {
+  --mha-widget-inner-padding: var(--mha-widget-inner-inset, 10px);
+  --mha-widget-inner-gap: var(--mha-widget-content-gap, var(--mha-grid-gap, var(--mha-gap, 10px)));
+
+  /*
+   * The icon should feel like it occupies one internal unit without touching
+   * the virtual unit edges. This keeps circle icons visually round and clean.
+   */
+  --mha-widget-unit-content-scale: .84;
+}
+
+.mha-widget-inner-grid {
+  position: absolute;
+  z-index: 1;
+  inset: var(--mha-widget-inner-padding);
+  display: grid;
+  grid-template-columns: repeat(var(--mha-widget-w, 1), minmax(0, 1fr));
+  grid-template-rows: repeat(var(--mha-widget-h, 1), minmax(0, 1fr));
+  gap: var(--mha-widget-inner-gap);
+  pointer-events: none;
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
+/*
+ * A generic internal widget unit.
+ * This can be reused later for buttons, small toggles, status dots, etc.
+ */
+.mha-widget-unit {
+  min-inline-size: 0;
+  min-block-size: 0;
+  display: grid;
+  place-items: center;
+  place-content: center;
+}
+
+/* Test icon unit:
+ * The wrapper occupies exactly one internal grid cell.
+ */
+.mha-widget-corner-icon-unit {
+  grid-column: 1 / span 1;
+  grid-row: 1 / span 1;
+  container-type: size;
+}
+
+/* Test icon:
+ * The icon itself is square and centered inside the internal unit.
+ */
+.mha-widget-corner-icon-unit > .mha-icon.mha-widget-corner-icon-test {
+  place-self: center;
+  inline-size: min(100cqi, 100cqb);
+  block-size: min(100cqi, 100cqb);
+  width: min(100cqi, 100cqb);
+  height: min(100cqi, 100cqb);
+  aspect-ratio: 1 / 1;
+
+  --mha-icon-size: min(100cqi, 100cqb);
+  --mha-icon-glyph-size: 58%;
+
+  transform: scale(var(--mha-widget-unit-content-scale));
+  transform-origin: center;
+}
+
+/* Fallback: if container query units are not supported, use row-based sizing. */
+@supports not (width: 1cqi) {
+  .mha-widget-corner-icon-unit > .mha-icon.mha-widget-corner-icon-test {
+    inline-size: 100%;
+    block-size: 100%;
+    width: 100%;
+    height: 100%;
+    --mha-icon-size: 100%;
+  }
+}

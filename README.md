@@ -309,3 +309,84 @@ In Material theme:
 - the dock container uses exactly `--mha-widget-surface`;
 - icon tiles intentionally use a separate Material You tonal container;
 - icon symbols continue to use the Material You symbol palette.
+
+
+## Icon symbol centering contract
+
+Icon symbols are now explicitly centered by both the container and the symbol component:
+
+- `.mha-icon` uses `display: grid` and `place-items: center`;
+- `.mha-icon-symbol` centers itself with grid/self alignment;
+- SVGs are block-level and centered to avoid inline baseline offsets.
+
+
+## Global icon shape contract
+
+Icon shape is now centralized at the end of `styles/components/icon.css`.
+
+All `.mha-icon` instances follow the host-level `data-icon-shape` value:
+- `rounded-square`
+- `squircle`
+- `circle`
+
+Dock, widgets, status bar, and future contexts may control icon size/color/surface, but should not redefine icon shape.
+
+
+## Widget internal unit layout foundation
+
+Widgets now expose internal layout tokens:
+
+- `--mha-widget-inner-padding`
+- `--mha-widget-inner-gap`
+- `--mha-widget-inner-unit-w`
+- `--mha-widget-inner-unit-h`
+- `--mha-widget-inner-unit`
+
+The internal unit is square because it uses the smaller of the available width/height units.
+The test icon in `slot-a` uses one `--mha-widget-inner-unit`, so it remains square and follows the global icon shape correctly.
+
+
+## Widget internal square unit fix
+
+The widget test icon now uses a row-based internal unit so it remains square.
+
+Reason:
+- width-based calculations can stretch icons in wide widgets;
+- stretched icons turn global `circle` shape into a pill;
+- the internal unit is now based on widget internal height divided by widget rows.
+
+
+## Widget icon size token fix
+
+The test widget icon now sets the reusable icon component token:
+
+```css
+--mha-icon-size: var(--mha-widget-inner-unit);
+```
+
+This is more reliable than setting only width/height because `.mha-icon` owns its dimensions through `--mha-icon-size`.
+
+
+## Widget internal grid restart
+
+The visible inner widget line is removed. Its former inset now acts as internal widget padding.
+
+Each widget now creates an internal grid matching its global unit count:
+- 1x4 => 1 internal column x 4 rows;
+- 2x4 => 2 internal columns x 4 rows;
+- 4x2 => 4 internal columns x 2 rows.
+
+The test icon in `slot-a` occupies the first internal unit.
+
+
+## Widget internal grid polish
+
+The test icon now sits inside a `.mha-widget-unit` wrapper.
+
+The wrapper occupies one internal grid cell, while the icon itself uses the smaller side of that cell through container query units:
+
+```css
+--mha-icon-size: min(100cqi, 100cqb);
+```
+
+This prevents circle icons from becoming pills inside rectangular widget cells.

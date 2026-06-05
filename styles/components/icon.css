@@ -85,46 +85,6 @@
  * - n=5.0: squarer / more OneUI-tensed
  */
 
-/* DIRECT ICON SHAPE APPLICATION
- * Keep this after base .mha-icon rules.
- *
- * Rounded-square and circle use border-radius.
- * Squircle uses an SVG mask so it can be tuned more precisely than a
- * regular rounded rectangle.
- */
-:host([data-icon-shape="rounded-square"]) .mha-icon {
-  border: 1px solid var(--mha-icon-border);
-  border-radius: var(--mha-icon-border-radius-rounded-square);
-  -webkit-mask-image: none;
-  mask-image: none;
-}
-
-:host([data-icon-shape="squircle"]) .mha-icon {
-  /*
-   * The SVG mask already defines the visible shape.
-   * A regular CSS border does not follow the mask perfectly and can appear as
-   * a thin internal white edge on the four sides, so squircle disables it.
-   */
-  border: 0;
-  border-radius: 0;
-  background-clip: border-box;
-  -webkit-mask-image: var(--mha-icon-squircle-mask);
-  mask-image: var(--mha-icon-squircle-mask);
-  -webkit-mask-size: 100% 100%;
-  mask-size: 100% 100%;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  mask-position: center;
-}
-
-:host([data-icon-shape="circle"]) .mha-icon {
-  border: 1px solid var(--mha-icon-border);
-  border-radius: var(--mha-icon-border-radius-circle);
-  -webkit-mask-image: none;
-  mask-image: none;
-}
-
 /* THEME-BOUND ICON SURFACES
  * Icon surface/color style follows the visual theme:
  * - iOS: Liquid Glass, white symbols in light and dark.
@@ -285,3 +245,63 @@
 :host([data-theme-style="material"][data-theme="dark"]) .mha-icon {
   background: var(--mha-material-you-icon-container, rgba(74, 68, 88, .96));
 }
+
+/* ICON SYMBOL CENTERING CONTRACT
+ * Every .mha-icon is a centering container.
+ * The symbol must always sit in the visual center of the icon shape.
+ */
+.mha-icon {
+  display: grid;
+  place-items: center;
+  place-content: center;
+}
+
+.mha-icon > .mha-icon-symbol {
+  justify-self: center;
+  align-self: center;
+}
+
+/* GLOBAL ICON SHAPE CONTRACT
+ * Keep this at the very end of icon.css.
+ *
+ * Every .mha-icon inside <mha-control-hub> follows the same configured shape,
+ * no matter where it is rendered: dock, widget, status bar, popup, or future UI.
+ *
+ * Contexts may override size, surface, color, glyph size, or shadow.
+ * Contexts must not own icon shape.
+ */
+:host([data-icon-shape="rounded-square"]) .mha-icon {
+  border-radius: var(--mha-icon-border-radius-rounded-square);
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+:host([data-icon-shape="squircle"]) .mha-icon {
+  /*
+   * Squircle uses the SVG mask for a true superellipse-like shape.
+   * The normal border is disabled because a CSS border does not follow the
+   * mask perfectly and can create a small internal edge.
+   */
+  border: 0;
+  border-radius: 0;
+  background-clip: border-box;
+  -webkit-mask-image: var(--mha-icon-squircle-mask);
+  mask-image: var(--mha-icon-squircle-mask);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+:host([data-icon-shape="circle"]) .mha-icon {
+  border-radius: var(--mha-icon-border-radius-circle);
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+/* Shape guard:
+ * These properties are intentionally centralized above.
+ * Do not redefine .mha-icon border-radius/mask in dock/widget/status-bar CSS.
+ */

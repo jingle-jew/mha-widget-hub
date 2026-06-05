@@ -43,3 +43,24 @@
 .mha-icon .mha-icon-symbol {
   color: var(--mha-icon-color, currentColor);
 }
+
+/* ICON SYMBOL CENTERING CONTRACT
+ * The sign component is always centered inside whatever icon container owns it.
+ */
+.mha-icon-symbol {
+  display: grid;
+  place-items: center;
+  place-content: center;
+  justify-self: center;
+  align-self: center;
+  margin: auto;
+  transform-origin: center;
+}
+
+.mha-icon-symbol svg {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  margin: auto;
+  transform-origin: center;
+}
