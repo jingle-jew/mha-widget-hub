@@ -161,3 +161,13 @@ Architecture:
 - icon shape/container is separate from icon symbol/sign.
 - any symbol can be placed inside any icon container later.
 - the symbol component is not connected to dock/widgets/status bar yet.
+
+
+## Dock populated with local symbol icons
+
+The dock now contains 8 normal reusable icon components.
+Each icon uses:
+- `createIcon()` for the shape/container;
+- `createIconSymbol()` for the local symbol/sign.
+
+The symbols are selected from the local icon symbol catalog.

@@ -3,8 +3,8 @@
  *
  * Scope:
  * - create a reusable icon container component;
- * - no glyph/sign rendering yet;
- * - no dock/widget/status-bar integration yet.
+ * - shape/container only;
+ * - signs/symbols are separate children, usually from createIconSymbol().
  */
 
 export function createIcon({
@@ -12,6 +12,7 @@ export function createIcon({
   category = "",
   label = "",
   className = "",
+  children = [],
 } = {}) {
   const icon = document.createElement("span");
 
@@ -26,6 +27,9 @@ export function createIcon({
   } else {
     icon.setAttribute("aria-hidden", "true");
   }
+
+  const normalizedChildren = Array.isArray(children) ? children : [children];
+  icon.append(...normalizedChildren.filter(Boolean));
 
   return icon;
 }

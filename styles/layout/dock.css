@@ -1,29 +1,30 @@
 .mha-dock {
   /*
-   * Empty macOS-ish floating dock.
-   *
-   * No fixed x-by-y dimensions:
-   * - width adapts to viewport;
-   * - height comes from tokens and viewport-aware clamp();
-   * - still stays readable on phones/tablets/desktops.
+   * macOS-ish floating dock.
+   * Width adapts to content, while empty/min bounds remain viewport-aware.
    */
   --mha-dock-empty-width: min(40vw, var(--mha-dock-max-width, calc(100% - (var(--mha-page-padding) * 2))));
   --mha-dock-empty-height: clamp(4.25rem, 7.5vw, 6.25rem);
   --mha-dock-empty-padding-block: clamp(0.55rem, 1.15vw, 0.95rem);
   --mha-dock-empty-padding-inline: clamp(0.85rem, 1.8vw, 1.45rem);
 
+  --mha-icon-size: clamp(2.55rem, 5.8vw, 4.15rem);
+  --mha-icon-glyph-size: 54%;
+
   position: absolute;
   z-index: 8;
   left: 50%;
   bottom: var(--mha-dock-bottom, var(--mha-floating-edge));
-  width: var(--mha-dock-empty-width);
+  width: fit-content;
+  min-width: var(--mha-dock-empty-width);
+  max-width: var(--mha-dock-max-width, calc(100% - (var(--mha-page-padding) * 2)));
   min-height: var(--mha-dock-empty-height);
   transform: translateX(-50%) translateY(0);
 
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--mha-dock-gap);
+  gap: clamp(0.35rem, 1.1vw, 0.8rem);
   padding:
     var(--mha-dock-empty-padding-block)
     var(--mha-dock-empty-padding-inline);
@@ -42,40 +43,54 @@
     min-height var(--mha-motion-duration, 260ms) var(--mha-motion-easing, ease);
 }
 
+.mha-dock-item {
+  appearance: none;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  inline-size: var(--mha-icon-size);
+  block-size: var(--mha-icon-size);
+  aspect-ratio: 1;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.mha-dock-item:focus-visible {
+  outline: 2px solid var(--mha-accent);
+  outline-offset: 3px;
+}
+
 :host(.is-dock-hidden) .mha-dock,
 :host([data-dock-hidden="true"]) .mha-dock {
   transform: translateX(-50%) translateY(calc(100% + var(--mha-floating-edge) + 18px));
   opacity: 0;
 }
 
-/*
- * Small portrait screens get a little wider so the empty dock still feels
- * intentional, while height remains viewport-adaptive.
- */
 @media (max-width: 520px) and (orientation: portrait) {
   .mha-dock {
     --mha-dock-empty-width: min(72vw, calc(100% - (var(--mha-page-padding) * 2)));
     --mha-dock-empty-height: clamp(4rem, 13vw, 5.4rem);
+    --mha-icon-size: clamp(2.35rem, 10.5vw, 3.4rem);
   }
 }
 
-/*
- * Landscape phones/tablets can afford a wider, lower-profile macOS-ish dock.
- */
 @media (max-height: 520px) and (orientation: landscape) {
   .mha-dock {
     --mha-dock-empty-width: min(46vw, calc(100% - (var(--mha-page-padding) * 2)));
     --mha-dock-empty-height: clamp(3.75rem, 11vh, 5rem);
+    --mha-icon-size: clamp(2.2rem, 9vh, 3.25rem);
   }
 }
 
-/*
- * Larger desktop/wallpanel views keep the dock elegant instead of massive.
- */
 @media (min-width: 1180px) {
   .mha-dock {
     --mha-dock-empty-width: min(34vw, 36rem);
     --mha-dock-empty-height: clamp(4.75rem, 5vw, 6.5rem);
+    --mha-icon-size: clamp(3rem, 4.2vw, 4.4rem);
   }
 }
 
