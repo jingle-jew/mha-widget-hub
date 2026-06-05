@@ -1763,3 +1763,35 @@ only the resolved effective shape to `data-icon-shape`.
 
 This prevents the settings panel from snapping back to `squircle` after choosing
 Auto.
+
+
+## Initial appearance defaults
+
+Fresh installs / empty localStorage now start with:
+
+```text
+Theme: Auto
+Visual style: OneUI
+Icon shape: Auto
+Accent: first OneUI accent (blue)
+```
+
+Theme `Auto` follows the system light/dark preference. Existing saved user
+preferences are preserved and are not overwritten.
+
+
+## Theme Auto missing helper fix
+
+Added the missing theme setting helpers used by `syncThemeAttributes()`:
+- `getSystemThemePreference()`;
+- `normalizeThemeSetting()`;
+- `resolveTheme()`;
+- `getStoredThemeSetting()`.
+
+This fixes the startup `ReferenceError: Can't find variable: getStoredThemeSetting`.
+
+
+## OneUI light slider track contrast
+
+The inactive slider track in OneUI light mode is slightly darker so it remains
+visible on light widget surfaces. The accent fill/progress color is unchanged.

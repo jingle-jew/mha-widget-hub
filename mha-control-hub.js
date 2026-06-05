@@ -10,6 +10,34 @@ import {DEFAULT_WIDGETS,WIDGET_UNIT,getActiveGridUnits,getEffectiveLayout,getLay
 import {createScreensaver,normalizeClockVariant,updateScreensaverClock} from "./src/screensaver/screensaver.js";
 // Keeps existing local widget order/sizes after the public naming cleanup.
 
+
+function getSystemThemePreference() {
+  return window.matchMedia?.("(prefers-color-scheme: light)")?.matches ? "light" : "dark";
+}
+
+function normalizeThemeSetting(theme = "auto") {
+  return ["auto", "dark", "light"].includes(theme) ? theme : "auto";
+}
+
+function resolveTheme(themeSetting = "auto") {
+  const normalized = normalizeThemeSetting(themeSetting);
+  return normalized === "auto" ? getSystemThemePreference() : normalized;
+}
+
+function getStoredThemeSetting(host) {
+  /*
+   * data-theme is the effective light/dark theme.
+   * data-theme-setting is the user preference: auto / dark / light.
+   */
+  const stored = localStorage.getItem("mha-theme")
+    || localStorage.getItem("mha-dev-theme")
+    || document.documentElement.dataset.themeSetting
+    || host?.dataset?.themeSetting
+    || "auto";
+
+  return normalizeThemeSetting(stored);
+}
+
 function getDefaultIconShapeForThemeStyle(themeStyle = "oneui") {
   if (themeStyle === "ios") return "rounded-square";
   if (themeStyle === "material") return "circle";
@@ -51,13 +79,20 @@ function getStoredIconShapeSetting(host) {
 }
 
 function syncThemeAttributes(host) {
-  const theme = document.documentElement.dataset.theme || "dark";
+  const themeSetting = getStoredThemeSetting(host);
+  const theme = resolveTheme(themeSetting);
   const themeStyle = document.documentElement.dataset.themeStyle || "oneui";
   const iconShapeSetting = getStoredIconShapeSetting(host);
   const iconShape = resolveIconShape(themeStyle, iconShapeSetting);
 
+  host.dataset.themeSetting = themeSetting;
+  host.setAttribute("data-theme-setting", themeSetting);
   host.dataset.theme = theme;
   host.setAttribute("data-theme", theme);
+  document.documentElement.dataset.themeSetting = themeSetting;
+  document.documentElement.setAttribute("data-theme-setting", themeSetting);
+  document.documentElement.dataset.theme = theme;
+  document.documentElement.setAttribute("data-theme", theme);
 
   host.dataset.themeStyle = themeStyle;
   host.setAttribute("data-theme-style", themeStyle);
@@ -76,10 +111,10 @@ function syncThemeAttributes(host) {
 
 const ORDER="mha-grid-order",SIZES="mha-widget-sizes",REMOVED="mha-hidden-widgets",LEGACY_STORAGE_PREFIX=["mha","v2"].join("-"),THEME_STYLES=new Set(["ios","oneui","material"]);
 function readMigratedJson(key,legacyKey,fallback){const current=readJson(key,null);if(current!==null)return current;const legacy=readJson(legacyKey,null);if(legacy!==null){writeJson(key,legacy);return legacy}return fallback}
-class MhaControlHub extends HTMLElement{constructor(){super();this.attachShadow({mode:"open"});this._hass=null;this._isEditing=false;this._draggedId="";this._resizeState=null;this._squareUnitFrame=0;this._renderId=0;this._gridScrollCleanup=null;this._screensaverPreview=false;this._screensaverNowBar=true;this._screensaverClockVariant="digital";this._settingsOpen=false;this._lastResponsiveSignature="";this._responsiveRelayoutTimer=null;this._widgets=this._readWidgets()}
+class MhaControlHub extends HTMLElement{constructor(){super();this.attachShadow({mode:"open"});this._hass=null;this._isEditing=false;this._draggedId="";this._resizeState=null;this._squareUnitFrame=0;this._renderId=0;this._systemThemeListener=null;this._gridScrollCleanup=null;this._screensaverPreview=false;this._screensaverNowBar=true;this._screensaverClockVariant="digital";this._settingsOpen=false;this._lastResponsiveSignature="";this._responsiveRelayoutTimer=null;this._widgets=this._readWidgets()}
 set hass(h){this._hass=h;this.render()}get hass(){return this._hass}
-connectedCallback(){this.render();this._clockTimer=setInterval(()=>{updateStatusTime(this.shadowRoot);if(this._screensaverPreview)updateScreensaverClock(this.shadowRoot,this._screensaverClockVariant)},1000);this._resizeListener=()=>this._handleViewportChange();window.addEventListener("resize",this._resizeListener);window.visualViewport?.addEventListener("resize",this._resizeListener);window.addEventListener("orientationchange",this._resizeListener);this._settingsOpenListener=()=>this._openSettings();this.shadowRoot.addEventListener("mha-open-settings",this._settingsOpenListener)}
-disconnectedCallback(){clearInterval(this._clockTimer);cancelAnimationFrame(this._squareUnitFrame);this._clearGridScrollListener();window.removeEventListener("resize",this._resizeListener);window.visualViewport?.removeEventListener("resize",this._resizeListener);window.removeEventListener("orientationchange",this._resizeListener);clearTimeout(this._responsiveRelayoutTimer);if(this._settingsOpenListener)this.shadowRoot.removeEventListener("mha-open-settings",this._settingsOpenListener)}
+connectedCallback(){this._systemThemeListener=()=>{if(getStoredThemeSetting(this)==="auto")this.render()};window.matchMedia?.("(prefers-color-scheme: light)")?.addEventListener?.("change",this._systemThemeListener);this.render();this._clockTimer=setInterval(()=>{updateStatusTime(this.shadowRoot);if(this._screensaverPreview)updateScreensaverClock(this.shadowRoot,this._screensaverClockVariant)},1000);this._resizeListener=()=>this._handleViewportChange();window.addEventListener("resize",this._resizeListener);window.visualViewport?.addEventListener("resize",this._resizeListener);window.addEventListener("orientationchange",this._resizeListener);this._settingsOpenListener=()=>this._openSettings();this.shadowRoot.addEventListener("mha-open-settings",this._settingsOpenListener)}
+disconnectedCallback(){window.matchMedia?.("(prefers-color-scheme: light)")?.removeEventListener?.("change",this._systemThemeListener);clearInterval(this._clockTimer);cancelAnimationFrame(this._squareUnitFrame);this._clearGridScrollListener();window.removeEventListener("resize",this._resizeListener);window.visualViewport?.removeEventListener("resize",this._resizeListener);window.removeEventListener("orientationchange",this._resizeListener);clearTimeout(this._responsiveRelayoutTimer);if(this._settingsOpenListener)this.shadowRoot.removeEventListener("mha-open-settings",this._settingsOpenListener)}
 requestRender(){this.render()}
 _syncEditModeDom(){
   this.classList.toggle("is-editing",this._isEditing);
@@ -99,7 +134,7 @@ _syncSettingsDom(){
 _createSettingsPanel(){
   return createSettingsPanel({
     open:this._settingsOpen,
-    theme:document.documentElement.dataset.theme||this.dataset.theme||"dark",
+    theme:getStoredThemeSetting(this),
     themeStyle:document.documentElement.dataset.themeStyle||this.dataset.themeStyle||"oneui",
     accent:document.documentElement.dataset.accent||this.dataset.accent||normalizeAccent(document.documentElement.dataset.themeStyle||this.dataset.themeStyle||"oneui",""),
     iconShape:getStoredIconShapeSetting(this),
@@ -134,14 +169,23 @@ _runThemeBackdropCrossfade(){
     this.style.removeProperty("--mha-theme-crossfade-from");
   },2000);
 }
-_applyThemeFromSettings(theme="dark"){
-  const resolved=theme==="light"?"light":"dark";
-  this._prepareThemeBackdropCrossfade();
+_applyThemeFromSettings(theme="auto"){
+  const themeSetting=normalizeThemeSetting(theme);
+  const resolved=resolveTheme(themeSetting);
+
+  document.documentElement.dataset.themeSetting=themeSetting;
+  document.documentElement.setAttribute("data-theme-setting",themeSetting);
   document.documentElement.dataset.theme=resolved;
   document.documentElement.setAttribute("data-theme",resolved);
+
+  this.dataset.themeSetting=themeSetting;
+  this.setAttribute("data-theme-setting",themeSetting);
   this.dataset.theme=resolved;
   this.setAttribute("data-theme",resolved);
-  localStorage.setItem("mha-dev-theme",resolved);
+
+  localStorage.setItem("mha-theme",themeSetting);
+  localStorage.setItem("mha-dev-theme",themeSetting);
+
   this._runThemeBackdropCrossfade();
   this._syncSettingsDom();
 }
@@ -286,5 +330,5 @@ _finishResize(){
 _getDropPlacement(e,t){const r=t.getBoundingClientRect(),u=r.top+r.height*.35,l=r.top+r.height*.65;if(e.clientY<u)return"before";if(e.clientY>l)return"after";return e.clientX<r.left+r.width/2?"before":"after"}
 _clearDropState(){this.shadowRoot.querySelectorAll(".is-drop-before,.is-drop-after").forEach(n=>{n.classList.remove("is-drop-before","is-drop-after");n.removeAttribute("data-drop-placement")})}
 _wireDrag(el,w){el.draggable=this._isEditing;el.addEventListener("dragstart",e=>{if(!this._isEditing){e.preventDefault();return}if(e.target.closest(".mha-widget-tools,.mha-resize-handle")){e.preventDefault();return}this._draggedId=w.id;el.classList.add("is-dragging");e.dataTransfer.effectAllowed="move";e.dataTransfer.setData("text/plain",w.id)});el.addEventListener("dragover",e=>{if(!this._isEditing)return;const id=this._draggedId||e.dataTransfer.getData("text/plain");if(!id||id===w.id)return;e.preventDefault();const p=this._getDropPlacement(e,el);this._clearDropState();el.classList.toggle("is-drop-before",p==="before");el.classList.toggle("is-drop-after",p==="after");el.dataset.dropPlacement=p});el.addEventListener("drop",e=>{if(!this._isEditing)return;const id=this._draggedId||e.dataTransfer.getData("text/plain");if(!id||id===w.id)return;e.preventDefault();const p=el.dataset.dropPlacement||"before";this._clearDropState();this._draggedId="";this._moveWidget(id,w.id,p)});el.addEventListener("dragend",()=>{this._draggedId="";el.classList.remove("is-dragging");this._clearDropState()})}
-render(){syncThemeAttributes(this);const renderId=++this._renderId,layoutMode=getLayoutMode(this),layout=getEffectiveLayout(this),units=getActiveGridUnits(this),cols=units/WIDGET_UNIT.unitsPerLogicalColumn,themeStyle=THEME_STYLES.has(document.documentElement.dataset.themeStyle)?document.documentElement.dataset.themeStyle:"oneui";const iconShapeSetting=getStoredIconShapeSetting(this);const iconShape=resolveIconShape(themeStyle,iconShapeSetting);this._clearGridScrollListener();this.dataset.themeStyle=themeStyle;this.dataset.iconShapeSetting=iconShapeSetting;this.setAttribute("data-icon-shape-setting",iconShapeSetting);this.dataset.iconShape=iconShape;this.setAttribute("data-icon-shape",iconShape);document.documentElement.dataset.iconShapeSetting=iconShapeSetting;document.documentElement.setAttribute("data-icon-shape-setting",iconShapeSetting);document.documentElement.dataset.iconShape=iconShape;document.documentElement.setAttribute("data-icon-shape",iconShape);const accent=normalizeAccent(themeStyle,localStorage.getItem(`mha-accent-${themeStyle}`)||localStorage.getItem("mha-accent")||"");this.dataset.accent=accent;this.setAttribute("data-accent",accent);document.documentElement.dataset.accent=accent;document.documentElement.setAttribute("data-accent",accent);this.dataset.layoutMode=layoutMode;this.dataset.layout=layout;this.dataset.gridUnits=String(units);this.dataset.logicalColumns=String(cols);this.classList.toggle("is-editing",this._isEditing);this.style.setProperty("--mha-runtime-grid-units",String(units));this.shadowRoot.innerHTML=`<link rel="stylesheet" href="./styles/core/tokens.css"><link rel="stylesheet" href="./styles/components/icon.css"><link rel="stylesheet" href="./styles/components/icon-symbol.css"><link rel="stylesheet" href="./styles/components/slider.css"><link rel="stylesheet" href="./styles/components/toggle.css"><link rel="stylesheet" href="./styles/components/pill.css"><link rel="stylesheet" href="./styles/components/button.css"><link rel="stylesheet" href="./styles/themes/ios.css"><link rel="stylesheet" href="./styles/themes/oneui.css"><link rel="stylesheet" href="./styles/themes/material.css"><link rel="stylesheet" href="./styles/themes/accent-palettes.css"><link rel="stylesheet" href="./styles/core/background.css"><link rel="stylesheet" href="./styles/layout/shell.css"><link rel="stylesheet" href="./styles/layout/status-bar.css"><link rel="stylesheet" href="./styles/layout/dock.css"><link rel="stylesheet" href="./styles/layout/mobile-dock.css"><link rel="stylesheet" href="./styles/settings/settings-panel.css"><link rel="stylesheet" href="./styles/themes/light-text-contract.css"><link rel="stylesheet" href="./styles/widgets/widget-layout.css"><link rel="stylesheet" href="./styles/widgets/empty-widget.css"><link rel="stylesheet" href="./styles/widgets/slider-widget.css"><link rel="stylesheet" href="./styles/screensaver/screensaver.css">`;const links=[...this.shadowRoot.querySelectorAll('link[rel="stylesheet"]')],{bg,shell,grid}=createShell({layoutMode,layout,logicalColumns:cols,gridUnits:units,onSettings:()=>this._openSettings()});this.shadowRoot.append(bg,shell);this._widgets.forEach(w=>{const el=createEmptyWidget(w,{activeGridUnits:units,isEditing:this._isEditing,onRemove:id=>this._removeWidget(id),onResizeStart:(e,id)=>this._startResize(e,id)});this._wireDrag(el,w);grid.append(el)});this.shadowRoot.append(createScreensaver({isVisible:this._screensaverPreview,showNowBar:this._screensaverNowBar,clockVariant:this._screensaverClockVariant}));this.shadowRoot.append(createMobileDock({onSettings:()=>this._openSettings()}));this.shadowRoot.append(this._createSettingsPanel());const edit=document.createElement("button");edit.className="mha-edit-button";edit.type="button";edit.innerHTML=this._isEditing?ICONS.close:ICONS.edit;edit.onclick=()=>this.toggleEditMode();this.shadowRoot.append(edit);this._syncEditModeDom();this._wireDockAutoHide(grid);this._scheduleSquareUnitSync();Promise.all(links.map(link=>link.sheet?Promise.resolve():new Promise(resolve=>{link.addEventListener("load",resolve,{once:true});link.addEventListener("error",resolve,{once:true})}))).then(()=>{if(this._renderId!==renderId)return;const styledUnits=getActiveGridUnits(this);if(styledUnits!==units){this.render();return}this._scheduleSquareUnitSync()});updateStatusTime(this.shadowRoot)}}
+render(){syncThemeAttributes(this);const renderId=++this._renderId,layoutMode=getLayoutMode(this),layout=getEffectiveLayout(this),units=getActiveGridUnits(this),cols=units/WIDGET_UNIT.unitsPerLogicalColumn,themeStyle=THEME_STYLES.has(document.documentElement.dataset.themeStyle)?document.documentElement.dataset.themeStyle:"oneui";const iconShapeSetting=getStoredIconShapeSetting(this);const iconShape=resolveIconShape(themeStyle,iconShapeSetting);this._clearGridScrollListener();this.dataset.themeStyle=themeStyle;this.dataset.iconShapeSetting=iconShapeSetting;this.setAttribute("data-icon-shape-setting",iconShapeSetting);this.dataset.iconShape=iconShape;this.setAttribute("data-icon-shape",iconShape);document.documentElement.dataset.iconShapeSetting=iconShapeSetting;document.documentElement.setAttribute("data-icon-shape-setting",iconShapeSetting);document.documentElement.dataset.iconShape=iconShape;document.documentElement.setAttribute("data-icon-shape",iconShape);const accent=normalizeAccent(themeStyle,localStorage.getItem(`mha-accent-${themeStyle}`)||localStorage.getItem("mha-accent")||"sky");this.dataset.accent=accent;this.setAttribute("data-accent",accent);document.documentElement.dataset.accent=accent;document.documentElement.setAttribute("data-accent",accent);this.dataset.layoutMode=layoutMode;this.dataset.layout=layout;this.dataset.gridUnits=String(units);this.dataset.logicalColumns=String(cols);this.classList.toggle("is-editing",this._isEditing);this.style.setProperty("--mha-runtime-grid-units",String(units));this.shadowRoot.innerHTML=`<link rel="stylesheet" href="./styles/core/tokens.css"><link rel="stylesheet" href="./styles/components/icon.css"><link rel="stylesheet" href="./styles/components/icon-symbol.css"><link rel="stylesheet" href="./styles/components/slider.css"><link rel="stylesheet" href="./styles/components/toggle.css"><link rel="stylesheet" href="./styles/components/pill.css"><link rel="stylesheet" href="./styles/components/button.css"><link rel="stylesheet" href="./styles/themes/ios.css"><link rel="stylesheet" href="./styles/themes/oneui.css"><link rel="stylesheet" href="./styles/themes/material.css"><link rel="stylesheet" href="./styles/themes/accent-palettes.css"><link rel="stylesheet" href="./styles/core/background.css"><link rel="stylesheet" href="./styles/layout/shell.css"><link rel="stylesheet" href="./styles/layout/status-bar.css"><link rel="stylesheet" href="./styles/layout/dock.css"><link rel="stylesheet" href="./styles/layout/mobile-dock.css"><link rel="stylesheet" href="./styles/settings/settings-panel.css"><link rel="stylesheet" href="./styles/themes/light-text-contract.css"><link rel="stylesheet" href="./styles/widgets/widget-layout.css"><link rel="stylesheet" href="./styles/widgets/empty-widget.css"><link rel="stylesheet" href="./styles/widgets/slider-widget.css"><link rel="stylesheet" href="./styles/screensaver/screensaver.css">`;const links=[...this.shadowRoot.querySelectorAll('link[rel="stylesheet"]')],{bg,shell,grid}=createShell({layoutMode,layout,logicalColumns:cols,gridUnits:units,onSettings:()=>this._openSettings()});this.shadowRoot.append(bg,shell);this._widgets.forEach(w=>{const el=createEmptyWidget(w,{activeGridUnits:units,isEditing:this._isEditing,onRemove:id=>this._removeWidget(id),onResizeStart:(e,id)=>this._startResize(e,id)});this._wireDrag(el,w);grid.append(el)});this.shadowRoot.append(createScreensaver({isVisible:this._screensaverPreview,showNowBar:this._screensaverNowBar,clockVariant:this._screensaverClockVariant}));this.shadowRoot.append(createMobileDock({onSettings:()=>this._openSettings()}));this.shadowRoot.append(this._createSettingsPanel());const edit=document.createElement("button");edit.className="mha-edit-button";edit.type="button";edit.innerHTML=this._isEditing?ICONS.close:ICONS.edit;edit.onclick=()=>this.toggleEditMode();this.shadowRoot.append(edit);this._syncEditModeDom();this._wireDockAutoHide(grid);this._scheduleSquareUnitSync();Promise.all(links.map(link=>link.sheet?Promise.resolve():new Promise(resolve=>{link.addEventListener("load",resolve,{once:true});link.addEventListener("error",resolve,{once:true})}))).then(()=>{if(this._renderId!==renderId)return;const styledUnits=getActiveGridUnits(this);if(styledUnits!==units){this.render();return}this._scheduleSquareUnitSync()});updateStatusTime(this.shadowRoot)}}
 customElements.define("mha-control-hub",MhaControlHub);

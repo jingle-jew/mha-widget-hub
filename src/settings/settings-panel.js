@@ -8,6 +8,7 @@ import { getAccentOptions, normalizeAccent } from "./accent-palettes.js";
  */
 
 const THEME_OPTIONS = [
+  { value: "auto", label: "Auto" },
   { value: "dark", label: "Sombre" },
   { value: "light", label: "Clair" },
 ];
@@ -122,7 +123,7 @@ function createSection(title, children = []) {
 
 export function createSettingsPanel({
   open = false,
-  theme = "dark",
+  theme = "auto",
   themeStyle = "oneui",
   accent = "",
   iconShape = "auto",

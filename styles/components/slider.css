@@ -588,3 +588,20 @@
   inline-size: var(--mha-slider-available-block, 100cqb);
   width: var(--mha-slider-available-block, 100cqb);
 }
+
+/* ONEUI LIGHT SLIDER TRACK CONTRAST
+ * In OneUI light mode, white-on-white makes the inactive slider track hard to
+ * read. Darken only the inactive track surface while keeping the accent fill
+ * untouched.
+ */
+:host([data-theme-style="oneui"][data-theme="light"]) {
+  --mha-slider-track-bg:
+    color-mix(in srgb, var(--mha-text, #1f1f1f) 12%, var(--mha-widget-surface, #fff));
+}
+
+:host([data-theme-style="oneui"][data-theme="light"]) .mha-slider-oneui-track {
+  background:
+    color-mix(in srgb, var(--mha-text, #1f1f1f) 10%, rgba(255,255,255,.76));
+  border-color:
+    color-mix(in srgb, var(--mha-text, #1f1f1f) 12%, transparent);
+}
