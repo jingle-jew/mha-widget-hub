@@ -1335,3 +1335,47 @@ The method is now explicitly defined in `mha-control-hub.js` and updates:
 - document `data-accent`;
 - `localStorage` global accent;
 - `localStorage` per-style accent.
+
+
+## iOS reference glass slider
+
+Updated the iOS-only slider style to match the intended glassy mobile reference.
+
+The iOS slider now uses:
+- translucent rounded glass track;
+- accent-filled progress;
+- white floating thumb;
+- light/dark iOS variants;
+- active accent token for the fill.
+
+OneUI and Material slider styles are intentionally untouched.
+
+
+## iOS slider square-pill thumb and track
+
+Adjusted the iOS slider itself, not a wrapper pill.
+
+The iOS slider now uses square-pill geometry for:
+- the track;
+- the progress track;
+- the thumb/button.
+
+OneUI and Material are untouched.
+
+
+## iOS slider wider centered thumb
+
+The iOS slider thumb is now wider than tall and explicitly centered on the track.
+
+New iOS-only tokens:
+```css
+--mha-slider-ios-thumb-width
+--mha-slider-ios-thumb-height
+```
+
+WebKit/Blink centering uses:
+```css
+margin-top: calc((var(--mha-slider-ios-track-height) - var(--mha-slider-ios-thumb-height)) / 2);
+```
+
+OneUI and Material remain untouched.

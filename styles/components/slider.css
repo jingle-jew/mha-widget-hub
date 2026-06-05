@@ -66,3 +66,202 @@
   --mha-slider-fill-bg: var(--mha-material-you-symbol-1, #6750a4);
   --mha-slider-thumb-bg: var(--mha-material-you-symbol-1, #6750a4);
 }
+
+/* iOS REFERENCE GLASS SLIDER
+ * iOS-only slider style inspired by the visual reference:
+ * - translucent rounded glass track;
+ * - accent-filled progress;
+ * - soft white thumb;
+ * - subtle internal highlight;
+ * - accent follows the active accent token.
+ *
+ * OneUI and Material are intentionally untouched.
+ */
+:host([data-theme-style="ios"]) {
+  --mha-slider-ios-track-height: clamp(.42rem, 1.35vw, .62rem);
+  --mha-slider-ios-thumb-size: clamp(1.05rem, 2.7vw, 1.35rem);
+  --mha-slider-ios-track-radius: 999px;
+
+  --mha-slider-track-bg:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.46),
+      rgba(255,255,255,.22)
+    );
+  --mha-slider-track-fill: var(--mha-accent);
+  --mha-slider-thumb-bg:
+    radial-gradient(circle at 35% 28%, rgba(255,255,255,1), rgba(255,255,255,.92) 56%, rgba(235,240,255,.96));
+  --mha-slider-thumb-shadow:
+    0 7px 18px rgba(0,0,0,.20),
+    0 2px 5px rgba(0,0,0,.14),
+    inset 0 1px 0 rgba(255,255,255,.95);
+}
+
+/* The shell gives the slider the glassy iOS "floating control" feel. */
+:host([data-theme-style="ios"]) .mha-slider {
+  color: var(--mha-text);
+}
+
+/* WebKit/Blink track. */
+:host([data-theme-style="ios"]) .mha-slider-input {
+  height: calc(var(--mha-slider-ios-thumb-size) + .65rem);
+  border-radius: 999px;
+}
+
+:host([data-theme-style="ios"]) .mha-slider-input::-webkit-slider-runnable-track {
+  height: var(--mha-slider-ios-track-height);
+  border-radius: var(--mha-slider-ios-track-radius);
+  border: 1px solid rgba(255,255,255,.36);
+  background:
+    linear-gradient(
+      90deg,
+      var(--mha-slider-track-fill) 0 var(--mha-slider-value, 50%),
+      transparent var(--mha-slider-value, 50%) 100%
+    ),
+    var(--mha-slider-track-bg);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.52),
+    inset 0 -1px 0 rgba(255,255,255,.12),
+    0 8px 24px color-mix(in srgb, var(--mha-accent) 16%, transparent);
+  backdrop-filter: blur(18px) saturate(160%);
+}
+
+:host([data-theme-style="ios"]) .mha-slider-input::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  inline-size: var(--mha-slider-ios-thumb-size);
+  block-size: var(--mha-slider-ios-thumb-size);
+  margin-top: calc((var(--mha-slider-ios-track-height) - var(--mha-slider-ios-thumb-size)) / 2);
+  border: 0;
+  border-radius: 999px;
+  background: var(--mha-slider-thumb-bg);
+  box-shadow: var(--mha-slider-thumb-shadow);
+}
+
+/* Firefox track/progress/thumb. */
+:host([data-theme-style="ios"]) .mha-slider-input::-moz-range-track {
+  height: var(--mha-slider-ios-track-height);
+  border-radius: var(--mha-slider-ios-track-radius);
+  border: 1px solid rgba(255,255,255,.36);
+  background: var(--mha-slider-track-bg);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.52),
+    inset 0 -1px 0 rgba(255,255,255,.12);
+}
+
+:host([data-theme-style="ios"]) .mha-slider-input::-moz-range-progress {
+  height: var(--mha-slider-ios-track-height);
+  border-radius: var(--mha-slider-ios-track-radius);
+  background: var(--mha-slider-track-fill);
+  box-shadow:
+    0 8px 24px color-mix(in srgb, var(--mha-accent) 16%, transparent);
+}
+
+:host([data-theme-style="ios"]) .mha-slider-input::-moz-range-thumb {
+  inline-size: var(--mha-slider-ios-thumb-size);
+  block-size: var(--mha-slider-ios-thumb-size);
+  border: 0;
+  border-radius: 999px;
+  background: var(--mha-slider-thumb-bg);
+  box-shadow: var(--mha-slider-thumb-shadow);
+}
+
+/* Light iOS: the reference is luminous and airy. */
+:host([data-theme="light"][data-theme-style="ios"]) {
+  --mha-slider-track-bg:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.68),
+      rgba(255,255,255,.34)
+    );
+  --mha-slider-thumb-shadow:
+    0 8px 20px rgba(90,105,145,.18),
+    0 2px 5px rgba(90,105,145,.12),
+    inset 0 1px 0 rgba(255,255,255,1);
+}
+
+/* Dark iOS: same shape, deeper glass. */
+:host([data-theme="dark"][data-theme-style="ios"]) {
+  --mha-slider-track-bg:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.30),
+      rgba(255,255,255,.13)
+    );
+  --mha-slider-thumb-shadow:
+    0 8px 22px rgba(0,0,0,.34),
+    0 2px 6px rgba(0,0,0,.22),
+    inset 0 1px 0 rgba(255,255,255,.95);
+}
+
+/* iOS SLIDER SQUARE-PILL THUMB AND TRACK
+ * The slider itself should use a square-pill language:
+ * - the track is not a full 999px capsule;
+ * - the thumb is not a perfect circle;
+ * - both remain soft, iOS-like, and accent-aware.
+ *
+ * iOS only. OneUI and Material are intentionally untouched.
+ */
+:host([data-theme-style="ios"]) {
+  --mha-slider-ios-track-radius: clamp(.34rem, 1.1vw, .52rem);
+  --mha-slider-ios-thumb-radius: clamp(.42rem, 1.35vw, .66rem);
+}
+
+/* WebKit/Blink track square-pill */
+:host([data-theme-style="ios"]) .mha-slider-input::-webkit-slider-runnable-track {
+  border-radius: var(--mha-slider-ios-track-radius);
+}
+
+/* WebKit/Blink thumb square-pill */
+:host([data-theme-style="ios"]) .mha-slider-input::-webkit-slider-thumb {
+  border-radius: var(--mha-slider-ios-thumb-radius);
+}
+
+/* Firefox track/progress square-pill */
+:host([data-theme-style="ios"]) .mha-slider-input::-moz-range-track,
+:host([data-theme-style="ios"]) .mha-slider-input::-moz-range-progress {
+  border-radius: var(--mha-slider-ios-track-radius);
+}
+
+/* Firefox thumb square-pill */
+:host([data-theme-style="ios"]) .mha-slider-input::-moz-range-thumb {
+  border-radius: var(--mha-slider-ios-thumb-radius);
+}
+
+/* iOS SLIDER WIDER CENTERED THUMB
+ * The iOS slider thumb is intentionally wider than tall.
+ *
+ * Vertical centering is locked with:
+ * margin-top = (track-height - thumb-height) / 2
+ *
+ * This keeps the thumb centered on the track regardless of viewport/theme.
+ */
+:host([data-theme-style="ios"]) {
+  --mha-slider-ios-thumb-width: clamp(1.55rem, 4.4vw, 2.05rem);
+  --mha-slider-ios-thumb-height: clamp(1.02rem, 2.75vw, 1.32rem);
+  --mha-slider-ios-thumb-radius: clamp(.42rem, 1.35vw, .66rem);
+}
+
+/* Give the native input enough vertical room for the wider square-pill thumb. */
+:host([data-theme-style="ios"]) .mha-slider-input {
+  height: calc(var(--mha-slider-ios-thumb-height) + .8rem);
+}
+
+/* WebKit/Blink: wider thumb, always centered to track. */
+:host([data-theme-style="ios"]) .mha-slider-input::-webkit-slider-thumb {
+  inline-size: var(--mha-slider-ios-thumb-width);
+  block-size: var(--mha-slider-ios-thumb-height);
+  width: var(--mha-slider-ios-thumb-width);
+  height: var(--mha-slider-ios-thumb-height);
+  margin-top: calc((var(--mha-slider-ios-track-height) - var(--mha-slider-ios-thumb-height)) / 2);
+  border-radius: var(--mha-slider-ios-thumb-radius);
+}
+
+/* Firefox: wider thumb. Firefox centers range thumbs differently, so no margin-top. */
+:host([data-theme-style="ios"]) .mha-slider-input::-moz-range-thumb {
+  inline-size: var(--mha-slider-ios-thumb-width);
+  block-size: var(--mha-slider-ios-thumb-height);
+  width: var(--mha-slider-ios-thumb-width);
+  height: var(--mha-slider-ios-thumb-height);
+  border-radius: var(--mha-slider-ios-thumb-radius);
+}
