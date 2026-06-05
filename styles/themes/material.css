@@ -64,3 +64,19 @@
   --mha-bg-blob-4: #625b71;
   --mha-bg-blob-opacity: .18;
 }
+
+/* Material dock surface alignment
+ * In Material mode, the dock container uses the exact same surface token as
+ * widgets. Icon surfaces remain controlled separately in icon.css.
+ */
+:host([data-theme-style="material"]) {
+  --mha-dock-surface: var(--mha-widget-surface);
+}
+
+:host([data-theme-style="material"][data-theme="light"]) {
+  --mha-dock-surface: var(--mha-widget-surface);
+}
+
+:host([data-theme-style="material"][data-theme="dark"]) {
+  --mha-dock-surface: var(--mha-widget-surface);
+}

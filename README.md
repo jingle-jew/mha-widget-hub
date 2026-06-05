@@ -240,3 +240,72 @@ The iOS widget surface is now intended to be uniform glass:
 - no surface gradient;
 - no pseudo-element corner gradient;
 - borders/shadows/blur remain.
+
+
+## Squircle SVG mask shape
+
+The squircle icon shape now uses an SVG mask instead of only `border-radius`.
+
+- rounded-square: `border-radius`
+- squircle: SVG mask / superellipse-like shape
+- circle: `border-radius: 999px`
+
+To tune the squircle, adjust the `--mha-icon-squircle-mask` path control points in `styles/components/icon.css`.
+
+
+## OneUI superellipse squircle mask
+
+The squircle icon shape now uses a generated superellipse mask (`n=4`) instead of a hand-tuned cubic SVG.
+
+This gives a more OneUI-like squircle:
+- flatter sides than a circle;
+- smoother corners than a rounded rectangle;
+- scalable across icon sizes.
+
+For future tuning, regenerate the mask with:
+
+```bash
+node tools/generate-squircle-mask.mjs 4
+```
+
+Try `3.2` for rounder or `5` for squarer.
+
+
+## Squircle n=3
+
+The squircle SVG mask was regenerated with superellipse exponent `n=3`.
+
+Compared with `n=4`, this produces a softer/rounder squircle.
+
+
+## Remove legacy squircle radius token
+
+Removed the old `--mha-icon-border-radius-squircle` token.
+
+Squircle shape is now controlled only by the SVG mask token:
+
+```css
+--mha-icon-squircle-mask
+```
+
+Rounded-square and circle still use border-radius tokens.
+
+
+## Squircle inner edge fix
+
+The squircle icon shape now disables the regular CSS border while the SVG mask is active.
+
+Reason:
+- the mask defines the visible shape;
+- a normal CSS border does not perfectly follow the mask;
+- this could create a thin white internal edge on the four sides.
+
+Rounded-square and circle still use normal borders.
+
+
+## Material dock/widget surface alignment
+
+In Material theme:
+- the dock container uses exactly `--mha-widget-surface`;
+- icon tiles intentionally use a separate Material You tonal container;
+- icon symbols continue to use the Material You symbol palette.

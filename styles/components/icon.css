@@ -14,18 +14,24 @@
   --mha-icon-size: clamp(2.25rem, 4vw, 3.5rem);
 
   /*
-   * Three supported icon shapes.
+   * Three supported icon shapes. Squircle uses the SVG mask token below.
    * These are intentionally independent from visual themes.
    */
   --mha-icon-border-radius-rounded-square: clamp(0.55rem, 1.25vw, 0.9rem);
-  --mha-icon-border-radius-squircle: 38%;
   --mha-icon-border-radius-circle: 999px;
+
+  /*
+   * True squircle/superellipse-like mask.
+   * This is used only for the squircle shape.
+   * Tweak the C80/C20 control points to make it more/less OneUI-ish.
+   */
+  --mha-icon-squircle-mask: url("data:image/svg+xml,%3Csvg%20viewBox%3D%270%200%20100%20100%27%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%3E%3Cpath%20d%3D%27M%20100.000%2050.000%20L%2099.939%2057.695%20L%2099.757%2062.201%20L%2099.452%2065.955%20L%2099.027%2069.273%20L%2098.479%2072.283%20L%2097.810%2075.050%20L%2097.018%2077.613%20L%2096.105%2079.999%20L%2095.069%2082.222%20L%2093.910%2084.295%20L%2092.627%2086.227%20L%2091.219%2088.022%20L%2089.685%2089.685%20L%2088.022%2091.219%20L%2086.227%2092.627%20L%2084.295%2093.910%20L%2082.222%2095.069%20L%2079.999%2096.105%20L%2077.613%2097.018%20L%2075.050%2097.810%20L%2072.283%2098.479%20L%2069.273%2099.027%20L%2065.955%2099.452%20L%2062.201%2099.757%20L%2057.695%2099.939%20L%2050.000%20100.000%20L%2042.305%2099.939%20L%2037.799%2099.757%20L%2034.045%2099.452%20L%2030.727%2099.027%20L%2027.717%2098.479%20L%2024.950%2097.810%20L%2022.387%2097.018%20L%2020.001%2096.105%20L%2017.778%2095.069%20L%2015.705%2093.910%20L%2013.773%2092.627%20L%2011.978%2091.219%20L%2010.315%2089.685%20L%208.781%2088.022%20L%207.373%2086.227%20L%206.090%2084.295%20L%204.931%2082.222%20L%203.895%2079.999%20L%202.982%2077.613%20L%202.190%2075.050%20L%201.521%2072.283%20L%200.973%2069.273%20L%200.548%2065.955%20L%200.243%2062.201%20L%200.061%2057.695%20L%200.000%2050.000%20L%200.061%2042.305%20L%200.243%2037.799%20L%200.548%2034.045%20L%200.973%2030.727%20L%201.521%2027.717%20L%202.190%2024.950%20L%202.982%2022.387%20L%203.895%2020.001%20L%204.931%2017.778%20L%206.090%2015.705%20L%207.373%2013.773%20L%208.781%2011.978%20L%2010.315%2010.315%20L%2011.978%208.781%20L%2013.773%207.373%20L%2015.705%206.090%20L%2017.778%204.931%20L%2020.001%203.895%20L%2022.387%202.982%20L%2024.950%202.190%20L%2027.717%201.521%20L%2030.727%200.973%20L%2034.045%200.548%20L%2037.799%200.243%20L%2042.305%200.061%20L%2050.000%200.000%20L%2057.695%200.061%20L%2062.201%200.243%20L%2065.955%200.548%20L%2069.273%200.973%20L%2072.283%201.521%20L%2075.050%202.190%20L%2077.613%202.982%20L%2079.999%203.895%20L%2082.222%204.931%20L%2084.295%206.090%20L%2086.227%207.373%20L%2088.022%208.781%20L%2089.685%2010.315%20L%2091.219%2011.978%20L%2092.627%2013.773%20L%2093.910%2015.705%20L%2095.069%2017.778%20L%2096.105%2020.001%20L%2097.018%2022.387%20L%2097.810%2024.950%20L%2098.479%2027.717%20L%2099.027%2030.727%20L%2099.452%2034.045%20L%2099.757%2037.799%20L%2099.939%2042.305%20Z%27%20fill%3D%27black%27%2F%3E%3C%2Fsvg%3E");
 
   /*
    * Active icon shape token.
    * IMPORTANT: this must not reference itself through another variable.
    */
-  --mha-border-radius-icon: var(--mha-icon-border-radius-squircle);
+  --mha-border-radius-icon: var(--mha-icon-border-radius-rounded-square);
   --mha-icon-border-radius: var(--mha-border-radius-icon);
 
   --mha-icon-bg: var(--mha-dock-slot-surface, var(--mha-control-surface, rgba(255,255,255,.16)));
@@ -41,11 +47,6 @@
 :host([data-icon-shape="rounded-square"]) {
   --mha-border-radius-icon: var(--mha-icon-border-radius-rounded-square);
   --mha-icon-border-radius: var(--mha-icon-border-radius-rounded-square);
-}
-
-:host([data-icon-shape="squircle"]) {
-  --mha-border-radius-icon: var(--mha-icon-border-radius-squircle);
-  --mha-icon-border-radius: var(--mha-icon-border-radius-squircle);
 }
 
 :host([data-icon-shape="circle"]) {
@@ -73,19 +74,55 @@
   transition: border-radius var(--mha-motion-duration-fast, 160ms) var(--mha-motion-easing, ease);
 }
 
+
+
+/*
+ * Squircle reference:
+ * This mask is generated from a superellipse with n=3.
+ * Tune by regenerating the path with:
+ * - n=3.2: rounder / closer to circle
+ * - n=4.0: classic squircle
+ * - n=5.0: squarer / more OneUI-tensed
+ */
+
 /* DIRECT ICON SHAPE APPLICATION
- * Keep this at the end.
+ * Keep this after base .mha-icon rules.
+ *
+ * Rounded-square and circle use border-radius.
+ * Squircle uses an SVG mask so it can be tuned more precisely than a
+ * regular rounded rectangle.
  */
 :host([data-icon-shape="rounded-square"]) .mha-icon {
+  border: 1px solid var(--mha-icon-border);
   border-radius: var(--mha-icon-border-radius-rounded-square);
+  -webkit-mask-image: none;
+  mask-image: none;
 }
 
 :host([data-icon-shape="squircle"]) .mha-icon {
-  border-radius: var(--mha-icon-border-radius-squircle);
+  /*
+   * The SVG mask already defines the visible shape.
+   * A regular CSS border does not follow the mask perfectly and can appear as
+   * a thin internal white edge on the four sides, so squircle disables it.
+   */
+  border: 0;
+  border-radius: 0;
+  background-clip: border-box;
+  -webkit-mask-image: var(--mha-icon-squircle-mask);
+  mask-image: var(--mha-icon-squircle-mask);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
 }
 
 :host([data-icon-shape="circle"]) .mha-icon {
+  border: 1px solid var(--mha-icon-border);
   border-radius: var(--mha-icon-border-radius-circle);
+  -webkit-mask-image: none;
+  mask-image: none;
 }
 
 /* THEME-BOUND ICON SURFACES
@@ -119,6 +156,7 @@
   --mha-material-you-symbol-6: #735573;
   --mha-material-you-symbol-7: #8c5000;
   --mha-material-you-symbol-8: #386a20;
+  --mha-material-you-icon-container: rgba(232, 222, 248, .98);
 }
 
 /* iOS: Liquid Glass icons, white symbols in both modes. */
@@ -159,15 +197,22 @@
 
 /* Material: icon background follows widget surface, symbols come from Material You palette. */
 :host([data-theme-style="material"]) {
-  --mha-icon-bg: var(--mha-widget-surface, var(--mha-surface-bg, rgba(244,239,247,.98)));
+  /*
+   * Material icons intentionally do NOT use the widget surface.
+   * The dock container can match widgets, while icon tiles remain distinct.
+   */
+  --mha-icon-bg: var(--mha-material-you-icon-container, rgba(232, 222, 248, .98));
   --mha-icon-color: var(--mha-material-you-symbol-1);
-  --mha-icon-border: var(--mha-widget-border, rgba(121,116,126,.18));
-  --mha-icon-shadow: var(--mha-widget-shadow, 0 4px 14px rgba(29,27,32,.10));
+  --mha-icon-border: color-mix(in srgb, var(--mha-icon-color) 18%, transparent);
+  --mha-icon-shadow: 0 3px 10px rgba(29,27,32,.08);
   --mha-icon-backdrop-filter: none;
 }
 
 :host([data-theme-style="material"][data-theme="dark"]) {
-  --mha-icon-bg: var(--mha-widget-surface, var(--mha-surface-bg, rgba(43,41,48,.96)));
+  --mha-material-you-icon-container: rgba(74, 68, 88, .96);
+  --mha-icon-bg: var(--mha-material-you-icon-container);
+  --mha-icon-border: color-mix(in srgb, var(--mha-icon-color) 22%, transparent);
+  --mha-icon-shadow: 0 4px 14px rgba(0,0,0,.20);
 }
 
 /* Local per-symbol color slots.
@@ -217,4 +262,26 @@
   border-color: var(--mha-icon-border);
   box-shadow: var(--mha-icon-shadow);
   backdrop-filter: var(--mha-icon-backdrop-filter, none);
+}
+
+/* squircle inner edge fix
+ * Squircle uses a mask, so it intentionally avoids regular borders.
+ * A soft inset highlight can be added later with a mask-aware pseudo-layer.
+ */
+:host([data-icon-shape="squircle"]) .mha-icon {
+  box-shadow:
+    var(--mha-icon-shadow),
+    inset 0 1px 0 rgba(255,255,255,.10);
+}
+
+/* Material icon/dock separation guard
+ * Dock uses widget surface through material.css.
+ * Icons must remain a distinct Material You tonal container.
+ */
+:host([data-theme-style="material"]) .mha-icon {
+  background: var(--mha-material-you-icon-container, rgba(232, 222, 248, .98));
+}
+
+:host([data-theme-style="material"][data-theme="dark"]) .mha-icon {
+  background: var(--mha-material-you-icon-container, rgba(74, 68, 88, .96));
 }
