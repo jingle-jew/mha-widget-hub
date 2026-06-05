@@ -18,7 +18,7 @@
    * These are intentionally independent from visual themes.
    */
   --mha-icon-border-radius-rounded-square: clamp(0.55rem, 1.25vw, 0.9rem);
-  --mha-icon-border-radius-squircle: clamp(1rem, 2vw, 1.45rem);
+  --mha-icon-border-radius-squircle: clamp(1.5rem, 2.6vw, 2rem);
   --mha-icon-border-radius-circle: 999px;
 
   /*
@@ -86,4 +86,135 @@
 
 :host([data-icon-shape="circle"]) .mha-icon {
   border-radius: var(--mha-icon-border-radius-circle);
+}
+
+/* THEME-BOUND ICON SURFACES
+ * Icon surface/color style follows the visual theme:
+ * - iOS: Liquid Glass, white symbols in light and dark.
+ * - OneUI: opaque simple colorful tiles, black symbols in light and dark.
+ * - Material: widget-like surface, Material You symbol palette.
+ *
+ * Icon shape remains independent and is still controlled by data-icon-shape.
+ */
+
+/* Shared defaults / fallbacks */
+:host {
+  --mha-icon-liquid-glass-blur: clamp(0.75rem, 1.4vw, 1.25rem);
+  --mha-icon-liquid-glass-saturation: 185%;
+
+  --mha-icon-oneui-bg-1: #7bb8ff;
+  --mha-icon-oneui-bg-2: #ff9dc7;
+  --mha-icon-oneui-bg-3: #96e6b5;
+  --mha-icon-oneui-bg-4: #c6a6ff;
+  --mha-icon-oneui-bg-5: #ffd17a;
+  --mha-icon-oneui-bg-6: #8de8ef;
+  --mha-icon-oneui-bg-7: #ffb08a;
+  --mha-icon-oneui-bg-8: #a8d4ff;
+
+  --mha-material-you-symbol-1: #6750a4;
+  --mha-material-you-symbol-2: #7d5260;
+  --mha-material-you-symbol-3: #006874;
+  --mha-material-you-symbol-4: #984061;
+  --mha-material-you-symbol-5: #4a6358;
+  --mha-material-you-symbol-6: #735573;
+  --mha-material-you-symbol-7: #8c5000;
+  --mha-material-you-symbol-8: #386a20;
+}
+
+/* iOS: Liquid Glass icons, white symbols in both modes. */
+:host([data-theme-style="ios"]) {
+  --mha-icon-bg:
+    linear-gradient(145deg, rgba(255,255,255,.28), rgba(255,255,255,.085) 48%, rgba(180,210,255,.07));
+  --mha-icon-color: rgba(255,255,255,.96);
+  --mha-icon-border: rgba(255,255,255,.36);
+  --mha-icon-shadow:
+    inset 0 1px 0 rgba(255,255,255,.42),
+    inset 0 -1px 0 rgba(255,255,255,.06),
+    0 12px 32px rgba(0,0,0,.16);
+  --mha-icon-backdrop-filter:
+    blur(var(--mha-icon-liquid-glass-blur))
+    saturate(var(--mha-icon-liquid-glass-saturation));
+}
+
+:host([data-theme-style="ios"][data-theme="light"]) {
+  --mha-icon-bg:
+    linear-gradient(145deg, rgba(255,255,255,.55), rgba(255,255,255,.22) 50%, rgba(205,225,255,.16));
+  --mha-icon-border: rgba(255,255,255,.74);
+  --mha-icon-shadow:
+    inset 0 1px 0 rgba(255,255,255,.88),
+    inset 0 -1px 0 rgba(255,255,255,.24),
+    0 12px 32px rgba(78,100,145,.13);
+}
+
+/* OneUI: opaque simple colorful icons, black symbols in both modes. */
+:host([data-theme-style="oneui"]) {
+  --mha-icon-bg: var(--mha-icon-oneui-bg-1);
+  --mha-icon-color: rgba(0,0,0,.88);
+  --mha-icon-border: rgba(0,0,0,.045);
+  --mha-icon-shadow:
+    0 10px 24px rgba(0,0,0,.13),
+    inset 0 1px 0 rgba(255,255,255,.22);
+  --mha-icon-backdrop-filter: none;
+}
+
+/* Material: icon background follows widget surface, symbols come from Material You palette. */
+:host([data-theme-style="material"]) {
+  --mha-icon-bg: var(--mha-widget-surface, var(--mha-surface-bg, rgba(244,239,247,.98)));
+  --mha-icon-color: var(--mha-material-you-symbol-1);
+  --mha-icon-border: var(--mha-widget-border, rgba(121,116,126,.18));
+  --mha-icon-shadow: var(--mha-widget-shadow, 0 4px 14px rgba(29,27,32,.10));
+  --mha-icon-backdrop-filter: none;
+}
+
+:host([data-theme-style="material"][data-theme="dark"]) {
+  --mha-icon-bg: var(--mha-widget-surface, var(--mha-surface-bg, rgba(43,41,48,.96)));
+}
+
+/* Local per-symbol color slots.
+ * These are generic and based on order, so any icon library symbol can use them.
+ */
+:host([data-theme-style="oneui"]) .mha-icon:nth-of-type(8n + 1) { --mha-icon-bg: var(--mha-icon-oneui-bg-1); }
+:host([data-theme-style="oneui"]) .mha-icon:nth-of-type(8n + 2) { --mha-icon-bg: var(--mha-icon-oneui-bg-2); }
+:host([data-theme-style="oneui"]) .mha-icon:nth-of-type(8n + 3) { --mha-icon-bg: var(--mha-icon-oneui-bg-3); }
+:host([data-theme-style="oneui"]) .mha-icon:nth-of-type(8n + 4) { --mha-icon-bg: var(--mha-icon-oneui-bg-4); }
+:host([data-theme-style="oneui"]) .mha-icon:nth-of-type(8n + 5) { --mha-icon-bg: var(--mha-icon-oneui-bg-5); }
+:host([data-theme-style="oneui"]) .mha-icon:nth-of-type(8n + 6) { --mha-icon-bg: var(--mha-icon-oneui-bg-6); }
+:host([data-theme-style="oneui"]) .mha-icon:nth-of-type(8n + 7) { --mha-icon-bg: var(--mha-icon-oneui-bg-7); }
+:host([data-theme-style="oneui"]) .mha-icon:nth-of-type(8n + 8) { --mha-icon-bg: var(--mha-icon-oneui-bg-8); }
+
+:host([data-theme-style="material"]) .mha-icon:nth-of-type(8n + 1) { --mha-icon-color: var(--mha-material-you-symbol-1); }
+:host([data-theme-style="material"]) .mha-icon:nth-of-type(8n + 2) { --mha-icon-color: var(--mha-material-you-symbol-2); }
+:host([data-theme-style="material"]) .mha-icon:nth-of-type(8n + 3) { --mha-icon-color: var(--mha-material-you-symbol-3); }
+:host([data-theme-style="material"]) .mha-icon:nth-of-type(8n + 4) { --mha-icon-color: var(--mha-material-you-symbol-4); }
+:host([data-theme-style="material"]) .mha-icon:nth-of-type(8n + 5) { --mha-icon-color: var(--mha-material-you-symbol-5); }
+:host([data-theme-style="material"]) .mha-icon:nth-of-type(8n + 6) { --mha-icon-color: var(--mha-material-you-symbol-6); }
+:host([data-theme-style="material"]) .mha-icon:nth-of-type(8n + 7) { --mha-icon-color: var(--mha-material-you-symbol-7); }
+:host([data-theme-style="material"]) .mha-icon:nth-of-type(8n + 8) { --mha-icon-color: var(--mha-material-you-symbol-8); }
+
+/* Category hints for semantic tinting.
+ * These remain local to the icon component and do not affect icon shape.
+ */
+:host([data-theme-style="oneui"]) .mha-icon[data-icon-category="lighting"] { --mha-icon-bg: #ffd36e; }
+:host([data-theme-style="oneui"]) .mha-icon[data-icon-category="climate"] { --mha-icon-bg: #8edcff; }
+:host([data-theme-style="oneui"]) .mha-icon[data-icon-category="media_player"] { --mha-icon-bg: #b7a0ff; }
+:host([data-theme-style="oneui"]) .mha-icon[data-icon-category="security"] { --mha-icon-bg: #ff9ba8; }
+:host([data-theme-style="oneui"]) .mha-icon[data-icon-category="network"] { --mha-icon-bg: #8de8ef; }
+:host([data-theme-style="oneui"]) .mha-icon[data-icon-category="energy"] { --mha-icon-bg: #9ee58f; }
+:host([data-theme-style="oneui"]) .mha-icon[data-icon-category="system"] { --mha-icon-bg: #c8d1dc; }
+
+:host([data-theme-style="material"]) .mha-icon[data-icon-category="lighting"] { --mha-icon-color: #8c5000; }
+:host([data-theme-style="material"]) .mha-icon[data-icon-category="climate"] { --mha-icon-color: #006874; }
+:host([data-theme-style="material"]) .mha-icon[data-icon-category="media_player"] { --mha-icon-color: #6750a4; }
+:host([data-theme-style="material"]) .mha-icon[data-icon-category="security"] { --mha-icon-color: #984061; }
+:host([data-theme-style="material"]) .mha-icon[data-icon-category="network"] { --mha-icon-color: #006a6a; }
+:host([data-theme-style="material"]) .mha-icon[data-icon-category="energy"] { --mha-icon-color: #386a20; }
+:host([data-theme-style="material"]) .mha-icon[data-icon-category="system"] { --mha-icon-color: #625b71; }
+
+/* Ensure the actual icon shell consumes the active theme-bound tokens. */
+.mha-icon {
+  background: var(--mha-icon-bg);
+  color: var(--mha-icon-color);
+  border-color: var(--mha-icon-border);
+  box-shadow: var(--mha-icon-shadow);
+  backdrop-filter: var(--mha-icon-backdrop-filter, none);
 }

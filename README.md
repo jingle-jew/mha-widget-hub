@@ -208,3 +208,14 @@ document.querySelector('[data-dev-action="icon-shape"]')
 
 Both `change` and `input` events now call `setIconShape()`.
 The setter is also exposed through `window.__MHA_DEV__.setIconShape` for manual testing.
+
+
+## Theme-bound icon surfaces
+
+Icon surface/color styling is now bound to the visual theme:
+
+- iOS: Liquid Glass icon surfaces with white symbols in light and dark modes.
+- OneUI: opaque OneUI-esque colored icon surfaces with black symbols.
+- Material: widget-colored icon surfaces with Material You symbol colors.
+
+Icon shape remains independent and controlled by `data-icon-shape`.

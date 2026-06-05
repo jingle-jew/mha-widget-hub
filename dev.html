@@ -68,8 +68,13 @@
 
     function setTheme(theme = "dark") {
       const resolved = theme === "light" ? "light" : "dark";
+
       document.documentElement.dataset.theme = resolved;
+      document.documentElement.setAttribute("data-theme", resolved);
+
       hub.dataset.theme = resolved;
+      hub.setAttribute("data-theme", resolved);
+
       localStorage.setItem("mha-dev-theme", resolved);
       hub.requestRender?.();
     }
@@ -80,8 +85,13 @@
 
     function setThemeStyle(style = "oneui") {
       const resolved = ["ios", "oneui", "material"].includes(style) ? style : "oneui";
+
       document.documentElement.dataset.themeStyle = resolved;
+      document.documentElement.setAttribute("data-theme-style", resolved);
+
       hub.dataset.themeStyle = resolved;
+      hub.setAttribute("data-theme-style", resolved);
+
       localStorage.setItem("mha-dev-theme-style", resolved);
 
       const select = document.querySelector("[data-dev-action='theme-style']");

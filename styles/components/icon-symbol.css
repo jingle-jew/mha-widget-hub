@@ -7,7 +7,7 @@
 
 :host {
   --mha-icon-symbol-size: var(--mha-icon-glyph-size, 58%);
-  --mha-icon-symbol-color: currentColor;
+  --mha-icon-symbol-color: var(--mha-icon-color, currentColor);
   --mha-icon-symbol-opacity: .86;
   --mha-icon-symbol-stroke-width: 0;
 }
@@ -34,4 +34,12 @@
 
 .mha-icon-symbol[data-icon-symbol=""] {
   opacity: .28;
+}
+
+/* THEME-BOUND SYMBOL COLOR
+ * Symbols inherit their color from the icon container.
+ * The symbol component remains independent from icon shape.
+ */
+.mha-icon .mha-icon-symbol {
+  color: var(--mha-icon-color, currentColor);
 }
