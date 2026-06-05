@@ -1,3 +1,370 @@
+# MHA Widget Hub
+
+A premium Home Assistant dashboard shell inspired by modern mobile design systems.
+
+The project is built around a clear separation:
+
+```text
+Shell = global interface, visual language, layout system
+Widgets = functional content, data, interactions, placement
+```
+
+The shell should provide a polished, coherent foundation. Widgets should provide the richness.
+
+---
+
+## Project direction
+
+MHA should feel like a real app, not a pile of cards.
+
+The goal is:
+
+- premium;
+- calm;
+- readable;
+- touch-friendly;
+- responsive;
+- modular;
+- visually coherent;
+- customizable without becoming chaotic.
+
+Customization should be powerful enough to give the interface personality, but limited enough to keep the design system consistent.
+
+---
+
+## Customization philosophy
+
+Global customization is intentionally limited.
+
+The user can customize the overall visual identity through a small number of high-impact choices:
+
+```text
+3 visual styles
+- iOS
+- OneUI
+- Material
+
+2 themes
+- light
+- dark
+
+3 icon shapes
+- rounded-square
+- squircle
+- circle
+
+Accent colors
+- 10 curated accent colors per visual style
+```
+
+That is the intended ceiling for global appearance customization.
+
+Avoid adding endless sliders, arbitrary per-pixel visual controls, or overly granular theme options.
+
+```text
+Good customization:
+- visual style
+- light/dark theme
+- icon shape
+- accent color
+- widget layout and content
+
+Avoid:
+- dozens of radius sliders
+- separate shadow sliders
+- random per-component color overrides
+- one-off visual exceptions
+```
+
+The richness of the dashboard should come mostly from widgets, their layout, and their content, not from unlimited shell settings.
+
+---
+
+## Visual styles
+
+Each visual style should have its own personality while using the same component architecture.
+
+### iOS
+
+- glassy;
+- luminous;
+- soft;
+- layered;
+- expressive blur;
+- bright in light mode;
+- deep and atmospheric in dark mode.
+
+### OneUI
+
+- clean;
+- friendly;
+- spacious;
+- readable;
+- rounded;
+- practical;
+- slightly playful without becoming noisy.
+
+### Material
+
+- tonal;
+- structured;
+- calm;
+- accessible;
+- token-driven;
+- respectful of the Material You direction.
+
+Material already has a strong color structure. Do not casually override it with unrelated custom rules.
+
+---
+
+## Accent system
+
+Accent colors are style-specific.
+
+Each visual style owns its own curated accent palette. Accent choices are stable across light/dark mode, but the available colors change according to the selected visual style.
+
+Accent applies to system-level interactive elements:
+
+- dock icons;
+- mobile floating dock icon;
+- edit button;
+- future system buttons;
+- toggles;
+- sliders;
+- accent pills;
+- primary buttons.
+
+Accent should not randomly recolor normal text, widget backgrounds, or content unless the component is intentionally designed as an accent component.
+
+---
+
+## Icon shape system
+
+Icon shape is global.
+
+If the user selects a shape, every icon-like control should respect it:
+
+```text
+rounded-square = all icon containers are rounded-square
+squircle = all icon containers are squircle
+circle = all icon containers are circle
+```
+
+This applies everywhere:
+
+- dock;
+- mobile dock;
+- edit button;
+- widget icons;
+- status/system icons;
+- future icon buttons.
+
+Do not create one-off icon shapes unless the component is explicitly not an icon.
+
+Icon symbols must remain centered inside their icon container.
+
+---
+
+## Text and typography rules
+
+Text should be readable before it is decorative.
+
+General rule:
+
+```text
+Prefer left-aligned text inside its box.
+Avoid centered text unless there is a strong UI reason.
+```
+
+Use centered text sparingly, for example:
+
+- tiny badges;
+- icon-only labels;
+- compact pills;
+- symmetrical controls;
+- empty states where centered composition is intentional.
+
+For widgets and normal content areas, prefer:
+
+- left-aligned headings;
+- left-aligned values;
+- left-aligned descriptions;
+- predictable reading flow.
+
+Avoid mixing text alignment randomly inside the same widget.
+
+### Light theme text rule
+
+In light theme, normal interface text should not be white.
+
+White text is allowed only when required for contrast, such as:
+
+- danger buttons;
+- dark/inverted buttons;
+- explicitly dark surfaces;
+- icon glyphs when the icon style requires it.
+
+---
+
+## Layout philosophy
+
+The layout system should remain predictable.
+
+Global grid rules:
+
+- widgets live on the dashboard grid;
+- widgets own an internal layout grid;
+- internal widget content should respect widget padding and gap tokens;
+- the shell should reserve space for global UI such as status bar and dock;
+- widgets should not render behind fixed shell controls.
+
+Mobile, tablet, and desktop can have different shell behavior, but they should still feel like the same app.
+
+---
+
+## Mobile shell
+
+Mobile should not be treated as a compressed desktop.
+
+Mobile uses:
+
+- hidden status bar;
+- floating dock launcher;
+- custom mobile dock panel;
+- touch-friendly controls;
+- responsive orientation relayout;
+- edit mode with dock hidden.
+
+The mobile floating dock launcher is visually an icon and must follow the global icon shape and icon surface tokens.
+
+---
+
+## Settings panel
+
+The settings panel is part of the shell.
+
+It should:
+
+- open from the gear icon;
+- use the same surface tokens as widgets;
+- respect the active visual style;
+- respect light/dark theme;
+- respect accent color;
+- blur/dim the dashboard behind it;
+- avoid full-page flashes or layout jumps.
+
+Settings should expose only meaningful global choices.
+
+Do not turn the settings panel into a dump for every possible CSS value.
+
+---
+
+## Component architecture
+
+Components should be reusable and token-driven.
+
+Preferred direction:
+
+```text
+src/ui/
+- icon
+- icon-symbol
+- button
+- pill
+- toggle
+- slider
+
+src/layout/
+- shell
+- dock
+- mobile-dock
+- status-bar
+
+src/widgets/
+- widget-layout
+- empty-widget
+- future real widgets
+
+src/settings/
+- settings-panel
+- accent-palettes
+```
+
+Visual behavior should come from tokens and scoped component CSS, not from scattered one-off rules.
+
+---
+
+## Token discipline
+
+Tokens are the source of truth.
+
+Prefer a single clear token over aliases and duplicates.
+
+Example:
+
+```css
+--mha-icon-radius-rounded-square
+```
+
+Avoid keeping old aliases around unless there is a real compatibility need.
+
+When a token is renamed, clean up the old one carefully.
+
+---
+
+## Rendering and motion
+
+The interface should feel smooth.
+
+Avoid:
+
+- full-screen flashes;
+- unnecessary full re-renders;
+- visible CSS loading artifacts;
+- dock/settings flashes during orientation changes;
+- abrupt background changes.
+
+Preferred behavior:
+
+- crossfade visual theme backgrounds;
+- suppress transitions during orientation relayout;
+- keep modal panels hidden until intentionally opened;
+- use motion for polish, not distraction.
+
+Respect `prefers-reduced-motion`.
+
+---
+
+## Edit mode
+
+Edit mode is a shell state.
+
+In edit mode:
+
+- widgets may dance subtly;
+- widgets may show a clear outline;
+- edit controls must be above widget content;
+- resize handles should feel integrated into widget borders;
+- mobile dock should be hidden;
+- the edit button remains the primary floating control.
+
+Resize handles should not look like debug blocks.
+
+---
+
+## README / project documentation rule
+
+When a major design-system decision is made, document it here.
+
+This README should explain the philosophy and guardrails of the project, not every tiny implementation detail.
+
+Implementation notes can be added lower in the file when useful.
+
+
+---
+
+## Implementation notes / history
+
 # MHA Control Hub — Componentized foundation
 
 ## Lancer
