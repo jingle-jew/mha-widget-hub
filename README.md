@@ -1795,3 +1795,14 @@ This fixes the startup `ReferenceError: Can't find variable: getStoredThemeSetti
 
 The inactive slider track in OneUI light mode is slightly darker so it remains
 visible on light widget surfaces. The accent fill/progress color is unchanged.
+
+
+## OneUI slider fill translucency
+
+OneUI slider progress/fill now keeps the accent hue but uses a translucent
+`color-mix()` treatment:
+- light theme: slightly softer;
+- dark theme: slightly stronger.
+
+This affects both embedded sliders and SliderWidget instances because they share
+the same low-level slider component.

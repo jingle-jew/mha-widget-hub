@@ -605,3 +605,22 @@
   border-color:
     color-mix(in srgb, var(--mha-text, #1f1f1f) 12%, transparent);
 }
+
+/* ONEUI SLIDER FILL TRANSLUCENCY
+ * OneUI slider progress should feel soft/liquid, not like a flat opaque block.
+ * Keep the accent hue but mix it with transparency.
+ */
+:host([data-theme-style="oneui"]) {
+  --mha-slider-oneui-fill-bg:
+    color-mix(in srgb, var(--mha-accent) 78%, transparent);
+}
+
+:host([data-theme-style="oneui"][data-theme="light"]) {
+  --mha-slider-oneui-fill-bg:
+    color-mix(in srgb, var(--mha-accent) 72%, transparent);
+}
+
+:host([data-theme-style="oneui"][data-theme="dark"]) {
+  --mha-slider-oneui-fill-bg:
+    color-mix(in srgb, var(--mha-accent) 82%, transparent);
+}
