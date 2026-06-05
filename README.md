@@ -146,3 +146,18 @@ Scope:
 - no glyphs/signs;
 - no dev menu;
 - no dock/widget/status-bar integration.
+
+
+## Local icon symbol library
+
+Added a local icon symbol library with 240 symbols.
+
+Files:
+- `src/icons/icon-symbol-catalog.js`
+- `src/ui/icon-symbol.js`
+- `styles/components/icon-symbol.css`
+
+Architecture:
+- icon shape/container is separate from icon symbol/sign.
+- any symbol can be placed inside any icon container later.
+- the symbol component is not connected to dock/widgets/status bar yet.
