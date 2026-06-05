@@ -1,3 +1,4 @@
+import { getAccentOptions, normalizeAccent } from "./accent-palettes.js";
 /*
  * MHA Settings panel.
  *
@@ -74,6 +75,38 @@ function createSwitch({ label, checked = false, onChange }) {
   return field;
 }
 
+
+function createAccentPicker({ label, themeStyle = "oneui", value = "", onChange }) {
+  const options = getAccentOptions(themeStyle);
+  const resolved = normalizeAccent(themeStyle, value);
+
+  const field = document.createElement("div");
+  field.className = "mha-settings-accent-field";
+
+  const text = document.createElement("span");
+  text.className = "mha-settings-label";
+  text.textContent = label;
+
+  const swatches = document.createElement("div");
+  swatches.className = "mha-settings-accent-swatches";
+  swatches.dataset.themeStyle = themeStyle;
+
+  for (const item of options) {
+    const button = document.createElement("button");
+    button.className = "mha-settings-accent-swatch";
+    button.type = "button";
+    button.dataset.accent = item.value;
+    button.setAttribute("aria-label", item.label);
+    button.setAttribute("aria-pressed", String(item.value === resolved));
+    button.title = item.label;
+    button.addEventListener("click", () => onChange?.(item.value));
+    swatches.append(button);
+  }
+
+  field.append(text, swatches);
+  return field;
+}
+
 function createSection(title, children = []) {
   const section = document.createElement("section");
   section.className = "mha-settings-section";
@@ -90,6 +123,7 @@ export function createSettingsPanel({
   open = false,
   theme = "dark",
   themeStyle = "oneui",
+  accent = "",
   iconShape = "squircle",
   screensaverPreview = false,
   screensaverNowBar = true,
@@ -97,6 +131,7 @@ export function createSettingsPanel({
   onClose,
   onThemeChange,
   onThemeStyleChange,
+  onAccentChange,
   onIconShapeChange,
   onScreensaverPreviewChange,
   onScreensaverNowBarChange,
@@ -162,6 +197,12 @@ export function createSettingsPanel({
         value: themeStyle,
         options: STYLE_OPTIONS,
         onChange: onThemeStyleChange,
+      }),
+      createAccentPicker({
+        label: "Accent",
+        themeStyle,
+        value: accent,
+        onChange: onAccentChange,
       }),
       createSelect({
         label: "Forme des icônes",

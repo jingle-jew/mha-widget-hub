@@ -48,3 +48,11 @@
   --mha-pill-color: var(--mha-text);
   color: var(--mha-text);
 }
+
+
+/* ACCENT TOKENS PILL SURFACES */
+.mha-pill[data-tone="accent"] {
+  --mha-pill-bg: var(--mha-accent);
+  --mha-pill-color: var(--mha-accent-contrast);
+  --mha-pill-border: color-mix(in srgb, var(--mha-accent) 72%, white 14%);
+}

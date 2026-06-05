@@ -68,3 +68,11 @@
 :host([data-theme="light"]:not([data-theme-style="material"])) .mha-button[data-variant="primary"] {
   color: #fff;
 }
+
+
+/* ACCENT TOKENS CONTROL SURFACES */
+.mha-button[data-variant="primary"] {
+  --mha-button-bg: var(--mha-accent);
+  --mha-button-color: var(--mha-accent-contrast);
+  --mha-button-border: color-mix(in srgb, var(--mha-accent) 72%, white 14%);
+}

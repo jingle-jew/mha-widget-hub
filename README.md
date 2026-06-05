@@ -930,3 +930,41 @@ Only OneUI light is affected:
 - `--mha-dock-shadow`
 
 Also added a OneUI-light-only guard to keep the grid/shell/background shadowless.
+
+
+## Accent palettes
+
+Added theme-style specific accent palettes.
+
+New files:
+- `src/settings/accent-palettes.js`
+- `styles/themes/accent-palettes.css`
+
+Each visual style has 10 accent colors:
+- iOS;
+- OneUI;
+- Material.
+
+The accent selector appears in Settings > Appearance between visual style and icon shape.
+
+Accent applies to:
+- system icons: dock, mobile dock, edit button;
+- toggles;
+- sliders;
+- accent pills;
+- primary buttons.
+
+Accent choices are stable across light/dark mode and change their available palette based on the selected visual style.
+
+
+## Fix accent handler method
+
+Fixed palette swatch clicks.
+
+The settings panel was calling `_applyAccentFromSettings()`, but the host method was not reliably present inside the `MhaControlHub` class.
+
+The method is now explicitly defined in `mha-control-hub.js` and updates:
+- host `data-accent`;
+- document `data-accent`;
+- `localStorage` global accent;
+- `localStorage` per-style accent.
