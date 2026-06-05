@@ -1,1 +1,86 @@
-.mha-dock{position:absolute;z-index:8;left:50%;bottom:var(--mha-dock-bottom);width:fit-content;max-width:var(--mha-dock-max-width);height:auto;min-height:0;transform:translateX(-50%) translateY(0);opacity:1;transition:transform var(--mha-motion-duration) var(--mha-motion-easing),opacity 220ms ease;display:flex;align-items:center;justify-content:center;gap:var(--mha-dock-gap);padding:var(--mha-dock-padding);border-radius:var(--mha-dock-radius);background:var(--mha-dock-surface);box-shadow:var(--mha-dock-shadow);pointer-events:auto}:host(.is-dock-hidden) .mha-dock{transform:translateX(-50%) translateY(calc(100% + var(--mha-floating-edge) + 16px));opacity:0}.mha-dock span{flex:0 0 auto;width:var(--mha-dock-button-size);height:var(--mha-dock-button-size);aspect-ratio:1;border-radius:var(--mha-dock-slot-radius);background:var(--mha-dock-slot-surface)}@media (prefers-reduced-motion:reduce){.mha-dock{transition:opacity 120ms ease}}
+.mha-dock {
+  /*
+   * Empty macOS-ish floating dock.
+   *
+   * No fixed x-by-y dimensions:
+   * - width adapts to viewport;
+   * - height comes from tokens and viewport-aware clamp();
+   * - still stays readable on phones/tablets/desktops.
+   */
+  --mha-dock-empty-width: min(40vw, var(--mha-dock-max-width, calc(100% - (var(--mha-page-padding) * 2))));
+  --mha-dock-empty-height: clamp(4.25rem, 7.5vw, 6.25rem);
+  --mha-dock-empty-padding-block: clamp(0.55rem, 1.15vw, 0.95rem);
+  --mha-dock-empty-padding-inline: clamp(0.85rem, 1.8vw, 1.45rem);
+
+  position: absolute;
+  z-index: 8;
+  left: 50%;
+  bottom: var(--mha-dock-bottom, var(--mha-floating-edge));
+  width: var(--mha-dock-empty-width);
+  min-height: var(--mha-dock-empty-height);
+  transform: translateX(-50%) translateY(0);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--mha-dock-gap);
+  padding:
+    var(--mha-dock-empty-padding-block)
+    var(--mha-dock-empty-padding-inline);
+
+  border: 1px solid var(--mha-widget-border);
+  border-radius: clamp(1.45rem, 3vw, var(--mha-dock-radius));
+  background: var(--mha-dock-surface);
+  backdrop-filter: blur(var(--mha-surface-blur)) saturate(var(--mha-surface-saturation));
+  box-shadow: var(--mha-dock-shadow);
+  pointer-events: auto;
+
+  transition:
+    transform var(--mha-motion-duration, 260ms) var(--mha-motion-easing, ease),
+    opacity var(--mha-motion-duration, 260ms) ease,
+    width var(--mha-motion-duration, 260ms) var(--mha-motion-easing, ease),
+    min-height var(--mha-motion-duration, 260ms) var(--mha-motion-easing, ease);
+}
+
+:host(.is-dock-hidden) .mha-dock,
+:host([data-dock-hidden="true"]) .mha-dock {
+  transform: translateX(-50%) translateY(calc(100% + var(--mha-floating-edge) + 18px));
+  opacity: 0;
+}
+
+/*
+ * Small portrait screens get a little wider so the empty dock still feels
+ * intentional, while height remains viewport-adaptive.
+ */
+@media (max-width: 520px) and (orientation: portrait) {
+  .mha-dock {
+    --mha-dock-empty-width: min(72vw, calc(100% - (var(--mha-page-padding) * 2)));
+    --mha-dock-empty-height: clamp(4rem, 13vw, 5.4rem);
+  }
+}
+
+/*
+ * Landscape phones/tablets can afford a wider, lower-profile macOS-ish dock.
+ */
+@media (max-height: 520px) and (orientation: landscape) {
+  .mha-dock {
+    --mha-dock-empty-width: min(46vw, calc(100% - (var(--mha-page-padding) * 2)));
+    --mha-dock-empty-height: clamp(3.75rem, 11vh, 5rem);
+  }
+}
+
+/*
+ * Larger desktop/wallpanel views keep the dock elegant instead of massive.
+ */
+@media (min-width: 1180px) {
+  .mha-dock {
+    --mha-dock-empty-width: min(34vw, 36rem);
+    --mha-dock-empty-height: clamp(4.75rem, 5vw, 6.5rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mha-dock {
+    transition: none;
+  }
+}

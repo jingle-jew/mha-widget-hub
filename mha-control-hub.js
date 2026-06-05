@@ -6,6 +6,7 @@ import {createEmptyWidget} from "./src/widgets/empty-widget.js";
 import {DEFAULT_WIDGETS,WIDGET_UNIT,getActiveGridUnits,getEffectiveLayout,getLayoutMode,getWidgetDensity,normalizeWidgetSize,sizeToString} from "./src/layout/layout-engine.js";
 import {createScreensaver,normalizeClockVariant,updateScreensaverClock} from "./src/screensaver/screensaver.js";
 // Keeps existing local widget order/sizes after the public naming cleanup.
+
 function syncThemeAttributes(host) {
   host.dataset.theme = document.documentElement.dataset.theme || "dark";
   host.dataset.themeStyle = document.documentElement.dataset.themeStyle || "oneui";

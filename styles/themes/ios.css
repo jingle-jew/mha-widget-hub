@@ -1,8 +1,12 @@
 :host([data-theme-style="ios"]) {
   /*
-   * iOS visual style: Tahoe-ish liquid glass.
-   * More transparent and crisp than the previous frosted Sequoia-like glass.
-   * Keep this file color/surface-focused; do not alter grid/layout behavior.
+   * iOS visual style: tinted Liquid Glass.
+   *
+   * Direction:
+   * - still transparent and optical;
+   * - slightly tinted for readability;
+   * - small controlled blur, not heavy frosted glass;
+   * - edge highlights/reflections sell the liquid material.
    */
   --mha-widget-radius: 32px;
   --mha-widget-inner-radius: 26px;
@@ -15,32 +19,50 @@
   --mha-statusbar-radius: 999px;
   --mha-status-bar-radius: var(--mha-statusbar-radius);
 
-  /* Less blur, more transparent/clear glass. */
-  --mha-surface-blur: 22px;
-  --mha-surface-saturation: 185%;
+  /*
+   * Tinted Liquid Glass uses less blur than old frosted glass, but a little
+   * more than pure clear glass so controls remain readable.
+   */
+  --mha-surface-blur: 16px;
+  --mha-surface-saturation: 190%;
+
+  /*
+   * Optional reflection tokens. They are harmless if component CSS does not
+   * consume them yet, and useful for future Liquid Glass refinement.
+   */
+  --mha-widget-reflection-opacity: .54;
+  --mha-widget-reflection:
+    radial-gradient(circle at 18% 0%, rgba(255,255,255,.26), transparent 34%),
+    radial-gradient(circle at 100% 100%, rgba(255,255,255,.09), transparent 32%);
 }
 
 :host([data-theme-style="ios"][data-theme="dark"]) {
-  /* iOS dark: clear liquid glass over a cool luminous wallpaper. */
+  /* Dark tinted Liquid Glass: clear, but with a subtle blue-violet tint. */
   --mha-text: rgba(255,255,255,.94);
   --mha-muted: rgba(255,255,255,.64);
 
-  --mha-widget-surface: linear-gradient(145deg, rgba(255,255,255,.145), rgba(255,255,255,.045));
-  --mha-widget-surface-edit: linear-gradient(145deg, rgba(255,255,255,.215), rgba(255,255,255,.075));
-  --mha-widget-border: rgba(255,255,255,.28);
-  --mha-widget-border-edit: rgba(255,255,255,.46);
-  --mha-widget-inner-highlight: rgba(255,255,255,.30);
+  --mha-widget-surface:
+    linear-gradient(145deg, rgba(210,225,255,.18), rgba(255,255,255,.060) 48%, rgba(150,175,255,.045));
+  --mha-widget-surface-edit:
+    linear-gradient(145deg, rgba(220,233,255,.25), rgba(255,255,255,.090) 48%, rgba(150,175,255,.065));
+  --mha-widget-border: rgba(235,243,255,.31);
+  --mha-widget-border-edit: rgba(240,246,255,.48);
+  --mha-widget-inner-highlight: rgba(255,255,255,.34);
   --mha-widget-shadow:
-    inset 0 1px 0 rgba(255,255,255,.34),
-    inset 0 -1px 0 rgba(255,255,255,.045),
+    inset 0 1px 0 rgba(255,255,255,.42),
+    inset 0 -1px 0 rgba(255,255,255,.055),
+    inset 1px 0 0 rgba(255,255,255,.07),
     0 18px 54px rgba(0,0,0,.18),
-    0 6px 22px rgba(130,160,255,.08);
+    0 6px 24px rgba(120,150,255,.10);
 
-  --mha-dock-surface: linear-gradient(145deg, rgba(255,255,255,.18), rgba(255,255,255,.065));
-  --mha-dock-slot-surface: linear-gradient(145deg, rgba(255,255,255,.22), rgba(255,255,255,.09));
-  --mha-statusbar-surface: linear-gradient(145deg, rgba(255,255,255,.16), rgba(255,255,255,.055));
-  --mha-control-surface: rgba(255,255,255,.10);
-  --mha-control-surface-edit: rgba(255,255,255,.17);
+  --mha-dock-surface:
+    linear-gradient(145deg, rgba(215,230,255,.22), rgba(255,255,255,.075) 52%, rgba(150,175,255,.055));
+  --mha-dock-slot-surface:
+    linear-gradient(145deg, rgba(235,243,255,.25), rgba(255,255,255,.105));
+  --mha-statusbar-surface:
+    linear-gradient(145deg, rgba(215,230,255,.20), rgba(255,255,255,.070) 52%, rgba(150,175,255,.050));
+  --mha-control-surface: rgba(225,238,255,.13);
+  --mha-control-surface-edit: rgba(235,245,255,.20);
 
   --mha-bg-base-1: #040712;
   --mha-bg-base-2: #10182d;
@@ -55,26 +77,32 @@
 }
 
 :host([data-theme-style="ios"][data-theme="light"]) {
-  /* iOS light: translucent liquid glass, bright and airy. */
+  /* Light tinted Liquid Glass: bright, transparent, slightly milky for contrast. */
   --mha-text: rgba(10,18,34,.92);
   --mha-muted: rgba(10,18,34,.58);
 
-  --mha-widget-surface: linear-gradient(145deg, rgba(255,255,255,.46), rgba(255,255,255,.18));
-  --mha-widget-surface-edit: linear-gradient(145deg, rgba(255,255,255,.60), rgba(255,255,255,.28));
-  --mha-widget-border: rgba(255,255,255,.68);
-  --mha-widget-border-edit: rgba(82,105,150,.24);
-  --mha-widget-inner-highlight: rgba(255,255,255,.78);
+  --mha-widget-surface:
+    linear-gradient(145deg, rgba(255,255,255,.56), rgba(255,255,255,.245) 50%, rgba(210,225,255,.155));
+  --mha-widget-surface-edit:
+    linear-gradient(145deg, rgba(255,255,255,.68), rgba(255,255,255,.34) 50%, rgba(210,225,255,.22));
+  --mha-widget-border: rgba(255,255,255,.74);
+  --mha-widget-border-edit: rgba(88,110,155,.26);
+  --mha-widget-inner-highlight: rgba(255,255,255,.84);
   --mha-widget-shadow:
-    inset 0 1px 0 rgba(255,255,255,.86),
-    inset 0 -1px 0 rgba(255,255,255,.24),
-    0 18px 54px rgba(78,100,145,.12),
-    0 6px 22px rgba(105,130,255,.06);
+    inset 0 1px 0 rgba(255,255,255,.90),
+    inset 0 -1px 0 rgba(255,255,255,.28),
+    inset 1px 0 0 rgba(255,255,255,.18),
+    0 18px 54px rgba(78,100,145,.13),
+    0 6px 24px rgba(105,130,255,.07);
 
-  --mha-dock-surface: linear-gradient(145deg, rgba(255,255,255,.54), rgba(255,255,255,.24));
-  --mha-dock-slot-surface: linear-gradient(145deg, rgba(255,255,255,.66), rgba(255,255,255,.34));
-  --mha-statusbar-surface: linear-gradient(145deg, rgba(255,255,255,.52), rgba(255,255,255,.22));
-  --mha-control-surface: rgba(255,255,255,.36);
-  --mha-control-surface-edit: rgba(255,255,255,.52);
+  --mha-dock-surface:
+    linear-gradient(145deg, rgba(255,255,255,.62), rgba(255,255,255,.285) 52%, rgba(210,225,255,.19));
+  --mha-dock-slot-surface:
+    linear-gradient(145deg, rgba(255,255,255,.74), rgba(255,255,255,.40));
+  --mha-statusbar-surface:
+    linear-gradient(145deg, rgba(255,255,255,.60), rgba(255,255,255,.275) 52%, rgba(210,225,255,.18));
+  --mha-control-surface: rgba(255,255,255,.42);
+  --mha-control-surface-edit: rgba(255,255,255,.58);
 
   --mha-bg-base-1: #f8fbff;
   --mha-bg-base-2: #eaf2ff;
