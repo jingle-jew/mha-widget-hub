@@ -67,19 +67,38 @@
     }
 
 
-    function triggerThemeBackdropCrossfade() {
+    function readThemeBackdropSnapshot() {
+      const style = getComputedStyle(hub);
+
+      const values = [
+        style.getPropertyValue("--mha-page-bg").trim(),
+        style.getPropertyValue("--mha-background").trim(),
+        style.getPropertyValue("--mha-shell-bg").trim(),
+      ].filter(Boolean);
+
+      return values[0] || document.body.style.background || "transparent";
+    }
+
+    function prepareThemeBackdropCrossfade() {
+      const snapshot = readThemeBackdropSnapshot();
+      hub.style.setProperty("--mha-theme-crossfade-from", snapshot);
       hub.classList.remove("is-theme-backdrop-crossfading");
       void hub.offsetWidth;
+    }
+
+    function runThemeBackdropCrossfade() {
       hub.classList.add("is-theme-backdrop-crossfading");
 
       window.clearTimeout(window.__mhaThemeBackdropCrossfadeTimer);
       window.__mhaThemeBackdropCrossfadeTimer = window.setTimeout(() => {
         hub.classList.remove("is-theme-backdrop-crossfading");
-      }, 520);
+        hub.style.removeProperty("--mha-theme-crossfade-from");
+      }, 2000);
     }
 
     function setTheme(theme = "dark") {
       const resolved = theme === "light" ? "light" : "dark";
+      prepareThemeBackdropCrossfade();
 
       document.documentElement.dataset.theme = resolved;
       document.documentElement.setAttribute("data-theme", resolved);
@@ -88,7 +107,7 @@
       hub.setAttribute("data-theme", resolved);
 
       localStorage.setItem("mha-dev-theme", resolved);
-      triggerThemeBackdropCrossfade();
+      runThemeBackdropCrossfade();
     }
 
     function toggleTheme() {
@@ -97,6 +116,7 @@
 
     function setThemeStyle(style = "oneui") {
       const resolved = ["ios", "oneui", "material"].includes(style) ? style : "oneui";
+      prepareThemeBackdropCrossfade();
 
       document.documentElement.dataset.themeStyle = resolved;
       document.documentElement.setAttribute("data-theme-style", resolved);
@@ -109,12 +129,13 @@
       const select = document.querySelector("[data-dev-action='theme-style']");
       if (select) select.value = resolved;
 
-      triggerThemeBackdropCrossfade();
+      runThemeBackdropCrossfade();
     }
 
 
     function setIconShape(shape = "squircle") {
       const resolved = ["rounded-square", "squircle", "circle"].includes(shape) ? shape : "squircle";
+      prepareThemeBackdropCrossfade();
 
       document.documentElement.dataset.iconShape = resolved;
       document.documentElement.setAttribute("data-icon-shape", resolved);
@@ -127,7 +148,7 @@
       const select = document.querySelector('[data-dev-action="icon-shape"]');
       if (select) select.value = resolved;
 
-      hub.requestRender?.();
+      runThemeBackdropCrossfade();
     }
 
     function setLayoutMode(mode = "auto") {

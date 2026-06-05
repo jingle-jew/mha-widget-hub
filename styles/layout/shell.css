@@ -1,12 +1,29 @@
 .mha-shell{position:relative;z-index:1;height:100%;display:grid;grid-template-rows:minmax(0,1fr);gap:var(--mha-grid-gap);padding:0 var(--mha-page-padding)}.mha-grid{min-height:0;overflow:auto;display:grid;gap:var(--mha-grid-gap);align-content:start;padding:max(2px,var(--mha-statusbar-reserved-top)) 2px var(--mha-grid-gap);scrollbar-width:none;--mha-active-grid-units:var(--mha-runtime-grid-units,2);grid-template-columns:repeat(var(--mha-active-grid-units),minmax(0,1fr));grid-auto-rows:var(--mha-square-unit);grid-auto-flow:dense}.mha-grid::-webkit-scrollbar{display:none}.mha-edit-button{position:absolute;z-index:10;right:22px;bottom:22px;width:56px;height:56px;display:grid;place-items:center;border:1px solid var(--mha-widget-border);border-radius:var(--mha-control-radius);background:var(--mha-control-surface-edit);color:var(--mha-text);backdrop-filter:blur(var(--mha-surface-blur)) saturate(var(--mha-surface-saturation));cursor:pointer;box-shadow:var(--mha-floating-shadow);transition:transform var(--mha-motion-duration) var(--mha-motion-easing)}.mha-edit-button svg{width:22px;height:22px;fill:currentColor}
 
+/* Smooth token transitions during visual theme changes. */
+.mha-shell,
+.mha-widget,
+.mha-dock,
+.mha-status-bar,
+.mha-icon {
+  transition:
+    background var(--mha-theme-crossfade-duration, 2000ms) var(--mha-theme-crossfade-easing, ease),
+    background-color var(--mha-theme-crossfade-duration, 2000ms) var(--mha-theme-crossfade-easing, ease),
+    border-color var(--mha-theme-crossfade-duration, 2000ms) var(--mha-theme-crossfade-easing, ease),
+    box-shadow var(--mha-theme-crossfade-duration, 2000ms) var(--mha-theme-crossfade-easing, ease),
+    color var(--mha-theme-crossfade-duration, 2000ms) var(--mha-theme-crossfade-easing, ease);
+}
+
 /* Theme backdrop crossfade
- * Theme switching is CSS-only. This overlay gives the background a short
- * fade-in/fade-out handoff so changing visual themes does not feel like a reload.
+ * Real crossfade:
+ * - JS snapshots the old background into --mha-theme-crossfade-from;
+ * - theme tokens switch immediately underneath;
+ * - this overlay shows the old background and fades it out.
  */
 :host {
-  --mha-theme-crossfade-duration: 520ms;
-  --mha-theme-crossfade-easing: cubic-bezier(.2, .8, .2, 1);
+  --mha-theme-crossfade-duration: 2000ms;
+  --mha-theme-crossfade-easing: cubic-bezier(.16, 1, .3, 1);
+  position: relative;
 }
 
 :host::after {
@@ -16,21 +33,29 @@
   z-index: 0;
   pointer-events: none;
   opacity: 0;
-  background:
-    radial-gradient(circle at 18% 14%, color-mix(in srgb, var(--mha-accent) 26%, transparent), transparent 34%),
-    radial-gradient(circle at 80% 18%, color-mix(in srgb, var(--mha-accent-2, var(--mha-accent)) 22%, transparent), transparent 34%),
-    linear-gradient(135deg, color-mix(in srgb, var(--mha-page-bg) 88%, transparent), transparent);
-  transition: opacity var(--mha-theme-crossfade-duration) var(--mha-theme-crossfade-easing);
-  mix-blend-mode: normal;
+  background: var(--mha-theme-crossfade-from, transparent);
+  transition: none;
 }
 
 :host(.is-theme-backdrop-crossfading)::after {
-  animation: mha-theme-backdrop-crossfade var(--mha-theme-crossfade-duration) var(--mha-theme-crossfade-easing);
+  animation: mha-theme-backdrop-crossfade var(--mha-theme-crossfade-duration) var(--mha-theme-crossfade-easing) forwards;
 }
 
 @keyframes mha-theme-backdrop-crossfade {
   0% {
-    opacity: .72;
+    opacity: 1;
+  }
+
+  30% {
+    opacity: .82;
+  }
+
+  60% {
+    opacity: .42;
+  }
+
+  82% {
+    opacity: .18;
   }
 
   100% {
@@ -42,19 +67,4 @@
   :host(.is-theme-backdrop-crossfading)::after {
     animation: none;
   }
-}
-
-
-/* Smooth token transitions during visual theme changes. */
-.mha-shell,
-.mha-widget,
-.mha-dock,
-.mha-status-bar,
-.mha-icon {
-  transition:
-    background var(--mha-theme-crossfade-duration, 520ms) var(--mha-theme-crossfade-easing, ease),
-    background-color var(--mha-theme-crossfade-duration, 520ms) var(--mha-theme-crossfade-easing, ease),
-    border-color var(--mha-theme-crossfade-duration, 520ms) var(--mha-theme-crossfade-easing, ease),
-    box-shadow var(--mha-theme-crossfade-duration, 520ms) var(--mha-theme-crossfade-easing, ease),
-    color var(--mha-theme-crossfade-duration, 520ms) var(--mha-theme-crossfade-easing, ease);
 }

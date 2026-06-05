@@ -402,3 +402,35 @@ Instead:
 - a short backdrop crossfade class smooths the visual handoff.
 
 This avoids the reload-like flash during theme changes.
+
+
+## Longer theme crossfade
+
+Theme background crossfade duration increased from 520ms to 1250ms.
+
+The overlay now fades through multiple opacity stops so the visual theme transition is intentionally noticeable and smooth.
+
+
+## Real background crossfade
+
+The theme backdrop crossfade now snapshots the old background before changing theme tokens.
+
+Flow:
+1. read current `--mha-page-bg`;
+2. store it in `--mha-theme-crossfade-from`;
+3. change `data-theme` / `data-theme-style`;
+4. fade the old background overlay out over the new background.
+
+This creates an actual old-to-new background transition instead of a simple overlay wash.
+
+
+## All theme crossfade 2s
+
+Theme crossfade duration is now 2000ms.
+
+The crossfade is applied to all visual theme preference changes from the dev menu:
+- light/dark theme;
+- iOS/OneUI/Material visual style;
+- global icon shape.
+
+The background crossfade snapshots the old background before changing tokens, then fades it over the new theme.
