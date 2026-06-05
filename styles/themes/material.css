@@ -1,0 +1,66 @@
+:host([data-theme-style="material"]) {
+  --mha-widget-radius: 20px;
+  --mha-widget-inner-radius: 16px;
+  --mha-widget-compact-radius: 999px;
+  --mha-widget-compact-inner-radius: 999px;
+  --mha-widget-pill-radius: 999px;
+  --mha-widget-pill-inner-radius: 999px;
+  --mha-control-radius: 18px;
+  --mha-dock-radius: 20px;
+  --mha-statusbar-radius: 22px;
+  --mha-status-bar-radius: var(--mha-statusbar-radius);
+  --mha-surface-blur: 4px;
+  --mha-surface-saturation: 110%;
+}
+
+:host([data-theme-style="material"][data-theme="dark"]) {
+  --mha-text: #e6e1e5;
+  --mha-muted: #cac4d0;
+  --mha-widget-surface: linear-gradient(145deg, rgba(43,41,48,.96), rgba(33,31,38,.94));
+  --mha-widget-surface-edit: linear-gradient(145deg, rgba(57,54,64,.98), rgba(43,41,48,.96));
+  --mha-widget-border: rgba(147,143,153,.22);
+  --mha-widget-border-edit: rgba(208,188,255,.42);
+  --mha-widget-inner-highlight: rgba(208,188,255,.08);
+  --mha-widget-shadow: 0 6px 18px rgba(0,0,0,.28);
+  --mha-dock-surface: linear-gradient(145deg, rgba(43,41,48,.98), rgba(33,31,38,.96));
+  --mha-dock-slot-surface: linear-gradient(145deg, rgba(208,188,255,.24), rgba(239,184,200,.14));
+  --mha-statusbar-surface: linear-gradient(145deg, rgba(43,41,48,.98), rgba(33,31,38,.96));
+  --mha-control-surface: rgba(208,188,255,.14);
+  --mha-control-surface-edit: rgba(208,188,255,.22);
+  --mha-bg-base-1: #141218;
+  --mha-bg-base-2: #211f26;
+  --mha-bg-radial-1: rgba(208,188,255,.18);
+  --mha-bg-radial-2: rgba(239,184,200,.12);
+  --mha-bg-radial-3: rgba(181,232,224,.10);
+  --mha-bg-blob-1: #d0bcff;
+  --mha-bg-blob-2: #efb8c8;
+  --mha-bg-blob-3: #b5e8e0;
+  --mha-bg-blob-4: #ccc2dc;
+  --mha-bg-blob-opacity: .22;
+}
+
+:host([data-theme-style="material"][data-theme="light"]) {
+  --mha-text: #1d1b20;
+  --mha-muted: #49454f;
+  --mha-widget-surface: linear-gradient(145deg, rgba(244,239,247,.98), rgba(239,234,242,.96));
+  --mha-widget-surface-edit: linear-gradient(145deg, rgba(234,221,255,.98), rgba(244,239,247,.98));
+  --mha-widget-border: rgba(121,116,126,.18);
+  --mha-widget-border-edit: rgba(103,80,164,.34);
+  --mha-widget-inner-highlight: rgba(255,255,255,.22);
+  --mha-widget-shadow: 0 4px 14px rgba(29,27,32,.10);
+  --mha-dock-surface: linear-gradient(145deg, rgba(244,239,247,.98), rgba(234,221,255,.94));
+  --mha-dock-slot-surface: linear-gradient(145deg, rgba(234,221,255,.98), rgba(255,216,228,.90));
+  --mha-statusbar-surface: linear-gradient(145deg, rgba(244,239,247,.98), rgba(234,221,255,.94));
+  --mha-control-surface: rgba(103,80,164,.12);
+  --mha-control-surface-edit: rgba(103,80,164,.20);
+  --mha-bg-base-1: #fffbfe;
+  --mha-bg-base-2: #f7f2fa;
+  --mha-bg-radial-1: rgba(103,80,164,.14);
+  --mha-bg-radial-2: rgba(125,82,96,.10);
+  --mha-bg-radial-3: rgba(0,104,116,.10);
+  --mha-bg-blob-1: #6750a4;
+  --mha-bg-blob-2: #7d5260;
+  --mha-bg-blob-3: #006874;
+  --mha-bg-blob-4: #625b71;
+  --mha-bg-blob-opacity: .18;
+}

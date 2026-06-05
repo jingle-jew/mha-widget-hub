@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="fr" data-theme="dark" data-theme-style="oneui" data-layout-mode="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>MHA</title>
+  <style>
+    html,body{width:100%;min-height:100%;margin:0;background:#050509;color:white;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;overflow:hidden}
+    .dev-menu{position:fixed;z-index:9999;top:max(14px,env(safe-area-inset-top));right:max(14px,env(safe-area-inset-right));font-size:12px;font-weight:750}
+    .dev-toggle{appearance:none;border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:9px 13px;background:rgba(10,10,18,.62);color:inherit;font:inherit;cursor:pointer;backdrop-filter:blur(22px) saturate(150%);box-shadow:0 14px 42px rgba(0,0,0,.28)}
+    .dev-toggle:hover,.dev-toggle[aria-expanded="true"]{background:rgba(255,255,255,.16)}
+    .dev-panel{position:absolute;top:calc(100% + 8px);right:0;display:grid;grid-template-columns:repeat(2,max-content);gap:8px;width:max-content;max-width:calc(100vw - 24px);padding:10px;border:1px solid rgba(255,255,255,.16);border-radius:18px;background:rgba(10,10,18,.72);backdrop-filter:blur(24px) saturate(155%);box-shadow:0 22px 70px rgba(0,0,0,.36)}
+    .dev-panel[hidden]{display:none}
+    .dev-panel button,.dev-panel select{appearance:none;min-height:34px;border:0;border-radius:999px;padding:8px 12px;background:rgba(255,255,255,.12);color:inherit;font:inherit;font-size:12px;font-weight:750;cursor:pointer}
+    .dev-panel button:hover,.dev-panel select:hover{background:rgba(255,255,255,.2)}
+    .dev-panel select{grid-column:1/-1;width:100%}
+    @media (max-width:420px){.dev-panel{grid-template-columns:1fr;width:min(260px,calc(100vw - 24px))}.dev-panel button,.dev-panel select{width:100%}}
+    mha-control-hub{width:100vw;height:100vh;display:block}
+  </style>
+</head>
+<body>
+  <div class="dev-menu" data-dev-menu>
+    <button class="dev-toggle" type="button" aria-expanded="false" aria-controls="dev-panel" data-dev-toggle>Dev</button>
+    <div class="dev-panel" id="dev-panel" hidden>
+    <button data-dev-action="theme">Theme</button><button data-dev-action="edit">Edit</button>
+    <button data-dev-action="auto">Auto</button><button data-dev-action="mobile">Mobile</button>
+    <button data-dev-action="tablet">Tablet</button><button data-dev-action="desktop">Desktop</button>
+    <button data-dev-action="reset">Reset grid</button><button data-dev-action="screensaver">Screensaver</button>
+    <button data-dev-action="nowbar">NowBar</button>
+    <select data-dev-action="theme-style"><option value="oneui">OneUI</option><option value="ios">iOS</option><option value="material">Material</option></select>
+    <select data-dev-action="clock-variant"><option value="digital">Digital</option><option value="analog-ios">Analog iOS</option><option value="analog-minimal">Analog minimal</option><option value="analog-bold">Analog bold</option><option value="analog-glass">Analog glass</option></select>
+    </div>
+  </div>
+  <mha-control-hub></mha-control-hub>
+  <script type="module">
+    import "./mha-control-hub.js";
+
+    const hub = document.querySelector("mha-control-hub");
+    const devMenu = document.querySelector("[data-dev-menu]");
+    const devToggle = document.querySelector("[data-dev-toggle]");
+    const devPanel = document.querySelector("#dev-panel");
+
+    const legacyDevPrefix = ["mha", "v2", "dev"].join("-");
+
+    function readDevPreference(key, legacyKey, fallback) {
+      const current = localStorage.getItem(key);
+      if (current !== null) return current;
+
+      const legacy = localStorage.getItem(legacyKey);
+      if (legacy !== null) {
+        localStorage.setItem(key, legacy);
+        return legacy;
+      }
+
+      return fallback;
+    }
+
+    function setDevMenuOpen(isOpen) {
+      devPanel.hidden = !isOpen;
+      devToggle.setAttribute("aria-expanded", String(isOpen));
+    }
+
+    function setTheme(theme = "dark") {
+      const resolved = theme === "light" ? "light" : "dark";
+      document.documentElement.dataset.theme = resolved;
+      hub.dataset.theme = resolved;
+      localStorage.setItem("mha-dev-theme", resolved);
+      hub.requestRender?.();
+    }
+
+    function toggleTheme() {
+      setTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
+    }
+
+    function setThemeStyle(style = "oneui") {
+      const resolved = ["ios", "oneui", "material"].includes(style) ? style : "oneui";
+      document.documentElement.dataset.themeStyle = resolved;
+      hub.dataset.themeStyle = resolved;
+      localStorage.setItem("mha-dev-theme-style", resolved);
+
+      const select = document.querySelector("[data-dev-action='theme-style']");
+      if (select) select.value = resolved;
+
+      hub.requestRender?.();
+    }
+
+    function setLayoutMode(mode = "auto") {
+      document.documentElement.dataset.layoutMode = mode;
+
+      if (mode === "auto") {
+        delete document.documentElement.dataset.layout;
+        delete hub.dataset.layout;
+        hub.dataset.layoutMode = "auto";
+      } else {
+        document.documentElement.dataset.layout = mode;
+        hub.dataset.layout = mode;
+        hub.dataset.layoutMode = mode;
+      }
+
+      localStorage.setItem("mha-dev-layout-mode", mode);
+      hub.requestRender?.();
+    }
+
+    devToggle.onclick = () => setDevMenuOpen(devPanel.hidden);
+
+    document.addEventListener("click", (event) => {
+      if (!devPanel.hidden && !devMenu.contains(event.target)) setDevMenuOpen(false);
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") setDevMenuOpen(false);
+    });
+
+    document.querySelector("[data-dev-action='theme']")?.addEventListener("click", toggleTheme);
+    document.querySelector("[data-dev-action='edit']")?.addEventListener("click", () => hub.toggleEditMode?.());
+    document.querySelector("[data-dev-action='auto']")?.addEventListener("click", () => setLayoutMode("auto"));
+    document.querySelector("[data-dev-action='mobile']")?.addEventListener("click", () => setLayoutMode("mobile"));
+    document.querySelector("[data-dev-action='tablet']")?.addEventListener("click", () => setLayoutMode("tablet"));
+    document.querySelector("[data-dev-action='desktop']")?.addEventListener("click", () => setLayoutMode("desktop"));
+    document.querySelector("[data-dev-action='reset']")?.addEventListener("click", () => hub.resetGrid?.());
+    document.querySelector("[data-dev-action='screensaver']")?.addEventListener("click", () => hub.toggleScreensaverPreview?.());
+    document.querySelector("[data-dev-action='nowbar']")?.addEventListener("click", () => hub.toggleNowBarPreview?.());
+    document.querySelector("[data-dev-action='theme-style']")?.addEventListener("change", (event) => setThemeStyle(event.target.value));
+    document.querySelector("[data-dev-action='clock-variant']")?.addEventListener("change", (event) => hub.setScreensaverClockVariant?.(event.target.value));
+
+    setTheme(readDevPreference("mha-dev-theme", `${legacyDevPrefix}-theme`, "dark"));
+    setThemeStyle(readDevPreference("mha-dev-theme-style", `${legacyDevPrefix}-theme-style`, "oneui"));
+    setLayoutMode(readDevPreference("mha-dev-layout-mode", `${legacyDevPrefix}-layout-mode`, "auto"));
+
+    hub.hass = { states: {}, language: "fr" };
+
+    window.__MHA_DEV__ = {
+      hub,
+      setTheme,
+      toggleTheme,
+      setThemeStyle,
+      setLayoutMode,
+    };
+  </script>
+</body>
+</html>

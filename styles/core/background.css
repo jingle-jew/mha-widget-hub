@@ -1,0 +1,24 @@
+.mha-background{
+  position:absolute;
+  inset:-20%;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 20% 15%,var(--mha-bg-radial-1),transparent 30%),
+    radial-gradient(circle at 78% 28%,var(--mha-bg-radial-2),transparent 32%),
+    radial-gradient(circle at 52% 90%,var(--mha-bg-radial-3),transparent 36%),
+    linear-gradient(135deg,var(--mha-bg-base-1) 0%,var(--mha-bg-base-2) 100%);
+}
+.mha-background span{
+  position:absolute;
+  width:42vmax;
+  height:42vmax;
+  border-radius:999px;
+  filter:blur(var(--mha-bg-blob-blur));
+  opacity:var(--mha-bg-blob-opacity);
+  animation:mha-float 22s ease-in-out infinite alternate;
+}
+.mha-background span:nth-child(1){left:4%;top:8%;background:var(--mha-bg-blob-1)}
+.mha-background span:nth-child(2){right:4%;top:18%;background:var(--mha-bg-blob-2);animation-delay:-7s}
+.mha-background span:nth-child(3){left:24%;bottom:-8%;background:var(--mha-bg-blob-3);animation-delay:-12s}
+.mha-background span:nth-child(4){right:18%;bottom:2%;background:var(--mha-bg-blob-4);animation-delay:-16s}
+@keyframes mha-float{from{transform:translate3d(-3%,-2%,0) scale(.96)}to{transform:translate3d(4%,3%,0) scale(1.08)}}

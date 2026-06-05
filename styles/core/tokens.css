@@ -1,0 +1,107 @@
+:host{
+  --mha-page-padding-mobile:14px;
+  --mha-page-padding-tablet:20px;
+  --mha-page-padding-desktop:22px;
+  --mha-page-padding-wallpanel:var(--mha-page-padding-tablet);
+  --mha-page-padding:var(--mha-page-padding-desktop);
+  --mha-grid-gap-mobile:10px;
+  --mha-grid-gap-tablet:12px;
+  --mha-grid-gap-desktop:14px;
+  --mha-gap-mobile:var(--mha-grid-gap-mobile);
+  --mha-gap-wallpanel:var(--mha-grid-gap-tablet);
+  --mha-gap-desktop:var(--mha-grid-gap-desktop);
+  --mha-grid-gap:var(--mha-grid-gap-desktop);
+  --mha-widget-gap:var(--mha-grid-gap);
+  --mha-logical-column-min-width:184px;
+  --mha-widget-radius:28px;
+  --mha-widget-inner-radius:22px;
+  --mha-widget-compact-radius:999px;
+  --mha-widget-compact-inner-radius:999px;
+  --mha-widget-pill-radius:999px;
+  --mha-widget-pill-inner-radius:999px;
+  --mha-control-radius:999px;
+  --mha-dock-radius:24px;
+  --mha-statusbar-radius:999px;
+  --mha-status-bar-radius:var(--mha-statusbar-radius);
+  --mha-surface-blur:26px;
+  --mha-surface-saturation:150%;
+  --mha-widget-surface:rgba(255,255,255,.105);
+  --mha-widget-surface-edit:rgba(255,255,255,.145);
+  --mha-widget-border:rgba(255,255,255,.16);
+  --mha-widget-border-edit:rgba(255,255,255,.34);
+  --mha-widget-inner-highlight:rgba(255,255,255,.18);
+  --mha-widget-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 18px 54px rgba(0,0,0,.16);
+  --mha-floating-shadow:0 16px 48px rgba(0,0,0,.18);
+  --mha-dock-shadow:0 18px 54px rgba(0,0,0,.24);
+  --mha-dock-surface:rgba(255,255,255,.12);
+  --mha-dock-slot-surface:rgba(255,255,255,.18);
+  --mha-statusbar-surface:rgba(255,255,255,.12);
+  --mha-control-surface:rgba(0,0,0,.24);
+  --mha-control-surface-edit:rgba(255,255,255,.16);
+  --mha-resize-affordance:rgba(255,255,255,.23);
+  --mha-accent:rgba(135,195,255,.95);
+  --mha-bg-base-1:#06070d;
+  --mha-bg-base-2:#111320;
+  --mha-bg-blob-1:#6d7cff;
+  --mha-bg-blob-2:#ff69b8;
+  --mha-bg-blob-3:#35cfff;
+  --mha-bg-blob-4:#a970ff;
+  --mha-bg-radial-1:rgba(113,128,255,.32);
+  --mha-bg-radial-2:rgba(255,112,178,.28);
+  --mha-bg-radial-3:rgba(56,209,255,.22);
+  --mha-bg-blob-opacity:.38;
+  --mha-bg-blob-blur:64px;
+  --mha-surface-bg:var(--mha-widget-surface);
+  --mha-surface-bg-edit:var(--mha-widget-surface-edit);
+  --mha-surface-border:var(--mha-widget-border);
+  --mha-surface-border-edit:var(--mha-widget-border-edit);
+  --mha-typography-weight:750;
+  --mha-control-height:34px;
+  --mha-control-gap:8px;
+  --mha-dock-padding:9px 11px;
+  --mha-dock-gap:9px;
+  --mha-dock-button-size:58px;
+  --mha-dock-slot-size:var(--mha-dock-button-size);
+  --mha-dock-slot-radius:17px;
+  --mha-motion-duration:260ms;
+  --mha-motion-easing:cubic-bezier(.22,1,.36,1);
+  --mha-bar-height:54px;
+  --mha-floating-edge:max(18px,env(safe-area-inset-bottom));
+  --mha-floating-top:max(18px,env(safe-area-inset-top));
+  --mha-statusbar-reserved-top:calc(var(--mha-floating-top) + var(--mha-bar-height) + var(--mha-grid-gap));
+  --mha-dock-max-width:calc(100% - (var(--mha-page-padding) * 2));
+  --mha-dock-bottom:var(--mha-floating-edge);
+  --mha-radius-widget:var(--mha-widget-radius);
+  --mha-radius-widget-inner:var(--mha-widget-inner-radius);
+  --mha-radius-pill:var(--mha-control-radius);
+  --mha-square-unit:72px;
+  --mha-widget-bg:var(--mha-widget-surface);
+  --mha-widget-bg-edit:var(--mha-widget-surface-edit);
+  --mha-text:rgba(255,255,255,.92);
+  --mha-muted:rgba(255,255,255,.56);
+  display:block;
+  position:relative;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  color:var(--mha-text);
+  background:var(--mha-bg-base-1);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;
+}
+:host([data-layout="mobile"]){--mha-page-padding:var(--mha-page-padding-mobile);--mha-grid-gap:var(--mha-grid-gap-mobile);--mha-dock-button-size:52px}
+:host([data-layout="tablet"]){--mha-page-padding:var(--mha-page-padding-tablet);--mha-grid-gap:var(--mha-grid-gap-tablet);--mha-dock-button-size:56px}
+
+/* MHA clean theme base
+ * data-theme="dark|light" is the only color-mode source of truth.
+ * data-theme-style="ios|oneui|material" chooses the visual family.
+ */
+:host {
+  --mha-widget-bg: var(--mha-widget-surface);
+  --mha-widget-bg-edit: var(--mha-widget-surface-edit);
+  --mha-surface-bg: var(--mha-widget-surface);
+  --mha-surface-bg-edit: var(--mha-widget-surface-edit);
+  --mha-surface-border: var(--mha-widget-border);
+  --mha-surface-border-edit: var(--mha-widget-border-edit);
+}
+
+*{box-sizing:border-box}

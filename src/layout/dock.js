@@ -1,0 +1,1 @@
+export function createDock(){const dock=document.createElement("nav");dock.className="mha-dock";dock.setAttribute("aria-label","Dock vide");for(let i=0;i<4;i++)dock.append(document.createElement("span"));return dock}
