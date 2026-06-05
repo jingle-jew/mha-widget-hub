@@ -1,0 +1,90 @@
+/*
+ * MHA Widget Layout helpers.
+ *
+ * A widget's internal grid mirrors the widget's global unit count.
+ * Helper units are positioned through CSS variables set by widget-layout.js.
+ */
+
+.mha-widget {
+  --mha-widget-inner-padding: var(--mha-widget-inner-inset, clamp(0.38rem, 0.9vw, 0.65rem));
+  --mha-widget-inner-gap: var(--mha-widget-content-gap, clamp(0.2rem, 0.55vw, 0.45rem));
+  --mha-widget-unit-content-scale: .84;
+}
+
+.mha-widget-inner-grid {
+  position: absolute;
+  z-index: 1;
+  inset: var(--mha-widget-inner-padding);
+  display: grid;
+  grid-template-columns: repeat(var(--mha-widget-w, 1), minmax(0, 1fr));
+  grid-template-rows: repeat(var(--mha-widget-h, 1), minmax(0, 1fr));
+  gap: var(--mha-widget-inner-gap);
+  pointer-events: none;
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
+.mha-widget-unit {
+  grid-column: var(--mha-widget-unit-col, 1) / span var(--mha-widget-unit-col-span, 1);
+  grid-row: var(--mha-widget-unit-row, 1) / span var(--mha-widget-unit-row-span, 1);
+  min-inline-size: 0;
+  min-block-size: 0;
+  display: grid;
+  place-items: center;
+  place-content: center;
+  pointer-events: auto;
+}
+
+.mha-widget-unit[data-align="start"] { align-items: start; }
+.mha-widget-unit[data-align="center"] { align-items: center; }
+.mha-widget-unit[data-align="end"] { align-items: end; }
+.mha-widget-unit[data-align="stretch"] { align-items: stretch; }
+
+.mha-widget-unit[data-justify="start"] { justify-items: start; }
+.mha-widget-unit[data-justify="center"] { justify-items: center; }
+.mha-widget-unit[data-justify="end"] { justify-items: end; }
+.mha-widget-unit[data-justify="stretch"] { justify-items: stretch; }
+
+/*
+ * Square content helper:
+ * Icons inside a widget unit use the smaller side of their unit.
+ */
+.mha-widget-unit > .mha-icon {
+  place-self: center;
+  inline-size: min(100cqi, 100cqb);
+  block-size: min(100cqi, 100cqb);
+  width: min(100cqi, 100cqb);
+  height: min(100cqi, 100cqb);
+  aspect-ratio: 1 / 1;
+  --mha-icon-size: min(100cqi, 100cqb);
+}
+
+.mha-widget-unit:has(> .mha-icon) {
+  container-type: size;
+}
+
+.mha-widget-unit > .mha-icon.mha-widget-unit-fit {
+  transform: scale(var(--mha-widget-unit-content-scale));
+  transform-origin: center;
+}
+
+.mha-widget-text {
+  min-inline-size: 0;
+  color: var(--mha-text);
+  font: inherit;
+  line-height: 1.05;
+}
+
+.mha-widget-text[data-tone="muted"] {
+  color: var(--mha-muted);
+}
+
+@supports not (width: 1cqi) {
+  .mha-widget-unit > .mha-icon {
+    inline-size: 100%;
+    block-size: 100%;
+    width: 100%;
+    height: 100%;
+    --mha-icon-size: 100%;
+  }
+}

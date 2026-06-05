@@ -246,6 +246,9 @@ export const ICON_SYMBOL_CATALOG = Object.freeze([
   Object.freeze({ name: "dashboard", category: "navigation", viewBox: "0 0 24 24", path: "M6 3h12v18H6V3Zm2 2v14h8V5H8Zm3 11h2v2h-2v-2Z" }),
   Object.freeze({ name: "grid", category: "navigation", viewBox: "0 0 24 24", path: "M12 2 4 6v6c0 5 3.4 8.4 8 10 4.6-1.6 8-5 8-10V6l-8-4Zm0 4 4 2v4c0 3-1.6 5.2-4 6.5C9.6 17.2 8 15 8 12V8l4-2Z" }),
   Object.freeze({ name: "list", category: "navigation", viewBox: "0 0 24 24", path: "M7 10V7a5 5 0 0 1 10 0v3h2v11H5V10h2Zm2 0h6V7a3 3 0 0 0-6 0v3Z" }),
+
+  Object.freeze({ name: "gear", category: "system", viewBox: "0 0 24 24", path: "M19.4 13.5c.08-.48.1-.98.1-1.5s-.02-1.02-.1-1.5l2-1.55-2-3.46-2.36.95a7.2 7.2 0 0 0-2.6-1.5L14.1 2h-4l-.34 2.94a7.2 7.2 0 0 0-2.6 1.5L4.8 5.49l-2 3.46 2 1.55c-.08.48-.1.98-.1 1.5s.02 1.02.1 1.5l-2 1.55 2 3.46 2.36-.95a7.2 7.2 0 0 0 2.6 1.5l.34 2.94h4l.34-2.94a7.2 7.2 0 0 0 2.6-1.5l2.36.95 2-3.46-2-1.55ZM12 15.6a3.6 3.6 0 1 1 0-7.2 3.6 3.6 0 0 1 0 7.2Z" }),
+  Object.freeze({ name: "apps", category: "system", viewBox: "0 0 24 24", path: "M5 5h5v5H5V5Zm9 0h5v5h-5V5ZM5 14h5v5H5v-5Zm9 0h5v5h-5v-5Z" }),
 ]);
 
 

@@ -8,20 +8,13 @@ import { createIconSymbol } from "../ui/icon-symbol.js";
  * come from the generic icon and icon-symbol components.
  */
 
-export function createDock() {
+export function createDock({ onSettings } = {}) {
   const dock = document.createElement("nav");
   dock.className = "mha-dock";
   dock.setAttribute("aria-label", "Dock");
 
   const items = [
-    { symbol: "home", category: "home", label: "Accueil" },
-    { symbol: "lightbulb", category: "lighting", label: "Lumières" },
-    { symbol: "thermostat", category: "climate", label: "Climat" },
-    { symbol: "media-player", category: "media_player", label: "Média" },
-    { symbol: "lock", category: "security", label: "Sécurité" },
-    { symbol: "wifi", category: "network", label: "Réseau" },
-    { symbol: "energy", category: "energy", label: "Énergie" },
-    { symbol: "settings", category: "system", label: "Réglages" },
+    { symbol: "gear", category: "system", label: "Paramètres", action: "settings" },
   ];
 
   for (const item of items) {
@@ -29,8 +22,22 @@ export function createDock() {
     button.className = "mha-dock-item";
     button.type = "button";
     button.setAttribute("aria-label", item.label);
+    if (item.action) button.dataset.dockAction = item.action;
+    if (item.action === "settings") {
+      button.addEventListener("click", () => {
+        if (onSettings) {
+          onSettings();
+          return;
+        }
 
-    button.append(
+        dock.dispatchEvent(new CustomEvent("mha-open-settings", {
+          bubbles: true,
+          composed: true,
+        }));
+      });
+    }
+
+button.append(
       createIcon({
         name: item.symbol,
         category: item.category,
@@ -39,7 +46,7 @@ export function createDock() {
           name: item.symbol,
           label: item.label,
         }),
-      })
+      }),
     );
 
     dock.append(button);

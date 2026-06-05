@@ -54,3 +54,17 @@
   --mha-button-bg: var(--mha-accent);
   --mha-button-color: white;
 }
+
+
+/* LIGHT THEME BUTTON TEXT CONTRACT
+ * Non-Material light buttons use dark text by default.
+ * Explicit primary/inverted buttons may override this.
+ */
+:host([data-theme="light"]:not([data-theme-style="material"])) .mha-button:not([data-variant="primary"]) {
+  --mha-button-color: var(--mha-text);
+  color: var(--mha-text);
+}
+
+:host([data-theme="light"]:not([data-theme-style="material"])) .mha-button[data-variant="primary"] {
+  color: #fff;
+}

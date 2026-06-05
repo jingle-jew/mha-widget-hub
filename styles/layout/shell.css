@@ -77,3 +77,86 @@
 :host(.is-editing) .mha-widget {
   will-change: transform, opacity;
 }
+
+/* EDIT BUTTON WITH VERTICAL DOCK
+ * On tablet/desktop the dock occupies the right rail, so the edit button sits
+ * below it near the lower-right corner as a separate floating control.
+ */
+@media (min-width: 768px) {
+  .mha-edit-button {
+    position: fixed;
+    z-index: 90;
+    inset-inline-end: max(var(--mha-safe-area-right, env(safe-area-inset-right)), clamp(0.85rem, 1.8vw, 1.35rem));
+    inset-block-end: max(var(--mha-safe-area-bottom, env(safe-area-inset-bottom)), clamp(0.85rem, 1.8vw, 1.35rem));
+  }
+}
+
+/* MOBILE FULL HEIGHT WIDGET GRID
+ * Mobile hides the status bar and lets widgets fill the freed top space.
+ */
+@media (max-width: 767px) {
+  :host {
+    --mha-statusbar-reserved-top: 0px;
+    --mha-mobile-grid-gutter: var(--mha-page-padding, clamp(1rem, 2.6vw, 2rem));
+  }
+
+  .mha-grid {
+    padding-block-start: var(--mha-mobile-grid-gutter);
+    padding-inline-start: var(--mha-mobile-grid-gutter);
+    padding-inline-end: var(--mha-mobile-grid-gutter);
+    scroll-padding-block-start: var(--mha-mobile-grid-gutter);
+  }
+}
+
+/* RESERVED RIGHT DOCK RAIL
+ * Tablet/desktop reserve space for the vertical dock so widgets never render
+ * behind the dock rail.
+ *
+ * Mobile is unaffected because mobile uses the custom floating dock.
+ */
+@media (min-width: 768px) {
+  :host {
+    --mha-dock-rail-reserved-width: calc(
+      var(--mha-icon-size, clamp(2.85rem, 4.2vw, 3.75rem)) +
+      (clamp(0.45rem, 0.9vw, 0.7rem) * 2) +
+      clamp(0.85rem, 1.8vw, 1.35rem)
+    );
+  }
+
+  .mha-grid {
+    padding-inline-end: var(--mha-dock-rail-reserved-width);
+    scroll-padding-inline-end: var(--mha-dock-rail-reserved-width);
+  }
+}
+
+/* STATUS BAR COMPACT RESERVED SPACE
+ * Keep the grid's top reservation aligned with the thinner status bar.
+ */
+@media (min-width: 768px) {
+  :host {
+    --mha-statusbar-reserved-top: calc(
+      var(--mha-floating-top, clamp(1rem, 2.4vw, 1.6rem)) +
+      var(--mha-statusbar-height-compact, clamp(2.25rem, 3.2vw, 2.85rem)) +
+      clamp(.7rem, 1.4vw, 1rem)
+    );
+  }
+}
+
+/* NO GLOBAL GRID SHADOW
+ * The shell/grid/background must never create a page-wide vertical shadow.
+ * Depth belongs to individual surfaces, not the layout container.
+ */
+.mha-background,
+.mha-shell,
+.mha-grid {
+  box-shadow: none !important;
+  filter: none;
+}
+
+.mha-grid::before,
+.mha-grid::after,
+.mha-shell::before,
+.mha-shell::after {
+  box-shadow: none !important;
+  filter: none !important;
+}

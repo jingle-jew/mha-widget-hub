@@ -1,0 +1,400 @@
+/*
+ * MHA Settings panel.
+ */
+
+.mha-settings-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  pointer-events: none;
+}
+
+.mha-settings-scrim {
+  position: fixed;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: rgba(0,0,0,.32);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 240ms ease;
+}
+
+.mha-settings-sheet {
+  position: fixed;
+  inset-block: clamp(1rem, 2.6vw, 2rem);
+  inset-inline-end: clamp(1rem, 2.6vw, 2rem);
+  inline-size: min(27rem, calc(100vw - 2rem));
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: clamp(1.4rem, 3vw, 2rem);
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.18), rgba(255,255,255,.07)),
+    rgba(18,20,28,.9);
+  color: var(--mha-text);
+  box-shadow:
+    0 26px 80px rgba(0,0,0,.42),
+    inset 0 1px 0 rgba(255,255,255,.16);
+  backdrop-filter: blur(30px) saturate(155%);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(18px) scale(.98);
+  transform-origin: right center;
+  transition:
+    opacity 240ms ease,
+    transform 240ms cubic-bezier(.2,.8,.2,1);
+  overflow: hidden;
+}
+
+.mha-settings-panel[data-open="true"] {
+  pointer-events: auto;
+}
+
+.mha-settings-panel[data-open="true"] .mha-settings-scrim {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.mha-settings-panel[data-open="true"] .mha-settings-sheet {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0) scale(1);
+}
+
+.mha-settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: clamp(1rem, 2.2vw, 1.35rem);
+  border-bottom: 1px solid rgba(255,255,255,.12);
+}
+
+.mha-settings-title-block {
+  display: grid;
+  gap: .2rem;
+}
+
+.mha-settings-eyebrow {
+  color: var(--mha-muted);
+  font-size: .78rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.mha-settings-title {
+  margin: 0;
+  font-size: clamp(1.4rem, 3vw, 1.9rem);
+  line-height: 1;
+}
+
+.mha-settings-close {
+  inline-size: 2.4rem;
+  block-size: 2.4rem;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  background: #ff3b30;
+  color: white;
+  font-size: 1.55rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.mha-settings-body {
+  min-block-size: 0;
+  overflow: auto;
+  display: grid;
+  align-content: start;
+  gap: clamp(.85rem, 2vw, 1.15rem);
+  padding: clamp(1rem, 2.2vw, 1.35rem);
+}
+
+.mha-settings-section {
+  display: grid;
+  gap: .75rem;
+  padding: clamp(.85rem, 2vw, 1.05rem);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: clamp(1rem, 2.4vw, 1.45rem);
+  background: rgba(255,255,255,.08);
+}
+
+.mha-settings-section-title {
+  margin: 0 0 .15rem;
+  color: var(--mha-text);
+  font-size: .9rem;
+  font-weight: 820;
+}
+
+.mha-settings-field,
+.mha-settings-switch {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: .85rem;
+}
+
+.mha-settings-label {
+  color: var(--mha-text);
+  font-size: .9rem;
+  font-weight: 700;
+}
+
+.mha-settings-select {
+  min-inline-size: 10rem;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: .9rem;
+  background: rgba(0,0,0,.28);
+  color: var(--mha-text);
+  padding: .55rem .7rem;
+  font: inherit;
+  font-size: .86rem;
+}
+
+.mha-settings-switch input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mha-settings-switch-visual {
+  inline-size: 3rem;
+  block-size: 1.65rem;
+  border-radius: 999px;
+  background: rgba(255,255,255,.16);
+  border: 1px solid rgba(255,255,255,.18);
+  position: relative;
+}
+
+.mha-settings-switch-visual::after {
+  content: "";
+  position: absolute;
+  inset-block: .18rem;
+  inline-size: calc(1.65rem - .36rem);
+  border-radius: 999px;
+  background: white;
+  transform: translateX(.18rem);
+  transition: transform 180ms cubic-bezier(.2,.8,.2,1);
+}
+
+.mha-settings-switch input:checked + .mha-settings-switch-visual {
+  background: var(--mha-accent);
+}
+
+.mha-settings-switch input:checked + .mha-settings-switch-visual::after {
+  transform: translateX(calc(3rem - 1.65rem + .18rem));
+}
+
+.mha-settings-reset {
+  min-block-size: 2.65rem;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 1rem;
+  background: rgba(255,255,255,.12);
+  color: var(--mha-text);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+:host([data-theme-style="ios"]) .mha-settings-sheet {
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.24), rgba(255,255,255,.08)),
+    rgba(18,20,28,.78);
+}
+
+:host([data-theme-style="oneui"]) .mha-settings-sheet {
+  background: rgba(246,247,252,.92);
+}
+
+:host([data-theme-style="oneui"][data-theme="dark"]) .mha-settings-sheet {
+  background: rgba(18,20,28,.94);
+}
+
+:host([data-theme-style="material"]) .mha-settings-sheet {
+  background: var(--mha-widget-surface);
+  color: var(--mha-text);
+}
+
+@media (max-width: 767px) {
+  .mha-settings-sheet {
+    inset-inline: clamp(.65rem, 2.5vw, 1rem);
+    inset-block: auto clamp(.65rem, 2.5vw, 1rem);
+    inline-size: auto;
+    max-block-size: min(82vh, 42rem);
+    transform: translateY(18px) scale(.98);
+    transform-origin: bottom center;
+  }
+
+  .mha-settings-panel[data-open="true"] .mha-settings-sheet {
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mha-settings-scrim,
+  .mha-settings-sheet,
+  .mha-settings-switch-visual::after {
+    transition: none;
+  }
+}
+
+
+/* LIGHT THEME SETTINGS TEXT CONTRACT
+ * Material palette remains untouched.
+ */
+:host([data-theme="light"]:not([data-theme-style="material"])) .mha-settings-sheet {
+  color: var(--mha-text);
+}
+
+:host([data-theme="light"]:not([data-theme-style="material"])) .mha-settings-section {
+  color: var(--mha-text);
+}
+
+:host([data-theme="light"]:not([data-theme-style="material"])) .mha-settings-select {
+  color: var(--mha-text);
+  background: rgba(255,255,255,.74);
+}
+
+:host([data-theme="light"]:not([data-theme-style="material"])) .mha-settings-reset {
+  color: var(--mha-text);
+}
+
+:host([data-theme="light"]:not([data-theme-style="material"])) .mha-settings-close {
+  color: #fff;
+}
+
+/* SETTINGS MODAL BACKGROUND BLUR
+ * When the settings panel is open, blur the dashboard behind it while keeping
+ * the settings panel itself sharp.
+ */
+:host(.is-settings-open) .mha-background,
+:host(.is-settings-open) .mha-shell,
+:host(.is-settings-open) .mha-dock,
+:host(.is-settings-open) .mha-mobile-dock,
+:host(.is-settings-open) .mha-edit-button {
+  filter: blur(var(--mha-settings-background-blur, 10px)) saturate(.82) brightness(.86);
+  transform: translateZ(0) scale(.995);
+  transition:
+    filter 240ms ease,
+    transform 240ms cubic-bezier(.2,.8,.2,1);
+  pointer-events: none;
+}
+
+/* Keep modal layers crisp and interactive. */
+:host(.is-settings-open) .mha-settings-panel {
+  filter: none;
+  transform: none;
+  pointer-events: auto;
+}
+
+/* The scrim adds depth, not the blur itself. */
+.mha-settings-panel[data-open="true"] .mha-settings-scrim {
+  background: rgba(0,0,0,.22);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host(.is-settings-open) .mha-background,
+  :host(.is-settings-open) .mha-shell,
+  :host(.is-settings-open) .mha-dock,
+  :host(.is-settings-open) .mha-mobile-dock,
+  :host(.is-settings-open) .mha-edit-button {
+    transition: none;
+    transform: none;
+  }
+}
+
+/* SETTINGS USE WIDGET SURFACE TOKENS
+ * The settings panel should visually belong to the current theme.
+ * It uses widget/surface tokens instead of its own disconnected color system.
+ */
+.mha-settings-sheet {
+  background: var(--mha-widget-surface);
+  border-color: var(--mha-widget-border);
+  color: var(--mha-text);
+  box-shadow: var(--mha-floating-shadow);
+}
+
+.mha-settings-section {
+  background: var(--mha-control-surface, var(--mha-widget-surface));
+  border-color: var(--mha-widget-border);
+}
+
+.mha-settings-select,
+.mha-settings-reset {
+  background: var(--mha-control-surface, var(--mha-widget-surface));
+  border-color: var(--mha-widget-border);
+  color: var(--mha-text);
+}
+
+.mha-settings-switch-visual {
+  background: var(--mha-control-surface, var(--mha-widget-surface));
+  border-color: var(--mha-widget-border);
+}
+
+/* iOS light only: make settings brighter and glassier, while still aligned with widget style. */
+:host([data-theme="light"][data-theme-style="ios"]) .mha-settings-sheet {
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.78), rgba(255,255,255,.42)),
+    color-mix(in srgb, var(--mha-widget-surface) 78%, rgba(255,255,255,.68));
+  border-color: rgba(255,255,255,.62);
+  box-shadow:
+    0 26px 80px rgba(35,45,70,.16),
+    inset 0 1px 0 rgba(255,255,255,.78),
+    inset 0 -1px 0 rgba(255,255,255,.28);
+  backdrop-filter: blur(34px) saturate(170%);
+}
+
+:host([data-theme="light"][data-theme-style="ios"]) .mha-settings-section {
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.58), rgba(255,255,255,.26)),
+    color-mix(in srgb, var(--mha-widget-surface) 68%, rgba(255,255,255,.48));
+  border-color: rgba(255,255,255,.5);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.55);
+}
+
+:host([data-theme="light"][data-theme-style="ios"]) .mha-settings-select,
+:host([data-theme="light"][data-theme-style="ios"]) .mha-settings-reset {
+  background: rgba(255,255,255,.58);
+  border-color: rgba(255,255,255,.56);
+  color: var(--mha-text);
+}
+
+/* iOS dark keeps glass, but still follows widget surface direction. */
+:host([data-theme="dark"][data-theme-style="ios"]) .mha-settings-sheet {
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.18), rgba(255,255,255,.07)),
+    color-mix(in srgb, var(--mha-widget-surface) 88%, rgba(255,255,255,.06));
+}
+
+/* OneUI: opaque, clean, widget-aligned. */
+:host([data-theme-style="oneui"]) .mha-settings-sheet {
+  background: var(--mha-widget-surface);
+  border-color: var(--mha-widget-border);
+}
+
+:host([data-theme-style="oneui"]) .mha-settings-section,
+:host([data-theme-style="oneui"]) .mha-settings-select,
+:host([data-theme-style="oneui"]) .mha-settings-reset {
+  background: var(--mha-control-surface, var(--mha-widget-surface));
+  border-color: var(--mha-widget-border);
+}
+
+/* Material: do not redefine palette structure; use existing widget/control tokens only. */
+:host([data-theme-style="material"]) .mha-settings-sheet {
+  background: var(--mha-widget-surface);
+  border-color: var(--mha-widget-border);
+  color: var(--mha-text);
+}
+
+:host([data-theme-style="material"]) .mha-settings-section,
+:host([data-theme-style="material"]) .mha-settings-select,
+:host([data-theme-style="material"]) .mha-settings-reset,
+:host([data-theme-style="material"]) .mha-settings-switch-visual {
+  background: var(--mha-control-surface, var(--mha-widget-surface));
+  border-color: var(--mha-widget-border);
+  color: var(--mha-text);
+}

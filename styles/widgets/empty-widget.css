@@ -23,107 +23,34 @@
   display: none;
 }
 
-/* Widget internal grid restart + polish
- *
- * A widget's internal layout mirrors its global unit count:
- * - 1x4 widget => 1 internal column x 4 internal rows
- * - 2x4 widget => 2 internal columns x 4 internal rows = 8 internal units
- * - 4x2 widget => 4 internal columns x 2 internal rows
- *
- * Important:
- * CSS grid cells inside a wide widget are often rectangular.
- * Reusable icons must not stretch to the whole rectangular cell.
- *
- * So each internal cell becomes a centering area, and reusable icon content
- * gets a square size based on the smaller side of the cell.
- */
-.mha-widget {
-  --mha-widget-inner-padding: var(--mha-widget-inner-inset, clamp(0.38rem, 0.9vw, 0.65rem));
-  --mha-widget-inner-gap: var(--mha-widget-content-gap, clamp(0.2rem, 0.55vw, 0.45rem));
-
-  /*
-   * The icon should feel like it occupies one internal unit without touching
-   * the virtual unit edges. This keeps circle icons visually round and clean.
-   */
-  --mha-widget-unit-content-scale: .84;
+/* Temporary reusable component demo placement for slot-a. */
+.mha-widget-demo-title {
+  color: var(--mha-text);
+  font-weight: 780;
+  font-size: clamp(1rem, 2.1vw, 1.45rem);
 }
 
-.mha-widget-inner-grid {
-  position: absolute;
-  z-index: 1;
-  inset: var(--mha-widget-inner-padding);
-  display: grid;
-  grid-template-columns: repeat(var(--mha-widget-w, 1), minmax(0, 1fr));
-  grid-template-rows: repeat(var(--mha-widget-h, 1), minmax(0, 1fr));
-  gap: var(--mha-widget-inner-gap);
-  pointer-events: none;
-  min-inline-size: 0;
-  min-block-size: 0;
+.mha-widget-demo-pill,
+.mha-widget-demo-toggle,
+.mha-widget-demo-button,
+.mha-widget-demo-slider {
+  inline-size: 100%;
 }
-
-/*
- * A generic internal widget unit.
- * This can be reused later for buttons, small toggles, status dots, etc.
- */
-.mha-widget-unit {
-  min-inline-size: 0;
-  min-block-size: 0;
-  display: grid;
-  place-items: center;
-  place-content: center;
-}
-
-/* Test icon unit:
- * The wrapper occupies exactly one internal grid cell.
- */
-.mha-widget-corner-icon-unit {
-  grid-column: 1 / span 1;
-  grid-row: 1 / span 1;
-  container-type: size;
-}
-
-/* Test icon:
- * The icon itself is square and centered inside the internal unit.
- */
-.mha-widget-corner-icon-unit > .mha-icon.mha-widget-corner-icon-test {
-  place-self: center;
-  inline-size: min(100cqi, 100cqb);
-  block-size: min(100cqi, 100cqb);
-  width: min(100cqi, 100cqb);
-  height: min(100cqi, 100cqb);
-  aspect-ratio: 1 / 1;
-
-  --mha-icon-size: min(100cqi, 100cqb);
-  --mha-icon-glyph-size: 58%;
-
-  transform: scale(var(--mha-widget-unit-content-scale));
-  transform-origin: center;
-}
-
-/* Fallback: if container query units are not supported, use row-based sizing. */
-@supports not (width: 1cqi) {
-  .mha-widget-corner-icon-unit > .mha-icon.mha-widget-corner-icon-test {
-    inline-size: 100%;
-    block-size: 100%;
-    width: 100%;
-    height: 100%;
-    --mha-icon-size: 100%;
-  }
-}
-
 
 /* EDIT MODE CSS-ONLY TOGGLE
- * Edit controls are always in the DOM so entering edit mode does not require
- * a full render. The host class only fades/toggles them.
+ * Edit guides/controls are always in the DOM, but must be fully hidden outside
+ * edit mode. Keep this near the end so it wins over base widget styles.
  */
 .mha-widget-tools,
 .mha-resize-handle,
 .mha-size-badge {
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
   transform: translateY(-2px) scale(.98);
   transition:
     opacity 180ms ease,
+    visibility 0s linear 180ms,
     transform 180ms ease;
 }
 
@@ -131,30 +58,41 @@
 :host(.is-editing) .mha-resize-handle,
 :host(.is-editing) .mha-size-badge {
   opacity: 1;
+  visibility: visible;
   pointer-events: auto;
   transform: translateY(0) scale(1);
+  transition:
+    opacity 180ms ease,
+    visibility 0s linear 0s,
+    transform 180ms ease;
+}
+
+/* The resize handle should not leave a visible corner hit area outside edit. */
+:host(:not(.is-editing)) .mha-resize-handle {
+  display: none;
+}
+
+:host(.is-editing) .mha-resize-handle {
+  display: block;
 }
 
 /* EDIT MODE WIDGET DANCE
- * In edit mode, widgets get a subtle native-app style wiggle and highlighted
- * contour. This is CSS-only and does not require re-rendering.
+ * CSS-only polish. The layout internals stay untouched.
  */
 :host(.is-editing) .mha-widget {
   --mha-edit-outline-color: color-mix(in srgb, var(--mha-accent) 72%, white 18%);
-  --mha-edit-outline-shadow:
+  border-color: var(--mha-edit-outline-color);
+  box-shadow:
     0 0 0 1px color-mix(in srgb, var(--mha-edit-outline-color) 72%, transparent),
     0 0 0 4px color-mix(in srgb, var(--mha-edit-outline-color) 16%, transparent),
     var(--mha-widget-shadow);
-
-  border-color: var(--mha-edit-outline-color);
-  box-shadow: var(--mha-edit-outline-shadow);
   animation:
     mha-widget-edit-dance 1450ms ease-in-out infinite,
     mha-widget-edit-glow 2200ms ease-in-out infinite;
   transform-origin: center;
+  will-change: transform, box-shadow;
 }
 
-/* Desynchronize the wiggle so the grid feels organic instead of mechanical. */
 :host(.is-editing) .mha-widget:nth-child(2n) {
   animation-delay: -180ms, -360ms;
 }
@@ -210,7 +148,6 @@
   }
 }
 
-/* Interaction states should stay readable over the edit dance. */
 :host(.is-editing) .mha-widget.is-dragging,
 :host(.is-editing) .mha-widget.is-resizing {
   animation-play-state: paused;
@@ -232,50 +169,64 @@
   }
 }
 
-
-/* Compact widget internal spacing
- * The internal widget gap is intentionally smaller than the global grid gap.
- * Global gap = spacing between widgets.
- * Internal gap = spacing between content units inside a widget.
+/* EDIT CONTROLS ABOVE WIDGET CONTENT
+ * Widget content/grid sits around z-index: 1.
+ * Edit affordances must always float above internal widget content.
  */
+.mha-widget-tools {
+  z-index: 30;
+}
 
+.mha-resize-handle {
+  z-index: 31;
+}
 
-/* Compact widget inner padding
- * This controls the distance between the widget contour and the internal
- * content grid. It is intentionally thinner than the old inner border inset.
+.mha-size-badge {
+  z-index: 30;
+}
+
+/* Drop/resize outlines must remain readable above content too. */
+:host(.is-editing) .mha-widget.is-drop-before,
+:host(.is-editing) .mha-widget.is-drop-after,
+:host(.is-editing) .mha-widget.is-resizing {
+  z-index: 12;
+}
+
+/* OPAQUE EDIT CONTROLS
+ * Edit affordances must stay visible over any widget content.
  */
-
-
-/* Reusable component demo placement
- * Temporary test layout inside slot-a.
- */
-.mha-widget-demo-title {
-  grid-column: 2 / span 2;
-  grid-row: 1 / span 1;
-  align-items: center;
-  justify-items: start;
-  color: var(--mha-text);
-  font-weight: 780;
-  font-size: clamp(1rem, 2.1vw, 1.45rem);
+:host(.is-editing) .mha-tool-button,
+:host(.is-editing) .mha-size-badge,
+:host(.is-editing) .mha-resize-handle {
+  background: var(--mha-edit-control-bg, rgba(20, 22, 30, .96));
+  color: var(--mha-edit-control-color, #fff);
+  border-color: var(--mha-edit-control-border, rgba(255,255,255,.22));
+  box-shadow:
+    0 10px 24px rgba(0,0,0,.24),
+    inset 0 1px 0 rgba(255,255,255,.12);
+  backdrop-filter: none;
 }
 
-.mha-widget-demo-pill {
-  grid-column: 4 / span 1;
-  grid-row: 1 / span 1;
+/* Red delete/close button. */
+:host(.is-editing) .mha-tool-button[data-action="close"] {
+  --mha-edit-control-bg: #ff3b30;
+  --mha-edit-control-color: #fff;
+  --mha-edit-control-border: color-mix(in srgb, #ff3b30 78%, white 22%);
+  background: var(--mha-edit-control-bg);
+  color: var(--mha-edit-control-color);
+  border-color: var(--mha-edit-control-border);
+  box-shadow:
+    0 10px 24px color-mix(in srgb, #ff3b30 42%, transparent),
+    inset 0 1px 0 rgba(255,255,255,.22);
 }
 
-.mha-widget-demo-toggle {
-  grid-column: 1 / span 1;
-  grid-row: 2 / span 1;
+/* Keep the move button neutral and readable. */
+:host(.is-editing) .mha-tool-button[data-action="move"] {
+  background: rgba(20, 22, 30, .96);
+  color: #fff;
 }
 
-.mha-widget-demo-button {
-  grid-column: 2 / span 1;
-  grid-row: 2 / span 1;
-}
-
-.mha-widget-demo-slider {
-  grid-column: 3 / span 2;
-  grid-row: 2 / span 1;
-  align-items: center;
+/* The resize corner is an affordance, not glass content. */
+:host(.is-editing) .mha-resize-handle::before {
+  opacity: .95;
 }

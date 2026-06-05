@@ -41,3 +41,10 @@
   --mha-pill-color: var(--mha-material-you-symbol-1, #6750a4);
   --mha-pill-border: color-mix(in srgb, var(--mha-pill-color) 16%, transparent);
 }
+
+
+/* LIGHT THEME PILL TEXT CONTRACT */
+:host([data-theme="light"]:not([data-theme-style="material"])) .mha-pill {
+  --mha-pill-color: var(--mha-text);
+  color: var(--mha-text);
+}

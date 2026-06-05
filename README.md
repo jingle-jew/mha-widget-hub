@@ -507,3 +507,333 @@ Added initial reusable UI components:
 Each component has theme-style specific rules for iOS, OneUI, and Material.
 
 A temporary demo layout was added to `slot-a` to validate placement inside the widget internal grid.
+
+
+## Widget layout helpers
+
+Added reusable widget internal layout helpers:
+
+- `src/widgets/widget-layout.js`
+- `styles/widgets/widget-layout.css`
+
+Helpers:
+- `createWidgetInnerGrid()`
+- `createWidgetUnit({ col, row, colSpan, rowSpan, children })`
+- `createWidgetText({ text })`
+
+The `slot-a` demo now uses these helpers instead of manually creating grid units.
+
+
+## Fix edit overlay after widget layout helpers
+
+Repaired edit-mode visual behavior after introducing `widget-layout.js`.
+
+- Edit controls/guides are hidden outside edit mode with opacity, visibility and pointer-events.
+- Resize handle is display:none outside edit mode.
+- Widget dance/glow animation restored in edit mode.
+- Widget internal layout was left untouched.
+
+
+## Edit controls above widget content
+
+Edit-mode controls and visual guides now sit above the internal widget content grid.
+
+- widget content grid: lower layer;
+- edit tools / resize handle / size badge: higher layer;
+- drop/resize outlines remain readable.
+
+
+## Opaque edit controls and red delete
+
+Edit-mode affordances are now opaque so they remain visible over widget content.
+
+- edit buttons and badges use solid readable surfaces;
+- the delete/close button is red through `data-action="close"`;
+- the move button remains neutral.
+
+
+## Remove edit button reserved space
+
+The edit button is now treated strictly as a floating overlay.
+
+The grid uses symmetrical left/right padding so the right side no longer reserves extra space for the edit button.
+
+
+## Vertical dock for tablet and desktop
+
+The dock is now responsive:
+
+- mobile: bottom horizontal dock;
+- tablet/desktop: right-side vertical floating dock.
+
+This uses the right-side free space without reserving layout space in the grid.
+
+
+## Dock autohide mobile only
+
+Dock scroll auto-hide is now limited to mobile.
+
+- mobile: bottom dock can hide while scrolling;
+- tablet/desktop: vertical dock remains visible as a persistent side rail.
+
+
+## Vertical dock top alignment
+
+On tablet/desktop, the vertical dock now aligns its top edge with the first widget row instead of centering vertically.
+
+It uses:
+
+```css
+--mha-dock-top: max(var(--mha-statusbar-reserved-top), var(--mha-page-padding));
+```
+
+
+## Mobile dock 4 icon pages
+
+Mobile dock now shows at most 4 icons per page.
+
+- icons are grouped into pages of 4 in `dock.js`;
+- mobile dock scrolls horizontally with snap points;
+- odd icon counts are handled naturally by the last partial page;
+- tablet/desktop vertical dock flattens the page wrappers with `display: contents`.
+
+
+## Mobile dock widget width and hidden status bar
+
+Mobile-only layout polish:
+
+- dock width now matches the widget/grid content width;
+- status bar is hidden on mobile;
+- the grid no longer reserves top status-bar space on mobile;
+- widgets can fill the freed top area.
+
+
+## Mobile dock 1.5x height
+
+Mobile dock height is now scaled to 1.5x its base widget-like height:
+
+```css
+--mha-dock-height-scale: 1.5;
+```
+
+The dock still shows 4 icons per page.
+
+
+## Mobile dock proportional icons
+
+Mobile dock icons now scale from the dock's available width/height instead of using a mostly fixed clamp.
+
+The icon size respects:
+- 4 visible icons per page;
+- dock padding;
+- dock internal gap;
+- dock height.
+
+```css
+--mha-icon-size: min(var(--mha-dock-icon-from-width), var(--mha-dock-icon-from-height));
+```
+
+
+## Mobile dock size guard
+
+Added a mobile safety layer so the bottom dock cannot become a giant panel.
+
+The dock keeps:
+- same widget/grid width;
+- 4 icons per page;
+- proportional icon sizing;
+- larger dock height;
+
+but now has a maximum height:
+
+```css
+--mha-dock-max-height: clamp(5.25rem, 18vh, 6.75rem);
+```
+
+and a mobile icon cap:
+
+```css
+--mha-icon-size-max-mobile: clamp(3rem, 14vw, 4.15rem);
+```
+
+
+## Restore mobile dock icons
+
+Mobile dock icon sizing was simplified.
+
+The icon size is now based on the available dock width divided by 4, with a mobile max cap.
+It no longer depends on inherited percentage height calculations, which could resolve to invalid/zero and hide the icons.
+
+
+## Mobile dock simple scroll
+
+Replaced mobile dock page wrappers with a robust direct-scroll layout.
+
+Mobile dock:
+- direct `.mha-dock-item` children;
+- 4 visible icon slots;
+- horizontal scroll/snap for additional icons;
+- no page wrapper structure;
+- easier to debug and less fragile.
+
+
+## Custom mobile dock
+
+Added a separate mobile-only dock:
+
+- `src/layout/mobile-dock.js`
+- `styles/layout/mobile-dock.css`
+
+Mobile uses a floating lower-left launcher that opens a custom dock panel.
+The standard dock is hidden on mobile and remains the vertical rail on tablet/desktop.
+
+Icon rule:
+- mobile dock icons still use `createIcon()` and `createIconSymbol()`;
+- `mobile-dock.css` does not define icon shape properties;
+- icons continue to follow the global `data-icon-shape` contract.
+
+
+## Settings panel from dock
+
+Added a real settings panel opened from the gear icon in both docks.
+
+New files:
+- `src/settings/settings-panel.js`
+- `styles/settings/settings-panel.css`
+
+Moved user-facing dev controls into settings:
+- light/dark theme;
+- iOS/OneUI/Material visual style;
+- global icon shape;
+- screensaver preview;
+- screensaver now bar;
+- screensaver clock variant;
+- reset grid.
+
+The gear icon dispatches `mha-open-settings`, and the host opens the settings panel without requiring a full dashboard render.
+
+
+## Fix settings dock icon and mobile launcher
+
+- Added reliable local `gear` and `apps` symbols to the icon catalog.
+- Dock settings item now uses `symbol: "gear"` with `action: "settings"`.
+- Both standard and mobile docks dispatch `mha-open-settings` from the gear item.
+- The mobile floating launcher is visually only a normal `.mha-icon`; the button shell is transparent.
+- The launcher icon therefore follows the global icon shape contract.
+
+
+## Force settings gear dock icon
+
+- Desktop/tablet dock now explicitly includes a 9th `gear` item for settings.
+- Mobile dock panel also explicitly includes a `gear` item.
+- `gear` and `apps` are guaranteed in the local icon catalog.
+- Mobile launcher has no visible button shell; only its internal `.mha-icon` is visible.
+
+
+## Dock settings only reserved rail
+
+Dock is now reduced to a settings-only test state.
+
+- desktop/tablet dock contains only the gear/settings icon;
+- mobile dock panel contains only the gear/settings icon;
+- tablet/desktop rail adapts to icon count and collapses compactly with one icon;
+- tablet/desktop grid reserves right-side rail space so widgets do not render behind the dock.
+
+
+## Plug settings panel to gear
+
+The gear icon now opens the settings panel through a direct host callback.
+
+- `createDock({ onSettings })`
+- `createMobileDock({ onSettings })`
+- host passes `onSettings: () => this._openSettings()`
+
+The previous `mha-open-settings` event fallback remains available, but the main path is now direct and reliable.
+
+
+## Fix missing settings methods
+
+Fixed crash caused by `this._createSettingsPanel is not a function`.
+
+The host class now explicitly defines:
+- `_openSettings()`
+- `_closeSettings()`
+- `_syncSettingsDom()`
+- `_createSettingsPanel()`
+- settings-specific theme/icon handlers.
+
+The gear callback now has a valid method to call.
+
+
+## Light theme no white text contract
+
+Added a global readability rule:
+
+- in `data-theme="light"`, normal interface text should not be white;
+- Material theme color structure is intentionally left untouched;
+- white text remains allowed for explicit contrast exceptions such as danger buttons and inverted/dark controls;
+- icon glyph colors remain owned by the icon component/theme contract.
+
+New file:
+- `styles/themes/light-text-contract.css`
+
+
+## Status bar row alignment
+
+Tablet/desktop status bar is now:
+- slightly thinner;
+- lower-shadow;
+- aligned from the first widget's left edge to the outside edge of the dock rail.
+
+Mobile status bar remains hidden.
+
+
+## Settings modal background blur
+
+Opening the settings panel now adds `is-settings-open` to the host.
+
+The dashboard background/shell/dock/edit button are blurred and dimmed while the settings panel remains sharp and interactive.
+
+
+## Settings use widget surface tokens
+
+Settings panel now follows the same surface/color tokens as widgets.
+
+- base settings surface uses `--mha-widget-surface`;
+- sections and controls use `--mha-control-surface` / `--mha-widget-surface`;
+- iOS light settings are brighter and more glass-like;
+- Material palette structure is not redefined, only existing widget/control tokens are consumed.
+
+
+## Rounder rounded-square icons
+
+Adjusted the rounded-square icon radius token to 38%:
+
+```css
+--mha-icon-radius-rounded-square: 38%;
+```
+
+Only the rounded-square icon shape is changed. Squircle and circle are untouched.
+
+
+## Icon radius token cleanup
+
+Cleaned up the rounded-square icon radius token.
+
+Canonical token:
+```css
+--mha-icon-radius-rounded-square: 32%;
+```
+
+Removed the old border-radius alias so rounded-square has a single source of truth.
+
+Squircle and circle shapes are untouched.
+
+
+## Remove global grid shadow
+
+Removed any possible shell/grid/background shadow and softened iOS light widget depth.
+
+- `.mha-background`, `.mha-shell`, and `.mha-grid` are forced to have no global shadow;
+- iOS light widget shadows are reduced so stacked widgets do not merge into a vertical grid shadow;
+- widget glass depth is kept mostly as subtle inset highlights.

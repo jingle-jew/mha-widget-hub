@@ -17,7 +17,6 @@
    * Three supported icon shapes. Squircle uses the SVG mask token below.
    * These are intentionally independent from visual themes.
    */
-  --mha-icon-border-radius-rounded-square: clamp(0.55rem, 1.25vw, 0.9rem);
   --mha-icon-border-radius-circle: 999px;
 
   /*
@@ -31,7 +30,7 @@
    * Active icon shape token.
    * IMPORTANT: this must not reference itself through another variable.
    */
-  --mha-border-radius-icon: var(--mha-icon-border-radius-rounded-square);
+  --mha-border-radius-icon: var(--mha-icon-radius-rounded-square);
   --mha-icon-border-radius: var(--mha-border-radius-icon);
 
   --mha-icon-bg: var(--mha-dock-slot-surface, var(--mha-control-surface, rgba(255,255,255,.16)));
@@ -45,8 +44,8 @@
  * Every .mha-icon in <mha-control-hub> reads the same token.
  */
 :host([data-icon-shape="rounded-square"]) {
-  --mha-border-radius-icon: var(--mha-icon-border-radius-rounded-square);
-  --mha-icon-border-radius: var(--mha-icon-border-radius-rounded-square);
+  --mha-border-radius-icon: var(--mha-icon-radius-rounded-square);
+  --mha-icon-border-radius: var(--mha-icon-radius-rounded-square);
 }
 
 :host([data-icon-shape="circle"]) {
@@ -271,7 +270,7 @@
  * Contexts must not own icon shape.
  */
 :host([data-icon-shape="rounded-square"]) .mha-icon {
-  border-radius: var(--mha-icon-border-radius-rounded-square);
+  border-radius: var(--mha-icon-radius-rounded-square);
   -webkit-mask-image: none;
   mask-image: none;
 }
@@ -305,3 +304,12 @@
  * These properties are intentionally centralized above.
  * Do not redefine .mha-icon border-radius/mask in dock/widget/status-bar CSS.
  */
+
+/* ICON RADIUS TOKEN CLEANUP
+ * Canonical rounded-square token:
+ * - use --mha-icon-radius-rounded-square
+ * - the old border-radius alias was removed
+ */
+:host {
+  --mha-icon-radius-rounded-square: 32%;
+}
