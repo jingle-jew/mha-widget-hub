@@ -2,6 +2,10 @@ import { ICONS } from "../components/icons.js";
 import { getWidgetDensity, normalizeWidgetSize, sizeToString } from "../layout/layout-engine.js";
 import { createIcon } from "../ui/icon.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
+import { createSlider } from "../ui/slider.js";
+import { createToggle } from "../ui/toggle.js";
+import { createPill } from "../ui/pill.js";
+import { createButton } from "../ui/button.js";
 
 export function createEmptyWidget(
   widget,
@@ -56,6 +60,28 @@ export function createEmptyWidget(
       }),
     );
     innerGrid.append(unit);
+    const title = document.createElement("div");
+    title.className = "mha-widget-unit mha-widget-demo-title";
+    title.textContent = "Salon";
+
+    const pill = document.createElement("div");
+    pill.className = "mha-widget-unit mha-widget-demo-pill";
+    pill.append(createPill({ label: "21.5 °C", tone: "info" }));
+
+    const toggle = document.createElement("div");
+    toggle.className = "mha-widget-unit mha-widget-demo-toggle";
+    toggle.append(createToggle({ label: "Activer", checked: true }));
+
+    const button = document.createElement("div");
+    button.className = "mha-widget-unit mha-widget-demo-button";
+    button.append(createButton({ label: "Mode", variant: "default" }));
+
+    const slider = document.createElement("div");
+    slider.className = "mha-widget-unit mha-widget-demo-slider";
+    slider.append(createSlider({ label: "Intensité", value: 68 }));
+
+    innerGrid.append(title, pill, toggle, button, slider);
+
   }
 
   el.append(innerGrid);

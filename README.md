@@ -493,3 +493,17 @@ Reduced the internal padding between the widget contour and the widget's interna
 ```
 
 This brings internal content closer to the widget edge while staying tokenized and overrideable through `--mha-widget-inner-inset`.
+
+
+## Reusable UI component library
+
+Added initial reusable UI components:
+
+- `createButton()` / `styles/components/button.css`
+- `createPill()` / `styles/components/pill.css`
+- `createToggle()` / `styles/components/toggle.css`
+- `createSlider()` / `styles/components/slider.css`
+
+Each component has theme-style specific rules for iOS, OneUI, and Material.
+
+A temporary demo layout was added to `slot-a` to validate placement inside the widget internal grid.

@@ -1,0 +1,56 @@
+/*
+ * MHA Button component.
+ */
+
+:host {
+  --mha-button-height: clamp(2.15rem, 4vw, 2.85rem);
+  --mha-button-padding-inline: clamp(.75rem, 1.5vw, 1.1rem);
+  --mha-button-radius: var(--mha-control-radius, 999px);
+  --mha-button-bg: var(--mha-control-surface);
+  --mha-button-color: var(--mha-text);
+  --mha-button-border: var(--mha-widget-border);
+  --mha-button-shadow: none;
+}
+
+.mha-button {
+  min-inline-size: 0;
+  min-block-size: var(--mha-button-height);
+  padding-inline: var(--mha-button-padding-inline);
+  border: 1px solid var(--mha-button-border);
+  border-radius: var(--mha-button-radius);
+  background: var(--mha-button-bg);
+  color: var(--mha-button-color);
+  box-shadow: var(--mha-button-shadow);
+  font: inherit;
+  font-size: clamp(.78rem, 1.2vw, .95rem);
+  font-weight: 680;
+  cursor: pointer;
+  display: inline-grid;
+  place-items: center;
+  white-space: nowrap;
+}
+
+:host([data-theme-style="ios"]) {
+  --mha-button-bg: linear-gradient(145deg, rgba(255,255,255,.26), rgba(255,255,255,.09));
+  --mha-button-border: rgba(255,255,255,.34);
+  --mha-button-shadow: inset 0 1px 0 rgba(255,255,255,.32), 0 8px 22px rgba(0,0,0,.12);
+}
+
+:host([data-theme-style="oneui"]) {
+  --mha-button-bg: rgba(255,255,255,.86);
+  --mha-button-color: rgba(0,0,0,.84);
+  --mha-button-border: rgba(0,0,0,.06);
+  --mha-button-shadow: 0 6px 18px rgba(0,0,0,.10);
+}
+
+:host([data-theme-style="material"]) {
+  --mha-button-bg: var(--mha-material-you-icon-container, rgba(232,222,248,.98));
+  --mha-button-color: var(--mha-material-you-symbol-1, #6750a4);
+  --mha-button-border: color-mix(in srgb, var(--mha-button-color) 18%, transparent);
+  --mha-button-shadow: none;
+}
+
+.mha-button[data-variant="primary"] {
+  --mha-button-bg: var(--mha-accent);
+  --mha-button-color: white;
+}

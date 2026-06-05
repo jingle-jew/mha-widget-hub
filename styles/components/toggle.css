@@ -1,0 +1,72 @@
+/*
+ * MHA Toggle component.
+ */
+
+:host {
+  --mha-toggle-w: clamp(3rem, 5vw, 3.7rem);
+  --mha-toggle-h: clamp(1.65rem, 3vw, 2.05rem);
+  --mha-toggle-padding: .18rem;
+  --mha-toggle-track-bg: var(--mha-control-surface);
+  --mha-toggle-track-border: var(--mha-widget-border);
+  --mha-toggle-thumb-bg: var(--mha-text);
+  --mha-toggle-on-bg: var(--mha-accent);
+}
+
+.mha-toggle {
+  inline-size: var(--mha-toggle-w);
+  block-size: var(--mha-toggle-h);
+  display: inline-grid;
+  cursor: pointer;
+}
+
+.mha-toggle-input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mha-toggle-track {
+  position: relative;
+  border-radius: 999px;
+  border: 1px solid var(--mha-toggle-track-border);
+  background: var(--mha-toggle-track-bg);
+  transition: background 220ms ease, border-color 220ms ease;
+}
+
+.mha-toggle-thumb {
+  position: absolute;
+  inset-block: var(--mha-toggle-padding);
+  inline-size: calc(var(--mha-toggle-h) - (var(--mha-toggle-padding) * 2) - 2px);
+  border-radius: 999px;
+  background: var(--mha-toggle-thumb-bg);
+  transform: translateX(var(--mha-toggle-padding));
+  transition: transform 220ms cubic-bezier(.2,.8,.2,1), background 220ms ease;
+}
+
+.mha-toggle-input:checked + .mha-toggle-track {
+  background: var(--mha-toggle-on-bg);
+  border-color: color-mix(in srgb, var(--mha-toggle-on-bg) 80%, white 12%);
+}
+
+.mha-toggle-input:checked + .mha-toggle-track .mha-toggle-thumb {
+  transform: translateX(calc(var(--mha-toggle-w) - var(--mha-toggle-h) + var(--mha-toggle-padding)));
+  background: white;
+}
+
+:host([data-theme-style="ios"]) {
+  --mha-toggle-track-bg: rgba(255,255,255,.16);
+  --mha-toggle-track-border: rgba(255,255,255,.28);
+  --mha-toggle-thumb-bg: rgba(255,255,255,.94);
+}
+
+:host([data-theme-style="oneui"]) {
+  --mha-toggle-track-bg: rgba(255,255,255,.8);
+  --mha-toggle-track-border: rgba(0,0,0,.06);
+  --mha-toggle-thumb-bg: rgba(0,0,0,.82);
+}
+
+:host([data-theme-style="material"]) {
+  --mha-toggle-track-bg: color-mix(in srgb, var(--mha-material-you-icon-container, #e8def8) 76%, transparent);
+  --mha-toggle-track-border: color-mix(in srgb, var(--mha-material-you-symbol-1, #6750a4) 20%, transparent);
+  --mha-toggle-thumb-bg: var(--mha-material-you-symbol-1, #6750a4);
+}

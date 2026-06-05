@@ -244,3 +244,38 @@
  * This controls the distance between the widget contour and the internal
  * content grid. It is intentionally thinner than the old inner border inset.
  */
+
+
+/* Reusable component demo placement
+ * Temporary test layout inside slot-a.
+ */
+.mha-widget-demo-title {
+  grid-column: 2 / span 2;
+  grid-row: 1 / span 1;
+  align-items: center;
+  justify-items: start;
+  color: var(--mha-text);
+  font-weight: 780;
+  font-size: clamp(1rem, 2.1vw, 1.45rem);
+}
+
+.mha-widget-demo-pill {
+  grid-column: 4 / span 1;
+  grid-row: 1 / span 1;
+}
+
+.mha-widget-demo-toggle {
+  grid-column: 1 / span 1;
+  grid-row: 2 / span 1;
+}
+
+.mha-widget-demo-button {
+  grid-column: 2 / span 1;
+  grid-row: 2 / span 1;
+}
+
+.mha-widget-demo-slider {
+  grid-column: 3 / span 2;
+  grid-row: 2 / span 1;
+  align-items: center;
+}
