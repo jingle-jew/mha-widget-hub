@@ -66,6 +66,18 @@
       devToggle.setAttribute("aria-expanded", String(isOpen));
     }
 
+
+    function triggerThemeBackdropCrossfade() {
+      hub.classList.remove("is-theme-backdrop-crossfading");
+      void hub.offsetWidth;
+      hub.classList.add("is-theme-backdrop-crossfading");
+
+      window.clearTimeout(window.__mhaThemeBackdropCrossfadeTimer);
+      window.__mhaThemeBackdropCrossfadeTimer = window.setTimeout(() => {
+        hub.classList.remove("is-theme-backdrop-crossfading");
+      }, 520);
+    }
+
     function setTheme(theme = "dark") {
       const resolved = theme === "light" ? "light" : "dark";
 
@@ -76,7 +88,7 @@
       hub.setAttribute("data-theme", resolved);
 
       localStorage.setItem("mha-dev-theme", resolved);
-      hub.requestRender?.();
+      triggerThemeBackdropCrossfade();
     }
 
     function toggleTheme() {
@@ -97,7 +109,7 @@
       const select = document.querySelector("[data-dev-action='theme-style']");
       if (select) select.value = resolved;
 
-      hub.requestRender?.();
+      triggerThemeBackdropCrossfade();
     }
 
 

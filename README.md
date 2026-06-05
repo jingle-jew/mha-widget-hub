@@ -390,3 +390,15 @@ The wrapper occupies one internal grid cell, while the icon itself uses the smal
 ```
 
 This prevents circle icons from becoming pills inside rectangular widget cells.
+
+
+## Theme switch crossfade without rerender
+
+Theme and visual-style switching no longer calls `hub.requestRender()` from the dev menu.
+
+Instead:
+- `data-theme` and `data-theme-style` are updated directly on the host;
+- CSS tokens update in place;
+- a short backdrop crossfade class smooths the visual handoff.
+
+This avoids the reload-like flash during theme changes.
