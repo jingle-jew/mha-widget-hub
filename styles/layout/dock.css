@@ -348,3 +348,15 @@
     block-size: var(--mha-icon-size);
   }
 }
+
+
+/* DOCK ORIENTATION FLASH GUARD
+ * During orientation relayout, the dock can be briefly created before the
+ * responsive rail/bottom rules settle. Hide it for the relayout window.
+ */
+:host(.is-responsive-relayouting) .mha-dock {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transition: none !important;
+}

@@ -160,3 +160,22 @@
   box-shadow: none !important;
   filter: none !important;
 }
+
+
+/* RESPONSIVE RELAYOUT NO FLASH
+ * Orientation changes rebuild layout. During that tiny window, suppress
+ * transitions that can look like a screen flash or modal pop.
+ */
+:host(.is-responsive-relayouting) .mha-background,
+:host(.is-responsive-relayouting) .mha-shell,
+:host(.is-responsive-relayouting) .mha-grid,
+:host(.is-responsive-relayouting) .mha-widget,
+:host(.is-responsive-relayouting) .mha-dock,
+:host(.is-responsive-relayouting) .mha-mobile-dock,
+:host(.is-responsive-relayouting) .mha-status-bar,
+:host(.is-responsive-relayouting) .mha-settings-panel,
+:host(.is-responsive-relayouting) .mha-settings-scrim,
+:host(.is-responsive-relayouting) .mha-settings-sheet {
+  transition: none !important;
+  animation: none !important;
+}

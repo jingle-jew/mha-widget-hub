@@ -26,10 +26,10 @@ function syncThemeAttributes(host) {
 
 const ORDER="mha-grid-order",SIZES="mha-widget-sizes",LEGACY_STORAGE_PREFIX=["mha","v2"].join("-"),THEME_STYLES=new Set(["ios","oneui","material"]);
 function readMigratedJson(key,legacyKey,fallback){const current=readJson(key,null);if(current!==null)return current;const legacy=readJson(legacyKey,null);if(legacy!==null){writeJson(key,legacy);return legacy}return fallback}
-class MhaControlHub extends HTMLElement{constructor(){super();this.attachShadow({mode:"open"});this._hass=null;this._isEditing=false;this._draggedId="";this._resizeState=null;this._squareUnitFrame=0;this._renderId=0;this._gridScrollCleanup=null;this._screensaverPreview=false;this._screensaverNowBar=true;this._screensaverClockVariant="digital";this._settingsOpen=false;this._widgets=this._readWidgets()}
+class MhaControlHub extends HTMLElement{constructor(){super();this.attachShadow({mode:"open"});this._hass=null;this._isEditing=false;this._draggedId="";this._resizeState=null;this._squareUnitFrame=0;this._renderId=0;this._gridScrollCleanup=null;this._screensaverPreview=false;this._screensaverNowBar=true;this._screensaverClockVariant="digital";this._settingsOpen=false;this._lastResponsiveSignature="";this._responsiveRelayoutTimer=null;this._widgets=this._readWidgets()}
 set hass(h){this._hass=h;this.render()}get hass(){return this._hass}
-connectedCallback(){this.render();this._clockTimer=setInterval(()=>{updateStatusTime(this.shadowRoot);if(this._screensaverPreview)updateScreensaverClock(this.shadowRoot,this._screensaverClockVariant)},1000);this._resizeListener=()=>{this._syncRuntimeLayoutAttrs();this._scheduleSquareUnitSync()};window.addEventListener("resize",this._resizeListener);this._settingsOpenListener=()=>this._openSettings();this.shadowRoot.addEventListener("mha-open-settings",this._settingsOpenListener)}
-disconnectedCallback(){clearInterval(this._clockTimer);cancelAnimationFrame(this._squareUnitFrame);this._clearGridScrollListener();window.removeEventListener("resize",this._resizeListener);if(this._settingsOpenListener)this.shadowRoot.removeEventListener("mha-open-settings",this._settingsOpenListener)}
+connectedCallback(){this.render();this._clockTimer=setInterval(()=>{updateStatusTime(this.shadowRoot);if(this._screensaverPreview)updateScreensaverClock(this.shadowRoot,this._screensaverClockVariant)},1000);this._resizeListener=()=>this._handleViewportChange();window.addEventListener("resize",this._resizeListener);window.visualViewport?.addEventListener("resize",this._resizeListener);window.addEventListener("orientationchange",this._resizeListener);this._settingsOpenListener=()=>this._openSettings();this.shadowRoot.addEventListener("mha-open-settings",this._settingsOpenListener)}
+disconnectedCallback(){clearInterval(this._clockTimer);cancelAnimationFrame(this._squareUnitFrame);this._clearGridScrollListener();window.removeEventListener("resize",this._resizeListener);window.visualViewport?.removeEventListener("resize",this._resizeListener);window.removeEventListener("orientationchange",this._resizeListener);clearTimeout(this._responsiveRelayoutTimer);if(this._settingsOpenListener)this.shadowRoot.removeEventListener("mha-open-settings",this._settingsOpenListener)}
 requestRender(){this.render()}
 _syncEditModeDom(){
   this.classList.toggle("is-editing",this._isEditing);
@@ -141,6 +141,42 @@ _moveWidgetDom(sourceId,targetId,placement="before"){
   else target.before(source);
   this._scheduleSquareUnitSync();
 }
+_getResponsiveSignature(){
+  const w=Math.round(window.visualViewport?.width||window.innerWidth||0);
+  const h=Math.round(window.visualViewport?.height||window.innerHeight||0);
+  const orientation=w>=h?"landscape":"portrait";
+  const layoutMode=getLayoutMode(this);
+  const layout=getEffectiveLayout(this);
+  const units=getActiveGridUnits(this);
+  return `${w}x${h}|${orientation}|${layoutMode}|${layout}|${units}`;
+}
+_syncRuntimeLayoutAttrs(){
+  const layoutMode=getLayoutMode(this),layout=getEffectiveLayout(this),units=getActiveGridUnits(this),cols=units/WIDGET_UNIT.unitsPerLogicalColumn;
+  this.dataset.layoutMode=layoutMode;
+  this.dataset.layout=layout;
+  this.dataset.gridUnits=String(units);
+  this.dataset.logicalColumns=String(cols);
+  this.style.setProperty("--mha-runtime-grid-units",String(units));this._lastResponsiveSignature=this._getResponsiveSignature();
+}
+_handleViewportChange(){
+  clearTimeout(this._responsiveRelayoutTimer);
+  this._responsiveRelayoutTimer=setTimeout(()=>{
+    const next=this._getResponsiveSignature();
+    if(next!==this._lastResponsiveSignature){
+      this._lastResponsiveSignature=next;
+      this.classList.add("is-responsive-relayouting");
+      this.render();
+      clearTimeout(this._responsiveRelayoutClearTimer);
+      this._responsiveRelayoutClearTimer=setTimeout(()=>{
+        this.classList.remove("is-responsive-relayouting");
+      },260);
+      return;
+    }
+    this._syncRuntimeLayoutAttrs();
+    this._scheduleSquareUnitSync();
+  },90);
+}
+
 _clearGridScrollListener(){this._gridScrollCleanup?.();this._gridScrollCleanup=null}
 // The dock behaves like macOS: downward grid scroll gets it out of the way, upward scroll recalls it.
 _wireDockAutoHide(grid){this._clearGridScrollListener();this.classList.remove("is-dock-hidden");

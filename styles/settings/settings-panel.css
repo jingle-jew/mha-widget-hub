@@ -398,3 +398,13 @@
   border-color: var(--mha-widget-border);
   color: var(--mha-text);
 }
+
+
+/* SETTINGS CLOSED HARD HIDE
+ * Prevents the closed settings panel from flashing during orientation re-render
+ * before async stylesheet links fully settle.
+ */
+.mha-settings-panel[hidden],
+.mha-settings-panel[aria-hidden="true"] {
+  display: none !important;
+}

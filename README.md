@@ -837,3 +837,34 @@ Removed any possible shell/grid/background shadow and softened iOS light widget 
 - `.mha-background`, `.mha-shell`, and `.mha-grid` are forced to have no global shadow;
 - iOS light widget shadows are reduced so stacked widgets do not merge into a vertical grid shadow;
 - widget glass depth is kept mostly as subtle inset highlights.
+
+
+## Orientation relayout
+
+Fixed Safari responsive simulator orientation changes.
+
+Viewport/orientation changes now compute a responsive signature based on:
+- viewport width/height;
+- portrait/landscape;
+- layout mode;
+- effective layout;
+- active grid units.
+
+If the signature changes, the host performs a layout-safe render so portrait → landscape can move from 1 column to 2 columns without a browser refresh.
+
+
+## Orientation flash fix
+
+Reduced visual artifacts during Safari responsive orientation changes.
+
+- closed settings panel now gets `hidden`;
+- closed settings panel is hard-hidden with CSS;
+- responsive relayout adds `is-responsive-relayouting`;
+- transitions/animations are suppressed during the short relayout window.
+
+
+## Orientation dock flash fix
+
+The standard dock and mobile dock are now hidden during the short responsive relayout window.
+
+This prevents the dock from briefly appearing in the wrong position during Safari simulator orientation changes.

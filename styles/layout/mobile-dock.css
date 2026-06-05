@@ -208,3 +208,15 @@
 :host([data-theme="light"]:not([data-theme-style="material"])) .mha-mobile-dock-close {
   color: #fff;
 }
+
+
+/* MOBILE DOCK ORIENTATION FLASH GUARD
+ * Prevents the mobile floating launcher/panel from flashing during orientation
+ * re-render.
+ */
+:host(.is-responsive-relayouting) .mha-mobile-dock {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transition: none !important;
+}

@@ -107,6 +107,7 @@ export function createSettingsPanel({
   root.className = "mha-settings-panel";
   root.dataset.open = String(Boolean(open));
   root.setAttribute("aria-hidden", String(!open));
+  root.hidden = !open;
 
   const scrim = document.createElement("button");
   scrim.className = "mha-settings-scrim";
