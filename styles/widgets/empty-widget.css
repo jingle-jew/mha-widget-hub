@@ -364,3 +364,45 @@
 .mha-tool-button[data-action="close"] path {
   filter: none !important;
 }
+
+/* MATERIAL WIDGET DYNAMIC SURFACES */
+:host([data-theme-style="material"]) .mha-widget {
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--mha-material-surface-tint) 42%, transparent),
+      transparent 46%
+    ),
+    var(--mha-widget-surface);
+  border-color: var(--mha-material-outline-variant);
+}
+
+:host([data-theme-style="material"]) .mha-widget::before {
+  border-color: color-mix(in srgb, var(--mha-accent) 10%, transparent);
+}
+
+:host([data-theme-style="material"].is-editing) .mha-widget {
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--mha-accent) 16%, transparent),
+      transparent 52%
+    ),
+    var(--mha-widget-surface-edit);
+}
+
+/* MATERIAL BORDERLESS SURFACES
+ * Widgets in Material use surface tint/elevation instead of visible outlines.
+ */
+:host([data-theme-style="material"]) .mha-widget {
+  border-color: transparent;
+}
+
+:host([data-theme-style="material"]) .mha-widget::before {
+  border-color: transparent;
+}
+
+/* Keep edit affordance visible when actively editing. */
+:host([data-theme-style="material"].is-editing) .mha-widget {
+  border-color: color-mix(in srgb, var(--mha-accent) 26%, transparent);
+}

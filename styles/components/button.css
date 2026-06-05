@@ -76,3 +76,19 @@
   --mha-button-color: var(--mha-accent-contrast);
   --mha-button-border: color-mix(in srgb, var(--mha-accent) 72%, white 14%);
 }
+
+/* MATERIAL BUTTON DYNAMIC SURFACE */
+:host([data-theme-style="material"]) .mha-button {
+  background: var(--mha-material-surface-container-high);
+  border-color: var(--mha-material-outline-variant);
+}
+
+/* MATERIAL BORDERLESS BUTTON SURFACE */
+:host([data-theme-style="material"]) .mha-button {
+  border-color: transparent;
+}
+
+:host([data-theme-style="material"]) .mha-button:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--mha-accent) 54%, transparent);
+  outline-offset: 2px;
+}

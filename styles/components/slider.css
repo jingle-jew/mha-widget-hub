@@ -624,3 +624,18 @@
   --mha-slider-oneui-fill-bg:
     color-mix(in srgb, var(--mha-accent) 82%, transparent);
 }
+
+/* MATERIAL SLIDER DYNAMIC SURFACE */
+:host([data-theme-style="material"]) {
+  --mha-slider-track-bg: var(--mha-material-surface-container-highest);
+  --mha-slider-fill-bg: var(--mha-accent);
+}
+
+/* MATERIAL BORDERLESS SLIDER SURFACE */
+:host([data-theme-style="material"]) .mha-slider-input::-webkit-slider-runnable-track {
+  border-color: transparent;
+}
+
+:host([data-theme-style="material"]) .mha-slider-input::-moz-range-track {
+  border-color: transparent;
+}

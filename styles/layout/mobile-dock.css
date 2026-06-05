@@ -313,3 +313,22 @@
 :host(.is-editing) .mha-mobile-dock-launcher {
   pointer-events: none !important;
 }
+
+/* MATERIAL MOBILE DOCK DYNAMIC SURFACE */
+:host([data-theme-style="material"]) .mha-mobile-dock,
+:host([data-theme-style="material"]) .mha-mobile-dock-panel {
+  background:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--mha-material-surface-tint) 44%, transparent),
+      transparent 56%
+    ),
+    var(--mha-dock-surface);
+  border-color: var(--mha-material-outline-variant);
+}
+
+/* MATERIAL BORDERLESS MOBILE DOCK SURFACE */
+:host([data-theme-style="material"]) .mha-mobile-dock,
+:host([data-theme-style="material"]) .mha-mobile-dock-panel {
+  border-color: transparent;
+}

@@ -56,3 +56,14 @@
   --mha-pill-color: var(--mha-accent-contrast);
   --mha-pill-border: color-mix(in srgb, var(--mha-accent) 72%, white 14%);
 }
+
+/* MATERIAL PILL DYNAMIC SURFACE */
+:host([data-theme-style="material"]) .mha-pill {
+  background: var(--mha-material-surface-container-high);
+  border-color: var(--mha-material-outline-variant);
+}
+
+/* MATERIAL BORDERLESS PILL SURFACE */
+:host([data-theme-style="material"]) .mha-pill {
+  border-color: transparent;
+}

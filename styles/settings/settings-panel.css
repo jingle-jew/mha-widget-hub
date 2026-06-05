@@ -474,3 +474,115 @@
 .mha-settings-accent-swatches[data-theme-style="material"] .mha-settings-accent-swatch[data-accent="green"] { --mha-swatch-color: #386a20; }
 .mha-settings-accent-swatches[data-theme-style="material"] .mha-settings-accent-swatch[data-accent="teal"] { --mha-swatch-color: #006a60; }
 .mha-settings-accent-swatches[data-theme-style="material"] .mha-settings-accent-swatch[data-accent="cyan"] { --mha-swatch-color: #006879; }
+
+/* SETTINGS BACKDROP BY VISUAL STYLE
+ * iOS and OneUI use a blurred background behind the settings sheet.
+ * Material keeps the page sharp and simply dims it with a stronger scrim.
+ */
+:host([data-theme-style="ios"].is-settings-open) .mha-background,
+:host([data-theme-style="ios"].is-settings-open) .mha-shell,
+:host([data-theme-style="ios"].is-settings-open) .mha-dock,
+:host([data-theme-style="ios"].is-settings-open) .mha-mobile-dock,
+:host([data-theme-style="ios"].is-settings-open) .mha-edit-button,
+:host([data-theme-style="oneui"].is-settings-open) .mha-background,
+:host([data-theme-style="oneui"].is-settings-open) .mha-shell,
+:host([data-theme-style="oneui"].is-settings-open) .mha-dock,
+:host([data-theme-style="oneui"].is-settings-open) .mha-mobile-dock,
+:host([data-theme-style="oneui"].is-settings-open) .mha-edit-button {
+  filter: blur(var(--mha-settings-background-blur, 10px)) saturate(.82) brightness(.86);
+  transform: translateZ(0) scale(.995);
+}
+
+:host([data-theme-style="material"].is-settings-open) .mha-background,
+:host([data-theme-style="material"].is-settings-open) .mha-shell,
+:host([data-theme-style="material"].is-settings-open) .mha-dock,
+:host([data-theme-style="material"].is-settings-open) .mha-mobile-dock,
+:host([data-theme-style="material"].is-settings-open) .mha-edit-button {
+  filter: brightness(.72) saturate(.94);
+  transform: none;
+}
+
+:host([data-theme-style="material"]) .mha-settings-panel[data-open="true"] .mha-settings-scrim {
+  background: rgba(0,0,0,.34);
+}
+
+:host([data-theme-style="material"][data-theme="light"]) .mha-settings-panel[data-open="true"] .mha-settings-scrim {
+  background: rgba(29,27,32,.24);
+}
+
+:host([data-theme-style="material"][data-theme="dark"]) .mha-settings-panel[data-open="true"] .mha-settings-scrim {
+  background: rgba(0,0,0,.42);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host([data-theme-style="ios"].is-settings-open) .mha-background,
+  :host([data-theme-style="ios"].is-settings-open) .mha-shell,
+  :host([data-theme-style="ios"].is-settings-open) .mha-dock,
+  :host([data-theme-style="ios"].is-settings-open) .mha-mobile-dock,
+  :host([data-theme-style="ios"].is-settings-open) .mha-edit-button,
+  :host([data-theme-style="oneui"].is-settings-open) .mha-background,
+  :host([data-theme-style="oneui"].is-settings-open) .mha-shell,
+  :host([data-theme-style="oneui"].is-settings-open) .mha-dock,
+  :host([data-theme-style="oneui"].is-settings-open) .mha-mobile-dock,
+  :host([data-theme-style="oneui"].is-settings-open) .mha-edit-button,
+  :host([data-theme-style="material"].is-settings-open) .mha-background,
+  :host([data-theme-style="material"].is-settings-open) .mha-shell,
+  :host([data-theme-style="material"].is-settings-open) .mha-dock,
+  :host([data-theme-style="material"].is-settings-open) .mha-mobile-dock,
+  :host([data-theme-style="material"].is-settings-open) .mha-edit-button {
+    transform: none;
+  }
+}
+
+/* MATERIAL SETTINGS DYNAMIC SURFACES
+ * Settings use Material container roles derived from the selected accent.
+ */
+:host([data-theme-style="material"]) .mha-settings-sheet {
+  background: var(--mha-material-surface-container-high);
+  border-color: var(--mha-material-outline-variant);
+  box-shadow: var(--mha-floating-shadow);
+}
+
+:host([data-theme-style="material"]) .mha-settings-section {
+  background: var(--mha-material-surface-container);
+  border-color: var(--mha-material-outline-variant);
+}
+
+:host([data-theme-style="material"]) .mha-settings-select,
+:host([data-theme-style="material"]) .mha-settings-reset {
+  background: var(--mha-material-surface-container-highest);
+  border-color: var(--mha-material-outline-variant);
+}
+
+:host([data-theme-style="material"]) .mha-settings-accent-swatch {
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--mha-accent) 18%, transparent),
+    0 2px 8px color-mix(in srgb, var(--mha-accent) 8%, transparent);
+}
+
+/* MATERIAL BORDERLESS SETTINGS SURFACES */
+:host([data-theme-style="material"]) .mha-settings-sheet,
+:host([data-theme-style="material"]) .mha-settings-section,
+:host([data-theme-style="material"]) .mha-settings-select,
+:host([data-theme-style="material"]) .mha-settings-reset {
+  border-color: transparent;
+}
+
+/* MATERIAL LIGHT SETTINGS DIM TUNING
+ * Material does not blur the page behind settings.
+ *
+ * In light mode, the previous dim was too heavy/gray. Keep the Material scrim
+ * behavior, but let the background stay lighter and more colorful.
+ */
+:host([data-theme-style="material"][data-theme="light"].is-settings-open) .mha-background,
+:host([data-theme-style="material"][data-theme="light"].is-settings-open) .mha-shell,
+:host([data-theme-style="material"][data-theme="light"].is-settings-open) .mha-dock,
+:host([data-theme-style="material"][data-theme="light"].is-settings-open) .mha-mobile-dock,
+:host([data-theme-style="material"][data-theme="light"].is-settings-open) .mha-edit-button {
+  filter: brightness(.86) saturate(.98);
+  transform: none;
+}
+
+:host([data-theme-style="material"][data-theme="light"]) .mha-settings-panel[data-open="true"] .mha-settings-scrim {
+  background: rgba(29,27,32,.16);
+}

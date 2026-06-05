@@ -1824,3 +1824,87 @@ A cautious performance/stability pass was added:
 - theme/style/accent/edit behavior remains token/class-driven instead of being refactored.
 
 This pass intentionally avoids large rendering architecture changes.
+
+
+## Settings backdrop by visual style
+
+When settings are open:
+- iOS blurs the page behind the sheet;
+- OneUI also blurs the page behind the sheet;
+- Material does not blur and instead dims/darkens the page with a stronger scrim.
+
+
+## Material You dynamic surfaces
+
+Material You surfaces now derive from the selected accent color.
+
+The Material layer defines dynamic color roles:
+- primary;
+- primary / secondary / tertiary containers;
+- surface tint;
+- surface container low / regular / high / highest;
+- outline / outline variant.
+
+Widgets, settings sections, dock surfaces, pills, buttons, toggles, and sliders
+use these Material roles. iOS and OneUI are unchanged.
+
+
+## Material borderless surfaces
+
+Material surfaces no longer use visible borders. The Material style now relies on:
+- dynamic container color;
+- surface tint;
+- elevation/shadow;
+- accent feedback for edit/focus states.
+
+Border geometry is mostly preserved by making surface border colors transparent
+instead of removing border width outright.
+
+
+## Material light settings dim tuning
+
+Material settings still use dim/scrim instead of blur. In light mode, the dim is
+now softer so the background does not become overly gray while the settings
+sheet remains clearly elevated.
+
+
+## Material tonal background
+
+Material You now uses a calm tonal app background derived from the selected
+accent color.
+
+- iOS and OneUI keep the decorative wallpaper/blob background.
+- Material disables the decorative blobs/orbs and uses a stable accent-derived
+  background surface.
+- Light/dark Material use different accent mix strengths.
+
+
+## Material solid background
+
+Material now uses a truly solid tonal background derived from the selected
+accent. Decorative background spans/blobs are disabled directly in Material mode.
+
+iOS and OneUI keep the decorative blob wallpaper.
+
+
+## OneUI-only animated blobs
+
+Background behavior by visual style:
+
+- iOS: decorative blobs remain visible but stable.
+- OneUI: decorative blobs animate gently.
+- Material: blobs remain disabled and the background stays solid/tonal.
+
+`prefers-reduced-motion` disables OneUI blob animation.
+
+
+## OneUI orbiting blobs
+
+OneUI background blobs are now more visible and centered. Each blob has its own
+orbit/crossing animation so the motion feels intentional and Samsung-like:
+- central concentration;
+- slow orbiting paths;
+- crossing trajectories;
+- stronger but still soft opacity.
+
+iOS blobs remain stable, and Material keeps its solid tonal background.

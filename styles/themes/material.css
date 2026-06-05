@@ -80,3 +80,117 @@
 :host([data-theme-style="material"][data-theme="dark"]) {
   --mha-dock-surface: var(--mha-widget-surface);
 }
+
+/* MATERIAL YOU DYNAMIC SURFACES
+ * Material surfaces are derived from the selected accent.
+ *
+ * Keep the accent as the source of identity, then derive subtle surface and
+ * container roles from it. This gives Material a dynamic-color feel without
+ * expanding the global palette or over-saturating the whole UI.
+ */
+:host([data-theme-style="material"]) {
+  --mha-material-primary: var(--mha-accent);
+  --mha-material-on-primary: var(--mha-accent-contrast);
+
+  --mha-material-outline:
+    color-mix(in srgb, var(--mha-accent) 24%, var(--mha-text) 10%, transparent);
+  --mha-material-outline-variant:
+    color-mix(in srgb, var(--mha-accent) 18%, var(--mha-text) 8%, transparent);
+
+  --mha-material-primary-container:
+    color-mix(in srgb, var(--mha-accent) 26%, var(--mha-base-surface, var(--mha-widget-surface)) 74%);
+  --mha-material-secondary-container:
+    color-mix(in srgb, var(--mha-accent) 14%, var(--mha-base-surface, var(--mha-widget-surface)) 86%);
+  --mha-material-tertiary-container:
+    color-mix(in srgb, var(--mha-accent) 18%, var(--mha-text) 4%, var(--mha-base-surface, var(--mha-widget-surface)) 78%);
+
+  --mha-material-surface-tint:
+    color-mix(in srgb, var(--mha-accent) 22%, transparent);
+}
+
+:host([data-theme-style="material"][data-theme="light"]) {
+  --mha-base-surface: #fef7ff;
+  --mha-base-surface-alt: #f7f2fa;
+
+  --mha-material-surface-container-low:
+    color-mix(in srgb, var(--mha-accent) 5%, #fdf8ff 95%);
+  --mha-material-surface-container:
+    color-mix(in srgb, var(--mha-accent) 8%, #f7f2fa 92%);
+  --mha-material-surface-container-high:
+    color-mix(in srgb, var(--mha-accent) 12%, #f1ecf4 88%);
+  --mha-material-surface-container-highest:
+    color-mix(in srgb, var(--mha-accent) 16%, #ece6f0 84%);
+
+  --mha-widget-surface: var(--mha-material-surface-container);
+  --mha-widget-surface-edit: var(--mha-material-surface-container-high);
+  --mha-widget-border: var(--mha-material-outline-variant);
+  --mha-control-surface: var(--mha-material-surface-container-high);
+  --mha-dock-surface:
+    color-mix(in srgb, var(--mha-accent) 10%, rgba(255,255,255,.82) 90%);
+
+  --mha-material-you-icon-container: var(--mha-material-primary-container);
+  --mha-floating-shadow:
+    0 12px 26px color-mix(in srgb, var(--mha-accent) 9%, transparent),
+    0 2px 10px rgba(29,27,32,.08);
+}
+
+:host([data-theme-style="material"][data-theme="dark"]) {
+  --mha-base-surface: #141218;
+  --mha-base-surface-alt: #1d1b20;
+
+  --mha-material-surface-container-low:
+    color-mix(in srgb, var(--mha-accent) 7%, #141218 93%);
+  --mha-material-surface-container:
+    color-mix(in srgb, var(--mha-accent) 11%, #1d1b20 89%);
+  --mha-material-surface-container-high:
+    color-mix(in srgb, var(--mha-accent) 15%, #211f26 85%);
+  --mha-material-surface-container-highest:
+    color-mix(in srgb, var(--mha-accent) 20%, #2b2930 80%);
+
+  --mha-widget-surface: var(--mha-material-surface-container);
+  --mha-widget-surface-edit: var(--mha-material-surface-container-high);
+  --mha-widget-border: var(--mha-material-outline-variant);
+  --mha-control-surface: var(--mha-material-surface-container-high);
+  --mha-dock-surface:
+    color-mix(in srgb, var(--mha-accent) 14%, rgba(30,28,34,.84) 86%);
+
+  --mha-material-you-icon-container:
+    color-mix(in srgb, var(--mha-accent) 28%, #2b2930 72%);
+  --mha-floating-shadow:
+    0 14px 30px rgba(0,0,0,.34),
+    0 0 22px color-mix(in srgb, var(--mha-accent) 8%, transparent);
+}
+
+/* MATERIAL SURFACE BORDERLESS CONTRACT
+ * Material You separates surfaces with container color, tint, and elevation
+ * rather than visible outlines.
+ *
+ * Keep border geometry stable by making surface outline tokens transparent.
+ * Interactive states/focus can still provide their own explicit feedback.
+ */
+:host([data-theme-style="material"]) {
+  --mha-material-outline: transparent;
+  --mha-material-outline-variant: transparent;
+  --mha-widget-border: transparent;
+  --mha-widget-border-edit: color-mix(in srgb, var(--mha-accent) 36%, transparent);
+  --mha-widget-inner-highlight: transparent;
+  --mha-dock-border: transparent;
+}
+
+/* MATERIAL YOU TONAL BACKGROUND
+ * Material uses a calm tonal background derived from the selected accent.
+ * iOS and OneUI keep their wallpaper/blob treatment.
+ */
+:host([data-theme-style="material"][data-theme="light"]) {
+  --mha-material-tonal-background:
+    color-mix(in srgb, var(--mha-accent) 9%, #fef7ff 91%);
+  --mha-material-tonal-background-soft:
+    color-mix(in srgb, var(--mha-accent) 6%, #fffbff 94%);
+}
+
+:host([data-theme-style="material"][data-theme="dark"]) {
+  --mha-material-tonal-background:
+    color-mix(in srgb, var(--mha-accent) 18%, #141218 82%);
+  --mha-material-tonal-background-soft:
+    color-mix(in srgb, var(--mha-accent) 11%, #1d1b20 89%);
+}

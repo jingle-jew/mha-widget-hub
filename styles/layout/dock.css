@@ -373,3 +373,20 @@
     border-radius: 999px;
   }
 }
+
+/* MATERIAL DOCK DYNAMIC SURFACE */
+:host([data-theme-style="material"]) .mha-dock {
+  background:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--mha-material-surface-tint) 48%, transparent),
+      transparent 54%
+    ),
+    var(--mha-dock-surface);
+  border-color: var(--mha-material-outline-variant);
+}
+
+/* MATERIAL BORDERLESS DOCK SURFACE */
+:host([data-theme-style="material"]) .mha-dock {
+  border-color: transparent;
+}

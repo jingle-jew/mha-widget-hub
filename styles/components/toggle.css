@@ -70,3 +70,14 @@
   --mha-toggle-track-border: color-mix(in srgb, var(--mha-material-you-symbol-1, #6750a4) 20%, transparent);
   --mha-toggle-thumb-bg: var(--mha-material-you-symbol-1, #6750a4);
 }
+
+/* MATERIAL TOGGLE DYNAMIC SURFACE */
+:host([data-theme-style="material"]) .mha-toggle-track {
+  background: var(--mha-material-surface-container-highest);
+  border-color: var(--mha-material-outline-variant);
+}
+
+/* MATERIAL BORDERLESS TOGGLE SURFACE */
+:host([data-theme-style="material"]) .mha-toggle-track {
+  border-color: transparent;
+}
