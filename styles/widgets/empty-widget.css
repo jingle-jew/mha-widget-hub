@@ -38,8 +38,8 @@
  * gets a square size based on the smaller side of the cell.
  */
 .mha-widget {
-  --mha-widget-inner-padding: var(--mha-widget-inner-inset, 10px);
-  --mha-widget-inner-gap: var(--mha-widget-content-gap, var(--mha-grid-gap, var(--mha-gap, 10px)));
+  --mha-widget-inner-padding: var(--mha-widget-inner-inset, clamp(0.38rem, 0.9vw, 0.65rem));
+  --mha-widget-inner-gap: var(--mha-widget-content-gap, clamp(0.2rem, 0.55vw, 0.45rem));
 
   /*
    * The icon should feel like it occupies one internal unit without touching
@@ -231,3 +231,16 @@
     animation: none;
   }
 }
+
+
+/* Compact widget internal spacing
+ * The internal widget gap is intentionally smaller than the global grid gap.
+ * Global gap = spacing between widgets.
+ * Internal gap = spacing between content units inside a widget.
+ */
+
+
+/* Compact widget inner padding
+ * This controls the distance between the widget contour and the internal
+ * content grid. It is intentionally thinner than the old inner border inset.
+ */

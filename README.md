@@ -469,3 +469,27 @@ Full `render()` is still kept for:
 - new hass assignment;
 - reset grid;
 - structural recovery when styled grid units mismatch.
+
+
+## Reduce widget internal gap
+
+Reduced the internal widget grid gap.
+
+The internal gap is now independent from the global grid gap:
+
+```css
+--mha-widget-inner-gap: var(--mha-widget-content-gap, clamp(0.2rem, 0.55vw, 0.45rem));
+```
+
+This keeps content units tighter inside widgets without changing spacing between widgets.
+
+
+## Reduce widget inner padding
+
+Reduced the internal padding between the widget contour and the widget's internal content grid.
+
+```css
+--mha-widget-inner-padding: var(--mha-widget-inner-inset, clamp(0.38rem, 0.9vw, 0.65rem));
+```
+
+This brings internal content closer to the widget edge while staying tokenized and overrideable through `--mha-widget-inner-inset`.
