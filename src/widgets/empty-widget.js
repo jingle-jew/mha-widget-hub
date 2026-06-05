@@ -59,9 +59,7 @@ export function createEmptyWidget(
   }
 
   el.append(innerGrid);
-
-  if (isEditing) {
-    const tools = document.createElement("div");
+  const tools = document.createElement("div");
     tools.className = "mha-widget-tools";
     tools.append(
       tool("Déplacer", "move"),
@@ -79,9 +77,8 @@ export function createEmptyWidget(
     badge.textContent = `${sizeToString(size)} · ${density}`;
 
     el.append(tools, handle, badge);
-  }
-
-  return el;
+  
+return el;
 }
 
 function tool(label, icon, onClick) {

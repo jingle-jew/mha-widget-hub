@@ -110,3 +110,124 @@
     --mha-icon-size: 100%;
   }
 }
+
+
+/* EDIT MODE CSS-ONLY TOGGLE
+ * Edit controls are always in the DOM so entering edit mode does not require
+ * a full render. The host class only fades/toggles them.
+ */
+.mha-widget-tools,
+.mha-resize-handle,
+.mha-size-badge {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-2px) scale(.98);
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+:host(.is-editing) .mha-widget-tools,
+:host(.is-editing) .mha-resize-handle,
+:host(.is-editing) .mha-size-badge {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+/* EDIT MODE WIDGET DANCE
+ * In edit mode, widgets get a subtle native-app style wiggle and highlighted
+ * contour. This is CSS-only and does not require re-rendering.
+ */
+:host(.is-editing) .mha-widget {
+  --mha-edit-outline-color: color-mix(in srgb, var(--mha-accent) 72%, white 18%);
+  --mha-edit-outline-shadow:
+    0 0 0 1px color-mix(in srgb, var(--mha-edit-outline-color) 72%, transparent),
+    0 0 0 4px color-mix(in srgb, var(--mha-edit-outline-color) 16%, transparent),
+    var(--mha-widget-shadow);
+
+  border-color: var(--mha-edit-outline-color);
+  box-shadow: var(--mha-edit-outline-shadow);
+  animation:
+    mha-widget-edit-dance 1450ms ease-in-out infinite,
+    mha-widget-edit-glow 2200ms ease-in-out infinite;
+  transform-origin: center;
+}
+
+/* Desynchronize the wiggle so the grid feels organic instead of mechanical. */
+:host(.is-editing) .mha-widget:nth-child(2n) {
+  animation-delay: -180ms, -360ms;
+}
+
+:host(.is-editing) .mha-widget:nth-child(3n) {
+  animation-delay: -320ms, -720ms;
+}
+
+:host(.is-editing) .mha-widget:nth-child(4n) {
+  animation-delay: -520ms, -1080ms;
+}
+
+:host(.is-editing) .mha-widget:nth-child(5n) {
+  animation-delay: -760ms, -1400ms;
+}
+
+@keyframes mha-widget-edit-dance {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(-.18deg) scale(1);
+  }
+
+  25% {
+    transform: translate3d(.35px, -.45px, 0) rotate(.22deg) scale(1.0015);
+  }
+
+  50% {
+    transform: translate3d(-.25px, .35px, 0) rotate(-.16deg) scale(.9995);
+  }
+
+  75% {
+    transform: translate3d(.25px, .25px, 0) rotate(.18deg) scale(1.001);
+  }
+
+  100% {
+    transform: translate3d(0, 0, 0) rotate(-.18deg) scale(1);
+  }
+}
+
+@keyframes mha-widget-edit-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--mha-edit-outline-color) 62%, transparent),
+      0 0 0 3px color-mix(in srgb, var(--mha-edit-outline-color) 10%, transparent),
+      var(--mha-widget-shadow);
+  }
+
+  50% {
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--mha-edit-outline-color) 88%, transparent),
+      0 0 0 5px color-mix(in srgb, var(--mha-edit-outline-color) 20%, transparent),
+      var(--mha-widget-shadow);
+  }
+}
+
+/* Interaction states should stay readable over the edit dance. */
+:host(.is-editing) .mha-widget.is-dragging,
+:host(.is-editing) .mha-widget.is-resizing {
+  animation-play-state: paused;
+}
+
+:host(.is-editing) .mha-widget.is-drop-before,
+:host(.is-editing) .mha-widget.is-drop-after,
+:host(.is-editing) .mha-widget.is-resizing {
+  border-color: var(--mha-accent);
+  box-shadow:
+    0 0 0 2px var(--mha-accent),
+    0 0 0 6px color-mix(in srgb, var(--mha-accent) 22%, transparent),
+    var(--mha-widget-shadow);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host(.is-editing) .mha-widget {
+    animation: none;
+  }
+}

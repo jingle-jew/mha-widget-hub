@@ -434,3 +434,21 @@ The crossfade is applied to all visual theme preference changes from the dev men
 - global icon shape.
 
 The background crossfade snapshots the old background before changing tokens, then fades it over the new theme.
+
+
+## Resize no-flash
+
+Widget resize no longer calls `render()` on pointer release.
+
+During resize, the widget's dataset and CSS custom properties are updated live.
+On finish, the new size is saved and square-unit sync is scheduled without rebuilding the Shadow DOM.
+
+
+## Edit mode widget dance
+
+Edit mode now adds a CSS-only widget wiggle/dance and highlighted contour.
+
+- No render required.
+- Widgets use staggered animation delays.
+- Dragging/resizing pauses the dance.
+- `prefers-reduced-motion` disables the animation.

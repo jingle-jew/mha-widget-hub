@@ -68,3 +68,12 @@
     animation: none;
   }
 }
+
+
+/* Edit/drop no-flash polish
+ * Entering edit mode and reordering widgets should not look like a reload.
+ */
+:host(.is-editing) .mha-grid,
+:host(.is-editing) .mha-widget {
+  will-change: transform, opacity;
+}
