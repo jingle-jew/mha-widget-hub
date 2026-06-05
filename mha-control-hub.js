@@ -8,8 +8,18 @@ import {createScreensaver,normalizeClockVariant,updateScreensaverClock} from "./
 // Keeps existing local widget order/sizes after the public naming cleanup.
 
 function syncThemeAttributes(host) {
-  host.dataset.theme = document.documentElement.dataset.theme || "dark";
-  host.dataset.themeStyle = document.documentElement.dataset.themeStyle || "oneui";
+  const theme = document.documentElement.dataset.theme || "dark";
+  const themeStyle = document.documentElement.dataset.themeStyle || "oneui";
+  const iconShape = document.documentElement.dataset.iconShape || host.dataset.iconShape || "squircle";
+
+  host.dataset.theme = theme;
+  host.setAttribute("data-theme", theme);
+
+  host.dataset.themeStyle = themeStyle;
+  host.setAttribute("data-theme-style", themeStyle);
+
+  host.dataset.iconShape = iconShape;
+  host.setAttribute("data-icon-shape", iconShape);
 }
 
 const ORDER="mha-grid-order",SIZES="mha-widget-sizes",LEGACY_STORAGE_PREFIX=["mha","v2"].join("-"),THEME_STYLES=new Set(["ios","oneui","material"]);

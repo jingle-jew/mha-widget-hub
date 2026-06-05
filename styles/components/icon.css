@@ -1,9 +1,9 @@
 /*
  * MHA Icon component tokens.
  *
- * This file defines only the reusable icon container and its shape tokens.
- * It does not render icon signs/glyphs.
- * It is not connected to dock/widgets/status bar yet.
+ * Container shape and symbol/sign are separate concerns:
+ * - .mha-icon = container / shape / surface
+ * - .mha-icon-symbol = pictogram / sign
  */
 
 :host {
@@ -23,15 +23,10 @@
 
   /*
    * Active icon shape token.
-   * Future user personalization can toggle this single token.
+   * IMPORTANT: this must not reference itself through another variable.
    */
-  --mha-icon-border-radius: var(--mha-icon-border-radius-squircle);
-
-  /*
-   * Compatibility alias if the project later standardizes everything under
-   * a more generic border-radius token naming scheme.
-   */
-  --mha-border-radius-icon: var(--mha-icon-border-radius);
+  --mha-border-radius-icon: var(--mha-icon-border-radius-squircle);
+  --mha-icon-border-radius: var(--mha-border-radius-icon);
 
   --mha-icon-bg: var(--mha-dock-slot-surface, var(--mha-control-surface, rgba(255,255,255,.16)));
   --mha-icon-color: var(--mha-text, currentColor);
@@ -40,28 +35,27 @@
 }
 
 /*
- * Future user preference hook.
- * No menu is implemented yet.
+ * Global icon shape preference.
+ * Every .mha-icon in <mha-control-hub> reads the same token.
  */
 :host([data-icon-shape="rounded-square"]) {
-  --mha-icon-border-radius: var(--mha-icon-border-radius-rounded-square);
   --mha-border-radius-icon: var(--mha-icon-border-radius-rounded-square);
+  --mha-icon-border-radius: var(--mha-icon-border-radius-rounded-square);
 }
 
 :host([data-icon-shape="squircle"]) {
-  --mha-icon-border-radius: var(--mha-icon-border-radius-squircle);
   --mha-border-radius-icon: var(--mha-icon-border-radius-squircle);
+  --mha-icon-border-radius: var(--mha-icon-border-radius-squircle);
 }
 
 :host([data-icon-shape="circle"]) {
-  --mha-icon-border-radius: var(--mha-icon-border-radius-circle);
   --mha-border-radius-icon: var(--mha-icon-border-radius-circle);
+  --mha-icon-border-radius: var(--mha-icon-border-radius-circle);
 }
 
 /*
  * Reusable icon container.
- * This is a shape/surface shell only. Actual signs/glyphs are intentionally
- * not implemented in this step.
+ * This is the shape/surface shell only.
  */
 .mha-icon {
   inline-size: var(--mha-icon-size);
@@ -76,4 +70,20 @@
   color: var(--mha-icon-color);
   border: 1px solid var(--mha-icon-border);
   box-shadow: var(--mha-icon-shadow);
+  transition: border-radius var(--mha-motion-duration-fast, 160ms) var(--mha-motion-easing, ease);
+}
+
+/* DIRECT ICON SHAPE APPLICATION
+ * Keep this at the end.
+ */
+:host([data-icon-shape="rounded-square"]) .mha-icon {
+  border-radius: var(--mha-icon-border-radius-rounded-square);
+}
+
+:host([data-icon-shape="squircle"]) .mha-icon {
+  border-radius: var(--mha-icon-border-radius-squircle);
+}
+
+:host([data-icon-shape="circle"]) .mha-icon {
+  border-radius: var(--mha-icon-border-radius-circle);
 }

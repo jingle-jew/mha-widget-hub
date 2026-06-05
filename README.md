@@ -171,3 +171,40 @@ Each icon uses:
 - `createIconSymbol()` for the local symbol/sign.
 
 The symbols are selected from the local icon symbol catalog.
+
+
+## Verified icon shape toggle fix
+
+Fixed the global icon shape toggle by removing a circular CSS token reference:
+
+```css
+--mha-icon-border-radius: var(--mha-border-radius-icon);
+--mha-border-radius-icon: var(--mha-icon-border-radius);
+```
+
+The active token now resolves cleanly through `--mha-border-radius-icon`, and `data-icon-shape` is mirrored as a real host attribute.
+
+
+## Direct icon shape CSS fix
+
+Added direct host-state rules at the end of `styles/components/icon.css`:
+
+```css
+:host([data-icon-shape="circle"]) .mha-icon {
+  border-radius: var(--mha-icon-border-radius-circle);
+}
+```
+
+This avoids relying only on chained custom properties for the visible icon shape.
+
+
+## Icon shape listener fix
+
+Fixed the dev menu icon shape control by attaching a robust listener directly to:
+
+```js
+document.querySelector('[data-dev-action="icon-shape"]')
+```
+
+Both `change` and `input` events now call `setIconShape()`.
+The setter is also exposed through `window.__MHA_DEV__.setIconShape` for manual testing.
