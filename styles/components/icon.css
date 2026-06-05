@@ -18,7 +18,7 @@
    * These are intentionally independent from visual themes.
    */
   --mha-icon-border-radius-rounded-square: clamp(0.55rem, 1.25vw, 0.9rem);
-  --mha-icon-border-radius-squircle: clamp(1.5rem, 2.6vw, 2rem);
+  --mha-icon-border-radius-squircle: 38%;
   --mha-icon-border-radius-circle: 999px;
 
   /*

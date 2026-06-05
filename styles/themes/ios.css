@@ -41,10 +41,8 @@
   --mha-text: rgba(255,255,255,.94);
   --mha-muted: rgba(255,255,255,.64);
 
-  --mha-widget-surface:
-    linear-gradient(145deg, rgba(210,225,255,.18), rgba(255,255,255,.060) 48%, rgba(150,175,255,.045));
-  --mha-widget-surface-edit:
-    linear-gradient(145deg, rgba(220,233,255,.25), rgba(255,255,255,.090) 48%, rgba(150,175,255,.065));
+  --mha-widget-surface: rgba(255,255,255,.105);
+  --mha-widget-surface-edit: rgba(255,255,255,.155);
   --mha-widget-border: rgba(235,243,255,.31);
   --mha-widget-border-edit: rgba(240,246,255,.48);
   --mha-widget-inner-highlight: rgba(255,255,255,.34);
@@ -81,10 +79,8 @@
   --mha-text: rgba(10,18,34,.92);
   --mha-muted: rgba(10,18,34,.58);
 
-  --mha-widget-surface:
-    linear-gradient(145deg, rgba(255,255,255,.56), rgba(255,255,255,.245) 50%, rgba(210,225,255,.155));
-  --mha-widget-surface-edit:
-    linear-gradient(145deg, rgba(255,255,255,.68), rgba(255,255,255,.34) 50%, rgba(210,225,255,.22));
+  --mha-widget-surface: rgba(255,255,255,.36);
+  --mha-widget-surface-edit: rgba(255,255,255,.46);
   --mha-widget-border: rgba(255,255,255,.74);
   --mha-widget-border-edit: rgba(88,110,155,.26);
   --mha-widget-inner-highlight: rgba(255,255,255,.84);
@@ -114,4 +110,40 @@
   --mha-bg-blob-3: #67d5ff;
   --mha-bg-blob-4: #c09dff;
   --mha-bg-blob-opacity: .30;
+}
+
+
+/*
+ * iOS widget surfaces intentionally avoid gradients.
+ * Liquid Glass depth should come from transparency, blur, border, and shadow,
+ * not from a visible surface gradient.
+ */
+
+/* iOS widget overlay gradient removal
+ * Keep this after the theme tokens.
+ *
+ * Some widget/card components draw a decorative top-left shine with ::before
+ * or ::after. For iOS Liquid Glass, widgets should be uniform glass surfaces:
+ * no visible corner gradient, no diagonal wash.
+ */
+:host([data-theme-style="ios"]) .mha-widget::before,
+:host([data-theme-style="ios"]) .mha-widget::after,
+:host([data-theme-style="ios"]) .mha-widget-surface::before,
+:host([data-theme-style="ios"]) .mha-widget-surface::after,
+:host([data-theme-style="ios"]) .widget::before,
+:host([data-theme-style="ios"]) .widget::after,
+:host([data-theme-style="ios"]) .card::before,
+:host([data-theme-style="ios"]) .card::after,
+:host([data-theme-style="ios"]) [data-widget-id]::before,
+:host([data-theme-style="ios"]) [data-widget-id]::after {
+  background: none;
+  background-image: none;
+}
+
+/* Keep the widget surface itself uniform in iOS. */
+:host([data-theme-style="ios"]) .mha-widget,
+:host([data-theme-style="ios"]) .mha-widget-surface,
+:host([data-theme-style="ios"]) .widget,
+:host([data-theme-style="ios"]) [data-widget-id] {
+  background-image: none;
 }

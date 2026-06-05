@@ -219,3 +219,24 @@ Icon surface/color styling is now bound to the visual theme:
 - Material: widget-colored icon surfaces with Material You symbol colors.
 
 Icon shape remains independent and controlled by `data-icon-shape`.
+
+
+## iOS widget gradient removal
+
+The iOS visual theme now uses uniform glass widget surfaces instead of widget background gradients.
+
+Adjusted tokens:
+- `--mha-widget-surface`
+- `--mha-widget-surface-edit`
+
+Icon surfaces remain unchanged.
+
+
+## iOS widget overlay gradient removal
+
+Removed the remaining top-left widget gradient/shine overlays for the iOS visual theme.
+
+The iOS widget surface is now intended to be uniform glass:
+- no surface gradient;
+- no pseudo-element corner gradient;
+- borders/shadows/blur remain.
