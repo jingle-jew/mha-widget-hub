@@ -868,3 +868,65 @@ Reduced visual artifacts during Safari responsive orientation changes.
 The standard dock and mobile dock are now hidden during the short responsive relayout window.
 
 This prevents the dock from briefly appearing in the wrong position during Safari simulator orientation changes.
+
+
+## Mobile dock panel surface tokens
+
+The mobile floating dock panel now follows the same surface tokens as widgets.
+
+- base panel derives from `--mha-widget-surface`;
+- panel is slightly denser/darker than normal widget surfaces;
+- iOS keeps a glass feel derived from widget tokens;
+- OneUI remains opaque and clean;
+- Material palette structure is preserved by consuming existing surface tokens only.
+
+
+## Resize handle border-only polish
+
+The resize handle no longer has a black square background.
+
+It is now:
+- an invisible generous hit target;
+- a visible white L-shaped mark drawn on the widget edge;
+- clipped by the widget overflow/radius so it follows the widget corner.
+
+
+## Edit button icon shape token
+
+The floating edit button now follows the global icon shape setting.
+
+- rounded-square uses `--mha-icon-radius-rounded-square`;
+- circle uses `--mha-icon-border-radius-circle`;
+- squircle uses `--mha-icon-squircle-mask`.
+
+
+## Edit button icon surface and edge alignment
+
+The floating edit button now follows the full icon token contract:
+
+- surface: `--mha-icon-bg`;
+- border: `--mha-icon-border`;
+- text/glyph: `--mha-icon-color`;
+- shadow: `--mha-icon-shadow`;
+- shape: global icon shape setting.
+
+On mobile, it uses the same edge rhythm as the floating dock launcher.
+
+
+## Hide mobile dock in edit mode
+
+When the host is in edit mode (`.is-editing`), the mobile floating dock is hidden.
+
+This prevents the dock launcher/panel from overlapping edit controls or adding visual clutter during layout editing.
+
+
+## OneUI light grid shadow fix
+
+Softened OneUI light shadows to prevent stacked widget shadows from visually merging into a vertical grid shadow.
+
+Only OneUI light is affected:
+- `--mha-widget-shadow`
+- `--mha-floating-shadow`
+- `--mha-dock-shadow`
+
+Also added a OneUI-light-only guard to keep the grid/shell/background shadowless.

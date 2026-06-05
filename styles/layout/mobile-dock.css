@@ -220,3 +220,96 @@
   pointer-events: none !important;
   transition: none !important;
 }
+
+/* MOBILE DOCK PANEL SURFACE TOKENS
+ * The mobile floating dock panel follows the same surface system as widgets.
+ * It is intentionally a slightly denser/darker surface so it reads as an
+ * opened floating layer over the dashboard.
+ */
+.mha-mobile-dock {
+  --mha-mobile-dock-panel-surface:
+    color-mix(in srgb, var(--mha-widget-surface) 88%, rgba(0,0,0,.16));
+  --mha-mobile-dock-panel-border: var(--mha-widget-border);
+  --mha-mobile-dock-panel-shadow: var(--mha-floating-shadow);
+}
+
+.mha-mobile-dock-panel {
+  background: var(--mha-mobile-dock-panel-surface);
+  border-color: var(--mha-mobile-dock-panel-border);
+  box-shadow: var(--mha-mobile-dock-panel-shadow);
+  color: var(--mha-text);
+}
+
+/* iOS: preserve glass, but derive it from widget surface instead of a fixed dark panel. */
+:host([data-theme-style="ios"]) .mha-mobile-dock {
+  --mha-mobile-dock-panel-surface:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--mha-widget-surface) 76%, rgba(255,255,255,.18)),
+      color-mix(in srgb, var(--mha-widget-surface) 88%, rgba(0,0,0,.16))
+    );
+  --mha-mobile-dock-panel-border: color-mix(in srgb, var(--mha-widget-border) 72%, rgba(255,255,255,.28));
+  --mha-mobile-dock-panel-shadow:
+    0 24px 70px rgba(0,0,0,.24),
+    inset 0 1px 0 rgba(255,255,255,.18);
+}
+
+:host([data-theme="light"][data-theme-style="ios"]) .mha-mobile-dock {
+  --mha-mobile-dock-panel-surface:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--mha-widget-surface) 78%, rgba(255,255,255,.52)),
+      color-mix(in srgb, var(--mha-widget-surface) 90%, rgba(110,125,160,.12))
+    );
+  --mha-mobile-dock-panel-border: rgba(255,255,255,.54);
+  --mha-mobile-dock-panel-shadow:
+    0 24px 70px rgba(65,80,120,.16),
+    inset 0 1px 0 rgba(255,255,255,.62);
+}
+
+/* OneUI: opaque and slightly denser than widgets. */
+:host([data-theme-style="oneui"]) .mha-mobile-dock {
+  --mha-mobile-dock-panel-surface:
+    color-mix(in srgb, var(--mha-widget-surface) 88%, rgba(0,0,0,.10));
+  --mha-mobile-dock-panel-border: var(--mha-widget-border);
+}
+
+:host([data-theme="light"][data-theme-style="oneui"]) .mha-mobile-dock {
+  --mha-mobile-dock-panel-surface:
+    color-mix(in srgb, var(--mha-widget-surface) 86%, rgba(115,125,145,.12));
+}
+
+/* Material: keep the Material palette structure; consume existing surface tokens only. */
+:host([data-theme-style="material"]) .mha-mobile-dock {
+  --mha-mobile-dock-panel-surface:
+    color-mix(in srgb, var(--mha-widget-surface) 90%, rgba(0,0,0,.10));
+  --mha-mobile-dock-panel-border: var(--mha-widget-border);
+  --mha-mobile-dock-panel-shadow: var(--mha-floating-shadow);
+}
+
+:host([data-theme="light"][data-theme-style="material"]) .mha-mobile-dock {
+  --mha-mobile-dock-panel-surface:
+    color-mix(in srgb, var(--mha-widget-surface) 88%, rgba(29,27,32,.08));
+}
+
+/* The close button is an explicit contrast/danger exception. */
+.mha-mobile-dock-close {
+  color: #fff;
+}
+
+/* HIDE MOBILE DOCK IN EDIT MODE
+ * Editing mode has its own floating control. Hide the mobile dock launcher/panel
+ * to avoid visual clutter and accidental overlap.
+ */
+:host(.is-editing) .mha-mobile-dock {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transform: translateY(8px) scale(.96);
+}
+
+:host(.is-editing) .mha-mobile-dock-panel,
+:host(.is-editing) .mha-mobile-dock-scrim,
+:host(.is-editing) .mha-mobile-dock-launcher {
+  pointer-events: none !important;
+}

@@ -64,3 +64,27 @@
   --mha-bg-blob-4: #ccb4ff;
   --mha-bg-blob-opacity: .24;
 }
+
+/* ONEUI LIGHT SOFT DEPTH
+ * In OneUI light, heavy stacked widget shadows can visually merge into a
+ * vertical "grid shadow". Keep depth subtle and mostly local to each widget.
+ */
+:host([data-theme="light"][data-theme-style="oneui"]) {
+  --mha-widget-shadow:
+    0 6px 16px rgba(76, 92, 120, .055),
+    0 1px 4px rgba(76, 92, 120, .035);
+
+  --mha-floating-shadow:
+    0 8px 22px rgba(76, 92, 120, .075);
+
+  --mha-dock-shadow:
+    0 8px 22px rgba(76, 92, 120, .075);
+}
+
+/* Extra guard: the layout containers themselves must stay shadowless. */
+:host([data-theme="light"][data-theme-style="oneui"]) .mha-background,
+:host([data-theme="light"][data-theme-style="oneui"]) .mha-shell,
+:host([data-theme="light"][data-theme-style="oneui"]) .mha-grid {
+  box-shadow: none !important;
+  filter: none;
+}

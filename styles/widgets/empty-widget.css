@@ -230,3 +230,60 @@
 :host(.is-editing) .mha-resize-handle::before {
   opacity: .95;
 }
+
+/* RESIZE HANDLE BORDER-ONLY POLISH
+ * The resize affordance should feel integrated into the widget border.
+ *
+ * - no black square background;
+ * - visible mark is only a white corner line;
+ * - hit target remains generous but invisible;
+ * - the mark is clipped by the widget radius/overflow.
+ */
+.mha-resize-handle {
+  inline-size: clamp(2.35rem, 7vw, 3rem);
+  block-size: clamp(2.35rem, 7vw, 3rem);
+  right: 0;
+  bottom: 0;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  z-index: 31;
+}
+
+:host(.is-editing) .mha-resize-handle {
+  display: block;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* Visible L-shaped resize mark, drawn directly on the widget edge. */
+.mha-resize-handle::before {
+  content: "";
+  position: absolute;
+  right: clamp(.42rem, 1.25vw, .62rem);
+  bottom: clamp(.42rem, 1.25vw, .62rem);
+  inline-size: clamp(1.05rem, 3.8vw, 1.45rem);
+  block-size: clamp(1.05rem, 3.8vw, 1.45rem);
+  border-right: clamp(.22rem, .7vw, .34rem) solid rgba(255,255,255,.92);
+  border-bottom: clamp(.22rem, .7vw, .34rem) solid rgba(255,255,255,.92);
+  border-radius: 0 0 calc(var(--mha-widget-radius) * .36) 0;
+  box-shadow:
+    0 1px 2px rgba(0,0,0,.16),
+    inset -1px -1px 0 rgba(255,255,255,.12);
+  opacity: .98;
+}
+
+/* Remove any older decorative layers from the handle. */
+.mha-resize-handle::after {
+  content: none !important;
+}
+
+/* Keep the handle mark on the border and allow the widget overflow to clip it to the corner radius. */
+.mha-widget {
+  overflow: hidden;
+}

@@ -179,3 +179,124 @@
   transition: none !important;
   animation: none !important;
 }
+
+/* EDIT BUTTON ICON SHAPE TOKEN
+ * The floating edit button is an icon-like control, so its visible container
+ * follows the same global icon shape setting.
+ */
+.mha-edit-button {
+  border-radius: var(--mha-icon-radius-rounded-square, 32%);
+  overflow: hidden;
+}
+
+/* Rounded-square uses the canonical rounded-square icon token. */
+:host([data-icon-shape="rounded-square"]) .mha-edit-button {
+  border-radius: var(--mha-icon-radius-rounded-square, 32%);
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+/* Circle is a simple radius. */
+:host([data-icon-shape="circle"]) .mha-edit-button {
+  border-radius: var(--mha-icon-border-radius-circle, 999px);
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+/* Squircle uses the same generated squircle mask as icons. */
+:host([data-icon-shape="squircle"]) .mha-edit-button {
+  border-radius: 0;
+  -webkit-mask-image: var(--mha-icon-squircle-mask);
+  mask-image: var(--mha-icon-squircle-mask);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+/* EDIT BUTTON ICON SURFACE AND EDGE ALIGNMENT
+ * The floating edit button is a global icon-like control:
+ * - same shape contract as .mha-icon;
+ * - same icon surface/border/shadow/color tokens;
+ * - same edge distance rhythm as the mobile floating dock launcher.
+ */
+.mha-edit-button {
+  --mha-edit-button-edge: var(--mha-mobile-dock-edge, max(env(safe-area-inset-left), clamp(.9rem, 3vw, 1.25rem)));
+  --mha-edit-button-bottom: var(--mha-mobile-dock-bottom, max(env(safe-area-inset-bottom), clamp(.9rem, 3vw, 1.25rem)));
+  --mha-edit-button-size: var(--mha-mobile-dock-launcher-size, clamp(3.75rem, 15vw, 4.8rem));
+
+  inline-size: var(--mha-edit-button-size);
+  block-size: var(--mha-edit-button-size);
+
+  border: 1px solid var(--mha-icon-border);
+  background: var(--mha-icon-bg);
+  color: var(--mha-icon-color);
+  box-shadow: var(--mha-icon-shadow);
+  backdrop-filter: var(--mha-icon-backdrop-filter, none);
+
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+
+/* Mobile: align to the same outer edge rhythm as the floating dock launcher. */
+@media (max-width: 767px) {
+  .mha-edit-button {
+    right: var(--mha-edit-button-edge);
+    bottom: var(--mha-edit-button-bottom);
+  }
+}
+
+/* Tablet/desktop: keep it on the right, using the same edge token family. */
+@media (min-width: 768px) {
+  .mha-edit-button {
+    inset-inline-end: max(var(--mha-safe-area-right, env(safe-area-inset-right)), clamp(.9rem, 3vw, 1.25rem));
+    inset-block-end: max(var(--mha-safe-area-bottom, env(safe-area-inset-bottom)), clamp(.9rem, 3vw, 1.25rem));
+  }
+}
+
+/* Edit/close SVG should behave like an icon glyph inside the icon container. */
+.mha-edit-button svg {
+  width: var(--mha-icon-glyph-size, 56%);
+  height: var(--mha-icon-glyph-size, 56%);
+  fill: currentColor;
+}
+
+/* Keep the shape rules from the icon contract. */
+:host([data-icon-shape="rounded-square"]) .mha-edit-button {
+  border-radius: var(--mha-icon-radius-rounded-square, 32%);
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+:host([data-icon-shape="circle"]) .mha-edit-button {
+  border-radius: var(--mha-icon-border-radius-circle, 999px);
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+:host([data-icon-shape="squircle"]) .mha-edit-button {
+  border-radius: 0;
+  -webkit-mask-image: var(--mha-icon-squircle-mask);
+  mask-image: var(--mha-icon-squircle-mask);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+
+/* ONEUI LIGHT GRID EDGE SHADOW GUARD
+ * Prevents layout-level vertical edge/shadow artifacts in OneUI light.
+ */
+:host([data-theme="light"][data-theme-style="oneui"]) .mha-grid {
+  box-shadow: none !important;
+  filter: none !important;
+  background: transparent;
+}
+
+:host([data-theme="light"][data-theme-style="oneui"]) .mha-grid::before,
+:host([data-theme="light"][data-theme-style="oneui"]) .mha-grid::after {
+  content: none !important;
+  display: none !important;
+}
