@@ -313,3 +313,62 @@
 :host {
   --mha-icon-radius-rounded-square: 32%;
 }
+
+/* ICON SHAPE MASK GUARD
+ * Squircle uses a CSS mask. Rounded-square and circle must explicitly remove
+ * that mask, otherwise Safari can keep a stale squircle cutout over the new
+ * radius and create clipped/border artifacts.
+ */
+:host([data-icon-shape="rounded-square"]) .mha-icon,
+:host([data-icon-shape="circle"]) .mha-icon {
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+  -webkit-mask-size: auto !important;
+  mask-size: auto !important;
+}
+
+:host([data-icon-shape="rounded-square"]) .mha-icon {
+  border-radius: var(--mha-icon-radius-rounded-square, 32%);
+}
+
+:host([data-icon-shape="circle"]) .mha-icon {
+  border-radius: var(--mha-icon-border-radius-circle, 999px);
+}
+
+:host([data-icon-shape="squircle"]) .mha-icon {
+  border-radius: 0;
+  -webkit-mask-image: var(--mha-icon-squircle-mask);
+  mask-image: var(--mha-icon-squircle-mask);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+}
+
+/* FINAL ICON SHAPE MASK RESET
+ * This must stay at the end of icon.css.
+ *
+ * Squircle is the only shape allowed to use the squircle mask. Every other
+ * effective shape explicitly removes masks, including possible stale WebKit
+ * mask state after settings changes.
+ */
+:host(:not([data-icon-shape="squircle"])) .mha-icon {
+  -webkit-mask: none !important;
+  mask: none !important;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+}
+
+:host([data-icon-shape="rounded-square"]) .mha-icon {
+  border-radius: var(--mha-icon-radius-rounded-square, 32%) !important;
+}
+
+:host([data-icon-shape="circle"]) .mha-icon {
+  border-radius: var(--mha-icon-border-radius-circle, 999px) !important;
+}
+
+:host([data-icon-shape="squircle"]) .mha-icon {
+  border-radius: 0 !important;
+  -webkit-mask-image: var(--mha-icon-squircle-mask) !important;
+  mask-image: var(--mha-icon-squircle-mask) !important;
+  -webkit-mask-size: 100% 100% !important;
+  mask-size: 100% 100% !important;
+}

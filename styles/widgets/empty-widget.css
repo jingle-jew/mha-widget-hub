@@ -287,3 +287,80 @@
 .mha-widget {
   overflow: hidden;
 }
+
+/* WIDGET SHAPE CONTRACT — ONEUI + MATERIAL
+ * In OneUI and Material, only 2x1 and 1x2 widgets are allowed to use pill
+ * widget geometry. Every other widget size must keep the theme's normal
+ * rounded-square / rounded-rect radius.
+ *
+ * This applies to widget containers only. It does not affect:
+ * - icon shape tokens;
+ * - internal pills/buttons;
+ * - reusable UI components;
+ * - iOS widget geometry.
+ */
+:host([data-theme-style="oneui"]) .mha-widget,
+:host([data-theme-style="material"]) .mha-widget {
+  border-radius: var(--mha-widget-radius);
+}
+
+:host([data-theme-style="oneui"]) .mha-widget::before,
+:host([data-theme-style="material"]) .mha-widget::before {
+  border-radius: var(--mha-widget-inner-radius);
+}
+
+/* Pill widgets allowed in OneUI/Material: 2x1 and 1x2 only. */
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-size="2x1"],
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-size="1x2"],
+:host([data-theme-style="material"]) .mha-widget[data-widget-size="2x1"],
+:host([data-theme-style="material"]) .mha-widget[data-widget-size="1x2"] {
+  border-radius: var(--mha-widget-pill-radius);
+}
+
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-size="2x1"]::before,
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-size="1x2"]::before,
+:host([data-theme-style="material"]) .mha-widget[data-widget-size="2x1"]::before,
+:host([data-theme-style="material"]) .mha-widget[data-widget-size="1x2"]::before {
+  border-radius: var(--mha-widget-pill-inner-radius);
+}
+
+/* SOBER EDIT TOOL BUTTONS
+ * Edit tools should feel integrated and calm.
+ *
+ * Drag/drop is taught through onboarding, so widgets only show the destructive
+ * close action in the edit tools. The button keeps a subtle surface/border but
+ * does not glow.
+ */
+.mha-widget-tools {
+  gap: clamp(.18rem, .5vw, .32rem);
+}
+
+.mha-tool-button {
+  background:
+    color-mix(in srgb, var(--mha-widget-surface-edit, var(--mha-widget-surface)) 74%, transparent);
+  border: 1px solid color-mix(in srgb, var(--mha-widget-border-edit, var(--mha-widget-border)) 70%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.14),
+    0 2px 7px rgba(0,0,0,.12);
+  color: var(--mha-text);
+}
+
+.mha-tool-button:hover,
+.mha-tool-button:focus-visible {
+  background:
+    color-mix(in srgb, var(--mha-widget-surface-edit, var(--mha-widget-surface)) 84%, var(--mha-accent) 8%);
+  border-color:
+    color-mix(in srgb, var(--mha-widget-border-edit, var(--mha-widget-border)) 72%, var(--mha-accent) 18%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.16),
+    0 3px 8px rgba(0,0,0,.14);
+}
+
+.mha-tool-button[data-action="close"] {
+  color: var(--mha-text);
+}
+
+.mha-tool-button[data-action="close"] svg,
+.mha-tool-button[data-action="close"] path {
+  filter: none !important;
+}

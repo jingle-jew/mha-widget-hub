@@ -4,6 +4,7 @@
 
 :host {
   --mha-slider-h: clamp(2.2rem, 4vw, 2.8rem);
+  --mha-slider-control-height: var(--mha-slider-h);
   --mha-slider-track-h: clamp(.42rem, .8vw, .62rem);
   --mha-slider-track-bg: var(--mha-control-surface);
   --mha-slider-fill-bg: var(--mha-accent);
@@ -11,10 +12,24 @@
 }
 
 .mha-slider {
+  position: relative;
+  container-type: size;
+  inline-size: 100%;
+  block-size: 100%;
   min-inline-size: 0;
+  min-block-size: 0;
+  box-sizing: border-box;
   display: grid;
-  gap: clamp(.25rem, .6vw, .45rem);
+  margin: 0;
+  padding: 0;
   color: var(--mha-text);
+}
+
+.mha-slider-rotor {
+  position: absolute;
+  min-inline-size: 0;
+  min-block-size: 0;
+  box-sizing: border-box;
 }
 
 .mha-slider-label {
@@ -23,11 +38,20 @@
   font-weight: 700;
 }
 
+.mha-slider-oneui-track {
+  display: none;
+}
+
 .mha-slider-input {
   -webkit-appearance: none;
   appearance: none;
+  display: block;
   inline-size: 100%;
-  block-size: var(--mha-slider-h);
+  block-size: 100%;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
   background: transparent;
   cursor: pointer;
 }
@@ -56,10 +80,7 @@
   --mha-slider-thumb-bg: rgba(255,255,255,.96);
 }
 
-:host([data-theme-style="oneui"]) {
-  --mha-slider-track-bg: rgba(255,255,255,.72);
-  --mha-slider-thumb-bg: rgba(0,0,0,.86);
-}
+
 
 :host([data-theme-style="material"]) {
   --mha-slider-track-bg: var(--mha-material-you-icon-container, #e8def8);
@@ -240,11 +261,13 @@
   --mha-slider-ios-thumb-width: clamp(1.55rem, 4.4vw, 2.05rem);
   --mha-slider-ios-thumb-height: clamp(1.02rem, 2.75vw, 1.32rem);
   --mha-slider-ios-thumb-radius: clamp(.42rem, 1.35vw, .66rem);
+  --mha-slider-control-height: calc(var(--mha-slider-ios-thumb-height) + .8rem);
 }
 
 /* Give the native input enough vertical room for the wider square-pill thumb. */
 :host([data-theme-style="ios"]) .mha-slider-input {
-  height: calc(var(--mha-slider-ios-thumb-height) + .8rem);
+  block-size: 100%;
+  height: 100%;
 }
 
 /* WebKit/Blink: wider thumb, always centered to track. */
@@ -264,4 +287,304 @@
   width: var(--mha-slider-ios-thumb-width);
   height: var(--mha-slider-ios-thumb-height);
   border-radius: var(--mha-slider-ios-thumb-radius);
+}
+
+/* ORIENTATION LAYOUT CONTRACT
+ * Every theme follows the same sizing rule:
+ * horizontal sliders grow in width, vertical sliders grow in height.
+ * Individual themes may still define their own visual track/thumb styling.
+ */
+.mha-slider[data-orientation="horizontal"] {
+  inline-size: 100%;
+  block-size: 100%;
+  width: 100%;
+  height: 100%;
+  max-inline-size: 100%;
+  max-block-size: 100%;
+  justify-self: stretch;
+  align-self: stretch;
+}
+
+.mha-slider[data-orientation="horizontal"] .mha-slider-rotor {
+  inset-inline: 0;
+  top: 50%;
+  inline-size: var(--mha-slider-available-inline, 100%);
+  width: var(--mha-slider-available-inline, 100%);
+  block-size: var(--mha-slider-control-height);
+  height: var(--mha-slider-control-height);
+  transform: translateY(-50%);
+  transform-origin: center;
+}
+
+.mha-slider[data-orientation="vertical"] {
+  inline-size: 100%;
+  block-size: 100%;
+  width: 100%;
+  height: 100%;
+  max-inline-size: 100%;
+  max-block-size: 100%;
+  justify-self: stretch;
+  align-self: stretch;
+}
+
+.mha-slider[data-orientation="vertical"] .mha-slider-rotor {
+  top: 50%;
+  left: 50%;
+  inline-size: var(--mha-slider-available-block, 100cqb);
+  width: var(--mha-slider-available-block, 100cqb);
+  block-size: var(--mha-slider-control-height);
+  height: var(--mha-slider-control-height);
+  transform: translate(-50%, -50%) rotate(-90deg);
+  transform-origin: center;
+}
+
+/* Component-level guard: fill the allocated slider unit. */
+.mha-widget-slider-unit {
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
+.mha-widget-slider-unit .mha-slider {
+  min-inline-size: 0;
+}
+
+.mha-widget-slider-unit--horizontal .mha-slider {
+  inline-size: 100%;
+  width: 100%;
+  max-inline-size: 100%;
+}
+
+.mha-widget-slider-unit--vertical .mha-slider {
+  inline-size: 100%;
+  width: 100%;
+  block-size: 100%;
+  height: 100%;
+}
+
+.mha-widget-slider-unit--auto .mha-slider {
+  inline-size: 100%;
+  width: 100%;
+  max-inline-size: 100%;
+  block-size: 100%;
+  height: 100%;
+  max-block-size: 100%;
+}
+
+/* Horizontal sliders should never collapse below the usable width of 2 widget units. */
+.mha-widget-slider-unit--horizontal .mha-slider {
+  min-inline-size: calc(
+    (var(--mha-widget-inner-unit-inline-size, 0px) * 2) +
+    var(--mha-widget-inner-gap, 0px)
+  );
+}
+
+/* Vertical sliders should never collapse below the usable height of 2 widget units. */
+.mha-widget-slider-unit--vertical .mha-slider {
+  min-block-size: calc(
+    (var(--mha-widget-inner-unit-block-size, 0px) * 2) +
+    var(--mha-widget-inner-gap, 0px)
+  );
+}
+
+/* ONEUI RANGE SLIDER
+ * OneUI uses custom track/fill visuals for cross-platform stability.
+ * The native input stays above them, invisible, for pointer and keyboard use.
+ */
+:host([data-theme-style="oneui"]) {
+  --mha-slider-oneui-control-height: var(--mha-button-height, clamp(2.15rem, 4vw, 2.85rem));
+  --mha-slider-control-height: var(--mha-slider-oneui-control-height);
+  --mha-slider-oneui-track-height: var(--mha-slider-oneui-control-height);
+  --mha-slider-oneui-track-width: var(--mha-slider-oneui-control-height);
+  --mha-slider-oneui-radius: var(--mha-button-radius, var(--mha-control-radius, 999px));
+  --mha-slider-oneui-track-radius: var(--mha-slider-oneui-radius);
+  --mha-slider-oneui-track-bg: rgba(255,255,255,.18);
+  --mha-slider-oneui-fill-bg: var(--mha-accent);
+}
+
+:host([data-theme-style="oneui"]) .mha-slider {
+  isolation: isolate;
+}
+
+:host([data-theme-style="oneui"]) .mha-widget-slider-unit--horizontal .mha-slider {
+  min-inline-size: 0;
+}
+
+:host([data-theme-style="oneui"]) .mha-widget-slider-unit {
+  place-content: stretch;
+}
+
+:host([data-theme-style="oneui"]) .mha-widget-slider-unit--vertical .mha-slider {
+  inline-size: 100%;
+  width: 100%;
+  max-inline-size: 100%;
+  block-size: 100%;
+  height: 100%;
+  min-block-size: 0;
+}
+
+:host([data-theme-style="oneui"]) .mha-slider-label {
+  display: none;
+}
+
+:host([data-theme-style="oneui"]) .mha-slider-oneui-track {
+  position: absolute;
+  z-index: 0;
+  display: block;
+  border-radius: var(--mha-slider-oneui-track-radius);
+  background: var(--mha-slider-oneui-track-bg);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+:host([data-theme-style="oneui"]) .mha-slider-oneui-fill {
+  position: absolute;
+  z-index: 1;
+  inset-block: 0;
+  inset-inline-start: 0;
+  inline-size: var(--mha-slider-value, 50%);
+  width: var(--mha-slider-value, 50%);
+  max-inline-size: 100%;
+  max-width: 100%;
+  min-inline-size: 0;
+  min-width: 0;
+  border-radius: var(--mha-slider-oneui-track-radius);
+  background: var(--mha-slider-oneui-fill-bg);
+}
+
+:host([data-theme-style="oneui"]) .mha-slider[data-orientation="horizontal"] {
+  inline-size: 100%;
+  width: 100%;
+  max-inline-size: 100%;
+  block-size: 100%;
+  height: 100%;
+}
+
+:host([data-theme-style="oneui"]) .mha-slider[data-orientation="horizontal"] .mha-slider-rotor {
+  block-size: var(--mha-slider-oneui-track-height);
+  height: var(--mha-slider-oneui-track-height);
+}
+
+:host([data-theme-style="oneui"]) .mha-slider[data-orientation="vertical"] .mha-slider-rotor {
+  block-size: var(--mha-slider-oneui-track-height);
+  height: var(--mha-slider-oneui-track-height);
+}
+
+:host([data-theme-style="oneui"]) .mha-slider-oneui-track {
+  inset: 0;
+  inline-size: 100%;
+  width: 100%;
+  block-size: 100%;
+  height: 100%;
+}
+
+:host([data-theme-style="oneui"]) .mha-slider-oneui-fill {
+  inset-block: 0;
+  inset-inline-start: 0;
+  inline-size: var(--mha-slider-value, 50%);
+  width: var(--mha-slider-value, 50%);
+  block-size: 100%;
+  height: 100%;
+}
+
+:host([data-theme-style="oneui"]) .mha-slider-input {
+  -webkit-appearance: none;
+  appearance: none;
+  position: absolute;
+  z-index: 3;
+  display: block;
+  inset: 0;
+  inline-size: 100%;
+  width: 100%;
+  max-inline-size: 100%;
+  block-size: 100%;
+  height: 100%;
+  align-self: center;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  visibility: visible;
+  background: transparent;
+  cursor: pointer;
+}
+
+:host([data-theme-style="oneui"]) .mha-slider-input::-webkit-slider-runnable-track {
+  -webkit-appearance: none;
+  appearance: none;
+  height: var(--mha-slider-oneui-track-height);
+  border: 0 !important;
+  border-radius: var(--mha-slider-oneui-track-radius);
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+:host([data-theme-style="oneui"]) .mha-slider-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  inline-size: 0 !important;
+  block-size: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  opacity: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+:host([data-theme-style="oneui"]) .mha-slider-input::-moz-range-track {
+  height: var(--mha-slider-oneui-track-height);
+  border: 0 !important;
+  border-radius: var(--mha-slider-oneui-track-radius);
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+:host([data-theme-style="oneui"]) .mha-slider-input::-moz-range-progress {
+  height: var(--mha-slider-oneui-track-height);
+  border-radius: var(--mha-slider-oneui-track-radius);
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+:host([data-theme-style="oneui"]) .mha-slider-input::-moz-range-thumb {
+  inline-size: 0 !important;
+  block-size: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  opacity: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* AUTO-ORIENTATION ROTOR LENGTH GUARD
+ * Horizontal sliders use the measured inline axis.
+ * Vertical sliders rotate the same rotor, so its unrotated inline size must use
+ * the measured block axis. This prevents a 1x4 SliderWidget from keeping the
+ * old compact horizontal length after resize.
+ */
+.mha-slider[data-orientation="horizontal"] .mha-slider-rotor {
+  inline-size: var(--mha-slider-available-inline, 100%);
+  width: var(--mha-slider-available-inline, 100%);
+}
+
+.mha-slider[data-orientation="vertical"] .mha-slider-rotor {
+  inline-size: var(--mha-slider-available-block, 100cqb);
+  width: var(--mha-slider-available-block, 100cqb);
+}
+
+/* SLIDER WIDGET ROTOR LENGTH CONTRACT
+ * The full SliderWidget must not inherit a compact embedded-control length.
+ */
+.mha-widget[data-widget-kind="slider"] .mha-slider[data-orientation="horizontal"] .mha-slider-rotor {
+  inline-size: var(--mha-slider-available-inline, 100%);
+  width: var(--mha-slider-available-inline, 100%);
+}
+
+.mha-widget[data-widget-kind="slider"] .mha-slider[data-orientation="vertical"] .mha-slider-rotor {
+  inline-size: var(--mha-slider-available-block, 100cqb);
+  width: var(--mha-slider-available-block, 100cqb);
 }

@@ -300,3 +300,95 @@
   content: none !important;
   display: none !important;
 }
+
+/* EDIT BUTTON ICON SIZE CONTRACT
+ * The edit launcher uses the same icon system as dock/widget icons.
+ *
+ * Keep the button/touch target size as-is, but align the SVG glyph with
+ * --mha-icon-glyph-size so the edit icon feels like part of the same interface.
+ */
+.mha-edit-button {
+  --mha-edit-icon-glyph-size: var(--mha-icon-glyph-size, 56%);
+}
+
+.mha-edit-button svg {
+  inline-size: var(--mha-edit-icon-glyph-size);
+  block-size: var(--mha-edit-icon-glyph-size);
+  width: var(--mha-edit-icon-glyph-size);
+  height: var(--mha-edit-icon-glyph-size);
+}
+
+/* EDIT BUTTON GLYPH COLOR GUARD
+ * The edit button color is supplied by accent-palettes.css.
+ * Keep the SVG bound to currentColor so accent changes apply consistently.
+ */
+.mha-edit-button svg,
+.mha-edit-button path {
+  fill: currentColor;
+  stroke: currentColor;
+}
+
+/* EDIT BUTTON ACCENT CASCADE FIX
+ * shell.css loads after accent-palettes.css, so the edit button's base/icon
+ * surface rules can override accent-palettes.css.
+ *
+ * Keep this final, more specific rule in shell.css so the edit launcher always
+ * follows the live system accent tokens.
+ */
+:host .mha-edit-button {
+  background: var(--mha-system-icon-bg) !important;
+  color: var(--mha-system-icon-color) !important;
+  border-color: var(--mha-system-icon-border) !important;
+  box-shadow: var(--mha-system-icon-shadow) !important;
+}
+
+:host .mha-edit-button svg,
+:host .mha-edit-button path {
+  fill: currentColor !important;
+  stroke: currentColor !important;
+}
+
+/* EDIT BUTTON SHAPE MASK GUARD
+ * The edit launcher shares icon shape tokens. Remove squircle masks when the
+ * effective shape is rounded-square or circle.
+ */
+:host([data-icon-shape="rounded-square"]) .mha-edit-button,
+:host([data-icon-shape="circle"]) .mha-edit-button {
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+  -webkit-mask-size: auto !important;
+  mask-size: auto !important;
+}
+
+:host([data-icon-shape="squircle"]) .mha-edit-button {
+  -webkit-mask-image: var(--mha-icon-squircle-mask);
+  mask-image: var(--mha-icon-squircle-mask);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+}
+
+/* FINAL EDIT BUTTON SHAPE MASK RESET
+ * The edit button follows the same effective icon shape as the rest of the UI.
+ */
+:host(:not([data-icon-shape="squircle"])) .mha-edit-button {
+  -webkit-mask: none !important;
+  mask: none !important;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+}
+
+:host([data-icon-shape="rounded-square"]) .mha-edit-button {
+  border-radius: var(--mha-icon-radius-rounded-square, 32%) !important;
+}
+
+:host([data-icon-shape="circle"]) .mha-edit-button {
+  border-radius: var(--mha-icon-border-radius-circle, 999px) !important;
+}
+
+:host([data-icon-shape="squircle"]) .mha-edit-button {
+  border-radius: 0 !important;
+  -webkit-mask-image: var(--mha-icon-squircle-mask) !important;
+  mask-image: var(--mha-icon-squircle-mask) !important;
+  -webkit-mask-size: 100% 100% !important;
+  mask-size: 100% 100% !important;
+}

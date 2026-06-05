@@ -19,6 +19,7 @@ const STYLE_OPTIONS = [
 ];
 
 const ICON_SHAPE_OPTIONS = [
+  { value: "auto", label: "Auto" },
   { value: "rounded-square", label: "Rounded square" },
   { value: "squircle", label: "Squircle" },
   { value: "circle", label: "Circle" },
@@ -124,7 +125,7 @@ export function createSettingsPanel({
   theme = "dark",
   themeStyle = "oneui",
   accent = "",
-  iconShape = "squircle",
+  iconShape = "auto",
   screensaverPreview = false,
   screensaverNowBar = true,
   screensaverClockVariant = "digital",

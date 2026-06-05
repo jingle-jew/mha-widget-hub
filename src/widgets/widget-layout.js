@@ -11,6 +11,7 @@ function normalizeGridNumber(value, fallback = 1) {
   return Math.max(1, Math.round(number));
 }
 
+
 function normalizeChildren(children = []) {
   if (children === null || children === undefined) return [];
   return Array.isArray(children) ? children.filter(Boolean) : [children].filter(Boolean);
@@ -56,6 +57,61 @@ export function createWidgetUnit({
   unit.style.setProperty("--mha-widget-unit-row-span", unit.dataset.rowSpan);
 
   unit.append(...normalizeChildren(children));
+
+  return unit;
+}
+
+/*
+ * Slider placement rule.
+ *
+ * Sliders are never allowed to occupy less than 2 internal widget units along
+ * their active axis:
+ *
+ * - horizontal slider without an embedded label: minimum 2 columns wide;
+ * - horizontal slider with an embedded label: minimum 3 columns wide;
+ * - vertical slider: minimum 2 rows tall.
+ *
+ * There is no max span here: full SliderWidget layout owns larger 4x1,
+ * 1x4, 6x1, and 1x6 use cases.
+ *
+ * This keeps embedded slider controls usable while avoiding an artificial cap.
+ */
+export function createWidgetSliderUnit({
+  orientation = "horizontal",
+  hasLabel = true,
+  colSpan = 1,
+  rowSpan = 1,
+  className = "",
+  children = [],
+  ...rest
+} = {}) {
+  const resolvedOrientation = orientation === "vertical" || orientation === "auto" ? orientation : "horizontal";
+  const minHorizontalSpan = hasLabel ? 3 : 2;
+
+  const resolvedColSpan = resolvedOrientation === "horizontal"
+    ? Math.max(minHorizontalSpan, normalizeGridNumber(colSpan))
+    : normalizeGridNumber(colSpan);
+
+  const resolvedRowSpan = resolvedOrientation === "vertical"
+    ? Math.max(2, normalizeGridNumber(rowSpan))
+    : normalizeGridNumber(rowSpan);
+
+  const unit = createWidgetUnit({
+    ...rest,
+    colSpan: resolvedColSpan,
+    rowSpan: resolvedRowSpan,
+    justify: rest.justify || "stretch",
+    align: rest.align || "stretch",
+    className: [
+      "mha-widget-slider-unit",
+      `mha-widget-slider-unit--${resolvedOrientation}`,
+      hasLabel ? "mha-widget-slider-unit--has-label" : "mha-widget-slider-unit--no-label",
+      className,
+    ].filter(Boolean).join(" "),
+    children,
+  });
+
+  unit.dataset.orientationMode = resolvedOrientation;
 
   return unit;
 }

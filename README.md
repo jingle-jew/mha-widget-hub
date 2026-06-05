@@ -1379,3 +1379,387 @@ margin-top: calc((var(--mha-slider-ios-track-height) - var(--mha-slider-ios-thum
 ```
 
 OneUI and Material remain untouched.
+
+
+## OneUI 7 reference tonal slider
+
+Updated the OneUI-only slider style to follow the One UI 7 volume/brightness direction.
+
+The OneUI slider now uses:
+- a wide soft rounded track;
+- tonal inactive surface;
+- accent-filled progress;
+- a subtle integrated thumb;
+- active accent token for the filled part.
+
+iOS and Material slider styles are intentionally untouched.
+
+
+## OneUI slider accent progress and round thumb fix
+
+Fixed OneUI slider behavior:
+
+- progress bar uses the active accent;
+- thumb uses a near-accent color;
+- thumb is round and wider;
+- thumb is vertically centered on the track;
+- inactive track remains tonal.
+
+Only OneUI slider CSS is affected.
+
+
+## OneUI embedded label contained slider
+
+OneUI slider now uses a larger self-contained control.
+
+- label is placed inside the slider control;
+- progress fill uses the active accent;
+- thumb uses a near-accent color;
+- thumb remains fully inside the track;
+- slider becomes thicker to use the freed space.
+
+Only OneUI slider styling is affected.
+
+
+## OneUI custom visual slider
+
+OneUI slider now uses a custom visual layer instead of relying on native range pseudo-elements.
+
+- native input remains for interaction;
+- custom visual track renders the inactive area;
+- custom visual fill renders accent progress;
+- custom visual thumb stays fully contained;
+- embedded label sits inside the control.
+
+This avoids Safari/WebKit range rendering issues.
+
+
+## OneUI custom slider ratio fix
+
+Fixed the custom OneUI slider visual calculation.
+
+The slider now exposes:
+```css
+--mha-slider-value: 50%;
+--mha-slider-ratio: .5;
+```
+
+The custom OneUI fill/thumb use the numeric ratio, avoiding Safari calc issues with percent division.
+
+
+## OneUI fresh custom slider
+
+OneUI slider was rebuilt from a fresh base instead of stacking overrides.
+
+OneUI now uses:
+- a dedicated DOM visual layer;
+- real fill DOM element;
+- real thumb DOM element;
+- transparent native range input as interaction layer.
+
+This keeps OneUI independent from native range pseudo-element quirks while preserving iOS/Material slider behavior.
+
+
+## OneUI slider adaptive width fix
+
+The OneUI slider now adapts to its container width.
+
+- label column shrinks responsively;
+- lane keeps a practical minimum width;
+- progress fill uses the lane width;
+- thumb is clamped inside the lane;
+- narrow containers prioritize the slider lane over label space.
+
+
+## Slider minimum two widget units
+
+Sliders have a layout rule:
+
+```text
+Horizontal slider: never less than 2 internal widget units wide.
+Vertical slider: never less than 2 internal widget units tall.
+```
+
+Use `createWidgetSliderUnit()` instead of raw `createWidgetUnit()` when placing sliders inside a widget.
+
+The helper enforces:
+- horizontal sliders: `colSpan >= 2`;
+- vertical sliders: `rowSpan >= 2`.
+
+This protects the track, progress bar, thumb, and label from becoming unusably compressed.
+
+
+## Diagnosed OneUI slider layout fix
+
+The OneUI slider issue was not only a visual slider bug.
+
+Root cause:
+- the slider was placed in a fixed internal widget slot;
+- when the widget grew, that slider slot did not grow;
+- extra CSS guard rules attempted to force grid span from CSS, which is fragile.
+
+Fix:
+- OneUI slider CSS was cleaned into one final block;
+- fragile `grid-column-end: span max(...)` guard was removed;
+- `createWidgetSliderUnit()` now enforces:
+  - horizontal slider without label: min 2 columns;
+  - horizontal slider with label: min 3 columns;
+  - vertical slider: min 2 rows;
+- the demo slider now consumes remaining row width when the widget grows.
+
+
+## Widget layout syntax fix
+
+Fixed a syntax error in `src/widgets/widget-layout.js` caused by a partial helper replacement.
+
+`createWidgetSliderUnit()` is now rebuilt cleanly and validated with `node --check`.
+
+
+## OneUI simple pill slider reset
+
+OneUI slider was reset to the simplest possible usable version:
+
+- rounded pill track;
+- accent progress fill;
+- no visible thumb;
+- no visible text;
+- native range input remains as a transparent interaction layer.
+
+This is the new baseline before adding any future OneUI slider complexity.
+
+
+## OneUI iOS-reference slider reset
+
+Removed the custom OneUI slider attempt.
+
+OneUI now uses the same native-range styling strategy as iOS:
+- taller pill track;
+- accent progress;
+- accent thumb;
+- no visible label for now.
+
+This is the new simple OneUI slider baseline.
+
+
+## SliderWidget architecture
+
+Slider support is now split into two layers:
+
+```text
+src/ui/slider.js
+→ low-level reusable slider control
+
+src/widgets/slider-widget.js
+→ full widget whose primary content is a slider
+```
+
+The slider control can still be used inside any widget. The SliderWidget owns widget-level concerns:
+- full widget width/height;
+- orientation auto;
+- 4x1 / 1x4 behavior;
+- future Home Assistant entity binding.
+
+Temporary demo slider slots (`slot-f` and `slot-i`) now render through `createSliderWidgetContent()` instead of embedding slider layout directly in `empty-widget.js`.
+
+
+## SliderWidget import fix
+
+`empty-widget.js` still uses `createWidgetSliderUnit()` for the embedded Salon slider (`slot-a`), while `slot-f` and `slot-i` now use `SliderWidget`.
+
+The import was restored so both layers can coexist:
+- embedded slider control inside a widget;
+- full SliderWidget as a standalone widget.
+
+
+## createSlider import fix
+
+`empty-widget.js` still creates an embedded low-level slider control in `slot-a`, so it must import `createSlider()` from `src/ui/slider.js`.
+
+`slot-f` and `slot-i` continue to use the full SliderWidget path.
+
+
+## clampSliderSpan cleanup fix
+
+Removed the remaining stale `clampSliderSpan()` call in `createWidgetSliderUnit()`.
+
+Slider widget spans now keep minimum useful sizes without imposing the old artificial max span helper.
+
+
+## SliderWidget size contract
+
+The reusable slider component is not size-limited.
+
+The full SliderWidget has its own widget-level size contract:
+- horizontal SliderWidget: minimum `2x1`, maximum `4x1`;
+- vertical SliderWidget: minimum `1x2`, maximum `1x4`.
+
+Once the SliderWidget receives its allowed span, the internal slider fills the
+entire granted area. This keeps full slider widgets predictable while preserving
+the low-level slider as a flexible reusable control for other widgets.
+
+
+## SliderWidget safe area centering
+
+The full SliderWidget now renders inside the same safe inset used by other widgets.
+This keeps horizontal and vertical slider widgets from touching or being cropped by
+widget edges.
+
+OneUI SliderWidget instances are centered on both axes inside that safe area while
+the low-level reusable slider component remains unchanged.
+
+
+## SliderWidget resize contract
+
+SliderWidget sizing is now enforced at widget-resize persistence level, not just
+inside the widget content.
+
+Only full SliderWidget instances are constrained:
+- horizontal SliderWidget: `2x1` to `4x1`;
+- vertical SliderWidget: `1x2` to `1x4`.
+
+The low-level reusable slider component remains unrestricted.
+
+
+## Slider rotor remeasure
+
+Auto-oriented sliders now measure the nearest slider widget/unit instead of the
+slider wrapper itself. The measured inline and block dimensions are written to
+CSS variables and rechecked across two animation frames after resize.
+
+This prevents vertical SliderWidget instances from keeping the previous compact
+horizontal rotor length after being resized from `4x1` to `1x4`.
+
+
+## SliderWidget span contract fix
+
+The SliderWidget now uses its normalized widget contract size directly for its
+internal grid span. The content layer no longer re-clamps with `activeGridUnits`,
+which could collapse a 4x1 / 1x4 SliderWidget back toward a compact 3-unit span.
+
+The widget shell still enforces:
+- horizontal SliderWidget: `2x1` to `4x1`;
+- vertical SliderWidget: `1x2` to `1x4`.
+
+The low-level slider component remains unrestricted.
+
+
+## OneUI and Material widget shape contract
+
+In OneUI and Material, widget-level pill geometry is only allowed for:
+- `2x1`;
+- `1x2`.
+
+All other widget sizes use the theme's normal rounded-square / rounded-rect
+widget radius.
+
+This rule applies only to widget containers. It does not affect internal pills,
+buttons, icon shapes, sliders, or the iOS widget geometry.
+
+
+## Sober edit tool buttons
+
+The edit-mode move button was removed from widget tools. Drag and drop remains
+handled by the widget itself and can be explained by onboarding.
+
+The remaining close button uses a calm surface/border treatment with no glow,
+keeping edit controls visible without making them visually noisy.
+
+
+## Edit button icon size contract
+
+The edit launcher keeps its current touch target, but its SVG glyph now follows
+the same `--mha-icon-glyph-size` token used by dock/widget icons. This keeps the
+edit icon visually aligned with the rest of the interface without shrinking the
+button itself.
+
+
+## Edit button accent contract
+
+The edit launcher is treated as a system control and now follows the same
+accent-aware system icon tokens as dock/system icons:
+
+- `--mha-system-icon-bg`;
+- `--mha-system-icon-color`;
+- `--mha-system-icon-border`;
+- `--mha-system-icon-shadow`.
+
+Its size and glyph scale remain controlled by `styles/layout/shell.css`.
+
+
+## Edit button accent cascade fix
+
+`styles/layout/shell.css` loads after `styles/themes/accent-palettes.css`, so
+base edit-button rules could override the accent palette rules.
+
+A final shell-level guard now binds `.mha-edit-button` to the live system icon
+accent tokens:
+- `--mha-system-icon-bg`;
+- `--mha-system-icon-color`;
+- `--mha-system-icon-border`;
+- `--mha-system-icon-shadow`.
+
+The SVG also stays bound to `currentColor`.
+
+
+## Automatic icon shape mapping
+
+Icon shape now supports an `Auto` setting.
+
+When icon shape is set to `Auto`, the effective icon shape follows the selected
+visual style:
+
+```text
+iOS      → rounded-square
+OneUI    → squircle
+Material → circle
+```
+
+Manual choices still override the automatic mapping:
+- rounded-square;
+- squircle;
+- circle.
+
+
+## Icon shape Auto settings fix
+
+The settings select now includes `Auto`.
+
+`Auto` stores as `mha-icon-shape = auto` and resolves dynamically:
+- iOS → rounded-square;
+- OneUI → squircle;
+- Material → circle.
+
+The legacy `mha-dev-icon-shape` key is still read/written for compatibility.
+
+
+## Icon shape Auto state and mask fix
+
+Icon shape now separates:
+- `data-icon-shape-setting`: the user preference (`auto`, `rounded-square`, `squircle`, `circle`);
+- `data-icon-shape`: the effective CSS shape.
+
+`Auto` remains visible in settings instead of being replaced by the resolved
+shape.
+
+Squircle mask rules are explicitly removed for `rounded-square` and `circle` so
+Safari/WebKit cannot keep stale squircle clipping artifacts.
+
+
+## Final icon shape Auto fix
+
+The settings panel now always reads the user icon-shape preference from
+`getStoredIconShapeSetting()`, never from the effective `data-icon-shape`.
+
+This prevents `Auto` from snapping back to the resolved shape.
+
+A final CSS guard also removes WebKit masks whenever the effective shape is not
+`squircle`, preventing stale squircle cutouts on rounded-square and circle icons.
+
+
+## Icon shape Auto final v2 fix
+
+The icon shape settings handler now saves `auto` as the user setting and applies
+only the resolved effective shape to `data-icon-shape`.
+
+This prevents the settings panel from snapping back to `squircle` after choosing
+Auto.

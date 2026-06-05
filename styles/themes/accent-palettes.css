@@ -125,3 +125,22 @@
   color: var(--mha-accent-contrast);
   border-color: color-mix(in srgb, var(--mha-accent) 72%, white 14%);
 }
+
+/* EDIT BUTTON ACCENT CONTRACT
+ * The edit launcher is a system control.
+ *
+ * It follows the same accent-aware system icon tokens as dock/system controls,
+ * while shell.css remains responsible for size/position/icon glyph scale.
+ */
+.mha-edit-button {
+  background: var(--mha-system-icon-bg);
+  color: var(--mha-system-icon-color);
+  border-color: var(--mha-system-icon-border);
+  box-shadow: var(--mha-system-icon-shadow);
+}
+
+.mha-edit-button svg,
+.mha-edit-button path {
+  fill: currentColor;
+  stroke: currentColor;
+}

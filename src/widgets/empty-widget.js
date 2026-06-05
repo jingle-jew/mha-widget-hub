@@ -2,7 +2,8 @@ import { ICONS } from "../components/icons.js";
 import { getWidgetDensity, normalizeWidgetSize, sizeToString } from "../layout/layout-engine.js";
 import { createIcon } from "../ui/icon.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
-import { createWidgetInnerGrid, createWidgetText, createWidgetUnit } from "./widget-layout.js";
+import { createWidgetInnerGrid, createWidgetSliderUnit, createWidgetText, createWidgetUnit } from "./widget-layout.js";
+import { createSliderWidgetContent, isSliderWidget } from "./slider-widget.js";
 import { createSlider } from "../ui/slider.js";
 import { createToggle } from "../ui/toggle.js";
 import { createPill } from "../ui/pill.js";
@@ -19,12 +20,16 @@ export function createEmptyWidget(
 ) {
   const size = normalizeWidgetSize(widget);
   const density = getWidgetDensity(size);
+  const effectiveWidgetW = Math.min(size.w, activeGridUnits);
 
   const el = document.createElement("article");
   el.className = "mha-widget";
   el.dataset.widgetId = widget.id;
+  if (isSliderWidget(widget) || widget.id === "slot-f" || widget.id === "slot-i") {
+    el.dataset.widgetKind = "slider";
+  }
   el.dataset.widgetConfiguredW = String(size.w);
-  el.dataset.widgetW = String(Math.min(size.w, activeGridUnits));
+  el.dataset.widgetW = String(effectiveWidgetW);
   el.dataset.widgetH = String(size.h);
   el.dataset.widgetSize = sizeToString(size);
   el.dataset.widgetDensity = density;
@@ -33,7 +38,7 @@ export function createEmptyWidget(
    * Expose widget dimensions to CSS so each widget can build its own internal
    * grid using the same unit count as its global footprint.
    */
-  el.style.setProperty("--mha-widget-w", String(Math.min(size.w, activeGridUnits)));
+  el.style.setProperty("--mha-widget-w", String(effectiveWidgetW));
   el.style.setProperty("--mha-widget-configured-w", String(size.w));
   el.style.setProperty("--mha-widget-h", String(size.h));
 
@@ -94,22 +99,34 @@ export function createEmptyWidget(
         children: createButton({ label: "Mode", variant: "default" }),
       }),
 
-      createWidgetUnit({
+      createWidgetSliderUnit({
         col: 3,
         row: 2,
         colSpan: 2,
-        justify: "stretch",
+        orientation: "horizontal",
+        hasLabel: false,
         className: "mha-widget-demo-slider",
-        children: createSlider({ label: "Intensité", value: 68 }),
+        children: createSlider({ value: 68 }),
       }),
     );
   }
 
-  el.append(innerGrid);
+  if (isSliderWidget(widget) || widget.id === "slot-f" || widget.id === "slot-i") {
+    el.append(
+      createSliderWidgetContent(widget, {
+        size,
+        activeGridUnits,
+        value: 68,
+        orientation: "auto",
+        className: "mha-widget-demo-slider",
+      }),
+    );
+  }
+
+  if (innerGrid.childElementCount > 0) el.append(innerGrid);
   const tools = document.createElement("div");
     tools.className = "mha-widget-tools";
     tools.append(
-      tool("Déplacer", "move"),
       tool("Supprimer", "close", () => onRemove?.(widget.id)),
     );
 
