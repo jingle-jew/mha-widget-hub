@@ -130,3 +130,19 @@ The empty dock is now taller and more macOS-like while remaining adaptive:
 - height uses `clamp()` and viewport units;
 - no fixed x-by-y dimensions;
 - mobile portrait, landscape, and desktop each receive adaptive bounds.
+
+
+## Icon component shapes only
+
+Added a reusable icon component foundation without connecting it to the interface.
+
+Files:
+- `src/ui/icon.js`
+- `styles/components/icon.css`
+
+Scope:
+- shape tokens only;
+- rounded-square, squircle, circle;
+- no glyphs/signs;
+- no dev menu;
+- no dock/widget/status-bar integration.
