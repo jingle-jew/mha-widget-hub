@@ -392,3 +392,61 @@
   -webkit-mask-size: 100% 100% !important;
   mask-size: 100% 100% !important;
 }
+
+/* SAFE INITIAL PAINT
+ * Prevent the shell from doing a harsh "boom flash" before tokens/layout settle.
+ * The app becomes visible after the first render has painted twice.
+ */
+:host {
+  --mha-initial-reveal-duration: 180ms;
+}
+
+:host(:not([data-ready="true"])) .mha-shell,
+:host(:not([data-ready="true"])) .mha-dock,
+:host(:not([data-ready="true"])) .mha-mobile-dock,
+:host(:not([data-ready="true"])) .mha-edit-button,
+:host(:not([data-ready="true"])) .mha-settings-panel {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+:host([data-ready="true"]) .mha-shell,
+:host([data-ready="true"]) .mha-dock,
+:host([data-ready="true"]) .mha-mobile-dock,
+:host([data-ready="true"]) .mha-edit-button,
+:host([data-ready="true"]) .mha-settings-panel {
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity var(--mha-initial-reveal-duration) ease,
+    transform var(--mha-initial-reveal-duration) cubic-bezier(.2,.8,.2,1);
+}
+
+/* During orientation/viewport relayout, keep existing UI visible but stop
+ * transition noise from flashing transient dock/settings/widget states.
+ */
+:host(.is-responsive-relayouting) .mha-shell,
+:host(.is-responsive-relayouting) .mha-dock,
+:host(.is-responsive-relayouting) .mha-mobile-dock,
+:host(.is-responsive-relayouting) .mha-edit-button,
+:host(.is-responsive-relayouting) .mha-settings-panel {
+  transition: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host(:not([data-ready="true"])) .mha-shell,
+  :host(:not([data-ready="true"])) .mha-dock,
+  :host(:not([data-ready="true"])) .mha-mobile-dock,
+  :host(:not([data-ready="true"])) .mha-edit-button,
+  :host(:not([data-ready="true"])) .mha-settings-panel {
+    transform: none;
+  }
+
+  :host([data-ready="true"]) .mha-shell,
+  :host([data-ready="true"]) .mha-dock,
+  :host([data-ready="true"]) .mha-mobile-dock,
+  :host([data-ready="true"]) .mha-edit-button,
+  :host([data-ready="true"]) .mha-settings-panel {
+    transition: none;
+  }
+}

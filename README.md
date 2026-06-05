@@ -1806,3 +1806,21 @@ OneUI slider progress/fill now keeps the accent hue but uses a translucent
 
 This affects both embedded sliders and SliderWidget instances because they share
 the same low-level slider component.
+
+
+## Material tablet/desktop dock pill
+
+In Material You only, the tablet/desktop dock container uses a pill/capsule
+radius. The mobile floating dock, iOS, and OneUI remain unchanged.
+
+
+## Safe render cleanup pass
+
+A cautious performance/stability pass was added:
+
+- initial shell/dock/settings/edit UI fades in after the first render settles;
+- viewport/orientation changes are coalesced through `requestAnimationFrame`;
+- during responsive relayout, transient transitions are suppressed to reduce flash;
+- theme/style/accent/edit behavior remains token/class-driven instead of being refactored.
+
+This pass intentionally avoids large rendering architecture changes.

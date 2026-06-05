@@ -360,3 +360,16 @@
   pointer-events: none !important;
   transition: none !important;
 }
+
+/* MATERIAL TABLET/DESKTOP DOCK PILL
+ * Material You prefers softer capsule containers.
+ *
+ * Scope this to tablet/desktop dock only:
+ * - mobile floating dock remains unchanged;
+ * - iOS and OneUI remain unchanged.
+ */
+@media (min-width: 768px) {
+  :host([data-theme-style="material"]) .mha-dock {
+    border-radius: 999px;
+  }
+}
