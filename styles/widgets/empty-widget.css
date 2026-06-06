@@ -578,29 +578,71 @@
 
 /* EDIT CONTENT POINTER LOCK
  * In edit mode, widget internals are no longer interactive.
- * The widget becomes an editable surface, while edit controls and move arrows
- * remain clickable.
+ * This prevents accidental toggles, slider drags, and button clicks while
+ * arranging widgets.
+ *
+ * Only edit tools, the resize handle, and move arrows are interactive.
  */
-:host(.is-editing) .mha-widget > *:not(.mha-widget-tools):not(.mha-widget-move-overlay):not(.mha-resize-handle):not(.mha-size-badge) {
+:host(.is-editing) .mha-widget > *:not(.mha-widget-tools):not(.mha-widget-move-overlay):not(.mha-resize-handle):not(.mha-size-badge),
+:host(.is-editing) .mha-widget :is(
+  .mha-widget-inner-grid,
+  .mha-widget-demo-slider,
+  .mha-widget-demo-button,
+  .mha-widget-demo-toggle,
+  .mha-widget-demo-pill,
+  .mha-slider,
+  .mha-button,
+  .mha-toggle,
+  .mha-pill,
+  input,
+  select,
+  textarea
+) {
   pointer-events: none !important;
 }
 
+/* Re-enable only edit chrome. */
 :host(.is-editing) .mha-widget-tools,
-:host(.is-editing) .mha-widget-tools *,
-:host(.is-editing) .mha-widget-move-overlay,
-:host(.is-editing) .mha-widget-move-arrow,
+:host(.is-editing) .mha-widget-tools .mha-tool-button,
 :host(.is-editing) .mha-resize-handle,
 :host(.is-editing) .mha-size-badge {
-  pointer-events: auto;
+  pointer-events: auto !important;
 }
 
-/* The move overlay backdrop itself should not steal pointer events; only its
- * arrow buttons are interactive.
- */
+/* The move overlay backdrop itself never steals events. */
 :host(.is-editing) .mha-widget-move-overlay {
-  pointer-events: none;
+  pointer-events: none !important;
 }
 
+/* Only the arrow buttons inside the move overlay are clickable. */
 :host(.is-editing) .mha-widget-move-arrow {
-  pointer-events: auto;
+  pointer-events: auto !important;
+}
+
+/* In active move mode, hidden dimension/close buttons must not block the arrows.
+ * The toolbar container becomes non-interactive, then the visible move button is
+ * explicitly re-enabled.
+ */
+:host(.is-editing) .mha-widget.is-move-target .mha-widget-tools {
+  pointer-events: none !important;
+}
+
+:host(.is-editing) .mha-widget.is-move-target .mha-tool-button--dimension,
+:host(.is-editing) .mha-widget.is-move-target .mha-tool-button--close {
+  pointer-events: none !important;
+}
+
+:host(.is-editing) .mha-widget.is-move-target .mha-tool-button--move {
+  pointer-events: auto !important;
+}
+
+/* EDIT MODE SIZE BADGE HIDE
+ * Size/density labels are useful for diagnostics but visually noisy during
+ * editing. Keep them hidden in edit mode while preserving the underlying size.
+ */
+:host(.is-editing) .mha-size-badge {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transform: translateY(2px) scale(.96) !important;
 }

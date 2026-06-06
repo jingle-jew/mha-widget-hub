@@ -635,3 +635,55 @@
   -webkit-mask: inherit;
   mask: inherit;
 }
+
+/* ACCENT SINGLE ROW EXCEPT MOBILE PORTRAIT
+ * Accent swatches are compact and shown on one line everywhere except phone
+ * portrait, where the existing two-row launcher-style grid remains easier to tap.
+ */
+@media (min-width: 741px), (orientation: landscape) {
+  .mha-settings-panel .mha-settings-accent-field {
+    gap: clamp(.35rem, 1.5vh, .5rem) !important;
+  }
+
+  .mha-settings-panel .mha-settings-accent-swatches {
+    display: grid !important;
+    grid-template-columns: repeat(10, minmax(22px, 30px)) !important;
+    grid-auto-flow: column !important;
+    grid-auto-columns: minmax(22px, 30px) !important;
+    grid-template-rows: minmax(22px, 30px) !important;
+    gap: clamp(7px, 1.8vh, 10px) !important;
+    align-items: center !important;
+    justify-items: end !important;
+    justify-content: end !important;
+    justify-self: end !important;
+    overflow: visible !important;
+  }
+
+  .mha-settings-panel .mha-settings-accent-swatch {
+    inline-size: clamp(22px, 3.4vw, 30px) !important;
+    block-size: clamp(22px, 3.4vw, 30px) !important;
+    min-inline-size: 0 !important;
+    min-block-size: 0 !important;
+    aspect-ratio: 1 / 1 !important;
+    border-radius: clamp(7px, 1.2vw, 10px) !important;
+  }
+}
+
+/* In short landscape viewports, height is the limiting axis, so prefer vh. */
+@media (max-width: 740px) and (orientation: landscape) {
+  .mha-settings-panel .mha-settings-accent-swatch {
+    inline-size: clamp(22px, 7.2vh, 30px) !important;
+    block-size: clamp(22px, 7.2vh, 30px) !important;
+    border-radius: clamp(7px, 2vh, 10px) !important;
+  }
+}
+
+/* ACCENT SINGLE ROW SPACING SAFETY
+ * Keep compact one-row accent swatches from touching each other, including
+ * selected-state outlines.
+ */
+@media (min-width: 741px), (orientation: landscape) {
+  .mha-settings-panel .mha-settings-accent-swatch[aria-pressed="true"] {
+    outline-offset: 1px !important;
+  }
+}

@@ -2522,3 +2522,56 @@ The move-mode tool morph animation has been slowed down for a smoother feel:
 In edit mode, widget internals no longer receive pointer events. This prevents
 accidental clicks/taps on widget content while arranging widgets. Edit tools,
 resize controls, and move arrows remain interactive.
+
+
+## Strict edit pointer lock
+
+Edit mode pointer locking is stricter:
+
+- widget internals, demo controls, sliders, toggles, and form controls are
+  disabled during edit mode;
+- edit tools, resize handle, and move arrows remain clickable;
+- in active move mode, the hidden dimension/close controls no longer block the
+  top move arrow because the toolbar container is non-interactive except for the
+  visible move button.
+
+
+## Edit mode size badge hide
+
+Widget size/density badges are now hidden during edit mode. The widget dimensions
+and layout behavior are unchanged; only the visual labels are hidden.
+
+
+## Mobile landscape accent row
+
+On phone landscape, accent color swatches in settings are forced into a single
+compact row. Portrait, tablet, and desktop settings are unchanged.
+
+
+## Mobile landscape accent exact row
+
+The phone-landscape accent swatch override now targets the real settings classes:
+
+- `.mha-settings-accent-swatches`;
+- `.mha-settings-accent-swatch`.
+
+All 10 accent colors are forced onto a single compact row in mobile landscape.
+
+
+## Mobile landscape accent right align
+
+In phone landscape, the compact single-row accent swatches are aligned to the
+right so they line up visually with the settings select controls.
+
+
+## Accent single row except mobile portrait
+
+Accent color swatches are now compact and displayed on a single right-aligned row
+for every layout except phone portrait. Phone portrait keeps the existing larger
+multi-row swatch grid for easier tapping.
+
+
+## Accent single row spacing safety
+
+Compact one-row accent swatches were reduced slightly and given more gap so they
+do not touch each other, including selected-state outlines.
