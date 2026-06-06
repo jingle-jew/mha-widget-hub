@@ -327,9 +327,8 @@
 /* SOBER EDIT TOOL BUTTONS
  * Edit tools should feel integrated and calm.
  *
- * Drag/drop is taught through onboarding, so widgets only show the destructive
- * close action in the edit tools. The button keeps a subtle surface/border but
- * does not glow.
+ * Directional move and close actions share a subtle surface/border without
+ * adding glow around the widget.
  */
 .mha-widget-tools {
   gap: clamp(.18rem, .5vw, .32rem);
@@ -367,13 +366,7 @@
 
 /* MATERIAL WIDGET DYNAMIC SURFACES */
 :host([data-theme-style="material"]) .mha-widget {
-  background:
-    linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--mha-material-surface-tint) 42%, transparent),
-      transparent 46%
-    ),
-    var(--mha-widget-surface);
+  background: var(--mha-widget-surface);
   border-color: var(--mha-material-outline-variant);
 }
 
@@ -382,13 +375,7 @@
 }
 
 :host([data-theme-style="material"].is-editing) .mha-widget {
-  background:
-    linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--mha-accent) 16%, transparent),
-      transparent 52%
-    ),
-    var(--mha-widget-surface-edit);
+  background: var(--mha-widget-surface-edit);
 }
 
 /* MATERIAL BORDERLESS SURFACES
@@ -405,4 +392,125 @@
 /* Keep edit affordance visible when actively editing. */
 :host([data-theme-style="material"].is-editing) .mha-widget {
   border-color: color-mix(in srgb, var(--mha-accent) 26%, transparent);
+}
+
+/* DIRECTIONAL WIDGET MOVE MODE
+ * The scrim and controls are local to the selected widget. The overlay itself
+ * ignores pointer events so mobile scrolling remains available between arrows.
+ */
+.mha-widget-move-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  border-radius: inherit;
+  background: rgba(0,0,0,.34);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 160ms ease,
+    visibility 0s linear 160ms;
+}
+
+:host([data-theme="light"]) .mha-widget-move-overlay {
+  background: rgba(20,22,28,.28);
+}
+
+:host(.is-editing) .mha-widget.is-move-target {
+  animation-play-state: paused;
+}
+
+:host(.is-editing) .mha-widget.is-move-target .mha-widget-tools {
+  flex-direction: column;
+}
+
+:host(.is-editing) .mha-widget.is-move-target .mha-size-badge,
+:host(.is-editing) .mha-widget.is-move-target .mha-resize-handle {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+:host(.is-editing) .mha-widget.is-move-target .mha-widget-move-overlay {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+.mha-widget-move-arrow {
+  position: absolute;
+  inline-size: clamp(2.25rem, 8vw, 2.75rem);
+  block-size: clamp(2.25rem, 8vw, 2.75rem);
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #fff;
+  pointer-events: auto;
+  cursor: pointer;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,.55));
+  touch-action: manipulation;
+}
+
+.mha-widget-move-arrow::before {
+  content: "";
+  position: absolute;
+  inset: 50% auto auto 50%;
+  inline-size: clamp(.62rem, 2.4vw, .82rem);
+  block-size: clamp(.62rem, 2.4vw, .82rem);
+  border-block-start: 3px solid currentColor;
+  border-inline-start: 3px solid currentColor;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.mha-widget-move-arrow[data-direction="up"] {
+  inset-block-start: clamp(.2rem, 1vw, .45rem);
+  inset-inline-start: 50%;
+  transform: translateX(-50%);
+}
+
+.mha-widget-move-arrow[data-direction="right"] {
+  inset-block-start: 50%;
+  inset-inline-end: clamp(.2rem, 1vw, .45rem);
+  transform: translateY(-50%);
+}
+
+.mha-widget-move-arrow[data-direction="right"]::before {
+  transform: translate(-50%, -50%) rotate(135deg);
+}
+
+.mha-widget-move-arrow[data-direction="down"] {
+  inset-block-end: clamp(.2rem, 1vw, .45rem);
+  inset-inline-start: 50%;
+  transform: translateX(-50%);
+}
+
+.mha-widget-move-arrow[data-direction="down"]::before {
+  transform: translate(-50%, -50%) rotate(225deg);
+}
+
+.mha-widget-move-arrow[data-direction="left"] {
+  inset-block-start: 50%;
+  inset-inline-start: clamp(.2rem, 1vw, .45rem);
+  transform: translateY(-50%);
+}
+
+.mha-widget-move-arrow[data-direction="left"]::before {
+  transform: translate(-50%, -50%) rotate(315deg);
+}
+
+.mha-widget-move-arrow:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -4px;
+  border-radius: 999px;
+}
+
+.mha-tool-button[data-action="move"][aria-pressed="true"] {
+  background: var(--mha-accent);
+  color: var(--mha-accent-contrast);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mha-widget-move-overlay {
+    transition: none;
+  }
 }

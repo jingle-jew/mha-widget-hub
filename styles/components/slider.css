@@ -639,3 +639,17 @@
 :host([data-theme-style="material"]) .mha-slider-input::-moz-range-track {
   border-color: transparent;
 }
+
+/* EDIT MODE RESIZE HANDLE EXCLUSIVITY
+ * The resize corner is reserved for resizing only.
+ * It must not start widget drag-and-drop.
+ */
+.mha-widget-resize,
+.mha-widget-resize-handle,
+.mha-resize-handle,
+[data-resize-handle="true"] {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  cursor: nwse-resize;
+}

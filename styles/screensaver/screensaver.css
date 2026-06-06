@@ -1,1 +1,477 @@
-.mha-screensaver[hidden]{display:none!important}.mha-screensaver{position:absolute;z-index:30;inset:0;display:grid;place-items:center;background:radial-gradient(circle at 50% 20%,rgba(105,125,255,.26),transparent 34%),radial-gradient(circle at 76% 72%,rgba(255,95,179,.2),transparent 32%),rgba(0,0,0,.64);backdrop-filter:blur(34px) saturate(140%);color:var(--mha-text)}.mha-screensaver-inner{width:min(520px,calc(100% - 48px));min-height:min(520px,calc(100% - 48px));display:grid;place-items:center;gap:22px}.mha-screensaver-time{font-size:clamp(64px,18vw,128px);line-height:.9;font-weight:800;letter-spacing:-.07em}.mha-screensaver-date{color:var(--mha-muted);font-size:clamp(15px,3vw,22px);font-weight:650;text-transform:capitalize}.mha-screensaver-digital{display:grid;place-items:center;gap:10px;text-align:center}.mha-screensaver-analog{position:relative;width:clamp(180px,44vw,320px);aspect-ratio:1;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 24px 80px rgba(0,0,0,.34);backdrop-filter:blur(24px) saturate(140%)}.mha-screensaver-analog--ios{background:linear-gradient(145deg,rgba(255,255,255,.16),rgba(255,255,255,.06))}.mha-screensaver-analog--bold{border-width:3px}.mha-screensaver-analog--glass{background:rgba(255,255,255,.12);backdrop-filter:blur(34px) saturate(170%)}.mha-analog-mark{position:absolute;inset:18px}.mha-analog-mark::before{content:"";position:absolute;left:50%;top:0;width:4px;height:16px;border-radius:999px;transform:translateX(-50%);background:currentColor;opacity:.6}.mha-analog-mark--3{transform:rotate(90deg)}.mha-analog-mark--6{transform:rotate(180deg)}.mha-analog-mark--9{transform:rotate(270deg)}.mha-analog-hand{position:absolute;left:50%;bottom:50%;width:5px;border-radius:999px;background:currentColor;transform-origin:50% 100%;transform:translateX(-50%) rotate(var(--angle))}.mha-analog-hand--hour{height:28%;opacity:.95}.mha-analog-hand--minute{height:38%;width:4px;opacity:.85}.mha-analog-hand--second{height:42%;width:2px;background:#8fa8ff}.mha-analog-center{position:absolute;left:50%;top:50%;width:14px;height:14px;border-radius:999px;background:currentColor;transform:translate(-50%,-50%)}.mha-nowbar{width:min(420px,100%);display:grid;gap:10px}.mha-nowbar-pill{min-height:58px;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:12px;padding:10px 14px;border:1px solid rgba(255,255,255,.16);border-radius:22px;background:rgba(255,255,255,.11);backdrop-filter:blur(24px) saturate(150%)}.mha-nowbar-pill strong,.mha-nowbar-pill span{display:block}.mha-nowbar-pill span{color:var(--mha-muted);font-size:13px}.mha-nowbar-dot{width:12px;height:12px;border-radius:999px;background:#8fa8ff;box-shadow:0 0 24px rgba(143,168,255,.75)}
+/*
+ * MHA Screensaver.
+ */
+
+.mha-screensaver {
+  position: fixed;
+  inset: 0;
+  z-index: 95;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  padding:
+    max(env(safe-area-inset-top), clamp(2rem, 6vh, 4.5rem))
+    max(env(safe-area-inset-right), clamp(1rem, 4vw, 3rem))
+    max(env(safe-area-inset-bottom), clamp(1.25rem, 5vh, 3rem))
+    max(env(safe-area-inset-left), clamp(1rem, 4vw, 3rem));
+  box-sizing: border-box;
+  opacity: 0;
+  pointer-events: none;
+  color: var(--mha-text);
+  transition: opacity 420ms ease;
+  overflow: hidden;
+}
+
+.mha-screensaver[data-visible="true"] {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.mha-screensaver[data-visible="true"] .mha-screensaver-edit-button {
+  opacity: .34 !important;
+  pointer-events: auto !important;
+  filter: saturate(.78) brightness(.92);
+  transform: none !important;
+}
+
+.mha-screensaver[data-visible="true"] .mha-screensaver-edit-button:hover,
+.mha-screensaver[data-visible="true"] .mha-screensaver-edit-button:focus-visible {
+  opacity: .62 !important;
+}
+
+.mha-screensaver::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 18%, color-mix(in srgb, var(--mha-accent) 16%, transparent), transparent 32%),
+    var(--mha-page-bg, transparent);
+  opacity: .96;
+  z-index: -2;
+}
+
+.mha-screensaver-shade {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: rgba(0,0,0,.34);
+  backdrop-filter: brightness(.72) saturate(.84);
+}
+
+:host([data-theme="light"]) .mha-screensaver-shade {
+  background: rgba(255,255,255,.20);
+  backdrop-filter: brightness(.88) saturate(.82);
+}
+
+:host([data-theme-style="material"]) .mha-screensaver::before {
+  background: var(--mha-material-tonal-background, var(--mha-page-bg));
+}
+
+:host([data-theme-style="material"]) .mha-screensaver-shade {
+  background: rgba(0,0,0,.22);
+  backdrop-filter: brightness(.78) saturate(.92);
+}
+
+:host([data-theme-style="material"][data-theme="light"]) .mha-screensaver-shade {
+  background: rgba(29,27,32,.12);
+  backdrop-filter: brightness(.9) saturate(.96);
+}
+
+.mha-screensaver-clock-region {
+  justify-self: center;
+  align-self: start;
+  min-block-size: clamp(8rem, 22vh, 15rem);
+  inline-size: min(34rem, 92vw);
+  display: grid;
+  place-items: center;
+  touch-action: pan-y;
+  user-select: none;
+  outline: none;
+}
+
+.mha-screensaver-clock-region[data-clock-hidden="true"] {
+  display: grid;
+}
+
+.mha-screensaver-clock {
+  text-align: center;
+  animation: mha-screensaver-clock-in 260ms cubic-bezier(.2,.8,.2,1) both;
+}
+
+.mha-screensaver-clock-region[data-transition="next"] .mha-screensaver-clock {
+  animation: mha-screensaver-clock-next 220ms cubic-bezier(.2,.8,.2,1) both;
+}
+
+.mha-screensaver-clock-region[data-transition="prev"] .mha-screensaver-clock {
+  animation: mha-screensaver-clock-prev 220ms cubic-bezier(.2,.8,.2,1) both;
+}
+
+.mha-screensaver-time {
+  font-size: clamp(4.2rem, 15vw, 9rem);
+  line-height: .9;
+  letter-spacing: -.07em;
+  font-weight: 760;
+}
+
+.mha-screensaver-date {
+  margin-block-start: clamp(.6rem, 1.7vw, 1.1rem);
+  font-size: clamp(.95rem, 2.4vw, 1.35rem);
+  color: var(--mha-muted);
+  font-weight: 650;
+  text-transform: capitalize;
+}
+
+.mha-screensaver-clock--analog {
+  display: grid;
+  place-items: center;
+}
+
+.mha-screensaver-analog-face {
+  position: relative;
+  inline-size: clamp(7.5rem, 20vw, 13rem);
+  block-size: clamp(7.5rem, 20vw, 13rem);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--mha-widget-surface) 70%, transparent);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--mha-text) 12%, transparent),
+    0 18px 42px rgba(0,0,0,.18);
+  backdrop-filter: blur(18px) saturate(135%);
+}
+
+.mha-screensaver-analog-hand {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  inline-size: .34rem;
+  border-radius: 999px;
+  background: var(--mha-text);
+  transform-origin: 50% 100%;
+  transform: translate(-50%, -100%) rotate(var(--mha-clock-rotation));
+}
+
+.mha-screensaver-analog-hour {
+  block-size: 28%;
+}
+
+.mha-screensaver-analog-minute {
+  block-size: 39%;
+  inline-size: .24rem;
+  opacity: .86;
+}
+
+.mha-screensaver-analog-dot {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  inline-size: .78rem;
+  block-size: .78rem;
+  border-radius: 999px;
+  background: var(--mha-accent);
+  transform: translate(-50%, -50%);
+}
+
+.mha-screensaver-spacer {
+  min-block-size: 0;
+}
+
+.mha-screensaver-nowbar {
+  justify-self: center;
+  align-self: end;
+  inline-size: min(38rem, 100%);
+  perspective: 900px;
+  touch-action: none;
+  user-select: none;
+  overflow: visible;
+}
+
+.mha-screensaver-nowbar-stack {
+  position: relative;
+  display: grid;
+  isolation: isolate;
+  overflow: visible;
+}
+
+.mha-screensaver-nowbar-tile {
+  position: relative;
+  grid-area: 1 / 1;
+  inline-size: 100%;
+  padding: clamp(.85rem, 2.5vw, 1.1rem) clamp(1rem, 3vw, 1.35rem);
+  border: 1px solid var(--mha-widget-border);
+  border-radius: clamp(1.35rem, 4vw, 2rem);
+  background: var(--mha-widget-surface);
+  box-shadow: var(--mha-widget-shadow);
+  backdrop-filter: blur(var(--mha-surface-blur)) saturate(var(--mha-surface-saturation));
+  box-sizing: border-box;
+  overflow: hidden;
+  transform: translate3d(0, var(--mha-nowbar-y, 0px), 0) scale(var(--mha-nowbar-scale, 1));
+  transform-origin: center top;
+  transition: transform 260ms cubic-bezier(.2,.8,.2,1);
+  will-change: transform;
+}
+
+.mha-screensaver-nowbar-tile::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: var(--mha-widget-reflection, none);
+  opacity: var(--mha-widget-reflection-opacity, 0);
+  mix-blend-mode: screen;
+}
+
+.mha-screensaver-nowbar.is-nowbar-dragging .mha-screensaver-nowbar-tile,
+.mha-screensaver-nowbar.is-nowbar-snapping .mha-screensaver-nowbar-tile {
+  transition: none;
+}
+
+.mha-screensaver-nowbar-title {
+  font-size: clamp(.95rem, 2vw, 1.1rem);
+  font-weight: 760;
+}
+
+.mha-screensaver-nowbar-subtitle {
+  margin-block-start: .25rem;
+  color: var(--mha-muted);
+  font-size: clamp(.78rem, 1.7vw, .92rem);
+}
+
+@keyframes mha-screensaver-clock-in {
+  from { opacity: 0; transform: translateY(-.65rem); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes mha-screensaver-clock-next {
+  from { opacity: 0; transform: translateX(2.4rem); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes mha-screensaver-clock-prev {
+  from { opacity: 0; transform: translateX(-2.4rem); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mha-screensaver,
+  .mha-screensaver-clock,
+  .mha-screensaver-nowbar-tile {
+    transition: none;
+    animation: none !important;
+  }
+}
+
+/* LOCKSCREEN TRUE BACKGROUND PASS-THROUGH
+ * The screensaver no longer repaints a fake background.
+ * It lets the real `.mha-background` show through and only applies a dim layer.
+ */
+.mha-screensaver {
+  background: transparent !important;
+}
+
+.mha-screensaver::before {
+  display: none !important;
+  content: none !important;
+}
+
+.mha-screensaver-shade {
+  background: rgba(0,0,0,.36);
+  backdrop-filter: none !important;
+}
+
+:host([data-theme="light"]) .mha-screensaver-shade {
+  background: rgba(255,255,255,.24);
+}
+
+:host([data-theme-style="material"][data-theme="light"]) .mha-screensaver-shade {
+  background: rgba(29,27,32,.10);
+}
+
+:host([data-theme-style="material"][data-theme="dark"]) .mha-screensaver-shade {
+  background: rgba(0,0,0,.26);
+}
+
+/* Exit behavior:
+ * when the screensaver is dismissed, clock/nowbar disappear immediately while
+ * the underlying interface fades back in through shell.css.
+ */
+.mha-screensaver[data-visible="false"] .mha-screensaver-clock-region,
+.mha-screensaver[data-visible="false"] .mha-screensaver-nowbar,
+.mha-screensaver[data-visible="false"] .mha-screensaver-shade {
+  opacity: 0 !important;
+  transition: none !important;
+}
+
+/* SCREENSAVER CLOCK POLISH
+ * Keep clocks clean and lockscreen-like:
+ * - no shadow on clock containers;
+ * - enough vertical room for analog clocks during carousel movement;
+ * - analog includes a second hand.
+ */
+.mha-screensaver-clock-region {
+  min-block-size: clamp(12rem, 32vh, 22rem);
+  inline-size: min(42rem, 96vw);
+  overflow: visible;
+}
+
+.mha-screensaver-clock-stage {
+  inline-size: min(42rem, 96vw);
+  min-block-size: clamp(12rem, 32vh, 22rem);
+  block-size: clamp(12rem, 32vh, 22rem);
+  overflow: visible;
+}
+
+.mha-screensaver-clock-layer {
+  overflow: visible;
+}
+
+.mha-screensaver-clock,
+.mha-screensaver-clock-stage,
+.mha-screensaver-clock-layer,
+.mha-screensaver-analog-face {
+  box-shadow: none !important;
+  filter: none;
+}
+
+.mha-screensaver-analog-face {
+  inline-size: clamp(8.75rem, 24vh, 15.5rem);
+  block-size: clamp(8.75rem, 24vh, 15.5rem);
+}
+
+.mha-screensaver-analog-second {
+  block-size: 43%;
+  inline-size: .14rem;
+  opacity: .9;
+  background: var(--mha-accent);
+}
+
+.mha-screensaver-analog-dot {
+  box-shadow: none !important;
+}
+
+/* SCREENSAVER STATIC CLOCK
+ * Clock variant is selected from settings only.
+ * No scroll/click carousel interactions or variant animations.
+ */
+.mha-screensaver-clock-region {
+  min-block-size: clamp(12rem, 32vh, 22rem);
+  inline-size: min(42rem, 96vw);
+  overflow: visible;
+  cursor: default;
+  --mha-clock-current-x: 0%;
+  --mha-clock-current-opacity: 1;
+}
+
+.mha-screensaver-clock-stage {
+  position: relative;
+  inline-size: min(42rem, 96vw);
+  min-block-size: clamp(12rem, 32vh, 22rem);
+  block-size: clamp(12rem, 32vh, 22rem);
+  display: grid;
+  place-items: center;
+  overflow: visible;
+}
+
+.mha-screensaver-clock-layer {
+  position: static;
+  display: grid;
+  place-items: center;
+  opacity: 1;
+  transform: none;
+  transition: none;
+  overflow: visible;
+}
+
+.mha-screensaver-clock-region[data-clock-hidden="true"] {
+  display: grid;
+}
+
+.mha-screensaver-clock--none {
+  inline-size: 100%;
+  block-size: 100%;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mha-screensaver-clock,
+.mha-screensaver-clock-stage,
+.mha-screensaver-clock-layer,
+.mha-screensaver-analog-face {
+  box-shadow: none !important;
+  filter: none;
+}
+
+.mha-screensaver-analog-second {
+  background: var(--mha-accent) !important;
+  opacity: .95;
+  block-size: 44%;
+  inline-size: max(.12rem, 2px);
+}
+
+.mha-screensaver-analog-hand {
+  transition: transform 180ms linear;
+}
+
+/* SCREENSAVER CLOCK VISUAL REFINEMENT
+ * Analog: stronger face, accent-colored hands.
+ * Digital: ticking colon separator.
+ */
+.mha-screensaver-analog-face {
+  background:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--mha-widget-surface) 88%, var(--mha-accent) 12%),
+      color-mix(in srgb, var(--mha-widget-surface) 78%, var(--mha-accent) 22%)
+    ) !important;
+  border-color: color-mix(in srgb, var(--mha-accent) 18%, transparent);
+}
+
+:host([data-theme-style="material"]) .mha-screensaver-analog-face {
+  background: var(--mha-material-surface-container-high, var(--mha-widget-surface)) !important;
+}
+
+.mha-screensaver-analog-hand {
+  background: var(--mha-accent) !important;
+}
+
+.mha-screensaver-analog-hour {
+  opacity: .98;
+}
+
+.mha-screensaver-analog-minute {
+  opacity: .86;
+}
+
+.mha-screensaver-analog-second {
+  background: var(--mha-accent) !important;
+  opacity: .95;
+}
+
+.mha-screensaver-analog-dot {
+  background: var(--mha-accent) !important;
+}
+
+.mha-screensaver-time {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+}
+
+.mha-screensaver-time-separator {
+  display: inline-block;
+  min-inline-size: .32em;
+  text-align: center;
+  opacity: 1;
+  transform: translateY(-.02em);
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+.mha-screensaver-time-separator[data-tick="1"] {
+  opacity: .28;
+  transform: translateY(-.02em) scale(.96);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mha-screensaver-time-separator {
+    transition: none;
+  }
+}

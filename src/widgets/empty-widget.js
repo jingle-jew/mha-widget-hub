@@ -14,6 +14,10 @@ export function createEmptyWidget(
   {
     activeGridUnits = 2,
     isEditing = false,
+    isMoveTarget = false,
+    position,
+    onToggleMove,
+    onMove,
     onRemove,
     onResizeStart,
   } = {},
@@ -24,6 +28,7 @@ export function createEmptyWidget(
 
   const el = document.createElement("article");
   el.className = "mha-widget";
+  el.classList.toggle("is-move-target", isMoveTarget);
   el.dataset.widgetId = widget.id;
   if (isSliderWidget(widget) || widget.id === "slot-f" || widget.id === "slot-i") {
     el.dataset.widgetKind = "slider";
@@ -41,6 +46,10 @@ export function createEmptyWidget(
   el.style.setProperty("--mha-widget-w", String(effectiveWidgetW));
   el.style.setProperty("--mha-widget-configured-w", String(size.w));
   el.style.setProperty("--mha-widget-h", String(size.h));
+  if (position) {
+    el.style.gridColumn = `${position.x} / span ${effectiveWidgetW}`;
+    el.style.gridRow = `${position.y} / span ${size.h}`;
+  }
 
   const innerGrid = createWidgetInnerGrid();
 
@@ -127,8 +136,13 @@ export function createEmptyWidget(
   const tools = document.createElement("div");
     tools.className = "mha-widget-tools";
     tools.append(
+      tool("Déplacer le widget", "move", () => onToggleMove?.(widget.id), {
+        pressed: isMoveTarget,
+      }),
       tool("Supprimer", "close", () => onRemove?.(widget.id)),
     );
+
+    const moveOverlay = createMoveOverlay(widget.id, onMove);
 
     const handle = document.createElement("button");
     handle.className = "mha-resize-handle";
@@ -140,18 +154,47 @@ export function createEmptyWidget(
     badge.className = "mha-size-badge";
     badge.textContent = `${sizeToString(size)} · ${density}`;
 
-    el.append(tools, handle, badge);
+    el.append(tools, moveOverlay, handle, badge);
   
 return el;
 }
 
-function tool(label, icon, onClick) {
+function createMoveOverlay(widgetId, onMove) {
+  const overlay = document.createElement("div");
+  overlay.className = "mha-widget-move-overlay";
+
+  [
+    ["up", "Déplacer vers le haut"],
+    ["right", "Déplacer vers la droite"],
+    ["down", "Déplacer vers le bas"],
+    ["left", "Déplacer vers la gauche"],
+  ].forEach(([direction, label]) => {
+    const button = document.createElement("button");
+    button.className = "mha-widget-move-arrow";
+    button.type = "button";
+    button.dataset.direction = direction;
+    button.setAttribute("aria-label", label);
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      onMove?.(widgetId, direction);
+    });
+    overlay.append(button);
+  });
+
+  return overlay;
+}
+
+function tool(label, icon, onClick, { pressed } = {}) {
   const button = document.createElement("button");
   button.className = "mha-tool-button";
   button.type = "button";
   button.setAttribute("aria-label", label);
   button.dataset.action = icon;
   button.innerHTML = ICONS[icon] || "";
+  if (typeof pressed === "boolean") {
+    button.setAttribute("aria-pressed", String(pressed));
+  }
   button.onclick = (event) => {
     event.preventDefault();
     event.stopPropagation();

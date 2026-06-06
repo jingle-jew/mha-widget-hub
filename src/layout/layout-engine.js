@@ -6,8 +6,215 @@ export const sizeToString=({w,h})=>`${w}x${h}`;
 export function getLayoutMode(host){const explicit=host?.dataset?.layout||document.documentElement.dataset.layout;const mode=host?.dataset?.layoutMode||document.documentElement.dataset.layoutMode||explicit||"auto";return mode==="wallpanel"?"tablet":(["auto","mobile","tablet","desktop"].includes(mode)?mode:"auto")}
 export function getEffectiveLayout(host){const mode=getLayoutMode(host);if(mode!=="auto")return mode;const width=host?.getBoundingClientRect?.().width||window.innerWidth||0;if(width>=1180)return"desktop";if(width>=700)return"tablet";return"mobile"}
 function cssPx(host,name,fallback){const value=host?Number.parseFloat(getComputedStyle(host).getPropertyValue(name)):NaN;return Number.isFinite(value)&&value>0?value:fallback}
-export function getLogicalColumnCount(host,layout=getEffectiveLayout(host)){const r=host?.getBoundingClientRect?.()||{};const width=r.width||window.innerWidth||0;const height=r.height||window.innerHeight||0;const isLandscape=width>height;if(layout==="mobile")return isLandscape?3:2;if(layout==="tablet")return isLandscape?6:5;const pagePadding=cssPx(host,"--mha-page-padding",22),target=cssPx(host,"--mha-logical-column-min-width",184),available=Math.max(0,width-pagePadding*2);return Math.max(6,Math.min(12,Math.floor(available/target)||6))}
-export function getActiveGridUnits(host,layout=getEffectiveLayout(host)){return getLogicalColumnCount(host,layout)*WIDGET_UNIT.unitsPerLogicalColumn}
+
+function clampNumber(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function getAdaptiveBounds(layout, isLandscape) {
+  /*
+   * Bounds are for the small internal grid unit.
+   *
+   * A visible 2x2 widget spans 2 units by 2 units. To make the visible 2x2 feel
+   * closer to the previous oversized 3x3, we keep the unit larger and cap max
+   * columns/rows by layout AND orientation.
+   */
+  if (layout === "mobile") {
+    return isLandscape
+      ? {
+          // Mobile launcher landscape: 4 logical columns × 2 = 8 widget units.
+          minCell: 44,
+          targetCell: 54,
+          maxCell: 999,
+          minColumns: 4,
+          maxColumns: 4,
+          minRows: 2,
+          maxRows: 4,
+          targetFillX: 1,
+          targetFillY: 0.72,
+          forceWidthFill: true,
+        }
+      : {
+          // Mobile launcher portrait: 2 logical columns × 2 = 4 widget units.
+          minCell: 64,
+          targetCell: 82,
+          maxCell: 999,
+          minColumns: 2,
+          maxColumns: 2,
+          minRows: 4,
+          maxRows: 7,
+          targetFillX: 1,
+          targetFillY: 0.86,
+          forceWidthFill: true,
+        };
+  }
+
+  if (layout === "tablet") {
+    return isLandscape
+      ? {
+          minCell: 88,
+          targetCell: 104,
+          maxCell: 150,
+          minColumns: 4,
+          maxColumns: 6,
+          minRows: 3,
+          maxRows: 4,
+          targetFillX: 0.88,
+          targetFillY: 0.76,
+        }
+      : {
+          minCell: 84,
+          targetCell: 102,
+          maxCell: 148,
+          minColumns: 3,
+          maxColumns: 4,
+          minRows: 4,
+          maxRows: 6,
+          targetFillX: 0.82,
+          targetFillY: 0.88,
+        };
+  }
+
+  return isLandscape
+    ? {
+        minCell: 92,
+        targetCell: 112,
+        maxCell: 160,
+        minColumns: 5,
+        maxColumns: 6,
+        minRows: 3,
+        maxRows: 4,
+        targetFillX: 0.86,
+        targetFillY: 0.72,
+      }
+    : {
+        minCell: 88,
+        targetCell: 108,
+        maxCell: 156,
+        minColumns: 4,
+        maxColumns: 5,
+        minRows: 4,
+        maxRows: 5,
+        targetFillX: 0.84,
+        targetFillY: 0.82,
+      };
+}
+
+export function getGridPreset(host, layout = getEffectiveLayout(host), metrics = {}) {
+  const r = host?.getBoundingClientRect?.() || {};
+  const width = metrics.width || r.width || window.innerWidth || 0;
+  const height = metrics.height || r.height || window.innerHeight || 0;
+  const isLandscape = width > height;
+  const bounds = getAdaptiveBounds(layout, isLandscape);
+
+  /*
+   * Orientation-aware comfort matrix.
+   *
+   * The shell/widget-area rectangle is already correct. This only chooses a
+   * columns/rows pair. We prioritize:
+   * 1) comfortable widget size;
+   * 2) square cells;
+   * 3) good fill of the available widget-area.
+   *
+   * We do not fill width at any cost, because that makes 2x2 widgets feel tiny.
+   */
+  let best = null;
+  let bestFallback = null;
+
+  for (let rows = bounds.minRows; rows <= bounds.maxRows; rows += 1) {
+    for (let columns = bounds.minColumns; columns <= bounds.maxColumns; columns += 1) {
+      const widthCell = Math.min(width / columns, bounds.maxCell);
+      const balancedCell = Math.min(widthCell, height / rows);
+      const cell = bounds.forceWidthFill ? widthCell : balancedCell;
+      if (!Number.isFinite(cell) || cell <= 0) continue;
+
+      const gridWidth = bounds.forceWidthFill ? width : cell * columns;
+      const gridHeight = cell * rows;
+      const fillX = width > 0 ? gridWidth / width : 1;
+      const fillY = height > 0 ? gridHeight / height : 1;
+
+      const underMinPenalty = cell < bounds.minCell
+        ? ((bounds.minCell - cell) / bounds.minCell)
+        : 0;
+      const targetCellPenalty = Math.abs(cell - bounds.targetCell) / bounds.targetCell;
+      const widthPenalty = Math.max(0, bounds.targetFillX - fillX);
+      const heightPenalty = Math.max(0, bounds.targetFillY - fillY);
+
+      /*
+       * Comfort beats density. Fill is important, but not enough to shrink the
+       * unit below the visual target.
+       */
+      const score =
+        Math.min(cell, bounds.maxCell) / bounds.maxCell * 5.5 +
+        fillX * 3.5 +
+        fillY * 2.0 -
+        underMinPenalty * 10 -
+        targetCellPenalty * 3.2 -
+        widthPenalty * 3.8 -
+        heightPenalty * 1.6 -
+        (columns / bounds.maxColumns) * 0.45;
+
+      const candidate = {
+        columns,
+        rows,
+        cell,
+        fillX,
+        fillY,
+        score,
+        validComfort: cell >= bounds.minCell,
+      };
+
+      if (!bestFallback || candidate.score > bestFallback.score) {
+        bestFallback = candidate;
+      }
+
+      if (!candidate.validComfort) continue;
+
+      if (!best || candidate.score > best.score) {
+        best = candidate;
+      }
+    }
+  }
+
+  const selected = best || bestFallback || {
+    columns: bounds.minColumns,
+    rows: bounds.minRows,
+    cell: bounds.minCell,
+    fillX: 1,
+    fillY: 1,
+  };
+
+  let density = "adaptive";
+  if (selected.cell < bounds.minCell * 1.08) density = "adaptive-dense";
+  else if (selected.cell > bounds.maxCell * 0.86) density = "adaptive-comfort";
+
+  return {
+    columns: selected.columns,
+    rows: selected.rows,
+    density: `${layout}-${isLandscape ? "landscape" : "portrait"}-${density}`,
+    minCell: bounds.minCell,
+    maxCell: bounds.maxCell,
+    targetCell: bounds.targetCell,
+    fillX: selected.fillX,
+    fillY: selected.fillY,
+  };
+}
+
+export function getLogicalColumnCount(host, layout = getEffectiveLayout(host), metrics = {}) {
+  return getGridPreset(host, layout, metrics).columns;
+}
+
+export function getLogicalRowCount(host, layout = getEffectiveLayout(host), metrics = {}) {
+  return getGridPreset(host, layout, metrics).rows;
+}
+
+export function getActiveGridUnits(host, layout = getEffectiveLayout(host), metrics = {}) {
+  return getLogicalColumnCount(host, layout, metrics) * WIDGET_UNIT.unitsPerLogicalColumn;
+}
+
+export function getActiveGridRows(host, layout = getEffectiveLayout(host), metrics = {}) {
+  return getLogicalRowCount(host, layout, metrics) * WIDGET_UNIT.unitsPerLogicalColumn;
+}
 
 
 export function isSliderWidgetSizeContract({w=2,h=1}={}) {

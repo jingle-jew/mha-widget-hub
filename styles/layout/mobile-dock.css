@@ -315,7 +315,6 @@
 }
 
 /* MATERIAL MOBILE DOCK DYNAMIC SURFACE */
-:host([data-theme-style="material"]) .mha-mobile-dock,
 :host([data-theme-style="material"]) .mha-mobile-dock-panel {
   background:
     linear-gradient(

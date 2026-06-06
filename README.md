@@ -1908,3 +1908,580 @@ orbit/crossing animation so the motion feels intentional and Samsung-like:
 - stronger but still soft opacity.
 
 iOS blobs remain stable, and Material keeps its solid tonal background.
+
+
+## Screensaver settings and lockscreen layout
+
+Settings now include an "Économiseur d’écran" section:
+- enabled/disabled;
+- delay: 15 seconds, 30 seconds, 2 minutes, 5 minutes;
+- Now bar enabled/disabled;
+- clock variant: none, digital, analog.
+
+The screensaver behaves like a phone lockscreen:
+- theme-matching dimmed background;
+- clock at the top;
+- Now bar at the bottom;
+- horizontal swipe/wheel on the clock changes clock variant with a slide/fade.
+
+The Now bar content itself was not redesigned.
+
+
+## Screensaver idle activation fix
+
+Screensaver visibility now separates:
+- manual preview (`_screensaverPreview`);
+- automatic idle activation (`_screensaverActive`);
+- actual visibility (`preview || active`).
+
+The idle timer is rescheduled after initial render, after settings changes, after
+closing settings, and after user activity. Settings and edit mode block automatic
+activation.
+
+
+## Screensaver syntax fix
+
+Fixed malformed method injection around `_openSettings()` that caused Safari to
+throw:
+
+```text
+SyntaxError: Unexpected token '{'
+```
+
+The screensaver idle activation logic remains intact.
+
+
+## Screensaver settings parameter fix
+
+Fixed duplicate destructured parameters in `createSettingsPanel()`:
+
+```text
+Cannot declare a parameter named 'screensaverEnabled'
+```
+
+The settings panel now has one clean screensaver parameter set.
+
+
+## Screensaver readBool runtime fix
+
+Fixed a runtime crash where the constructor referenced `readBool()` and
+`readNumberOption()` before those helpers existed.
+
+This caused:
+- `ReferenceError: Can't find variable: readBool`
+- then `_widgets` was never initialized, making the page render blank.
+
+
+## Screensaver constants runtime fix
+
+Fixed missing `SCREENSAVER_*` constant declarations used by the constructor:
+
+- `SCREENSAVER_ENABLED`
+- `SCREENSAVER_DELAY`
+- `SCREENSAVER_NOWBAR`
+- `SCREENSAVER_CLOCK_VARIANT`
+
+The validation now checks for actual `const` declarations, not just string usage.
+
+
+## Screensaver interface fade
+
+The screensaver now behaves like a true lockscreen layer:
+
+- the real theme background remains visible;
+- dashboard UI fades out when the screensaver fades in;
+- screensaver clock/Now bar fade in over a dim layer;
+- tapping the screensaver hides its elements immediately;
+- the dashboard UI fades back in.
+
+The screensaver no longer repaints a separate background.
+
+
+## Screensaver clock click variants
+
+The screensaver clock supports both interaction modes:
+
+- horizontal swipe on the clock changes variants by direction;
+- click/tap on the clock cycles to the next variant;
+- click/tap outside the clock wakes the dashboard.
+
+This makes variant switching usable on desktop/tablet without touch swiping.
+
+
+## Screensaver clock propagation fix
+
+Clock pointer/wheel interactions now stop propagation so the root screensaver
+wake handler does not treat clock clicks as a request to return to the dashboard.
+
+Expected behavior:
+- click the clock: cycle clock variant and stay in screensaver;
+- swipe the clock: change variant by direction and stay in screensaver;
+- click outside the clock: exit screensaver.
+
+
+## Screensaver empty clock variant
+
+The `Pas d’horloge` variant now keeps an invisible but interactive clock region.
+
+This allows clock variants to loop forever:
+- none → digital → analog → none;
+- analog → digital → none in reverse.
+
+Clicking/swiping the empty top clock area changes variants instead of waking the
+dashboard. Clicking outside that top region still exits the screensaver.
+
+
+## Screensaver clock snap carousel
+
+Clock variant changes now behave like an interactive snap carousel:
+
+- horizontal drag/scroll moves the current clock in the same direction;
+- the current clock fades out while moving about one third of the screen;
+- the incoming clock enters from the opposite side and fades in;
+- movement follows the user input proportionally;
+- release snaps forward/back instead of free-rolling;
+- click/tap on the clock cycles to the next variant;
+- `none` remains an invisible interactive clock region.
+
+
+## Screensaver clock polish
+
+Screensaver clocks were refined:
+
+- removed shadows from clock containers/faces;
+- increased the clock region/stage size to prevent analog clock cropping;
+- added a second hand to the analog clock.
+
+
+## Screensaver clock runtime loop fix
+
+Fixed three screensaver clock issues:
+
+- analog clock hands, including the second hand, now update every second without
+  needing a variant change;
+- the second hand keeps an explicit accent background;
+- carousel wrap-around keeps the same visual direction instead of briefly
+  reversing at the end of the variant list.
+
+
+## Screensaver clock visible tick fix
+
+The main one-second timer now updates the screensaver clock whenever the
+screensaver is actually visible:
+
+```text
+_screensaverPreview || _screensaverActive
+```
+
+Previously it only updated during manual preview, so the analog second hand did
+not move during automatic idle activation.
+
+
+## Screensaver static clock
+
+Removed clock carousel interactions and animations.
+
+The screensaver clock is now static:
+- no click-to-change;
+- no scroll/swipe-to-change;
+- no carousel slide/fade variant animation;
+- variant remains selected from settings;
+- analog second hand continues updating every second.
+
+Future lockscreen-style editing can provide richer variant selection later.
+
+
+## Screensaver clock visual refinement
+
+Refined screensaver clock visuals:
+
+- analog clock face is less transparent;
+- analog hands and center dot follow the accent color;
+- digital clock separator is split into its own span and ticks every second.
+
+
+## Theme apply methods restore
+
+Restored the theme apply methods used by the settings panel:
+
+- `_applyThemeFromSettings()`
+- `_applyThemeStyleFromSettings()`
+- `_applyAccentFromSettings()`
+- `_applyIconShapeFromSettings()`
+
+These methods are critical because the settings UI calls them directly. Without
+them, controls still render but clicks fail at runtime, for example:
+
+```text
+this._applyAccentFromSettings is not a function
+```
+
+A code comment now marks this block as important for the theme system.
+
+
+## Resize handle exclusivity
+
+In edit mode, the widget resize corner is reserved for resizing only.
+
+Resize-handle pointer/touch/mouse events are captured before widget drag and drop
+can start. Dragging the rest of the widget still works normally.
+
+
+## Resize handle event fix
+
+The resize handle exclusivity guard no longer calls `preventDefault()` and no
+longer captures pointer events before the resize logic can run.
+
+Result:
+- resize handle can start resizing normally;
+- drag-and-drop is still blocked when the interaction comes from the resize
+  corner.
+
+
+## Grid max 5 columns
+
+Tablet and desktop layouts are capped at 5 logical columns.
+
+This keeps larger screens from becoming too dense/compact while preserving the
+existing mobile behavior.
+
+
+## Main interface no global scroll
+
+The main dashboard surface is now constrained to the viewport like a tablet home
+screen:
+
+- the host/shell/grid use a fixed viewport height;
+- global page scroll is disabled;
+- the main widget grid does not create vertical page scrolling;
+- settings and panel bodies keep internal scrolling.
+
+This is intentionally a shell/layout constraint, not a widget redesign.
+
+
+## Hide bottom scroll indicator
+
+The main dashboard surface now hides browser/Safari scroll indicators on the
+viewport-locked shell/grid while keeping settings panels internally scrollable.
+
+This removes the small bottom scroll line that could overlap the lowest widget
+in iPad/tablet responsive views.
+
+
+## Sane non-scroll grid restore
+
+Restored the dashboard to the sane non-scroll foundation:
+
+- 5 logical columns max on tablet/desktop;
+- main surface remains viewport-locked;
+- browser scroll indicators remain hidden;
+- removed logical row compression / fit algorithms.
+
+The dashboard should not flatten widgets to force every widget into one
+viewport. Future overflow should be handled with dashboard pages/pagination.
+
+
+## Clean shell matrix reset
+
+The dashboard shell is reset to one explicit rectangle model:
+
+- status bar = top row;
+- workspace = row below the status bar;
+- dock zone = right column inside workspace;
+- widget area = remaining rectangle;
+- grid = square-cell matrix rendered inside widget area.
+
+`_syncSquareUnit()` measures only `.mha-widget-area`. The grid never measures
+itself, never compensates for the dock/status bar with padding, and widgets span
+square cells.
+
+
+## Layout engine duplicate export fix
+
+Removed duplicate grid sizing exports from `src/layout/layout-engine.js`.
+
+Safari was rejecting the module because `getLogicalColumnCount` and related grid
+functions existed more than once after the clean shell matrix refactor.
+
+
+## Widget area status gap
+
+Added a structural row gap between the status bar and the workspace so
+`.mha-widget-area` starts below the status bar with proper breathing room.
+
+The grid still measures only `.mha-widget-area`; status bar spacing is not
+handled through grid padding or widget offsets.
+
+
+## Widget area status gap plus
+
+Increased the structural gap between the status bar and `.mha-widget-area` by
+approximately the same amount as the previous spacing pass.
+
+
+## Adaptive matrix units
+
+The grid no longer uses only fixed tablet/desktop presets.
+
+`getGridPreset()` receives the real `.mha-widget-area` size and chooses
+columns/rows based on a comfortable grid-unit pixel range. `_syncSquareUnit()`
+then computes the exact square unit from that widget area.
+
+The shell remains the source of structure: status bar and dock are excluded
+before the grid is measured.
+
+
+## Adaptive width-fill matrix
+
+The adaptive grid now chooses rows first from a comfortable target cell size,
+then derives columns from the resulting square cell so the matrix fills more of
+`.mha-widget-area` horizontally.
+
+This keeps cells square while avoiding the previous case where too many rows
+made the shared cell tiny and left unused width.
+
+
+## Adaptive fill width syntax fix
+
+Rebuilt `src/layout/layout-engine.js` to remove a malformed duplicate function
+fragment that caused Safari to throw `Unexpected token ')'`.
+
+
+## Adaptive bigger units
+
+Adjusted only the grid density bounds.
+
+The adaptive algorithm now favors larger square units and fewer maximum
+columns/rows, so a 2x2 widget appears closer to the previous oversized 3x3 feel
+instead of becoming too tiny. The shell, status bar, dock, and widget-area
+structure are unchanged.
+
+
+## Adaptive strict width fill
+
+The grid preset selection now scores all columns/rows combinations and strongly
+penalizes layouts that leave too much empty horizontal space.
+
+The shell, status bar, dock, and widget-area structure are unchanged.
+
+
+## Adaptive oriented comfort
+
+The adaptive grid density is now aware of both layout class and orientation:
+mobile portrait/landscape, tablet portrait/landscape, and desktop
+portrait/landscape.
+
+The algorithm now prioritizes comfortable widget size before width fill so 2x2
+widgets do not become too tiny. The shell, status bar, dock, widget-area, and
+CSS structure are unchanged.
+
+
+## Final mobile gap tune
+
+Only two things changed:
+
+- the status bar to widget-grid gap is tied to `--mha-page-padding`, so it stays
+  consistent with the screen gutter in portrait and landscape;
+- mobile grid density is fixed to 2 logical columns in portrait and 4 logical
+  columns in landscape, with mobile cells allowed to grow enough to fill the
+  widget area width.
+
+
+## Final widget-area gap tune
+
+Moved the status bar gap back to `.mha-widget-area`.
+
+The previous final mobile gap tune put `padding-block-start` on `.mha-grid`,
+which made the matrix compensate for the status bar. The gap is now applied to
+the widget-area rectangle instead, so the grid follows naturally.
+
+
+## Final widget-area lowering
+
+Increased only `.mha-widget-area` top gutter to add more breathing room below
+the status bar. The grid, dock, shell, and adaptive sizing logic are unchanged.
+
+
+## Status bar workspace alignment
+
+The status bar is forced to stretch across the same shell/workspace width:
+its left edge aligns with the widgets and its right edge aligns with the outer
+dock edge. The widget-area top gutter multiplier is set to `2`.
+
+
+## Status bar no overflow
+
+The previous status-bar alignment forced the bar to `width: 100%`, which could
+make it protrude past the outer dock edge.
+
+The status bar now stretches within its grid cell but is clipped/contained so it
+cannot visually overflow beyond the dock. The widget-area top gutter remains at
+`calc(var(--mha-page-padding) * 2)`.
+
+
+## Resize boundary guard
+
+Widget resizing is clamped to the remaining logical grid space.
+
+During resize, width and height are limited by the widget's current x/y position
+and the active logical columns/rows, preventing widgets from growing outside
+`.mha-widget-area`, especially past the bottom edge.
+
+
+## Drag boundary guard
+
+Widget positions are normalized to the active logical grid before widget layouts
+are saved or reordered.
+
+This means drag/drop cannot persist a widget position that escapes
+`.mha-widget-area`. The same bounds used by resize are also applied to x/y:
+`x + w - 1 <= logicalColumns` and `y + h - 1 <= logicalRows`.
+
+
+## Safe layout fit guard
+
+Added full-layout overflow protection from the healthier `drag-bounds` base.
+
+This patch avoids broad method-region replacement. It only inserts the layout-fit
+helpers before `_getGridMetrics()` and patches `_updateResize()`, `_moveWidget()`,
+and `_saveWidgets()` with precise replacements.
+
+Extra textual guards verify that `render()`, `_startResize()`, `_updateResize()`,
+and `_getGridMetrics()` remain separate class methods.
+
+
+## Mobile grid full width
+
+Mobile only: `.mha-grid` is forced to stretch to the full width of
+`.mha-widget-area`.
+
+Tablet and desktop layouts are untouched.
+
+
+## Mobile width calc safe
+
+Rolled back the unsafe CSS track override from `mobile-tracks-full-width`.
+
+Mobile grid width is now handled only by layout sizing:
+
+- mobile portrait remains fixed at 2 logical columns;
+- mobile landscape remains fixed at 4 logical columns;
+- mobile cell size is based on widget-area width / columns;
+- CSS does not override `grid-template-columns`;
+- tablet and desktop are unchanged.
+
+
+## Mobile grid real width fix
+
+Inspected the rendered grid stack after mobile still showed ~42px tracks.
+
+The safe fix keeps the existing internal grid-template logic but makes mobile
+layout report `gridWidth = widgetAreaWidth` and prevents `.mha-grid` from
+shrink-to-content behavior.
+
+No `grid-template-columns` override is used.
+
+
+## Mobile unit multiplier consistency
+
+Mobile can set `unitsPerLogicalColumn: 1` so portrait uses 2 visible grid tracks
+and landscape uses 4 visible grid tracks.
+
+This patch keeps the global desktop/tablet multiplier at 2, but makes the runtime
+grid calculations consistently read `preset.unitsPerLogicalColumn` where active
+grid units, rows, bounds, and square-unit metrics are calculated.
+
+This avoids the previous loop where `layout-engine.js` returned mobile 2 units
+while `mha-control-hub.js` still recalculated 2 × global multiplier.
+
+
+## 670 breakpoint stability rollback
+
+The flashing/re-render loop began in the patch that made mobile
+`unitsPerLogicalColumn = 1`. This rollback restores the previous stable global
+unit multiplier path while keeping the safer mobile real-width CSS.
+
+Inspection did not find an explicit `670px` breakpoint in the source. The
+observed 670/671 split is therefore likely caused by the runtime mobile branch
+crossing a sizing threshold, not a literal `@media (max-width: 670px)` rule.
+
+
+## Grid units direct restore
+
+Restored the stable direct grid-unit model:
+
+- `w` is directly the number of widget grid units wide;
+- `h` is directly the number of widget grid units tall;
+- `2x2` remains 2 units wide by 2 units tall;
+- `4x2` remains 4 units wide by 2 units tall.
+
+No size migration or vocabulary conversion is applied. The failed model-migration
+helpers and localStorage migration flags were removed.
+
+
+## Mobile launcher layout
+
+Mobile is now treated as a launcher-style grid:
+
+- portrait: 4 widget units wide;
+- landscape: 8 widget units wide;
+- the grid fills the available `.mha-widget-area` width while respecting the
+  existing interface gaps;
+- widget dimensions remain direct grid units (`2x2` = 2 wide × 2 high).
+
+Implementation note: this codebase still uses
+`WIDGET_UNIT.unitsPerLogicalColumn = 2`. Therefore the mobile launcher presets
+use 2 logical columns in portrait and 4 in landscape, which produce 4 and 8
+actual widget units respectively.
+
+
+## Mobile scroll no drag clean
+
+Mobile launcher mode now:
+
+- computes square units from available width only;
+- disables widget drag/drop;
+- disables widget resize;
+- keeps vertical scrolling active with `touch-action: pan-y`.
+
+Tablet and desktop behavior is unchanged.
+
+
+## Same-size arrow swap
+
+Arrow movement now supports a conservative same-size swap:
+
+- moving into an empty space keeps the existing behavior;
+- moving into an occupied space swaps positions only if both widgets have the
+  same effective width and height;
+- incompatible occupied destinations are refused;
+- no cascade/push behavior is introduced.
+
+
+## Compatible group arrow swap
+
+Arrow movement now supports rectangular group swaps:
+
+- moving into empty space keeps the existing behavior;
+- moving into a single same-size widget still swaps normally;
+- moving into multiple widgets swaps only if the occupants exactly fill the
+  target rectangle with no holes, overlaps, or overflow;
+- the occupant group is translated into the moving widget's previous rectangle;
+- incompatible or partial groups are refused;
+- no cascade/push behavior is introduced.
+
+
+## Adjacent group arrow swap
+
+Group swaps now distinguish between two behaviors:
+
+- empty space movement still moves by 1 grid unit;
+- if that 1-unit movement is blocked, the system also checks the adjacent
+  full widget-sized rectangle in the arrow direction:
+  - down uses `y + h`;
+  - up uses `y - h`;
+  - right uses `x + w`;
+  - left uses `x - w`.
+
+This allows swaps such as a `2x4` widget against two stacked `2x2` widgets,
+without introducing cascade/push behavior.

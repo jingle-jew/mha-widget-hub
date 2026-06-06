@@ -6,10 +6,23 @@ import {createSettingsPanel} from "./src/settings/settings-panel.js";
 import { normalizeAccent } from "./src/settings/accent-palettes.js";
 import {updateStatusTime} from "./src/layout/status-bar.js";
 import {createEmptyWidget} from "./src/widgets/empty-widget.js";
-import {DEFAULT_WIDGETS,WIDGET_UNIT,getActiveGridUnits,getEffectiveLayout,getLayoutMode,getWidgetDensity,normalizeWidgetForKind,normalizeWidgetSize,sizeToString} from "./src/layout/layout-engine.js";
+import {DEFAULT_WIDGETS,WIDGET_UNIT,getActiveGridRows,getActiveGridUnits,getEffectiveLayout,getLayoutMode,getGridPreset,getWidgetDensity,normalizeWidgetForKind,normalizeWidgetSize,sizeToString} from "./src/layout/layout-engine.js";
 import {createScreensaver,normalizeClockVariant,updateScreensaverClock} from "./src/screensaver/screensaver.js";
 // Keeps existing local widget order/sizes after the public naming cleanup.
 
+
+
+
+function readBool(key, fallback = false) {
+  const value = localStorage.getItem(key);
+  if (value === null) return fallback;
+  return value === "true";
+}
+
+function readNumberOption(key, fallback, allowed = []) {
+  const value = Number(localStorage.getItem(key));
+  return allowed.includes(value) ? value : fallback;
+}
 
 function getSystemThemePreference() {
   return window.matchMedia?.("(prefers-color-scheme: light)")?.matches ? "light" : "dark";
@@ -36,6 +49,31 @@ function getStoredThemeSetting(host) {
     || "auto";
 
   return normalizeThemeSetting(stored);
+}
+
+function normalizeThemeStyle(themeStyle = "oneui") {
+  return THEME_STYLES.has(themeStyle) ? themeStyle : "oneui";
+}
+
+function getStoredThemeStyle(host) {
+  const stored = localStorage.getItem("mha-theme-style")
+    || localStorage.getItem("mha-dev-theme-style")
+    || document.documentElement.dataset.themeStyle
+    || host?.dataset?.themeStyle
+    || "oneui";
+
+  return normalizeThemeStyle(stored);
+}
+
+function getStoredAccent(host, themeStyle = "oneui") {
+  const normalizedStyle = normalizeThemeStyle(themeStyle);
+  const stored = localStorage.getItem(`mha-accent-${normalizedStyle}`)
+    || localStorage.getItem("mha-accent")
+    || document.documentElement.dataset.accent
+    || host?.dataset?.accent
+    || "";
+
+  return normalizeAccent(normalizedStyle, stored);
 }
 
 function getDefaultIconShapeForThemeStyle(themeStyle = "oneui") {
@@ -70,7 +108,6 @@ function getStoredIconShapeSetting(host) {
    * Auto gets replaced by the previously resolved effective shape.
    */
   const stored = localStorage.getItem("mha-icon-shape")
-    || localStorage.getItem("mha-dev-icon-shape")
     || document.documentElement.dataset.iconShapeSetting
     || host.dataset.iconShapeSetting
     || "auto";
@@ -81,7 +118,8 @@ function getStoredIconShapeSetting(host) {
 function syncThemeAttributes(host) {
   const themeSetting = getStoredThemeSetting(host);
   const theme = resolveTheme(themeSetting);
-  const themeStyle = document.documentElement.dataset.themeStyle || "oneui";
+  const themeStyle = getStoredThemeStyle(host);
+  const accent = getStoredAccent(host, themeStyle);
   const iconShapeSetting = getStoredIconShapeSetting(host);
   const iconShape = resolveIconShape(themeStyle, iconShapeSetting);
 
@@ -96,6 +134,13 @@ function syncThemeAttributes(host) {
 
   host.dataset.themeStyle = themeStyle;
   host.setAttribute("data-theme-style", themeStyle);
+  document.documentElement.dataset.themeStyle = themeStyle;
+  document.documentElement.setAttribute("data-theme-style", themeStyle);
+
+  host.dataset.accent = accent;
+  host.setAttribute("data-accent", accent);
+  document.documentElement.dataset.accent = accent;
+  document.documentElement.setAttribute("data-accent", accent);
 
   host.dataset.iconShapeSetting = iconShapeSetting;
   host.setAttribute("data-icon-shape-setting", iconShapeSetting);
@@ -109,9 +154,14 @@ function syncThemeAttributes(host) {
   document.documentElement.setAttribute("data-icon-shape", iconShape);
 }
 
-const ORDER="mha-grid-order",SIZES="mha-widget-sizes",REMOVED="mha-hidden-widgets",LEGACY_STORAGE_PREFIX=["mha","v2"].join("-"),THEME_STYLES=new Set(["ios","oneui","material"]);
+const ORDER="mha-grid-order",SIZES="mha-widget-sizes",REMOVED="mha-hidden-widgets",POSITIONS="mha-widget-positions",LEGACY_STORAGE_PREFIX=["mha","v2"].join("-"),THEME_STYLES=new Set(["ios","oneui","material"]);
+const SCREENSAVER_ENABLED="mha-screensaver-enabled";
+const SCREENSAVER_DELAY="mha-screensaver-delay";
+const SCREENSAVER_NOWBAR="mha-screensaver-nowbar";
+const SCREENSAVER_CLOCK_VARIANT="mha-screensaver-clock-variant";
+
 function readMigratedJson(key,legacyKey,fallback){const current=readJson(key,null);if(current!==null)return current;const legacy=readJson(legacyKey,null);if(legacy!==null){writeJson(key,legacy);return legacy}return fallback}
-class MhaControlHub extends HTMLElement{constructor(){super();this.attachShadow({mode:"open"});this._hass=null;this._isEditing=false;this._draggedId="";this._resizeState=null;this._squareUnitFrame=0;this._renderId=0;this._readyRaf=0;this._viewportRaf=0;this._relayoutTimer=0;this._systemThemeListener=null;this._gridScrollCleanup=null;this._screensaverPreview=false;this._screensaverNowBar=true;this._screensaverClockVariant="digital";this._settingsOpen=false;this._lastResponsiveSignature="";this._responsiveRelayoutTimer=null;this._widgets=this._readWidgets()}
+class MhaControlHub extends HTMLElement{constructor(){super();this.attachShadow({mode:"open"});this._hass=null;this._isEditing=false;this._activeMoveWidgetId="";this._widgetPositions=readJson(POSITIONS,{})||{};this._draggedId="";this._isResizingWidget=false;this._resizeState=null;this._squareUnitFrame=0;this._renderId=0;this._readyRaf=0;this._viewportRaf=0;this._relayoutTimer=0;this._systemThemeListener=null;this._themeTransitionTimer=0;this._themeTransitionFrame=0;this._gridScrollCleanup=null;this._screensaverPreview=false;this._screensaverActive=false;this._screensaverNowBar=readBool(SCREENSAVER_NOWBAR,true);this._screensaverClockVariant=localStorage.getItem(SCREENSAVER_CLOCK_VARIANT)||localStorage.getItem("mha-screensaver-clock")||"digital";this._screensaverIdleTimer=0;this._screensaverEnabled=readBool(SCREENSAVER_ENABLED,false);this._screensaverDelay=readNumberOption(SCREENSAVER_DELAY,30000,[15000,30000,120000,300000]);this._settingsOpen=false;this._screensaverSettingsOpen=false;this._lastResponsiveSignature="";this._responsiveRelayoutTimer=null;this._widgets=this._readWidgets()}
 set hass(h){this._hass=h;this.render()}get hass(){return this._hass}
 _markReadyAfterPaint(){
   cancelAnimationFrame(this._readyRaf);
@@ -122,143 +172,311 @@ _markReadyAfterPaint(){
     this.setAttribute("data-ready","true");
   }));
 }
-connectedCallback(){this._systemThemeListener=()=>{if(getStoredThemeSetting(this)==="auto")this.render()};window.matchMedia?.("(prefers-color-scheme: light)")?.addEventListener?.("change",this._systemThemeListener);this.render();this._clockTimer=setInterval(()=>{updateStatusTime(this.shadowRoot);if(this._screensaverPreview)updateScreensaverClock(this.shadowRoot,this._screensaverClockVariant)},1000);this._resizeListener=()=>this._handleViewportChange();window.addEventListener("resize",this._resizeListener);window.visualViewport?.addEventListener("resize",this._resizeListener);window.addEventListener("orientationchange",this._resizeListener);this._settingsOpenListener=()=>this._openSettings();this.shadowRoot.addEventListener("mha-open-settings",this._settingsOpenListener)}
-disconnectedCallback(){window.matchMedia?.("(prefers-color-scheme: light)")?.removeEventListener?.("change",this._systemThemeListener);clearInterval(this._clockTimer);cancelAnimationFrame(this._squareUnitFrame);this._clearGridScrollListener();window.removeEventListener("resize",this._resizeListener);window.visualViewport?.removeEventListener("resize",this._resizeListener);window.removeEventListener("orientationchange",this._resizeListener);clearTimeout(this._responsiveRelayoutTimer);if(this._settingsOpenListener)this.shadowRoot.removeEventListener("mha-open-settings",this._settingsOpenListener)}
+connectedCallback(){this._systemThemeListener=()=>{if(getStoredThemeSetting(this)==="auto")this._transitionSystemThemeChange()};window.matchMedia?.("(prefers-color-scheme: light)")?.addEventListener?.("change",this._systemThemeListener);this.render();this._clockTimer=setInterval(()=>{updateStatusTime(this.shadowRoot);if(this._getScreensaverVisible())updateScreensaverClock(this.shadowRoot,this._screensaverClockVariant)},1000);this._activityListener=()=>this._handleUserActivity();["pointerdown","touchstart","keydown","wheel","scroll"].forEach(type=>window.addEventListener(type,this._activityListener,{passive:true}));this._scheduleScreensaverIdleTimer();this._resizeListener=()=>{this._handleUserActivity();this._handleViewportChange()};window.addEventListener("resize",this._resizeListener);window.visualViewport?.addEventListener("resize",this._resizeListener);window.addEventListener("orientationchange",this._resizeListener);this._resizeHandlePointerDownListener=(event)=>this._markResizeInteraction(event);this.shadowRoot.addEventListener("pointerdown",this._resizeHandlePointerDownListener);this.shadowRoot.addEventListener("mousedown",this._resizeHandlePointerDownListener);this.shadowRoot.addEventListener("touchstart",this._resizeHandlePointerDownListener);this._resizeInteractionCleanup=()=>this._clearResizeInteraction();["pointerup","pointercancel","mouseup","touchend","touchcancel"].forEach(type=>window.addEventListener(type,this._resizeInteractionCleanup,{passive:true}));this._settingsOpenListener=()=>this._openSettings();this.shadowRoot.addEventListener("mha-open-settings",this._settingsOpenListener)}
+disconnectedCallback(){window.matchMedia?.("(prefers-color-scheme: light)")?.removeEventListener?.("change",this._systemThemeListener);clearInterval(this._clockTimer);cancelAnimationFrame(this._squareUnitFrame);cancelAnimationFrame(this._themeTransitionFrame);clearTimeout(this._themeTransitionTimer);this._clearGridScrollListener();["pointerdown","touchstart","keydown","wheel","scroll"].forEach(type=>window.removeEventListener(type,this._activityListener));clearTimeout(this._screensaverIdleTimer);window.removeEventListener("resize",this._resizeListener);window.visualViewport?.removeEventListener("resize",this._resizeListener);window.removeEventListener("orientationchange",this._resizeListener);clearTimeout(this._responsiveRelayoutTimer);if(this._resizeHandlePointerDownListener){this.shadowRoot.removeEventListener("pointerdown",this._resizeHandlePointerDownListener);this.shadowRoot.removeEventListener("mousedown",this._resizeHandlePointerDownListener);this.shadowRoot.removeEventListener("touchstart",this._resizeHandlePointerDownListener)}if(this._resizeInteractionCleanup)["pointerup","pointercancel","mouseup","touchend","touchcancel"].forEach(type=>window.removeEventListener(type,this._resizeInteractionCleanup));if(this._settingsOpenListener)this.shadowRoot.removeEventListener("mha-open-settings",this._settingsOpenListener)}
 requestRender(){this.render()}
 _syncEditModeDom(){
+  if(!this._isEditing)this._activeMoveWidgetId="";
   this.classList.toggle("is-editing",this._isEditing);
-  const edit=this.shadowRoot.querySelector(".mha-edit-button");
+  this.dataset.editing=String(this._isEditing);
+  const edit=this.shadowRoot.querySelector(".mha-main-edit-button");
   if(edit)edit.innerHTML=this._isEditing?ICONS.close:ICONS.edit;
   this.shadowRoot.querySelectorAll(".mha-widget").forEach(el=>{
-    el.draggable=this._isEditing;
+    el.draggable=this._isEditing&&!this._isMobileLauncherLayout();
+    el.classList.toggle("is-editing",this._isEditing);
+    const active=this._isEditing&&el.dataset.widgetId===this._activeMoveWidgetId;
+    el.classList.toggle("is-move-target",active);
+    el.querySelector('[data-action="move"]')?.setAttribute("aria-pressed",String(active));
   });
-}_openSettings(){this._settingsOpen=true;this._syncSettingsModalState();this._syncSettingsDom()}
-_closeSettings(){this._settingsOpen=false;this._syncSettingsModalState();this._syncSettingsDom()}
-_syncSettingsModalState(){this.classList.toggle("is-settings-open",this._settingsOpen);this.dataset.settingsOpen=String(this._settingsOpen)}
-_syncSettingsDom(){
-  const existing=this.shadowRoot.querySelector(".mha-settings-panel");
-  if(existing)existing.remove();
-  this._syncSettingsModalState();this.shadowRoot.append(this._createSettingsPanel());
 }
-_createSettingsPanel(){
-  return createSettingsPanel({
-    open:this._settingsOpen,
+_openSettings(){
+  this._settingsOpen=true;
+  this._setScreensaverActive(false);
+  clearTimeout(this._screensaverIdleTimer);
+  this._syncSettingsModalState();
+  this._syncSettingsDom();
+}
+_closeSettings(){
+  this._settingsOpen=false;
+  this._syncSettingsModalState();
+  this._syncSettingsDom();
+  this._scheduleScreensaverIdleTimer();
+}
+_syncSettingsModalState(){
+  this.classList.toggle("is-settings-open",this._settingsOpen);
+  this.dataset.settingsOpen=String(this._settingsOpen);
+}
+_syncSettingsDom(){
+  const existing=this.shadowRoot.querySelector('.mha-settings-panel[data-settings-scope="all"]');
+  if(existing)existing.remove();
+  this._syncSettingsModalState();
+  this.shadowRoot.append(this._createSettingsPanel());
+}
+_getSettingsPanelProps(scope="all"){
+  const themeStyle=getStoredThemeStyle(this);
+  const iconShapeSetting=getStoredIconShapeSetting(this);
+  const effectiveIconShape=this.dataset.iconShape
+    || document.documentElement.dataset.iconShape
+    || resolveIconShape(themeStyle,iconShapeSetting);
+
+  return {
+    open:scope==="screensaver"?this._screensaverSettingsOpen:this._settingsOpen,
+    scope,
     theme:getStoredThemeSetting(this),
-    themeStyle:document.documentElement.dataset.themeStyle||this.dataset.themeStyle||"oneui",
-    accent:document.documentElement.dataset.accent||this.dataset.accent||normalizeAccent(document.documentElement.dataset.themeStyle||this.dataset.themeStyle||"oneui",""),
-    iconShape:getStoredIconShapeSetting(this),
+    themeStyle,
+    accent:getStoredAccent(this,themeStyle),
+    iconShape:iconShapeSetting,
+    effectiveIconShape,
+    screensaverEnabled:this._screensaverEnabled,
+    screensaverDelay:this._screensaverDelay,
     screensaverPreview:this._screensaverPreview,
     screensaverNowBar:this._screensaverNowBar,
     screensaverClockVariant:this._screensaverClockVariant,
-    onClose:()=>this._closeSettings(),
+    onClose:()=>scope==="screensaver"?this._closeScreensaverSettings():this._closeSettings(),
     onThemeChange:v=>this._applyThemeFromSettings(v),
     onThemeStyleChange:v=>this._applyThemeStyleFromSettings(v),
     onAccentChange:v=>this._applyAccentFromSettings(v),
     onIconShapeChange:v=>this._applyIconShapeFromSettings(v),
-    onScreensaverPreviewChange:v=>{this._screensaverPreview=v;this._syncScreensaverDom();this._syncSettingsDom()},
-    onScreensaverNowBarChange:v=>{this._screensaverNowBar=v;this._syncScreensaverDom();this._syncSettingsDom()},
-    onScreensaverClockVariantChange:v=>{this._screensaverClockVariant=normalizeClockVariant(v);this._syncScreensaverDom();this._syncSettingsDom()},
+    onScreensaverEnabledChange:v=>this._applyScreensaverEnabledFromSettings(v),
+    onScreensaverDelayChange:v=>this._applyScreensaverDelayFromSettings(v),
+    onScreensaverPreviewChange:v=>this._applyScreensaverPreviewFromSettings(v),
+    onScreensaverNowBarChange:v=>this._applyScreensaverNowBarFromSettings(v),
+    onScreensaverClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),
     onResetGrid:()=>this.resetGrid(),
-  });
+  };
 }
-_readThemeBackdropSnapshot(){
-  const style=getComputedStyle(this);
-  return style.getPropertyValue("--mha-page-bg").trim()||style.getPropertyValue("--mha-background").trim()||style.getPropertyValue("--mha-shell-bg").trim()||"transparent";
+_createSettingsPanel(){
+  return createSettingsPanel(this._getSettingsPanelProps("all"));
 }
-_prepareThemeBackdropCrossfade(){
-  this.style.setProperty("--mha-theme-crossfade-from",this._readThemeBackdropSnapshot());
-  this.classList.remove("is-theme-backdrop-crossfading");
-  void this.offsetWidth;
+_openScreensaverSettings(){
+  this._screensaverSettingsOpen=true;
+  this._syncScreensaverSettingsDom();
 }
-_runThemeBackdropCrossfade(){
-  this.classList.add("is-theme-backdrop-crossfading");
-  clearTimeout(this._themeBackdropCrossfadeTimer);
-  this._themeBackdropCrossfadeTimer=setTimeout(()=>{
-    this.classList.remove("is-theme-backdrop-crossfading");
-    this.style.removeProperty("--mha-theme-crossfade-from");
-  },2000);
+_closeScreensaverSettings(){
+  this._screensaverSettingsOpen=false;
+  this._syncScreensaverSettingsDom();
 }
-_applyThemeFromSettings(theme="auto"){
-  const themeSetting=normalizeThemeSetting(theme);
-  const resolved=resolveTheme(themeSetting);
+_syncScreensaverSettingsDom(){
+  const existing=this.shadowRoot.querySelector('.mha-settings-panel[data-settings-scope="screensaver"]');
+  if(existing)existing.remove();
+  this.classList.toggle("is-screensaver-settings-open",this._screensaverSettingsOpen);
+  this.dataset.screensaverSettingsOpen=String(this._screensaverSettingsOpen);
+  this.shadowRoot.append(createSettingsPanel(this._getSettingsPanelProps("screensaver")));
+}
 
-  document.documentElement.dataset.themeSetting=themeSetting;
-  document.documentElement.setAttribute("data-theme-setting",themeSetting);
-  document.documentElement.dataset.theme=resolved;
-  document.documentElement.setAttribute("data-theme",resolved);
-
-  this.dataset.themeSetting=themeSetting;
-  this.setAttribute("data-theme-setting",themeSetting);
-  this.dataset.theme=resolved;
-  this.setAttribute("data-theme",resolved);
-
+/*
+ * THEME SYSTEM APPLY METHODS — IMPORTANT
+ *
+ * These methods are the bridge between the settings UI and the live theme
+ * system. The settings panel calls them directly when the user changes:
+ * theme mode, visual style, accent color, or icon shape.
+ *
+ * If these methods are removed, the settings UI may still render and receive
+ * clicks, but theme changes will fail at runtime with errors like:
+ * `this._applyAccentFromSettings is not a function`.
+ *
+ * Keep this block together when cleaning/refactoring the theme system.
+ */
+_applyThemeFromSettings(value="auto"){
+  const themeSetting=normalizeThemeSetting(value);
   localStorage.setItem("mha-theme",themeSetting);
   localStorage.setItem("mha-dev-theme",themeSetting);
-
-  this._runThemeBackdropCrossfade();
+  syncThemeAttributes(this);
   this._syncSettingsDom();
-}
-_applyThemeStyleFromSettings(style="oneui"){
-  const allowed=["ios","oneui","material"];
-  const resolved=allowed.includes(style)?style:"oneui";
-  this._prepareThemeBackdropCrossfade();
-  document.documentElement.dataset.themeStyle=resolved;
-  document.documentElement.setAttribute("data-theme-style",resolved);
-  this.dataset.themeStyle=resolved;
-  this.setAttribute("data-theme-style",resolved);
-  localStorage.setItem("mha-dev-theme-style",resolved);
-  const iconShapeSetting=getStoredIconShapeSetting(this);
-  const effectiveIconShape=resolveIconShape(resolved,iconShapeSetting);
-  document.documentElement.dataset.iconShape=effectiveIconShape;
-  document.documentElement.setAttribute("data-icon-shape",effectiveIconShape);
-  this.dataset.iconShape=effectiveIconShape;
-  this.setAttribute("data-icon-shape",effectiveIconShape);
-  const accent=normalizeAccent(resolved,localStorage.getItem(`mha-accent-${resolved}`)||"");
-  this.dataset.accent=accent;
-  this.setAttribute("data-accent",accent);
-  document.documentElement.dataset.accent=accent;
-  document.documentElement.setAttribute("data-accent",accent);
-  localStorage.setItem("mha-accent",accent);
-  localStorage.setItem(`mha-accent-${resolved}`,accent);
-  this._runThemeBackdropCrossfade();
-  this._syncSettingsDom();
-}
-_applyAccentFromSettings(accent=""){
-  const themeStyle=document.documentElement.dataset.themeStyle||this.dataset.themeStyle||"oneui";
-  const resolved=normalizeAccent(themeStyle,accent);
-  this.dataset.accent=resolved;
-  this.setAttribute("data-accent",resolved);
-  document.documentElement.dataset.accent=resolved;
-  document.documentElement.setAttribute("data-accent",resolved);
-  localStorage.setItem("mha-accent",resolved);
-  localStorage.setItem(`mha-accent-${themeStyle}`,resolved);
-  this._syncSettingsDom();
-}
-_applyIconShapeFromSettings(shape="auto"){
-  const resolved=normalizeIconShapeSetting(shape);
-  const themeStyle=this.dataset.themeStyle||document.documentElement.dataset.themeStyle||"oneui";
-  const effective=resolveIconShape(themeStyle,resolved);
-
-  document.documentElement.dataset.iconShapeSetting=resolved;
-  document.documentElement.setAttribute("data-icon-shape-setting",resolved);
-  document.documentElement.dataset.iconShape=effective;
-  document.documentElement.setAttribute("data-icon-shape",effective);
-
-  this.dataset.iconShapeSetting=resolved;
-  this.setAttribute("data-icon-shape-setting",resolved);
-  this.dataset.iconShape=effective;
-  this.setAttribute("data-icon-shape",effective);
-
-  localStorage.setItem("mha-icon-shape",resolved);
-  localStorage.setItem("mha-dev-icon-shape",resolved);
-  this._syncSettingsDom();
+  this._syncScreensaverSettingsDom();
 }
 
+_transitionSystemThemeChange(){
+  if(!this.isConnected)return;
 
-toggleEditMode(){this._isEditing=!this._isEditing;this._syncEditModeDom()}toggleScreensaverPreview(){this._screensaverPreview=!this._screensaverPreview;this._syncScreensaverDom()}toggleNowBarPreview(){this._screensaverNowBar=!this._screensaverNowBar;this._syncScreensaverDom()}setScreensaverClockVariant(v="digital"){this._screensaverClockVariant=normalizeClockVariant(v);this._syncScreensaverDom()}resetGrid(){localStorage.removeItem(ORDER);localStorage.removeItem(SIZES);localStorage.removeItem(REMOVED);this._widgets=this._readWidgets();this.render()}
+  const reducedMotion=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+  const cover=this.shadowRoot.querySelector(".mha-theme-transition-cover")||document.createElement("div");
+  cover.className="mha-theme-transition-cover";
+  cover.dataset.state="covering";
+  cover.setAttribute("aria-hidden","true");
+  if(!cover.parentNode)this.shadowRoot.append(cover);
+  cover.style.background=getComputedStyle(cover).background;
+
+  this.classList.add("is-theme-transitioning");
+  clearTimeout(this._themeTransitionTimer);
+  cancelAnimationFrame(this._themeTransitionFrame);
+
+  syncThemeAttributes(this);
+
+  const finish=()=>{
+    cover.dataset.state="revealing";
+    const duration=reducedMotion?0:260;
+    this._themeTransitionTimer=setTimeout(()=>{
+      cover.remove();
+      this.classList.remove("is-theme-transitioning");
+    },duration);
+  };
+
+  if(reducedMotion){
+    finish();
+    return;
+  }
+
+  // Wait for two paints so CSS variables and theme selectors settle under the cover.
+  this._themeTransitionFrame=requestAnimationFrame(()=>{
+    this._themeTransitionFrame=requestAnimationFrame(finish);
+  });
+}
+
+_applyThemeStyleFromSettings(value="oneui"){
+  const nextStyle=normalizeThemeStyle(value);
+  localStorage.setItem("mha-theme-style",nextStyle);
+  localStorage.setItem("mha-dev-theme-style",nextStyle);
+
+  /*
+   * Accent and icon shape both depend on the active visual style.
+   * Re-normalize the current accent so a value from another style does not
+   * leave the UI stuck on the first/default swatch.
+   */
+  const nextAccent=getStoredAccent(this,nextStyle);
+  localStorage.setItem("mha-accent",nextAccent);
+  localStorage.setItem(`mha-accent-${nextStyle}`,nextAccent);
+
+  syncThemeAttributes(this);
+  this._syncSettingsDom();
+}
+
+_applyAccentFromSettings(value=""){
+  const style=getStoredThemeStyle(this);
+  const nextAccent=normalizeAccent(style,value);
+  localStorage.setItem("mha-accent",nextAccent);
+  localStorage.setItem(`mha-accent-${style}`,nextAccent);
+  syncThemeAttributes(this);
+  this._syncSettingsDom();
+}
+
+_applyIconShapeFromSettings(value="auto"){
+  const nextShape=normalizeIconShapeSetting(value);
+  localStorage.setItem("mha-icon-shape",nextShape);
+  localStorage.setItem("mha-dev-icon-shape",nextShape);
+  syncThemeAttributes(this);
+  this._syncSettingsDom();
+}
+
+_isScreensaverBlocked(){
+  return this._settingsOpen||this._isEditing;
+}
+_getScreensaverVisible(){
+  return Boolean(this._screensaverPreview||this._screensaverActive);
+}
+_setScreensaverActive(active=false){
+  const next=Boolean(active)&&this._screensaverEnabled&&!this._isScreensaverBlocked();
+  if(this._screensaverActive===next){
+    this._syncScreensaverVisibilityState();
+    this._syncScreensaverDom();
+    return;
+  }
+  this._screensaverActive=next;
+  this._syncScreensaverDom();
+}
+_scheduleScreensaverIdleTimer(){
+  clearTimeout(this._screensaverIdleTimer);
+  if(!this._screensaverEnabled||this._isScreensaverBlocked())return;
+  this._screensaverIdleTimer=setTimeout(()=>{
+    this._setScreensaverActive(true);
+  },this._screensaverDelay);
+}
+_handleUserActivity(){
+  if(this._screensaverSettingsOpen)return;
+  if(this._screensaverActive){
+    this._setScreensaverActive(false);
+  }
+  this._scheduleScreensaverIdleTimer();
+}
+_applyScreensaverEnabledFromSettings(enabled=false){
+  this._screensaverEnabled=Boolean(enabled);
+  localStorage.setItem(SCREENSAVER_ENABLED,String(this._screensaverEnabled));
+  if(!this._screensaverEnabled){
+    this._setScreensaverActive(false);
+  }
+  this._scheduleScreensaverIdleTimer();
+  this._syncSettingsDom();
+  this._syncScreensaverSettingsDom();
+}
+_applyScreensaverDelayFromSettings(delay=30000){
+  const numeric=Number(delay);
+  this._screensaverDelay=[15000,30000,120000,300000].includes(numeric)?numeric:30000;
+  localStorage.setItem(SCREENSAVER_DELAY,String(this._screensaverDelay));
+  this._scheduleScreensaverIdleTimer();
+  this._syncSettingsDom();
+  this._syncScreensaverSettingsDom();
+}
+_applyScreensaverPreviewFromSettings(enabled=false){
+  this._screensaverPreview=Boolean(enabled);
+  this._syncScreensaverDom();
+  this._syncSettingsDom();
+  this._syncScreensaverSettingsDom();
+  this._scheduleScreensaverIdleTimer();
+}
+_applyScreensaverNowBarFromSettings(enabled=true){
+  this._screensaverNowBar=Boolean(enabled);
+  localStorage.setItem(SCREENSAVER_NOWBAR,String(this._screensaverNowBar));
+  this._syncScreensaverDom();
+  this._syncSettingsDom();
+  this._syncScreensaverSettingsDom();
+}
+_applyScreensaverClockVariantFromSettings(variant="digital"){
+  this._screensaverClockVariant=normalizeClockVariant(variant);
+  localStorage.setItem(SCREENSAVER_CLOCK_VARIANT,this._screensaverClockVariant);
+  localStorage.setItem("mha-screensaver-clock",this._screensaverClockVariant);
+  this._syncScreensaverDom();
+  this._syncSettingsDom();
+  this._syncScreensaverSettingsDom();
+}
+_syncScreensaverVisibilityState(){
+  const visible=this._getScreensaverVisible();
+  this.classList.toggle("is-screensaver-visible",visible);
+  this.dataset.screensaverVisible=String(visible);
+}
+_syncScreensaverDom(){
+  this._syncScreensaverVisibilityState();
+  const existing=this.shadowRoot.querySelector(".mha-screensaver");
+  if(!existing)return;
+  const next=createScreensaver({
+    isVisible:this._getScreensaverVisible(),
+    showNowBar:this._screensaverNowBar,
+    clockVariant:this._screensaverClockVariant,
+    onClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),
+    onOpenScreensaverSettings:()=>this._openScreensaverSettings(),
+    onWake:()=>this._wakeScreensaver(),
+  });
+  existing.replaceWith(next);
+}
+toggleEditMode(){this._isEditing=!this._isEditing;if(this._isEditing)this._setScreensaverActive(false);this._syncEditModeDom();this._scheduleScreensaverIdleTimer()}toggleScreensaverPreview(){this._screensaverPreview=!this._screensaverPreview;this._syncScreensaverDom()}toggleNowBarPreview(){this._screensaverNowBar=!this._screensaverNowBar;this._syncScreensaverDom()}setScreensaverClockVariant(v="digital"){this._screensaverClockVariant=normalizeClockVariant(v);this._syncScreensaverDom()}resetGrid(){localStorage.removeItem(ORDER);localStorage.removeItem(SIZES);localStorage.removeItem(REMOVED);localStorage.removeItem(POSITIONS);this._widgetPositions={};this._activeMoveWidgetId="";this._widgets=this._readWidgets();this.render()}
 _readWidgets(){const byId=new Map(DEFAULT_WIDGETS.map(w=>[w.id,w]));const removed=new Set(readJson(REMOVED,[]).filter?.(id=>byId.has(id))||[]);const order=readMigratedJson(ORDER,`${LEGACY_STORAGE_PREFIX}-grid-order`,DEFAULT_WIDGETS.map(w=>w.id)).filter?.(id=>byId.has(id)&&!removed.has(id))||[];DEFAULT_WIDGETS.forEach(w=>{if(!removed.has(w.id)&&!order.includes(w.id))order.push(w.id)});const sizes=readMigratedJson(SIZES,`${LEGACY_STORAGE_PREFIX}-widget-sizes`,{});return order.map(id=>{const base=byId.get(id);return {...base,...normalizeWidgetForKind({...base,...(sizes[id]||{})})}})}
-_saveWidgets(){writeJson(ORDER,this._widgets.map(w=>w.id));const sizes={};this._widgets.forEach(w=>sizes[w.id]=normalizeWidgetForKind(w));writeJson(SIZES,sizes)}
-_removeWidget(id){if(!this._widgets.some(w=>w.id===id))return;this._widgets=this._widgets.filter(w=>w.id!==id);const removed=new Set(readJson(REMOVED,[]));removed.add(id);writeJson(REMOVED,[...removed]);this._saveWidgets();this.shadowRoot.querySelector(`[data-widget-id="${id}"]`)?.remove();this._clearDropState();this._scheduleSquareUnitSync()}
+_saveWidgets(){this._widgets=this._normalizeWidgetsToGridBounds(this._widgets);if(!this._doesWidgetLayoutFitGrid(this._widgets))return;writeJson(ORDER,this._widgets.map(w=>w.id));const sizes={};this._widgets.forEach(w=>sizes[w.id]=normalizeWidgetForKind(w));writeJson(SIZES,sizes)}
+_removeWidget(id){if(!this._widgets.some(w=>w.id===id))return;if(this._activeMoveWidgetId===id)this._activeMoveWidgetId="";this._widgets=this._widgets.filter(w=>w.id!==id);Object.values(this._widgetPositions).forEach(layout=>{if(layout&&typeof layout==="object")delete layout[id]});writeJson(POSITIONS,this._widgetPositions);const removed=new Set(readJson(REMOVED,[]));removed.add(id);writeJson(REMOVED,[...removed]);this._saveWidgets();this.shadowRoot.querySelector(`[data-widget-id="${id}"]`)?.remove();this._clearDropState();this._scheduleSquareUnitSync()}
+
+_isResizeHandleEvent(event){
+  return Boolean(event?.target?.closest?.(
+    ".mha-widget-resize, .mha-widget-resize-handle, .mha-resize-handle, [data-resize-handle='true']"
+  ));
+}
+
+_markResizeInteraction(event){
+  if(!this._isEditing||!this._isResizeHandleEvent(event))return;
+  this._isResizingWidget=true;
+  const widget=event.target.closest?.(".mha-widget");
+  if(widget)widget.dataset.resizing="true";
+  /*
+   * Stop bubbling toward widget drag/drop, but do NOT preventDefault here.
+   * The resize logic itself still needs the original pointer/touch event.
+   */
+  event.stopPropagation?.();
+}
+
+_clearResizeInteraction(){
+  this._isResizingWidget=false;
+  this.shadowRoot?.querySelectorAll?.('.mha-widget[data-resizing="true"]').forEach(el=>{
+    delete el.dataset.resizing;
+  });
+}
+
 _moveWidget(sourceId,targetId,placement="before"){
   if(!sourceId||!targetId||sourceId===targetId)return;
   const si=this._widgets.findIndex(w=>w.id===sourceId),ti=this._widgets.findIndex(w=>w.id===targetId);
@@ -267,7 +485,8 @@ _moveWidget(sourceId,targetId,placement="before"){
   const [moved]=next.splice(si,1);
   const ati=next.findIndex(w=>w.id===targetId);
   next.splice(placement==="after"?ati+1:ati,0,moved);
-  this._widgets=next;
+  const normalized=this._normalizeWidgetsToGridBounds(next);if(!this._doesWidgetLayoutFitGrid(normalized))return;this._widgets=normalized;
+  this._clearCurrentWidgetPositions();
   this._saveWidgets();
   this._moveWidgetDom(sourceId,targetId,placement);
 }
@@ -280,22 +499,304 @@ _moveWidgetDom(sourceId,targetId,placement="before"){
   else target.before(source);
   this._scheduleSquareUnitSync();
 }
+_getWidgetPositionKey(){
+  const bounds=this._getGridBounds();
+  return `${getEffectiveLayout(this)}:${bounds.units}x${bounds.rowUnits}`;
+}
+_getStoredWidgetPositions(){
+  const positions=this._widgetPositions[this._getWidgetPositionKey()];
+  return positions&&typeof positions==="object"?positions:null;
+}
+_saveCurrentWidgetPositions(positions){
+  this._widgetPositions[this._getWidgetPositionKey()]=positions;
+  writeJson(POSITIONS,this._widgetPositions);
+}
+_applyWidgetPositionsToDom(positions){
+  if(!positions)return;
+  const {units}=this._getGridBounds();
+  this._widgets.forEach(widget=>{
+    const position=positions[widget.id];
+    const el=this.shadowRoot.querySelector(`[data-widget-id="${widget.id}"]`);
+    if(!position||!el)return;
+    const size=normalizeWidgetForKind(widget);
+    el.style.gridColumn=`${position.x} / span ${Math.min(units,size.w)}`;
+    el.style.gridRow=`${position.y} / span ${size.h}`;
+  });
+}
+_clearCurrentWidgetPositions(){
+  const key=this._getWidgetPositionKey();
+  if(!this._widgetPositions[key])return;
+  delete this._widgetPositions[key];
+  writeJson(POSITIONS,this._widgetPositions);
+  this.shadowRoot.querySelectorAll(".mha-widget").forEach(el=>{
+    el.style.removeProperty("grid-column");
+    el.style.removeProperty("grid-row");
+  });
+}
+_packWidgetsForCurrentGrid(){
+  const {units,rowUnits}=this._getGridBounds();
+  const maxRows=this._isMobileLauncherLayout()?Number.POSITIVE_INFINITY:rowUnits;
+  const occupied=[];
+  const positions={};
+  const isFree=(x,y,w,h)=>{
+    if(x<1||x+w-1>units||y<1||y+h-1>maxRows)return false;
+    for(let yy=y;yy<y+h;yy+=1){
+      for(let xx=x;xx<x+w;xx+=1){
+        if(occupied[yy]?.[xx])return false;
+      }
+    }
+    return true;
+  };
+  const occupy=(x,y,w,h)=>{
+    for(let yy=y;yy<y+h;yy+=1){
+      occupied[yy]??=[];
+      for(let xx=x;xx<x+w;xx+=1)occupied[yy][xx]=true;
+    }
+  };
+
+  for(const widget of this._widgets){
+    const size=normalizeWidgetForKind(widget);
+    const w=Math.min(units,size.w);
+    const h=size.h;
+    let placed=null;
+    for(let y=1;!placed&&y<=maxRows-h+1;y+=1){
+      for(let x=1;x<=units-w+1;x+=1){
+        if(isFree(x,y,w,h)){
+          placed={x,y};
+          break;
+        }
+      }
+    }
+    if(!placed)return null;
+    positions[widget.id]=placed;
+    occupy(placed.x,placed.y,w,h);
+  }
+
+  return positions;
+}
+_getActiveWidgetPositions({create=false}={}){
+  const stored=this._getStoredWidgetPositions();
+  if(stored)return stored;
+  if(!create)return null;
+  const packed=this._packWidgetsForCurrentGrid();
+  if(packed){
+    this._saveCurrentWidgetPositions(packed);
+    this._applyWidgetPositionsToDom(packed);
+  }
+  return packed;
+}
+_toggleWidgetMoveMode(id){
+  if(!this._isEditing||!this._widgets.some(widget=>widget.id===id))return;
+  this._activeMoveWidgetId=this._activeMoveWidgetId===id?"":id;
+  this._syncEditModeDom();
+}
+_rectsOverlap(a,b){
+  return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;
+}
+_getWidgetRectFromPosition(widget,position,units){
+  const size=normalizeWidgetForKind(widget);
+  return {
+    x:Number(position?.x)||1,
+    y:Number(position?.y)||1,
+    w:Math.min(units,Number(size.w)||1),
+    h:Number(size.h)||1,
+  };
+}
+_findWidgetAtCandidatePosition(id,candidateRect,positions,units){
+  return this._widgets.find(other=>{
+    if(other.id===id)return false;
+    const otherPosition=positions?.[other.id];
+    if(!otherPosition)return false;
+    const otherRect=this._getWidgetRectFromPosition(other,otherPosition,units);
+    return this._rectsOverlap(candidateRect,otherRect);
+  })||null;
+}
+_canSwapWidgetPositions(id,occupantId,nextPositions,units){
+  return this._widgets.every(widget=>{
+    const position=nextPositions?.[widget.id];
+    if(!position)return true;
+    const rect=this._getWidgetRectFromPosition(widget,position,units);
+    return this._widgets.every(other=>{
+      if(other.id===widget.id)return true;
+      const otherPosition=nextPositions?.[other.id];
+      if(!otherPosition)return true;
+      const otherRect=this._getWidgetRectFromPosition(other,otherPosition,units);
+      return !this._rectsOverlap(rect,otherRect);
+    });
+  });
+}
+_getWidgetsInCandidateRect(id,candidateRect,positions,units){
+  return this._widgets.filter(other=>{
+    if(other.id===id)return false;
+    const otherPosition=positions?.[other.id];
+    if(!otherPosition)return false;
+    const otherRect=this._getWidgetRectFromPosition(other,otherPosition,units);
+    return this._rectsOverlap(candidateRect,otherRect);
+  });
+}
+_doesWidgetGroupExactlyFillRect(widgets,targetRect,positions,units){
+  if(!widgets?.length)return false;
+
+  const width=Math.max(1,Number(targetRect.w)||1);
+  const height=Math.max(1,Number(targetRect.h)||1);
+  const cells=Array.from({length:height},()=>Array(width).fill(false));
+
+  for(const widget of widgets){
+    const position=positions?.[widget.id];
+    if(!position)return false;
+
+    const rect=this._getWidgetRectFromPosition(widget,position,units);
+
+    if(
+      rect.x<targetRect.x||
+      rect.y<targetRect.y||
+      rect.x+rect.w>targetRect.x+targetRect.w||
+      rect.y+rect.h>targetRect.y+targetRect.h
+    )return false;
+
+    for(let y=rect.y;y<rect.y+rect.h;y+=1){
+      for(let x=rect.x;x<rect.x+rect.w;x+=1){
+        const localX=x-targetRect.x;
+        const localY=y-targetRect.y;
+        if(cells[localY]?.[localX])return false;
+        cells[localY][localX]=true;
+      }
+    }
+  }
+
+  return cells.every(row=>row.every(Boolean));
+}
+_translateWidgetGroupPositions(group,targetRect,destinationRect,positions){
+  const dx=destinationRect.x-targetRect.x;
+  const dy=destinationRect.y-targetRect.y;
+  const next={...positions};
+
+  group.forEach(widget=>{
+    const position=positions?.[widget.id];
+    if(position)next[widget.id]={x:position.x+dx,y:position.y+dy};
+  });
+
+  return next;
+}
+_moveWidgetByDirection(id,direction){
+  if(!this._isEditing||this._activeMoveWidgetId!==id)return;
+  const positions=this._getActiveWidgetPositions({create:true});
+  const current=positions?.[id];
+  const widget=this._widgets.find(item=>item.id===id);
+  if(!positions||!current||!widget)return;
+
+  const delta={
+    up:{x:0,y:-1},
+    right:{x:1,y:0},
+    down:{x:0,y:1},
+    left:{x:-1,y:0},
+  }[direction];
+  if(!delta)return;
+
+  const {units,rowUnits}=this._getGridBounds();
+  const size=normalizeWidgetForKind(widget);
+  const w=Math.min(units,size.w);
+  const h=size.h;
+  const currentRect={x:current.x,y:current.y,w,h};
+  const maxY=this._isMobileLauncherLayout()?Number.POSITIVE_INFINITY:rowUnits-h+1;
+
+  const isCandidateInBounds=candidate=>!(
+    candidate.x<1||
+    candidate.x+w-1>units||
+    candidate.y<1||
+    candidate.y>maxY
+  );
+
+  const applyEmptyMove=candidate=>{
+    positions[id]=candidate;
+    this._saveCurrentWidgetPositions(positions);
+    const el=this.shadowRoot.querySelector(`[data-widget-id="${id}"]`);
+    if(el){
+      el.style.gridColumn=`${candidate.x} / span ${w}`;
+      el.style.gridRow=`${candidate.y} / span ${h}`;
+    }
+    this._scheduleSquareUnitSync();
+  };
+
+  const tryGroupSwap=candidate=>{
+    if(!isCandidateInBounds(candidate))return false;
+
+    const candidateRect={...candidate,w,h};
+    const occupants=this._getWidgetsInCandidateRect(id,candidateRect,positions,units);
+    if(!occupants.length)return false;
+    if(!this._doesWidgetGroupExactlyFillRect(occupants,candidateRect,positions,units))return false;
+
+    let nextPositions={
+      ...positions,
+      [id]:{x:candidateRect.x,y:candidateRect.y},
+    };
+    nextPositions=this._translateWidgetGroupPositions(occupants,candidateRect,currentRect,nextPositions);
+
+    if(!this._canSwapWidgetPositions(id,occupants.map(widget=>widget.id).join(","),nextPositions,units))return false;
+
+    this._saveCurrentWidgetPositions(nextPositions);
+    this._applyWidgetPositionsToDom(nextPositions);
+    this._scheduleSquareUnitSync();
+    return true;
+  };
+
+  const unitCandidate={x:current.x+delta.x,y:current.y+delta.y};
+  if(!isCandidateInBounds(unitCandidate))return;
+
+  const unitRect={...unitCandidate,w,h};
+  const unitOccupants=this._getWidgetsInCandidateRect(id,unitRect,positions,units);
+
+  if(!unitOccupants.length){
+    applyEmptyMove(unitCandidate);
+    return;
+  }
+
+  if(this._doesWidgetGroupExactlyFillRect(unitOccupants,unitRect,positions,units)&&tryGroupSwap(unitCandidate))return;
+
+  const adjacentCandidate={
+    x:current.x+(delta.x*w),
+    y:current.y+(delta.y*h),
+  };
+
+  if(adjacentCandidate.x===unitCandidate.x&&adjacentCandidate.y===unitCandidate.y)return;
+
+  tryGroupSwap(adjacentCandidate);
+}
 _getResponsiveSignature(){
-  const w=Math.round(window.visualViewport?.width||window.innerWidth||0);
-  const h=Math.round(window.visualViewport?.height||window.innerHeight||0);
-  const orientation=w>=h?"landscape":"portrait";
+  const rect=this.getBoundingClientRect();
+  const w=Math.round(rect.width||window.innerWidth||0);
+  const h=Math.round(rect.height||window.innerHeight||0);
+  const orientation=w>h?"landscape":"portrait";
   const layoutMode=getLayoutMode(this);
   const layout=getEffectiveLayout(this);
-  const units=getActiveGridUnits(this);
-  return `${w}x${h}|${orientation}|${layoutMode}|${layout}|${units}`;
+  const metrics=this._getWidgetAreaMetrics();
+  const preset=getGridPreset(this,layout,metrics||{});
+  return `${w}x${h}|${orientation}|${layoutMode}|${layout}|${preset.columns}|${preset.rows}|${preset.density}|${metrics?.width||0}x${metrics?.height||0}`;
 }
 _syncRuntimeLayoutAttrs(){
-  const layoutMode=getLayoutMode(this),layout=getEffectiveLayout(this),units=getActiveGridUnits(this),cols=units/WIDGET_UNIT.unitsPerLogicalColumn;
+  const layoutMode=getLayoutMode(this);
+  const layout=getEffectiveLayout(this);
+  const preset=this._getRuntimeGridPreset();
+  const units=preset.columns*WIDGET_UNIT.unitsPerLogicalColumn;
+  const rows=preset.rows*WIDGET_UNIT.unitsPerLogicalColumn;
+
   this.dataset.layoutMode=layoutMode;
   this.dataset.layout=layout;
+  this.dataset.gridDensity=preset.density;
   this.dataset.gridUnits=String(units);
-  this.dataset.logicalColumns=String(cols);
-  this.style.setProperty("--mha-runtime-grid-units",String(units));this._lastResponsiveSignature=this._getResponsiveSignature();
+  this.dataset.logicalColumns=String(preset.columns);
+  this.dataset.gridRows=String(rows);
+  this.dataset.logicalRows=String(preset.rows);
+
+  this.style.setProperty("--mha-runtime-grid-units",String(units));
+  this.style.setProperty("--mha-runtime-grid-rows",String(rows));
+  this.style.setProperty("--mha-runtime-grid-columns",String(preset.columns));
+  this.style.setProperty("--mha-runtime-logical-rows",String(preset.rows));
+  this._lastResponsiveSignature=this._getResponsiveSignature();
+}
+_syncGridRuntimeMetrics(){
+  this._syncRuntimeLayoutAttrs();
+  this._syncSquareUnit();
 }
 _handleViewportChange(){
   if(this._isResponsiveRelayouting)return;
@@ -320,10 +821,216 @@ const shouldAutoHideDock=()=>window.matchMedia("(max-width: 767px)").matches;
 if(!shouldAutoHideDock())return;
 let previousScrollTop=grid.scrollTop;const threshold=10;const onScroll=()=>{if(!shouldAutoHideDock()){this.classList.remove("is-dock-hidden");previousScrollTop=grid.scrollTop;return}const currentScrollTop=grid.scrollTop;if(currentScrollTop<=4){this.classList.remove("is-dock-hidden");previousScrollTop=currentScrollTop;return}const delta=currentScrollTop-previousScrollTop;if(delta>threshold)this.classList.add("is-dock-hidden");else if(delta<-threshold)this.classList.remove("is-dock-hidden");if(Math.abs(delta)>threshold)previousScrollTop=currentScrollTop};grid.addEventListener("scroll",onScroll,{passive:true});this._gridScrollCleanup=()=>grid.removeEventListener("scroll",onScroll)}
 _scheduleSquareUnitSync(){cancelAnimationFrame(this._squareUnitFrame);this._squareUnitFrame=requestAnimationFrame(()=>{this._squareUnitFrame=requestAnimationFrame(()=>this._syncSquareUnit())})}
-_syncSquareUnit(){const grid=this.shadowRoot.querySelector(".mha-grid");if(!grid)return;const st=getComputedStyle(grid);const units=getActiveGridUnits(this);const gap=Number.parseFloat(st.columnGap||st.gap||"0")||0;const padding=(Number.parseFloat(st.paddingLeft)||0)+(Number.parseFloat(st.paddingRight)||0);const width=grid.clientWidth-padding;const unit=(width-gap*(units-1))/units;if(Number.isFinite(unit)&&unit>0)grid.style.setProperty("--mha-square-unit",`${unit}px`)}
+_getWidgetAreaMetrics(){
+  const area=this.shadowRoot?.querySelector?.(".mha-widget-area");
+  if(!area)return null;
+
+  const areaStyle=getComputedStyle(area);
+  const width=Math.max(0,area.clientWidth-(Number.parseFloat(areaStyle.paddingLeft)||0)-(Number.parseFloat(areaStyle.paddingRight)||0));
+  const height=Math.max(0,area.clientHeight-(Number.parseFloat(areaStyle.paddingTop)||0)-(Number.parseFloat(areaStyle.paddingBottom)||0));
+
+  return width>0&&height>0?{width,height}:null;
+}
+_getRuntimeGridPreset(){
+  const layout=getEffectiveLayout(this);
+  return getGridPreset(this,layout,this._getWidgetAreaMetrics()||{});
+}
+_getRuntimeGridUnits(){
+  const preset=this._getRuntimeGridPreset();
+  return preset.columns*WIDGET_UNIT.unitsPerLogicalColumn;
+}
+_getRuntimeGridRows(){
+  const preset=this._getRuntimeGridPreset();
+  return preset.rows*WIDGET_UNIT.unitsPerLogicalColumn;
+}
+_isMobileLauncherLayout(){return this._getRuntimeLayout?.()==="mobile"||this._layout==="mobile"||this.dataset.layout==="mobile"}
+_syncSquareUnit(){
+  const grid=this.shadowRoot.querySelector(".mha-grid");
+  const area=this.shadowRoot.querySelector(".mha-widget-area");
+  if(!grid||!area)return;
+
+  const st=getComputedStyle(grid);
+  const metrics=this._getWidgetAreaMetrics();
+  if(!metrics)return;
+
+  const layout=getEffectiveLayout(this);
+  const preset=getGridPreset(this,layout,metrics);
+  const units=preset.columns*WIDGET_UNIT.unitsPerLogicalColumn;
+  const rows=preset.rows*WIDGET_UNIT.unitsPerLogicalColumn;
+
+  const columnGap=Number.parseFloat(st.columnGap||st.gap||"0")||0;
+  const rowGap=Number.parseFloat(st.rowGap||st.gap||"0")||0;
+  const gridPaddingX=(Number.parseFloat(st.paddingLeft)||0)+(Number.parseFloat(st.paddingRight)||0);
+  const gridPaddingY=(Number.parseFloat(st.paddingTop)||0)+(Number.parseFloat(st.paddingBottom)||0);
+
+  /*
+   * Adaptive OS/window-responsive matrix.
+   *
+   * .mha-widget-area is the source of truth. Columns/rows are chosen from the
+   * available area so each grid unit stays within a comfortable pixel range.
+   * The exact cell size is still one shared square value.
+   */
+  const unitX=(metrics.width-gridPaddingX-columnGap*(units-1))/units;
+  const unitY=(metrics.height-gridPaddingY-rowGap*(rows-1))/rows;
+  const hardMin=Number.parseFloat(st.getPropertyValue("--mha-square-unit-hard-min"))||24;
+  const maxUnit=Number.parseFloat(st.getPropertyValue("--mha-square-unit-max"))||preset.maxCell||160;
+  const preferredUnit=this._isMobileLauncherLayout()?unitX:Math.min(unitX,unitY);const unit=Math.max(hardMin,Math.min(maxUnit,preferredUnit));
+
+  if(Number.isFinite(unit)&&unit>0){
+    this.dataset.gridDensity=preset.density;
+    this.dataset.gridUnits=String(units);
+    this.dataset.logicalColumns=String(preset.columns);
+    this.dataset.gridRows=String(rows);
+    this.dataset.logicalRows=String(preset.rows);
+
+    this.style.setProperty("--mha-runtime-grid-units",String(units));
+    this.style.setProperty("--mha-runtime-grid-rows",String(rows));
+    this.style.setProperty("--mha-runtime-grid-columns",String(preset.columns));
+    this.style.setProperty("--mha-runtime-logical-rows",String(preset.rows));
+
+    grid.style.setProperty("--mha-square-unit",`${unit}px`);
+    grid.style.setProperty("--mha-grid-matrix-width",`${unit*units+columnGap*(units-1)+gridPaddingX}px`);
+    grid.style.setProperty("--mha-grid-matrix-height",`${unit*rows+rowGap*(rows-1)+gridPaddingY}px`);
+  }
+}
+_getGridBounds(){
+  const layout=getEffectiveLayout(this);
+  const preset=this._getRuntimeGridPreset?.()||getGridPreset(this,layout,this._getWidgetAreaMetrics?.()||{});
+  const logicalColumns=Number(preset?.columns)||Number(this.dataset.logicalColumns)||1;
+  const logicalRows=Number(preset?.rows)||Number(this.dataset.logicalRows)||1;
+  return {
+    columns:Math.max(1,logicalColumns),
+    rows:Math.max(1,logicalRows),
+    units:Math.max(1,logicalColumns*WIDGET_UNIT.unitsPerLogicalColumn),
+    rowUnits:Math.max(1,logicalRows*WIDGET_UNIT.unitsPerLogicalColumn),
+  };
+}
+_doesWidgetLayoutFitGrid(widgets=this._widgets){
+  const bounds=this._getGridBounds();
+  const columns=bounds.units;
+  const rows=bounds.rowUnits;
+  const occupied=Array.from({length:rows},()=>Array(columns).fill(false));
+
+  for(const raw of widgets){
+    const widget=normalizeWidgetForKind(raw);
+    const w=Math.max(1,Math.min(columns,Number(widget.w)||1));
+    const h=Math.max(1,Math.min(rows,Number(widget.h)||1));
+    let placed=false;
+
+    for(let y=0;y<=rows-h&&!placed;y+=1){
+      for(let x=0;x<=columns-w&&!placed;x+=1){
+        let fits=true;
+
+        for(let yy=y;yy<y+h&&fits;yy+=1){
+          for(let xx=x;xx<x+w;xx+=1){
+            if(occupied[yy]&&occupied[yy][xx]){
+              fits=false;
+              break;
+            }
+          }
+        }
+
+        if(!fits)continue;
+
+        for(let yy=y;yy<y+h;yy+=1){
+          for(let xx=x;xx<x+w;xx+=1){
+            occupied[yy][xx]=true;
+          }
+        }
+
+        placed=true;
+      }
+    }
+
+    if(!placed)return false;
+  }
+
+  return true;
+}
+_findFittingResize(current,requested){
+  let next=this._clampWidgetSizeToGridBounds(current,requested);
+  const originalWidgets=this._widgets;
+
+  while(next.h>=1){
+    let test=originalWidgets.map(w=>w.id===current.id?{...w,...next}:w);
+    test=this._normalizeWidgetsToGridBounds(test);
+
+    if(this._doesWidgetLayoutFitGrid(test))return next;
+
+    if(next.h>1){
+      next={...next,h:next.h-1};
+      continue;
+    }
+
+    if(next.w>1){
+      next={...next,w:next.w-1,h:Math.max(1,requested.h)};
+      continue;
+    }
+
+    break;
+  }
+
+  return normalizeWidgetForKind(current);
+}
 _getGridMetrics(){const grid=this.shadowRoot.querySelector(".mha-grid");if(!grid)return null;const st=getComputedStyle(grid);const col=parseFloat(st.gridTemplateColumns.split(" ")[0])||72;const gap=parseFloat(st.columnGap||st.gap||"0")||0;const row=parseFloat(st.gridAutoRows)||72;return{columnStep:col+gap,rowStep:row+gap}}
-_startResize(e,id){if(!this._isEditing||e.button!==0)return;e.preventDefault();e.stopPropagation();const w=this._widgets.find(x=>x.id===id),m=this._getGridMetrics();if(!w||!m)return;this._resizeState={widgetId:id,pointerId:e.pointerId,startX:e.clientX,startY:e.clientY,startW:w.w,startH:w.h,metrics:m};e.currentTarget.closest(".mha-widget")?.classList.add("is-resizing");e.currentTarget.setPointerCapture?.(e.pointerId);const move=ev=>this._updateResize(ev),end=ev=>{window.removeEventListener("pointermove",move);window.removeEventListener("pointerup",end);window.removeEventListener("pointercancel",end);this._finishResize(ev)};window.addEventListener("pointermove",move,{passive:false});window.addEventListener("pointerup",end,{passive:false});window.addEventListener("pointercancel",end,{passive:false})}
-_updateResize(e){const s=this._resizeState;if(!s||e.pointerId!==s.pointerId)return;e.preventDefault();const current=this._widgets.find(w=>w.id===s.widgetId)||{};const ns=normalizeWidgetForKind({...current,w:s.startW+Math.round((e.clientX-s.startX)/s.metrics.columnStep),h:s.startH+Math.round((e.clientY-s.startY)/s.metrics.rowStep)});this._widgets=this._widgets.map(w=>w.id===s.widgetId?{...w,...ns}:w);const el=this.shadowRoot.querySelector(`[data-widget-id="${s.widgetId}"]`);if(!el)return;const density=getWidgetDensity(ns);el.dataset.widgetConfiguredW=String(ns.w);el.dataset.widgetW=String(Math.min(ns.w,getActiveGridUnits(this)));el.dataset.widgetH=String(ns.h);el.dataset.widgetSize=sizeToString(ns);el.dataset.widgetDensity=density;el.style.setProperty("--mha-widget-w",String(Math.min(ns.w,getActiveGridUnits(this))));el.style.setProperty("--mha-widget-configured-w",String(ns.w));el.style.setProperty("--mha-widget-h",String(ns.h));const badge=el.querySelector(".mha-size-badge");if(badge)badge.textContent=`${sizeToString(ns)} · ${density}`}
+_clampWidgetSizeToGridBounds(widget,size){
+  const layout=getEffectiveLayout(this);
+  const preset=this._getRuntimeGridPreset?.()||getGridPreset(this,layout,this._getWidgetAreaMetrics?.()||{});
+  const logicalColumns=Number(preset?.columns)||Number(this.dataset.logicalColumns)||1;
+  const logicalRows=Number(preset?.rows)||Number(this.dataset.logicalRows)||1;
+
+  const x=Number(widget?.x ?? widget?.col ?? widget?.column ?? 1)||1;
+  const y=Number(widget?.y ?? widget?.row ?? 1)||1;
+
+  const maxW=Math.max(1,logicalColumns-x+1);
+  const maxH=Math.max(1,logicalRows-y+1);
+
+  /*
+   * Resize boundary guard:
+   * A widget can grow only inside the logical grid rectangle. This prevents
+   * resize handles from creating widgets that visually escape .mha-widget-area,
+   * especially at the bottom edge.
+   */
+  return {
+    ...size,
+    w:Math.max(1,Math.min(Number(size?.w)||1,maxW)),
+    h:Math.max(1,Math.min(Number(size?.h)||1,maxH)),
+  };
+}
+_clampWidgetPositionToGridBounds(widget,position){
+  const layout=getEffectiveLayout(this);
+  const preset=this._getRuntimeGridPreset?.()||getGridPreset(this,layout,this._getWidgetAreaMetrics?.()||{});
+  const logicalColumns=Number(preset?.columns)||Number(this.dataset.logicalColumns)||1;
+  const logicalRows=Number(preset?.rows)||Number(this.dataset.logicalRows)||1;
+
+  const w=Math.max(1,Number(widget?.w)||1);
+  const h=Math.max(1,Number(widget?.h)||1);
+  const maxX=Math.max(1,logicalColumns-w+1);
+  const maxY=Math.max(1,logicalRows-h+1);
+
+  /*
+   * Drag boundary guard:
+   * A widget can move only inside the logical grid rectangle. This prevents
+   * drag/drop from placing widgets outside .mha-widget-area, especially below
+   * the bottom edge.
+   */
+  return {
+    ...position,
+    x:Math.max(1,Math.min(Number(position?.x)||1,maxX)),
+    y:Math.max(1,Math.min(Number(position?.y)||1,maxY)),
+  };
+}
+_normalizeWidgetToGridBounds(widget){
+  const size=this._clampWidgetSizeToGridBounds(widget,widget);
+  const position=this._clampWidgetPositionToGridBounds({...widget,...size},widget);
+  return {...widget,...size,...position};
+}
+_normalizeWidgetsToGridBounds(widgets=this._widgets){
+  return widgets.map(widget=>this._normalizeWidgetToGridBounds(widget));
+}
+
+_startResize(e,id){if(this._isMobileLauncherLayout())return;if(!this._isEditing||e.button!==0)return;e.preventDefault();e.stopPropagation();this._clearCurrentWidgetPositions();const w=this._widgets.find(x=>x.id===id),m=this._getGridMetrics();if(!w||!m)return;this._resizeState={widgetId:id,pointerId:e.pointerId,startX:e.clientX,startY:e.clientY,startW:w.w,startH:w.h,metrics:m};e.currentTarget.closest(".mha-widget")?.classList.add("is-resizing");e.currentTarget.setPointerCapture?.(e.pointerId);const move=ev=>this._updateResize(ev),end=ev=>{window.removeEventListener("pointermove",move);window.removeEventListener("pointerup",end);window.removeEventListener("pointercancel",end);this._finishResize(ev)};window.addEventListener("pointermove",move,{passive:false});window.addEventListener("pointerup",end,{passive:false});window.addEventListener("pointercancel",end,{passive:false})}
+_updateResize(e){const s=this._resizeState;if(!s||e.pointerId!==s.pointerId)return;e.preventDefault();const current=this._widgets.find(w=>w.id===s.widgetId)||{};let ns=normalizeWidgetForKind({...current,w:s.startW+Math.round((e.clientX-s.startX)/s.metrics.columnStep),h:s.startH+Math.round((e.clientY-s.startY)/s.metrics.rowStep)});ns=this._findFittingResize(current,ns);const nextWidgets=this._widgets.map(w=>w.id===s.widgetId?{...w,...ns}:w);if(!this._doesWidgetLayoutFitGrid(this._normalizeWidgetsToGridBounds(nextWidgets)))return;this._widgets=this._normalizeWidgetsToGridBounds(nextWidgets);const el=this.shadowRoot.querySelector(`[data-widget-id="${s.widgetId}"]`);if(!el)return;const density=getWidgetDensity(ns);el.dataset.widgetConfiguredW=String(ns.w);el.dataset.widgetW=String(Math.min(ns.w,getActiveGridUnits(this)));el.dataset.widgetH=String(ns.h);el.dataset.widgetSize=sizeToString(ns);el.dataset.widgetDensity=density;el.style.setProperty("--mha-widget-w",String(Math.min(ns.w,getActiveGridUnits(this))));el.style.setProperty("--mha-widget-configured-w",String(ns.w));el.style.setProperty("--mha-widget-h",String(ns.h));const badge=el.querySelector(".mha-size-badge");if(badge)badge.textContent=`${sizeToString(ns)} · ${density}`}
 _finishResize(){
   const s=this._resizeState;
   if(!s)return;
@@ -335,6 +1042,6 @@ _finishResize(){
 }
 _getDropPlacement(e,t){const r=t.getBoundingClientRect(),u=r.top+r.height*.35,l=r.top+r.height*.65;if(e.clientY<u)return"before";if(e.clientY>l)return"after";return e.clientX<r.left+r.width/2?"before":"after"}
 _clearDropState(){this.shadowRoot.querySelectorAll(".is-drop-before,.is-drop-after").forEach(n=>{n.classList.remove("is-drop-before","is-drop-after");n.removeAttribute("data-drop-placement")})}
-_wireDrag(el,w){el.draggable=this._isEditing;el.addEventListener("dragstart",e=>{if(!this._isEditing){e.preventDefault();return}if(e.target.closest(".mha-widget-tools,.mha-resize-handle")){e.preventDefault();return}this._draggedId=w.id;el.classList.add("is-dragging");e.dataTransfer.effectAllowed="move";e.dataTransfer.setData("text/plain",w.id)});el.addEventListener("dragover",e=>{if(!this._isEditing)return;const id=this._draggedId||e.dataTransfer.getData("text/plain");if(!id||id===w.id)return;e.preventDefault();const p=this._getDropPlacement(e,el);this._clearDropState();el.classList.toggle("is-drop-before",p==="before");el.classList.toggle("is-drop-after",p==="after");el.dataset.dropPlacement=p});el.addEventListener("drop",e=>{if(!this._isEditing)return;const id=this._draggedId||e.dataTransfer.getData("text/plain");if(!id||id===w.id)return;e.preventDefault();const p=el.dataset.dropPlacement||"before";this._clearDropState();this._draggedId="";this._moveWidget(id,w.id,p)});el.addEventListener("dragend",()=>{this._draggedId="";el.classList.remove("is-dragging");this._clearDropState()})}
-render(){syncThemeAttributes(this);const renderId=++this._renderId,layoutMode=getLayoutMode(this),layout=getEffectiveLayout(this),units=getActiveGridUnits(this),cols=units/WIDGET_UNIT.unitsPerLogicalColumn,themeStyle=THEME_STYLES.has(document.documentElement.dataset.themeStyle)?document.documentElement.dataset.themeStyle:"oneui";const iconShapeSetting=getStoredIconShapeSetting(this);const iconShape=resolveIconShape(themeStyle,iconShapeSetting);this._clearGridScrollListener();this.dataset.themeStyle=themeStyle;this.dataset.iconShapeSetting=iconShapeSetting;this.setAttribute("data-icon-shape-setting",iconShapeSetting);this.dataset.iconShape=iconShape;this.setAttribute("data-icon-shape",iconShape);document.documentElement.dataset.iconShapeSetting=iconShapeSetting;document.documentElement.setAttribute("data-icon-shape-setting",iconShapeSetting);document.documentElement.dataset.iconShape=iconShape;document.documentElement.setAttribute("data-icon-shape",iconShape);const accent=normalizeAccent(themeStyle,localStorage.getItem(`mha-accent-${themeStyle}`)||localStorage.getItem("mha-accent")||"sky");this.dataset.accent=accent;this.setAttribute("data-accent",accent);document.documentElement.dataset.accent=accent;document.documentElement.setAttribute("data-accent",accent);this.dataset.layoutMode=layoutMode;this.dataset.layout=layout;this.dataset.gridUnits=String(units);this.dataset.logicalColumns=String(cols);this.classList.toggle("is-editing",this._isEditing);this.style.setProperty("--mha-runtime-grid-units",String(units));this.shadowRoot.innerHTML=`<link rel="stylesheet" href="./styles/core/tokens.css"><link rel="stylesheet" href="./styles/components/icon.css"><link rel="stylesheet" href="./styles/components/icon-symbol.css"><link rel="stylesheet" href="./styles/components/slider.css"><link rel="stylesheet" href="./styles/components/toggle.css"><link rel="stylesheet" href="./styles/components/pill.css"><link rel="stylesheet" href="./styles/components/button.css"><link rel="stylesheet" href="./styles/themes/ios.css"><link rel="stylesheet" href="./styles/themes/oneui.css"><link rel="stylesheet" href="./styles/themes/material.css"><link rel="stylesheet" href="./styles/themes/accent-palettes.css"><link rel="stylesheet" href="./styles/core/background.css"><link rel="stylesheet" href="./styles/layout/shell.css"><link rel="stylesheet" href="./styles/layout/status-bar.css"><link rel="stylesheet" href="./styles/layout/dock.css"><link rel="stylesheet" href="./styles/layout/mobile-dock.css"><link rel="stylesheet" href="./styles/settings/settings-panel.css"><link rel="stylesheet" href="./styles/themes/light-text-contract.css"><link rel="stylesheet" href="./styles/widgets/widget-layout.css"><link rel="stylesheet" href="./styles/widgets/empty-widget.css"><link rel="stylesheet" href="./styles/widgets/slider-widget.css"><link rel="stylesheet" href="./styles/screensaver/screensaver.css">`;const links=[...this.shadowRoot.querySelectorAll('link[rel="stylesheet"]')],{bg,shell,grid}=createShell({layoutMode,layout,logicalColumns:cols,gridUnits:units,onSettings:()=>this._openSettings()});this.shadowRoot.append(bg,shell);this._widgets.forEach(w=>{const el=createEmptyWidget(w,{activeGridUnits:units,isEditing:this._isEditing,onRemove:id=>this._removeWidget(id),onResizeStart:(e,id)=>this._startResize(e,id)});this._wireDrag(el,w);grid.append(el)});this.shadowRoot.append(createScreensaver({isVisible:this._screensaverPreview,showNowBar:this._screensaverNowBar,clockVariant:this._screensaverClockVariant}));this.shadowRoot.append(createMobileDock({onSettings:()=>this._openSettings()}));this.shadowRoot.append(this._createSettingsPanel());const edit=document.createElement("button");edit.className="mha-edit-button";edit.type="button";edit.innerHTML=this._isEditing?ICONS.close:ICONS.edit;edit.onclick=()=>this.toggleEditMode();this.shadowRoot.append(edit);this._syncEditModeDom();this._wireDockAutoHide(grid);this._scheduleSquareUnitSync();Promise.all(links.map(link=>link.sheet?Promise.resolve():new Promise(resolve=>{link.addEventListener("load",resolve,{once:true});link.addEventListener("error",resolve,{once:true})}))).then(()=>{if(this._renderId!==renderId)return;const styledUnits=getActiveGridUnits(this);if(styledUnits!==units){this.render();return}this._scheduleSquareUnitSync();this._markReadyAfterPaint()});updateStatusTime(this.shadowRoot);this._markReadyAfterPaint()}}
+_wireDrag(el,w){const mobileLauncher=this._isMobileLauncherLayout();el.draggable=this._isEditing&&!mobileLauncher;el.addEventListener("dragstart",e=>{if(mobileLauncher){e.preventDefault();return}if(this._isResizingWidget||this._isResizeHandleEvent(e)){e.preventDefault();e.stopPropagation();return;}if(!this._isEditing){e.preventDefault();return}if(e.target.closest(".mha-widget-tools,.mha-resize-handle")){e.preventDefault();return}this._draggedId=w.id;el.classList.add("is-dragging");e.dataTransfer.effectAllowed="move";e.dataTransfer.setData("text/plain",w.id)});el.addEventListener("dragover",e=>{if(this._isResizingWidget)return;if(!this._isEditing)return;const id=this._draggedId||e.dataTransfer.getData("text/plain");if(!id||id===w.id)return;e.preventDefault();const p=this._getDropPlacement(e,el);this._clearDropState();el.classList.toggle("is-drop-before",p==="before");el.classList.toggle("is-drop-after",p==="after");el.dataset.dropPlacement=p});el.addEventListener("drop",e=>{if(this._isResizingWidget)return;if(!this._isEditing)return;const id=this._draggedId||e.dataTransfer.getData("text/plain");if(!id||id===w.id)return;e.preventDefault();const p=el.dataset.dropPlacement||"before";this._clearDropState();this._draggedId="";this._moveWidget(id,w.id,p)});el.addEventListener("dragend",()=>{this._draggedId="";el.classList.remove("is-dragging");this._clearDropState()})}
+render(){syncThemeAttributes(this);const renderId=++this._renderId,layoutMode=getLayoutMode(this),layout=getEffectiveLayout(this),preset=this._getRuntimeGridPreset(),units=preset.columns*WIDGET_UNIT.unitsPerLogicalColumn,rows=preset.rows*WIDGET_UNIT.unitsPerLogicalColumn,cols=preset.columns,logicalRows=preset.rows,themeStyle=THEME_STYLES.has(document.documentElement.dataset.themeStyle)?document.documentElement.dataset.themeStyle:"oneui";const iconShapeSetting=getStoredIconShapeSetting(this);const iconShape=resolveIconShape(themeStyle,iconShapeSetting);this._clearGridScrollListener();this.dataset.themeStyle=themeStyle;this.dataset.iconShapeSetting=iconShapeSetting;this.setAttribute("data-icon-shape-setting",iconShapeSetting);this.dataset.iconShape=iconShape;this.setAttribute("data-icon-shape",iconShape);document.documentElement.dataset.iconShapeSetting=iconShapeSetting;document.documentElement.setAttribute("data-icon-shape-setting",iconShapeSetting);document.documentElement.dataset.iconShape=iconShape;document.documentElement.setAttribute("data-icon-shape",iconShape);const accent=normalizeAccent(themeStyle,localStorage.getItem(`mha-accent-${themeStyle}`)||localStorage.getItem("mha-accent")||"sky");this.dataset.accent=accent;this.setAttribute("data-accent",accent);document.documentElement.dataset.accent=accent;document.documentElement.setAttribute("data-accent",accent);this.dataset.layoutMode=layoutMode;this.dataset.layout=layout;this.dataset.gridDensity=preset.density;this.dataset.gridUnits=String(units);this.dataset.logicalColumns=String(cols);this.dataset.gridRows=String(rows);this.dataset.logicalRows=String(logicalRows);this.classList.toggle("is-editing",this._isEditing);this.style.setProperty("--mha-runtime-grid-units",String(units));this.style.setProperty("--mha-runtime-grid-rows",String(rows));this.shadowRoot.innerHTML=`<link rel="stylesheet" href="./styles/core/tokens.css"><link rel="stylesheet" href="./styles/components/icon.css"><link rel="stylesheet" href="./styles/components/icon-symbol.css"><link rel="stylesheet" href="./styles/components/slider.css"><link rel="stylesheet" href="./styles/components/toggle.css"><link rel="stylesheet" href="./styles/components/pill.css"><link rel="stylesheet" href="./styles/components/button.css"><link rel="stylesheet" href="./styles/themes/ios.css"><link rel="stylesheet" href="./styles/themes/oneui.css"><link rel="stylesheet" href="./styles/themes/material.css"><link rel="stylesheet" href="./styles/themes/accent-palettes.css"><link rel="stylesheet" href="./styles/core/background.css"><link rel="stylesheet" href="./styles/layout/shell.css"><link rel="stylesheet" href="./styles/layout/status-bar.css"><link rel="stylesheet" href="./styles/layout/dock.css"><link rel="stylesheet" href="./styles/layout/mobile-dock.css"><link rel="stylesheet" href="./styles/settings/settings-panel.css"><link rel="stylesheet" href="./styles/themes/light-text-contract.css"><link rel="stylesheet" href="./styles/widgets/widget-layout.css"><link rel="stylesheet" href="./styles/widgets/empty-widget.css"><link rel="stylesheet" href="./styles/widgets/slider-widget.css"><link rel="stylesheet" href="./styles/screensaver/screensaver.css">`;const links=[...this.shadowRoot.querySelectorAll('link[rel="stylesheet"]')],{bg,shell,grid}=createShell({layoutMode,layout,logicalColumns:cols,gridUnits:units,onSettings:()=>this._openSettings()});this.shadowRoot.append(bg,shell);const positions=this._getActiveWidgetPositions();this._widgets.forEach(w=>{const el=createEmptyWidget(w,{activeGridUnits:units,isEditing:this._isEditing,isMoveTarget:this._isEditing&&this._activeMoveWidgetId===w.id,position:positions?.[w.id],onToggleMove:id=>this._toggleWidgetMoveMode(id),onMove:(id,direction)=>this._moveWidgetByDirection(id,direction),onRemove:id=>this._removeWidget(id),onResizeStart:(e,id)=>this._startResize(e,id)});this._wireDrag(el,w);grid.append(el)});this.shadowRoot.append(createScreensaver({isVisible:this._getScreensaverVisible(),showNowBar:this._screensaverNowBar,clockVariant:this._screensaverClockVariant,onClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),onOpenScreensaverSettings:()=>this._openScreensaverSettings(),onWake:()=>this._wakeScreensaver()}));this.shadowRoot.append(createMobileDock({onSettings:()=>this._openSettings()}));this.shadowRoot.append(this._createSettingsPanel());this.shadowRoot.append(createSettingsPanel(this._getSettingsPanelProps("screensaver")));const edit=document.createElement("button");edit.className="mha-edit-button mha-main-edit-button";edit.type="button";edit.innerHTML=this._isEditing?ICONS.close:ICONS.edit;edit.onclick=()=>this.toggleEditMode();this.shadowRoot.append(edit);this._syncEditModeDom();this._wireDockAutoHide(grid);this._scheduleSquareUnitSync();Promise.all(links.map(link=>link.sheet?Promise.resolve():new Promise(resolve=>{link.addEventListener("load",resolve,{once:true});link.addEventListener("error",resolve,{once:true})}))).then(()=>{if(this._renderId!==renderId)return;const styledUnits=getActiveGridUnits(this);if(styledUnits!==units){this.render();return}this._scheduleSquareUnitSync();this._syncScreensaverVisibilityState();this._markReadyAfterPaint()});updateStatusTime(this.shadowRoot);this._markReadyAfterPaint();this._scheduleScreensaverIdleTimer()}}
 customElements.define("mha-control-hub",MhaControlHub);

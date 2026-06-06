@@ -26,7 +26,15 @@ const ICON_SHAPE_OPTIONS = [
   { value: "circle", label: "Circle" },
 ];
 
+const SCREENSAVER_DELAY_OPTIONS = [
+  { value: "15000", label: "15 secondes" },
+  { value: "30000", label: "30 secondes" },
+  { value: "120000", label: "2 minutes" },
+  { value: "300000", label: "5 minutes" },
+];
+
 const CLOCK_VARIANTS = [
+  { value: "none", label: "Pas d’horloge" },
   { value: "digital", label: "Numérique" },
   { value: "analog", label: "Analogique" },
 ];
@@ -123,10 +131,14 @@ function createSection(title, children = []) {
 
 export function createSettingsPanel({
   open = false,
+  scope = "all",
   theme = "auto",
   themeStyle = "oneui",
   accent = "",
   iconShape = "auto",
+  effectiveIconShape = "",
+  screensaverEnabled = false,
+  screensaverDelay = 30000,
   screensaverPreview = false,
   screensaverNowBar = true,
   screensaverClockVariant = "digital",
@@ -135,14 +147,19 @@ export function createSettingsPanel({
   onThemeStyleChange,
   onAccentChange,
   onIconShapeChange,
+  onScreensaverEnabledChange,
+  onScreensaverDelayChange,
   onScreensaverPreviewChange,
   onScreensaverNowBarChange,
   onScreensaverClockVariantChange,
   onResetGrid,
 } = {}) {
+  const isScreensaverScope = scope === "screensaver";
   const root = document.createElement("aside");
   root.className = "mha-settings-panel";
+  root.dataset.settingsScope = scope;
   root.dataset.open = String(Boolean(open));
+  root.dataset.iconShape = effectiveIconShape;
   root.setAttribute("aria-hidden", String(!open));
   root.hidden = !open;
 
@@ -150,13 +167,19 @@ export function createSettingsPanel({
   scrim.className = "mha-settings-scrim";
   scrim.type = "button";
   scrim.setAttribute("aria-label", "Fermer les paramètres");
-  scrim.addEventListener("click", () => onClose?.());
+  scrim.addEventListener("click", (event) => {
+    event.stopPropagation();
+    onClose?.();
+  });
 
   const sheet = document.createElement("div");
   sheet.className = "mha-settings-sheet";
   sheet.setAttribute("role", "dialog");
   sheet.setAttribute("aria-modal", "true");
-  sheet.setAttribute("aria-label", "Paramètres MHA");
+  sheet.setAttribute("aria-label", isScreensaverScope ? "Paramètres de l’économiseur d’écran" : "Paramètres MHA");
+  ["pointerdown", "pointerup", "click", "touchstart", "touchmove", "touchend", "wheel"].forEach((type) => {
+    root.addEventListener(type, (event) => event.stopPropagation(), { passive: type !== "wheel" });
+  });
 
   const header = document.createElement("header");
   header.className = "mha-settings-header";
@@ -170,7 +193,7 @@ export function createSettingsPanel({
 
   const h2 = document.createElement("h2");
   h2.className = "mha-settings-title";
-  h2.textContent = "Paramètres";
+  h2.textContent = isScreensaverScope ? "Économiseur d’écran" : "Paramètres";
 
   title.append(eyebrow, h2);
 
@@ -186,8 +209,10 @@ export function createSettingsPanel({
   const body = document.createElement("div");
   body.className = "mha-settings-body";
 
-  body.append(
-    createSection("Apparence", [
+  const sections = [];
+
+  if (!isScreensaverScope) {
+    sections.push(createSection("Apparence", [
       createSelect({
         label: "Thème",
         value: theme,
@@ -212,16 +237,32 @@ export function createSettingsPanel({
         options: ICON_SHAPE_OPTIONS,
         onChange: onIconShapeChange,
       }),
-    ]),
+    ]));
+  } else {
+    sections.push(createSection("Apparence", [
+      createSelect({
+        label: "Thème",
+        value: theme,
+        options: THEME_OPTIONS,
+        onChange: onThemeChange,
+      }),
+    ]));
+  }
 
-    createSection("Écran de veille", [
+  sections.push(createSection("Économiseur d’écran", [
       createSwitch({
-        label: "Aperçu écran de veille",
-        checked: screensaverPreview,
-        onChange: onScreensaverPreviewChange,
+        label: "Activer",
+        checked: screensaverEnabled,
+        onChange: onScreensaverEnabledChange,
+      }),
+      createSelect({
+        label: "Délai",
+        value: String(screensaverDelay),
+        options: SCREENSAVER_DELAY_OPTIONS,
+        onChange: onScreensaverDelayChange,
       }),
       createSwitch({
-        label: "Barre Now Playing",
+        label: "Now bar",
         checked: screensaverNowBar,
         onChange: onScreensaverNowBarChange,
       }),
@@ -231,8 +272,9 @@ export function createSettingsPanel({
         options: CLOCK_VARIANTS,
         onChange: onScreensaverClockVariantChange,
       }),
-    ]),
-  );
+    ]));
+
+  body.append(...sections);
 
   const resetButton = document.createElement("button");
   resetButton.className = "mha-settings-reset";
@@ -240,7 +282,9 @@ export function createSettingsPanel({
   resetButton.textContent = "Réinitialiser la grille";
   resetButton.addEventListener("click", () => onResetGrid?.());
 
-  body.append(createSection("Layout", [resetButton]));
+  if (!isScreensaverScope) {
+    body.append(createSection("Layout", [resetButton]));
+  }
 
   sheet.append(header, body);
   root.append(scrim, sheet);
