@@ -678,6 +678,323 @@ _translateWidgetGroupPositions(group,targetRect,destinationRect,positions){
 
   return next;
 }
+_getGroupBoundingRect(group,positions,units){
+  if(!group?.length)return null;
+
+  const rects=group.map(widget=>this._getWidgetRectFromPosition(widget,positions?.[widget.id],units));
+  const minX=Math.min(...rects.map(rect=>rect.x));
+  const minY=Math.min(...rects.map(rect=>rect.y));
+  const maxX=Math.max(...rects.map(rect=>rect.x+rect.w));
+  const maxY=Math.max(...rects.map(rect=>rect.y+rect.h));
+
+  return {
+    x:minX,
+    y:minY,
+    w:maxX-minX,
+    h:maxY-minY,
+  };
+}
+_isGroupInternallyValid(group,positions,units){
+  for(let i=0;i<group.length;i+=1){
+    const a=this._getWidgetRectFromPosition(group[i],positions?.[group[i].id],units);
+    for(let j=i+1;j<group.length;j+=1){
+      const b=this._getWidgetRectFromPosition(group[j],positions?.[group[j].id],units);
+      if(this._rectsOverlap(a,b))return false;
+    }
+  }
+  return true;
+}
+_getAdjacentWidgetGroupInDirection(id,direction,positions,units){
+  const widget=this._widgets.find(item=>item.id===id);
+  const position=positions?.[id];
+  if(!widget||!position)return [];
+
+  const activeRect=this._getWidgetRectFromPosition(widget,position,units);
+
+  const isInForwardHalfPlane=rect=>{
+    if(direction==="right")return rect.x>=activeRect.x+activeRect.w;
+    if(direction==="left")return rect.x+rect.w<=activeRect.x;
+    if(direction==="down")return rect.y>=activeRect.y+activeRect.h;
+    if(direction==="up")return rect.y+rect.h<=activeRect.y;
+    return false;
+  };
+
+  const overlapsBand=rect=>{
+    if(direction==="right"||direction==="left"){
+      return rect.y<activeRect.y+activeRect.h&&rect.y+rect.h>activeRect.y;
+    }
+    if(direction==="down"||direction==="up"){
+      return rect.x<activeRect.x+activeRect.w&&rect.x+rect.w>activeRect.x;
+    }
+    return false;
+  };
+
+  const candidates=this._widgets
+    .filter(other=>other.id!==id&&positions?.[other.id])
+    .map(other=>({
+      widget:other,
+      rect:this._getWidgetRectFromPosition(other,positions[other.id],units),
+    }))
+    .filter(item=>isInForwardHalfPlane(item.rect)&&overlapsBand(item.rect));
+
+  if(!candidates.length)return [];
+
+  const edgeValue=item=>{
+    if(direction==="right")return item.rect.x;
+    if(direction==="left")return -(item.rect.x+item.rect.w);
+    if(direction==="down")return item.rect.y;
+    if(direction==="up")return -(item.rect.y+item.rect.h);
+    return 0;
+  };
+
+  const nearestEdge=Math.min(...candidates.map(edgeValue));
+  const seed=candidates.filter(item=>edgeValue(item)===nearestEdge);
+  const group=new Map(seed.map(item=>[item.widget.id,item.widget]));
+  let bounds=this._getGroupBoundingRect([...group.values()],positions,units);
+
+  let changed=true;
+  while(changed){
+    changed=false;
+    for(const item of candidates){
+      if(group.has(item.widget.id))continue;
+      const expanded={
+        x:Math.min(bounds.x,item.rect.x),
+        y:Math.min(bounds.y,item.rect.y),
+        w:Math.max(bounds.x+bounds.w,item.rect.x+item.rect.w)-Math.min(bounds.x,item.rect.x),
+        h:Math.max(bounds.y+bounds.h,item.rect.y+item.rect.h)-Math.min(bounds.y,item.rect.y),
+      };
+
+      const touchesOrOverlaps=
+        item.rect.x<=bounds.x+bounds.w&&item.rect.x+item.rect.w>=bounds.x&&
+        item.rect.y<=bounds.y+bounds.h&&item.rect.y+item.rect.h>=bounds.y;
+
+      if(touchesOrOverlaps){
+        group.set(item.widget.id,item.widget);
+        bounds=expanded;
+        changed=true;
+      }
+    }
+  }
+
+  return [...group.values()];
+}
+_isPositionMapValid(nextPositions,units,rowUnits){
+  const maxRows=this._isMobileLauncherLayout()?Number.POSITIVE_INFINITY:rowUnits;
+
+  for(const widget of this._widgets){
+    const position=nextPositions?.[widget.id];
+    if(!position)return false;
+    const rect=this._getWidgetRectFromPosition(widget,position,units);
+    if(rect.x<1||rect.y<1||rect.x+rect.w-1>units||rect.y+rect.h-1>maxRows)return false;
+  }
+
+  for(let i=0;i<this._widgets.length;i+=1){
+    const a=this._getWidgetRectFromPosition(this._widgets[i],nextPositions[this._widgets[i].id],units);
+    for(let j=i+1;j<this._widgets.length;j+=1){
+      const b=this._getWidgetRectFromPosition(this._widgets[j],nextPositions[this._widgets[j].id],units);
+      if(this._rectsOverlap(a,b))return false;
+    }
+  }
+
+  return true;
+}
+_getBandParticipantsForTranslatedSwap(id,group,direction,positions,units){
+  const ids=new Set([id,...group.map(widget=>widget.id)]);
+  const active=this._widgets.find(widget=>widget.id===id);
+  const activePosition=positions?.[id];
+  if(!active||!activePosition)return [];
+
+  const activeRect=this._getWidgetRectFromPosition(active,activePosition,units);
+  const groupRect=this._getGroupBoundingRect(group,positions,units);
+  if(!groupRect)return [];
+
+  const band={
+    x:Math.min(activeRect.x,groupRect.x),
+    y:Math.min(activeRect.y,groupRect.y),
+    w:Math.max(activeRect.x+activeRect.w,groupRect.x+groupRect.w)-Math.min(activeRect.x,groupRect.x),
+    h:Math.max(activeRect.y+activeRect.h,groupRect.y+groupRect.h)-Math.min(activeRect.y,groupRect.y),
+  };
+
+  return this._widgets
+    .filter(widget=>ids.has(widget.id))
+    .map(widget=>({
+      widget,
+      rect:this._getWidgetRectFromPosition(widget,positions[widget.id],units),
+    }))
+    .filter(item=>this._rectsOverlap(item.rect,band));
+}
+_packTranslatedSwapBand(id,group,direction,positions,units,rowUnits){
+  const participants=this._getBandParticipantsForTranslatedSwap(id,group,direction,positions,units);
+  if(!participants.length)return null;
+
+  const activeItem=participants.find(item=>item.widget.id===id);
+  if(!activeItem)return null;
+
+  const activeRect=activeItem.rect;
+  const groupRect=this._getGroupBoundingRect(group,positions,units);
+  if(!groupRect)return null;
+
+  const groupItems=participants.filter(item=>item.widget.id!==id);
+  if(!groupItems.length)return null;
+
+  const next={...positions};
+
+  if(direction==="right"||direction==="left"){
+    const fromX=Math.min(activeRect.x,groupRect.x);
+    const toX=Math.max(activeRect.x+activeRect.w,groupRect.x+groupRect.w);
+    const leftToRight=direction==="right";
+
+    const ordered=leftToRight
+      ? [activeItem,...groupItems.sort((a,b)=>a.rect.x-b.rect.x||a.rect.y-b.rect.y)]
+      : [...groupItems.sort((a,b)=>a.rect.x-b.rect.x||a.rect.y-b.rect.y),activeItem];
+
+    let cursor=fromX;
+    ordered.forEach(item=>{
+      next[item.widget.id]={x:cursor,y:item.rect.y};
+      cursor+=item.rect.w;
+    });
+
+    if(cursor!==toX)return null;
+    return this._isPositionMapValid(next,units,rowUnits)?next:null;
+  }
+
+  if(direction==="down"||direction==="up"){
+    const fromY=Math.min(activeRect.y,groupRect.y);
+    const toY=Math.max(activeRect.y+activeRect.h,groupRect.y+groupRect.h);
+    const topToBottom=direction==="down";
+
+    const ordered=topToBottom
+      ? [activeItem,...groupItems.sort((a,b)=>a.rect.y-b.rect.y||a.rect.x-b.rect.x)]
+      : [...groupItems.sort((a,b)=>a.rect.y-b.rect.y||a.rect.x-b.rect.x),activeItem];
+
+    let cursor=fromY;
+    ordered.forEach(item=>{
+      next[item.widget.id]={x:item.rect.x,y:cursor};
+      cursor+=item.rect.h;
+    });
+
+    if(cursor!==toY)return null;
+    return this._isPositionMapValid(next,units,rowUnits)?next:null;
+  }
+
+  return null;
+}
+_tryTranslatedGroupSwap(id,direction,positions,units,rowUnits){
+  const widget=this._widgets.find(item=>item.id===id);
+  const current=positions?.[id];
+  if(!widget||!current)return false;
+
+  const activeRect=this._getWidgetRectFromPosition(widget,current,units);
+  const group=this._getAdjacentWidgetGroupInDirection(id,direction,positions,units);
+  if(!group.length)return false;
+  if(!this._isGroupInternallyValid(group,positions,units))return false;
+
+  const groupRect=this._getGroupBoundingRect(group,positions,units);
+  if(!groupRect)return false;
+
+  const isAxisAdjacent=
+    direction==="right"?groupRect.x>=activeRect.x+activeRect.w:
+    direction==="left"?groupRect.x+groupRect.w<=activeRect.x:
+    direction==="down"?groupRect.y>=activeRect.y+activeRect.h:
+    direction==="up"?groupRect.y+groupRect.h<=activeRect.y:
+    false;
+
+  if(!isAxisAdjacent)return false;
+
+  const bandCompatible=
+    direction==="right"||direction==="left"
+      ? groupRect.y<=activeRect.y&&groupRect.y+groupRect.h>=activeRect.y+activeRect.h
+      : groupRect.x<=activeRect.x&&groupRect.x+groupRect.w>=activeRect.x+activeRect.w;
+
+  if(!bandCompatible)return false;
+
+  const packedPositions=this._packTranslatedSwapBand(id,group,direction,positions,units,rowUnits);
+  if(!packedPositions)return false;
+
+  this._saveCurrentWidgetPositions(packedPositions);
+  this._applyWidgetPositionsToDom(packedPositions);
+  this._scheduleSquareUnitSync();
+  return true;
+}
+_getDirectNeighborInDirection(id,direction,positions,units){
+  const widget=this._widgets.find(item=>item.id===id);
+  const position=positions?.[id];
+  if(!widget||!position)return null;
+
+  const activeRect=this._getWidgetRectFromPosition(widget,position,units);
+
+  const candidates=this._widgets
+    .filter(other=>other.id!==id&&positions?.[other.id])
+    .map(other=>({
+      widget:other,
+      rect:this._getWidgetRectFromPosition(other,positions[other.id],units),
+    }))
+    .filter(item=>{
+      if(direction==="right"){
+        return item.rect.x>=activeRect.x+activeRect.w&&item.rect.y<activeRect.y+activeRect.h&&item.rect.y+item.rect.h>activeRect.y;
+      }
+      if(direction==="left"){
+        return item.rect.x+item.rect.w<=activeRect.x&&item.rect.y<activeRect.y+activeRect.h&&item.rect.y+item.rect.h>activeRect.y;
+      }
+      if(direction==="down"){
+        return item.rect.y>=activeRect.y+activeRect.h&&item.rect.x<activeRect.x+activeRect.w&&item.rect.x+item.rect.w>activeRect.x;
+      }
+      if(direction==="up"){
+        return item.rect.y+item.rect.h<=activeRect.y&&item.rect.x<activeRect.x+activeRect.w&&item.rect.x+item.rect.w>activeRect.x;
+      }
+      return false;
+    });
+
+  if(!candidates.length)return null;
+
+  const distance=item=>{
+    if(direction==="right")return item.rect.x-(activeRect.x+activeRect.w);
+    if(direction==="left")return activeRect.x-(item.rect.x+item.rect.w);
+    if(direction==="down")return item.rect.y-(activeRect.y+activeRect.h);
+    if(direction==="up")return activeRect.y-(item.rect.y+item.rect.h);
+    return Number.POSITIVE_INFINITY;
+  };
+
+  candidates.sort((a,b)=>distance(a)-distance(b)||a.rect.y-b.rect.y||a.rect.x-b.rect.x);
+  return candidates[0];
+}
+_tryDirectNeighborSwap(id,direction,positions,units,rowUnits){
+  const active=this._widgets.find(widget=>widget.id===id);
+  const activePosition=positions?.[id];
+  if(!active||!activePosition)return false;
+
+  const activeRect=this._getWidgetRectFromPosition(active,activePosition,units);
+  const neighbor=this._getDirectNeighborInDirection(id,direction,positions,units);
+  if(!neighbor)return false;
+
+  const next={...positions};
+  const neighborRect=neighbor.rect;
+
+  if(direction==="right"||direction==="left"){
+    const fromX=Math.min(activeRect.x,neighborRect.x);
+    const leftFirst=direction==="right"?neighbor: {widget:active,rect:activeRect};
+    const rightSecond=direction==="right"?{widget:active,rect:activeRect}:neighbor;
+
+    next[leftFirst.widget.id]={x:fromX,y:leftFirst.rect.y};
+    next[rightSecond.widget.id]={x:fromX+leftFirst.rect.w,y:rightSecond.rect.y};
+  }else if(direction==="down"||direction==="up"){
+    const fromY=Math.min(activeRect.y,neighborRect.y);
+    const topFirst=direction==="down"?neighbor:{widget:active,rect:activeRect};
+    const bottomSecond=direction==="down"?{widget:active,rect:activeRect}:neighbor;
+
+    next[topFirst.widget.id]={x:topFirst.rect.x,y:fromY};
+    next[bottomSecond.widget.id]={x:bottomSecond.rect.x,y:fromY+topFirst.rect.h};
+  }else{
+    return false;
+  }
+
+  if(!this._isPositionMapValid(next,units,rowUnits))return false;
+
+  this._saveCurrentWidgetPositions(next);
+  this._applyWidgetPositionsToDom(next);
+  this._scheduleSquareUnitSync();
+  return true;
+}
 _moveWidgetByDirection(id,direction){
   if(!this._isEditing||this._activeMoveWidgetId!==id)return;
   const positions=this._getActiveWidgetPositions({create:true});
@@ -753,14 +1070,18 @@ _moveWidgetByDirection(id,direction){
 
   if(this._doesWidgetGroupExactlyFillRect(unitOccupants,unitRect,positions,units)&&tryGroupSwap(unitCandidate))return;
 
+  if(this._tryDirectNeighborSwap(id,direction,positions,units,rowUnits))return;
+
   const adjacentCandidate={
     x:current.x+(delta.x*w),
     y:current.y+(delta.y*h),
   };
 
-  if(adjacentCandidate.x===unitCandidate.x&&adjacentCandidate.y===unitCandidate.y)return;
+  if(!(adjacentCandidate.x===unitCandidate.x&&adjacentCandidate.y===unitCandidate.y)){
+    if(tryGroupSwap(adjacentCandidate))return;
+  }
 
-  tryGroupSwap(adjacentCandidate);
+  this._tryTranslatedGroupSwap(id,direction,positions,units,rowUnits);
 }
 _getResponsiveSignature(){
   const rect=this.getBoundingClientRect();

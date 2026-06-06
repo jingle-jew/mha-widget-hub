@@ -2575,3 +2575,48 @@ multi-row swatch grid for easier tapping.
 
 Compact one-row accent swatches were reduced slightly and given more gap so they
 do not touch each other, including selected-state outlines.
+
+
+## Translated group arrow swap
+
+Arrow movement now has a conservative fallback for non-identical adjacent groups.
+
+After empty moves, same-size swaps, and exact rectangle group swaps fail, the
+engine can try a translated group swap:
+
+- it finds the nearest adjacent group in the arrow direction;
+- the group can be larger than the active widget;
+- the active widget is translated to the group's origin;
+- the group is translated to the active widget's old origin;
+- the final position map must be valid: no collisions, no out-of-grid widgets,
+  and no cascade/push/search elsewhere.
+
+This supports cases such as swapping a `3x4` widget with an adjacent `1x4 + 3x4`
+group when the final layout remains legal.
+
+
+## Translated swap band packing
+
+Translated group swaps now repack the involved band instead of simply preserving
+the target group's old bounding-box offset. This prevents "ghost" empty cells
+when swapping blocks of different widths/heights, such as a `3x4` widget against
+a wider adjacent group like `1x4 + 3x4`.
+
+The repack remains conservative:
+- it only moves the active widget and the adjacent group;
+- it does not push unrelated widgets;
+- it saves only if the final position map has no collisions and no out-of-grid widgets.
+
+
+## Direct adjacent neighbor swap
+
+Arrow movement now prioritizes direct adjacent swaps before widget-width jumps.
+If the active widget has an immediate neighbor in the arrow direction, the two
+blocks are compactly exchanged in that band, even when they have different
+widths/heights.
+
+Example: pressing right on a wide widget beside a smaller widget swaps the two
+neighbors directly instead of moving the wide widget by its own full width.
+
+The final position map is still validated before saving: no collision, no
+out-of-grid widget, and no cascade/push behavior.
