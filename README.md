@@ -2485,3 +2485,40 @@ Group swaps now distinguish between two behaviors:
 
 This allows swaps such as a `2x4` widget against two stacked `2x2` widgets,
 without introducing cascade/push behavior.
+
+
+## Move mode tool morph
+
+In edit mode, widget tools now include move, dimension, and close buttons.
+When a widget enters move mode, the close button fades out and the dimension
+button slides into its slot while rotating 180 degrees. Clicking the dimension
+button in move mode exits move mode and restores the close button.
+
+
+## Move button roll morph
+
+Widget edit controls now use the order:
+
+- dimension;
+- move;
+- close.
+
+When a widget enters move mode, the dimension and close buttons fade out while
+the move button rolls 180 degrees into the close slot. Clicking move again exits
+move mode and restores the controls.
+
+
+## Move button roll animation duration
+
+The move-mode tool morph animation has been slowed down for a smoother feel:
+
+- fade duration: 260ms;
+- roll/slide duration: 520ms;
+- easing: `cubic-bezier(.16,.9,.18,1)`.
+
+
+## Edit content pointer lock
+
+In edit mode, widget internals no longer receive pointer events. This prevents
+accidental clicks/taps on widget content while arranging widgets. Edit tools,
+resize controls, and move arrows remain interactive.

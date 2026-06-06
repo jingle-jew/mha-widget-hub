@@ -135,12 +135,30 @@ export function createEmptyWidget(
   if (innerGrid.childElementCount > 0) el.append(innerGrid);
   const tools = document.createElement("div");
     tools.className = "mha-widget-tools";
-    tools.append(
-      tool("Déplacer le widget", "move", () => onToggleMove?.(widget.id), {
+
+    const dimensionButton = tool("Redimensionner le widget", "resize", () => {}, {
+      className: "mha-tool-button--dimension",
+    });
+    dimensionButton.addEventListener("pointerdown", (event) => {
+      if (isMoveTarget) return;
+      onResizeStart?.(event, widget.id);
+    });
+
+    const moveButton = tool(
+      isMoveTarget ? "Terminer le déplacement" : "Déplacer le widget",
+      "move",
+      () => onToggleMove?.(widget.id),
+      {
         pressed: isMoveTarget,
-      }),
-      tool("Supprimer", "close", () => onRemove?.(widget.id)),
+        className: "mha-tool-button--move",
+      },
     );
+
+    const closeButton = tool("Supprimer", "close", () => onRemove?.(widget.id), {
+      className: "mha-tool-button--close",
+    });
+
+    tools.append(dimensionButton, moveButton, closeButton);
 
     const moveOverlay = createMoveOverlay(widget.id, onMove);
 
@@ -185,9 +203,9 @@ function createMoveOverlay(widgetId, onMove) {
   return overlay;
 }
 
-function tool(label, icon, onClick, { pressed } = {}) {
+function tool(label, icon, onClick, { pressed, className = "" } = {}) {
   const button = document.createElement("button");
-  button.className = "mha-tool-button";
+  button.className = ["mha-tool-button", className].filter(Boolean).join(" ");
   button.type = "button";
   button.setAttribute("aria-label", label);
   button.dataset.action = icon;
@@ -198,7 +216,7 @@ function tool(label, icon, onClick, { pressed } = {}) {
   button.onclick = (event) => {
     event.preventDefault();
     event.stopPropagation();
-    onClick?.();
+    onClick?.(event);
   };
   return button;
 }

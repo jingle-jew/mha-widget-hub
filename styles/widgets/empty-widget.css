@@ -420,10 +420,6 @@
   animation-play-state: paused;
 }
 
-:host(.is-editing) .mha-widget.is-move-target .mha-widget-tools {
-  flex-direction: column;
-}
-
 :host(.is-editing) .mha-widget.is-move-target .mha-size-badge,
 :host(.is-editing) .mha-widget.is-move-target .mha-resize-handle {
   opacity: 0;
@@ -513,4 +509,98 @@
   .mha-widget-move-overlay {
     transition: none;
   }
+}
+
+/* MOVE BUTTON ROLL MORPH
+ * Normal edit order:
+ *   [dimension] [move] [close]
+ *
+ * Active move mode:
+ * - dimension fades out;
+ * - close fades out;
+ * - move rolls 180deg and slides into the close slot.
+ */
+.mha-widget-tools {
+  --mha-tool-button-size: var(--mha-control-height);
+  --mha-tool-gap: var(--mha-control-gap);
+  --mha-tool-fade-duration: 260ms;
+  --mha-tool-roll-duration: 520ms;
+  inline-size: calc((var(--mha-tool-button-size) * 3) + (var(--mha-tool-gap) * 2));
+  min-inline-size: calc((var(--mha-tool-button-size) * 3) + (var(--mha-tool-gap) * 2));
+  justify-content: flex-end;
+}
+
+.mha-tool-button {
+  flex: 0 0 var(--mha-tool-button-size);
+  transition:
+    opacity var(--mha-tool-fade-duration) ease,
+    transform var(--mha-tool-roll-duration) cubic-bezier(.16,.9,.18,1),
+    background var(--mha-tool-fade-duration) ease,
+    border-color var(--mha-tool-fade-duration) ease,
+    box-shadow var(--mha-tool-fade-duration) ease;
+  will-change: transform, opacity;
+}
+
+.mha-tool-button--dimension {
+  z-index: 1;
+}
+
+.mha-tool-button--move {
+  z-index: 3;
+  transform-origin: center;
+}
+
+.mha-tool-button--close {
+  z-index: 1;
+}
+
+:host(.is-editing) .mha-widget.is-move-target .mha-widget-tools {
+  flex-direction: row;
+}
+
+:host(.is-editing) .mha-widget.is-move-target .mha-tool-button--dimension,
+:host(.is-editing) .mha-widget.is-move-target .mha-tool-button--close {
+  opacity: 0;
+  transform: scale(.82);
+  pointer-events: none;
+}
+
+:host(.is-editing) .mha-widget.is-move-target .mha-tool-button--move {
+  transform: translateX(calc(var(--mha-tool-button-size) + var(--mha-tool-gap))) rotate(180deg);
+}
+
+/* The corner resize handle remains the actual resize grip outside move mode. */
+:host(.is-editing) .mha-widget.is-move-target .mha-resize-handle {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* EDIT CONTENT POINTER LOCK
+ * In edit mode, widget internals are no longer interactive.
+ * The widget becomes an editable surface, while edit controls and move arrows
+ * remain clickable.
+ */
+:host(.is-editing) .mha-widget > *:not(.mha-widget-tools):not(.mha-widget-move-overlay):not(.mha-resize-handle):not(.mha-size-badge) {
+  pointer-events: none !important;
+}
+
+:host(.is-editing) .mha-widget-tools,
+:host(.is-editing) .mha-widget-tools *,
+:host(.is-editing) .mha-widget-move-overlay,
+:host(.is-editing) .mha-widget-move-arrow,
+:host(.is-editing) .mha-resize-handle,
+:host(.is-editing) .mha-size-badge {
+  pointer-events: auto;
+}
+
+/* The move overlay backdrop itself should not steal pointer events; only its
+ * arrow buttons are interactive.
+ */
+:host(.is-editing) .mha-widget-move-overlay {
+  pointer-events: none;
+}
+
+:host(.is-editing) .mha-widget-move-arrow {
+  pointer-events: auto;
 }
