@@ -256,3 +256,9 @@ are no longer allowed to make a fresh install appear as `Sombre`.
 The Widget Manager now follows the Settings panel visual contract more closely:
 same sheet class, same surface tokens, and category/widget tiles styled like
 settings sections across iOS, OneUI, and Material.
+
+
+## Status bar left gap matches right
+
+The status bar now uses the same effective side gap on the left and right, with
+the left side matching the right-side spacing.

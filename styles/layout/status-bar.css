@@ -165,3 +165,29 @@
     0 3px 12px rgba(29,27,32,.10),
     inset 0 1px 0 rgba(255,255,255,.32);
 }
+
+/* STATUS BAR LEFT GAP MATCHES RIGHT
+ * The requested visual correction is to make the left gap match the right gap.
+ * Keep the status bar's existing sizing/layout behavior, but increase the left
+ * inset to use the same effective page/status inset used on the right side.
+ */
+.mha-status-bar {
+  --mha-status-bar-side-gap: max(
+    var(--mha-page-inline-padding, clamp(1rem, 3vw, 2rem)),
+    var(--mha-safe-area-right, env(safe-area-inset-right))
+  );
+
+  left: var(--mha-status-bar-side-gap) !important;
+  right: var(--mha-status-bar-side-gap) !important;
+  inline-size: auto !important;
+  max-inline-size: none;
+}
+
+@media (max-width: 767px) {
+  .mha-status-bar {
+    --mha-status-bar-side-gap: max(
+      var(--mha-page-inline-padding, clamp(.8rem, 3vw, 1rem)),
+      var(--mha-safe-area-right, env(safe-area-inset-right))
+    );
+  }
+}
