@@ -294,3 +294,11 @@ Material sliders now follow the reference #1 shape: accent active track, pale
 inactive track, vertical handle, and a small stop indicator dot. All colors are
 driven by `--mha-accent` and Material surface tokens; iOS and OneUI sliders are
 unchanged.
+
+
+## Status bar theme token surfaces
+
+The status bar now follows the active visual style tokens without changing its
+geometry: iOS uses a liquid glass surface, OneUI uses a soft widget-aligned
+surface, and Material uses tonal container surfaces. The status bar remains
+shadowless.
