@@ -197,3 +197,20 @@
 .mha-shell.is-mobile .mha-grid {
   touch-action: pan-y;
 }
+
+/* GRID FRAME LEFT NUDGE
+ * Tablet/desktop only.
+ *
+ * Status bar alignment is now correct. The visible widget grid still needs a
+ * tiny optical nudge left to match the shared frame. Keep all internal padding
+ * and grid math intact; move the grid as a whole by a few pixels only.
+ */
+@media (min-width: 768px) {
+  :host {
+    --mha-grid-frame-nudge-x: clamp(4px, 0.45vw, 7px);
+  }
+
+  .mha-grid {
+    transform: translateX(calc(-1 * var(--mha-grid-frame-nudge-x)));
+  }
+}

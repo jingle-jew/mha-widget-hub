@@ -258,7 +258,31 @@ same sheet class, same surface tokens, and category/widget tiles styled like
 settings sections across iOS, OneUI, and Material.
 
 
-## Status bar left gap matches right
+## Status bar safe frame alignment
 
-The status bar now uses the same effective side gap on the left and right, with
-the left side matching the right-side spacing.
+The experimental centered-shell content frame was rolled back. Tablet/desktop
+status bar alignment now uses a safer CSS-only frame: the shell and grid math
+remain untouched, while the status bar and floating edit button use the same
+left/right page padding inset.
+
+
+## Status bar padding compensation
+
+Tablet/desktop status bar alignment now compensates for the existing horizontal
+padding inside `.mha-widget-area` and `.mha-grid` instead of removing that
+padding. The internal grid padding remains intact, while the status bar left
+inset is adjusted so the visual widget edge aligns with the right-side frame.
+
+
+## Grid frame left nudge
+
+After status bar alignment, tablet/desktop grid placement received a very small
+left nudge. This does not change grid math, widget positions, or internal
+padding; it only optically aligns the visible widget frame.
+
+
+## Grid vertical nudge rollback
+
+The previous vertical grid compensation was too aggressive and made the widget
+grid sit too high. The grid is restored to the earlier horizontal-only nudge,
+while the status bar shadow remains removed.

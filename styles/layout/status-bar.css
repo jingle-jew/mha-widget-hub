@@ -166,28 +166,74 @@
     inset 0 1px 0 rgba(255,255,255,.32);
 }
 
-/* STATUS BAR LEFT GAP MATCHES RIGHT
- * The requested visual correction is to make the left gap match the right gap.
- * Keep the status bar's existing sizing/layout behavior, but increase the left
- * inset to use the same effective page/status inset used on the right side.
+/* STATUS BAR SAFE FRAME ALIGNMENT
+ * Rollback-safe alignment patch.
+ *
+ * Do not resize/center `.mha-shell`.
+ * Do not change `.mha-workspace`, `.mha-widget-area`, or `.mha-grid` geometry.
+ *
+ * The status bar stays in the original full shell, but its visual frame uses
+ * the same left/right page padding. This prevents the bar from touching the
+ * screen edge while keeping the existing grid/dock math intact.
  */
-.mha-status-bar {
-  --mha-status-bar-side-gap: max(
-    var(--mha-page-inline-padding, clamp(1rem, 3vw, 2rem)),
-    var(--mha-safe-area-right, env(safe-area-inset-right))
-  );
-
-  left: var(--mha-status-bar-side-gap) !important;
-  right: var(--mha-status-bar-side-gap) !important;
-  inline-size: auto !important;
-  max-inline-size: none;
+@media (min-width: 768px) {
+  .mha-status-bar {
+    left: var(--mha-page-padding) !important;
+    right: var(--mha-page-padding) !important;
+    width: auto !important;
+    inline-size: auto !important;
+    max-inline-size: none !important;
+    transform: none !important;
+  }
 }
 
-@media (max-width: 767px) {
-  .mha-status-bar {
-    --mha-status-bar-side-gap: max(
-      var(--mha-page-inline-padding, clamp(.8rem, 3vw, 1rem)),
-      var(--mha-safe-area-right, env(safe-area-inset-right))
+/* STATUS BAR PADDING COMPENSATION
+ * Tablet/desktop only.
+ *
+ * Do not modify `.mha-widget-area` or `.mha-grid`.
+ * They keep their internal horizontal padding for widget breathing room.
+ *
+ * Instead, compensate the status bar's left inset so the visible widget edge
+ * produced by:
+ *
+ *   shell/page padding + widget-area padding-x + grid padding-x
+ *
+ * lines up visually with the right-side frame/dock/edit edge.
+ */
+@media (min-width: 768px) {
+  :host {
+    --mha-widget-area-padding-x: clamp(0.35rem, 0.7vw, 0.75rem);
+    --mha-grid-padding-x: clamp(0.25rem, 0.55vw, 0.6rem);
+    --mha-statusbar-left-compensation: calc(
+      var(--mha-widget-area-padding-x) + var(--mha-grid-padding-x)
+    );
+    --mha-statusbar-left-inset: max(
+      0px,
+      calc(var(--mha-page-padding) - var(--mha-statusbar-left-compensation))
     );
   }
+
+  .mha-status-bar {
+    left: var(--mha-statusbar-left-inset) !important;
+    right: var(--mha-page-padding) !important;
+    width: auto !important;
+    inline-size: auto !important;
+    max-inline-size: none !important;
+    transform: none !important;
+  }
+}
+
+/* STATUS BAR NO SHADOW
+ * Keep the status bar surface/border/blur, but remove its floating shadow.
+ * This is intentionally separate from grid positioning.
+ */
+.mha-status-bar {
+  box-shadow: none !important;
+}
+
+:host([data-theme-style="ios"]) .mha-status-bar,
+:host([data-theme-style="oneui"]) .mha-status-bar,
+:host([data-theme-style="material"]) .mha-status-bar,
+:host([data-theme-style="material"][data-theme="light"]) .mha-status-bar {
+  box-shadow: none !important;
 }
