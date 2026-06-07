@@ -302,3 +302,59 @@ The status bar now follows the active visual style tokens without changing its
 geometry: iOS uses a liquid glass surface, OneUI uses a soft widget-aligned
 surface, and Material uses tonal container surfaces. The status bar remains
 shadowless.
+
+
+## iOS Control Center SliderWidget
+
+Full SliderWidget instances now use an iOS Control Center-style treatment when
+the visual style is iOS. The widget itself becomes the slider surface and fill,
+while the reusable slider component remains unchanged for embedded sliders and
+for OneUI/Material.
+
+
+## iOS SliderWidget fill fix
+
+The iOS Control Center-style SliderWidget now receives `--mha-slider-value` on
+the widget shell itself, so the active/inactive regions are visible. The hidden
+native input also covers the full widget surface instead of appearing as a small
+centered control.
+
+
+## iOS SliderWidget active fill layer
+
+The iOS Control Center-style SliderWidget now draws its active fill on the
+internal widget grid layer, below the invisible full-surface input. The inactive
+surface follows `--mha-widget-surface`, while the active region follows
+`--mha-accent`.
+
+
+## iOS SliderWidget white fill and pointer fix
+
+The iOS Control Center-style SliderWidget active region now uses translucent
+iOS white instead of the accent color. Full-surface pointer handling was added
+for iOS SliderWidget instances so dragging/clicking works across the widget and
+vertical sliders increase upward/decrease downward.
+
+
+## iOS SliderWidget drag direction fix
+
+The iOS Control Center-style SliderWidget now uses custom full-surface pointer
+mapping. Dragging works across the whole widget, and vertical sliders map bottom
+to min / top to max. The native mobile vertical slider handler is skipped for
+this iOS full-widget treatment to avoid inverted behavior.
+
+
+## iOS SliderWidget inactive soft gray
+
+The inactive region of the iOS Control Center-style SliderWidget now uses a
+subtle iOS gray glass surface that is more transparent than the active white
+fill. This improves the active/inactive distinction without making the inactive
+surface feel dark.
+
+
+## iOS SliderWidget inactive widget surface
+
+The inactive region of the iOS Control Center-style SliderWidget now uses the
+exact widget surface token, `--mha-widget-surface`, instead of a separate gray
+overlay. The active region remains translucent white, and the glass sheen was
+reduced so the inactive area matches regular widgets.

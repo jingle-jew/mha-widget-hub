@@ -97,6 +97,48 @@ function observeSliderLayout(wrapper) {
   });
 }
 
+
+function getSliderWidgetShell(wrapper) {
+  return wrapper.closest?.('.mha-widget[data-widget-kind="slider"]') || null;
+}
+
+function getSliderHost(wrapper) {
+  const root = wrapper.getRootNode();
+  return root instanceof ShadowRoot ? root.host : null;
+}
+
+function isIosFullSliderWidget(wrapper) {
+  return Boolean(
+    getSliderWidgetShell(wrapper)
+    && getSliderHost(wrapper)?.dataset?.themeStyle === "ios"
+  );
+}
+
+function getFullWidgetSliderValueFromPointer(wrapper, input, event, min, max) {
+  const shell = getSliderWidgetShell(wrapper) || wrapper;
+  const rect = shell.getBoundingClientRect();
+  const minNumber = Number(min);
+  const maxNumber = Number(max);
+
+  if (!Number.isFinite(minNumber) || !Number.isFinite(maxNumber) || maxNumber === minNumber) {
+    return Number(input.value) || 0;
+  }
+
+  const orientation = wrapper.dataset.orientation || "horizontal";
+  const ratio = orientation === "vertical"
+    ? 1 - ((event.clientY - rect.top) / Math.max(1, rect.height))
+    : (event.clientX - rect.left) / Math.max(1, rect.width);
+
+  const clamped = Math.max(0, Math.min(1, ratio));
+  return minNumber + ((maxNumber - minNumber) * clamped);
+}
+
+function setFullWidgetSliderValueFromPointer(wrapper, input, event, min, max) {
+  const nextValue = getFullWidgetSliderValueFromPointer(wrapper, input, event, min, max);
+  input.value = String(nextValue);
+  input.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
 export function createSlider({
   label = "",
   min = 0,
@@ -141,8 +183,17 @@ export function createSlider({
 
   const syncValue = (currentValue) => {
     const percent = getSliderPercent(currentValue, min, max);
-    wrapper.style.setProperty("--mha-slider-value", `${percent}%`);
-    input.style.setProperty("--mha-slider-value", `${percent}%`);
+    const percentValue = `${percent}%`;
+    wrapper.style.setProperty("--mha-slider-value", percentValue);
+    input.style.setProperty("--mha-slider-value", percentValue);
+
+    /*
+     * Full SliderWidget visuals may be drawn by the widget shell itself.
+     * CSS variables do not inherit upward, so expose the value on the nearest
+     * slider widget parent while keeping the reusable slider component generic.
+     */
+    const sliderWidget = wrapper.closest?.('.mha-widget[data-widget-kind="slider"]');
+    sliderWidget?.style?.setProperty("--mha-slider-value", percentValue);
   };
 
   syncValue(value);
@@ -176,7 +227,7 @@ export function createSlider({
   };
 
   input.addEventListener("pointerdown", (event) => {
-    if (!isMobileVerticalSlider()) return;
+    if (!isMobileVerticalSlider() || isIosFullSliderWidget(wrapper)) return;
     activePointerId = event.pointerId;
     activeScrollContainer = wrapper.closest(".mha-widget-area");
     wrapper.classList.add("is-slider-dragging");
@@ -193,6 +244,45 @@ export function createSlider({
   input.addEventListener("pointerup", finishPointerDrag);
   input.addEventListener("pointercancel", finishPointerDrag);
   input.addEventListener("lostpointercapture", finishPointerDrag);
+
+  let activeFullWidgetPointerId = null;
+
+  const startFullWidgetPointer = (event) => {
+    if (!isIosFullSliderWidget(wrapper)) return;
+    activeFullWidgetPointerId = event.pointerId;
+    input.setPointerCapture?.(event.pointerId);
+    setFullWidgetSliderValueFromPointer(wrapper, input, event, min, max);
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  };
+
+  const moveFullWidgetPointer = (event) => {
+    if (!isIosFullSliderWidget(wrapper) || event.pointerId !== activeFullWidgetPointerId) return;
+    setFullWidgetSliderValueFromPointer(wrapper, input, event, min, max);
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  };
+
+  const finishFullWidgetPointer = (event) => {
+    if (!isIosFullSliderWidget(wrapper)) return;
+    if (event.pointerId !== undefined && event.pointerId !== activeFullWidgetPointerId) return;
+
+    const pointerId = activeFullWidgetPointerId;
+    activeFullWidgetPointerId = null;
+
+    if (event.type !== "lostpointercapture" && pointerId !== null && input.hasPointerCapture?.(pointerId)) {
+      input.releasePointerCapture?.(pointerId);
+    }
+
+    event.preventDefault?.();
+    event.stopImmediatePropagation?.();
+  };
+
+  input.addEventListener("pointerdown", startFullWidgetPointer, { capture: true });
+  input.addEventListener("pointermove", moveFullWidgetPointer, { capture: true });
+  input.addEventListener("pointerup", finishFullWidgetPointer, { capture: true });
+  input.addEventListener("pointercancel", finishFullWidgetPointer, { capture: true });
+  input.addEventListener("lostpointercapture", finishFullWidgetPointer, { capture: true });
 
   rotor.append(oneUiTrack, input);
   wrapper.append(rotor);

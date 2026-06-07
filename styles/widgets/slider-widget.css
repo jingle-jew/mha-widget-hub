@@ -187,3 +187,149 @@
   max-inline-size: 100%;
   max-block-size: 100%;
 }
+
+/* IOS CONTROL CENTER SLIDER WIDGET
+ * Full SliderWidget only, iOS visual style only.
+ *
+ * The inactive surface follows the normal widget surface token. The active fill
+ * is drawn inside the widget grid layer so it stays visible under the invisible
+ * full-surface input.
+ */
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="slider"] {
+  --mha-ios-slider-widget-radius: var(--mha-widget-radius, 1.75rem);
+  --mha-ios-slider-widget-surface: var(--mha-widget-surface);
+  --mha-ios-slider-widget-border: var(--mha-widget-border);
+  --mha-ios-slider-widget-fill:
+    linear-gradient(
+      145deg,
+      rgba(255,255,255,.74),
+      rgba(255,255,255,.38)
+    );
+
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--mha-ios-slider-widget-surface) !important;
+  border-color: var(--mha-ios-slider-widget-border);
+  -webkit-backdrop-filter: blur(calc(var(--mha-surface-blur) * 1.05)) saturate(170%);
+  backdrop-filter: blur(calc(var(--mha-surface-blur) * 1.05)) saturate(170%);
+}
+/* The visual layers live in the widget grid, below the invisible input. */
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="slider"] .mha-slider-widget-grid {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  inline-size: 100%;
+  width: 100%;
+  block-size: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: inherit;
+  background: var(--mha-ios-slider-widget-surface);
+}
+
+/* Active fill. Horizontal fills left-to-right; vertical fills bottom-to-top. */
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="slider"] .mha-slider-widget-grid::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: inherit;
+  background: var(--mha-ios-slider-widget-fill);
+  opacity: .96;
+  transition:
+    inline-size 120ms linear,
+    block-size 120ms linear;
+}
+
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="slider"]:has(.mha-slider[data-orientation="horizontal"]) .mha-slider-widget-grid::before {
+  inset-block: 0;
+  inset-inline-start: 0;
+  inline-size: var(--mha-slider-value, 50%);
+  block-size: 100%;
+}
+
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="slider"]:has(.mha-slider[data-orientation="vertical"]) .mha-slider-widget-grid::before {
+  inset-inline: 0;
+  inset-block-end: 0;
+  inline-size: 100%;
+  block-size: var(--mha-slider-value, 50%);
+}
+
+/* Subtle iOS glass sheen above the active/inactive layers. */
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="slider"] .mha-slider-widget-grid::after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 22% 0%, rgba(255,255,255,.28), transparent 34%),
+    linear-gradient(135deg, rgba(255,255,255,.14), transparent 58%);
+  opacity: .16;
+  mix-blend-mode: screen;
+}
+
+/* Keep the invisible native input full-surface and above the visual layers. */
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="slider"] .mha-slider-widget-unit,
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="slider"] .mha-slider,
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="slider"] .mha-slider-rotor {
+  position: absolute;
+  z-index: 4;
+  inset: 0 !important;
+  inline-size: 100% !important;
+  width: 100% !important;
+  block-size: 100% !important;
+  height: 100% !important;
+  max-inline-size: 100% !important;
+  max-block-size: 100% !important;
+}
+
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="slider"] .mha-slider[data-orientation="horizontal"] .mha-slider-rotor,
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="slider"] .mha-slider[data-orientation="vertical"] .mha-slider-rotor {
+  transform: none !important;
+}
+
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="slider"] .mha-slider-input {
+  position: absolute;
+  z-index: 5;
+  touch-action: none;
+  inset: 0 !important;
+  inline-size: 100% !important;
+  width: 100% !important;
+  block-size: 100% !important;
+  height: 100% !important;
+  opacity: 0;
+  cursor: pointer;
+  pointer-events: auto !important;
+  touch-action: none !important;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Hide native visual track/thumb for this full-widget iOS treatment only. */
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="slider"] .mha-slider-input::-webkit-slider-runnable-track {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="slider"] .mha-slider-input::-webkit-slider-thumb {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+}
+
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="slider"] .mha-slider-input::-moz-range-track,
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="slider"] .mha-slider-input::-moz-range-progress {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="slider"] .mha-slider-input::-moz-range-thumb {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+}
