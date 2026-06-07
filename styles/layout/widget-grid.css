@@ -123,6 +123,11 @@
 }
 
 @media (max-width: 767px) {
+  :host {
+    --mha-statusbar-reserved-top: 0px;
+    --mha-mobile-grid-gutter: var(--mha-page-padding, clamp(1rem, 2.6vw, 2rem));
+  }
+
   .mha-workspace {
     grid-template-columns: minmax(0, 1fr);
   }

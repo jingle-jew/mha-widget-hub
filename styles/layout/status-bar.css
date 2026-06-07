@@ -9,6 +9,41 @@
   }
 }
 
+/* Keep the status bar inside the shell and dock edge. */
+.mha-shell > :first-child,
+.mha-status-bar,
+.mha-statusbar,
+.mha-topbar {
+  box-sizing: border-box;
+  justify-self: stretch !important;
+  align-self: start;
+  inline-size: auto !important;
+  width: auto !important;
+  max-inline-size: 100% !important;
+  max-width: 100% !important;
+  margin-inline: 0 !important;
+  overflow: hidden !important;
+  contain: paint;
+}
+
+.mha-shell > :first-child > *,
+.mha-status-bar > *,
+.mha-statusbar > *,
+.mha-topbar > * {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+
+@media (min-width: 768px) {
+  :host {
+    --mha-statusbar-reserved-top: calc(
+      var(--mha-floating-top, clamp(1rem, 2.4vw, 1.6rem)) +
+      var(--mha-statusbar-height-compact, clamp(2.25rem, 3.2vw, 2.85rem)) +
+      clamp(.7rem, 1.4vw, 1rem)
+    );
+  }
+}
+
 /* STATUS BAR ROW ALIGNMENT
  * Tablet/desktop:
  * - slightly thinner status bar;
