@@ -26,17 +26,6 @@
   pointer-events: auto;
 }
 
-.mha-screensaver[data-visible="true"] .mha-screensaver-edit-button {
-  opacity: .34 !important;
-  pointer-events: auto !important;
-  filter: saturate(.78) brightness(.92);
-  transform: none !important;
-}
-
-.mha-screensaver[data-visible="true"] .mha-screensaver-edit-button:hover,
-.mha-screensaver[data-visible="true"] .mha-screensaver-edit-button:focus-visible {
-  opacity: .62 !important;
-}
 
 .mha-screensaver::before {
   content: "";
@@ -474,4 +463,21 @@
   .mha-screensaver-time-separator {
     transition: none;
   }
+}
+
+/* SCREENSAVER EDIT BUTTON PARITY
+ * The screensaver edit button intentionally reuses the main floating edit button
+ * class so its position, size, shape, and theme treatment match the home view.
+ */
+.mha-screensaver .mha-screensaver-edit-button {
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+.mha-screensaver[data-visible="true"] .mha-screensaver-edit-button {
+  pointer-events: auto !important;
+}
+
+.mha-screensaver[data-visible="false"] .mha-screensaver-edit-button {
+  pointer-events: none !important;
 }

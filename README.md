@@ -2660,3 +2660,11 @@ unit sync is scheduled. This avoids the visible full Shadow DOM rebuild flash.
 Leaving edit mode now always clears the active move widget and removes ghost drop
 slots. This prevents a widget from staying in move-target state after pressing
 the main edit-mode close button.
+
+
+## Screensaver edit button and themed status bar
+
+- The screensaver edit button now reuses the main floating edit button class so
+  it has the same position, size, shape, and visual treatment as the home view.
+- The status bar now receives theme-style-specific material polish for iOS,
+  OneUI, and Material while keeping the same layout geometry.

@@ -587,7 +587,7 @@ export function createScreensaver({
   root.append(shade, clockRegion);
 
   const edit = document.createElement("button");
-  edit.className = "mha-edit-button mha-screensaver-edit-button";
+  edit.className = "mha-edit-button mha-main-edit-button mha-screensaver-edit-button";
   edit.type = "button";
   edit.innerHTML = ICONS.edit;
   edit.setAttribute("aria-label", "Configurer l’économiseur d’écran");
