@@ -1,4 +1,4 @@
-.mha-shell{position:relative;z-index:1;height:100%;display:grid;grid-template-rows:minmax(0,1fr);gap:var(--mha-grid-gap);padding:0 var(--mha-page-padding)}.mha-grid{min-height:0;overflow:auto;display:grid;gap:var(--mha-grid-gap);align-content:start;padding:max(2px,var(--mha-statusbar-reserved-top)) 2px var(--mha-grid-gap);scrollbar-width:none;--mha-active-grid-units:var(--mha-runtime-grid-units,2);grid-template-columns:repeat(var(--mha-active-grid-units),minmax(0,1fr));grid-auto-rows:var(--mha-square-unit);grid-auto-flow:dense}.mha-grid::-webkit-scrollbar{display:none}.mha-edit-button{position:absolute;z-index:10;right:22px;bottom:22px;width:56px;height:56px;display:grid;place-items:center;border:1px solid var(--mha-widget-border);border-radius:var(--mha-control-radius);background:var(--mha-control-surface-edit);color:var(--mha-text);backdrop-filter:blur(var(--mha-surface-blur)) saturate(var(--mha-surface-saturation));cursor:pointer;box-shadow:var(--mha-floating-shadow);transition:transform var(--mha-motion-duration) var(--mha-motion-easing)}.mha-edit-button svg{width:22px;height:22px;fill:currentColor}
+.mha-shell{position:relative;z-index:1;height:100%;display:grid;grid-template-rows:minmax(0,1fr);gap:var(--mha-grid-gap);padding:0 var(--mha-page-padding)}.mha-grid{min-height:0;overflow:auto;display:grid;gap:var(--mha-grid-gap);align-content:start;padding:max(2px,var(--mha-statusbar-reserved-top)) 2px var(--mha-grid-gap);scrollbar-width:none;--mha-active-grid-units:var(--mha-runtime-grid-units,2);grid-template-columns:repeat(var(--mha-active-grid-units),minmax(0,1fr));grid-auto-rows:var(--mha-square-unit);grid-auto-flow:dense}.mha-grid::-webkit-scrollbar{display:none}
 
 /* Smooth token transitions during visual theme changes. */
 .mha-shell,
@@ -106,19 +106,6 @@
   will-change: transform, opacity;
 }
 
-/* EDIT BUTTON WITH VERTICAL DOCK
- * On tablet/desktop the dock occupies the right rail, so the edit button sits
- * below it near the lower-right corner as a separate floating control.
- */
-@media (min-width: 768px) {
-  .mha-edit-button {
-    position: fixed;
-    z-index: 90;
-    inset-inline-end: max(var(--mha-safe-area-right, env(safe-area-inset-right)), clamp(0.85rem, 1.8vw, 1.35rem));
-    inset-block-end: max(var(--mha-safe-area-bottom, env(safe-area-inset-bottom)), clamp(0.85rem, 1.8vw, 1.35rem));
-  }
-}
-
 /* MOBILE FULL HEIGHT WIDGET GRID
  * Mobile hides the status bar and lets widgets fill the freed top space.
  */
@@ -208,112 +195,6 @@
   animation: none !important;
 }
 
-/* EDIT BUTTON ICON SHAPE TOKEN
- * The floating edit button is an icon-like control, so its visible container
- * follows the same global icon shape setting.
- */
-.mha-edit-button {
-  border-radius: var(--mha-icon-radius-rounded-square, 32%);
-  overflow: hidden;
-}
-
-/* Rounded-square uses the canonical rounded-square icon token. */
-:host([data-icon-shape="rounded-square"]) .mha-edit-button {
-  border-radius: var(--mha-icon-radius-rounded-square, 32%);
-  -webkit-mask-image: none;
-  mask-image: none;
-}
-
-/* Circle is a simple radius. */
-:host([data-icon-shape="circle"]) .mha-edit-button {
-  border-radius: var(--mha-icon-border-radius-circle, 999px);
-  -webkit-mask-image: none;
-  mask-image: none;
-}
-
-/* Squircle uses the same generated squircle mask as icons. */
-:host([data-icon-shape="squircle"]) .mha-edit-button {
-  border-radius: 0;
-  -webkit-mask-image: var(--mha-icon-squircle-mask);
-  mask-image: var(--mha-icon-squircle-mask);
-  -webkit-mask-size: 100% 100%;
-  mask-size: 100% 100%;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-}
-
-/* EDIT BUTTON ICON SURFACE AND EDGE ALIGNMENT
- * The floating edit button is a global icon-like control:
- * - same shape contract as .mha-icon;
- * - same icon surface/border/shadow/color tokens;
- * - same edge distance rhythm as the mobile floating dock launcher.
- */
-.mha-edit-button {
-  --mha-edit-button-edge: var(--mha-mobile-dock-edge, max(env(safe-area-inset-left), clamp(.9rem, 3vw, 1.25rem)));
-  --mha-edit-button-bottom: var(--mha-mobile-dock-bottom, max(env(safe-area-inset-bottom), clamp(.9rem, 3vw, 1.25rem)));
-  --mha-edit-button-size: var(--mha-mobile-dock-launcher-size, clamp(3.75rem, 15vw, 4.8rem));
-
-  inline-size: var(--mha-edit-button-size);
-  block-size: var(--mha-edit-button-size);
-
-  border: 1px solid var(--mha-icon-border);
-  background: var(--mha-icon-bg);
-  color: var(--mha-icon-color);
-  box-shadow: var(--mha-icon-shadow);
-  backdrop-filter: var(--mha-icon-backdrop-filter, none);
-
-  display: grid;
-  place-items: center;
-  padding: 0;
-}
-
-/* Mobile: align to the same outer edge rhythm as the floating dock launcher. */
-@media (max-width: 767px) {
-  .mha-edit-button {
-    right: var(--mha-edit-button-edge);
-    bottom: var(--mha-edit-button-bottom);
-  }
-}
-
-/* Tablet/desktop: keep it on the right, using the same edge token family. */
-@media (min-width: 768px) {
-  .mha-edit-button {
-    inset-inline-end: max(var(--mha-safe-area-right, env(safe-area-inset-right)), clamp(.9rem, 3vw, 1.25rem));
-    inset-block-end: max(var(--mha-safe-area-bottom, env(safe-area-inset-bottom)), clamp(.9rem, 3vw, 1.25rem));
-  }
-}
-
-/* Edit/close SVG should behave like an icon glyph inside the icon container. */
-.mha-edit-button svg {
-  width: var(--mha-icon-glyph-size, 56%);
-  height: var(--mha-icon-glyph-size, 56%);
-  fill: currentColor;
-}
-
-/* Keep the shape rules from the icon contract. */
-:host([data-icon-shape="rounded-square"]) .mha-edit-button {
-  border-radius: var(--mha-icon-radius-rounded-square, 32%);
-  -webkit-mask-image: none;
-  mask-image: none;
-}
-
-:host([data-icon-shape="circle"]) .mha-edit-button {
-  border-radius: var(--mha-icon-border-radius-circle, 999px);
-  -webkit-mask-image: none;
-  mask-image: none;
-}
-
-:host([data-icon-shape="squircle"]) .mha-edit-button {
-  border-radius: 0;
-  -webkit-mask-image: var(--mha-icon-squircle-mask);
-  mask-image: var(--mha-icon-squircle-mask);
-  -webkit-mask-size: 100% 100%;
-  mask-size: 100% 100%;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-}
-
-
 /* ONEUI LIGHT GRID EDGE SHADOW GUARD
  * Prevents layout-level vertical edge/shadow artifacts in OneUI light.
  */
@@ -327,117 +208,6 @@
 :host([data-theme="light"][data-theme-style="oneui"]) .mha-grid::after {
   content: none !important;
   display: none !important;
-}
-
-/* EDIT BUTTON ICON SIZE CONTRACT
- * The edit launcher uses the same icon system as dock/widget icons.
- *
- * Keep the button/touch target size as-is, but align the SVG glyph with
- * --mha-icon-glyph-size so the edit icon feels like part of the same interface.
- */
-.mha-edit-button {
-  --mha-edit-icon-glyph-size: var(--mha-icon-glyph-size, 56%);
-}
-
-.mha-edit-button svg {
-  inline-size: var(--mha-edit-icon-glyph-size);
-  block-size: var(--mha-edit-icon-glyph-size);
-  width: var(--mha-edit-icon-glyph-size);
-  height: var(--mha-edit-icon-glyph-size);
-}
-
-/* EDIT BUTTON GLYPH COLOR GUARD
- * The edit button color is supplied by accent-palettes.css.
- * Keep the SVG bound to currentColor so accent changes apply consistently.
- */
-.mha-edit-button svg,
-.mha-edit-button path {
-  fill: currentColor;
-  stroke: currentColor;
-}
-
-/* EDIT BUTTON ACCENT CASCADE FIX
- * shell.css loads after accent-palettes.css, so the edit button's base/icon
- * surface rules can override accent-palettes.css.
- */
-:host .mha-edit-button {
-  background: var(--mha-system-icon-bg) !important;
-  color: var(--mha-system-icon-color) !important;
-  border-color: var(--mha-system-icon-border) !important;
-  box-shadow: var(--mha-system-icon-shadow) !important;
-}
-
-/* iOS keeps the edit launcher on the same Liquid Glass surface as icons.
- * The glyph stays accent-colored below, but the container should not use the
- * accent-filled system icon surface.
- */
-:host([data-theme-style="ios"]) .mha-edit-button {
-  opacity: 1;
-  background: var(--mha-icon-bg) !important;
-  color: var(--mha-accent) !important;
-  border-color: var(--mha-icon-border) !important;
-  box-shadow: var(--mha-icon-shadow) !important;
-  -webkit-backdrop-filter: var(--mha-icon-backdrop-filter, blur(var(--mha-surface-blur)) saturate(var(--mha-surface-saturation)));
-  backdrop-filter: var(--mha-icon-backdrop-filter, blur(var(--mha-surface-blur)) saturate(var(--mha-surface-saturation)));
-}
-
-:host([data-theme-style="ios"]) .mha-edit-button svg,
-:host([data-theme-style="ios"]) .mha-edit-button path {
-  fill: var(--mha-accent) !important;
-  stroke: var(--mha-accent) !important;
-}
-
-:host .mha-edit-button svg,
-:host .mha-edit-button path {
-  fill: currentColor !important;
-  stroke: currentColor !important;
-}
-
-/* EDIT BUTTON SHAPE MASK GUARD
- * The edit launcher shares icon shape tokens. Remove squircle masks when the
- * effective shape is rounded-square or circle.
- */
-:host([data-icon-shape="rounded-square"]) .mha-edit-button,
-:host([data-icon-shape="circle"]) .mha-edit-button {
-  -webkit-mask-image: none !important;
-  mask-image: none !important;
-  -webkit-mask-size: auto !important;
-  mask-size: auto !important;
-}
-
-:host([data-icon-shape="squircle"]) .mha-edit-button {
-  -webkit-mask-image: var(--mha-icon-squircle-mask);
-  mask-image: var(--mha-icon-squircle-mask);
-  -webkit-mask-size: 100% 100%;
-  mask-size: 100% 100%;
-}
-
-/* FINAL EDIT BUTTON SHAPE MASK RESET
- * The edit button follows data-icon-shape, the effective resolved shape.
- * In Auto, data-icon-shape-setting stays "auto" while data-icon-shape becomes
- * rounded-square, squircle, or circle for the active visual style.
- */
-:host(:not([data-icon-shape="squircle"])) .mha-edit-button {
-  -webkit-mask: none !important;
-  mask: none !important;
-  -webkit-mask-image: none !important;
-  mask-image: none !important;
-}
-
-:host([data-icon-shape="rounded-square"]) .mha-edit-button {
-  border-radius: var(--mha-icon-radius-rounded-square, 32%) !important;
-}
-
-:host([data-icon-shape="circle"]) .mha-edit-button {
-  border-radius: var(--mha-icon-border-radius-circle, 999px) !important;
-}
-
-:host([data-icon-shape="squircle"]) .mha-edit-button {
-  border-radius: 0 !important;
-  -webkit-mask-image: var(--mha-icon-squircle-mask) !important;
-  mask-image: var(--mha-icon-squircle-mask) !important;
-  -webkit-mask-size: 100% 100% !important;
-  mask-size: 100% 100% !important;
 }
 
 /* SAFE INITIAL PAINT
@@ -692,26 +462,4 @@
 .mha-topbar > * {
   min-inline-size: 0;
   max-inline-size: 100%;
-}
-
-:host {
-  --mha-floating-button-size: clamp(2.625rem, 10vw, 3rem);
-}
-
-/* Keep the main edit launcher compact and aligned with widget surfaces. */
-:host .mha-edit-button.mha-main-edit-button {
-  inline-size: var(--mha-floating-button-size) !important;
-  block-size: var(--mha-floating-button-size) !important;
-  width: var(--mha-floating-button-size) !important;
-  height: var(--mha-floating-button-size) !important;
-  aspect-ratio: 1 / 1;
-  border-radius: 999px !important;
-  -webkit-mask: none !important;
-  mask: none !important;
-  -webkit-mask-image: none !important;
-  mask-image: none !important;
-  background: var(--mha-widget-surface) !important;
-  border-color: var(--mha-widget-border) !important;
-  color: var(--mha-text) !important;
-  box-shadow: var(--mha-widget-shadow) !important;
 }

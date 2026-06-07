@@ -331,35 +331,3 @@
 :host([data-theme-style="material"]) .mha-mobile-dock-panel {
   border-color: transparent;
 }
-
-/* Match the mobile dock launcher to the main floating edit button. */
-@media (max-width: 767px) {
-  .mha-mobile-dock-launcher {
-    inline-size: var(--mha-floating-button-size) !important;
-    block-size: var(--mha-floating-button-size) !important;
-    width: var(--mha-floating-button-size) !important;
-    height: var(--mha-floating-button-size) !important;
-    aspect-ratio: 1 / 1;
-    border: 1px solid var(--mha-widget-border) !important;
-    border-radius: 999px !important;
-    background: var(--mha-widget-surface) !important;
-    box-shadow: var(--mha-widget-shadow) !important;
-    color: var(--mha-text) !important;
-    overflow: hidden;
-  }
-
-  .mha-mobile-dock-launcher > .mha-icon {
-    --mha-icon-size: var(--mha-floating-button-size);
-    --mha-icon-color: currentColor !important;
-    border: 0 !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    color: inherit !important;
-  }
-
-  .mha-mobile-dock-launcher > .mha-icon .mha-icon-symbol {
-    --mha-icon-symbol-color: currentColor !important;
-    color: currentColor !important;
-    opacity: 1;
-  }
-}
