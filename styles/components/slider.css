@@ -662,3 +662,134 @@
   -webkit-user-drag: none;
   cursor: nwse-resize;
 }
+
+/* MATERIAL YOU SLIDER SHAPE #1
+ * Material-only slider styling inspired by the reference option #1:
+ * - accent-filled active track;
+ * - pale accent/surface inactive track;
+ * - thick vertical handle;
+ * - small stop indicator dot at the far end.
+ *
+ * Colors remain token-driven through `--mha-accent`; no fixed purple.
+ * iOS and OneUI slider styles are intentionally untouched.
+ */
+:host([data-theme-style="material"]) {
+  --mha-slider-material-track-height: clamp(.85rem, 1.65vw, 1.1rem);
+  --mha-slider-material-track-radius: 999px;
+  --mha-slider-material-handle-width: clamp(.32rem, .72vw, .46rem);
+  --mha-slider-material-handle-height: clamp(2.25rem, 5.2vw, 3.15rem);
+  --mha-slider-material-stop-size: clamp(.28rem, .68vw, .42rem);
+  --mha-slider-control-height: calc(var(--mha-slider-material-handle-height) + .35rem);
+
+  --mha-slider-fill-bg: var(--mha-accent);
+  --mha-slider-thumb-bg: var(--mha-accent);
+  --mha-slider-track-bg:
+    color-mix(
+      in srgb,
+      var(--mha-accent) 15%,
+      var(--mha-material-surface-container-highest, var(--mha-control-surface))
+    );
+  --mha-slider-material-stop-bg:
+    color-mix(in srgb, var(--mha-text) 72%, var(--mha-accent) 10%);
+}
+
+:host([data-theme-style="material"][data-theme="dark"]) {
+  --mha-slider-track-bg:
+    color-mix(
+      in srgb,
+      var(--mha-accent) 18%,
+      var(--mha-material-surface-container-highest, var(--mha-control-surface))
+    );
+  --mha-slider-material-stop-bg:
+    color-mix(in srgb, var(--mha-text) 82%, var(--mha-accent) 12%);
+}
+
+:host([data-theme-style="material"]) .mha-slider {
+  isolation: isolate;
+}
+
+:host([data-theme-style="material"]) .mha-slider-input {
+  block-size: 100%;
+  height: 100%;
+  border-radius: 999px;
+}
+
+/* WebKit/Blink */
+:host([data-theme-style="material"]) .mha-slider-input::-webkit-slider-runnable-track {
+  block-size: var(--mha-slider-material-track-height);
+  height: var(--mha-slider-material-track-height);
+  border: 0 !important;
+  border-radius: var(--mha-slider-material-track-radius);
+  background:
+    radial-gradient(
+      circle,
+      var(--mha-slider-material-stop-bg) 0 calc(var(--mha-slider-material-stop-size) / 2),
+      transparent calc((var(--mha-slider-material-stop-size) / 2) + 1px)
+    ) calc(100% - (var(--mha-slider-material-track-height) / 2)) 50% /
+      var(--mha-slider-material-stop-size) var(--mha-slider-material-stop-size) no-repeat,
+    linear-gradient(
+      90deg,
+      var(--mha-slider-fill-bg) 0 var(--mha-slider-value, 50%),
+      var(--mha-slider-track-bg) var(--mha-slider-value, 50%) 100%
+    );
+  box-shadow: none !important;
+}
+
+:host([data-theme-style="material"]) .mha-slider-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  inline-size: var(--mha-slider-material-handle-width);
+  width: var(--mha-slider-material-handle-width);
+  block-size: var(--mha-slider-material-handle-height);
+  height: var(--mha-slider-material-handle-height);
+  margin-block-start: calc((var(--mha-slider-material-track-height) - var(--mha-slider-material-handle-height)) / 2);
+  border: 0 !important;
+  border-radius: 999px;
+  background: var(--mha-slider-thumb-bg);
+  box-shadow: none !important;
+}
+
+/* Firefox */
+:host([data-theme-style="material"]) .mha-slider-input::-moz-range-track {
+  block-size: var(--mha-slider-material-track-height);
+  height: var(--mha-slider-material-track-height);
+  border: 0 !important;
+  border-radius: var(--mha-slider-material-track-radius);
+  background:
+    radial-gradient(
+      circle,
+      var(--mha-slider-material-stop-bg) 0 calc(var(--mha-slider-material-stop-size) / 2),
+      transparent calc((var(--mha-slider-material-stop-size) / 2) + 1px)
+    ) calc(100% - (var(--mha-slider-material-track-height) / 2)) 50% /
+      var(--mha-slider-material-stop-size) var(--mha-slider-material-stop-size) no-repeat,
+    var(--mha-slider-track-bg);
+  box-shadow: none !important;
+}
+
+:host([data-theme-style="material"]) .mha-slider-input::-moz-range-progress {
+  block-size: var(--mha-slider-material-track-height);
+  height: var(--mha-slider-material-track-height);
+  border: 0 !important;
+  border-radius: var(--mha-slider-material-track-radius);
+  background: var(--mha-slider-fill-bg);
+  box-shadow: none !important;
+}
+
+:host([data-theme-style="material"]) .mha-slider-input::-moz-range-thumb {
+  inline-size: var(--mha-slider-material-handle-width);
+  width: var(--mha-slider-material-handle-width);
+  block-size: var(--mha-slider-material-handle-height);
+  height: var(--mha-slider-material-handle-height);
+  border: 0 !important;
+  border-radius: 999px;
+  background: var(--mha-slider-thumb-bg);
+  box-shadow: none !important;
+}
+
+/* Full SliderWidget: keep the Material control optically centered like the
+ * native Material track, without affecting embedded iOS/OneUI sliders.
+ */
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="slider"] .mha-slider {
+  display: grid;
+  place-items: center;
+}

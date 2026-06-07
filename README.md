@@ -286,3 +286,11 @@ padding; it only optically aligns the visible widget frame.
 The previous vertical grid compensation was too aggressive and made the widget
 grid sit too high. The grid is restored to the earlier horizontal-only nudge,
 while the status bar shadow remains removed.
+
+
+## Material You slider shape #1
+
+Material sliders now follow the reference #1 shape: accent active track, pale
+inactive track, vertical handle, and a small stop indicator dot. All colors are
+driven by `--mha-accent` and Material surface tokens; iOS and OneUI sliders are
+unchanged.
