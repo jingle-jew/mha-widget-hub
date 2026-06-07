@@ -3,11 +3,6 @@
 /* MOBILE STATUS BAR HIDDEN
  * Mobile uses the freed top area for widgets.
  */
-@media (max-width: 767px) {
-  .mha-status-bar {
-    display: none;
-  }
-}
 
 /* Keep the status bar inside the shell and dock edge. */
 .mha-shell > :first-child,

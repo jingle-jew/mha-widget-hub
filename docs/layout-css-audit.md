@@ -77,3 +77,45 @@ Approximate `!important` counts before cleanup:
 - settings panel and scrim;
 - screensaver and responsive relayout;
 - OneUI, iOS, and Material You in light and dark modes.
+
+## Cleanup Result
+
+The five cleanup phases were completed without changing JavaScript layout
+logic, runtime grid calculations, class names, theme values, or widget sizing.
+
+- `shell.css` now owns host sizing, transitions, and global visibility states.
+- `widget-grid.css` owns the effective shell matrix, workspace, widget area,
+  runtime grid mapping, and mobile scrolling contract.
+- `floating-controls.css` owns the main edit button and mobile launcher visuals.
+- `status-bar.css` owns status bar containment and reserved-space tokens.
+- historical declarations overridden by the effective matrix were removed.
+
+Final approximate `!important` counts:
+
+| File | Count |
+| --- | ---: |
+| `styles/layout/shell.css` | 12 |
+| `styles/layout/widget-grid.css` | 29 |
+| `styles/layout/floating-controls.css` | 31 |
+| `styles/layout/mobile-dock.css` | 14 |
+| `styles/layout/dock.css` | 4 |
+| `styles/layout/status-bar.css` | 7 |
+| `styles/widgets/widget-layout.css` | 0 |
+| `styles/widgets/empty-widget.css` | 19 |
+| `styles/settings/settings-panel.css` | 43 |
+
+Static validation completed:
+
+- `git diff --check`;
+- `node --check mha-control-hub.js`;
+- extracted stylesheets are present in `render()` in dependency order;
+- local HTTP responses are successful for the extracted stylesheets;
+- the edit button DOM retains both `mha-edit-button` and
+  `mha-main-edit-button`.
+
+Browser validation completed before the final consolidation confirmed desktop
+and mobile portrait grid behavior after extraction. The in-app browser became
+unresponsive during final computed-style validation, and no separate headless
+browser is installed. The remaining manual matrix above should therefore be
+run before merging, especially mobile landscape, settings, edit movement, and
+theme combinations.

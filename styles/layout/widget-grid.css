@@ -5,16 +5,9 @@
  * This file only maps those values into the stable shell rectangles.
  */
 
-:host {
-  display: block;
-  inline-size: 100%;
-  block-size: 100dvh;
-  max-block-size: 100dvh;
-  overflow: hidden;
-  overscroll-behavior: none;
-}
-
 .mha-shell {
+  --mha-statusbar-widget-gap: var(--mha-page-padding) !important;
+
   position: relative;
   z-index: 1;
   box-sizing: border-box;
@@ -25,7 +18,8 @@
   display: grid !important;
   grid-template-rows: auto minmax(0, 1fr) !important;
   grid-template-columns: minmax(0, 1fr);
-  gap: clamp(0.65rem, 1.2vw, 1.15rem) !important;
+  row-gap: var(--mha-statusbar-widget-gap) !important;
+  column-gap: 0 !important;
   padding-inline: var(--mha-page-padding);
   padding-block-end: 0;
   overflow: hidden;
@@ -62,7 +56,9 @@
   min-block-size: 0;
   display: grid;
   place-items: start center;
+  --mha-widget-area-top-gutter: calc(var(--mha-page-padding) * 2) !important;
   padding: clamp(0.35rem, 0.7vw, 0.75rem);
+  padding-block-start: var(--mha-widget-area-top-gutter) !important;
   overflow: visible;
 }
 
@@ -87,9 +83,9 @@
 .mha-grid {
   --mha-active-grid-units: var(--mha-runtime-grid-units, 4);
   --mha-active-grid-rows: var(--mha-runtime-grid-rows, 8);
-  --mha-square-unit-hard-min: clamp(1.75rem, 3.4vw, 3rem);
-  --mha-square-unit-max: clamp(5rem, 8.75vw, 9.25rem);
-  --mha-statusbar-reserved-top: 0px;
+  --mha-square-unit-hard-min: clamp(1.5rem, 3vw, 2.5rem);
+  --mha-square-unit-max: clamp(4.5rem, 8.5vw, 8.75rem);
+  --mha-statusbar-reserved-top: 0px !important;
 
   box-sizing: border-box;
   inline-size: min(100%, var(--mha-grid-matrix-width, 100%));
@@ -152,67 +148,10 @@
   content: none !important;
 }
 
-@supports (height: 100svh) {
-  :host {
-    block-size: 100svh;
-    max-block-size: 100svh;
-  }
-}
-
-.mha-shell {
-  --mha-statusbar-widget-gap: clamp(1.7rem, 2.9vw, 2.7rem);
-  row-gap: var(--mha-statusbar-widget-gap) !important;
-  column-gap: 0 !important;
-}
-
 .mha-workspace {
   grid-row: 2 !important;
   margin-block-start: 0 !important;
   padding-block-start: 0 !important;
-}
-
-.mha-widget-area {
-  --mha-widget-area-top-gutter: clamp(1.1rem, 1.9vw, 1.9rem);
-  padding-block-start: var(--mha-widget-area-top-gutter) !important;
-}
-
-.mha-grid {
-  --mha-statusbar-reserved-top: 0px !important;
-  margin-block-start: 0 !important;
-  scroll-padding-block-start: 0 !important;
-}
-
-.mha-grid {
-  --mha-active-grid-units: var(--mha-runtime-grid-units, 4);
-  --mha-active-grid-rows: var(--mha-runtime-grid-rows, 8);
-  --mha-square-unit-hard-min: clamp(1.5rem, 3vw, 2.5rem);
-  --mha-square-unit-max: clamp(4.5rem, 8.5vw, 8.75rem);
-}
-
-.mha-shell {
-  --mha-statusbar-widget-gap: var(--mha-page-padding) !important;
-  row-gap: var(--mha-statusbar-widget-gap) !important;
-}
-
-.mha-workspace {
-  margin-block-start: 0 !important;
-  padding-block-start: 0 !important;
-}
-
-.mha-widget-area {
-  --mha-widget-area-top-gutter: var(--mha-page-padding) !important;
-  padding-block-start: var(--mha-widget-area-top-gutter) !important;
-}
-
-.mha-grid {
-  --mha-statusbar-reserved-top: 0px !important;
-  margin-block-start: 0 !important;
-  scroll-padding-block-start: 0 !important;
-}
-
-.mha-widget-area {
-  --mha-widget-area-top-gutter: calc(var(--mha-page-padding) * 2) !important;
-  padding-block-start: var(--mha-widget-area-top-gutter) !important;
 }
 
 :host([data-layout="mobile"]) .mha-widget-area,

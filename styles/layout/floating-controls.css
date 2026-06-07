@@ -6,83 +6,40 @@
  */
 
 .mha-edit-button {
+  --mha-edit-button-edge: var(--mha-mobile-dock-edge, max(env(safe-area-inset-left), clamp(.9rem, 3vw, 1.25rem)));
+  --mha-edit-button-bottom: var(--mha-mobile-dock-bottom, max(env(safe-area-inset-bottom), clamp(.9rem, 3vw, 1.25rem)));
+  --mha-edit-icon-glyph-size: var(--mha-icon-glyph-size, 56%);
+
   position: absolute;
   z-index: 10;
   right: 22px;
   bottom: 22px;
-  width: 56px;
-  height: 56px;
   display: grid;
   place-items: center;
   border: 1px solid var(--mha-widget-border);
-  border-radius: var(--mha-control-radius);
-  background: var(--mha-control-surface-edit);
+  border-radius: 999px;
+  background: var(--mha-widget-surface);
   color: var(--mha-text);
-  backdrop-filter: blur(var(--mha-surface-blur)) saturate(var(--mha-surface-saturation));
+  backdrop-filter: var(--mha-icon-backdrop-filter, none);
   cursor: pointer;
-  box-shadow: var(--mha-floating-shadow);
+  box-shadow: var(--mha-widget-shadow);
+  overflow: hidden;
+  padding: 0;
   transition: transform var(--mha-motion-duration) var(--mha-motion-easing);
 }
 
 .mha-edit-button svg {
-  width: 22px;
-  height: 22px;
+  inline-size: var(--mha-edit-icon-glyph-size);
+  block-size: var(--mha-edit-icon-glyph-size);
+  width: var(--mha-edit-icon-glyph-size);
+  height: var(--mha-edit-icon-glyph-size);
   fill: currentColor;
+  stroke: currentColor;
 }
 
-@media (min-width: 768px) {
-  .mha-edit-button {
-    position: fixed;
-    z-index: 90;
-    inset-inline-end: max(var(--mha-safe-area-right, env(safe-area-inset-right)), clamp(0.85rem, 1.8vw, 1.35rem));
-    inset-block-end: max(var(--mha-safe-area-bottom, env(safe-area-inset-bottom)), clamp(0.85rem, 1.8vw, 1.35rem));
-  }
-}
-
-.mha-edit-button {
-  border-radius: var(--mha-icon-radius-rounded-square, 32%);
-  overflow: hidden;
-}
-
-:host([data-icon-shape="rounded-square"]) .mha-edit-button {
-  border-radius: var(--mha-icon-radius-rounded-square, 32%);
-  -webkit-mask-image: none;
-  mask-image: none;
-}
-
-:host([data-icon-shape="circle"]) .mha-edit-button {
-  border-radius: var(--mha-icon-border-radius-circle, 999px);
-  -webkit-mask-image: none;
-  mask-image: none;
-}
-
-:host([data-icon-shape="squircle"]) .mha-edit-button {
-  border-radius: 0;
-  -webkit-mask-image: var(--mha-icon-squircle-mask);
-  mask-image: var(--mha-icon-squircle-mask);
-  -webkit-mask-size: 100% 100%;
-  mask-size: 100% 100%;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-}
-
-.mha-edit-button {
-  --mha-edit-button-edge: var(--mha-mobile-dock-edge, max(env(safe-area-inset-left), clamp(.9rem, 3vw, 1.25rem)));
-  --mha-edit-button-bottom: var(--mha-mobile-dock-bottom, max(env(safe-area-inset-bottom), clamp(.9rem, 3vw, 1.25rem)));
-  --mha-edit-button-size: var(--mha-mobile-dock-launcher-size, clamp(3.75rem, 15vw, 4.8rem));
-
-  inline-size: var(--mha-edit-button-size);
-  block-size: var(--mha-edit-button-size);
-
-  border: 1px solid var(--mha-icon-border);
-  background: var(--mha-icon-bg);
-  color: var(--mha-icon-color);
-  box-shadow: var(--mha-icon-shadow);
-  backdrop-filter: var(--mha-icon-backdrop-filter, none);
-
-  display: grid;
-  place-items: center;
-  padding: 0;
+.mha-edit-button path {
+  fill: currentColor;
+  stroke: currentColor;
 }
 
 @media (max-width: 767px) {
@@ -94,121 +51,23 @@
 
 @media (min-width: 768px) {
   .mha-edit-button {
+    position: fixed;
+    z-index: 90;
     inset-inline-end: max(var(--mha-safe-area-right, env(safe-area-inset-right)), clamp(.9rem, 3vw, 1.25rem));
     inset-block-end: max(var(--mha-safe-area-bottom, env(safe-area-inset-bottom)), clamp(.9rem, 3vw, 1.25rem));
   }
 }
 
-.mha-edit-button svg {
-  width: var(--mha-icon-glyph-size, 56%);
-  height: var(--mha-icon-glyph-size, 56%);
-  fill: currentColor;
-}
-
-:host([data-icon-shape="rounded-square"]) .mha-edit-button {
-  border-radius: var(--mha-icon-radius-rounded-square, 32%);
-  -webkit-mask-image: none;
-  mask-image: none;
-}
-
-:host([data-icon-shape="circle"]) .mha-edit-button {
-  border-radius: var(--mha-icon-border-radius-circle, 999px);
-  -webkit-mask-image: none;
-  mask-image: none;
-}
-
-:host([data-icon-shape="squircle"]) .mha-edit-button {
-  border-radius: 0;
-  -webkit-mask-image: var(--mha-icon-squircle-mask);
-  mask-image: var(--mha-icon-squircle-mask);
-  -webkit-mask-size: 100% 100%;
-  mask-size: 100% 100%;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-}
-
-.mha-edit-button {
-  --mha-edit-icon-glyph-size: var(--mha-icon-glyph-size, 56%);
-}
-
-.mha-edit-button svg {
-  inline-size: var(--mha-edit-icon-glyph-size);
-  block-size: var(--mha-edit-icon-glyph-size);
-  width: var(--mha-edit-icon-glyph-size);
-  height: var(--mha-edit-icon-glyph-size);
-}
-
-.mha-edit-button svg,
-.mha-edit-button path {
-  fill: currentColor;
-  stroke: currentColor;
-}
-
-:host .mha-edit-button {
-  background: var(--mha-system-icon-bg) !important;
-  color: var(--mha-system-icon-color) !important;
-  border-color: var(--mha-system-icon-border) !important;
-  box-shadow: var(--mha-system-icon-shadow) !important;
-}
-
 :host([data-theme-style="ios"]) .mha-edit-button {
   opacity: 1;
-  background: var(--mha-icon-bg) !important;
-  color: var(--mha-accent) !important;
-  border-color: var(--mha-icon-border) !important;
-  box-shadow: var(--mha-icon-shadow) !important;
   -webkit-backdrop-filter: var(--mha-icon-backdrop-filter, blur(var(--mha-surface-blur)) saturate(var(--mha-surface-saturation)));
   backdrop-filter: var(--mha-icon-backdrop-filter, blur(var(--mha-surface-blur)) saturate(var(--mha-surface-saturation)));
-}
-
-:host([data-theme-style="ios"]) .mha-edit-button svg,
-:host([data-theme-style="ios"]) .mha-edit-button path {
-  fill: var(--mha-accent) !important;
-  stroke: var(--mha-accent) !important;
 }
 
 :host .mha-edit-button svg,
 :host .mha-edit-button path {
   fill: currentColor !important;
   stroke: currentColor !important;
-}
-
-:host([data-icon-shape="rounded-square"]) .mha-edit-button,
-:host([data-icon-shape="circle"]) .mha-edit-button {
-  -webkit-mask-image: none !important;
-  mask-image: none !important;
-  -webkit-mask-size: auto !important;
-  mask-size: auto !important;
-}
-
-:host([data-icon-shape="squircle"]) .mha-edit-button {
-  -webkit-mask-image: var(--mha-icon-squircle-mask);
-  mask-image: var(--mha-icon-squircle-mask);
-  -webkit-mask-size: 100% 100%;
-  mask-size: 100% 100%;
-}
-
-:host(:not([data-icon-shape="squircle"])) .mha-edit-button {
-  -webkit-mask: none !important;
-  mask: none !important;
-  -webkit-mask-image: none !important;
-  mask-image: none !important;
-}
-
-:host([data-icon-shape="rounded-square"]) .mha-edit-button {
-  border-radius: var(--mha-icon-radius-rounded-square, 32%) !important;
-}
-
-:host([data-icon-shape="circle"]) .mha-edit-button {
-  border-radius: var(--mha-icon-border-radius-circle, 999px) !important;
-}
-
-:host([data-icon-shape="squircle"]) .mha-edit-button {
-  border-radius: 0 !important;
-  -webkit-mask-image: var(--mha-icon-squircle-mask) !important;
-  mask-image: var(--mha-icon-squircle-mask) !important;
-  -webkit-mask-size: 100% 100% !important;
-  mask-size: 100% 100% !important;
 }
 
 :host {
