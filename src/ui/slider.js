@@ -152,6 +152,48 @@ export function createSlider({
     onInput?.(event);
   });
 
+  let activePointerId = null;
+  let activeScrollContainer = null;
+  const getHost = () => {
+    const root = input.getRootNode();
+    return root instanceof ShadowRoot ? root.host : null;
+  };
+  const isMobileVerticalSlider = () => (
+    wrapper.dataset.orientation === "vertical"
+    && getHost()?.dataset.layout === "mobile"
+  );
+  const finishPointerDrag = (event) => {
+    if (activePointerId === null || (event.pointerId !== undefined && event.pointerId !== activePointerId)) return;
+    const pointerId = activePointerId;
+    activePointerId = null;
+    wrapper.classList.remove("is-slider-dragging");
+    activeScrollContainer?.classList.remove("is-mobile-slider-dragging");
+    activeScrollContainer = null;
+    if (event.type !== "lostpointercapture" && input.hasPointerCapture?.(pointerId)) {
+      input.releasePointerCapture?.(pointerId);
+    }
+    event.stopPropagation();
+  };
+
+  input.addEventListener("pointerdown", (event) => {
+    if (!isMobileVerticalSlider()) return;
+    activePointerId = event.pointerId;
+    activeScrollContainer = wrapper.closest(".mha-widget-area");
+    wrapper.classList.add("is-slider-dragging");
+    activeScrollContainer?.classList.add("is-mobile-slider-dragging");
+    input.setPointerCapture?.(event.pointerId);
+    event.stopPropagation();
+  });
+
+  input.addEventListener("pointermove", (event) => {
+    if (event.pointerId !== activePointerId) return;
+    event.stopPropagation();
+  });
+
+  input.addEventListener("pointerup", finishPointerDrag);
+  input.addEventListener("pointercancel", finishPointerDrag);
+  input.addEventListener("lostpointercapture", finishPointerDrag);
+
   rotor.append(oneUiTrack, input);
   wrapper.append(rotor);
 
