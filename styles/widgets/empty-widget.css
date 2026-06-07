@@ -646,3 +646,137 @@
   pointer-events: none !important;
   transform: translateY(2px) scale(.96) !important;
 }
+
+/* WIDGET DROP SLOTS
+ * Available slots are a quiet grey ghost grid. The hovered/focused slot becomes
+ * the accent-colored preview shape so it is obvious where the widget will land.
+ */
+:host(.is-editing) .mha-grid {
+  position: relative;
+}
+
+.mha-widget-drop-slot {
+  appearance: none;
+  position: relative;
+  z-index: 1;
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  min-inline-size: 0;
+  min-block-size: 0;
+  border: 1.25px dashed color-mix(in srgb, var(--mha-text) 22%, transparent);
+  border-radius: var(--mha-widget-radius, 1.45rem);
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.055), transparent 62%),
+    color-mix(in srgb, var(--mha-text) 5%, transparent);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--mha-text) 8%, transparent),
+    0 8px 20px rgba(0,0,0,.08);
+  opacity: .34;
+  cursor: pointer;
+  pointer-events: auto !important;
+  transform: scale(.992);
+  transition:
+    opacity 170ms ease,
+    transform 170ms cubic-bezier(.2,.8,.2,1),
+    border-color 170ms ease,
+    background 170ms ease,
+    box-shadow 170ms ease;
+}
+
+.mha-widget-drop-slot::before {
+  content: "";
+  position: absolute;
+  inset: clamp(.32rem, .9vw, .55rem);
+  border-radius: calc(var(--mha-widget-radius, 1.45rem) * .76);
+  border: 1px solid color-mix(in srgb, var(--mha-text) 12%, transparent);
+  background:
+    repeating-linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--mha-text) 5%, transparent) 0 6px,
+      transparent 6px 12px
+    );
+  opacity: .52;
+  transition:
+    opacity 170ms ease,
+    border-color 170ms ease,
+    background 170ms ease,
+    box-shadow 170ms ease;
+}
+
+.mha-widget-drop-slot::after {
+  content: "";
+  position: absolute;
+  inset: clamp(.62rem, 1.4vw, .92rem);
+  border-radius: calc(var(--mha-widget-radius, 1.45rem) * .58);
+  background: color-mix(in srgb, var(--mha-text) 6%, transparent);
+  opacity: .38;
+  transition:
+    opacity 170ms ease,
+    background 170ms ease,
+    transform 170ms cubic-bezier(.2,.8,.2,1);
+}
+
+.mha-widget-drop-slot:hover,
+.mha-widget-drop-slot:focus-visible {
+  z-index: 4;
+  opacity: 1;
+  transform: scale(.985);
+  border-color: color-mix(in srgb, var(--mha-accent) 84%, white 18%);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--mha-accent) 20%, transparent), transparent 64%),
+    color-mix(in srgb, var(--mha-accent) 10%, transparent);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--mha-accent) 34%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--mha-accent) 18%, transparent),
+    0 0 34px color-mix(in srgb, var(--mha-accent) 30%, transparent),
+    0 14px 34px rgba(0,0,0,.18);
+  outline: none;
+}
+
+.mha-widget-drop-slot:hover::before,
+.mha-widget-drop-slot:focus-visible::before {
+  border-color: color-mix(in srgb, var(--mha-accent) 72%, white 10%);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--mha-accent) 18%, transparent), transparent 68%);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--mha-accent) 24%, transparent);
+  opacity: .95;
+}
+
+.mha-widget-drop-slot:hover::after,
+.mha-widget-drop-slot:focus-visible::after {
+  background: color-mix(in srgb, var(--mha-accent) 28%, transparent);
+  opacity: .86;
+  transform: scale(.94);
+}
+
+.mha-widget {
+  z-index: 2;
+}
+
+.mha-widget.is-move-target {
+  z-index: 5;
+}
+
+
+/* WIDGET DROP SLOTS VISIBILITY FIX
+ * Drop slots are generated after render/square-unit sync and must remain visible
+ * below real widgets but above the grid background.
+ */
+.mha-grid.has-drop-slots {
+  isolation: isolate;
+}
+
+:host(.is-editing) .mha-widget-drop-slot {
+  pointer-events: auto !important;
+}
+
+:host(.is-editing) .mha-grid > .mha-widget-drop-slot {
+  opacity: .34;
+}
+
+:host(.is-editing) .mha-grid > .mha-widget-drop-slot:hover,
+:host(.is-editing) .mha-grid > .mha-widget-drop-slot:focus-visible {
+  opacity: 1;
+}

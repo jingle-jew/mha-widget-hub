@@ -176,7 +176,7 @@ connectedCallback(){this._systemThemeListener=()=>{if(getStoredThemeSetting(this
 disconnectedCallback(){window.matchMedia?.("(prefers-color-scheme: light)")?.removeEventListener?.("change",this._systemThemeListener);clearInterval(this._clockTimer);cancelAnimationFrame(this._squareUnitFrame);cancelAnimationFrame(this._themeTransitionFrame);clearTimeout(this._themeTransitionTimer);this._clearGridScrollListener();["pointerdown","touchstart","keydown","wheel","scroll"].forEach(type=>window.removeEventListener(type,this._activityListener));clearTimeout(this._screensaverIdleTimer);window.removeEventListener("resize",this._resizeListener);window.visualViewport?.removeEventListener("resize",this._resizeListener);window.removeEventListener("orientationchange",this._resizeListener);clearTimeout(this._responsiveRelayoutTimer);if(this._resizeHandlePointerDownListener){this.shadowRoot.removeEventListener("pointerdown",this._resizeHandlePointerDownListener);this.shadowRoot.removeEventListener("mousedown",this._resizeHandlePointerDownListener);this.shadowRoot.removeEventListener("touchstart",this._resizeHandlePointerDownListener)}if(this._resizeInteractionCleanup)["pointerup","pointercancel","mouseup","touchend","touchcancel"].forEach(type=>window.removeEventListener(type,this._resizeInteractionCleanup));if(this._settingsOpenListener)this.shadowRoot.removeEventListener("mha-open-settings",this._settingsOpenListener)}
 requestRender(){this.render()}
 _syncEditModeDom(){
-  if(!this._isEditing)this._activeMoveWidgetId="";
+  if(!this._isEditing){this._activeMoveWidgetId="";const grid=this.shadowRoot?.querySelector?.(".mha-grid");if(grid)this._renderWidgetDropSlots(grid);}
   this.classList.toggle("is-editing",this._isEditing);
   this.dataset.editing=String(this._isEditing);
   const edit=this.shadowRoot.querySelector(".mha-main-edit-button");
@@ -447,7 +447,21 @@ _syncScreensaverDom(){
   });
   existing.replaceWith(next);
 }
-toggleEditMode(){this._isEditing=!this._isEditing;if(this._isEditing)this._setScreensaverActive(false);this._syncEditModeDom();this._scheduleScreensaverIdleTimer()}toggleScreensaverPreview(){this._screensaverPreview=!this._screensaverPreview;this._syncScreensaverDom()}toggleNowBarPreview(){this._screensaverNowBar=!this._screensaverNowBar;this._syncScreensaverDom()}setScreensaverClockVariant(v="digital"){this._screensaverClockVariant=normalizeClockVariant(v);this._syncScreensaverDom()}resetGrid(){localStorage.removeItem(ORDER);localStorage.removeItem(SIZES);localStorage.removeItem(REMOVED);localStorage.removeItem(POSITIONS);this._widgetPositions={};this._activeMoveWidgetId="";this._widgets=this._readWidgets();this.render()}
+toggleEditMode(){
+  const wasEditing=this._isEditing;
+  this._isEditing=!this._isEditing;
+
+  if(!this._isEditing){
+    this._activeMoveWidgetId="";
+    const grid=this.shadowRoot?.querySelector?.(".mha-grid");
+    if(grid)this._renderWidgetDropSlots(grid);
+  }
+
+  this._syncEditModeDom();
+  this._syncWidgetDropSlots();
+
+  if(wasEditing!==this._isEditing)this._scheduleSquareUnitSync();
+}toggleScreensaverPreview(){this._screensaverPreview=!this._screensaverPreview;this._syncScreensaverDom()}toggleNowBarPreview(){this._screensaverNowBar=!this._screensaverNowBar;this._syncScreensaverDom()}setScreensaverClockVariant(v="digital"){this._screensaverClockVariant=normalizeClockVariant(v);this._syncScreensaverDom()}resetGrid(){localStorage.removeItem(ORDER);localStorage.removeItem(SIZES);localStorage.removeItem(REMOVED);localStorage.removeItem(POSITIONS);this._widgetPositions={};this._activeMoveWidgetId="";this._widgets=this._readWidgets();this.render()}
 _readWidgets(){const byId=new Map(DEFAULT_WIDGETS.map(w=>[w.id,w]));const removed=new Set(readJson(REMOVED,[]).filter?.(id=>byId.has(id))||[]);const order=readMigratedJson(ORDER,`${LEGACY_STORAGE_PREFIX}-grid-order`,DEFAULT_WIDGETS.map(w=>w.id)).filter?.(id=>byId.has(id)&&!removed.has(id))||[];DEFAULT_WIDGETS.forEach(w=>{if(!removed.has(w.id)&&!order.includes(w.id))order.push(w.id)});const sizes=readMigratedJson(SIZES,`${LEGACY_STORAGE_PREFIX}-widget-sizes`,{});return order.map(id=>{const base=byId.get(id);return {...base,...normalizeWidgetForKind({...base,...(sizes[id]||{})})}})}
 _saveWidgets(){this._widgets=this._normalizeWidgetsToGridBounds(this._widgets);if(!this._doesWidgetLayoutFitGrid(this._widgets))return;writeJson(ORDER,this._widgets.map(w=>w.id));const sizes={};this._widgets.forEach(w=>sizes[w.id]=normalizeWidgetForKind(w));writeJson(SIZES,sizes)}
 _removeWidget(id){if(!this._widgets.some(w=>w.id===id))return;if(this._activeMoveWidgetId===id)this._activeMoveWidgetId="";this._widgets=this._widgets.filter(w=>w.id!==id);Object.values(this._widgetPositions).forEach(layout=>{if(layout&&typeof layout==="object")delete layout[id]});writeJson(POSITIONS,this._widgetPositions);const removed=new Set(readJson(REMOVED,[]));removed.add(id);writeJson(REMOVED,[...removed]);this._saveWidgets();this.shadowRoot.querySelector(`[data-widget-id="${id}"]`)?.remove();this._clearDropState();this._scheduleSquareUnitSync()}
@@ -588,7 +602,7 @@ _getActiveWidgetPositions({create=false}={}){
 _toggleWidgetMoveMode(id){
   if(!this._isEditing||!this._widgets.some(widget=>widget.id===id))return;
   this._activeMoveWidgetId=this._activeMoveWidgetId===id?"":id;
-  this._syncEditModeDom();
+  this._syncEditModeDom();this._syncWidgetDropSlots();
 }
 _rectsOverlap(a,b){
   return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;
@@ -995,6 +1009,104 @@ _tryDirectNeighborSwap(id,direction,positions,units,rowUnits){
   this._scheduleSquareUnitSync();
   return true;
 }
+_getAvailableDropSlotsForWidget(id,positions=this._getActiveWidgetPositions({create:true})){
+  const widget=this._widgets.find(item=>item.id===id);
+  const current=positions?.[id];
+  if(!widget||!current)return [];
+
+  const {units,rowUnits}=this._getGridBounds();
+  const size=normalizeWidgetForKind(widget);
+  const w=Math.min(units,Number(size.w)||1);
+  const h=Math.max(1,Number(size.h)||1);
+  const maxOccupiedRow=this._widgets.reduce((max,other)=>{
+    if(other.id===id)return max;
+    const position=positions?.[other.id];
+    if(!position)return max;
+    const rect=this._getWidgetRectFromPosition(other,position,units);
+    return Math.max(max,rect.y+rect.h-1);
+  },0);
+
+  const maxRow=this._isMobileLauncherLayout()
+    ? Math.max(maxOccupiedRow+h+2,current.y+h+2,h+2)
+    : rowUnits;
+
+  const slots=[];
+  for(let y=1;y<=maxRow-h+1;y+=1){
+    for(let x=1;x<=units-w+1;x+=1){
+      if(x===current.x&&y===current.y)continue;
+      const candidate={...positions,[id]:{x,y}};
+      if(this._isPositionMapValid(candidate,units,rowUnits)){
+        slots.push({x,y,w,h});
+      }
+    }
+  }
+  return slots;
+}
+_renderWidgetDropSlots(grid){
+  if(!grid)return;
+  grid.querySelectorAll(".mha-widget-drop-slot").forEach(slot=>slot.remove());
+  grid.dataset.dropSlotsCount="0";
+  grid.classList.remove("has-drop-slots");
+
+  if(!this._isEditing||!this._activeMoveWidgetId)return;
+
+  const positions=this._getActiveWidgetPositions({create:true});
+  const slots=this._getAvailableDropSlotsForWidget(this._activeMoveWidgetId,positions);
+  grid.dataset.dropSlotsCount=String(slots.length);
+
+  if(!slots.length)return;
+
+  const fragment=document.createDocumentFragment();
+
+  slots.forEach(slot=>{
+    const button=document.createElement("button");
+    button.className="mha-widget-drop-slot";
+    button.type="button";
+    button.setAttribute("aria-label",`Déplacer le widget ici, colonne ${slot.x}, rangée ${slot.y}`);
+    button.dataset.x=String(slot.x);
+    button.dataset.y=String(slot.y);
+    button.style.gridColumn=`${slot.x} / span ${slot.w}`;
+    button.style.gridRow=`${slot.y} / span ${slot.h}`;
+    button.addEventListener("click",event=>{
+      event.preventDefault();
+      event.stopPropagation();
+      this._moveWidgetToDropSlot(this._activeMoveWidgetId,slot.x,slot.y);
+    });
+    fragment.append(button);
+  });
+
+  grid.prepend(fragment);
+  grid.classList.add("has-drop-slots");
+}
+
+_syncWidgetDropSlots(){
+  const grid=this.shadowRoot?.querySelector?.(".mha-grid");
+  if(!grid)return;
+  this._renderWidgetDropSlots(grid);
+  requestAnimationFrame(()=> {
+    const refreshedGrid=this.shadowRoot?.querySelector?.(".mha-grid");
+    if(refreshedGrid)this._renderWidgetDropSlots(refreshedGrid);
+  });
+}
+
+_moveWidgetToDropSlot(id,x,y){
+  if(!this._isEditing||this._activeMoveWidgetId!==id)return;
+  const positions=this._getActiveWidgetPositions({create:true});
+  const {units,rowUnits}=this._getGridBounds();
+  const next={...positions,[id]:{x:Number(x)||1,y:Number(y)||1}};
+  if(!this._isPositionMapValid(next,units,rowUnits))return;
+
+  this._saveCurrentWidgetPositions(next);
+  this._activeMoveWidgetId="";
+
+  this._applyWidgetPositionsToDom(next);
+
+  const grid=this.shadowRoot?.querySelector?.(".mha-grid");
+  if(grid)this._renderWidgetDropSlots(grid);
+
+  this._syncEditModeDom();
+  this._scheduleSquareUnitSync();
+}
 _moveWidgetByDirection(id,direction){
   if(!this._isEditing||this._activeMoveWidgetId!==id)return;
   const positions=this._getActiveWidgetPositions({create:true});
@@ -1032,7 +1144,7 @@ _moveWidgetByDirection(id,direction){
       el.style.gridColumn=`${candidate.x} / span ${w}`;
       el.style.gridRow=`${candidate.y} / span ${h}`;
     }
-    this._scheduleSquareUnitSync();
+    this._scheduleSquareUnitSync();this._syncWidgetDropSlots();
   };
 
   const tryGroupSwap=candidate=>{
@@ -1053,7 +1165,7 @@ _moveWidgetByDirection(id,direction){
 
     this._saveCurrentWidgetPositions(nextPositions);
     this._applyWidgetPositionsToDom(nextPositions);
-    this._scheduleSquareUnitSync();
+    this._scheduleSquareUnitSync();this._syncWidgetDropSlots();
     return true;
   };
 
@@ -1213,6 +1325,8 @@ _syncSquareUnit(){
     grid.style.setProperty("--mha-grid-matrix-width",`${unit*units+columnGap*(units-1)+gridPaddingX}px`);
     grid.style.setProperty("--mha-grid-matrix-height",`${unit*rows+rowGap*(rows-1)+gridPaddingY}px`);
   }
+
+  this._syncWidgetDropSlots();
 }
 _getGridBounds(){
   const layout=getEffectiveLayout(this);
@@ -1364,5 +1478,5 @@ _finishResize(){
 _getDropPlacement(e,t){const r=t.getBoundingClientRect(),u=r.top+r.height*.35,l=r.top+r.height*.65;if(e.clientY<u)return"before";if(e.clientY>l)return"after";return e.clientX<r.left+r.width/2?"before":"after"}
 _clearDropState(){this.shadowRoot.querySelectorAll(".is-drop-before,.is-drop-after").forEach(n=>{n.classList.remove("is-drop-before","is-drop-after");n.removeAttribute("data-drop-placement")})}
 _wireDrag(el,w){const mobileLauncher=this._isMobileLauncherLayout();el.draggable=this._isEditing&&!mobileLauncher;el.addEventListener("dragstart",e=>{if(mobileLauncher){e.preventDefault();return}if(this._isResizingWidget||this._isResizeHandleEvent(e)){e.preventDefault();e.stopPropagation();return;}if(!this._isEditing){e.preventDefault();return}if(e.target.closest(".mha-widget-tools,.mha-resize-handle")){e.preventDefault();return}this._draggedId=w.id;el.classList.add("is-dragging");e.dataTransfer.effectAllowed="move";e.dataTransfer.setData("text/plain",w.id)});el.addEventListener("dragover",e=>{if(this._isResizingWidget)return;if(!this._isEditing)return;const id=this._draggedId||e.dataTransfer.getData("text/plain");if(!id||id===w.id)return;e.preventDefault();const p=this._getDropPlacement(e,el);this._clearDropState();el.classList.toggle("is-drop-before",p==="before");el.classList.toggle("is-drop-after",p==="after");el.dataset.dropPlacement=p});el.addEventListener("drop",e=>{if(this._isResizingWidget)return;if(!this._isEditing)return;const id=this._draggedId||e.dataTransfer.getData("text/plain");if(!id||id===w.id)return;e.preventDefault();const p=el.dataset.dropPlacement||"before";this._clearDropState();this._draggedId="";this._moveWidget(id,w.id,p)});el.addEventListener("dragend",()=>{this._draggedId="";el.classList.remove("is-dragging");this._clearDropState()})}
-render(){syncThemeAttributes(this);const renderId=++this._renderId,layoutMode=getLayoutMode(this),layout=getEffectiveLayout(this),preset=this._getRuntimeGridPreset(),units=preset.columns*WIDGET_UNIT.unitsPerLogicalColumn,rows=preset.rows*WIDGET_UNIT.unitsPerLogicalColumn,cols=preset.columns,logicalRows=preset.rows,themeStyle=THEME_STYLES.has(document.documentElement.dataset.themeStyle)?document.documentElement.dataset.themeStyle:"oneui";const iconShapeSetting=getStoredIconShapeSetting(this);const iconShape=resolveIconShape(themeStyle,iconShapeSetting);this._clearGridScrollListener();this.dataset.themeStyle=themeStyle;this.dataset.iconShapeSetting=iconShapeSetting;this.setAttribute("data-icon-shape-setting",iconShapeSetting);this.dataset.iconShape=iconShape;this.setAttribute("data-icon-shape",iconShape);document.documentElement.dataset.iconShapeSetting=iconShapeSetting;document.documentElement.setAttribute("data-icon-shape-setting",iconShapeSetting);document.documentElement.dataset.iconShape=iconShape;document.documentElement.setAttribute("data-icon-shape",iconShape);const accent=normalizeAccent(themeStyle,localStorage.getItem(`mha-accent-${themeStyle}`)||localStorage.getItem("mha-accent")||"sky");this.dataset.accent=accent;this.setAttribute("data-accent",accent);document.documentElement.dataset.accent=accent;document.documentElement.setAttribute("data-accent",accent);this.dataset.layoutMode=layoutMode;this.dataset.layout=layout;this.dataset.gridDensity=preset.density;this.dataset.gridUnits=String(units);this.dataset.logicalColumns=String(cols);this.dataset.gridRows=String(rows);this.dataset.logicalRows=String(logicalRows);this.classList.toggle("is-editing",this._isEditing);this.style.setProperty("--mha-runtime-grid-units",String(units));this.style.setProperty("--mha-runtime-grid-rows",String(rows));this.shadowRoot.innerHTML=`<link rel="stylesheet" href="./styles/core/tokens.css"><link rel="stylesheet" href="./styles/components/icon.css"><link rel="stylesheet" href="./styles/components/icon-symbol.css"><link rel="stylesheet" href="./styles/components/slider.css"><link rel="stylesheet" href="./styles/components/toggle.css"><link rel="stylesheet" href="./styles/components/pill.css"><link rel="stylesheet" href="./styles/components/button.css"><link rel="stylesheet" href="./styles/themes/ios.css"><link rel="stylesheet" href="./styles/themes/oneui.css"><link rel="stylesheet" href="./styles/themes/material.css"><link rel="stylesheet" href="./styles/themes/accent-palettes.css"><link rel="stylesheet" href="./styles/core/background.css"><link rel="stylesheet" href="./styles/layout/shell.css"><link rel="stylesheet" href="./styles/layout/status-bar.css"><link rel="stylesheet" href="./styles/layout/dock.css"><link rel="stylesheet" href="./styles/layout/mobile-dock.css"><link rel="stylesheet" href="./styles/settings/settings-panel.css"><link rel="stylesheet" href="./styles/themes/light-text-contract.css"><link rel="stylesheet" href="./styles/widgets/widget-layout.css"><link rel="stylesheet" href="./styles/widgets/empty-widget.css"><link rel="stylesheet" href="./styles/widgets/slider-widget.css"><link rel="stylesheet" href="./styles/screensaver/screensaver.css">`;const links=[...this.shadowRoot.querySelectorAll('link[rel="stylesheet"]')],{bg,shell,grid}=createShell({layoutMode,layout,logicalColumns:cols,gridUnits:units,onSettings:()=>this._openSettings()});this.shadowRoot.append(bg,shell);const positions=this._getActiveWidgetPositions();this._widgets.forEach(w=>{const el=createEmptyWidget(w,{activeGridUnits:units,isEditing:this._isEditing,isMoveTarget:this._isEditing&&this._activeMoveWidgetId===w.id,position:positions?.[w.id],onToggleMove:id=>this._toggleWidgetMoveMode(id),onMove:(id,direction)=>this._moveWidgetByDirection(id,direction),onRemove:id=>this._removeWidget(id),onResizeStart:(e,id)=>this._startResize(e,id)});this._wireDrag(el,w);grid.append(el)});this.shadowRoot.append(createScreensaver({isVisible:this._getScreensaverVisible(),showNowBar:this._screensaverNowBar,clockVariant:this._screensaverClockVariant,onClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),onOpenScreensaverSettings:()=>this._openScreensaverSettings(),onWake:()=>this._wakeScreensaver()}));this.shadowRoot.append(createMobileDock({onSettings:()=>this._openSettings()}));this.shadowRoot.append(this._createSettingsPanel());this.shadowRoot.append(createSettingsPanel(this._getSettingsPanelProps("screensaver")));const edit=document.createElement("button");edit.className="mha-edit-button mha-main-edit-button";edit.type="button";edit.innerHTML=this._isEditing?ICONS.close:ICONS.edit;edit.onclick=()=>this.toggleEditMode();this.shadowRoot.append(edit);this._syncEditModeDom();this._wireDockAutoHide(grid);this._scheduleSquareUnitSync();Promise.all(links.map(link=>link.sheet?Promise.resolve():new Promise(resolve=>{link.addEventListener("load",resolve,{once:true});link.addEventListener("error",resolve,{once:true})}))).then(()=>{if(this._renderId!==renderId)return;const styledUnits=getActiveGridUnits(this);if(styledUnits!==units){this.render();return}this._scheduleSquareUnitSync();this._syncScreensaverVisibilityState();this._markReadyAfterPaint()});updateStatusTime(this.shadowRoot);this._markReadyAfterPaint();this._scheduleScreensaverIdleTimer()}}
+render(){syncThemeAttributes(this);const renderId=++this._renderId,layoutMode=getLayoutMode(this),layout=getEffectiveLayout(this),preset=this._getRuntimeGridPreset(),units=preset.columns*WIDGET_UNIT.unitsPerLogicalColumn,rows=preset.rows*WIDGET_UNIT.unitsPerLogicalColumn,cols=preset.columns,logicalRows=preset.rows,themeStyle=THEME_STYLES.has(document.documentElement.dataset.themeStyle)?document.documentElement.dataset.themeStyle:"oneui";const iconShapeSetting=getStoredIconShapeSetting(this);const iconShape=resolveIconShape(themeStyle,iconShapeSetting);this._clearGridScrollListener();this.dataset.themeStyle=themeStyle;this.dataset.iconShapeSetting=iconShapeSetting;this.setAttribute("data-icon-shape-setting",iconShapeSetting);this.dataset.iconShape=iconShape;this.setAttribute("data-icon-shape",iconShape);document.documentElement.dataset.iconShapeSetting=iconShapeSetting;document.documentElement.setAttribute("data-icon-shape-setting",iconShapeSetting);document.documentElement.dataset.iconShape=iconShape;document.documentElement.setAttribute("data-icon-shape",iconShape);const accent=normalizeAccent(themeStyle,localStorage.getItem(`mha-accent-${themeStyle}`)||localStorage.getItem("mha-accent")||"sky");this.dataset.accent=accent;this.setAttribute("data-accent",accent);document.documentElement.dataset.accent=accent;document.documentElement.setAttribute("data-accent",accent);this.dataset.layoutMode=layoutMode;this.dataset.layout=layout;this.dataset.gridDensity=preset.density;this.dataset.gridUnits=String(units);this.dataset.logicalColumns=String(cols);this.dataset.gridRows=String(rows);this.dataset.logicalRows=String(logicalRows);this.classList.toggle("is-editing",this._isEditing);this.style.setProperty("--mha-runtime-grid-units",String(units));this.style.setProperty("--mha-runtime-grid-rows",String(rows));this.shadowRoot.innerHTML=`<link rel="stylesheet" href="./styles/core/tokens.css"><link rel="stylesheet" href="./styles/components/icon.css"><link rel="stylesheet" href="./styles/components/icon-symbol.css"><link rel="stylesheet" href="./styles/components/slider.css"><link rel="stylesheet" href="./styles/components/toggle.css"><link rel="stylesheet" href="./styles/components/pill.css"><link rel="stylesheet" href="./styles/components/button.css"><link rel="stylesheet" href="./styles/themes/ios.css"><link rel="stylesheet" href="./styles/themes/oneui.css"><link rel="stylesheet" href="./styles/themes/material.css"><link rel="stylesheet" href="./styles/themes/accent-palettes.css"><link rel="stylesheet" href="./styles/core/background.css"><link rel="stylesheet" href="./styles/layout/shell.css"><link rel="stylesheet" href="./styles/layout/status-bar.css"><link rel="stylesheet" href="./styles/layout/dock.css"><link rel="stylesheet" href="./styles/layout/mobile-dock.css"><link rel="stylesheet" href="./styles/settings/settings-panel.css"><link rel="stylesheet" href="./styles/themes/light-text-contract.css"><link rel="stylesheet" href="./styles/widgets/widget-layout.css"><link rel="stylesheet" href="./styles/widgets/empty-widget.css"><link rel="stylesheet" href="./styles/widgets/slider-widget.css"><link rel="stylesheet" href="./styles/screensaver/screensaver.css">`;const links=[...this.shadowRoot.querySelectorAll('link[rel="stylesheet"]')],{bg,shell,grid}=createShell({layoutMode,layout,logicalColumns:cols,gridUnits:units,onSettings:()=>this._openSettings()});this.shadowRoot.append(bg,shell);const positions=this._getActiveWidgetPositions();this._widgets.forEach(w=>{const el=createEmptyWidget(w,{activeGridUnits:units,isEditing:this._isEditing,isMoveTarget:this._isEditing&&this._activeMoveWidgetId===w.id,position:positions?.[w.id],onToggleMove:id=>this._toggleWidgetMoveMode(id),onMove:(id,direction)=>this._moveWidgetByDirection(id,direction),onRemove:id=>this._removeWidget(id),onResizeStart:(e,id)=>this._startResize(e,id)});this._wireDrag(el,w);grid.append(el)});this.shadowRoot.append(createScreensaver({isVisible:this._getScreensaverVisible(),showNowBar:this._screensaverNowBar,clockVariant:this._screensaverClockVariant,onClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),onOpenScreensaverSettings:()=>this._openScreensaverSettings(),onWake:()=>this._wakeScreensaver()}));this.shadowRoot.append(createMobileDock({onSettings:()=>this._openSettings()}));this.shadowRoot.append(this._createSettingsPanel());this.shadowRoot.append(createSettingsPanel(this._getSettingsPanelProps("screensaver")));const edit=document.createElement("button");edit.className="mha-edit-button mha-main-edit-button";edit.type="button";edit.innerHTML=this._isEditing?ICONS.close:ICONS.edit;edit.onclick=()=>this.toggleEditMode();this.shadowRoot.append(edit);this._syncEditModeDom();this._wireDockAutoHide(grid);this._scheduleSquareUnitSync();Promise.all(links.map(link=>link.sheet?Promise.resolve():new Promise(resolve=>{link.addEventListener("load",resolve,{once:true});link.addEventListener("error",resolve,{once:true})}))).then(()=>{if(this._renderId!==renderId)return;const styledUnits=getActiveGridUnits(this);if(styledUnits!==units){this.render();return}this._scheduleSquareUnitSync();this._syncScreensaverVisibilityState();this._markReadyAfterPaint()});updateStatusTime(this.shadowRoot);this._syncWidgetDropSlots();this._markReadyAfterPaint();this._scheduleScreensaverIdleTimer()}}
 customElements.define("mha-control-hub",MhaControlHub);

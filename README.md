@@ -2620,3 +2620,43 @@ neighbors directly instead of moving the wide widget by its own full width.
 
 The final position map is still validated before saving: no collision, no
 out-of-grid widget, and no cascade/push behavior.
+
+
+## Widget drop slots
+
+When a widget enters move mode, the grid shows ghost drop slots for empty
+positions that can fit that widget's exact size. Clicking a slot moves the active
+widget there, saves the position map, and exits that widget's move mode.
+
+This is tap-to-place only: it does not re-enable free drag/drop and does not
+change mobile layout, grid sizing, dock, settings, or theme behavior.
+
+
+## Widget drop slots visibility fix
+
+Drop slots now refresh when move mode is toggled, after render, and after square
+unit sync. The grid also exposes `data-drop-slots-count` and `has-drop-slots`
+for quick DOM inspection.
+
+
+## Widget drop slots hover polish
+
+Available drop slots now render as a quiet grey ghost grid. Hovering or focusing
+a slot turns that exact widget-sized shape into an accent-colored placement
+preview with stronger border, glow, and inner fill so the landing target is
+obvious before clicking.
+
+
+## Drop slot no-flash placement
+
+Dropping a widget onto a ghost slot no longer calls `render()`. The position map
+is saved, the widget positions are applied directly to the existing DOM, move
+mode is cleared, drop slots are removed, edit chrome is synced, and the square
+unit sync is scheduled. This avoids the visible full Shadow DOM rebuild flash.
+
+
+## Exit edit clears move mode
+
+Leaving edit mode now always clears the active move widget and removes ghost drop
+slots. This prevents a widget from staying in move-target state after pressing
+the main edit-mode close button.

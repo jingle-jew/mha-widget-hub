@@ -999,3 +999,25 @@
 .mha-shell.is-mobile .mha-grid {
   touch-action: pan-y;
 }
+
+:host {
+  --mha-floating-button-size: clamp(2.625rem, 10vw, 3rem);
+}
+
+/* Keep the main edit launcher compact and aligned with widget surfaces. */
+:host .mha-edit-button.mha-main-edit-button {
+  inline-size: var(--mha-floating-button-size) !important;
+  block-size: var(--mha-floating-button-size) !important;
+  width: var(--mha-floating-button-size) !important;
+  height: var(--mha-floating-button-size) !important;
+  aspect-ratio: 1 / 1;
+  border-radius: 999px !important;
+  -webkit-mask: none !important;
+  mask: none !important;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+  background: var(--mha-widget-surface) !important;
+  border-color: var(--mha-widget-border) !important;
+  color: var(--mha-text) !important;
+  box-shadow: var(--mha-widget-shadow) !important;
+}
