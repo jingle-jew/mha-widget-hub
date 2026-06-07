@@ -3,6 +3,7 @@ import {ICONS} from "./src/components/icons.js";
 import {createShell} from "./src/layout/shell.js";
 import {createMobileDock} from "./src/layout/mobile-dock.js";
 import {createSettingsPanel} from "./src/settings/settings-panel.js";
+import {createWidgetManager, WIDGET_MANAGER_CATEGORIES} from "./src/widget-manager/widget-manager.js";
 import { normalizeAccent } from "./src/settings/accent-palettes.js";
 import {updateStatusTime} from "./src/layout/status-bar.js";
 import {createEmptyWidget} from "./src/widgets/empty-widget.js";
@@ -154,14 +155,14 @@ function syncThemeAttributes(host) {
   document.documentElement.setAttribute("data-icon-shape", iconShape);
 }
 
-const ORDER="mha-grid-order",SIZES="mha-widget-sizes",REMOVED="mha-hidden-widgets",POSITIONS="mha-widget-positions",LEGACY_STORAGE_PREFIX=["mha","v2"].join("-"),THEME_STYLES=new Set(["ios","oneui","material"]);
+const ORDER="mha-grid-order",SIZES="mha-widget-sizes",REMOVED="mha-hidden-widgets",POSITIONS="mha-widget-positions",CUSTOM_WIDGETS="mha-custom-widgets",LEGACY_STORAGE_PREFIX=["mha","v2"].join("-"),THEME_STYLES=new Set(["ios","oneui","material"]);
 const SCREENSAVER_ENABLED="mha-screensaver-enabled";
 const SCREENSAVER_DELAY="mha-screensaver-delay";
 const SCREENSAVER_NOWBAR="mha-screensaver-nowbar";
 const SCREENSAVER_CLOCK_VARIANT="mha-screensaver-clock-variant";
 
 function readMigratedJson(key,legacyKey,fallback){const current=readJson(key,null);if(current!==null)return current;const legacy=readJson(legacyKey,null);if(legacy!==null){writeJson(key,legacy);return legacy}return fallback}
-class MhaControlHub extends HTMLElement{constructor(){super();this.attachShadow({mode:"open"});this._hass=null;this._isEditing=false;this._activeMoveWidgetId="";this._widgetPositions=readJson(POSITIONS,{})||{};this._draggedId="";this._isResizingWidget=false;this._resizeState=null;this._squareUnitFrame=0;this._renderId=0;this._readyRaf=0;this._viewportRaf=0;this._relayoutTimer=0;this._systemThemeListener=null;this._themeTransitionTimer=0;this._themeTransitionFrame=0;this._gridScrollCleanup=null;this._screensaverPreview=false;this._screensaverActive=false;this._screensaverNowBar=readBool(SCREENSAVER_NOWBAR,true);this._screensaverClockVariant=localStorage.getItem(SCREENSAVER_CLOCK_VARIANT)||localStorage.getItem("mha-screensaver-clock")||"digital";this._screensaverIdleTimer=0;this._screensaverEnabled=readBool(SCREENSAVER_ENABLED,false);this._screensaverDelay=readNumberOption(SCREENSAVER_DELAY,30000,[15000,30000,120000,300000]);this._settingsOpen=false;this._screensaverSettingsOpen=false;this._lastResponsiveSignature="";this._responsiveRelayoutTimer=null;this._widgets=this._readWidgets()}
+class MhaControlHub extends HTMLElement{constructor(){super();this.attachShadow({mode:"open"});this._hass=null;this._isEditing=false;this._activeMoveWidgetId="";this._widgetPositions=readJson(POSITIONS,{})||{};this._draggedId="";this._isResizingWidget=false;this._resizeState=null;this._squareUnitFrame=0;this._renderId=0;this._readyRaf=0;this._viewportRaf=0;this._relayoutTimer=0;this._systemThemeListener=null;this._themeTransitionTimer=0;this._themeTransitionFrame=0;this._gridScrollCleanup=null;this._screensaverPreview=false;this._screensaverActive=false;this._screensaverNowBar=readBool(SCREENSAVER_NOWBAR,true);this._screensaverClockVariant=localStorage.getItem(SCREENSAVER_CLOCK_VARIANT)||localStorage.getItem("mha-screensaver-clock")||"digital";this._screensaverIdleTimer=0;this._screensaverEnabled=readBool(SCREENSAVER_ENABLED,false);this._screensaverDelay=readNumberOption(SCREENSAVER_DELAY,30000,[15000,30000,120000,300000]);this._settingsOpen=false;this._screensaverSettingsOpen=false;this._lastResponsiveSignature="";this._responsiveRelayoutTimer=null;this._widgetManagerOpen=false;this._widgetManagerCategory="";this._pendingWidgetPlacement=null;this._widgets=this._readWidgets()}
 set hass(h){this._hass=h;this.render()}get hass(){return this._hass}
 _markReadyAfterPaint(){
   cancelAnimationFrame(this._readyRaf);
@@ -176,13 +177,17 @@ connectedCallback(){this._systemThemeListener=()=>{if(getStoredThemeSetting(this
 disconnectedCallback(){window.matchMedia?.("(prefers-color-scheme: light)")?.removeEventListener?.("change",this._systemThemeListener);clearInterval(this._clockTimer);cancelAnimationFrame(this._squareUnitFrame);cancelAnimationFrame(this._themeTransitionFrame);clearTimeout(this._themeTransitionTimer);this._clearGridScrollListener();["pointerdown","touchstart","keydown","wheel","scroll"].forEach(type=>window.removeEventListener(type,this._activityListener));clearTimeout(this._screensaverIdleTimer);window.removeEventListener("resize",this._resizeListener);window.visualViewport?.removeEventListener("resize",this._resizeListener);window.removeEventListener("orientationchange",this._resizeListener);clearTimeout(this._responsiveRelayoutTimer);if(this._resizeHandlePointerDownListener){this.shadowRoot.removeEventListener("pointerdown",this._resizeHandlePointerDownListener);this.shadowRoot.removeEventListener("mousedown",this._resizeHandlePointerDownListener);this.shadowRoot.removeEventListener("touchstart",this._resizeHandlePointerDownListener)}if(this._resizeInteractionCleanup)["pointerup","pointercancel","mouseup","touchend","touchcancel"].forEach(type=>window.removeEventListener(type,this._resizeInteractionCleanup));if(this._settingsOpenListener)this.shadowRoot.removeEventListener("mha-open-settings",this._settingsOpenListener)}
 requestRender(){this.render()}
 _syncEditModeDom(){
-  if(!this._isEditing){this._activeMoveWidgetId="";const grid=this.shadowRoot?.querySelector?.(".mha-grid");if(grid)this._renderWidgetDropSlots(grid);}
+  if(!this._isEditing||this._isMobileLandscapeLayout()){this._activeMoveWidgetId="";this._pendingWidgetPlacement=null;this._widgetManagerOpen=false;this._widgetManagerCategory="";const grid=this.shadowRoot?.querySelector?.(".mha-grid");if(grid)this._renderWidgetDropSlots(grid);}
   this.classList.toggle("is-editing",this._isEditing);
+  this.classList.toggle("is-placing-widget",Boolean(this._pendingWidgetPlacement));
   this.dataset.editing=String(this._isEditing);
-  const edit=this.shadowRoot.querySelector(".mha-main-edit-button");
+  if(this._isEditing)this.classList.remove("is-mobile-floating-controls-hidden","is-dock-hidden");
+  const edit=this.shadowRoot.querySelector(".mha-primary-edit-button");
   if(edit)edit.innerHTML=this._isEditing?ICONS.close:ICONS.edit;
+  const add=this.shadowRoot.querySelector(".mha-add-widget-button");
+  if(add)add.hidden=!this._isEditing||this._isMobileLandscapeLayout();
   this.shadowRoot.querySelectorAll(".mha-widget").forEach(el=>{
-    el.draggable=this._isEditing&&!this._isMobileLauncherLayout();
+    el.draggable=false;el.removeAttribute("draggable");
     el.classList.toggle("is-editing",this._isEditing);
     const active=this._isEditing&&el.dataset.widgetId===this._activeMoveWidgetId;
     el.classList.toggle("is-move-target",active);
@@ -244,6 +249,75 @@ _getSettingsPanelProps(scope="all"){
     onScreensaverClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),
     onResetGrid:()=>this.resetGrid(),
   };
+}
+_isMobileLandscapeLayout(){
+  return this._isMobileLauncherLayout()&&window.matchMedia?.("(orientation: landscape)")?.matches;
+}
+_createWidgetManagerPanel(){
+  return createWidgetManager({
+    open:this._widgetManagerOpen,
+    activeCategory:this._widgetManagerCategory,
+    categories:WIDGET_MANAGER_CATEGORIES,
+    onClose:()=>this._closeWidgetManager(),
+    onBack:()=>this._showWidgetManagerCategories(),
+    onSelectCategory:id=>this._selectWidgetManagerCategory(id),
+    onSelectWidget:item=>this._beginWidgetPlacement(item),
+  });
+}
+_syncWidgetManagerDom(){
+  const existing=this.shadowRoot.querySelector(".mha-widget-manager-panel");
+  if(existing)existing.remove();
+  this.shadowRoot.append(this._createWidgetManagerPanel());
+}
+_openWidgetManager(){
+  if(!this._isEditing||this._isMobileLandscapeLayout())return;
+  this._pendingWidgetPlacement=null;
+  this._activeMoveWidgetId="";
+  this._widgetManagerOpen=true;
+  this._widgetManagerCategory="";
+  this._syncEditModeDom();
+  this._syncWidgetDropSlots();
+  this._syncWidgetManagerDom();
+}
+_closeWidgetManager(){
+  this._widgetManagerOpen=false;
+  this._widgetManagerCategory="";
+  this._syncWidgetManagerDom();
+}
+_showWidgetManagerCategories(){
+  this._widgetManagerCategory="";
+  this._syncWidgetManagerDom();
+}
+_selectWidgetManagerCategory(id){
+  this._widgetManagerCategory=id;
+  this._syncWidgetManagerDom();
+}
+_createWidgetFromCatalogItem(item){
+  const timestamp=Date.now().toString(36);
+  const random=Math.random().toString(36).slice(2,7);
+  const size=normalizeWidgetSize(item?.size||{w:2,h:2});
+  const kind=item?.kind==="slider"?"slider":"empty";
+  return {
+    id:`widget-${item?.category||"custom"}-${item?.variant||kind}-${timestamp}-${random}`,
+    kind,
+    type:kind==="slider"?"slider":"empty",
+    category:item?.category||"custom",
+    variant:item?.variant||kind,
+    title:item?.label||"Widget",
+    w:size.w,
+    h:size.h,
+  };
+}
+_beginWidgetPlacement(item){
+  if(!this._isEditing||this._isMobileLandscapeLayout())return;
+  const widget=this._createWidgetFromCatalogItem(item);
+  this._pendingWidgetPlacement=widget;
+  this._widgetManagerOpen=false;
+  this._widgetManagerCategory="";
+  this._activeMoveWidgetId="";
+  this._syncWidgetManagerDom();
+  this._syncEditModeDom();
+  this._syncWidgetDropSlots();
 }
 _createSettingsPanel(){
   return createSettingsPanel(this._getSettingsPanelProps("all"));
@@ -448,11 +522,12 @@ _syncScreensaverDom(){
   existing.replaceWith(next);
 }
 toggleEditMode(){
+  if(!this._isEditing&&this._isMobileLandscapeLayout())return;
   const wasEditing=this._isEditing;
   this._isEditing=!this._isEditing;
 
   if(!this._isEditing){
-    this._activeMoveWidgetId="";
+    this._activeMoveWidgetId="";this._pendingWidgetPlacement=null;this._widgetManagerOpen=false;this._widgetManagerCategory="";
     const grid=this.shadowRoot?.querySelector?.(".mha-grid");
     if(grid)this._renderWidgetDropSlots(grid);
   }
@@ -462,8 +537,39 @@ toggleEditMode(){
 
   if(wasEditing!==this._isEditing)this._scheduleSquareUnitSync();
 }toggleScreensaverPreview(){this._screensaverPreview=!this._screensaverPreview;this._syncScreensaverDom()}toggleNowBarPreview(){this._screensaverNowBar=!this._screensaverNowBar;this._syncScreensaverDom()}setScreensaverClockVariant(v="digital"){this._screensaverClockVariant=normalizeClockVariant(v);this._syncScreensaverDom()}resetGrid(){localStorage.removeItem(ORDER);localStorage.removeItem(SIZES);localStorage.removeItem(REMOVED);localStorage.removeItem(POSITIONS);this._widgetPositions={};this._activeMoveWidgetId="";this._widgets=this._readWidgets();this.render()}
-_readWidgets(){const byId=new Map(DEFAULT_WIDGETS.map(w=>[w.id,w]));const removed=new Set(readJson(REMOVED,[]).filter?.(id=>byId.has(id))||[]);const order=readMigratedJson(ORDER,`${LEGACY_STORAGE_PREFIX}-grid-order`,DEFAULT_WIDGETS.map(w=>w.id)).filter?.(id=>byId.has(id)&&!removed.has(id))||[];DEFAULT_WIDGETS.forEach(w=>{if(!removed.has(w.id)&&!order.includes(w.id))order.push(w.id)});const sizes=readMigratedJson(SIZES,`${LEGACY_STORAGE_PREFIX}-widget-sizes`,{});return order.map(id=>{const base=byId.get(id);return {...base,...normalizeWidgetForKind({...base,...(sizes[id]||{})})}})}
-_saveWidgets(){this._widgets=this._normalizeWidgetsToGridBounds(this._widgets);if(!this._doesWidgetLayoutFitGrid(this._widgets))return;writeJson(ORDER,this._widgets.map(w=>w.id));const sizes={};this._widgets.forEach(w=>sizes[w.id]=normalizeWidgetForKind(w));writeJson(SIZES,sizes)}
+_readWidgets(){
+  const custom=readJson(CUSTOM_WIDGETS,[])||[];
+  const baseWidgets=[...DEFAULT_WIDGETS,...custom.filter(widget=>widget?.id)];
+  const byId=new Map(baseWidgets.map(w=>[w.id,w]));
+  const removed=new Set(readJson(REMOVED,[]).filter?.(id=>byId.has(id))||[]);
+  const order=readMigratedJson(ORDER,`${LEGACY_STORAGE_PREFIX}-grid-order`,DEFAULT_WIDGETS.map(w=>w.id)).filter?.(id=>byId.has(id)&&!removed.has(id))||[];
+  DEFAULT_WIDGETS.forEach(w=>{if(!removed.has(w.id)&&!order.includes(w.id))order.push(w.id)});
+  custom.forEach(w=>{if(!removed.has(w.id)&&!order.includes(w.id))order.push(w.id)});
+  const sizes=readMigratedJson(SIZES,`${LEGACY_STORAGE_PREFIX}-widget-sizes`,{});
+  return order.map(id=>{
+    const base=byId.get(id);
+    return {...base,...(sizes[id]||{}),...normalizeWidgetForKind({...base,...(sizes[id]||{})})};
+  });
+}
+_saveWidgets(){
+  this._widgets=this._normalizeWidgetsToGridBounds(this._widgets);
+  if(!this._doesWidgetLayoutFitGrid(this._widgets))return;
+  writeJson(ORDER,this._widgets.map(w=>w.id));
+  const defaultIds=new Set(DEFAULT_WIDGETS.map(w=>w.id));
+  const custom=this._widgets.filter(w=>!defaultIds.has(w.id)).map(w=>({
+    id:w.id,
+    kind:w.kind||w.type||"empty",
+    type:w.type||w.kind||"empty",
+    category:w.category||"custom",
+    variant:w.variant||"custom",
+    title:w.title||"Widget",
+    ...normalizeWidgetForKind(w),
+  }));
+  writeJson(CUSTOM_WIDGETS,custom);
+  const sizes={};
+  this._widgets.forEach(w=>sizes[w.id]={...normalizeWidgetForKind(w),kind:w.kind,type:w.type,category:w.category,variant:w.variant,title:w.title});
+  writeJson(SIZES,sizes);
+}
 _removeWidget(id){if(!this._widgets.some(w=>w.id===id))return;if(this._activeMoveWidgetId===id)this._activeMoveWidgetId="";this._widgets=this._widgets.filter(w=>w.id!==id);Object.values(this._widgetPositions).forEach(layout=>{if(layout&&typeof layout==="object")delete layout[id]});writeJson(POSITIONS,this._widgetPositions);const removed=new Set(readJson(REMOVED,[]));removed.add(id);writeJson(REMOVED,[...removed]);this._saveWidgets();this.shadowRoot.querySelector(`[data-widget-id="${id}"]`)?.remove();this._clearDropState();this._scheduleSquareUnitSync()}
 
 _isResizeHandleEvent(event){
@@ -792,6 +898,23 @@ _getAdjacentWidgetGroupInDirection(id,direction,positions,units){
 
   return [...group.values()];
 }
+_isPositionMapValidForWidgets(nextPositions,widgets,units,rowUnits){
+  const maxRows=this._isMobileLauncherLayout()?Number.POSITIVE_INFINITY:rowUnits;
+  for(const widget of widgets){
+    const position=nextPositions?.[widget.id];
+    if(!position)return false;
+    const rect=this._getWidgetRectFromPosition(widget,position,units);
+    if(rect.x<1||rect.y<1||rect.x+rect.w-1>units||rect.y+rect.h-1>maxRows)return false;
+  }
+  for(let i=0;i<widgets.length;i+=1){
+    const a=this._getWidgetRectFromPosition(widgets[i],nextPositions[widgets[i].id],units);
+    for(let j=i+1;j<widgets.length;j+=1){
+      const b=this._getWidgetRectFromPosition(widgets[j],nextPositions[widgets[j].id],units);
+      if(this._rectsOverlap(a,b))return false;
+    }
+  }
+  return true;
+}
 _isPositionMapValid(nextPositions,units,rowUnits){
   const maxRows=this._isMobileLauncherLayout()?Number.POSITIVE_INFINITY:rowUnits;
 
@@ -1009,60 +1132,66 @@ _tryDirectNeighborSwap(id,direction,positions,units,rowUnits){
   this._scheduleSquareUnitSync();
   return true;
 }
-_getAvailableDropSlotsForWidget(id,positions=this._getActiveWidgetPositions({create:true})){
-  const widget=this._widgets.find(item=>item.id===id);
-  const current=positions?.[id];
-  if(!widget||!current)return [];
-
+_getAvailableDropSlotsForCandidate(candidateWidget,positions=this._getActiveWidgetPositions({create:true}),currentPosition=null){
+  const widget=candidateWidget;
+  if(!widget)return [];
   const {units,rowUnits}=this._getGridBounds();
   const size=normalizeWidgetForKind(widget);
   const w=Math.min(units,Number(size.w)||1);
   const h=Math.max(1,Number(size.h)||1);
+  const ignoreId=widget.id;
+  const current=currentPosition||positions?.[ignoreId]||null;
   const maxOccupiedRow=this._widgets.reduce((max,other)=>{
-    if(other.id===id)return max;
+    if(other.id===ignoreId)return max;
     const position=positions?.[other.id];
     if(!position)return max;
     const rect=this._getWidgetRectFromPosition(other,position,units);
     return Math.max(max,rect.y+rect.h-1);
   },0);
-
   const maxRow=this._isMobileLauncherLayout()
-    ? Math.max(maxOccupiedRow+h+2,current.y+h+2,h+2)
+    ? Math.max(maxOccupiedRow+h+2,(current?.y||1)+h+2,h+2)
     : rowUnits;
-
   const slots=[];
   for(let y=1;y<=maxRow-h+1;y+=1){
     for(let x=1;x<=units-w+1;x+=1){
-      if(x===current.x&&y===current.y)continue;
-      const candidate={...positions,[id]:{x,y}};
-      if(this._isPositionMapValid(candidate,units,rowUnits)){
+      if(current&&current.x>0&&x===current.x&&y===current.y)continue;
+      const candidatePositions={...positions,[ignoreId]:{x,y}};
+      if(this._isPositionMapValidForWidgets(candidatePositions,[...this._widgets.filter(item=>item.id!==ignoreId),widget],units,rowUnits)){
         slots.push({x,y,w,h});
       }
     }
   }
   return slots;
 }
+_getAvailableDropSlotsForWidget(id,positions=this._getActiveWidgetPositions({create:true})){
+  const widget=this._widgets.find(item=>item.id===id);
+  const current=positions?.[id];
+  if(!widget||!current)return [];
+  return this._getAvailableDropSlotsForCandidate(widget,positions,current);
+}
 _renderWidgetDropSlots(grid){
   if(!grid)return;
   grid.querySelectorAll(".mha-widget-drop-slot").forEach(slot=>slot.remove());
   grid.dataset.dropSlotsCount="0";
   grid.classList.remove("has-drop-slots");
-
-  if(!this._isEditing||!this._activeMoveWidgetId)return;
-
+  if(!this._isEditing)return;
   const positions=this._getActiveWidgetPositions({create:true});
-  const slots=this._getAvailableDropSlotsForWidget(this._activeMoveWidgetId,positions);
+  const placementWidget=this._pendingWidgetPlacement;
+  const activeId=this._activeMoveWidgetId;
+  const slots=placementWidget
+    ? this._getAvailableDropSlotsForCandidate(placementWidget,positions,{x:0,y:0})
+    : activeId
+      ? this._getAvailableDropSlotsForWidget(activeId,positions)
+      : [];
   grid.dataset.dropSlotsCount=String(slots.length);
-
+  grid.dataset.dropSlotMode=placementWidget?"add":activeId?"move":"none";
   if(!slots.length)return;
-
   const fragment=document.createDocumentFragment();
-
   slots.forEach(slot=>{
     const button=document.createElement("button");
     button.className="mha-widget-drop-slot";
     button.type="button";
-    button.setAttribute("aria-label",`Déplacer le widget ici, colonne ${slot.x}, rangée ${slot.y}`);
+    button.setAttribute("aria-label",placementWidget?`Ajouter le widget ici, colonne ${slot.x}, rangée ${slot.y}`:`Déplacer le widget ici, colonne ${slot.x}, rangée ${slot.y}`);
     button.dataset.x=String(slot.x);
     button.dataset.y=String(slot.y);
     button.style.gridColumn=`${slot.x} / span ${slot.w}`;
@@ -1070,11 +1199,11 @@ _renderWidgetDropSlots(grid){
     button.addEventListener("click",event=>{
       event.preventDefault();
       event.stopPropagation();
-      this._moveWidgetToDropSlot(this._activeMoveWidgetId,slot.x,slot.y);
+      if(this._pendingWidgetPlacement)this._placePendingWidgetAtSlot(slot.x,slot.y);
+      else this._moveWidgetToDropSlot(this._activeMoveWidgetId,slot.x,slot.y);
     });
     fragment.append(button);
   });
-
   grid.prepend(fragment);
   grid.classList.add("has-drop-slots");
 }
@@ -1089,6 +1218,44 @@ _syncWidgetDropSlots(){
   });
 }
 
+_placePendingWidgetAtSlot(x,y){
+  if(!this._isEditing||!this._pendingWidgetPlacement)return;
+  const widget={...this._pendingWidgetPlacement};
+  const positions=this._getActiveWidgetPositions({create:true});
+  const {units,rowUnits}=this._getGridBounds();
+  const nextPositions={...positions,[widget.id]:{x:Number(x)||1,y:Number(y)||1}};
+  const nextWidgets=[...this._widgets,widget];
+  if(!this._isPositionMapValidForWidgets(nextPositions,nextWidgets,units,rowUnits))return;
+
+  this._widgets=this._normalizeWidgetsToGridBounds(nextWidgets);
+  this._saveWidgets();
+  this._saveCurrentWidgetPositions(nextPositions);
+  this._pendingWidgetPlacement=null;
+  this._activeMoveWidgetId="";
+
+  const grid=this.shadowRoot?.querySelector?.(".mha-grid");
+  if(grid){
+    const el=createEmptyWidget(widget,{
+      activeGridUnits:units,
+      isEditing:this._isEditing,
+      isMoveTarget:false,
+      position:nextPositions[widget.id],
+      onToggleMove:id=>this._toggleWidgetMoveMode(id),
+      onMove:(id,direction)=>this._moveWidgetByDirection(id,direction),
+      onRemove:id=>this._removeWidget(id),
+      onResizeStart:(event,id)=>this._startResize(event,id),
+    });
+
+    this._wireDrag(el,widget);
+    grid.append(el);
+    this._applyWidgetPositionsToDom(nextPositions);
+    this._renderWidgetDropSlots(grid);
+  }
+
+  this._syncEditModeDom();
+  this._syncWidgetDropSlots();
+  this._scheduleSquareUnitSync();
+}
 _moveWidgetToDropSlot(id,x,y){
   if(!this._isEditing||this._activeMoveWidgetId!==id)return;
   const positions=this._getActiveWidgetPositions({create:true});
@@ -1478,6 +1645,10 @@ _finishResize(){
 }
 _getDropPlacement(e,t){const r=t.getBoundingClientRect(),u=r.top+r.height*.35,l=r.top+r.height*.65;if(e.clientY<u)return"before";if(e.clientY>l)return"after";return e.clientX<r.left+r.width/2?"before":"after"}
 _clearDropState(){this.shadowRoot.querySelectorAll(".is-drop-before,.is-drop-after").forEach(n=>{n.classList.remove("is-drop-before","is-drop-after");n.removeAttribute("data-drop-placement")})}
-_wireDrag(el,w){const mobileLauncher=this._isMobileLauncherLayout();el.draggable=this._isEditing&&!mobileLauncher;el.addEventListener("dragstart",e=>{if(mobileLauncher){e.preventDefault();return}if(this._isResizingWidget||this._isResizeHandleEvent(e)){e.preventDefault();e.stopPropagation();return;}if(!this._isEditing){e.preventDefault();return}if(e.target.closest(".mha-widget-tools,.mha-resize-handle")){e.preventDefault();return}this._draggedId=w.id;el.classList.add("is-dragging");e.dataTransfer.effectAllowed="move";e.dataTransfer.setData("text/plain",w.id)});el.addEventListener("dragover",e=>{if(this._isResizingWidget)return;if(!this._isEditing)return;const id=this._draggedId||e.dataTransfer.getData("text/plain");if(!id||id===w.id)return;e.preventDefault();const p=this._getDropPlacement(e,el);this._clearDropState();el.classList.toggle("is-drop-before",p==="before");el.classList.toggle("is-drop-after",p==="after");el.dataset.dropPlacement=p});el.addEventListener("drop",e=>{if(this._isResizingWidget)return;if(!this._isEditing)return;const id=this._draggedId||e.dataTransfer.getData("text/plain");if(!id||id===w.id)return;e.preventDefault();const p=el.dataset.dropPlacement||"before";this._clearDropState();this._draggedId="";this._moveWidget(id,w.id,p)});el.addEventListener("dragend",()=>{this._draggedId="";el.classList.remove("is-dragging");this._clearDropState()})}
-render(){syncThemeAttributes(this);const renderId=++this._renderId,layoutMode=getLayoutMode(this),layout=getEffectiveLayout(this),preset=this._getRuntimeGridPreset(),units=preset.columns*WIDGET_UNIT.unitsPerLogicalColumn,rows=preset.rows*WIDGET_UNIT.unitsPerLogicalColumn,cols=preset.columns,logicalRows=preset.rows,themeStyle=THEME_STYLES.has(document.documentElement.dataset.themeStyle)?document.documentElement.dataset.themeStyle:"oneui";const iconShapeSetting=getStoredIconShapeSetting(this);const iconShape=resolveIconShape(themeStyle,iconShapeSetting);this._clearGridScrollListener();this.dataset.themeStyle=themeStyle;this.dataset.iconShapeSetting=iconShapeSetting;this.setAttribute("data-icon-shape-setting",iconShapeSetting);this.dataset.iconShape=iconShape;this.setAttribute("data-icon-shape",iconShape);document.documentElement.dataset.iconShapeSetting=iconShapeSetting;document.documentElement.setAttribute("data-icon-shape-setting",iconShapeSetting);document.documentElement.dataset.iconShape=iconShape;document.documentElement.setAttribute("data-icon-shape",iconShape);const accent=normalizeAccent(themeStyle,localStorage.getItem(`mha-accent-${themeStyle}`)||localStorage.getItem("mha-accent")||"sky");this.dataset.accent=accent;this.setAttribute("data-accent",accent);document.documentElement.dataset.accent=accent;document.documentElement.setAttribute("data-accent",accent);this.dataset.layoutMode=layoutMode;this.dataset.layout=layout;this.dataset.gridDensity=preset.density;this.dataset.gridUnits=String(units);this.dataset.logicalColumns=String(cols);this.dataset.gridRows=String(rows);this.dataset.logicalRows=String(logicalRows);this.classList.toggle("is-editing",this._isEditing);this.style.setProperty("--mha-runtime-grid-units",String(units));this.style.setProperty("--mha-runtime-grid-rows",String(rows));this.shadowRoot.innerHTML=`<link rel="stylesheet" href="./styles/core/tokens.css"><link rel="stylesheet" href="./styles/components/icon.css"><link rel="stylesheet" href="./styles/components/icon-symbol.css"><link rel="stylesheet" href="./styles/components/slider.css"><link rel="stylesheet" href="./styles/components/toggle.css"><link rel="stylesheet" href="./styles/components/pill.css"><link rel="stylesheet" href="./styles/components/button.css"><link rel="stylesheet" href="./styles/themes/ios.css"><link rel="stylesheet" href="./styles/themes/oneui.css"><link rel="stylesheet" href="./styles/themes/material.css"><link rel="stylesheet" href="./styles/themes/accent-palettes.css"><link rel="stylesheet" href="./styles/core/background.css"><link rel="stylesheet" href="./styles/layout/shell.css"><link rel="stylesheet" href="./styles/layout/widget-grid.css"><link rel="stylesheet" href="./styles/layout/status-bar.css"><link rel="stylesheet" href="./styles/layout/dock.css"><link rel="stylesheet" href="./styles/layout/mobile-dock.css"><link rel="stylesheet" href="./styles/layout/floating-controls.css"><link rel="stylesheet" href="./styles/settings/settings-panel.css"><link rel="stylesheet" href="./styles/themes/light-text-contract.css"><link rel="stylesheet" href="./styles/widgets/widget-layout.css"><link rel="stylesheet" href="./styles/widgets/empty-widget.css"><link rel="stylesheet" href="./styles/widgets/slider-widget.css"><link rel="stylesheet" href="./styles/screensaver/screensaver.css">`;const links=[...this.shadowRoot.querySelectorAll('link[rel="stylesheet"]')],{bg,shell,grid}=createShell({layoutMode,layout,logicalColumns:cols,gridUnits:units,onSettings:()=>this._openSettings()});this.shadowRoot.append(bg,shell);const positions=this._getActiveWidgetPositions();this._widgets.forEach(w=>{const el=createEmptyWidget(w,{activeGridUnits:units,isEditing:this._isEditing,isMoveTarget:this._isEditing&&this._activeMoveWidgetId===w.id,position:positions?.[w.id],onToggleMove:id=>this._toggleWidgetMoveMode(id),onMove:(id,direction)=>this._moveWidgetByDirection(id,direction),onRemove:id=>this._removeWidget(id),onResizeStart:(e,id)=>this._startResize(e,id)});this._wireDrag(el,w);grid.append(el)});this.shadowRoot.append(createScreensaver({isVisible:this._getScreensaverVisible(),showNowBar:this._screensaverNowBar,clockVariant:this._screensaverClockVariant,onClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),onOpenScreensaverSettings:()=>this._openScreensaverSettings(),onWake:()=>this._wakeScreensaver()}));this.shadowRoot.append(createMobileDock({onSettings:()=>this._openSettings()}));this.shadowRoot.append(this._createSettingsPanel());this.shadowRoot.append(createSettingsPanel(this._getSettingsPanelProps("screensaver")));const edit=document.createElement("button");edit.className="mha-edit-button mha-main-edit-button";edit.type="button";edit.innerHTML=this._isEditing?ICONS.close:ICONS.edit;edit.onclick=()=>this.toggleEditMode();this.shadowRoot.append(edit);this._syncEditModeDom();this._wireDockAutoHide(grid);this._scheduleSquareUnitSync();Promise.all(links.map(link=>link.sheet?Promise.resolve():new Promise(resolve=>{link.addEventListener("load",resolve,{once:true});link.addEventListener("error",resolve,{once:true})}))).then(()=>{if(this._renderId!==renderId)return;const styledUnits=getActiveGridUnits(this);if(styledUnits!==units){this.render();return}this._scheduleSquareUnitSync();this._syncScreensaverVisibilityState();this._markReadyAfterPaint()});updateStatusTime(this.shadowRoot);this._syncWidgetDropSlots();this._markReadyAfterPaint();this._scheduleScreensaverIdleTimer()}}
+_wireDrag(el){
+  if(!el)return;
+  el.draggable=false;
+  el.removeAttribute("draggable");
+}
+render(){syncThemeAttributes(this);const renderId=++this._renderId,layoutMode=getLayoutMode(this),layout=getEffectiveLayout(this),preset=this._getRuntimeGridPreset(),units=preset.columns*WIDGET_UNIT.unitsPerLogicalColumn,rows=preset.rows*WIDGET_UNIT.unitsPerLogicalColumn,cols=preset.columns,logicalRows=preset.rows,themeStyle=THEME_STYLES.has(document.documentElement.dataset.themeStyle)?document.documentElement.dataset.themeStyle:"oneui";const iconShapeSetting=getStoredIconShapeSetting(this);const iconShape=resolveIconShape(themeStyle,iconShapeSetting);this._clearGridScrollListener();this.dataset.themeStyle=themeStyle;this.dataset.iconShapeSetting=iconShapeSetting;this.setAttribute("data-icon-shape-setting",iconShapeSetting);this.dataset.iconShape=iconShape;this.setAttribute("data-icon-shape",iconShape);document.documentElement.dataset.iconShapeSetting=iconShapeSetting;document.documentElement.setAttribute("data-icon-shape-setting",iconShapeSetting);document.documentElement.dataset.iconShape=iconShape;document.documentElement.setAttribute("data-icon-shape",iconShape);const accent=normalizeAccent(themeStyle,localStorage.getItem(`mha-accent-${themeStyle}`)||localStorage.getItem("mha-accent")||"sky");this.dataset.accent=accent;this.setAttribute("data-accent",accent);document.documentElement.dataset.accent=accent;document.documentElement.setAttribute("data-accent",accent);this.dataset.layoutMode=layoutMode;this.dataset.layout=layout;this.dataset.gridDensity=preset.density;this.dataset.gridUnits=String(units);this.dataset.logicalColumns=String(cols);this.dataset.gridRows=String(rows);this.dataset.logicalRows=String(logicalRows);this.classList.toggle("is-editing",this._isEditing);this.style.setProperty("--mha-runtime-grid-units",String(units));this.style.setProperty("--mha-runtime-grid-rows",String(rows));this.shadowRoot.innerHTML=`<link rel="stylesheet" href="./styles/core/tokens.css"><link rel="stylesheet" href="./styles/components/icon.css"><link rel="stylesheet" href="./styles/components/icon-symbol.css"><link rel="stylesheet" href="./styles/components/slider.css"><link rel="stylesheet" href="./styles/components/toggle.css"><link rel="stylesheet" href="./styles/components/pill.css"><link rel="stylesheet" href="./styles/components/button.css"><link rel="stylesheet" href="./styles/themes/ios.css"><link rel="stylesheet" href="./styles/themes/oneui.css"><link rel="stylesheet" href="./styles/themes/material.css"><link rel="stylesheet" href="./styles/themes/accent-palettes.css"><link rel="stylesheet" href="./styles/core/background.css"><link rel="stylesheet" href="./styles/layout/shell.css"><link rel="stylesheet" href="./styles/layout/widget-grid.css"><link rel="stylesheet" href="./styles/layout/status-bar.css"><link rel="stylesheet" href="./styles/layout/dock.css"><link rel="stylesheet" href="./styles/layout/mobile-dock.css"><link rel="stylesheet" href="./styles/layout/floating-controls.css"><link rel="stylesheet" href="./styles/settings/settings-panel.css"><link rel="stylesheet" href="./styles/widget-manager/widget-manager.css"><link rel="stylesheet" href="./styles/themes/light-text-contract.css"><link rel="stylesheet" href="./styles/widgets/widget-layout.css"><link rel="stylesheet" href="./styles/widgets/empty-widget.css"><link rel="stylesheet" href="./styles/widgets/slider-widget.css"><link rel="stylesheet" href="./styles/screensaver/screensaver.css">`;const links=[...this.shadowRoot.querySelectorAll('link[rel="stylesheet"]')],{bg,shell,grid}=createShell({layoutMode,layout,logicalColumns:cols,gridUnits:units,onSettings:()=>this._openSettings()});this.shadowRoot.append(bg,shell);const positions=this._getActiveWidgetPositions();this._widgets.forEach(w=>{const el=createEmptyWidget(w,{activeGridUnits:units,isEditing:this._isEditing,isMoveTarget:this._isEditing&&this._activeMoveWidgetId===w.id,position:positions?.[w.id],onToggleMove:id=>this._toggleWidgetMoveMode(id),onMove:(id,direction)=>this._moveWidgetByDirection(id,direction),onRemove:id=>this._removeWidget(id),onResizeStart:(e,id)=>this._startResize(e,id)});this._wireDrag(el,w);grid.append(el)});this.shadowRoot.append(createScreensaver({isVisible:this._getScreensaverVisible(),showNowBar:this._screensaverNowBar,clockVariant:this._screensaverClockVariant,onClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),onOpenScreensaverSettings:()=>this._openScreensaverSettings(),onWake:()=>this._wakeScreensaver()}));this.shadowRoot.append(createMobileDock({onSettings:()=>this._openSettings()}));this.shadowRoot.append(this._createSettingsPanel());this.shadowRoot.append(this._createWidgetManagerPanel());this.shadowRoot.append(createSettingsPanel(this._getSettingsPanelProps("screensaver")));const edit=document.createElement("button");edit.className="mha-edit-button mha-main-edit-button mha-primary-edit-button";edit.type="button";edit.innerHTML=this._isEditing?ICONS.close:ICONS.edit;edit.onclick=()=>this.toggleEditMode();this.shadowRoot.append(edit);const addWidget=document.createElement("button");addWidget.className="mha-edit-button mha-main-edit-button mha-add-widget-button";addWidget.type="button";addWidget.innerHTML=`<svg viewBox="0 0 24 24"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5Z"/></svg>`;addWidget.setAttribute("aria-label","Ajouter un widget");addWidget.hidden=!this._isEditing;addWidget.onclick=(event)=>{event.preventDefault();event.stopPropagation();this._openWidgetManager()};this.shadowRoot.append(addWidget);this._syncEditModeDom();this._wireDockAutoHide(grid);this._scheduleSquareUnitSync();Promise.all(links.map(link=>link.sheet?Promise.resolve():new Promise(resolve=>{link.addEventListener("load",resolve,{once:true});link.addEventListener("error",resolve,{once:true})}))).then(()=>{if(this._renderId!==renderId)return;const styledUnits=getActiveGridUnits(this);if(styledUnits!==units){this.render();return}this._scheduleSquareUnitSync();this._syncScreensaverVisibilityState();this._markReadyAfterPaint()});updateStatusTime(this.shadowRoot);this._syncWidgetDropSlots();this._markReadyAfterPaint();this._scheduleScreensaverIdleTimer()}}
 customElements.define("mha-control-hub",MhaControlHub);

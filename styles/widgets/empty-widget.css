@@ -780,3 +780,87 @@
 :host(.is-editing) .mha-grid > .mha-widget-drop-slot:focus-visible {
   opacity: 1;
 }
+
+/* FREE DRAG DISABLED
+ * Widget placement is now intentionally controlled through ghost drop slots and
+ * arrow/swap movement. Browser drag-and-drop is disabled everywhere.
+ */
+.mha-widget,
+.mha-widget * {
+  -webkit-user-drag: none;
+}
+
+.mha-widget[draggable="true"] {
+  cursor: default;
+}
+
+/* VERTICAL WIDGET EDIT TOOLS
+ * Tall widgets have less horizontal room. The toolbar is still flex-based, so
+ * vertical widgets stack the buttons and reverse their visual order:
+ *
+ *   [x]
+ *   [move]
+ *   [dimension]
+ */
+.mha-widget[data-widget-h="3"][data-widget-w="1"] .mha-widget-tools,
+.mha-widget[data-widget-h="4"][data-widget-w="1"] .mha-widget-tools,
+.mha-widget[data-widget-h="5"][data-widget-w="1"] .mha-widget-tools,
+.mha-widget[data-widget-h="6"][data-widget-w="1"] .mha-widget-tools,
+.mha-widget[data-widget-h="4"][data-widget-w="2"] .mha-widget-tools,
+.mha-widget[data-widget-h="5"][data-widget-w="2"] .mha-widget-tools,
+.mha-widget[data-widget-h="6"][data-widget-w="2"] .mha-widget-tools,
+.mha-widget[data-widget-h="5"][data-widget-w="3"] .mha-widget-tools,
+.mha-widget[data-widget-h="6"][data-widget-w="3"] .mha-widget-tools {
+  flex-direction: column-reverse;
+  inline-size: var(--mha-tool-button-size, var(--mha-control-height));
+  min-inline-size: var(--mha-tool-button-size, var(--mha-control-height));
+  block-size: calc((var(--mha-tool-button-size, var(--mha-control-height)) * 3) + (var(--mha-tool-gap, var(--mha-control-gap)) * 2));
+  min-block-size: calc((var(--mha-tool-button-size, var(--mha-control-height)) * 3) + (var(--mha-tool-gap, var(--mha-control-gap)) * 2));
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.mha-widget[data-widget-h="3"][data-widget-w="1"] .mha-widget-tools .mha-tool-button,
+.mha-widget[data-widget-h="4"][data-widget-w="1"] .mha-widget-tools .mha-tool-button,
+.mha-widget[data-widget-h="5"][data-widget-w="1"] .mha-widget-tools .mha-tool-button,
+.mha-widget[data-widget-h="6"][data-widget-w="1"] .mha-widget-tools .mha-tool-button,
+.mha-widget[data-widget-h="4"][data-widget-w="2"] .mha-widget-tools .mha-tool-button,
+.mha-widget[data-widget-h="5"][data-widget-w="2"] .mha-widget-tools .mha-tool-button,
+.mha-widget[data-widget-h="6"][data-widget-w="2"] .mha-widget-tools .mha-tool-button,
+.mha-widget[data-widget-h="5"][data-widget-w="3"] .mha-widget-tools .mha-tool-button,
+.mha-widget[data-widget-h="6"][data-widget-w="3"] .mha-widget-tools .mha-tool-button {
+  inline-size: var(--mha-tool-button-size, var(--mha-control-height));
+  block-size: var(--mha-tool-button-size, var(--mha-control-height));
+}
+
+/* The base move-mode rule forces row so the move button can roll to the right.
+ * For vertical widgets, keep the reversed vertical stack while selected.
+ */
+:host(.is-editing) .mha-widget.is-move-target[data-widget-h="3"][data-widget-w="1"] .mha-widget-tools,
+:host(.is-editing) .mha-widget.is-move-target[data-widget-h="4"][data-widget-w="1"] .mha-widget-tools,
+:host(.is-editing) .mha-widget.is-move-target[data-widget-h="5"][data-widget-w="1"] .mha-widget-tools,
+:host(.is-editing) .mha-widget.is-move-target[data-widget-h="6"][data-widget-w="1"] .mha-widget-tools,
+:host(.is-editing) .mha-widget.is-move-target[data-widget-h="4"][data-widget-w="2"] .mha-widget-tools,
+:host(.is-editing) .mha-widget.is-move-target[data-widget-h="5"][data-widget-w="2"] .mha-widget-tools,
+:host(.is-editing) .mha-widget.is-move-target[data-widget-h="6"][data-widget-w="2"] .mha-widget-tools,
+:host(.is-editing) .mha-widget.is-move-target[data-widget-h="5"][data-widget-w="3"] .mha-widget-tools,
+:host(.is-editing) .mha-widget.is-move-target[data-widget-h="6"][data-widget-w="3"] .mha-widget-tools {
+  flex-direction: column-reverse;
+}
+
+/* With column-reverse, the visual X position is above the move button. In move
+ * mode the move button rolls upward into the X position.
+ */
+:host(.is-editing) .mha-widget.is-move-target[data-widget-h="3"][data-widget-w="1"] .mha-tool-button--move,
+:host(.is-editing) .mha-widget.is-move-target[data-widget-h="4"][data-widget-w="1"] .mha-tool-button--move,
+:host(.is-editing) .mha-widget.is-move-target[data-widget-h="5"][data-widget-w="1"] .mha-tool-button--move,
+:host(.is-editing) .mha-widget.is-move-target[data-widget-h="6"][data-widget-w="1"] .mha-tool-button--move,
+:host(.is-editing) .mha-widget.is-move-target[data-widget-h="4"][data-widget-w="2"] .mha-tool-button--move,
+:host(.is-editing) .mha-widget.is-move-target[data-widget-h="5"][data-widget-w="2"] .mha-tool-button--move,
+:host(.is-editing) .mha-widget.is-move-target[data-widget-h="6"][data-widget-w="2"] .mha-tool-button--move,
+:host(.is-editing) .mha-widget.is-move-target[data-widget-h="5"][data-widget-w="3"] .mha-tool-button--move,
+:host(.is-editing) .mha-widget.is-move-target[data-widget-h="6"][data-widget-w="3"] .mha-tool-button--move {
+  transform:
+    translateY(calc(-1 * (var(--mha-tool-button-size, var(--mha-control-height)) + var(--mha-tool-gap, var(--mha-control-gap)))))
+    rotate(-180deg);
+}

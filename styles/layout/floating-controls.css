@@ -140,3 +140,108 @@
     pointer-events: none !important;
   }
 }
+
+
+/* ADD WIDGET FLOATING BUTTON */
+.mha-add-widget-button {
+  transform: translateY(calc(-1 * (var(--mha-floating-button-size) + clamp(.55rem, 1.6vw, .85rem)))) !important;
+}
+
+.mha-add-widget-button[hidden] {
+  display: none !important;
+}
+
+@media (orientation: landscape) {
+  :host([data-layout="mobile"]) .mha-add-widget-button {
+    opacity: 0 !important;
+    transform: translateY(calc(100% + 1rem)) scale(.96) !important;
+    pointer-events: none !important;
+  }
+}
+
+@media (orientation: portrait) {
+  :host([data-layout="mobile"].is-mobile-floating-controls-hidden) .mha-add-widget-button {
+    opacity: 0 !important;
+    transform: translateY(calc(100% + 1rem)) scale(.96) !important;
+    pointer-events: none !important;
+  }
+}
+
+/* EDIT MODE MOBILE FLOATING CONTROLS VISIBILITY
+ * In mobile portrait, the normal scroll auto-hide can hide floating controls.
+ * While editing, the primary edit/X button and the add-widget + button must
+ * remain visible during scroll so the user can always exit edit mode or add.
+ */
+@media (orientation: portrait) {
+  :host([data-layout="mobile"].is-editing.is-mobile-floating-controls-hidden) .mha-primary-edit-button,
+  :host([data-layout="mobile"].is-editing.is-mobile-floating-controls-hidden) .mha-add-widget-button {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+
+  :host([data-layout="mobile"].is-editing.is-mobile-floating-controls-hidden) .mha-primary-edit-button {
+    transform: none !important;
+  }
+
+  :host([data-layout="mobile"].is-editing.is-mobile-floating-controls-hidden) .mha-add-widget-button {
+    transform: translateY(calc(-1 * (var(--mha-floating-button-size) + clamp(.55rem, 1.6vw, .85rem)))) !important;
+  }
+}
+
+/* ONEUI FLOATING BUTTON BLUR
+ * OneUI keeps the floating controls softly translucent instead of opaque.
+ * This applies only to the floating edit/X, add-widget +, screensaver edit
+ * button that shares the same surface class, and the mobile dock floating
+ * button. iOS and Material keep their own treatments.
+ */
+:host([data-theme-style="oneui"]) .mha-main-edit-button,
+:host([data-theme-style="oneui"]) .mha-mobile-dock-button,
+:host([data-theme-style="oneui"]) .mha-mobile-dock-toggle,
+:host([data-theme-style="oneui"]) .mha-mobile-dock-fab {
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.26), rgba(255,255,255,.12)),
+    color-mix(in srgb, var(--mha-widget-surface) 68%, transparent) !important;
+  border-color: color-mix(in srgb, var(--mha-widget-border) 72%, white 18%) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(155%);
+  backdrop-filter: blur(22px) saturate(155%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.24),
+    0 16px 38px rgba(0,0,0,.18),
+    0 6px 16px color-mix(in srgb, var(--mha-accent) 12%, transparent) !important;
+}
+
+:host([data-theme-style="oneui"][data-theme="dark"]) .mha-main-edit-button,
+:host([data-theme-style="oneui"][data-theme="dark"]) .mha-mobile-dock-button,
+:host([data-theme-style="oneui"][data-theme="dark"]) .mha-mobile-dock-toggle,
+:host([data-theme-style="oneui"][data-theme="dark"]) .mha-mobile-dock-fab {
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.16), rgba(255,255,255,.055)),
+    color-mix(in srgb, var(--mha-widget-surface) 54%, transparent) !important;
+  border-color: color-mix(in srgb, var(--mha-widget-border) 82%, white 8%) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.16),
+    0 18px 42px rgba(0,0,0,.34),
+    0 8px 20px color-mix(in srgb, var(--mha-accent) 16%, transparent) !important;
+}
+
+:host([data-theme-style="oneui"]) .mha-main-edit-button::before,
+:host([data-theme-style="oneui"]) .mha-mobile-dock-button::before,
+:host([data-theme-style="oneui"]) .mha-mobile-dock-toggle::before,
+:host([data-theme-style="oneui"]) .mha-mobile-dock-fab::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 28% 18%, rgba(255,255,255,.30), transparent 34%),
+    linear-gradient(135deg, rgba(255,255,255,.12), transparent 58%);
+  opacity: .72;
+}
+
+:host([data-theme-style="oneui"][data-theme="dark"]) .mha-main-edit-button::before,
+:host([data-theme-style="oneui"][data-theme="dark"]) .mha-mobile-dock-button::before,
+:host([data-theme-style="oneui"][data-theme="dark"]) .mha-mobile-dock-toggle::before,
+:host([data-theme-style="oneui"][data-theme="dark"]) .mha-mobile-dock-fab::before {
+  opacity: .38;
+}

@@ -687,3 +687,72 @@
     outline-offset: 1px !important;
   }
 }
+
+/* ONEUI SELECTED ACCENT OUTLINE
+ * OneUI uses softer glass surfaces, so the selected accent swatch needs an
+ * explicit ring like the other visual styles.
+ */
+:host([data-theme-style="oneui"]) .mha-settings-accent-swatch[aria-pressed="true"],
+:host([data-theme-style="oneui"]) .mha-settings-accent-swatch.is-selected,
+:host([data-theme-style="oneui"]) .mha-accent-swatch[aria-pressed="true"],
+:host([data-theme-style="oneui"]) .mha-accent-swatch.is-selected {
+  outline: 2px solid color-mix(in srgb, var(--mha-text) 82%, white 18%) !important;
+  outline-offset: 2px !important;
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--mha-widget-surface) 82%, transparent),
+    0 0 0 5px color-mix(in srgb, var(--mha-accent) 42%, transparent),
+    inset 0 1px 0 rgba(255,255,255,.35),
+    0 10px 24px rgba(0,0,0,.18) !important;
+  transform: translateY(-1px);
+}
+
+:host([data-theme-style="oneui"][data-theme="dark"]) .mha-settings-accent-swatch[aria-pressed="true"],
+:host([data-theme-style="oneui"][data-theme="dark"]) .mha-settings-accent-swatch.is-selected,
+:host([data-theme-style="oneui"][data-theme="dark"]) .mha-accent-swatch[aria-pressed="true"],
+:host([data-theme-style="oneui"][data-theme="dark"]) .mha-accent-swatch.is-selected {
+  outline-color: rgba(255,255,255,.82) !important;
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--mha-widget-surface) 72%, transparent),
+    0 0 0 5px color-mix(in srgb, var(--mha-accent) 48%, transparent),
+    inset 0 1px 0 rgba(255,255,255,.26),
+    0 12px 28px rgba(0,0,0,.34) !important;
+}
+
+/* SQUIRCLE SELECTED ACCENT CHECK ONLY
+ * Squircle swatches are masked. Keep the selected state minimal: no outer ring,
+ * no internal highlight ring, only a check mark inside the selected color.
+ */
+.mha-settings-panel[data-icon-shape="squircle"] .mha-settings-accent-swatch {
+  position: relative;
+}
+
+.mha-settings-panel[data-icon-shape="squircle"] .mha-settings-accent-swatch[aria-pressed="true"],
+.mha-settings-panel[data-icon-shape="squircle"] .mha-settings-accent-swatch.is-selected {
+  outline: none !important;
+  border-color: transparent !important;
+  box-shadow: 0 6px 16px rgba(0,0,0,.12) !important;
+}
+
+.mha-settings-panel[data-icon-shape="squircle"] .mha-settings-accent-swatch[aria-pressed="true"]::after,
+.mha-settings-panel[data-icon-shape="squircle"] .mha-settings-accent-swatch.is-selected::after {
+  content: "✓";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: clamp(.95rem, 2.6vw, 1.25rem);
+  font-weight: 950;
+  line-height: 1;
+  text-shadow:
+    0 1px 3px rgba(0,0,0,.55),
+    0 0 10px rgba(0,0,0,.28);
+  pointer-events: none;
+}
+
+:host([data-theme="light"]) .mha-settings-panel[data-icon-shape="squircle"] .mha-settings-accent-swatch[aria-pressed="true"]::after,
+:host([data-theme="light"]) .mha-settings-panel[data-icon-shape="squircle"] .mha-settings-accent-swatch.is-selected::after {
+  text-shadow:
+    0 1px 3px rgba(0,0,0,.48),
+    0 0 8px rgba(0,0,0,.22);
+}
