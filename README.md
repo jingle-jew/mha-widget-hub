@@ -358,3 +358,52 @@ The inactive region of the iOS Control Center-style SliderWidget now uses the
 exact widget surface token, `--mha-widget-surface`, instead of a separate gray
 overlay. The active region remains translucent white, and the glass sheen was
 reduced so the inactive area matches regular widgets.
+
+
+## Screensaver edit hotspot
+
+In screensaver mode, the primary edit/settings entry point is intentionally
+invisible but remains clickable as a larger top-left hotspot. This keeps the
+screensaver clean while avoiding unreliable long-press gestures on mobile
+WebViews.
+
+
+## Screensaver real settings hotspot
+
+The invisible screensaver settings hotspot now targets the real screensaver
+settings button instead of the main dashboard edit button. The hotspot is moved
+to the top-left and enlarged, while the dashboard edit/+ controls remain hidden
+and non-interactive during screensaver mode.
+
+
+## Clock widget variants
+
+A 2×2 Clock Widget is available in the Widget Manager under Utilitaires with four
+variants: digital, analog, iOS analog, and scientific. The screensaver reuses the
+same clock variants without a widget tile background so its lockscreen-style
+presentation stays clean.
+
+
+## Clock widget persistence fix
+
+Clock widgets created from the Widget Manager now persist as `kind: "clock"`
+custom widgets instead of falling back to empty widgets. The renderer also
+recognizes earlier utility clock entries by category/variant, so previously
+created clock entries can render correctly after refresh.
+
+
+## Clock widget persistence fix 3
+
+Widget persistence no longer depends on the legacy auto-pack layout validator.
+Explicit ghost-slot placement is already validated before saving, so
+`_saveWidgets()` now writes the current widget contract/order/sizes directly.
+This prevents multiple 2×2 ClockWidgets from appearing temporarily but
+disappearing after browser refresh.
+
+
+## Clock widget persistence fix 4
+
+The legacy auto-pack validator is no longer used as a global save gate. It is
+kept only as a fallback/resize heuristic, while widget persistence now follows
+the explicit ghost-slot position map. This prevents valid multi-clock layouts
+from disappearing after refresh.

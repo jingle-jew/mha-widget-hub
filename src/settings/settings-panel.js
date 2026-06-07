@@ -37,6 +37,8 @@ const CLOCK_VARIANTS = [
   { value: "none", label: "Pas d’horloge" },
   { value: "digital", label: "Numérique" },
   { value: "analog", label: "Analogique" },
+  { value: "ios-analog", label: "Analogique iOS" },
+  { value: "scientific", label: "Scientifique" },
 ];
 
 function option(value, label, selectedValue) {

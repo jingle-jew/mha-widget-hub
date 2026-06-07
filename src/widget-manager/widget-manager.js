@@ -1,4 +1,10 @@
 export const WIDGET_MANAGER_CATEGORIES = Object.freeze([
+  { id:"utilities", label:"Utilitaires", description:"Horloges et infos rapides.", icon:"◷", widgets:[
+    {kind:"clock",variant:"digital",label:"Horloge numérique",size:{w:2,h:2},description:"Heure et date."},
+    {kind:"clock",variant:"analog",label:"Horloge analogique",size:{w:2,h:2},description:"Cadran simple."},
+    {kind:"clock",variant:"ios-analog",label:"Analogique iOS",size:{w:2,h:2},description:"Cadran classique iOS."},
+    {kind:"clock",variant:"scientific",label:"Horloge scientifique",size:{w:2,h:2},description:"Temps + indicateurs."},
+  ]},
   { id:"weather", label:"Météo", description:"Prévisions et conditions.", icon:"☁", widgets:[
     {kind:"empty",variant:"weather-compact",label:"Météo compacte",size:{w:2,h:2},description:"Carte météo simple."},
     {kind:"empty",variant:"weather-wide",label:"Météo large",size:{w:4,h:2},description:"Conditions + détails."},
@@ -45,6 +51,12 @@ function createPreview(item) {
     rail.className = "mha-widget-manager-preview-slider";
     rail.dataset.orientation = (item.size?.h || 1) > (item.size?.w || 1) ? "vertical" : "horizontal";
     shape.append(rail);
+  } else if (item.kind === "clock") {
+    const clock = document.createElement("span");
+    clock.className = "mha-widget-manager-preview-clock";
+    clock.dataset.variant = item.variant || "digital";
+    clock.textContent = item.variant === "analog" || item.variant === "ios-analog" ? "◷" : item.variant === "scientific" ? "T+" : "12:45";
+    shape.append(clock);
   } else {
     const dot = document.createElement("span");
     dot.className = "mha-widget-manager-preview-dot";

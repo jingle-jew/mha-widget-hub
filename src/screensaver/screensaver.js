@@ -6,8 +6,9 @@
  */
 
 import { ICONS } from "../components/icons.js";
+import { CLOCK_WIDGET_VARIANTS, createClockWidgetContent, normalizeClockWidgetVariant, updateClockWidget } from "../widgets/clock-widget.js";
 
-export const CLOCK_VARIANTS = ["none", "digital", "analog"];
+export const CLOCK_VARIANTS = ["none", ...CLOCK_WIDGET_VARIANTS];
 
 export function normalizeClockVariant(value = "digital") {
   return CLOCK_VARIANTS.includes(value) ? value : "digital";
@@ -61,16 +62,15 @@ function updateAnalogClockHands(root, now = new Date()) {
 function updateClockContent(root, variant = "digital", now = new Date()) {
   const normalized = normalizeClockVariant(variant);
 
-  if (normalized === "digital") {
-    updateDigitalClock(root, now);
-    return;
-  }
+  if (normalized === "none") return;
 
-  if (normalized === "analog") {
-    updateAnalogClockHands(root, now);
-  }
+  const clock = root?.querySelector?.(".mha-clock-widget") || root;
+  updateClockWidget(clock, normalizeClockWidgetVariant(normalized), now);
 }
 
+/* Legacy screensaver digital/analog builders are kept below for compatibility,
+ * but current screensaver rendering uses the shared ClockWidget variants.
+ */
 function createDigitalClock(now = new Date()) {
   const wrap = document.createElement("div");
   wrap.className = "mha-screensaver-clock mha-screensaver-clock--digital";
@@ -132,7 +132,11 @@ function createClockContent(variant = "digital") {
     return empty;
   }
 
-  return normalized === "analog" ? createAnalogClock() : createDigitalClock();
+  return createClockWidgetContent({
+    variant: normalizeClockWidgetVariant(normalized),
+    className: "mha-screensaver-clock",
+    screensaver: true,
+  });
 }
 
 function createClock(variant = "digital") {

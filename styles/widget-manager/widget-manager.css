@@ -333,3 +333,28 @@
     display: none !important;
   }
 }
+
+
+/* Clock widget previews */
+.mha-widget-manager-preview-clock {
+  color: var(--mha-text);
+  font-size: clamp(.78rem, 1.8vw, 1.05rem);
+  font-weight: 850;
+  letter-spacing: -.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.mha-widget-manager-preview-clock[data-variant="analog"],
+.mha-widget-manager-preview-clock[data-variant="ios-analog"] {
+  inline-size: 1.65rem;
+  block-size: 1.65rem;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--mha-text) 22%, transparent);
+}
+
+.mha-widget-manager-preview-clock[data-variant="scientific"] {
+  color: var(--mha-accent);
+  letter-spacing: .02em;
+}

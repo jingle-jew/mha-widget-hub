@@ -348,3 +348,14 @@
  * force every possible layout into one viewport. The correct future solution is
  * dashboard pages / pagination for overflow content.
  */
+
+/* SCREENSAVER DASHBOARD CONTROLS HIDDEN
+ * The screensaver owns its own settings hotspot. The dashboard edit/+ controls
+ * stay hidden and non-interactive while the screensaver is visible.
+ */
+:host(.is-screensaver-visible) .mha-primary-edit-button,
+:host(.is-screensaver-visible) .mha-add-widget-button {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}

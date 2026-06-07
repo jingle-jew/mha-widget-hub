@@ -4,6 +4,7 @@ import { createIcon } from "../ui/icon.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
 import { createWidgetInnerGrid, createWidgetSliderUnit, createWidgetText, createWidgetUnit } from "./widget-layout.js";
 import { createSliderWidgetContent, isSliderWidget } from "./slider-widget.js";
+import { createClockWidgetContent, isClockWidget } from "./clock-widget.js";
 import { createSlider } from "../ui/slider.js";
 import { createToggle } from "../ui/toggle.js";
 import { createPill } from "../ui/pill.js";
@@ -32,6 +33,10 @@ export function createEmptyWidget(
   el.dataset.widgetId = widget.id;
   if (isSliderWidget(widget) || widget.id === "slot-f" || widget.id === "slot-i") {
     el.dataset.widgetKind = "slider";
+  }
+
+  if (isClockWidget(widget)) {
+    el.dataset.widgetKind = "clock";
   }
   el.dataset.widgetConfiguredW = String(size.w);
   el.dataset.widgetW = String(effectiveWidgetW);
@@ -130,6 +135,25 @@ export function createEmptyWidget(
         className: "mha-widget-demo-slider",
       }),
     );
+  }
+
+  if (isClockWidget(widget)) {
+    const clockGrid = createWidgetInnerGrid({ className: "mha-clock-widget-grid" });
+    clockGrid.append(
+      createWidgetUnit({
+        col: 1,
+        row: 1,
+        colSpan: effectiveWidgetW,
+        rowSpan: size.h,
+        align: "stretch",
+        justify: "stretch",
+        className: "mha-clock-widget-unit",
+        children: createClockWidgetContent({
+          variant: widget.variant || "digital",
+        }),
+      }),
+    );
+    el.append(clockGrid);
   }
 
   if (innerGrid.childElementCount > 0) el.append(innerGrid);

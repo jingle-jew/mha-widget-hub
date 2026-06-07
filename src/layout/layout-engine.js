@@ -240,10 +240,19 @@ export function normalizeSliderWidgetSize({w=2,h=1}={}) {
   return {w:Math.max(2,Math.min(4,w)),h:1};
 }
 
+export function normalizeClockWidgetSize() {
+  return {w:2,h:2};
+}
+
 export function normalizeWidgetForKind(widget={}) {
   const size=normalizeWidgetSize(widget);
   const kind=widget.kind||widget.type||widget.component;
+  const variant=widget.variant||"";
+  const category=widget.category||"";
   const isSlider=kind==="slider"||kind==="slider-widget"||widget.id==="slot-f"||widget.id==="slot-i";
+  const isClock=kind==="clock"||kind==="clock-widget"||(category==="utilities"&&["digital","analog","ios-analog","scientific"].includes(variant));
+
+  if(isClock)return normalizeClockWidgetSize();
   if(!isSlider)return size;
   return normalizeSliderWidgetSize(size);
 }

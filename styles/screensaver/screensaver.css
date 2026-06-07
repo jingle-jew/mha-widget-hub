@@ -481,3 +481,49 @@
 .mha-screensaver[data-visible="false"] .mha-screensaver-edit-button {
   pointer-events: none !important;
 }
+
+/* SCREENSAVER REAL SETTINGS HOTSPOT
+ * This targets the real screensaver settings button, the one already wired to
+ * open the screensaver settings panel.
+ *
+ * It is intentionally invisible, moved to the top-left, and enlarged so the
+ * screensaver stays visually clean without relying on long-press gestures.
+ */
+.mha-screensaver[data-visible="true"] .mha-screensaver-edit-button,
+.mha-screensaver[data-visible="true"] [data-action="screensaver-settings"],
+.mha-screensaver[data-visible="true"] [data-screensaver-action="settings"] {
+  position: fixed !important;
+  z-index: 140 !important;
+  inset-block-start: max(env(safe-area-inset-top), clamp(.85rem, 2.4vw, 1.35rem)) !important;
+  inset-inline-start: max(env(safe-area-inset-left), clamp(.85rem, 2.4vw, 1.35rem)) !important;
+  inset-inline-end: auto !important;
+  inset-block-end: auto !important;
+  inline-size: clamp(4.75rem, 10vw, 6.75rem) !important;
+  block-size: clamp(4.75rem, 10vw, 6.75rem) !important;
+  width: clamp(4.75rem, 10vw, 6.75rem) !important;
+  height: clamp(4.75rem, 10vw, 6.75rem) !important;
+  opacity: 0 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  transform: none !important;
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  cursor: pointer;
+}
+
+/* Make sure no bottom-right visual/hit-area remains for the screensaver button. */
+.mha-screensaver[data-visible="true"] .mha-screensaver-edit-button > *,
+.mha-screensaver[data-visible="true"] .mha-screensaver-edit-button::before,
+.mha-screensaver[data-visible="true"] .mha-screensaver-edit-button::after,
+.mha-screensaver[data-visible="true"] [data-action="screensaver-settings"] > *,
+.mha-screensaver[data-visible="true"] [data-action="screensaver-settings"]::before,
+.mha-screensaver[data-visible="true"] [data-action="screensaver-settings"]::after,
+.mha-screensaver[data-visible="true"] [data-screensaver-action="settings"] > *,
+.mha-screensaver[data-visible="true"] [data-screensaver-action="settings"]::before,
+.mha-screensaver[data-visible="true"] [data-screensaver-action="settings"]::after {
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
