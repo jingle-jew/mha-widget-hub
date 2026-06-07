@@ -218,3 +218,41 @@ The product idea is simple:
 ## License
 
 License not selected yet.
+
+
+## Accent swatch selected checkmarks
+
+Accent swatches now use the same internal check mark selected state across iOS,
+OneUI and Material. External contour/ring highlights were removed to keep the
+selection treatment clean and compatible with squircle masking.
+
+
+## First launch defaults
+
+On a fresh browser/device with no saved preferences, MHA Widget Hub opens with:
+
+- theme: Auto;
+- visual style: OneUI;
+- accent: first OneUI blue;
+- icon shape: Auto;
+- screensaver: enabled;
+- screensaver delay: 30 seconds;
+- Now Bar: enabled;
+- clock: digital.
+
+These are only fallback values. Once the user changes a setting, the saved
+localStorage preference remains persistent and is not overwritten by the defaults.
+
+
+## Theme Auto first-launch fix
+
+The theme setting now defaults to `Auto` on first launch. Persisted user choices
+from localStorage still win, but document-level effective theme bootstrap values
+are no longer allowed to make a fresh install appear as `Sombre`.
+
+
+## Widget Manager settings token parity
+
+The Widget Manager now follows the Settings panel visual contract more closely:
+same sheet class, same surface tokens, and category/widget tiles styled like
+settings sections across iOS, OneUI, and Material.

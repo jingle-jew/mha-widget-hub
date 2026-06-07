@@ -42,10 +42,16 @@ function getStoredThemeSetting(host) {
   /*
    * data-theme is the effective light/dark theme.
    * data-theme-setting is the user preference: auto / dark / light.
+   *
+   * First-launch rule:
+   * - localStorage is the source of persisted user choice;
+   * - host data-theme-setting may provide an explicit embedding override;
+   * - documentElement data-theme-setting is ignored as a default source because
+   *   some bootstrap/theme code can leave it as the effective "dark/light",
+   *   making a fresh install appear as "Sombre" instead of "Auto".
    */
   const stored = localStorage.getItem("mha-theme")
     || localStorage.getItem("mha-dev-theme")
-    || document.documentElement.dataset.themeSetting
     || host?.dataset?.themeSetting
     || "auto";
 
@@ -161,8 +167,22 @@ const SCREENSAVER_DELAY="mha-screensaver-delay";
 const SCREENSAVER_NOWBAR="mha-screensaver-nowbar";
 const SCREENSAVER_CLOCK_VARIANT="mha-screensaver-clock-variant";
 
+/*
+ * FIRST LAUNCH DEFAULTS
+ * These are fallback values only. Stored user choices in localStorage always win.
+ *
+ * Theme: auto
+ * Visual style: OneUI
+ * Accent: first OneUI blue / sky
+ * Icon shape: auto
+ * Screensaver: enabled
+ * Screensaver delay: 30 seconds
+ * Screensaver Now Bar: enabled
+ * Screensaver clock: digital
+ */
+
 function readMigratedJson(key,legacyKey,fallback){const current=readJson(key,null);if(current!==null)return current;const legacy=readJson(legacyKey,null);if(legacy!==null){writeJson(key,legacy);return legacy}return fallback}
-class MhaControlHub extends HTMLElement{constructor(){super();this.attachShadow({mode:"open"});this._hass=null;this._isEditing=false;this._activeMoveWidgetId="";this._widgetPositions=readJson(POSITIONS,{})||{};this._draggedId="";this._isResizingWidget=false;this._resizeState=null;this._squareUnitFrame=0;this._renderId=0;this._readyRaf=0;this._viewportRaf=0;this._relayoutTimer=0;this._systemThemeListener=null;this._themeTransitionTimer=0;this._themeTransitionFrame=0;this._gridScrollCleanup=null;this._screensaverPreview=false;this._screensaverActive=false;this._screensaverNowBar=readBool(SCREENSAVER_NOWBAR,true);this._screensaverClockVariant=localStorage.getItem(SCREENSAVER_CLOCK_VARIANT)||localStorage.getItem("mha-screensaver-clock")||"digital";this._screensaverIdleTimer=0;this._screensaverEnabled=readBool(SCREENSAVER_ENABLED,false);this._screensaverDelay=readNumberOption(SCREENSAVER_DELAY,30000,[15000,30000,120000,300000]);this._settingsOpen=false;this._screensaverSettingsOpen=false;this._lastResponsiveSignature="";this._responsiveRelayoutTimer=null;this._widgetManagerOpen=false;this._widgetManagerCategory="";this._pendingWidgetPlacement=null;this._widgets=this._readWidgets()}
+class MhaControlHub extends HTMLElement{constructor(){super();this.attachShadow({mode:"open"});this._hass=null;this._isEditing=false;this._activeMoveWidgetId="";this._widgetPositions=readJson(POSITIONS,{})||{};this._draggedId="";this._isResizingWidget=false;this._resizeState=null;this._squareUnitFrame=0;this._renderId=0;this._readyRaf=0;this._viewportRaf=0;this._relayoutTimer=0;this._systemThemeListener=null;this._themeTransitionTimer=0;this._themeTransitionFrame=0;this._gridScrollCleanup=null;this._screensaverPreview=false;this._screensaverActive=false;this._screensaverNowBar=readBool(SCREENSAVER_NOWBAR,true);this._screensaverClockVariant=localStorage.getItem(SCREENSAVER_CLOCK_VARIANT)||localStorage.getItem("mha-screensaver-clock")||"digital";this._screensaverIdleTimer=0;this._screensaverEnabled=readBool(SCREENSAVER_ENABLED,true);this._screensaverDelay=readNumberOption(SCREENSAVER_DELAY,30000,[15000,30000,120000,300000]);this._settingsOpen=false;this._screensaverSettingsOpen=false;this._lastResponsiveSignature="";this._responsiveRelayoutTimer=null;this._widgetManagerOpen=false;this._widgetManagerCategory="";this._pendingWidgetPlacement=null;this._widgets=this._readWidgets()}
 set hass(h){this._hass=h;this.render()}get hass(){return this._hass}
 _markReadyAfterPaint(){
   cancelAnimationFrame(this._readyRaf);
