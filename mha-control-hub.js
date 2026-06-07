@@ -1248,11 +1248,12 @@ _handleViewportChange(){
 }
 
 _clearGridScrollListener(){this._gridScrollCleanup?.();this._gridScrollCleanup=null}
-// The dock behaves like macOS: downward grid scroll gets it out of the way, upward scroll recalls it.
-_wireDockAutoHide(grid){this._clearGridScrollListener();this.classList.remove("is-dock-hidden");
-const shouldAutoHideDock=()=>window.matchMedia("(max-width: 767px)").matches;
-if(!shouldAutoHideDock())return;
-let previousScrollTop=grid.scrollTop;const threshold=10;const onScroll=()=>{if(!shouldAutoHideDock()){this.classList.remove("is-dock-hidden");previousScrollTop=grid.scrollTop;return}const currentScrollTop=grid.scrollTop;if(currentScrollTop<=4){this.classList.remove("is-dock-hidden");previousScrollTop=currentScrollTop;return}const delta=currentScrollTop-previousScrollTop;if(delta>threshold)this.classList.add("is-dock-hidden");else if(delta<-threshold)this.classList.remove("is-dock-hidden");if(Math.abs(delta)>threshold)previousScrollTop=currentScrollTop};grid.addEventListener("scroll",onScroll,{passive:true});this._gridScrollCleanup=()=>grid.removeEventListener("scroll",onScroll)}
+// Mobile floating controls move out of the way on downward portrait scroll.
+_wireDockAutoHide(grid){this._clearGridScrollListener();this.classList.remove("is-dock-hidden","is-mobile-floating-controls-hidden");
+const scrollContainer=grid.closest(".mha-widget-area");const isMobileLayout=()=>this.dataset.layout==="mobile";const isLandscape=()=>window.matchMedia("(orientation: landscape)").matches;
+if(!scrollContainer||!isMobileLayout())return;
+if(isLandscape()){this.classList.add("is-mobile-floating-controls-hidden");return}
+let previousScrollTop=scrollContainer.scrollTop;const threshold=10;const onScroll=()=>{if(!isMobileLayout()||isLandscape()){this.classList.toggle("is-mobile-floating-controls-hidden",isMobileLayout()&&isLandscape());previousScrollTop=scrollContainer.scrollTop;return}const currentScrollTop=scrollContainer.scrollTop;if(currentScrollTop<=4){this.classList.remove("is-mobile-floating-controls-hidden");previousScrollTop=currentScrollTop;return}const delta=currentScrollTop-previousScrollTop;if(delta>threshold)this.classList.add("is-mobile-floating-controls-hidden");else if(delta<-threshold)this.classList.remove("is-mobile-floating-controls-hidden");if(Math.abs(delta)>threshold)previousScrollTop=currentScrollTop};scrollContainer.addEventListener("scroll",onScroll,{passive:true});this._gridScrollCleanup=()=>scrollContainer.removeEventListener("scroll",onScroll)}
 _scheduleSquareUnitSync(){cancelAnimationFrame(this._squareUnitFrame);this._squareUnitFrame=requestAnimationFrame(()=>{this._squareUnitFrame=requestAnimationFrame(()=>this._syncSquareUnit())})}
 _getWidgetAreaMetrics(){
   const area=this.shadowRoot?.querySelector?.(".mha-widget-area");

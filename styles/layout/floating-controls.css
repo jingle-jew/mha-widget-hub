@@ -25,7 +25,9 @@
   box-shadow: var(--mha-widget-shadow);
   overflow: hidden;
   padding: 0;
-  transition: transform var(--mha-motion-duration) var(--mha-motion-easing);
+  transition:
+    opacity var(--mha-motion-duration) ease,
+    transform var(--mha-motion-duration) var(--mha-motion-easing);
 }
 
 .mha-edit-button svg {
@@ -46,6 +48,14 @@
   .mha-edit-button {
     right: var(--mha-edit-button-edge);
     bottom: var(--mha-edit-button-bottom);
+  }
+}
+
+@media (orientation: landscape) {
+  :host([data-layout="mobile"]) .mha-main-edit-button {
+    opacity: 0 !important;
+    transform: translateY(calc(100% + 1rem)) scale(.96) !important;
+    pointer-events: none !important;
   }
 }
 
@@ -119,5 +129,14 @@
     --mha-icon-symbol-color: currentColor !important;
     color: currentColor !important;
     opacity: 1;
+  }
+}
+
+@media (orientation: portrait) {
+  :host([data-layout="mobile"].is-mobile-floating-controls-hidden) .mha-main-edit-button,
+  :host([data-layout="mobile"].is-mobile-floating-controls-hidden) .mha-mobile-dock-launcher {
+    opacity: 0 !important;
+    transform: translateY(calc(100% + 1rem)) scale(.96) !important;
+    pointer-events: none !important;
   }
 }

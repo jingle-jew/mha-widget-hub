@@ -222,13 +222,10 @@
 }
 
 /* MOBILE DOCK PANEL SURFACE TOKENS
- * The mobile floating dock panel follows the same surface system as widgets.
- * It is intentionally a slightly denser/darker surface so it reads as an
- * opened floating layer over the dashboard.
+ * The expanded panel uses the exact same background token as widgets.
  */
 .mha-mobile-dock {
-  --mha-mobile-dock-panel-surface:
-    color-mix(in srgb, var(--mha-widget-surface) 88%, rgba(0,0,0,.16));
+  --mha-mobile-dock-panel-surface: var(--mha-widget-surface);
   --mha-mobile-dock-panel-border: var(--mha-widget-border);
   --mha-mobile-dock-panel-shadow: var(--mha-floating-shadow);
 }
@@ -240,14 +237,8 @@
   color: var(--mha-text);
 }
 
-/* iOS: preserve glass, but derive it from widget surface instead of a fixed dark panel. */
+/* Theme-specific borders and shadows keep their existing visual treatment. */
 :host([data-theme-style="ios"]) .mha-mobile-dock {
-  --mha-mobile-dock-panel-surface:
-    linear-gradient(
-      145deg,
-      color-mix(in srgb, var(--mha-widget-surface) 76%, rgba(255,255,255,.18)),
-      color-mix(in srgb, var(--mha-widget-surface) 88%, rgba(0,0,0,.16))
-    );
   --mha-mobile-dock-panel-border: color-mix(in srgb, var(--mha-widget-border) 72%, rgba(255,255,255,.28));
   --mha-mobile-dock-panel-shadow:
     0 24px 70px rgba(0,0,0,.24),
@@ -255,41 +246,19 @@
 }
 
 :host([data-theme="light"][data-theme-style="ios"]) .mha-mobile-dock {
-  --mha-mobile-dock-panel-surface:
-    linear-gradient(
-      145deg,
-      color-mix(in srgb, var(--mha-widget-surface) 78%, rgba(255,255,255,.52)),
-      color-mix(in srgb, var(--mha-widget-surface) 90%, rgba(110,125,160,.12))
-    );
   --mha-mobile-dock-panel-border: rgba(255,255,255,.54);
   --mha-mobile-dock-panel-shadow:
     0 24px 70px rgba(65,80,120,.16),
     inset 0 1px 0 rgba(255,255,255,.62);
 }
 
-/* OneUI: opaque and slightly denser than widgets. */
 :host([data-theme-style="oneui"]) .mha-mobile-dock {
-  --mha-mobile-dock-panel-surface:
-    color-mix(in srgb, var(--mha-widget-surface) 88%, rgba(0,0,0,.10));
   --mha-mobile-dock-panel-border: var(--mha-widget-border);
 }
 
-:host([data-theme="light"][data-theme-style="oneui"]) .mha-mobile-dock {
-  --mha-mobile-dock-panel-surface:
-    color-mix(in srgb, var(--mha-widget-surface) 86%, rgba(115,125,145,.12));
-}
-
-/* Material: keep the Material palette structure; consume existing surface tokens only. */
 :host([data-theme-style="material"]) .mha-mobile-dock {
-  --mha-mobile-dock-panel-surface:
-    color-mix(in srgb, var(--mha-widget-surface) 90%, rgba(0,0,0,.10));
   --mha-mobile-dock-panel-border: var(--mha-widget-border);
   --mha-mobile-dock-panel-shadow: var(--mha-floating-shadow);
-}
-
-:host([data-theme="light"][data-theme-style="material"]) .mha-mobile-dock {
-  --mha-mobile-dock-panel-surface:
-    color-mix(in srgb, var(--mha-widget-surface) 88%, rgba(29,27,32,.08));
 }
 
 /* The close button is an explicit contrast/danger exception. */
@@ -314,20 +283,23 @@
   pointer-events: none !important;
 }
 
-/* MATERIAL MOBILE DOCK DYNAMIC SURFACE */
-:host([data-theme-style="material"]) .mha-mobile-dock-panel {
-  background:
-    linear-gradient(
-      145deg,
-      color-mix(in srgb, var(--mha-material-surface-tint) 44%, transparent),
-      transparent 56%
-    ),
-    var(--mha-dock-surface);
-  border-color: var(--mha-material-outline-variant);
-}
-
 /* MATERIAL BORDERLESS MOBILE DOCK SURFACE */
 :host([data-theme-style="material"]) .mha-mobile-dock,
 :host([data-theme-style="material"]) .mha-mobile-dock-panel {
   border-color: transparent;
+}
+
+/* Mobile landscape keeps floating controls out of the widget viewport. */
+@media (orientation: landscape) {
+  :host([data-layout="mobile"]) .mha-mobile-dock {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  :host([data-layout="mobile"]) .mha-mobile-dock-launcher,
+  :host([data-layout="mobile"]) .mha-mobile-dock-panel,
+  :host([data-layout="mobile"]) .mha-mobile-dock-scrim {
+    pointer-events: none !important;
+  }
 }
