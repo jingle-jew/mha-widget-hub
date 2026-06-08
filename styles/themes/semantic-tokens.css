@@ -172,3 +172,51 @@
   --mha-panel-border: var(--mha-border-secondary);
   --mha-panel-section-border: var(--mha-border-subtle);
 }
+
+
+/* PHASE 4 SHELL ROLE TOKENS
+ *
+ * Status bar and docks now consume shell roles:
+ * - --mha-shell-surface
+ * - --mha-shell-status-surface
+ * - --mha-shell-dock-surface
+ * - --mha-shell-panel-surface
+ * - --mha-shell-border
+ * - --mha-shell-shadow
+ * - --mha-shell-blur
+ */
+:host,
+:root {
+  --mha-shell-surface: var(--mha-surface-glass);
+  --mha-shell-status-surface: var(--mha-shell-surface);
+  --mha-shell-dock-surface: var(--mha-shell-surface);
+  --mha-shell-panel-surface: var(--mha-surface-panel);
+  --mha-shell-border: var(--mha-border-secondary);
+  --mha-shell-shadow: var(--mha-shadow-floating);
+  --mha-shell-blur: var(--mha-blur-primary);
+}
+
+:host([data-theme-style="ios"]),
+:root[data-theme-style="ios"] {
+  --mha-shell-surface: var(--mha-surface-glass);
+  --mha-shell-panel-surface: var(--mha-surface-panel);
+  --mha-shell-blur: var(--mha-blur-primary);
+}
+
+:host([data-theme-style="oneui"]),
+:root[data-theme-style="oneui"] {
+  --mha-shell-surface: var(--mha-surface-glass);
+  --mha-shell-panel-surface: var(--mha-surface-panel);
+  --mha-shell-blur: var(--mha-blur-primary);
+}
+
+:host([data-theme-style="material"]),
+:root[data-theme-style="material"] {
+  --mha-shell-surface: var(--mha-surface-tonal);
+  --mha-shell-status-surface: var(--mha-surface-tonal);
+  --mha-shell-dock-surface: var(--mha-surface-tonal);
+  --mha-shell-panel-surface: var(--mha-surface-panel);
+  --mha-shell-border: var(--mha-border-subtle);
+  --mha-shell-shadow: var(--mha-shadow-floating);
+  --mha-shell-blur: 0px;
+}

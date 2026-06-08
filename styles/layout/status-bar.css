@@ -1,4 +1,4 @@
-.mha-status-bar,.mha-dock{min-height:var(--mha-bar-height);border:1px solid var(--mha-widget-border);border-radius:var(--mha-statusbar-radius);background:var(--mha-statusbar-surface);backdrop-filter:blur(var(--mha-surface-blur)) saturate(var(--mha-surface-saturation));box-shadow:var(--mha-floating-shadow)}.mha-status-bar{position:absolute;z-index:8;top:var(--mha-floating-top);left:50%;width:min(760px,calc(100% - (var(--mha-page-padding-desktop) * 2)));height:var(--mha-bar-height);transform:translateX(-50%);display:flex;align-items:center;justify-content:space-between;gap:var(--mha-control-gap);padding:0 18px;pointer-events:auto}:host([data-layout="mobile"]) .mha-status-bar{width:min(390px,calc(100% - (var(--mha-page-padding-mobile) * 2)))}:host([data-layout="tablet"]) .mha-status-bar{width:min(720px,calc(100% - (var(--mha-page-padding-wallpanel) * 2)))}.mha-status-brand,.mha-status-meta{display:flex;align-items:center;gap:10px;min-width:0;color:var(--mha-muted);font-size:13px;font-weight:var(--mha-typography-weight);white-space:nowrap}.mha-status-brand strong,.mha-status-meta strong{color:var(--mha-text)}.mha-dot{width:10px;height:10px;border-radius:999px;background:currentColor;opacity:.7}:host([data-layout="mobile"]) .mha-status-meta span:nth-child(2),:host([data-layout="mobile"]) .mha-status-meta span:nth-child(3){display:none}
+.mha-status-bar,.mha-dock{min-height:var(--mha-bar-height);border:1px solid var(--mha-border-secondary);border-radius:var(--mha-statusbar-radius);background:var(--mha-shell-surface, var(--mha-surface-glass));-webkit-backdrop-filter:blur(var(--mha-blur-primary)) saturate(var(--mha-surface-saturation));backdrop-filter:blur(var(--mha-blur-primary)) saturate(var(--mha-surface-saturation));box-shadow:var(--mha-shadow-floating)}.mha-status-bar{position:absolute;z-index:8;top:var(--mha-floating-top);left:50%;width:min(760px,calc(100% - (var(--mha-page-padding-desktop) * 2)));height:var(--mha-bar-height);transform:translateX(-50%);display:flex;align-items:center;justify-content:space-between;gap:var(--mha-control-gap);padding:0 18px;pointer-events:auto}:host([data-layout="mobile"]) .mha-status-bar{width:min(390px,calc(100% - (var(--mha-page-padding-mobile) * 2)))}:host([data-layout="tablet"]) .mha-status-bar{width:min(720px,calc(100% - (var(--mha-page-padding-wallpanel) * 2)))}.mha-status-brand,.mha-status-meta{display:flex;align-items:center;gap:10px;min-width:0;color:var(--mha-text-muted);font-size:13px;font-weight:var(--mha-typography-weight);white-space:nowrap}.mha-status-brand strong,.mha-status-meta strong{color:var(--mha-text-primary)}.mha-dot{width:10px;height:10px;border-radius:999px;background:currentColor;opacity:.7}:host([data-layout="mobile"]) .mha-status-meta span:nth-child(2),:host([data-layout="mobile"]) .mha-status-meta span:nth-child(3){display:none}
 
 /* MOBILE STATUS BAR HIDDEN
  * Mobile uses the freed top area for widgets.
@@ -64,7 +64,7 @@
     min-height: var(--mha-statusbar-height-compact);
     transform: none;
     padding-inline: clamp(0.85rem, 1.8vw, 1.15rem);
-    box-shadow: var(--mha-statusbar-shadow-soft);
+    box-shadow: var(--mha-shell-shadow, var(--mha-statusbar-shadow-soft));
   }
 
   .mha-status-brand,
@@ -107,8 +107,8 @@
 
 /* iOS: Liquid Glass, brighter edge highlight and optical reflection. */
 :host([data-theme-style="ios"]) .mha-status-bar {
-  background: var(--mha-statusbar-surface);
-  border-color: color-mix(in srgb, var(--mha-widget-border) 86%, white 14%);
+  background: var(--mha-shell-surface, var(--mha-surface-glass));
+  border-color: color-mix(in srgb, var(--mha-border-primary) 86%, white 14%);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.34),
     inset 0 -1px 0 rgba(255,255,255,.06),
@@ -126,8 +126,8 @@
 
 /* OneUI: warm soft pill, subtle floating depth. */
 :host([data-theme-style="oneui"]) .mha-status-bar {
-  background: var(--mha-statusbar-surface);
-  border-color: color-mix(in srgb, var(--mha-widget-border) 92%, transparent);
+  background: var(--mha-shell-surface, var(--mha-surface-glass));
+  border-color: color-mix(in srgb, var(--mha-border-primary) 92%, transparent);
   box-shadow:
     0 14px 36px rgba(36,21,14,.13),
     0 7px 18px rgba(101,168,255,.06),
@@ -145,8 +145,8 @@
 
 /* Material You: flatter tonal container, less blur, smaller radius from theme. */
 :host([data-theme-style="material"]) .mha-status-bar {
-  background: var(--mha-statusbar-surface);
-  border-color: color-mix(in srgb, var(--mha-widget-border) 88%, var(--mha-muted) 12%);
+  background: var(--mha-shell-surface, var(--mha-surface-glass));
+  border-color: color-mix(in srgb, var(--mha-border-primary) 88%, var(--mha-muted) 12%);
   box-shadow:
     0 4px 14px rgba(0,0,0,.18),
     inset 0 1px 0 color-mix(in srgb, var(--mha-text) 5%, transparent);
@@ -246,8 +246,8 @@
  * iOS glass, OneUI soft widget surface, Material tonal container.
  */
 .mha-status-bar {
-  background: var(--mha-statusbar-surface);
-  border-color: var(--mha-widget-border);
+  background: var(--mha-shell-surface, var(--mha-surface-glass));
+  border-color: var(--mha-border-primary);
   color: var(--mha-text);
   box-shadow: none !important;
 }
@@ -278,7 +278,7 @@
   background:
     linear-gradient(145deg, rgba(255,255,255,.22), rgba(255,255,255,.07)),
     color-mix(in srgb, var(--mha-widget-surface) 82%, transparent);
-  border-color: color-mix(in srgb, var(--mha-widget-border) 68%, rgba(255,255,255,.46));
+  border-color: color-mix(in srgb, var(--mha-border-primary) 68%, rgba(255,255,255,.46));
   -webkit-backdrop-filter: blur(calc(var(--mha-surface-blur) * 1.15)) saturate(175%);
   backdrop-filter: blur(calc(var(--mha-surface-blur) * 1.15)) saturate(175%);
   box-shadow: none !important;
@@ -307,7 +307,7 @@
 :host([data-theme-style="oneui"]) .mha-status-bar {
   background:
     linear-gradient(145deg, color-mix(in srgb, var(--mha-widget-surface) 96%, rgba(255,255,255,.08)), var(--mha-widget-surface));
-  border-color: color-mix(in srgb, var(--mha-widget-border) 78%, rgba(255,255,255,.16));
+  border-color: color-mix(in srgb, var(--mha-border-primary) 78%, rgba(255,255,255,.16));
   -webkit-backdrop-filter: blur(var(--mha-surface-blur)) saturate(var(--mha-surface-saturation));
   backdrop-filter: blur(var(--mha-surface-blur)) saturate(var(--mha-surface-saturation));
   box-shadow: none !important;
@@ -317,14 +317,14 @@
   background:
     linear-gradient(145deg, rgba(255,255,255,.54), rgba(255,255,255,.28)),
     color-mix(in srgb, var(--mha-widget-surface) 86%, rgba(255,255,255,.34));
-  border-color: color-mix(in srgb, var(--mha-widget-border) 64%, rgba(255,255,255,.34));
+  border-color: color-mix(in srgb, var(--mha-border-primary) 64%, rgba(255,255,255,.34));
 }
 
 :host([data-theme="dark"][data-theme-style="oneui"]) .mha-status-bar {
   background:
     linear-gradient(145deg, rgba(255,255,255,.105), rgba(255,255,255,.045)),
     color-mix(in srgb, var(--mha-widget-surface) 92%, rgba(255,255,255,.04));
-  border-color: color-mix(in srgb, var(--mha-widget-border) 86%, rgba(255,255,255,.08));
+  border-color: color-mix(in srgb, var(--mha-border-primary) 86%, rgba(255,255,255,.08));
 }
 
 :host([data-theme-style="oneui"]) .mha-status-bar::after {
@@ -370,4 +370,21 @@
 
 :host([data-theme="dark"][data-theme-style="material"]) .mha-status-bar {
   background: var(--mha-material-surface-container, var(--mha-widget-surface));
+}
+
+/* SEMANTIC STATUS BAR SHELL TOKENS
+ * Phase 4 routes the status bar through the shell semantic roles.
+ */
+.mha-status-bar {
+  background: var(--mha-shell-status-surface, var(--mha-shell-surface, var(--mha-surface-glass)));
+  border-color: var(--mha-shell-border, var(--mha-border-secondary));
+  box-shadow: var(--mha-shell-shadow, var(--mha-shadow-floating));
+  -webkit-backdrop-filter: blur(var(--mha-shell-blur, var(--mha-blur-primary))) saturate(var(--mha-surface-saturation));
+  backdrop-filter: blur(var(--mha-shell-blur, var(--mha-blur-primary))) saturate(var(--mha-surface-saturation));
+}
+
+:host([data-theme-style="material"]) .mha-status-bar {
+  background: var(--mha-shell-status-surface, var(--mha-surface-tonal));
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }

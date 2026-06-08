@@ -29,11 +29,12 @@
     var(--mha-dock-empty-padding-block)
     var(--mha-dock-empty-padding-inline);
 
-  border: 1px solid var(--mha-widget-border);
+  border: 1px solid var(--mha-shell-border, var(--mha-border-secondary));
   border-radius: clamp(1.45rem, 3vw, var(--mha-dock-radius));
-  background: var(--mha-dock-surface);
-  backdrop-filter: blur(var(--mha-surface-blur)) saturate(var(--mha-surface-saturation));
-  box-shadow: var(--mha-dock-shadow);
+  background: var(--mha-shell-dock-surface, var(--mha-surface-glass));
+  -webkit-backdrop-filter: blur(var(--mha-shell-blur, var(--mha-blur-primary))) saturate(var(--mha-surface-saturation));
+  backdrop-filter: blur(var(--mha-shell-blur, var(--mha-blur-primary))) saturate(var(--mha-surface-saturation));
+  box-shadow: var(--mha-shell-shadow, var(--mha-shadow-floating));
   pointer-events: auto;
 
   transition:
@@ -389,4 +390,21 @@
 /* MATERIAL BORDERLESS DOCK SURFACE */
 :host([data-theme-style="material"]) .mha-dock {
   border-color: transparent;
+}
+
+/* SEMANTIC DOCK SHELL TOKENS
+ * Phase 4 routes the persistent dock through shell semantic roles.
+ */
+.mha-dock {
+  background: var(--mha-shell-dock-surface, var(--mha-surface-glass));
+  border-color: var(--mha-shell-border, var(--mha-border-secondary));
+  box-shadow: var(--mha-shell-shadow, var(--mha-shadow-floating));
+  -webkit-backdrop-filter: blur(var(--mha-shell-blur, var(--mha-blur-primary))) saturate(var(--mha-surface-saturation));
+  backdrop-filter: blur(var(--mha-shell-blur, var(--mha-blur-primary))) saturate(var(--mha-surface-saturation));
+}
+
+:host([data-theme-style="material"]) .mha-dock {
+  background: var(--mha-shell-dock-surface, var(--mha-surface-tonal));
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }

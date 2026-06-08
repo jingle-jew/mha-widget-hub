@@ -468,3 +468,14 @@ semantic panel roles: `--mha-bg-overlay`, `--mha-surface-panel`,
 `--mha-surface-secondary`, `--mha-surface-tertiary`, `--mha-border-subtle`,
 and `--mha-shadow-panel`. Theme-specific panel treatments remain intact:
 iOS/OneUI keep glass-style panels, while Material panels stay opaque/tonal.
+
+
+## Semantic tokens phase 4
+
+The status bar, persistent dock, mobile dock panel, and mobile dock scrim now
+consume shell semantic roles such as `--mha-shell-surface`,
+`--mha-shell-dock-surface`, `--mha-shell-status-surface`,
+`--mha-shell-border`, `--mha-shell-shadow`, and `--mha-shell-blur`.
+
+iOS and OneUI keep their glass/blurred shell surfaces. Material shell surfaces
+are routed to opaque tonal containers with `backdrop-filter: none`.
