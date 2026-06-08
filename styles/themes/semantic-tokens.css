@@ -407,3 +407,8 @@
  * - light: less transparent / milkier;
  * - dark: more glass / less opaque.
  */
+
+/* IOS PANEL LIQUID GLASS TOKEN NOTE
+ * iOS settings panels are calibrated in settings-panel.css for a crisper
+ * Liquid Glass look: less diffuse blur, stronger optical highlights.
+ */

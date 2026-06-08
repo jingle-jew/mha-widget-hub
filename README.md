@@ -529,3 +529,17 @@ for the internal slider rail/fill/thumb only.
 OneUI settings-style panels were visually calibrated after the semantic-token
 migration. Light mode panels are now less transparent/milkier for readability,
 while dark mode panels are less opaque and more glass-like.
+
+
+## iOS light panel transparency tuning
+
+iOS light settings-style panels are now more transparent/Liquid Glass while
+keeping inner sections readable. iOS dark mode is intentionally unchanged.
+
+
+## iOS panel Liquid Glass tuning
+
+iOS settings-style panels now use less diffuse blur and stronger Liquid
+Glass-style highlights in both light and dark themes. Light mode keeps its
+transparent glass character, while dark mode keeps its existing balance with a
+cleaner, less foggy glass surface.
