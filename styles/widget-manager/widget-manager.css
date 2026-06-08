@@ -21,7 +21,7 @@
  * already style `.mha-settings-sheet` because the manager carries that class.
  */
 .mha-widget-manager-sheet.mha-settings-sheet {
-  color: var(--mha-text);
+  color: var(--mha-text-primary);
 }
 
 .mha-widget-manager-actions {
@@ -35,12 +35,12 @@
   block-size: 2.4rem;
   display: grid;
   place-items: center;
-  border: 1px solid var(--mha-widget-border);
+  border: 1px solid var(--mha-border-primary);
   border-radius: 999px;
-  background: var(--mha-control-surface, var(--mha-widget-surface));
-  color: var(--mha-text);
+  background: var(--mha-surface-secondary);
+  color: var(--mha-text-primary);
   box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--mha-text) 8%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--mha-text-primary) 8%, transparent),
     0 6px 16px rgba(0,0,0,.10);
   font: inherit;
   font-size: 1.65rem;
@@ -55,7 +55,7 @@
 .mha-widget-manager-back:hover,
 .mha-widget-manager-back:focus-visible {
   transform: translateY(-1px);
-  border-color: color-mix(in srgb, var(--mha-accent) 34%, var(--mha-widget-border));
+  border-color: color-mix(in srgb, var(--mha-accent) 34%, var(--mha-border-primary));
   outline: none;
 }
 
@@ -74,12 +74,12 @@
 .mha-widget-manager-widget {
   width: 100%;
   min-width: 0;
-  border: 1px solid var(--mha-widget-border);
+  border: 1px solid var(--mha-border-primary);
   border-radius: var(--mha-section-radius, clamp(1rem, 2vw, 1.35rem));
-  background: var(--mha-control-surface, var(--mha-widget-surface));
-  color: var(--mha-text);
+  background: var(--mha-surface-secondary);
+  color: var(--mha-text-primary);
   box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--mha-text) 7%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--mha-text-primary) 7%, transparent),
     0 8px 22px rgba(0,0,0,.08);
   cursor: pointer;
   transition:
@@ -94,10 +94,10 @@
 .mha-widget-manager-widget:hover,
 .mha-widget-manager-widget:focus-visible {
   transform: translateY(-1px);
-  border-color: color-mix(in srgb, var(--mha-accent) 34%, var(--mha-widget-border));
-  background: color-mix(in srgb, var(--mha-accent) 7%, var(--mha-control-surface, var(--mha-widget-surface)));
+  border-color: color-mix(in srgb, var(--mha-accent) 34%, var(--mha-border-primary));
+  background: color-mix(in srgb, var(--mha-accent) 7%, var(--mha-surface-secondary));
   box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--mha-text) 9%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--mha-text-primary) 9%, transparent),
     0 12px 28px rgba(0,0,0,.11);
   outline: none;
 }
@@ -118,10 +118,10 @@
   display: grid;
   place-items: center;
   border-radius: var(--mha-border-radius-icon, 999px);
-  background: color-mix(in srgb, var(--mha-accent) 15%, var(--mha-control-surface, var(--mha-widget-surface)));
-  color: var(--mha-text);
-  border: 1px solid color-mix(in srgb, var(--mha-accent) 20%, var(--mha-widget-border));
-  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--mha-text) 8%, transparent);
+  background: color-mix(in srgb, var(--mha-accent) 15%, var(--mha-surface-secondary));
+  color: var(--mha-text-primary);
+  border: 1px solid color-mix(in srgb, var(--mha-accent) 20%, var(--mha-border-primary));
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--mha-text-primary) 8%, transparent);
   font-size: clamp(1.15rem, 2.4vw, 1.45rem);
 }
 
@@ -172,10 +172,10 @@
   border-radius: calc(var(--mha-section-radius, 1.35rem) * .78);
   background:
     radial-gradient(circle at 30% 20%, color-mix(in srgb, var(--mha-accent) 13%, transparent), transparent 34%),
-    var(--mha-widget-surface);
-  border: 1px solid var(--mha-widget-border);
+    var(--mha-surface-primary);
+  border: 1px solid var(--mha-border-primary);
   box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--mha-text) 7%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--mha-text-primary) 7%, transparent),
     0 8px 18px rgba(0,0,0,.08);
   overflow: hidden;
 }
@@ -186,10 +186,10 @@
   min-inline-size: 1.35rem;
   min-block-size: 1.15rem;
   border-radius: calc(var(--mha-section-radius, 1.35rem) * .42);
-  background: var(--mha-control-surface, var(--mha-widget-surface));
-  border: 1px solid color-mix(in srgb, var(--mha-accent) 24%, var(--mha-widget-border));
+  background: var(--mha-surface-secondary);
+  border: 1px solid color-mix(in srgb, var(--mha-accent) 24%, var(--mha-border-primary));
   box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--mha-text) 8%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--mha-text-primary) 8%, transparent),
     0 8px 18px rgba(0,0,0,.10);
   position: relative;
   display: grid;
@@ -241,9 +241,9 @@
   flex: 0 0 auto;
   border-radius: 999px;
   padding: .22rem .48rem;
-  background: color-mix(in srgb, var(--mha-accent) 12%, var(--mha-control-surface, var(--mha-widget-surface)));
-  border: 1px solid color-mix(in srgb, var(--mha-accent) 18%, var(--mha-widget-border));
-  color: var(--mha-text);
+  background: color-mix(in srgb, var(--mha-accent) 12%, var(--mha-surface-secondary));
+  border: 1px solid color-mix(in srgb, var(--mha-accent) 18%, var(--mha-border-primary));
+  color: var(--mha-text-primary);
   font-size: .72rem;
   font-weight: 800;
 }
@@ -265,10 +265,10 @@
 :host([data-theme-style="oneui"]) .mha-widget-manager-category,
 :host([data-theme-style="oneui"]) .mha-widget-manager-widget,
 :host([data-theme-style="oneui"]) .mha-widget-manager-back {
-  background: var(--mha-control-surface, var(--mha-widget-surface));
-  border-color: var(--mha-widget-border);
+  background: var(--mha-surface-secondary);
+  border-color: var(--mha-border-primary);
   box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--mha-text) 7%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--mha-text-primary) 7%, transparent),
     0 10px 26px rgba(36,21,14,.10);
 }
 
@@ -276,12 +276,12 @@
 :host([data-theme-style="oneui"]) .mha-widget-manager-category:focus-visible,
 :host([data-theme-style="oneui"]) .mha-widget-manager-widget:hover,
 :host([data-theme-style="oneui"]) .mha-widget-manager-widget:focus-visible {
-  background: color-mix(in srgb, var(--mha-accent) 8%, var(--mha-control-surface, var(--mha-widget-surface)));
+  background: color-mix(in srgb, var(--mha-accent) 8%, var(--mha-surface-secondary));
 }
 
 /* Material: follow settings' tonal containers and borderless surface direction. */
 :host([data-theme-style="material"]) .mha-widget-manager-sheet {
-  background: var(--mha-material-surface-container-high, var(--mha-widget-surface));
+  background: var(--mha-material-surface-container-high, var(--mha-surface-primary));
   border-color: transparent;
   box-shadow: var(--mha-floating-shadow, var(--mha-widget-shadow));
 }
@@ -289,7 +289,7 @@
 :host([data-theme-style="material"]) .mha-widget-manager-category,
 :host([data-theme-style="material"]) .mha-widget-manager-widget,
 :host([data-theme-style="material"]) .mha-widget-manager-back {
-  background: var(--mha-material-surface-container, var(--mha-control-surface, var(--mha-widget-surface)));
+  background: var(--mha-material-surface-container, var(--mha-surface-secondary));
   border-color: transparent;
   box-shadow: none;
 }
@@ -305,7 +305,7 @@
 :host([data-theme-style="material"]) .mha-widget-manager-category:focus-visible,
 :host([data-theme-style="material"]) .mha-widget-manager-widget:hover,
 :host([data-theme-style="material"]) .mha-widget-manager-widget:focus-visible {
-  background: var(--mha-material-surface-container-highest, color-mix(in srgb, var(--mha-accent) 8%, var(--mha-control-surface, var(--mha-widget-surface))));
+  background: var(--mha-material-surface-container-highest, color-mix(in srgb, var(--mha-accent) 8%, var(--mha-surface-secondary)));
   box-shadow: none;
 }
 
@@ -337,7 +337,7 @@
 
 /* Clock widget previews */
 .mha-widget-manager-preview-clock {
-  color: var(--mha-text);
+  color: var(--mha-text-primary);
   font-size: clamp(.78rem, 1.8vw, 1.05rem);
   font-weight: 850;
   letter-spacing: -.04em;
@@ -357,4 +357,29 @@
 .mha-widget-manager-preview-clock[data-variant="scientific"] {
   color: var(--mha-accent);
   letter-spacing: .02em;
+}
+
+/* SEMANTIC WIDGET MANAGER TOKEN CONSUMERS
+ * Widget Manager tiles now follow panel/section semantic roles.
+ */
+.mha-widget-manager-category,
+.mha-widget-manager-widget,
+.mha-widget-manager-back {
+  border-color: var(--mha-border-primary);
+  background: var(--mha-surface-secondary);
+  color: var(--mha-text-primary);
+}
+
+.mha-widget-manager-category:hover,
+.mha-widget-manager-category:focus-visible,
+.mha-widget-manager-widget:hover,
+.mha-widget-manager-widget:focus-visible {
+  border-color: color-mix(in srgb, var(--mha-accent) 34%, var(--mha-border-primary));
+  background: color-mix(in srgb, var(--mha-accent) 7%, var(--mha-surface-secondary));
+}
+
+:host([data-theme-style="material"]) .mha-widget-manager-category,
+:host([data-theme-style="material"]) .mha-widget-manager-widget,
+:host([data-theme-style="material"]) .mha-widget-manager-back {
+  box-shadow: none;
 }

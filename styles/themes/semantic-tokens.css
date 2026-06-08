@@ -1,0 +1,174 @@
+/*
+ * MHA Semantic Tokens — Phase 1
+ *
+ * This file introduces a role-based token layer without breaking the existing
+ * component-level token contract. Components may keep using legacy tokens such
+ * as --mha-widget-surface or --mha-dock-surface; those tokens now have a clear
+ * semantic source of truth and can be migrated gradually.
+ *
+ * Naming convention:
+ * - bg-*       page/background layers
+ * - surface-* component surfaces/elevation roles
+ * - border-*  outline/divider roles
+ * - text-*    content emphasis roles
+ * - shadow-*  elevation roles
+ * - blur-*    backdrop roles
+ * - highlight-* reflection/sheen roles
+ * - accent-*  accent color extensions
+ */
+
+:host,
+:root {
+  /* Background roles */
+  --mha-bg-primary: var(--mha-page-bg, transparent);
+  --mha-bg-secondary: color-mix(in srgb, var(--mha-bg-primary) 88%, var(--mha-text, #fff) 4%);
+  --mha-bg-elevated: color-mix(in srgb, var(--mha-bg-primary) 76%, var(--mha-text, #fff) 8%);
+  --mha-bg-overlay: rgba(0,0,0,.34);
+
+  /* Surface roles */
+  --mha-surface-primary: var(--mha-widget-surface, rgba(255,255,255,.12));
+  --mha-surface-secondary: var(--mha-control-surface, var(--mha-surface-primary));
+  --mha-surface-tertiary: color-mix(in srgb, var(--mha-surface-primary) 78%, var(--mha-text, #fff) 6%);
+  --mha-surface-glass: var(--mha-dock-surface, var(--mha-surface-primary));
+  --mha-surface-floating: var(--mha-system-button-bg, var(--mha-surface-glass));
+  --mha-surface-panel: var(--mha-panel-surface, var(--mha-surface-primary));
+  --mha-surface-tonal: var(--mha-material-surface-container, var(--mha-surface-secondary));
+
+  /* Border roles */
+  --mha-border-primary: var(--mha-widget-border, rgba(255,255,255,.16));
+  --mha-border-secondary: color-mix(in srgb, var(--mha-border-primary) 76%, transparent);
+  --mha-border-subtle: color-mix(in srgb, var(--mha-border-primary) 46%, transparent);
+  --mha-border-focus: var(--mha-accent);
+
+  /* Text roles */
+  --mha-text-primary: var(--mha-text);
+  --mha-text-secondary: color-mix(in srgb, var(--mha-text) 78%, transparent);
+  --mha-text-muted: var(--mha-muted);
+  --mha-text-inverse: var(--mha-bg-primary);
+
+  /* Effect roles */
+  --mha-blur-primary: var(--mha-surface-blur, 22px);
+  --mha-blur-strong: calc(var(--mha-blur-primary) * 1.25);
+  --mha-shadow-primary: var(--mha-widget-shadow, 0 18px 42px rgba(0,0,0,.22));
+  --mha-shadow-floating: var(--mha-dock-shadow, var(--mha-shadow-primary));
+  --mha-shadow-panel: var(--mha-panel-shadow, var(--mha-shadow-primary));
+  --mha-highlight-primary: var(--mha-widget-reflection, linear-gradient(135deg, rgba(255,255,255,.14), transparent 58%));
+  --mha-highlight-subtle: linear-gradient(135deg, color-mix(in srgb, var(--mha-text) 7%, transparent), transparent 62%);
+
+  /* Accent extensions */
+  --mha-accent-soft: color-mix(in srgb, var(--mha-accent) 18%, transparent);
+  --mha-accent-strong: color-mix(in srgb, var(--mha-accent) 88%, var(--mha-text-primary) 12%);
+  --mha-accent-contrast: #fff;
+}
+
+/* Theme-style semantic overrides.
+ * These preserve the current visual language while making the role layer
+ * explicit for future migrations.
+ */
+
+:host([data-theme-style="ios"]),
+:root[data-theme-style="ios"] {
+  --mha-surface-glass: var(--mha-dock-surface, var(--mha-surface-primary));
+  --mha-surface-floating: var(--mha-system-button-bg, var(--mha-surface-glass));
+  --mha-blur-primary: var(--mha-surface-blur, 24px);
+  --mha-highlight-primary:
+    radial-gradient(circle at 24% 12%, rgba(255,255,255,.30), transparent 34%),
+    linear-gradient(135deg, rgba(255,255,255,.14), transparent 58%);
+}
+
+:host([data-theme-style="oneui"]),
+:root[data-theme-style="oneui"] {
+  --mha-surface-glass: var(--mha-dock-surface, var(--mha-surface-primary));
+  --mha-surface-floating: var(--mha-system-button-bg, var(--mha-surface-glass));
+  --mha-highlight-primary:
+    radial-gradient(circle at 28% 18%, rgba(255,255,255,.20), transparent 34%),
+    linear-gradient(135deg, rgba(255,255,255,.08), transparent 58%);
+}
+
+:host([data-theme-style="material"]),
+:root[data-theme-style="material"] {
+  --mha-surface-primary: var(--mha-material-surface-container, var(--mha-widget-surface));
+  --mha-surface-secondary: var(--mha-material-surface-container-high, var(--mha-control-surface));
+  --mha-surface-tertiary: var(--mha-material-surface-container-highest, var(--mha-surface-secondary));
+  --mha-surface-glass: var(--mha-surface-secondary);
+  --mha-surface-floating: var(--mha-system-button-bg, var(--mha-surface-secondary));
+  --mha-surface-panel: var(--mha-material-surface-container-high, var(--mha-panel-surface));
+  --mha-surface-tonal: var(--mha-material-surface-container, var(--mha-surface-secondary));
+  --mha-shadow-primary: 0 1px 2px rgba(0,0,0,.10);
+  --mha-shadow-floating: 0 1px 2px rgba(0,0,0,.12);
+  --mha-highlight-primary:
+    linear-gradient(135deg, color-mix(in srgb, var(--mha-accent) 8%, transparent), transparent 64%);
+}
+
+/* Compatibility aliases.
+ *
+ * Existing component tokens remain valid. Phase 1 intentionally keeps them as
+ * aliases/fallbacks rather than replacing every component usage at once.
+ */
+
+:host,
+:root {
+  --mha-page-background: var(--mha-bg-primary);
+
+  --mha-widget-surface-semantic: var(--mha-surface-primary);
+  --mha-widget-border-semantic: var(--mha-border-primary);
+  --mha-widget-shadow-semantic: var(--mha-shadow-primary);
+
+  --mha-control-surface-semantic: var(--mha-surface-secondary);
+  --mha-panel-surface-semantic: var(--mha-surface-panel);
+  --mha-panel-background-semantic: var(--mha-bg-overlay);
+  --mha-dock-surface-semantic: var(--mha-surface-glass);
+  --mha-statusbar-surface-semantic: var(--mha-surface-secondary);
+  --mha-system-button-bg-semantic: var(--mha-surface-floating);
+
+  --mha-surface-blur-semantic: var(--mha-blur-primary);
+  --mha-widget-reflection-semantic: var(--mha-highlight-primary);
+}
+
+
+/* PHASE 2 SYSTEM BUTTON CONSUMERS
+ *
+ * The floating system button layer now consumes these semantic roles directly:
+ * - --mha-surface-floating
+ * - --mha-border-primary / --mha-border-subtle
+ * - --mha-shadow-floating
+ * - --mha-blur-primary
+ * - --mha-highlight-primary
+ *
+ * Component-level system-button tokens remain as the small adapter layer between
+ * semantic roles and concrete button selectors.
+ */
+
+
+/* MATERIAL OPAQUE SYSTEM BUTTON NOTE
+ * Material system buttons intentionally bypass glass/translucent surface roles.
+ * They use opaque Material tonal containers through the system-button adapter.
+ */
+:host([data-theme-style="material"]),
+:root[data-theme-style="material"] {
+  --mha-surface-floating-material-opaque:
+    var(--mha-material-surface-container-high, var(--mha-surface-tonal));
+}
+
+
+/* PHASE 3 PANEL ROLE NOTES
+ *
+ * Settings, Widget Manager, and Screensaver Settings panels now consume:
+ * - --mha-bg-overlay
+ * - --mha-surface-panel
+ * - --mha-surface-secondary
+ * - --mha-surface-tertiary
+ * - --mha-border-secondary / --mha-border-subtle
+ * - --mha-shadow-panel
+ *
+ * The legacy component tokens remain available for older components, but panel
+ * CSS should prefer the semantic roles above.
+ */
+:host,
+:root {
+  --mha-panel-scrim-bg: var(--mha-bg-overlay);
+  --mha-panel-section-surface: var(--mha-surface-secondary);
+  --mha-panel-control-surface: var(--mha-surface-tertiary);
+  --mha-panel-border: var(--mha-border-secondary);
+  --mha-panel-section-border: var(--mha-border-subtle);
+}

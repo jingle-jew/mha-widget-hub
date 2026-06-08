@@ -423,3 +423,48 @@ buttons and the mobile dock launcher consume the same background, border,
 shadow, blur, and highlight tokens. OneUI defines a flatter blurred treatment,
 and `mobile-dock.css` now explicitly respects those tokens so the dock launcher
 matches the edit button.
+
+
+## System button tokens for iOS and Material
+
+iOS and Material now define their own `--mha-system-button-*` tokens. iOS keeps
+the Liquid Glass-style blurred/translucent controls, while Material uses flatter
+tonal container surfaces with minimal shadow and no glass blur. The existing
+shared consumers remain unchanged.
+
+
+## Semantic tokens phase 1
+
+A new role-based token layer was added in `styles/themes/semantic-tokens.css`.
+It introduces background, surface, border, text, shadow, blur, highlight, and
+accent roles such as `--mha-surface-primary`, `--mha-surface-floating`,
+`--mha-bg-primary`, and `--mha-border-primary`.
+
+Existing component tokens remain in place for compatibility. This phase creates
+the semantic source of truth and compatibility aliases without mass-replacing
+component CSS.
+
+
+## Semantic tokens phase 2
+
+System buttons now consume semantic roles directly. The edit button, add button,
+and mobile dock launcher still use the `--mha-system-button-*` adapter tokens,
+but those adapter tokens are now routed through semantic roles such as
+`--mha-surface-floating`, `--mha-border-primary`, `--mha-shadow-floating`,
+`--mha-blur-primary`, and `--mha-highlight-primary`.
+
+
+## Material opaque system buttons
+
+Material system buttons are now explicitly opaque tonal containers. The edit
+button, add button, and mobile dock launcher no longer use translucent/glass
+surfaces in Material mode, and their backdrop filter is forced to `none`.
+
+
+## Semantic tokens phase 3
+
+Settings panels, screensaver settings, and the Widget Manager now consume the
+semantic panel roles: `--mha-bg-overlay`, `--mha-surface-panel`,
+`--mha-surface-secondary`, `--mha-surface-tertiary`, `--mha-border-subtle`,
+and `--mha-shadow-panel`. Theme-specific panel treatments remain intact:
+iOS/OneUI keep glass-style panels, while Material panels stay opaque/tonal.

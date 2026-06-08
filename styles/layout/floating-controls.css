@@ -89,24 +89,84 @@
  * edit/X, add widget, and mobile dock launcher.
  */
 :host {
-  --mha-system-button-bg: var(--mha-widget-surface);
-  --mha-system-button-border: var(--mha-widget-border);
-  --mha-system-button-color: var(--mha-text);
-  --mha-system-button-shadow: var(--mha-widget-shadow);
+  --mha-system-button-bg: var(--mha-surface-floating);
+  --mha-system-button-border: var(--mha-border-primary);
+  --mha-system-button-color: var(--mha-text-primary);
+  --mha-system-button-shadow: var(--mha-shadow-floating);
   --mha-system-button-backdrop-filter:
-    blur(var(--mha-surface-blur)) saturate(var(--mha-surface-saturation));
-  --mha-system-button-highlight:
-    var(--mha-widget-reflection, linear-gradient(135deg, rgba(255,255,255,.12), transparent 58%));
+    blur(var(--mha-blur-primary)) saturate(var(--mha-surface-saturation));
+  --mha-system-button-highlight: var(--mha-highlight-primary);
   --mha-system-button-highlight-opacity: var(--mha-widget-reflection-opacity, .22);
 }
+
+
+/* iOS: Liquid Glass system buttons. */
+:host([data-theme-style="ios"]) {
+  --mha-system-button-bg:
+    linear-gradient(145deg, rgba(255,255,255,.30), rgba(255,255,255,.10)),
+    color-mix(in srgb, var(--mha-surface-floating) 78%, transparent);
+  --mha-system-button-border:
+    color-mix(in srgb, var(--mha-border-primary) 70%, rgba(255,255,255,.42));
+  --mha-system-button-shadow:
+    inset 0 1px 0 rgba(255,255,255,.24),
+    var(--mha-shadow-floating);
+  --mha-system-button-backdrop-filter:
+    blur(calc(var(--mha-blur-primary) * 1.05)) saturate(175%);
+  --mha-system-button-highlight: var(--mha-highlight-primary);
+  --mha-system-button-highlight-opacity: .62;
+}
+
+:host([data-theme-style="ios"][data-theme="light"]) {
+  --mha-system-button-bg:
+    linear-gradient(145deg, rgba(255,255,255,.72), rgba(255,255,255,.36)),
+    color-mix(in srgb, var(--mha-surface-floating) 64%, rgba(255,255,255,.46));
+  --mha-system-button-border: rgba(255,255,255,.56);
+  --mha-system-button-shadow:
+    inset 0 1px 0 rgba(255,255,255,.34),
+    0 8px 20px rgba(0,0,0,.10);
+  --mha-system-button-highlight-opacity: .58;
+}
+
+:host([data-theme-style="ios"][data-theme="dark"]) {
+  --mha-system-button-bg:
+    linear-gradient(145deg, rgba(255,255,255,.18), rgba(255,255,255,.06)),
+    color-mix(in srgb, var(--mha-surface-floating) 82%, transparent);
+  --mha-system-button-border:
+    color-mix(in srgb, var(--mha-border-primary) 82%, rgba(255,255,255,.14));
+  --mha-system-button-shadow:
+    inset 0 1px 0 rgba(255,255,255,.16),
+    0 10px 24px rgba(0,0,0,.26);
+  --mha-system-button-highlight-opacity: .42;
+}
+
+/* Material: opaque tonal, flatter system buttons.
+ * Material system buttons should never be glass/translucent.
+ */
+:host([data-theme-style="material"]) {
+  --mha-system-button-bg: var(--mha-material-surface-container-high, var(--mha-surface-tonal));
+  --mha-system-button-border: var(--mha-border-subtle);
+  --mha-system-button-shadow: var(--mha-shadow-floating);
+  --mha-system-button-backdrop-filter: none;
+  --mha-system-button-highlight:
+    linear-gradient(135deg, color-mix(in srgb, var(--mha-accent) 7%, transparent), transparent 66%);
+  --mha-system-button-highlight-opacity: .18;
+}
+
+:host([data-theme-style="material"][data-theme="dark"]) {
+  --mha-system-button-bg: var(--mha-material-surface-container-high, var(--mha-surface-tonal));
+  --mha-system-button-border: var(--mha-border-subtle);
+  --mha-system-button-shadow: var(--mha-shadow-floating);
+  --mha-system-button-highlight-opacity: .12;
+}
+
 
 /* OneUI: flatter but still blurred. */
 :host([data-theme-style="oneui"]) {
   --mha-system-button-bg:
     linear-gradient(145deg, rgba(255,255,255,.22), rgba(255,255,255,.10)),
-    color-mix(in srgb, var(--mha-widget-surface) 76%, transparent);
+    color-mix(in srgb, var(--mha-surface-floating) 76%, transparent);
   --mha-system-button-border:
-    color-mix(in srgb, var(--mha-widget-border) 76%, rgba(255,255,255,.16));
+    color-mix(in srgb, var(--mha-border-primary) 76%, rgba(255,255,255,.16));
   --mha-system-button-shadow:
     inset 0 1px 0 rgba(255,255,255,.20),
     0 8px 18px rgba(0,0,0,.12),
@@ -121,9 +181,9 @@
 :host([data-theme-style="oneui"][data-theme="dark"]) {
   --mha-system-button-bg:
     linear-gradient(145deg, rgba(255,255,255,.13), rgba(255,255,255,.045)),
-    color-mix(in srgb, var(--mha-widget-surface) 62%, transparent);
+    color-mix(in srgb, var(--mha-surface-floating) 62%, transparent);
   --mha-system-button-border:
-    color-mix(in srgb, var(--mha-widget-border) 84%, rgba(255,255,255,.08));
+    color-mix(in srgb, var(--mha-border-primary) 84%, rgba(255,255,255,.08));
   --mha-system-button-shadow:
     inset 0 1px 0 rgba(255,255,255,.13),
     0 9px 20px rgba(0,0,0,.24),
@@ -272,4 +332,26 @@
   .mha-main-edit-button {
     right: var(--mha-page-padding) !important;
   }
+}
+
+
+/* MATERIAL OPAQUE SYSTEM BUTTON GUARANTEE
+ * Material You is tonal/flat here, not glass. Keep system buttons opaque even
+ * if shared/mobile rules evolve later.
+ */
+:host([data-theme-style="material"]) .mha-edit-button.mha-main-edit-button,
+:host([data-theme-style="material"]) .mha-add-widget-button,
+:host([data-theme-style="material"]) .mha-mobile-dock-launcher {
+  background-color: var(--mha-material-surface-container-high, var(--mha-surface-tonal)) !important;
+  background-image: none !important;
+  background: var(--mha-material-surface-container-high, var(--mha-surface-tonal)) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+:host([data-theme-style="material"]) .mha-edit-button.mha-main-edit-button::before,
+:host([data-theme-style="material"]) .mha-add-widget-button::before,
+:host([data-theme-style="material"]) .mha-mobile-dock-launcher::before {
+  opacity: var(--mha-system-button-highlight-opacity, .14) !important;
+  mix-blend-mode: normal;
 }
