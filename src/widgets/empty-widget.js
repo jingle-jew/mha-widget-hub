@@ -5,6 +5,7 @@ import { createIconSymbol } from "../ui/icon-symbol.js";
 import { createWidgetInnerGrid, createWidgetSliderUnit, createWidgetText, createWidgetUnit } from "./widget-layout.js";
 import { createSliderWidgetContent, isSliderWidget } from "./slider-widget.js";
 import { createClockWidgetContent, isClockWidget } from "./clock-widget.js";
+import { createWeatherWidgetContent, isWeatherWidget } from "./weather-widget.js";
 import { createSlider } from "../ui/slider.js";
 import { createToggle } from "../ui/toggle.js";
 import { createPill } from "../ui/pill.js";
@@ -37,6 +38,10 @@ export function createEmptyWidget(
 
   if (isClockWidget(widget)) {
     el.dataset.widgetKind = "clock";
+  }
+
+  if (isWeatherWidget(widget)) {
+    el.dataset.widgetKind = "weather";
   }
   el.dataset.widgetConfiguredW = String(size.w);
   el.dataset.widgetW = String(effectiveWidgetW);
@@ -154,6 +159,23 @@ export function createEmptyWidget(
       }),
     );
     el.append(clockGrid);
+  }
+
+  if (isWeatherWidget(widget)) {
+    const weatherGrid = createWidgetInnerGrid({ className: "mha-weather-widget-grid" });
+    weatherGrid.append(
+      createWidgetUnit({
+        col: 1,
+        row: 1,
+        colSpan: effectiveWidgetW,
+        rowSpan: size.h,
+        align: "stretch",
+        justify: "stretch",
+        className: "mha-weather-widget-unit",
+        children: createWeatherWidgetContent(widget),
+      }),
+    );
+    el.append(weatherGrid);
   }
 
   if (innerGrid.childElementCount > 0) el.append(innerGrid);

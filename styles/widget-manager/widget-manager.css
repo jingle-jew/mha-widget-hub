@@ -406,3 +406,12 @@
 .mha-widget-manager-preview-clock[data-variant="scientific"] {
   color: var(--mha-accent);
 }
+
+
+/* Weather widget previews */
+.mha-widget-manager-preview-weather {
+  color: var(--mha-preview-text);
+  font-size: clamp(.62rem, 1.7vw, .94rem);
+  font-weight: 850;
+  letter-spacing: -.03em;
+}

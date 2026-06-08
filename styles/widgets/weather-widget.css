@@ -1,0 +1,261 @@
+/*
+ * MHA Weather Widget
+ *
+ * 2x2 current weather card.
+ * No hourly forecast.
+ *
+ * Content density rule:
+ * The widget content sizes from the widget rectangle using container units.
+ */
+
+.mha-widget[data-widget-kind="weather"] {
+  container-type: size;
+  container-name: mha-weather-widget;
+  overflow: hidden;
+}
+
+.mha-widget[data-widget-kind="weather"] .mha-widget-inner-grid {
+  container-type: size;
+  container-name: mha-weather-content;
+  overflow: hidden;
+}
+
+.mha-weather-widget {
+  inline-size: 100%;
+  block-size: 100%;
+  min-inline-size: 0;
+  min-block-size: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  gap: clamp(.18rem, 3.2cqb, .48rem);
+  padding: min(5.4cqi, 5.4cqb);
+  color: var(--mha-weather-widget-text);
+  overflow: hidden;
+  contain: layout paint;
+  isolation: isolate;
+}
+
+.mha-weather-header {
+  min-inline-size: 0;
+  display: grid;
+  gap: clamp(.06rem, 1.2cqb, .18rem);
+}
+
+.mha-weather-location {
+  max-inline-size: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--mha-weather-widget-text);
+  font-size: clamp(.55rem, min(6.8cqi, 6.4cqb), .96rem);
+  font-weight: 760;
+  letter-spacing: -.02em;
+}
+
+.mha-weather-condition {
+  max-inline-size: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--mha-weather-widget-muted);
+  font-size: clamp(.44rem, min(5.1cqi, 4.8cqb), .74rem);
+  font-weight: 680;
+}
+
+.mha-weather-hero {
+  min-inline-size: 0;
+  min-block-size: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: clamp(.25rem, 4cqi, .75rem);
+}
+
+.mha-weather-temperature {
+  min-inline-size: 0;
+  color: var(--mha-weather-widget-temp);
+  font-size: clamp(1.55rem, min(29cqi, 28cqb), 4.1rem);
+  line-height: .88;
+  font-weight: 800;
+  letter-spacing: -.075em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.mha-weather-icon {
+  position: relative;
+  inline-size: min(28cqi, 26cqb);
+  block-size: min(28cqi, 26cqb);
+  min-inline-size: 2rem;
+  min-block-size: 2rem;
+  border-radius: 999px;
+  filter: drop-shadow(0 .55rem 1rem color-mix(in srgb, var(--mha-weather-widget-sun) 18%, transparent));
+}
+
+.mha-weather-icon-sun {
+  position: absolute;
+  inset: 8% 8% auto auto;
+  inline-size: 58%;
+  block-size: 58%;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 34% 30%, rgba(255,255,255,.86), transparent 24%),
+    linear-gradient(145deg, #fff6a7, var(--mha-weather-widget-sun));
+  box-shadow:
+    0 0 0 .28rem color-mix(in srgb, var(--mha-weather-widget-sun) 18%, transparent),
+    0 .6rem 1.2rem color-mix(in srgb, var(--mha-weather-widget-sun) 28%, transparent);
+}
+
+.mha-weather-icon-cloud,
+.mha-weather-icon-cloud-small {
+  position: absolute;
+  border-radius: 999px;
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.94), rgba(255,255,255,.58));
+  border: 1px solid color-mix(in srgb, var(--mha-weather-widget-border) 50%, rgba(255,255,255,.34));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.46),
+    0 .35rem .8rem rgba(0,0,0,.08);
+}
+
+.mha-weather-icon-cloud {
+  inset-inline-start: 2%;
+  inset-block-end: 11%;
+  inline-size: 72%;
+  block-size: 38%;
+}
+
+.mha-weather-icon-cloud::before,
+.mha-weather-icon-cloud::after {
+  content: "";
+  position: absolute;
+  border-radius: inherit;
+  background: inherit;
+}
+
+.mha-weather-icon-cloud::before {
+  inline-size: 48%;
+  block-size: 86%;
+  inset-inline-start: 11%;
+  inset-block-end: 20%;
+}
+
+.mha-weather-icon-cloud::after {
+  inline-size: 42%;
+  block-size: 76%;
+  inset-inline-end: 12%;
+  inset-block-end: 28%;
+}
+
+.mha-weather-icon-cloud-small {
+  inset-inline-end: 0;
+  inset-block-end: 18%;
+  inline-size: 42%;
+  block-size: 24%;
+  opacity: .74;
+}
+
+.mha-weather-range {
+  max-inline-size: 100%;
+  white-space: nowrap;
+  color: var(--mha-weather-widget-muted);
+  font-size: clamp(.48rem, min(5.4cqi, 5.2cqb), .82rem);
+  font-weight: 720;
+  letter-spacing: -.01em;
+}
+
+.mha-weather-meta {
+  min-inline-size: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(.14rem, 2.2cqi, .34rem);
+}
+
+.mha-weather-meta-item {
+  min-inline-size: 0;
+  display: grid;
+  gap: .04rem;
+  padding: clamp(.2rem, 2.5cqb, .42rem) clamp(.18rem, 2.6cqi, .42rem);
+  border-radius: clamp(.55rem, 6cqi, .95rem);
+  background: var(--mha-weather-widget-chip);
+  border: 1px solid var(--mha-weather-widget-chip-border);
+  overflow: hidden;
+}
+
+.mha-weather-meta-label,
+.mha-weather-meta-value {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mha-weather-meta-label {
+  color: var(--mha-weather-widget-muted);
+  font-size: clamp(.32rem, min(3.7cqi, 3.7cqb), .56rem);
+  font-weight: 650;
+}
+
+.mha-weather-meta-value {
+  color: var(--mha-weather-widget-text);
+  font-size: clamp(.36rem, min(4.1cqi, 4.1cqb), .62rem);
+  font-weight: 760;
+}
+
+/* iOS Weather reference: rounded glassy card, large temperature, soft climate icon. */
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="weather"] {
+  background:
+    radial-gradient(circle at 82% 12%, color-mix(in srgb, var(--mha-weather-widget-sky) 34%, transparent), transparent 34%),
+    radial-gradient(circle at 20% 90%, color-mix(in srgb, var(--mha-weather-widget-sun) 18%, transparent), transparent 38%),
+    var(--mha-widget-shell-surface);
+}
+
+:host([data-theme-style="ios"][data-theme="dark"]) .mha-widget[data-widget-kind="weather"] {
+  background:
+    radial-gradient(circle at 82% 12%, color-mix(in srgb, var(--mha-weather-widget-sky) 22%, transparent), transparent 34%),
+    radial-gradient(circle at 14% 92%, color-mix(in srgb, var(--mha-weather-widget-sun) 10%, transparent), transparent 38%),
+    var(--mha-widget-shell-surface);
+}
+
+/* OneUI Weather reference: soft pill-like glass, colorful ambient blobs. */
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="weather"] {
+  background:
+    radial-gradient(circle at 86% 16%, color-mix(in srgb, var(--mha-weather-widget-sky) 30%, transparent), transparent 34%),
+    radial-gradient(circle at 14% 88%, color-mix(in srgb, var(--mha-weather-widget-sun) 18%, transparent), transparent 38%),
+    linear-gradient(145deg, rgba(255,255,255,.12), rgba(255,255,255,.035)),
+    var(--mha-widget-shell-surface);
+}
+
+:host([data-theme-style="oneui"][data-theme="dark"]) .mha-widget[data-widget-kind="weather"] {
+  background:
+    radial-gradient(circle at 86% 16%, color-mix(in srgb, var(--mha-weather-widget-sky) 20%, transparent), transparent 34%),
+    radial-gradient(circle at 14% 88%, color-mix(in srgb, var(--mha-weather-widget-sun) 10%, transparent), transparent 38%),
+    linear-gradient(145deg, rgba(255,255,255,.08), rgba(255,255,255,.026)),
+    var(--mha-widget-shell-surface);
+}
+
+/* Material You Weather reference: tonal, opaque, shape-forward and non-glass. */
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="weather"] {
+  background:
+    radial-gradient(circle at 88% 12%, color-mix(in srgb, var(--mha-weather-widget-sky) 14%, transparent), transparent 34%),
+    var(--mha-widget-shell-surface);
+  box-shadow: var(--mha-widget-shell-shadow);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+:host([data-theme-style="material"]) .mha-weather-meta-item {
+  background: var(--mha-surface-secondary);
+  border-color: var(--mha-border-subtle);
+}
+
+@supports not (width: 1cqi) {
+  .mha-weather-temperature {
+    font-size: clamp(1.8rem, 34%, 3.6rem);
+  }
+
+  .mha-weather-icon {
+    inline-size: 26%;
+    block-size: 26%;
+  }
+}

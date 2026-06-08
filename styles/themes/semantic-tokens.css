@@ -440,3 +440,46 @@
 :root[data-theme-style="ios"][data-theme="dark"] {
   --mha-slider-widget-surface-inactive: var(--mha-widget-shell-surface);
 }
+
+
+/* WEATHER WIDGET ROLE TOKENS
+ *
+ * Current weather widget roles. The visual treatment is theme-specific, but the
+ * widget content still follows the global widget density contract.
+ */
+:host,
+:root {
+  --mha-weather-widget-text: var(--mha-text-primary);
+  --mha-weather-widget-muted: var(--mha-text-muted);
+  --mha-weather-widget-temp: var(--mha-text-primary);
+  --mha-weather-widget-border: var(--mha-widget-shell-border);
+  --mha-weather-widget-chip: var(--mha-surface-secondary);
+  --mha-weather-widget-chip-border: var(--mha-border-subtle);
+  --mha-weather-widget-sky: #47a8ff;
+  --mha-weather-widget-sun: #ffd34d;
+}
+
+:host([data-theme-style="ios"]),
+:root[data-theme-style="ios"] {
+  --mha-weather-widget-chip: color-mix(in srgb, var(--mha-widget-shell-surface) 72%, rgba(255,255,255,.28));
+  --mha-weather-widget-chip-border: color-mix(in srgb, var(--mha-border-subtle) 60%, rgba(255,255,255,.42));
+}
+
+:host([data-theme-style="ios"][data-theme="dark"]),
+:root[data-theme-style="ios"][data-theme="dark"] {
+  --mha-weather-widget-chip: color-mix(in srgb, var(--mha-widget-shell-surface) 78%, transparent);
+  --mha-weather-widget-chip-border: color-mix(in srgb, var(--mha-border-subtle) 72%, rgba(255,255,255,.10));
+}
+
+:host([data-theme-style="oneui"]),
+:root[data-theme-style="oneui"] {
+  --mha-weather-widget-chip: color-mix(in srgb, var(--mha-surface-secondary) 82%, transparent);
+  --mha-weather-widget-chip-border: color-mix(in srgb, var(--mha-border-subtle) 78%, rgba(255,255,255,.16));
+}
+
+:host([data-theme-style="material"]),
+:root[data-theme-style="material"] {
+  --mha-weather-widget-chip: var(--mha-surface-secondary);
+  --mha-weather-widget-chip-border: var(--mha-border-subtle);
+  --mha-weather-widget-temp: var(--mha-accent);
+}

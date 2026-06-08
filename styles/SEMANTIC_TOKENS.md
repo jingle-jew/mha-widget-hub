@@ -236,6 +236,24 @@ Simple rule:
 The widget shell may know about the dashboard layout.  
 The widget content must only know about the widget.
 
+
+---
+
+## WeatherWidget tokens
+
+WeatherWidget tokens are adapter tokens for current weather cards.
+
+| Token | Simple description |
+|---|---|
+| `--mha-weather-widget-text` | Main weather text color. |
+| `--mha-weather-widget-muted` | Muted weather text color. |
+| `--mha-weather-widget-temp` | Temperature color. |
+| `--mha-weather-widget-border` | Weather internal border color. |
+| `--mha-weather-widget-chip` | Small metric chip surface. |
+| `--mha-weather-widget-chip-border` | Small metric chip border. |
+| `--mha-weather-widget-sky` | Weather sky/accent color. |
+| `--mha-weather-widget-sun` | Weather sun/accent color. |
+
 ---
 
 ## Rule of thumb

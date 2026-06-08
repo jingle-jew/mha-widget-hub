@@ -244,6 +244,10 @@ export function normalizeClockWidgetSize() {
   return {w:2,h:2};
 }
 
+export function normalizeWeatherWidgetSize() {
+  return {w:2,h:2};
+}
+
 export function normalizeWidgetForKind(widget={}) {
   const size=normalizeWidgetSize(widget);
   const kind=widget.kind||widget.type||widget.component;
@@ -251,8 +255,10 @@ export function normalizeWidgetForKind(widget={}) {
   const category=widget.category||"";
   const isSlider=kind==="slider"||kind==="slider-widget"||widget.id==="slot-f"||widget.id==="slot-i";
   const isClock=kind==="clock"||kind==="clock-widget"||(category==="utilities"&&["digital","analog","ios-analog","scientific"].includes(variant));
+  const isWeather=kind==="weather"||kind==="weather-widget"||category==="weather"||variant==="weather-current"||variant==="current";
 
   if(isClock)return normalizeClockWidgetSize();
+  if(isWeather)return normalizeWeatherWidgetSize();
   if(!isSlider)return size;
   return normalizeSliderWidgetSize(size);
 }

@@ -588,3 +588,11 @@ depend on viewport sizing or fixed rem caps for their main content.
 
 A global widget content density rule was also documented: widget internals must
 size from the widget itself, not from the viewport, grid, shell, dock, or page.
+
+
+## WeatherWidget 2x2
+
+Added the first WeatherWidget: a 2x2 current-conditions card without hourly
+forecast. It has theme-specific styling for iOS, OneUI, and Material You, while
+following the widget density rule: content sizes from the widget rectangle, not
+from the viewport/grid/shell.

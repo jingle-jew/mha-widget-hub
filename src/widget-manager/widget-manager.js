@@ -5,10 +5,8 @@ export const WIDGET_MANAGER_CATEGORIES = Object.freeze([
     {kind:"clock",variant:"ios-analog",label:"Analogique iOS",size:{w:2,h:2},description:"Cadran classique iOS."},
     {kind:"clock",variant:"scientific",label:"Horloge scientifique",size:{w:2,h:2},description:"Temps + indicateurs."},
   ]},
-  { id:"weather", label:"Météo", description:"Prévisions et conditions.", icon:"☁", widgets:[
-    {kind:"empty",variant:"weather-compact",label:"Météo compacte",size:{w:2,h:2},description:"Carte météo simple."},
-    {kind:"empty",variant:"weather-wide",label:"Météo large",size:{w:4,h:2},description:"Conditions + détails."},
-    {kind:"empty",variant:"weather-panel",label:"Météo panneau",size:{w:4,h:3},description:"Grand bloc météo."},
+  { id:"weather", label:"Météo", description:"Conditions météo actuelles.", icon:"☁", widgets:[
+    {kind:"weather",variant:"current",label:"Météo actuelle",size:{w:2,h:2},description:"Conditions actuelles sans prévisions horaires."},
   ]},
   { id:"lights", label:"Lumières", description:"Contrôles rapides et intensité.", icon:"💡", widgets:[
     {kind:"empty",variant:"light-toggle",label:"Tuile lumière",size:{w:2,h:2},description:"Contrôle simple."},
@@ -57,6 +55,11 @@ function createPreview(item) {
     clock.dataset.variant = item.variant || "digital";
     clock.textContent = item.variant === "analog" || item.variant === "ios-analog" ? "◷" : item.variant === "scientific" ? "T+" : "12:45";
     shape.append(clock);
+  } else if (item.kind === "weather") {
+    const weather = document.createElement("span");
+    weather.className = "mha-widget-manager-preview-weather";
+    weather.textContent = "☁ 21°";
+    shape.append(weather);
   } else {
     const dot = document.createElement("span");
     dot.className = "mha-widget-manager-preview-dot";
