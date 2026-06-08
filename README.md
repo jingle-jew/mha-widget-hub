@@ -522,3 +522,10 @@ tokens. Layout and behavior are unchanged.
 Material SliderWidget cards now follow the same shell surface, border, shadow,
 and edit-state tokens as other Material widgets. Slider-specific tokens remain
 for the internal slider rail/fill/thumb only.
+
+
+## OneUI panel opacity tuning
+
+OneUI settings-style panels were visually calibrated after the semantic-token
+migration. Light mode panels are now less transparent/milkier for readability,
+while dark mode panels are less opaque and more glass-like.

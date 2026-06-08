@@ -399,3 +399,11 @@
   --mha-slider-widget-surface-inactive: var(--mha-surface-secondary);
   --mha-slider-widget-surface-active: var(--mha-accent);
 }
+
+
+/* ONEUI PANEL OPACITY TOKEN NOTE
+ * OneUI panel opacity is calibrated in settings-panel.css because the desired
+ * light/dark opacity curve is specific to modal settings sheets:
+ * - light: less transparent / milkier;
+ * - dark: more glass / less opaque.
+ */
