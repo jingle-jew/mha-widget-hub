@@ -355,3 +355,35 @@
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
+
+
+/* MATERIAL SLIDER WIDGET SHELL PARITY
+ * The full SliderWidget card must look like every other Material widget card.
+ * Only the internal slider control keeps SliderWidget-specific roles.
+ */
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="slider"] {
+  background: var(--mha-widget-shell-surface) !important;
+  border-color: var(--mha-widget-shell-border) !important;
+  box-shadow: var(--mha-widget-shell-shadow) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+/* Edit-mode parity: SliderWidget card follows the same edit shell tokens as
+ * standard widgets instead of keeping its normal SliderWidget surface.
+ */
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="slider"].is-editing,
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="slider"].is-edit-mode,
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="slider"][data-editing="true"],
+:host([data-theme-style="material"].is-editing) .mha-widget[data-widget-kind="slider"],
+:host([data-theme-style="material"].is-edit-mode) .mha-widget[data-widget-kind="slider"],
+:host([data-theme-style="material"][data-editing="true"]) .mha-widget[data-widget-kind="slider"],
+:host([data-theme-style="material"][data-edit-mode="true"]) .mha-widget[data-widget-kind="slider"] {
+  background: var(--mha-widget-shell-surface-edit, var(--mha-widget-shell-surface)) !important;
+  border-color: var(--mha-widget-shell-border-edit, var(--mha-widget-shell-border)) !important;
+}
+
+/* The overlay/reflection remains the generic widget highlight layer. */
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="slider"]::after {
+  background: var(--mha-widget-shell-highlight, var(--mha-highlight-subtle, none)) !important;
+}

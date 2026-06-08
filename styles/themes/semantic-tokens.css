@@ -384,3 +384,18 @@
   --mha-clock-widget-highlight: var(--mha-highlight-subtle);
   --mha-clock-widget-blur: 0px;
 }
+
+
+/* MATERIAL SLIDER SHELL TOKEN PARITY
+ * In Material, SliderWidget's outer card shell intentionally follows the same
+ * widget shell roles as every other widget. Slider-specific tokens remain for
+ * the internal rail/fill/thumb only.
+ */
+:host([data-theme-style="material"]),
+:root[data-theme-style="material"] {
+  --mha-slider-widget-surface: var(--mha-widget-shell-surface);
+  --mha-slider-widget-border: var(--mha-widget-shell-border);
+  --mha-slider-widget-shadow: var(--mha-widget-shell-shadow);
+  --mha-slider-widget-surface-inactive: var(--mha-surface-secondary);
+  --mha-slider-widget-surface-active: var(--mha-accent);
+}

@@ -515,3 +515,10 @@ ClockWidget internals and Widget Manager previews now consume dedicated semantic
 adapter roles. Clock faces, tick marks, hands, muted date text, and manager
 preview tiles are routed through `--mha-clock-widget-*` and `--mha-preview-*`
 tokens. Layout and behavior are unchanged.
+
+
+## Material SliderWidget shell parity
+
+Material SliderWidget cards now follow the same shell surface, border, shadow,
+and edit-state tokens as other Material widgets. Slider-specific tokens remain
+for the internal slider rail/fill/thumb only.
