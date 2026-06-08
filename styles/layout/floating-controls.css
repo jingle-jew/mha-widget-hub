@@ -84,6 +84,78 @@
   --mha-floating-button-size: clamp(2.625rem, 10vw, 3rem);
 }
 
+/* SYSTEM BUTTON TOKENS
+ * Shared shell-control surface for floating system buttons:
+ * edit/X, add widget, and mobile dock launcher.
+ */
+:host {
+  --mha-system-button-bg: var(--mha-widget-surface);
+  --mha-system-button-border: var(--mha-widget-border);
+  --mha-system-button-color: var(--mha-text);
+  --mha-system-button-shadow: var(--mha-widget-shadow);
+  --mha-system-button-backdrop-filter:
+    blur(var(--mha-surface-blur)) saturate(var(--mha-surface-saturation));
+  --mha-system-button-highlight:
+    var(--mha-widget-reflection, linear-gradient(135deg, rgba(255,255,255,.12), transparent 58%));
+  --mha-system-button-highlight-opacity: var(--mha-widget-reflection-opacity, .22);
+}
+
+/* OneUI: flatter but still blurred. */
+:host([data-theme-style="oneui"]) {
+  --mha-system-button-bg:
+    linear-gradient(145deg, rgba(255,255,255,.22), rgba(255,255,255,.10)),
+    color-mix(in srgb, var(--mha-widget-surface) 76%, transparent);
+  --mha-system-button-border:
+    color-mix(in srgb, var(--mha-widget-border) 76%, rgba(255,255,255,.16));
+  --mha-system-button-shadow:
+    inset 0 1px 0 rgba(255,255,255,.20),
+    0 8px 18px rgba(0,0,0,.12),
+    0 2px 6px color-mix(in srgb, var(--mha-accent) 7%, transparent);
+  --mha-system-button-backdrop-filter: blur(20px) saturate(145%);
+  --mha-system-button-highlight:
+    radial-gradient(circle at 28% 18%, rgba(255,255,255,.20), transparent 34%),
+    linear-gradient(135deg, rgba(255,255,255,.08), transparent 58%);
+  --mha-system-button-highlight-opacity: .56;
+}
+
+:host([data-theme-style="oneui"][data-theme="dark"]) {
+  --mha-system-button-bg:
+    linear-gradient(145deg, rgba(255,255,255,.13), rgba(255,255,255,.045)),
+    color-mix(in srgb, var(--mha-widget-surface) 62%, transparent);
+  --mha-system-button-border:
+    color-mix(in srgb, var(--mha-widget-border) 84%, rgba(255,255,255,.08));
+  --mha-system-button-shadow:
+    inset 0 1px 0 rgba(255,255,255,.13),
+    0 9px 20px rgba(0,0,0,.24),
+    0 2px 7px color-mix(in srgb, var(--mha-accent) 8%, transparent);
+  --mha-system-button-highlight-opacity: .30;
+}
+
+/* System button token consumers. */
+:host .mha-edit-button.mha-main-edit-button,
+:host .mha-add-widget-button,
+:host .mha-mobile-dock-launcher {
+  background: var(--mha-system-button-bg) !important;
+  border-color: var(--mha-system-button-border) !important;
+  color: var(--mha-system-button-color) !important;
+  box-shadow: var(--mha-system-button-shadow) !important;
+  -webkit-backdrop-filter: var(--mha-system-button-backdrop-filter) !important;
+  backdrop-filter: var(--mha-system-button-backdrop-filter) !important;
+}
+
+:host .mha-edit-button.mha-main-edit-button::before,
+:host .mha-add-widget-button::before,
+:host .mha-mobile-dock-launcher::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: var(--mha-system-button-highlight);
+  opacity: var(--mha-system-button-highlight-opacity);
+}
+
+
 :host .mha-edit-button.mha-main-edit-button {
   inline-size: var(--mha-floating-button-size) !important;
   block-size: var(--mha-floating-button-size) !important;
@@ -95,10 +167,12 @@
   mask: none !important;
   -webkit-mask-image: none !important;
   mask-image: none !important;
-  background: var(--mha-widget-surface) !important;
-  border-color: var(--mha-widget-border) !important;
-  color: var(--mha-text) !important;
-  box-shadow: var(--mha-widget-shadow) !important;
+  background: var(--mha-system-button-bg) !important;
+  border-color: var(--mha-system-button-border) !important;
+  color: var(--mha-system-button-color) !important;
+  box-shadow: var(--mha-system-button-shadow) !important;
+  -webkit-backdrop-filter: var(--mha-system-button-backdrop-filter) !important;
+  backdrop-filter: var(--mha-system-button-backdrop-filter) !important;
 }
 
 @media (max-width: 767px) {
@@ -110,9 +184,11 @@
     aspect-ratio: 1 / 1;
     border: 1px solid var(--mha-widget-border) !important;
     border-radius: 999px !important;
-    background: var(--mha-widget-surface) !important;
-    box-shadow: var(--mha-widget-shadow) !important;
-    color: var(--mha-text) !important;
+    background: var(--mha-system-button-bg) !important;
+    box-shadow: var(--mha-system-button-shadow) !important;
+    color: var(--mha-system-button-color) !important;
+    -webkit-backdrop-filter: var(--mha-system-button-backdrop-filter) !important;
+    backdrop-filter: var(--mha-system-button-backdrop-filter) !important;
     overflow: hidden;
   }
 
@@ -186,64 +262,6 @@
   :host([data-layout="mobile"].is-editing.is-mobile-floating-controls-hidden) .mha-add-widget-button {
     transform: translateY(calc(-1 * (var(--mha-floating-button-size) + clamp(.55rem, 1.6vw, .85rem)))) !important;
   }
-}
-
-/* ONEUI FLOATING BUTTON BLUR
- * OneUI keeps the floating controls softly translucent instead of opaque.
- * This applies only to the floating edit/X, add-widget +, screensaver edit
- * button that shares the same surface class, and the mobile dock floating
- * button. iOS and Material keep their own treatments.
- */
-:host([data-theme-style="oneui"]) .mha-main-edit-button,
-:host([data-theme-style="oneui"]) .mha-mobile-dock-button,
-:host([data-theme-style="oneui"]) .mha-mobile-dock-toggle,
-:host([data-theme-style="oneui"]) .mha-mobile-dock-fab {
-  background:
-    linear-gradient(145deg, rgba(255,255,255,.26), rgba(255,255,255,.12)),
-    color-mix(in srgb, var(--mha-widget-surface) 68%, transparent) !important;
-  border-color: color-mix(in srgb, var(--mha-widget-border) 72%, white 18%) !important;
-  -webkit-backdrop-filter: blur(22px) saturate(155%);
-  backdrop-filter: blur(22px) saturate(155%);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.24),
-    0 16px 38px rgba(0,0,0,.18),
-    0 6px 16px color-mix(in srgb, var(--mha-accent) 12%, transparent) !important;
-}
-
-:host([data-theme-style="oneui"][data-theme="dark"]) .mha-main-edit-button,
-:host([data-theme-style="oneui"][data-theme="dark"]) .mha-mobile-dock-button,
-:host([data-theme-style="oneui"][data-theme="dark"]) .mha-mobile-dock-toggle,
-:host([data-theme-style="oneui"][data-theme="dark"]) .mha-mobile-dock-fab {
-  background:
-    linear-gradient(145deg, rgba(255,255,255,.16), rgba(255,255,255,.055)),
-    color-mix(in srgb, var(--mha-widget-surface) 54%, transparent) !important;
-  border-color: color-mix(in srgb, var(--mha-widget-border) 82%, white 8%) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.16),
-    0 18px 42px rgba(0,0,0,.34),
-    0 8px 20px color-mix(in srgb, var(--mha-accent) 16%, transparent) !important;
-}
-
-:host([data-theme-style="oneui"]) .mha-main-edit-button::before,
-:host([data-theme-style="oneui"]) .mha-mobile-dock-button::before,
-:host([data-theme-style="oneui"]) .mha-mobile-dock-toggle::before,
-:host([data-theme-style="oneui"]) .mha-mobile-dock-fab::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  background:
-    radial-gradient(circle at 28% 18%, rgba(255,255,255,.30), transparent 34%),
-    linear-gradient(135deg, rgba(255,255,255,.12), transparent 58%);
-  opacity: .72;
-}
-
-:host([data-theme-style="oneui"][data-theme="dark"]) .mha-main-edit-button::before,
-:host([data-theme-style="oneui"][data-theme="dark"]) .mha-mobile-dock-button::before,
-:host([data-theme-style="oneui"][data-theme="dark"]) .mha-mobile-dock-toggle::before,
-:host([data-theme-style="oneui"][data-theme="dark"]) .mha-mobile-dock-fab::before {
-  opacity: .38;
 }
 
 /* STATUS BAR SAFE FRAME ALIGNMENT

@@ -407,3 +407,19 @@ The legacy auto-pack validator is no longer used as a global save gate. It is
 kept only as a fallback/resize heuristic, while widget persistence now follows
 the explicit ghost-slot position map. This prevents valid multi-clock layouts
 from disappearing after refresh.
+
+
+## OneUI flatter floating buttons
+
+The OneUI main edit button and mobile floating dock button now share the same
+blurred surface treatment. Their shadows were reduced for a flatter, cleaner
+look while keeping the OneUI glass/blur identity.
+
+
+## System button tokens
+
+Floating shell controls now share `--mha-system-button-*` tokens. The edit/add
+buttons and the mobile dock launcher consume the same background, border,
+shadow, blur, and highlight tokens. OneUI defines a flatter blurred treatment,
+and `mobile-dock.css` now explicitly respects those tokens so the dock launcher
+matches the edit button.

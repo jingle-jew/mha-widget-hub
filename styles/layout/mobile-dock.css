@@ -303,3 +303,36 @@
     pointer-events: none !important;
   }
 }
+
+/* MOBILE DOCK SYSTEM BUTTON TOKEN OVERRIDE
+ * This final rule keeps the mobile dock launcher aligned with the shared
+ * system-button surface. It intentionally comes after the icon-only launcher
+ * rules so it wins the cascade.
+ */
+@media (max-width: 767px) {
+  :host .mha-mobile-dock-launcher {
+    border: 1px solid var(--mha-system-button-border) !important;
+    background: var(--mha-system-button-bg) !important;
+    box-shadow: var(--mha-system-button-shadow) !important;
+    -webkit-backdrop-filter: var(--mha-system-button-backdrop-filter) !important;
+    backdrop-filter: var(--mha-system-button-backdrop-filter) !important;
+    color: var(--mha-system-button-color) !important;
+    overflow: hidden;
+  }
+
+  :host .mha-mobile-dock-launcher::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: var(--mha-system-button-highlight);
+    opacity: var(--mha-system-button-highlight-opacity);
+  }
+
+  :host .mha-mobile-dock-launcher > .mha-icon {
+    background: transparent !important;
+    box-shadow: none !important;
+    border-color: transparent !important;
+  }
+}
