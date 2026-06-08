@@ -320,3 +320,67 @@
   --mha-slider-widget-highlight: var(--mha-highlight-subtle);
   --mha-slider-widget-blur: 0px;
 }
+
+
+/* PHASE 5B-2 CLOCK WIDGET ROLE TOKENS
+ *
+ * ClockWidget internals and Widget Manager previews consume semantic roles
+ * through clock/preview adapters. This keeps ClockWidget styling stable while
+ * removing direct dependence on generic widget shell tokens inside the clock.
+ */
+:host,
+:root {
+  --mha-clock-widget-text: var(--mha-text-primary);
+  --mha-clock-widget-muted: var(--mha-text-muted);
+  --mha-clock-widget-face-surface: var(--mha-surface-secondary);
+  --mha-clock-widget-face-surface-strong: var(--mha-surface-tertiary);
+  --mha-clock-widget-face-border: var(--mha-border-subtle);
+  --mha-clock-widget-face-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--mha-text-primary) 7%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, var(--mha-text-primary) 4%, transparent);
+  --mha-clock-widget-mark: color-mix(in srgb, var(--mha-text-primary) 24%, transparent);
+  --mha-clock-widget-mark-major: color-mix(in srgb, var(--mha-text-primary) 48%, transparent);
+  --mha-clock-widget-hand: var(--mha-text-primary);
+  --mha-clock-widget-second-hand: var(--mha-accent);
+  --mha-clock-widget-center-dot: var(--mha-accent);
+  --mha-clock-widget-highlight: var(--mha-highlight-primary);
+  --mha-clock-widget-blur: var(--mha-blur-primary);
+
+  --mha-preview-surface: var(--mha-surface-secondary);
+  --mha-preview-surface-hover: color-mix(in srgb, var(--mha-accent) 7%, var(--mha-surface-secondary));
+  --mha-preview-border: var(--mha-border-primary);
+  --mha-preview-border-hover: color-mix(in srgb, var(--mha-accent) 34%, var(--mha-border-primary));
+  --mha-preview-accent-soft: var(--mha-accent-soft);
+  --mha-preview-text: var(--mha-text-primary);
+  --mha-preview-muted: var(--mha-text-muted);
+}
+
+:host([data-theme-style="ios"]),
+:root[data-theme-style="ios"] {
+  --mha-clock-widget-face-surface:
+    color-mix(in srgb, var(--mha-surface-secondary) 78%, transparent);
+  --mha-clock-widget-face-surface-strong:
+    color-mix(in srgb, var(--mha-surface-primary) 76%, transparent);
+  --mha-clock-widget-face-border:
+    color-mix(in srgb, var(--mha-border-primary) 70%, rgba(255,255,255,.36));
+  --mha-clock-widget-highlight: var(--mha-highlight-primary);
+  --mha-clock-widget-blur: var(--mha-blur-primary);
+}
+
+:host([data-theme-style="oneui"]),
+:root[data-theme-style="oneui"] {
+  --mha-clock-widget-face-surface:
+    color-mix(in srgb, var(--mha-surface-secondary) 82%, transparent);
+  --mha-clock-widget-face-surface-strong:
+    color-mix(in srgb, var(--mha-surface-primary) 78%, transparent);
+}
+
+:host([data-theme-style="material"]),
+:root[data-theme-style="material"] {
+  --mha-clock-widget-face-surface: var(--mha-surface-secondary);
+  --mha-clock-widget-face-surface-strong: var(--mha-surface-tertiary);
+  --mha-clock-widget-face-border: var(--mha-border-subtle);
+  --mha-clock-widget-face-shadow: none;
+  --mha-clock-widget-highlight: var(--mha-highlight-subtle);
+  --mha-clock-widget-blur: 0px;
+}

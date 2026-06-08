@@ -180,6 +180,43 @@ SliderWidget tokens are adapter tokens for the full-widget slider variants.
 | `--mha-slider-widget-highlight` | Highlight/reflection layer for SliderWidget. |
 | `--mha-slider-widget-blur` | Blur strength for SliderWidget glass effects. |
 
+
+---
+
+## ClockWidget tokens
+
+ClockWidget tokens are adapter tokens for dashboard and screensaver clock variants.
+
+| Token | Simple description |
+|---|---|
+| `--mha-clock-widget-text` | Main text/hand color inside ClockWidget. |
+| `--mha-clock-widget-muted` | Muted date/helper text inside ClockWidget. |
+| `--mha-clock-widget-face-surface` | Main analog clock face surface. |
+| `--mha-clock-widget-face-surface-strong` | Stronger face surface for scientific/iOS variants. |
+| `--mha-clock-widget-face-border` | Clock face border. |
+| `--mha-clock-widget-face-shadow` | Clock face inset shadow. |
+| `--mha-clock-widget-mark` | Minor tick mark color. |
+| `--mha-clock-widget-mark-major` | Major tick mark color. |
+| `--mha-clock-widget-hand` | Main hour/minute hand color. |
+| `--mha-clock-widget-second-hand` | Second hand/accent color. |
+| `--mha-clock-widget-center-dot` | Center dot color. |
+| `--mha-clock-widget-highlight` | Highlight layer for glass clock faces. |
+| `--mha-clock-widget-blur` | Blur strength for glass clock faces. |
+
+---
+
+## Widget Manager preview tokens
+
+| Token | Simple description |
+|---|---|
+| `--mha-preview-surface` | Surface for widget manager tiles/previews. |
+| `--mha-preview-surface-hover` | Hover/focus surface for widget manager tiles. |
+| `--mha-preview-border` | Border for widget manager tiles/previews. |
+| `--mha-preview-border-hover` | Hover/focus border for widget manager tiles. |
+| `--mha-preview-accent-soft` | Soft accent layer in previews/icons. |
+| `--mha-preview-text` | Main preview text color. |
+| `--mha-preview-muted` | Muted preview/helper text color. |
+
 ---
 
 ## Rule of thumb

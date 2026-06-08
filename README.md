@@ -507,3 +507,11 @@ SliderWidget internals now consume slider-specific semantic adapter roles such
 as `--mha-slider-widget-surface`, `--mha-slider-widget-surface-inactive`,
 `--mha-slider-widget-surface-active`, `--mha-slider-widget-border`, and
 `--mha-slider-widget-blur`. Layout and pointer behavior are unchanged.
+
+
+## Semantic tokens phase 5B-2
+
+ClockWidget internals and Widget Manager previews now consume dedicated semantic
+adapter roles. Clock faces, tick marks, hands, muted date text, and manager
+preview tiles are routed through `--mha-clock-widget-*` and `--mha-preview-*`
+tokens. Layout and behavior are unchanged.
