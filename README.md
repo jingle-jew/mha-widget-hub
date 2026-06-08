@@ -557,3 +557,24 @@ iOS dark, OneUI, Material, and slider behavior are unchanged.
 iOS dark SliderWidget/fader inactive surfaces now match the widget card surface.
 The active Liquid Glass fill, iOS light tuning, OneUI, Material, and slider
 behavior are unchanged.
+
+
+## Screensaver horizontal center alignment
+
+The screensaver clock and Now Bar are now centered against the full viewport
+instead of inheriting dashboard grid/page/dock alignment. This keeps both
+elements on the same horizontal axis.
+
+
+## Screensaver Now Bar box center fix
+
+The screensaver alignment fix now centers the actual `.mha-screensaver-nowbar`
+box and `.mha-screensaver-clock-region` box, instead of centering text or inner
+Now Bar implementation layers.
+
+
+## Screensaver mobile Now Bar viewport center fix
+
+On mobile screensaver layouts, the Now Bar and clock region are centered against
+the viewport axis instead of the padded grid content box. Desktop/tablet
+screensaver alignment is unchanged.

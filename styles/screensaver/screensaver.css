@@ -527,3 +527,66 @@
   opacity: 0 !important;
   visibility: hidden !important;
 }
+
+/* SCREENSAVER NOWBAR BOX CENTER FIX
+ * Center the actual screensaver boxes, not the text inside them.
+ *
+ * The screensaver DOM uses direct grid children:
+ * - .mha-screensaver-clock-region
+ * - .mha-screensaver-nowbar
+ *
+ * Keep their internal alignment untouched; only center the outer boxes on the
+ * screensaver viewport/grid axis.
+ */
+.mha-screensaver-clock-region,
+.mha-screensaver-nowbar {
+  justify-self: center;
+  margin-inline: auto;
+}
+
+/* The Now Bar box owns its own width. Keep it centered as a box and let its
+ * internal content keep the existing Now Bar layout.
+ */
+.mha-screensaver-nowbar {
+  inline-size: min(38rem, calc(100vw - 2rem));
+  width: min(38rem, calc(100vw - 2rem));
+  max-inline-size: calc(100vw - 2rem);
+}
+
+/* Defensive reset against previous centering attempts: do not move inner Now Bar
+ * implementation layers independently of the outer .mha-screensaver-nowbar box.
+ */
+.mha-screensaver-nowbar-stack,
+.mha-screensaver-nowbar-card {
+  margin-inline: 0;
+  text-align: inherit;
+}
+
+/* SCREENSAVER MOBILE NOWBAR VIEWPORT CENTER FIX
+ * Mobile Safari/responsive view can visually offset the screensaver Now Bar when
+ * it is centered by the grid's padded content box. On mobile only, center the
+ * actual Now Bar box against the viewport axis.
+ *
+ * Internal Now Bar text/layout remains untouched.
+ */
+@media (max-width: 767px) {
+  .mha-screensaver-nowbar {
+    position: relative;
+    left: 50%;
+    right: auto;
+    justify-self: start;
+    margin-inline: 0;
+    inline-size: min(19rem, calc(100vw - 2rem));
+    width: min(19rem, calc(100vw - 2rem));
+    max-inline-size: calc(100vw - 2rem);
+    transform: translateX(-50%);
+  }
+
+  .mha-screensaver-clock-region {
+    position: relative;
+    left: 50%;
+    justify-self: start;
+    margin-inline: 0;
+    transform: translateX(-50%);
+  }
+}
