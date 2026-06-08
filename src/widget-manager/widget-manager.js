@@ -5,10 +5,6 @@ export const WIDGET_MANAGER_CATEGORIES = Object.freeze([
     {kind:"clock",variant:"ios-analog",label:"Analogique iOS",size:{w:2,h:2},description:"Cadran classique iOS."},
     {kind:"clock",variant:"scientific",label:"Horloge scientifique",size:{w:2,h:2},description:"Temps + indicateurs."},
   ]},
-  { id:"weather", label:"Météo", description:"Conditions météo actuelles.", icon:"☁", widgets:[
-    {kind:"weather",variant:"current",label:"Météo actuelle",size:{w:2,h:2},description:"Conditions actuelles sans prévisions horaires."},
-    {kind:"weather",variant:"forecast",label:"Météo 5 jours",size:{w:4,h:2},description:"Conditions actuelles + prévisions 5 jours."},
-  ]},
   { id:"lights", label:"Lumières", description:"Contrôles rapides et intensité.", icon:"💡", widgets:[
     {kind:"empty",variant:"light-toggle",label:"Tuile lumière",size:{w:2,h:2},description:"Contrôle simple."},
     {kind:"slider",variant:"light-slider-wide",label:"Intensité horizontale",size:{w:4,h:1},description:"Slider large."},
@@ -56,11 +52,6 @@ function createPreview(item) {
     clock.dataset.variant = item.variant || "digital";
     clock.textContent = item.variant === "analog" || item.variant === "ios-analog" ? "◷" : item.variant === "scientific" ? "T+" : "12:45";
     shape.append(clock);
-  } else if (item.kind === "weather") {
-    const weather = document.createElement("span");
-    weather.className = "mha-widget-manager-preview-weather";
-    weather.textContent = "☁ 21°";
-    shape.append(weather);
   } else {
     const dot = document.createElement("span");
     dot.className = "mha-widget-manager-preview-dot";

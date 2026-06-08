@@ -94,9 +94,28 @@ export function createWidgetContentText({
   return el;
 }
 
-export function createWidgetInnerGrid({ className = "", ariaHidden = true } = {}) {
+export function createWidgetInnerGrid({
+  widgetW = 1,
+  widgetH = 1,
+  scale = 2,
+  className = "",
+  ariaHidden = true,
+} = {}) {
+  const normalizedW = normalizeGridNumber(widgetW);
+  const normalizedH = normalizeGridNumber(widgetH);
+  const normalizedScale = Math.max(1, normalizeGridNumber(scale));
+  const cols = normalizedW * normalizedScale;
+  const rows = normalizedH * normalizedScale;
+
   const grid = document.createElement("div");
   grid.className = ["mha-widget-inner-grid", className].filter(Boolean).join(" ");
+  grid.dataset.innerScale = String(normalizedScale);
+  grid.dataset.innerCols = String(cols);
+  grid.dataset.innerRows = String(rows);
+
+  grid.style.setProperty("--mha-widget-inner-scale", String(normalizedScale));
+  grid.style.setProperty("--mha-widget-inner-cols", String(cols));
+  grid.style.setProperty("--mha-widget-inner-rows", String(rows));
 
   if (ariaHidden) {
     grid.setAttribute("aria-hidden", "true");
@@ -137,6 +156,53 @@ export function createWidgetUnit({
 
   return unit;
 }
+
+/*
+ * Doubled internal grid unit.
+ *
+ * Use this for content inside .mha-widget-inner-grid. The inner grid resolution
+ * is doubled by default:
+ *
+ * - external 2x2 widget -> internal 4x4 grid;
+ * - external 3x2 widget -> internal 6x4 grid;
+ * - external 4x2 widget -> internal 8x4 grid.
+ *
+ * The API mirrors createWidgetUnit(), but names the CSS variables with "inner"
+ * so the internal and external placement systems stay conceptually separate.
+ */
+export function createWidgetInnerUnit({
+  col = 1,
+  row = 1,
+  colSpan = 1,
+  rowSpan = 1,
+  area = "",
+  className = "",
+  align = "stretch",
+  justify = "stretch",
+  children = [],
+} = {}) {
+  const unit = document.createElement("div");
+
+  unit.className = ["mha-widget-inner-unit", className].filter(Boolean).join(" ");
+  unit.dataset.innerCol = String(normalizeGridNumber(col));
+  unit.dataset.innerRow = String(normalizeGridNumber(row));
+  unit.dataset.innerColSpan = String(normalizeGridNumber(colSpan));
+  unit.dataset.innerRowSpan = String(normalizeGridNumber(rowSpan));
+
+  if (area) unit.dataset.area = area;
+  if (align) unit.dataset.align = align;
+  if (justify) unit.dataset.justify = justify;
+
+  unit.style.setProperty("--mha-widget-inner-unit-col", unit.dataset.innerCol);
+  unit.style.setProperty("--mha-widget-inner-unit-row", unit.dataset.innerRow);
+  unit.style.setProperty("--mha-widget-inner-unit-col-span", unit.dataset.innerColSpan);
+  unit.style.setProperty("--mha-widget-inner-unit-row-span", unit.dataset.innerRowSpan);
+
+  unit.append(...normalizeChildren(children));
+
+  return unit;
+}
+
 
 /*
  * Slider placement rule.

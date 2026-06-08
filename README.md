@@ -745,14 +745,27 @@ Supported internal layouts:
 This phase adds the contract and CSS without migrating existing widgets yet.
 
 
-## WeatherWidget Internal Widget Grid migration
+## WeatherWidget removed + doubled inner-grid foundation
 
-WeatherWidget now uses the shared Internal Widget Grid System:
+WeatherWidget was removed for now. The previous implementation had accumulated
+too many compensating patches and was no longer a reliable foundation.
 
-- `2x2` uses `data-inner-layout="compact"`
-- `3x2` uses `data-inner-layout="wide"`
-- `4x2` uses `data-inner-layout="split"`
+A new doubled internal grid foundation was added:
 
-The current-weather header, hero, footer/range, meta, and secondary forecast
-regions now use the shared content-region language. This makes WeatherWidget the
-first real widget migrated to the internal grid contract.
+- external `2x2` widget -> internal `4x4` grid
+- external `3x2` widget -> internal `6x4` grid
+- external `4x2` widget -> internal `8x4` grid
+
+Rules:
+
+- `.mha-grid` places widgets on the dashboard.
+- `.mha-widget` owns the shell, surface, and one equal internal padding.
+- `.mha-widget-inner-grid` fills the padded area.
+- `.mha-widget-inner-unit` places content/components inside the doubled grid.
+
+New/updated helpers:
+
+- `createWidgetInnerGrid({ widgetW, widgetH, scale })`
+- `createWidgetInnerUnit({ col, row, colSpan, rowSpan })`
+
+This is now the foundation for rebuilding WeatherWidget and future rich widgets.

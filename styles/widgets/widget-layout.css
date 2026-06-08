@@ -184,6 +184,7 @@
   align-items: stretch;
   justify-items: stretch;
   place-items: stretch;
+  place-content: stretch;
   min-inline-size: 0;
   min-block-size: 0;
   overflow: hidden;
@@ -191,6 +192,88 @@
 
 .mha-widget-unit[data-align="stretch"] > *,
 .mha-widget-unit[data-justify="stretch"] > * {
+  inline-size: 100%;
+  block-size: 100%;
+  max-inline-size: 100%;
+  max-block-size: 100%;
+  min-inline-size: 0;
+  min-block-size: 0;
+  justify-self: stretch;
+  align-self: stretch;
+  box-sizing: border-box;
+}
+
+
+/* DOUBLED WIDGET INNER GRID FOUNDATION
+ * The external .mha-grid places widget shells.
+ *
+ * Inside every widget, .mha-widget owns one equal padding/inset:
+ *   --mha-widget-inner-padding
+ *
+ * Inside that padding, .mha-widget-inner-grid creates a separate internal grid
+ * whose resolution is doubled from the external widget footprint:
+ *
+ * - 2x2 widget -> 4x4 internal units;
+ * - 3x2 widget -> 6x4 internal units;
+ * - 4x2 widget -> 8x4 internal units.
+ *
+ * Components/text/content should be placed with .mha-widget-inner-unit.
+ */
+.mha-widget {
+  --mha-widget-inner-padding: var(--mha-widget-inner-inset, clamp(0.28rem, min(4cqi, 4cqb), 0.48rem));
+  --mha-widget-inner-gap: var(--mha-widget-inner-unit-gap, clamp(0.12rem, min(1.8cqi, 1.8cqb), 0.28rem));
+}
+
+.mha-widget-inner-grid {
+  inline-size: 100%;
+  block-size: 100%;
+  min-inline-size: 0;
+  min-block-size: 0;
+  max-inline-size: 100%;
+  max-block-size: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: repeat(var(--mha-widget-inner-cols, 4), minmax(0, 1fr));
+  grid-template-rows: repeat(var(--mha-widget-inner-rows, 4), minmax(0, 1fr));
+  gap: var(--mha-widget-inner-gap);
+  contain: layout paint;
+  container-type: size;
+  container-name: mha-widget-inner-grid;
+}
+
+.mha-widget-inner-unit {
+  grid-column: var(--mha-widget-inner-unit-col, 1) / span var(--mha-widget-inner-unit-col-span, 1);
+  grid-row: var(--mha-widget-inner-unit-row, 1) / span var(--mha-widget-inner-unit-row-span, 1);
+  min-inline-size: 0;
+  min-block-size: 0;
+  max-inline-size: 100%;
+  max-block-size: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  place-content: center;
+}
+
+.mha-widget-inner-unit[data-align="start"] { align-items: start; }
+.mha-widget-inner-unit[data-align="center"] { align-items: center; }
+.mha-widget-inner-unit[data-align="end"] { align-items: end; }
+.mha-widget-inner-unit[data-align="stretch"] {
+  align-items: stretch;
+  place-content: stretch;
+}
+
+.mha-widget-inner-unit[data-justify="start"] { justify-items: start; }
+.mha-widget-inner-unit[data-justify="center"] { justify-items: center; }
+.mha-widget-inner-unit[data-justify="end"] { justify-items: end; }
+.mha-widget-inner-unit[data-justify="stretch"] {
+  justify-items: stretch;
+  place-content: stretch;
+}
+
+.mha-widget-inner-unit[data-align="stretch"] > *,
+.mha-widget-inner-unit[data-justify="stretch"] > * {
   inline-size: 100%;
   block-size: 100%;
   max-inline-size: 100%;
