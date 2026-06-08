@@ -1,13 +1,17 @@
 /*
  * MHA Weather Widget
  *
- * Current weather widget with size variants:
+ * Migrated to the Internal Widget Grid System.
+ *
+ * Size variants:
  * - 2x2: compact current conditions;
- * - 3x2: wider current conditions, hidden from widget manager;
- * - 4x2: current conditions + 5-day forecast stack.
+ * - 3x2: wide current conditions;
+ * - 4x2: split current conditions + 5-day forecast stack.
  *
  * No hourly forecast.
  */
+
+import { createWidgetContentGrid, createWidgetContentRegion } from "./widget-layout.js";
 
 export const WEATHER_WIDGET_KIND = "weather";
 export const WEATHER_WIDGET_VARIANTS = Object.freeze(["current", "forecast"]);
@@ -33,7 +37,7 @@ export function isWeatherWidget(widget = {}) {
 
 export function getWeatherWidgetLayout(size = {}) {
   const w = Number(size?.w) || 2;
-  if (w >= 4) return "forecast";
+  if (w >= 4) return "split";
   if (w >= 3) return "wide";
   return "compact";
 }
@@ -58,9 +62,9 @@ function getFallbackWeatherData(widget = {}) {
   };
 }
 
-function createIcon({ small = false } = {}) {
+function createIcon() {
   const icon = document.createElement("div");
-  icon.className = ["mha-weather-icon", small ? "mha-weather-icon--small" : ""].filter(Boolean).join(" ");
+  icon.className = "mha-weather-icon";
   icon.setAttribute("aria-hidden", "true");
 
   const sun = document.createElement("span");
@@ -101,12 +105,14 @@ function meta(label, value) {
   return item;
 }
 
-function createCurrentPane(data, layout = "compact") {
-  const current = document.createElement("div");
-  current.className = "mha-weather-current";
+function createHeader(data) {
+  const header = createWidgetContentRegion({
+    region: "header",
+    className: "mha-weather-header",
+  });
 
-  const header = document.createElement("div");
-  header.className = "mha-weather-header";
+  const text = document.createElement("div");
+  text.className = "mha-weather-header-text";
 
   const location = document.createElement("div");
   location.className = "mha-weather-location";
@@ -116,41 +122,72 @@ function createCurrentPane(data, layout = "compact") {
   condition.className = "mha-weather-condition";
   condition.textContent = data.condition;
 
-  header.append(location, condition);
+  text.append(location, condition);
+  header.append(text, createIcon());
+  return header;
+}
 
-  const hero = document.createElement("div");
-  hero.className = "mha-weather-hero";
+function createHero(data) {
+  const hero = createWidgetContentRegion({
+    region: "hero",
+    className: "mha-weather-hero",
+  });
 
   const temperature = document.createElement("div");
   temperature.className = "mha-weather-temperature";
   temperature.textContent = data.temperature;
 
-  const icon = createIcon();
+  hero.append(temperature);
+  return hero;
+}
 
-  hero.append(temperature, icon);
+function createFooter(data) {
+  const footer = createWidgetContentRegion({
+    region: "footer",
+    className: "mha-weather-range",
+  });
+  footer.textContent = `H:${data.high}  B:${data.low}`;
+  return footer;
+}
 
-  const range = document.createElement("div");
-  range.className = "mha-weather-range";
-  range.textContent = `H:${data.high}  B:${data.low}`;
-
-  const metaGrid = document.createElement("div");
-  metaGrid.className = "mha-weather-meta";
+function createMeta(data) {
+  const metaGrid = createWidgetContentRegion({
+    region: "meta",
+    className: "mha-weather-meta",
+  });
   metaGrid.append(
     meta("Ressenti", data.feelsLike),
     meta("Humidité", data.humidity),
     meta("Vent", data.wind),
   );
+  return metaGrid;
+}
 
-  current.append(header, hero, range);
+function createCurrentGrid(data, layout = "compact") {
+  const current = createWidgetContentGrid({
+    layout: layout === "split" ? "compact" : layout,
+    density: layout === "compact" ? "normal" : "comfortable",
+    className: "mha-weather-current",
+  });
+
+  current.append(
+    createHeader(data),
+    createHero(data),
+    createFooter(data),
+  );
+
   if (layout !== "compact") {
-    current.append(metaGrid);
+    current.append(createMeta(data));
   }
+
   return current;
 }
 
 function createForecastStack(data) {
-  const stack = document.createElement("div");
-  stack.className = "mha-weather-forecast";
+  const stack = createWidgetContentRegion({
+    region: "secondary",
+    className: "mha-weather-forecast",
+  });
   stack.setAttribute("aria-label", "Prévisions 5 jours");
 
   const title = document.createElement("div");
@@ -185,17 +222,28 @@ function createForecastStack(data) {
 export function createWeatherWidgetContent(widget = {}, { className = "" } = {}) {
   const data = getFallbackWeatherData(widget);
   const layout = getWeatherWidgetLayout(widget);
-  const root = document.createElement("section");
-  root.className = ["mha-weather-widget", className].filter(Boolean).join(" ");
+  const root = createWidgetContentGrid({
+    layout,
+    density: layout === "compact" ? "normal" : "comfortable",
+    className: ["mha-weather-widget", className].filter(Boolean).join(" "),
+  });
+
   root.dataset.weatherVariant = normalizeWeatherWidgetVariant(widget.variant);
   root.dataset.weatherLayout = layout;
   root.setAttribute("aria-label", `Météo ${data.location}: ${data.temperature}, ${data.condition}`);
 
-  root.append(createCurrentPane(data, layout));
-
-  if (layout === "forecast") {
-    root.append(createForecastStack(data));
+  if (layout === "split") {
+    root.append(
+      createWidgetContentRegion({
+        region: "body",
+        className: "mha-weather-current-region",
+        children: createCurrentGrid(data, "split"),
+      }),
+      createForecastStack(data),
+    );
+    return root;
   }
 
+  root.append(...createCurrentGrid(data, layout).children);
   return root;
 }

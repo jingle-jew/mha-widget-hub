@@ -17,6 +17,83 @@ function normalizeChildren(children = []) {
   return Array.isArray(children) ? children.filter(Boolean) : [children].filter(Boolean);
 }
 
+
+/*
+ * Internal Widget Grid System
+ *
+ * This is the shared content grammar for widgets.
+ *
+ * The outer dashboard grid decides where a widget lives and how large it is.
+ * The internal widget grid decides where common content regions live inside the
+ * widget itself: header, hero, body, meta, secondary, footer.
+ *
+ * Widgets may still use fully custom markup, but new widgets should prefer this
+ * system so their internal rhythm stays coherent.
+ */
+export const WIDGET_INNER_LAYOUTS = Object.freeze([
+  "compact",
+  "wide",
+  "split",
+  "stack",
+  "hero",
+  "custom",
+]);
+
+export const WIDGET_INNER_DENSITIES = Object.freeze([
+  "comfortable",
+  "normal",
+  "dense",
+]);
+
+export function normalizeWidgetInnerLayout(layout = "compact") {
+  return WIDGET_INNER_LAYOUTS.includes(layout) ? layout : "compact";
+}
+
+export function normalizeWidgetInnerDensity(density = "normal") {
+  return WIDGET_INNER_DENSITIES.includes(density) ? density : "normal";
+}
+
+export function createWidgetContentGrid({
+  layout = "compact",
+  density = "normal",
+  className = "",
+  children = [],
+} = {}) {
+  const grid = document.createElement("section");
+  grid.className = ["mha-widget-content-grid", className].filter(Boolean).join(" ");
+  grid.dataset.innerLayout = normalizeWidgetInnerLayout(layout);
+  grid.dataset.innerDensity = normalizeWidgetInnerDensity(density);
+  grid.append(...normalizeChildren(children));
+  return grid;
+}
+
+export function createWidgetContentRegion({
+  region = "body",
+  as = "div",
+  className = "",
+  children = [],
+} = {}) {
+  const tag = typeof as === "string" && as ? as : "div";
+  const el = document.createElement(tag);
+  el.className = ["mha-widget-content-region", `mha-widget-content-${region}`, className].filter(Boolean).join(" ");
+  el.dataset.region = region;
+  el.append(...normalizeChildren(children));
+  return el;
+}
+
+export function createWidgetContentText({
+  text = "",
+  region = "text",
+  as = "span",
+  className = "",
+} = {}) {
+  const tag = typeof as === "string" && as ? as : "span";
+  const el = document.createElement(tag);
+  el.className = ["mha-widget-content-text", `mha-widget-content-${region}`, className].filter(Boolean).join(" ");
+  el.textContent = text;
+  return el;
+}
+
 export function createWidgetInnerGrid({ className = "", ariaHidden = true } = {}) {
   const grid = document.createElement("div");
   grid.className = ["mha-widget-inner-grid", className].filter(Boolean).join(" ");

@@ -711,3 +711,48 @@ WeatherWidget CSS was cleaned up to remove several compensating width/overflow
 patches that were trying to solve the wrapper issue locally. WeatherWidget now
 relies on the generic unit stretch contract, then applies only its own content
 composition rules.
+
+
+## Internal Widget Grid phase A
+
+Added a shared Internal Widget Grid System for future widgets.
+
+The outer dashboard grid places widgets. The internal widget grid defines common
+regions inside a widget:
+
+- header
+- hero
+- body
+- meta
+- secondary
+- footer
+
+New helpers in `src/widgets/widget-layout.js`:
+
+- `createWidgetContentGrid()`
+- `createWidgetContentRegion()`
+- `createWidgetContentText()`
+
+Supported internal layouts:
+
+- `compact`
+- `wide`
+- `split`
+- `stack`
+- `hero`
+- `custom`
+
+This phase adds the contract and CSS without migrating existing widgets yet.
+
+
+## WeatherWidget Internal Widget Grid migration
+
+WeatherWidget now uses the shared Internal Widget Grid System:
+
+- `2x2` uses `data-inner-layout="compact"`
+- `3x2` uses `data-inner-layout="wide"`
+- `4x2` uses `data-inner-layout="split"`
+
+The current-weather header, hero, footer/range, meta, and secondary forecast
+regions now use the shared content-region language. This makes WeatherWidget the
+first real widget migrated to the internal grid contract.

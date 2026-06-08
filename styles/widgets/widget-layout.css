@@ -201,3 +201,181 @@
   align-self: stretch;
   box-sizing: border-box;
 }
+
+/* INTERNAL WIDGET GRID SYSTEM
+ * Shared internal content grammar for widgets.
+ *
+ * Rule:
+ * - The dashboard grid places the widget.
+ * - .mha-widget-unit gives the widget content a rectangle.
+ * - .mha-widget-content-grid lays out the content inside that rectangle.
+ *
+ * Content still sizes from the widget/container rectangle, never from viewport,
+ * page shell, dock, or dashboard grid.
+ */
+.mha-widget-content-grid {
+  inline-size: 100%;
+  block-size: 100%;
+  min-inline-size: 0;
+  min-block-size: 0;
+  max-inline-size: 100%;
+  max-block-size: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  contain: layout paint;
+  display: grid;
+  color: inherit;
+  container-type: size;
+  container-name: mha-widget-content;
+}
+
+/* Standard regions */
+.mha-widget-content-region {
+  min-inline-size: 0;
+  min-block-size: 0;
+  max-inline-size: 100%;
+  max-block-size: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.mha-widget-content-header {
+  grid-area: header;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: clamp(.16rem, 2cqi, .42rem);
+}
+
+.mha-widget-content-title,
+.mha-widget-content-subtitle,
+.mha-widget-content-value,
+.mha-widget-content-label,
+.mha-widget-content-text {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mha-widget-content-title,
+.mha-widget-content-subtitle,
+.mha-widget-content-label {
+  white-space: nowrap;
+}
+
+.mha-widget-content-hero {
+  grid-area: hero;
+  display: grid;
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
+.mha-widget-content-body {
+  grid-area: body;
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
+.mha-widget-content-meta {
+  grid-area: meta;
+  display: grid;
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
+.mha-widget-content-secondary {
+  grid-area: secondary;
+  display: grid;
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
+.mha-widget-content-footer {
+  grid-area: footer;
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
+/* Compact: 2x2-ish current info cards.
+ * Header + hero + optional footer/meta.
+ */
+.mha-widget-content-grid[data-inner-layout="compact"] {
+  grid-template-areas:
+    "header"
+    "hero"
+    "footer"
+    "meta";
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(.22rem, 4cqb, .58rem);
+}
+
+/* Wide: 3x2-ish current info cards.
+ * Same content language as compact, but roomier horizontally.
+ */
+.mha-widget-content-grid[data-inner-layout="wide"] {
+  grid-template-areas:
+    "header header"
+    "hero hero"
+    "footer footer"
+    "meta meta";
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: clamp(.24rem, 4.2cqb, .64rem);
+}
+
+/* Split: 4x2-ish cards.
+ * Primary current/content on the left, secondary list/details on the right.
+ */
+.mha-widget-content-grid[data-inner-layout="split"] {
+  grid-template-areas: "body secondary";
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  gap: clamp(.42rem, 3.4cqi, .88rem);
+}
+
+/* Stack: list-like cards.
+ * Header on top, body/list below.
+ */
+.mha-widget-content-grid[data-inner-layout="stack"] {
+  grid-template-areas:
+    "header"
+    "body"
+    "footer";
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(.22rem, 3.2cqb, .58rem);
+}
+
+/* Hero: icon/value-first widgets, such as simple sensors or actions. */
+.mha-widget-content-grid[data-inner-layout="hero"] {
+  grid-template-areas:
+    "hero"
+    "footer";
+  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(.18rem, 3cqb, .48rem);
+}
+
+/* Densities tune internal rhythm only, not the external widget padding. */
+.mha-widget-content-grid[data-inner-density="comfortable"] {
+  gap: clamp(.32rem, 5cqb, .8rem);
+}
+
+.mha-widget-content-grid[data-inner-density="dense"] {
+  gap: clamp(.14rem, 2.4cqb, .38rem);
+}
+
+/* Inner split helper for nesting a compact pattern inside split/body. */
+.mha-widget-content-grid[data-inner-layout="split"] > .mha-widget-content-body {
+  display: grid;
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
+.mha-widget-content-grid[data-inner-layout="split"] > .mha-widget-content-secondary {
+  display: grid;
+  min-inline-size: 0;
+  min-block-size: 0;
+}
