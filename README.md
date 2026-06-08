@@ -492,3 +492,10 @@ This phase migrates the widget card shell and lightweight helper controls. It
 does not deeply refactor specialized widget internals yet; SliderWidget and
 ClockWidget keep their existing layout/behavior while consuming the new semantic
 surface/text/border adapters where safe.
+
+
+## Semantic token reference
+
+A human-readable token reference is available at `styles/SEMANTIC_TOKENS.md`.
+It lists the semantic design tokens, adapter tokens, compatibility aliases, and
+simple usage guidance for future UI work.
