@@ -543,3 +543,17 @@ iOS settings-style panels now use less diffuse blur and stronger Liquid
 Glass-style highlights in both light and dark themes. Light mode keeps its
 transparent glass character, while dark mode keeps its existing balance with a
 cleaner, less foggy glass surface.
+
+
+## iOS light SliderWidget active/inactive contrast
+
+iOS light SliderWidget/fader inactive surfaces now match the widget card
+surface, while the active fill remains a more visible white Liquid Glass layer.
+iOS dark, OneUI, Material, and slider behavior are unchanged.
+
+
+## iOS dark SliderWidget inactive surface parity
+
+iOS dark SliderWidget/fader inactive surfaces now match the widget card surface.
+The active Liquid Glass fill, iOS light tuning, OneUI, Material, and slider
+behavior are unchanged.

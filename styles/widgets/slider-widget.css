@@ -387,3 +387,19 @@
 :host([data-theme-style="material"]) .mha-widget[data-widget-kind="slider"]::after {
   background: var(--mha-widget-shell-highlight, var(--mha-highlight-subtle, none)) !important;
 }
+
+/* IOS LIGHT SLIDER ACTIVE INACTIVE CONTRAST
+ * Keeps inactive fader surface aligned with the widget card, while active fill
+ * remains a visible white Liquid Glass surface.
+ */
+:host([data-theme-style="ios"][data-theme="light"]) .mha-widget[data-widget-kind="slider"] {
+  --mha-ios-slider-widget-surface: var(--mha-slider-widget-surface-inactive);
+  --mha-ios-slider-widget-fill: var(--mha-slider-widget-surface-active);
+}
+
+/* IOS DARK SLIDER INACTIVE SURFACE PARITY
+ * Keeps inactive fader surface aligned with the widget card in iOS dark.
+ */
+:host([data-theme-style="ios"][data-theme="dark"]) .mha-widget[data-widget-kind="slider"] {
+  --mha-ios-slider-widget-surface: var(--mha-slider-widget-surface-inactive);
+}

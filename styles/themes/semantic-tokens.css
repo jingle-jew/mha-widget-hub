@@ -412,3 +412,31 @@
  * iOS settings panels are calibrated in settings-panel.css for a crisper
  * Liquid Glass look: less diffuse blur, stronger optical highlights.
  */
+
+
+/* IOS LIGHT SLIDER WIDGET ACTIVE INACTIVE CONTRAST
+ * iOS light faders/sliders:
+ * - inactive surface should match the widget card surface;
+ * - active surface stays white Liquid Glass, but with enough contrast to read.
+ */
+:host([data-theme-style="ios"][data-theme="light"]),
+:root[data-theme-style="ios"][data-theme="light"] {
+  --mha-slider-widget-surface-inactive: var(--mha-widget-shell-surface);
+  --mha-slider-widget-surface-active:
+    linear-gradient(
+      145deg,
+      rgba(255,255,255,.86),
+      rgba(255,255,255,.50)
+    );
+}
+
+
+/* IOS DARK SLIDER WIDGET INACTIVE SURFACE PARITY
+ * iOS dark faders/sliders:
+ * - inactive surface should match the widget card surface;
+ * - active surface remains the existing white/translucent Liquid Glass fill.
+ */
+:host([data-theme-style="ios"][data-theme="dark"]),
+:root[data-theme-style="ios"][data-theme="dark"] {
+  --mha-slider-widget-surface-inactive: var(--mha-widget-shell-surface);
+}
