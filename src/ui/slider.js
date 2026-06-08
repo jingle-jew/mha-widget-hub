@@ -107,11 +107,22 @@ function getSliderHost(wrapper) {
   return root instanceof ShadowRoot ? root.host : null;
 }
 
-function isIosFullSliderWidget(wrapper) {
-  return Boolean(
-    getSliderWidgetShell(wrapper)
-    && getSliderHost(wrapper)?.dataset?.themeStyle === "ios"
-  );
+function isFullSliderWidgetPointerControl(wrapper) {
+  const shell = getSliderWidgetShell(wrapper);
+  if (!shell) return false;
+
+  const host = getSliderHost(wrapper);
+  const isMobile = host?.dataset?.layout === "mobile";
+  const isVertical = wrapper.dataset.orientation === "vertical";
+  const themeStyle = host?.dataset?.themeStyle || "";
+
+  /*
+   * iOS always used custom full-widget pointer control, which is why it worked
+   * reliably on Android too. OneUI/Material vertical full SliderWidget controls
+   * need the same pointer mapping on mobile because native rotated range drag is
+   * unreliable there: tap works, continuous vertical drag often does not.
+   */
+  return themeStyle === "ios" || (isMobile && isVertical);
 }
 
 function getFullWidgetSliderValueFromPointer(wrapper, input, event, min, max) {
@@ -227,7 +238,7 @@ export function createSlider({
   };
 
   input.addEventListener("pointerdown", (event) => {
-    if (!isMobileVerticalSlider() || isIosFullSliderWidget(wrapper)) return;
+    if (!isMobileVerticalSlider() || isFullSliderWidgetPointerControl(wrapper)) return;
     activePointerId = event.pointerId;
     activeScrollContainer = wrapper.closest(".mha-widget-area");
     wrapper.classList.add("is-slider-dragging");
@@ -246,10 +257,14 @@ export function createSlider({
   input.addEventListener("lostpointercapture", finishPointerDrag);
 
   let activeFullWidgetPointerId = null;
+  let activeFullWidgetScrollContainer = null;
 
   const startFullWidgetPointer = (event) => {
-    if (!isIosFullSliderWidget(wrapper)) return;
+    if (!isFullSliderWidgetPointerControl(wrapper)) return;
     activeFullWidgetPointerId = event.pointerId;
+    activeFullWidgetScrollContainer = wrapper.closest(".mha-widget-area");
+    wrapper.classList.add("is-slider-dragging");
+    activeFullWidgetScrollContainer?.classList.add("is-mobile-slider-dragging");
     input.setPointerCapture?.(event.pointerId);
     setFullWidgetSliderValueFromPointer(wrapper, input, event, min, max);
     event.preventDefault();
@@ -257,18 +272,21 @@ export function createSlider({
   };
 
   const moveFullWidgetPointer = (event) => {
-    if (!isIosFullSliderWidget(wrapper) || event.pointerId !== activeFullWidgetPointerId) return;
+    if (!isFullSliderWidgetPointerControl(wrapper) || event.pointerId !== activeFullWidgetPointerId) return;
     setFullWidgetSliderValueFromPointer(wrapper, input, event, min, max);
     event.preventDefault();
     event.stopImmediatePropagation();
   };
 
   const finishFullWidgetPointer = (event) => {
-    if (!isIosFullSliderWidget(wrapper)) return;
+    if (!isFullSliderWidgetPointerControl(wrapper)) return;
     if (event.pointerId !== undefined && event.pointerId !== activeFullWidgetPointerId) return;
 
     const pointerId = activeFullWidgetPointerId;
     activeFullWidgetPointerId = null;
+    wrapper.classList.remove("is-slider-dragging");
+    activeFullWidgetScrollContainer?.classList.remove("is-mobile-slider-dragging");
+    activeFullWidgetScrollContainer = null;
 
     if (event.type !== "lostpointercapture" && pointerId !== null && input.hasPointerCapture?.(pointerId)) {
       input.releasePointerCapture?.(pointerId);

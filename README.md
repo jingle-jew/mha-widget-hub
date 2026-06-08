@@ -769,3 +769,11 @@ New/updated helpers:
 - `createWidgetInnerUnit({ col, row, colSpan, rowSpan })`
 
 This is now the foundation for rebuilding WeatherWidget and future rich widgets.
+
+
+## Vertical SliderWidget mobile pointer fix
+
+The full-widget pointer mapping that previously made the iOS SliderWidget
+reliable is now shared by mobile vertical SliderWidget controls in OneUI and
+Material as well. This fixes Android mobile vertical sliders where tap/click
+worked but continuous vertical dragging did not.
