@@ -141,3 +141,20 @@
     --mha-icon-size: 100%;
   }
 }
+
+
+/* WIDGET CONTENT DENSITY CONTRACT
+ * Every widget is its own sizing container.
+ *
+ * Rule:
+ * Widget content must size itself from the widget's own rectangle, not from the
+ * viewport, dashboard grid, page shell, dock, status bar, or any external layout.
+ *
+ * New widget internals should prefer container units:
+ * - cqi: widget content/container inline size
+ * - cqb: widget content/container block size
+ * - cqmin/cqmax where supported
+ */
+.mha-widget {
+  container-type: size;
+}

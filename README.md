@@ -578,3 +578,13 @@ Now Bar implementation layers.
 On mobile screensaver layouts, the Now Bar and clock region are centered against
 the viewport axis instead of the padded grid content box. Desktop/tablet
 screensaver alignment is unchanged.
+
+
+## ClockWidget density independence
+
+ClockWidget content now sizes from its own widget rectangle using container query
+units. Digital, analog, iOS analog, and scientific clock variants no longer
+depend on viewport sizing or fixed rem caps for their main content.
+
+A global widget content density rule was also documented: widget internals must
+size from the widget itself, not from the viewport, grid, shell, dock, or page.

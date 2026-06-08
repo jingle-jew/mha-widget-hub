@@ -345,3 +345,117 @@
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
+
+/* CLOCK WIDGET DENSITY INDEPENDENCE
+ * ClockWidget content sizes only from the widget's own rectangle.
+ *
+ * No viewport-based typography/sizing here. The clock must not know about the
+ * dashboard grid, page shell, screen size, dock, or status bar.
+ */
+.mha-widget[data-widget-kind="clock"] {
+  container-type: size;
+  container-name: mha-clock-widget;
+  overflow: hidden;
+}
+
+.mha-widget[data-widget-kind="clock"] .mha-widget-inner-grid {
+  container-type: size;
+  container-name: mha-clock-content;
+  overflow: hidden;
+}
+
+.mha-clock-widget {
+  inline-size: 100%;
+  block-size: 100%;
+  max-inline-size: 100%;
+  max-block-size: 100%;
+  overflow: hidden;
+  contain: layout paint;
+}
+
+/* Digital clock: scale from the widget content box, never from viewport width. */
+.mha-clock-widget--digital {
+  gap: clamp(.18rem, 5cqb, .62rem);
+  padding: min(5cqi, 5cqb);
+}
+
+.mha-clock-time {
+  max-inline-size: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip;
+  font-size: clamp(1.15rem, min(27cqi, 37cqb), 5.4rem);
+  line-height: .9;
+}
+
+.mha-clock-date {
+  max-inline-size: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: clamp(.52rem, min(8cqi, 9cqb), 1.15rem);
+  line-height: 1.05;
+}
+
+/* Analog faces: no fixed rem cap. The face follows the widget content box. */
+.mha-clock-face {
+  inline-size: min(82cqi, 82cqb);
+  block-size: min(82cqi, 82cqb);
+  max-inline-size: 100%;
+  max-block-size: 100%;
+}
+
+/* iOS analog keeps the same face contract as other analog clocks. */
+.mha-clock-widget--ios-analog .mha-clock-face {
+  inline-size: min(84cqi, 84cqb);
+  block-size: min(84cqi, 84cqb);
+}
+
+/* Scientific variant: allow the face/data stack to use widget density, not a
+ * fixed rem cap. This prevents the tiny/shrunken look inside a 2x2 card.
+ */
+.mha-clock-widget--scientific {
+  gap: clamp(.18rem, 3cqb, .48rem);
+  padding: min(4cqi, 4cqb);
+}
+
+.mha-clock-widget--scientific .mha-clock-face {
+  inline-size: min(62cqi, 54cqb);
+  block-size: min(62cqi, 54cqb);
+}
+
+.mha-clock-science-time {
+  font-size: clamp(.86rem, min(13cqi, 15cqb), 1.75rem);
+  line-height: .95;
+  white-space: nowrap;
+}
+
+.mha-clock-science-data,
+.mha-clock-science-label {
+  font-size: clamp(.38rem, min(4.4cqi, 5.2cqb), .72rem);
+  line-height: 1.05;
+}
+
+/* Fallback for browsers without container query units.
+ * This keeps clocks usable without reverting to viewport-based sizing.
+ */
+@supports not (width: 1cqi) {
+  .mha-clock-time {
+    font-size: clamp(1.4rem, 35%, 4rem);
+  }
+
+  .mha-clock-date {
+    font-size: clamp(.62rem, 11%, 1rem);
+  }
+
+  .mha-clock-face,
+  .mha-clock-widget--ios-analog .mha-clock-face {
+    inline-size: min(82%, 82%);
+    block-size: min(82%, 82%);
+  }
+
+  .mha-clock-widget--scientific .mha-clock-face {
+    inline-size: 56%;
+    block-size: 56%;
+  }
+}

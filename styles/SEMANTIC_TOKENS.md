@@ -217,6 +217,25 @@ ClockWidget tokens are adapter tokens for dashboard and screensaver clock varian
 | `--mha-preview-text` | Main preview text color. |
 | `--mha-preview-muted` | Muted preview/helper text color. |
 
+
+---
+
+## Widget content density rule
+
+All widget content must size itself from the widget's own available rectangle.
+
+Simple rule:
+
+| Do | Avoid |
+|---|---|
+| Use the widget/card/content box as the sizing source. | Sizing widget internals from the viewport. |
+| Prefer container units like `cqi`, `cqb`, `cqmin`, `cqmax`. | Using `vw`, `vh`, page width, grid width, dock offset, or shell dimensions inside widget internals. |
+| Let each widget be its own sizing container. | Letting widget content know about the dashboard grid or page shell. |
+| Use widget-specific adapter tokens when a widget needs a unique visual role. | Creating layout dependencies between widgets and the outer shell. |
+
+The widget shell may know about the dashboard layout.  
+The widget content must only know about the widget.
+
 ---
 
 ## Rule of thumb
