@@ -197,8 +197,8 @@
  */
 :host([data-theme-style="ios"]) .mha-widget[data-widget-kind="slider"] {
   --mha-ios-slider-widget-radius: var(--mha-widget-radius, 1.75rem);
-  --mha-ios-slider-widget-surface: var(--mha-widget-shell-surface, var(--mha-surface-primary));
-  --mha-ios-slider-widget-border: var(--mha-widget-shell-border, var(--mha-border-primary));
+  --mha-ios-slider-widget-surface: var(--mha-slider-widget-surface-inactive);
+  --mha-ios-slider-widget-border: var(--mha-slider-widget-border);
   --mha-ios-slider-widget-fill:
     linear-gradient(
       145deg,
@@ -211,8 +211,8 @@
   isolation: isolate;
   background: var(--mha-ios-slider-widget-surface) !important;
   border-color: var(--mha-ios-slider-widget-border);
-  -webkit-backdrop-filter: blur(calc(var(--mha-blur-primary) * 1.05)) saturate(170%);
-  backdrop-filter: blur(calc(var(--mha-blur-primary) * 1.05)) saturate(170%);
+  -webkit-backdrop-filter: blur(calc(var(--mha-slider-widget-blur) * 1.05)) saturate(170%);
+  backdrop-filter: blur(calc(var(--mha-slider-widget-blur) * 1.05)) saturate(170%);
 }
 /* The visual layers live in the widget grid, below the invisible input. */
 :host([data-theme-style="ios"]) .mha-widget[data-widget-kind="slider"] .mha-slider-widget-grid {
@@ -235,7 +235,7 @@
   z-index: 1;
   pointer-events: none;
   border-radius: inherit;
-  background: var(--mha-ios-slider-widget-fill);
+  background: var(--mha-ios-slider-widget-fill, var(--mha-slider-widget-surface-active));
   opacity: .96;
   transition:
     inline-size 120ms linear,
@@ -332,4 +332,26 @@
   background: transparent !important;
   box-shadow: none !important;
   border: 0 !important;
+}
+
+/* SEMANTIC SLIDER WIDGET TOKEN CONSUMERS
+ * Phase 5B-1 routes full SliderWidget internals through slider semantic roles.
+ */
+.mha-widget[data-widget-kind="slider"] {
+  color: var(--mha-slider-widget-text);
+  border-color: var(--mha-slider-widget-border);
+}
+
+.mha-widget[data-widget-kind="slider"] .mha-slider-widget-grid,
+.mha-widget[data-widget-kind="slider"] .mha-slider-widget-unit {
+  color: inherit;
+}
+
+/* Material SliderWidget must remain tonal/opaque, not glass. */
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="slider"] {
+  background: var(--mha-slider-widget-surface);
+  border-color: var(--mha-slider-widget-border);
+  box-shadow: var(--mha-slider-widget-shadow);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }

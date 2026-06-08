@@ -161,6 +161,25 @@ They should gradually point to semantic roles instead of being treated as indepe
 | `--mha-surface-blur` | `--mha-blur-primary` |
 | `--mha-widget-reflection` | `--mha-highlight-primary` |
 
+
+---
+
+## SliderWidget tokens
+
+SliderWidget tokens are adapter tokens for the full-widget slider variants.
+
+| Token | Simple description |
+|---|---|
+| `--mha-slider-widget-surface` | Main SliderWidget surface. |
+| `--mha-slider-widget-surface-inactive` | Inactive slider/fader surface. |
+| `--mha-slider-widget-surface-active` | Active slider/fader fill. |
+| `--mha-slider-widget-border` | SliderWidget border. |
+| `--mha-slider-widget-shadow` | SliderWidget shadow. |
+| `--mha-slider-widget-text` | Main text/icon color inside SliderWidget. |
+| `--mha-slider-widget-muted` | Muted/helper text inside SliderWidget. |
+| `--mha-slider-widget-highlight` | Highlight/reflection layer for SliderWidget. |
+| `--mha-slider-widget-blur` | Blur strength for SliderWidget glass effects. |
+
 ---
 
 ## Rule of thumb

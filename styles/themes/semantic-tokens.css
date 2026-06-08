@@ -266,3 +266,57 @@
   --mha-widget-shell-highlight: var(--mha-highlight-subtle);
   --mha-widget-shell-shadow: var(--mha-shadow-primary);
 }
+
+
+/* PHASE 5B-1 SLIDER WIDGET ROLE TOKENS
+ *
+ * Full SliderWidget internals now consume semantic roles through slider-specific
+ * adapters. This keeps SliderWidget styling consistent while preserving its
+ * theme-specific personalities.
+ */
+:host,
+:root {
+  --mha-slider-widget-surface: var(--mha-widget-shell-surface, var(--mha-surface-primary));
+  --mha-slider-widget-surface-inactive: var(--mha-surface-secondary);
+  --mha-slider-widget-surface-active: var(--mha-accent);
+  --mha-slider-widget-border: var(--mha-widget-shell-border, var(--mha-border-primary));
+  --mha-slider-widget-shadow: var(--mha-widget-shell-shadow, var(--mha-shadow-primary));
+  --mha-slider-widget-text: var(--mha-text-primary);
+  --mha-slider-widget-muted: var(--mha-text-muted);
+  --mha-slider-widget-highlight: var(--mha-highlight-primary);
+  --mha-slider-widget-blur: var(--mha-blur-primary);
+}
+
+:host([data-theme-style="ios"]),
+:root[data-theme-style="ios"] {
+  --mha-slider-widget-surface: var(--mha-widget-shell-surface, var(--mha-surface-primary));
+  --mha-slider-widget-surface-inactive: var(--mha-widget-shell-surface, var(--mha-surface-primary));
+  --mha-slider-widget-surface-active:
+    linear-gradient(
+      145deg,
+      rgba(255,255,255,.74),
+      rgba(255,255,255,.38)
+    );
+  --mha-slider-widget-highlight: var(--mha-highlight-primary);
+  --mha-slider-widget-blur: var(--mha-blur-primary);
+}
+
+:host([data-theme-style="oneui"]),
+:root[data-theme-style="oneui"] {
+  --mha-slider-widget-surface: var(--mha-widget-shell-surface, var(--mha-surface-primary));
+  --mha-slider-widget-surface-inactive: var(--mha-surface-secondary);
+  --mha-slider-widget-surface-active: var(--mha-accent);
+  --mha-slider-widget-highlight: var(--mha-highlight-primary);
+  --mha-slider-widget-blur: var(--mha-blur-primary);
+}
+
+:host([data-theme-style="material"]),
+:root[data-theme-style="material"] {
+  --mha-slider-widget-surface: var(--mha-widget-shell-surface, var(--mha-surface-primary));
+  --mha-slider-widget-surface-inactive: var(--mha-surface-secondary);
+  --mha-slider-widget-surface-active: var(--mha-accent);
+  --mha-slider-widget-border: var(--mha-border-subtle);
+  --mha-slider-widget-shadow: none;
+  --mha-slider-widget-highlight: var(--mha-highlight-subtle);
+  --mha-slider-widget-blur: 0px;
+}

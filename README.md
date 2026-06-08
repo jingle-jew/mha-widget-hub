@@ -499,3 +499,11 @@ surface/text/border adapters where safe.
 A human-readable token reference is available at `styles/SEMANTIC_TOKENS.md`.
 It lists the semantic design tokens, adapter tokens, compatibility aliases, and
 simple usage guidance for future UI work.
+
+
+## Semantic tokens phase 5B-1
+
+SliderWidget internals now consume slider-specific semantic adapter roles such
+as `--mha-slider-widget-surface`, `--mha-slider-widget-surface-inactive`,
+`--mha-slider-widget-surface-active`, `--mha-slider-widget-border`, and
+`--mha-slider-widget-blur`. Layout and pointer behavior are unchanged.
