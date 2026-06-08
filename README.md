@@ -479,3 +479,16 @@ consume shell semantic roles such as `--mha-shell-surface`,
 
 iOS and OneUI keep their glass/blurred shell surfaces. Material shell surfaces
 are routed to opaque tonal containers with `backdrop-filter: none`.
+
+
+## Semantic tokens phase 5A
+
+Widget shells now route through semantic widget roles:
+`--mha-widget-shell-surface`, `--mha-widget-shell-border`,
+`--mha-widget-shell-shadow`, `--mha-widget-shell-highlight`, and
+`--mha-widget-control-surface`.
+
+This phase migrates the widget card shell and lightweight helper controls. It
+does not deeply refactor specialized widget internals yet; SliderWidget and
+ClockWidget keep their existing layout/behavior while consuming the new semantic
+surface/text/border adapters where safe.

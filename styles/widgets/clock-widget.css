@@ -22,7 +22,7 @@
   min-block-size: 0;
   display: grid;
   place-items: center;
-  color: var(--mha-text);
+  color: var(--mha-text-primary);
   user-select: none;
 }
 
@@ -41,7 +41,7 @@
 }
 
 .mha-clock-date {
-  color: var(--mha-muted);
+  color: var(--mha-text-muted);
   font-size: clamp(.78rem, 1.6vw, .98rem);
   font-weight: 720;
   text-transform: capitalize;
@@ -54,12 +54,12 @@
   aspect-ratio: 1 / 1;
   border-radius: 999px;
   background:
-    radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--mha-widget-surface) 86%, transparent), transparent 58%),
-    color-mix(in srgb, var(--mha-widget-surface) 66%, transparent);
-  border: 1px solid color-mix(in srgb, var(--mha-widget-border) 74%, transparent);
+    radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--mha-widget-shell-surface, var(--mha-surface-primary)) 86%, transparent), transparent 58%),
+    color-mix(in srgb, var(--mha-widget-shell-surface, var(--mha-surface-primary)) 66%, transparent);
+  border: 1px solid color-mix(in srgb, var(--mha-widget-shell-border, var(--mha-border-primary)) 74%, transparent);
   box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--mha-text) 7%, transparent),
-    inset 0 -1px 0 color-mix(in srgb, var(--mha-text) 4%, transparent);
+    inset 0 1px 0 color-mix(in srgb, var(--mha-text-primary) 7%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, var(--mha-text-primary) 4%, transparent);
 }
 
 .mha-clock-mark {
@@ -80,14 +80,14 @@
   inline-size: .07rem;
   block-size: .34rem;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--mha-text) 24%, transparent);
+  background: color-mix(in srgb, var(--mha-text-primary) 24%, transparent);
   transform: translateX(-50%);
 }
 
 .mha-clock-mark[data-major="true"]::before {
   inline-size: .12rem;
   block-size: .56rem;
-  background: color-mix(in srgb, var(--mha-text) 48%, transparent);
+  background: color-mix(in srgb, var(--mha-text-primary) 48%, transparent);
 }
 
 .mha-clock-hand {
@@ -96,7 +96,7 @@
   top: 50%;
   inline-size: .18rem;
   border-radius: 999px;
-  background: var(--mha-text);
+  background: var(--mha-text-primary);
   transform-origin: 50% 100%;
   transform: translate(-50%, -100%) rotate(var(--mha-clock-rotation));
 }
@@ -133,9 +133,9 @@
 .mha-clock-widget--ios-analog .mha-clock-face {
   background:
     linear-gradient(145deg, rgba(255,255,255,.32), rgba(255,255,255,.09)),
-    color-mix(in srgb, var(--mha-widget-surface) 76%, transparent);
-  -webkit-backdrop-filter: blur(calc(var(--mha-surface-blur) * .82)) saturate(160%);
-  backdrop-filter: blur(calc(var(--mha-surface-blur) * .82)) saturate(160%);
+    color-mix(in srgb, var(--mha-widget-shell-surface, var(--mha-surface-primary)) 76%, transparent);
+  -webkit-backdrop-filter: blur(calc(var(--mha-blur-primary) * .82)) saturate(160%);
+  backdrop-filter: blur(calc(var(--mha-blur-primary) * .82)) saturate(160%);
 }
 
 .mha-clock-number {
@@ -143,7 +143,7 @@
   inset: .58rem;
   display: grid;
   place-items: start center;
-  color: color-mix(in srgb, var(--mha-text) 72%, transparent);
+  color: color-mix(in srgb, var(--mha-text-primary) 72%, transparent);
   font-size: clamp(.54rem, 1.1vw, .72rem);
   font-weight: 760;
   transform: rotate(var(--mha-clock-number-rotation));
@@ -212,8 +212,8 @@
   block-size: min(100%, 7rem);
   background:
     radial-gradient(circle at 50% 50%, transparent 0 34%, color-mix(in srgb, var(--mha-accent) 10%, transparent) 35% 36%, transparent 37%),
-    color-mix(in srgb, var(--mha-text) 5%, transparent);
-  border-color: color-mix(in srgb, var(--mha-accent) 36%, var(--mha-widget-border));
+    color-mix(in srgb, var(--mha-text-primary) 5%, transparent);
+  border-color: color-mix(in srgb, var(--mha-accent) 36%, var(--mha-widget-shell-border, var(--mha-border-primary)));
 }
 
 .mha-clock-widget--scientific .mha-clock-mark::before {
@@ -228,7 +228,7 @@
   grid-template-columns: 1fr auto;
   gap: .12rem .5rem;
   align-items: baseline;
-  color: var(--mha-muted);
+  color: var(--mha-text-muted);
   font-size: clamp(.52rem, 1vw, .72rem);
   font-weight: 760;
   letter-spacing: .02em;
@@ -239,7 +239,7 @@
   grid-column: 1;
   font-size: clamp(1rem, 2.4vw, 1.45rem);
   letter-spacing: -.03em;
-  color: var(--mha-text);
+  color: var(--mha-text-primary);
 }
 
 .mha-clock-seconds {
@@ -274,7 +274,7 @@
 .mha-clock-widget--screensaver .mha-clock-face {
   inline-size: clamp(7.5rem, 20vw, 13rem);
   block-size: clamp(7.5rem, 20vw, 13rem);
-  background: color-mix(in srgb, var(--mha-widget-surface) 70%, transparent);
+  background: color-mix(in srgb, var(--mha-widget-shell-surface, var(--mha-surface-primary)) 70%, transparent);
 }
 
 .mha-clock-widget--screensaver.mha-clock-widget--ios-analog .mha-clock-face {
@@ -292,14 +292,14 @@
 }
 
 :host([data-theme-style="material"]) .mha-clock-face {
-  background: var(--mha-material-surface-container, var(--mha-widget-surface));
+  background: var(--mha-material-surface-container, var(--mha-widget-shell-surface, var(--mha-surface-primary)));
   border-color: transparent;
 }
 
 :host([data-theme-style="oneui"]) .mha-clock-face {
   background:
     linear-gradient(145deg, rgba(255,255,255,.16), rgba(255,255,255,.06)),
-    color-mix(in srgb, var(--mha-widget-surface) 78%, transparent);
+    color-mix(in srgb, var(--mha-widget-shell-surface, var(--mha-surface-primary)) 78%, transparent);
 }
 
 

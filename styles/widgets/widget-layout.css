@@ -123,13 +123,13 @@
 
 .mha-widget-text {
   min-inline-size: 0;
-  color: var(--mha-text);
+  color: var(--mha-text-primary);
   font: inherit;
   line-height: 1.05;
 }
 
 .mha-widget-text[data-tone="muted"] {
-  color: var(--mha-muted);
+  color: var(--mha-text-muted);
 }
 
 @supports not (width: 1cqi) {

@@ -197,8 +197,8 @@
  */
 :host([data-theme-style="ios"]) .mha-widget[data-widget-kind="slider"] {
   --mha-ios-slider-widget-radius: var(--mha-widget-radius, 1.75rem);
-  --mha-ios-slider-widget-surface: var(--mha-widget-surface);
-  --mha-ios-slider-widget-border: var(--mha-widget-border);
+  --mha-ios-slider-widget-surface: var(--mha-widget-shell-surface, var(--mha-surface-primary));
+  --mha-ios-slider-widget-border: var(--mha-widget-shell-border, var(--mha-border-primary));
   --mha-ios-slider-widget-fill:
     linear-gradient(
       145deg,
@@ -211,8 +211,8 @@
   isolation: isolate;
   background: var(--mha-ios-slider-widget-surface) !important;
   border-color: var(--mha-ios-slider-widget-border);
-  -webkit-backdrop-filter: blur(calc(var(--mha-surface-blur) * 1.05)) saturate(170%);
-  backdrop-filter: blur(calc(var(--mha-surface-blur) * 1.05)) saturate(170%);
+  -webkit-backdrop-filter: blur(calc(var(--mha-blur-primary) * 1.05)) saturate(170%);
+  backdrop-filter: blur(calc(var(--mha-blur-primary) * 1.05)) saturate(170%);
 }
 /* The visual layers live in the widget grid, below the invisible input. */
 :host([data-theme-style="ios"]) .mha-widget[data-widget-kind="slider"] .mha-slider-widget-grid {
