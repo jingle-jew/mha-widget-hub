@@ -7,6 +7,7 @@ export const WIDGET_MANAGER_CATEGORIES = Object.freeze([
   ]},
   { id:"weather", label:"Météo", description:"Conditions météo actuelles.", icon:"☁", widgets:[
     {kind:"weather",variant:"current",label:"Météo actuelle",size:{w:2,h:2},description:"Conditions actuelles sans prévisions horaires."},
+    {kind:"weather",variant:"forecast",label:"Météo 5 jours",size:{w:4,h:2},description:"Conditions actuelles + prévisions 5 jours."},
   ]},
   { id:"lights", label:"Lumières", description:"Contrôles rapides et intensité.", icon:"💡", widgets:[
     {kind:"empty",variant:"light-toggle",label:"Tuile lumière",size:{w:2,h:2},description:"Contrôle simple."},

@@ -6,7 +6,7 @@
  */
 
 .mha-widget {
-  --mha-widget-inner-padding: var(--mha-widget-inner-inset, clamp(0.38rem, 0.9vw, 0.65rem));
+  --mha-widget-inner-padding: var(--mha-widget-inner-inset, clamp(0.28rem, min(4cqi, 4cqb), 0.48rem));
   --mha-widget-inner-gap: var(--mha-widget-content-gap, clamp(0.2rem, 0.55vw, 0.45rem));
   --mha-widget-unit-content-scale: .84;
 }
@@ -157,4 +157,47 @@
  */
 .mha-widget {
   container-type: size;
+}
+
+
+/* WIDGET INNER PADDING DENSITY TUNING
+ * Smaller global inner inset so widget content can use more of its own card.
+ * The gap remains modern/coherent, but no longer pulls 2x2 content toward the
+ * center as much.
+ */
+@supports not (width: 1cqi) {
+  .mha-widget {
+    --mha-widget-inner-padding: var(--mha-widget-inner-inset, clamp(0.28rem, 0.62vw, 0.48rem));
+  }
+}
+
+/* WIDGET UNIT STRETCH CONTRACT
+ * createWidgetUnit() can request align="stretch" and justify="stretch".
+ * The CSS contract must honor that request all the way down to the direct child:
+ * the unit owns the available rectangle, and the child fills it.
+ *
+ * This prevents widget internals from being shrink-to-content/centered inside a
+ * correctly-sized internal widget unit.
+ */
+.mha-widget-unit[data-align="stretch"],
+.mha-widget-unit[data-justify="stretch"] {
+  align-items: stretch;
+  justify-items: stretch;
+  place-items: stretch;
+  min-inline-size: 0;
+  min-block-size: 0;
+  overflow: hidden;
+}
+
+.mha-widget-unit[data-align="stretch"] > *,
+.mha-widget-unit[data-justify="stretch"] > * {
+  inline-size: 100%;
+  block-size: 100%;
+  max-inline-size: 100%;
+  max-block-size: 100%;
+  min-inline-size: 0;
+  min-block-size: 0;
+  justify-self: stretch;
+  align-self: stretch;
+  box-sizing: border-box;
 }

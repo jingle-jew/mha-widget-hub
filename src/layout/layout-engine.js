@@ -244,8 +244,29 @@ export function normalizeClockWidgetSize() {
   return {w:2,h:2};
 }
 
-export function normalizeWeatherWidgetSize() {
-  return {w:2,h:2};
+export const WEATHER_WIDGET_SIZES = Object.freeze([
+  {w:2,h:2},
+  {w:3,h:2},
+  {w:4,h:2},
+]);
+
+export function normalizeWeatherWidgetSize({w=2,h=2}={}) {
+  ({w,h}=normalizeWidgetSize({w,h}));
+
+  /*
+   * WeatherWidget size contract:
+   * - 2x2: current conditions compact;
+   * - 3x2: current conditions wider, hidden from the manager;
+   * - 4x2: current conditions + 5-day vertical forecast stack.
+   *
+   * Height is fixed at 2. Width snaps to the closest allowed size.
+   */
+  const allowed=[2,3,4];
+  const nearest=allowed.reduce((best,value)=>(
+    Math.abs(value-w)<Math.abs(best-w)?value:best
+  ),2);
+
+  return {w:nearest,h:2};
 }
 
 export function normalizeWidgetForKind(widget={}) {

@@ -596,3 +596,118 @@ Added the first WeatherWidget: a 2x2 current-conditions card without hourly
 forecast. It has theme-specific styling for iOS, OneUI, and Material You, while
 following the widget density rule: content sizes from the widget rectangle, not
 from the viewport/grid/shell.
+
+
+## Widget inner padding tuning
+
+The global widget inner padding was reduced so widget content uses more of the
+card area while keeping a modern/coherent gap from the widget edge. The padding
+now follows the widget's own container size using container query units, with a
+viewport-based fallback for older browsers.
+
+
+## WeatherWidget vertical rhythm tuning
+
+WeatherWidget now has a slightly larger vertical gap between its internal
+sections so the top and bottom breathing room feels balanced with the left/right
+edge spacing, without changing the global widget padding.
+
+
+## WeatherWidget size variants
+
+WeatherWidget now supports three official sizes:
+
+- `2x2`: current weather compact card;
+- `3x2`: current weather, wider layout, hidden from the widget manager;
+- `4x2`: current weather on the left and a vertical 5-day forecast stack on the right.
+
+The WeatherWidget dimension button cycles `2x2 → 3x2 → 4x2 → 2x2`. Manual resize snaps to the same allowed sizes.
+
+
+## WeatherWidget 4x2 width and rhythm tuning
+
+The 4x2 WeatherWidget now stretches its current-weather and forecast panes to
+the full inner widget width while respecting the global widget padding. All
+WeatherWidget variants also have a slightly roomier vertical rhythm.
+
+
+## WeatherWidget 4x2 meta and width fix
+
+The 4x2 WeatherWidget now keeps its current-weather detail chips horizontal like
+the 2x2/3x2 variants. The current and forecast panes also stretch to the full
+inner widget width instead of visually shrinking toward the center.
+
+
+## WeatherWidget variant padding parity
+
+WeatherWidget variants now share the same internal padding in 2x2, 3x2, and
+4x2. The variant may change layout, but the inset from the widget edge remains
+constant.
+
+
+## WeatherWidget 4x2 single inset fix
+
+The 4x2 WeatherWidget now uses a single outer inset, matching the 2x2/3x2
+variants. The forecast pane no longer creates a second nested-card padding that
+pulls the content toward the center.
+
+
+## WeatherWidget 4x2 full width forecast fix
+
+WeatherWidget wrappers now stretch to the full inner widget box, preventing the
+4x2 content from staying at a min-content width. The 4x2 forecast pane is also
+wider, using a balanced 1fr/1fr split with safer forecast row columns.
+
+
+## WeatherWidget full width padded bounds fix
+
+WeatherWidget internals now stretch inside the padded widget content box instead
+of overflowing past it. The 4x2 forecast layout keeps the wider forecast pane,
+but respects the same internal padding contract as 2x2 and 3x2.
+
+
+## WeatherWidget icon/forecast/background tuning
+
+WeatherWidget current-condition icons are now constrained so the sun/cloud icon
+does not overflow in 2x2 or 3x2. The 4x2 forecast rows are more horizontally
+compact between day, icon, and temperatures. iOS and OneUI WeatherWidget cards
+also get blue weather-style gradients in both light and dark themes.
+
+
+## WeatherWidget crop and forecast compact fix
+
+WeatherWidget 2x2/4x2 content is now clipped inside the widget box so the
+weather icon no longer crops or overflows on the right side. The 4x2 forecast
+rows are also more compact horizontally between day, icon, and temperatures.
+
+
+## WeatherWidget icon top-right and compact meta
+
+WeatherWidget current-weather icons are now anchored to the top-right of the
+current section and align with the title/header area. The 2x2 variant no longer
+renders detail chips, letting the temperature/range content use the freed space.
+The 4x2 forecast rows are more compact horizontally, with temperatures closer to
+forecast icons but padded away from the widget edge.
+
+
+## WeatherWidget composition polish
+
+WeatherWidget composition was tuned across its three size variants: 2x2 has less
+top emptiness, 3x2 removes the accidental left inset, 4x2 gives the forecast
+section more usable room while increasing the gap between current conditions and
+forecast. The current-condition icon is anchored to the top-right of the current
+section and aligned with the title/header area.
+
+
+## Widget unit stretch audit and cleanup
+
+Audit found that `createWidgetUnit()` was already emitting
+`data-align="stretch"` and `data-justify="stretch"` for WeatherWidget and
+ClockWidget full-card units, but the generic CSS contract did not force direct
+children to fill those units. `widget-layout.css` now honors stretch units by
+stretching their direct children to the full internal widget-unit rectangle.
+
+WeatherWidget CSS was cleaned up to remove several compensating width/overflow
+patches that were trying to solve the wrapper issue locally. WeatherWidget now
+relies on the generic unit stretch contract, then applies only its own content
+composition rules.

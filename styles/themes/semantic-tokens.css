@@ -483,3 +483,10 @@
   --mha-weather-widget-chip-border: var(--mha-border-subtle);
   --mha-weather-widget-temp: var(--mha-accent);
 }
+
+
+/* WEATHER WIDGET BLUE BACKGROUND TOKEN NOTE
+ * iOS and OneUI WeatherWidget cards use explicit blue weather gradients in
+ * weather-widget.css. The semantic weather color tokens below remain the source
+ * for accent sky/sun elements and future HA-bound conditions.
+ */

@@ -22,6 +22,7 @@ export function createEmptyWidget(
     onMove,
     onRemove,
     onResizeStart,
+    onCycleDimension,
   } = {},
 ) {
   const size = normalizeWidgetSize(widget);
@@ -187,6 +188,12 @@ export function createEmptyWidget(
     });
     dimensionButton.addEventListener("pointerdown", (event) => {
       if (isMoveTarget) return;
+      if (isWeatherWidget(widget)) {
+        event.preventDefault();
+        event.stopPropagation();
+        onCycleDimension?.(widget.id);
+        return;
+      }
       onResizeStart?.(event, widget.id);
     });
 

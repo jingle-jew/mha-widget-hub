@@ -239,6 +239,20 @@ The widget content must only know about the widget.
 
 ---
 
+## WeatherWidget size contract
+
+WeatherWidget supports three official sizes:
+
+| Size | Role |
+|---|---|
+| `2x2` | Current weather compact card. |
+| `3x2` | Wider current weather card; hidden from the widget manager. |
+| `4x2` | Current weather plus vertical 5-day forecast stack. |
+
+The dimension button cycles `2x2 → 3x2 → 4x2 → 2x2`. Manual resize snaps to those allowed sizes.
+
+---
+
 ## WeatherWidget tokens
 
 WeatherWidget tokens are adapter tokens for current weather cards.
