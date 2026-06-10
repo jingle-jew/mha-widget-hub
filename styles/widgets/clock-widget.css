@@ -701,3 +701,11 @@
   place-items: center;
 }
 
+/* iOS analog cleanup:
+ * The iOS-style face already has numbers. Hide only the hour guide marks that
+ * sit behind those numbers. The regular analog variant keeps its guides.
+ */
+.mha-clock-widget--ios-analog .mha-clock-mark[data-major="true"]::before {
+  display: none;
+}
+
