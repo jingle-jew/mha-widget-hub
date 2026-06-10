@@ -17,6 +17,7 @@ export function createEmptyWidget(
     onMove,
     onRemove,
     onResizeStart,
+    onCycleVariant,
   } = {},
 ) {
   const size = normalizeWidgetSize(widget);
@@ -132,12 +133,14 @@ export function createEmptyWidget(
   const tools = document.createElement("div");
     tools.className = "mha-widget-tools";
 
-    const dimensionButton = tool("Redimensionner le widget", "resize", () => {}, {
+    const dimensionButton = tool("Variante suivante", "resize", () => {}, {
       className: "mha-tool-button--dimension",
     });
     dimensionButton.addEventListener("pointerdown", (event) => {
       if (isMoveTarget) return;
-      onResizeStart?.(event, widget.id);
+      event.preventDefault();
+      event.stopPropagation();
+      onCycleVariant?.(widget.id);
     });
 
     const moveButton = tool(

@@ -632,3 +632,72 @@
   filter: none !important;
   text-shadow: none !important;
 }
+
+/* CLOCK WIDGET CENTERING CONTRACT
+ * The widget shell is the positioning parent. Clock content must occupy a
+ * single centered grid cell so analog faces never drift toward a corner when
+ * the variant is swapped or when edit overlays are present.
+ */
+.mha-widget[data-widget-kind="clock"] {
+  display: grid;
+  place-items: center;
+}
+
+.mha-widget[data-widget-kind="clock"] > .mha-clock-widget-frame {
+  grid-area: 1 / 1;
+  inline-size: 100%;
+  block-size: 100%;
+  min-inline-size: 0;
+  min-block-size: 0;
+  display: grid;
+  place-items: center;
+  align-self: center;
+  justify-self: center;
+}
+
+.mha-widget[data-widget-kind="clock"] .mha-clock-widget {
+  inline-size: 100%;
+  block-size: 100%;
+  display: grid;
+  place-items: center;
+  align-self: center;
+  justify-self: center;
+}
+
+.mha-clock-widget--analog .mha-clock-face,
+.mha-clock-widget--ios-analog .mha-clock-face {
+  inline-size: calc(100% - var(--mha-clock-face-edge-gap, .65rem));
+  block-size: calc(100% - var(--mha-clock-face-edge-gap, .65rem));
+  max-inline-size: none;
+  max-block-size: none;
+  aspect-ratio: 1 / 1;
+  align-self: center;
+  justify-self: center;
+}
+
+/* Move analog guides/ticks closer to the edge of the clock face. */
+.mha-clock-widget--analog .mha-clock-mark,
+.mha-clock-widget--ios-analog .mha-clock-mark {
+  block-size: 48%;
+}
+
+.mha-clock-widget--analog .mha-clock-mark::before,
+.mha-clock-widget--ios-analog .mha-clock-mark::before {
+  inset-block-start: .1rem;
+  block-size: .36rem;
+}
+
+.mha-clock-widget--analog .mha-clock-mark[data-major="true"]::before,
+.mha-clock-widget--ios-analog .mha-clock-mark[data-major="true"]::before {
+  block-size: .54rem;
+}
+
+.mha-clock-widget--ios-analog .mha-clock-number {
+  inset: .24rem;
+}
+
+/* Keep the dense scientific variant intentionally more instrument-like. */
+.mha-clock-widget--scientific {
+  place-items: center;
+}
+
