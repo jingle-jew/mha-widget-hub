@@ -459,3 +459,154 @@
     block-size: 56%;
   }
 }
+
+/* CLOCK WIDGET CONTENT FILL
+ * Clock widgets already live inside .mha-widget-inner-grid, which is inset by
+ * --mha-widget-inner-padding. From this point on, the clock itself should use
+ * the safe content box, but analog faces still need their own optical inset:
+ * ticks, numbers and hands visually reach past the face circle and otherwise
+ * get clipped by the widget corners.
+ */
+.mha-widget[data-widget-kind="clock"] .mha-clock-widget-grid,
+.mha-widget[data-widget-kind="clock"] .mha-clock-widget-unit,
+.mha-widget[data-widget-kind="clock"] .mha-clock-widget {
+  inline-size: 100%;
+  block-size: 100%;
+  min-inline-size: 0;
+  min-block-size: 0;
+  max-inline-size: 100%;
+  max-block-size: 100%;
+}
+
+.mha-widget[data-widget-kind="clock"] .mha-clock-widget-unit,
+.mha-widget[data-widget-kind="clock"] .mha-clock-widget {
+  display: grid;
+  place-items: center;
+}
+
+.mha-widget[data-widget-kind="clock"] .mha-clock-widget--digital {
+  padding: 0;
+  gap: clamp(.14rem, 3.8cqb, .5rem);
+  align-content: center;
+  justify-items: center;
+}
+
+.mha-widget[data-widget-kind="clock"] .mha-clock-time {
+  font-size: clamp(1.35rem, min(31cqi, 43cqb), 6.25rem);
+}
+
+.mha-widget[data-widget-kind="clock"] .mha-clock-date {
+  font-size: clamp(.56rem, min(8.6cqi, 10.2cqb), 1.22rem);
+}
+
+.mha-widget[data-widget-kind="clock"] .mha-clock-face {
+  inline-size: min(var(--mha-clock-face-fill, 88cqi), var(--mha-clock-face-fill-block, 88cqb));
+  block-size: min(var(--mha-clock-face-fill, 88cqi), var(--mha-clock-face-fill-block, 88cqb));
+  max-inline-size: 100%;
+  max-block-size: 100%;
+}
+
+.mha-widget[data-widget-kind="clock"] .mha-clock-widget--ios-analog .mha-clock-face {
+  inline-size: min(var(--mha-clock-ios-face-fill, 90cqi), var(--mha-clock-ios-face-fill-block, 90cqb));
+  block-size: min(var(--mha-clock-ios-face-fill, 90cqi), var(--mha-clock-ios-face-fill-block, 90cqb));
+}
+
+.mha-widget[data-widget-kind="clock"] .mha-clock-widget--scientific {
+  padding: 0;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: clamp(.14rem, 2.5cqb, .42rem);
+  align-content: stretch;
+}
+
+.mha-widget[data-widget-kind="clock"] .mha-clock-science-scope {
+  min-block-size: 0;
+  overflow: hidden;
+}
+
+.mha-widget[data-widget-kind="clock"] .mha-clock-widget--scientific .mha-clock-face {
+  inline-size: min(var(--mha-clock-science-face-fill, 88cqi), var(--mha-clock-science-face-fill-block, 62cqb));
+  block-size: min(var(--mha-clock-science-face-fill, 88cqi), var(--mha-clock-science-face-fill-block, 62cqb));
+}
+
+@supports not (width: 1cqi) {
+  .mha-widget[data-widget-kind="clock"] .mha-clock-face,
+  .mha-widget[data-widget-kind="clock"] .mha-clock-widget--ios-analog .mha-clock-face {
+    inline-size: 88%;
+    block-size: 88%;
+  }
+
+  .mha-widget[data-widget-kind="clock"] .mha-clock-widget--scientific .mha-clock-face {
+    inline-size: 62%;
+    block-size: 62%;
+  }
+}
+
+/* CLOCK WIDGET DIRECT SAFE FRAME
+ * Clock widgets are no longer rendered through .mha-widget-inner-grid. They use
+ * one direct frame inset by the global widget padding, then center the selected
+ * clock variant inside that safe box.
+ */
+.mha-widget[data-widget-kind="clock"] > .mha-clock-widget-frame {
+  position: absolute;
+  inset: var(--mha-widget-inner-padding);
+  display: grid;
+  place-items: center;
+  min-inline-size: 0;
+  min-block-size: 0;
+  overflow: hidden;
+  container-type: size;
+  container-name: mha-clock-content;
+}
+
+.mha-widget[data-widget-kind="clock"] > .mha-clock-widget-frame > .mha-clock-widget {
+  inline-size: 100%;
+  block-size: 100%;
+  min-inline-size: 0;
+  min-block-size: 0;
+  max-inline-size: 100%;
+  max-block-size: 100%;
+  display: grid;
+  place-items: center;
+  place-content: center;
+  overflow: hidden;
+}
+
+.mha-widget[data-widget-kind="clock"] > .mha-clock-widget-frame > .mha-clock-widget--digital {
+  padding: 0;
+  align-content: center;
+  justify-items: center;
+}
+
+.mha-widget[data-widget-kind="clock"] > .mha-clock-widget-frame .mha-clock-face {
+  inline-size: min(var(--mha-clock-face-fill, 84cqi), var(--mha-clock-face-fill-block, 84cqb));
+  block-size: min(var(--mha-clock-face-fill, 84cqi), var(--mha-clock-face-fill-block, 84cqb));
+  place-self: center;
+}
+
+.mha-widget[data-widget-kind="clock"] > .mha-clock-widget-frame .mha-clock-widget--ios-analog .mha-clock-face {
+  inline-size: min(var(--mha-clock-ios-face-fill, 86cqi), var(--mha-clock-ios-face-fill-block, 86cqb));
+  block-size: min(var(--mha-clock-ios-face-fill, 86cqi), var(--mha-clock-ios-face-fill-block, 86cqb));
+}
+
+.mha-widget[data-widget-kind="clock"] > .mha-clock-widget-frame > .mha-clock-widget--scientific {
+  padding: 0;
+  grid-template-rows: minmax(0, 1fr) auto;
+  align-content: center;
+  justify-content: center;
+  justify-items: center;
+  gap: clamp(.12rem, 2cqb, .34rem);
+}
+
+.mha-widget[data-widget-kind="clock"] > .mha-clock-widget-frame .mha-clock-science-scope {
+  inline-size: 100%;
+  block-size: 100%;
+  min-block-size: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.mha-widget[data-widget-kind="clock"] > .mha-clock-widget-frame .mha-clock-widget--scientific .mha-clock-face {
+  inline-size: min(var(--mha-clock-science-face-fill, 82cqi), var(--mha-clock-science-face-fill-block, 58cqb));
+  block-size: min(var(--mha-clock-science-face-fill, 82cqi), var(--mha-clock-science-face-fill-block, 58cqb));
+}

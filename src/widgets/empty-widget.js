@@ -2,7 +2,7 @@ import { ICONS } from "../components/icons.js";
 import { getWidgetDensity, normalizeWidgetSize, sizeToString } from "../layout/layout-engine.js";
 import { createIcon } from "../ui/icon.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
-import { createWidgetInnerGrid, createWidgetInnerUnit, createWidgetSliderUnit, createWidgetText, createWidgetUnit } from "./widget-layout.js";
+import { createWidgetInnerGrid, createWidgetSliderUnit, createWidgetText, createWidgetUnit } from "./widget-layout.js";
 import { createSliderWidgetContent, isSliderWidget } from "./slider-widget.js";
 import { createClockWidgetContent, isClockWidget } from "./clock-widget.js";
 import { createSimpleButtonWidgetContent, isSimpleButtonWidget } from "./simple-button-widget.js";
@@ -148,32 +148,19 @@ export function createEmptyWidget(
   }
 
   if (isClockWidget(widget)) {
-    const clockGrid = createWidgetInnerGrid({
-      widgetW: effectiveWidgetW,
-      widgetH: size.h,
-      className: "mha-clock-widget-grid",
-    });
-
     /*
-     * Clock widgets live inside the quadrupled internal grid. Cover the whole
-     * inner grid instead of using the older .mha-widget-unit coordinates,
-     * otherwise clocks only occupy the first top-left cells and look cropped.
+     * Clocks are single centered visual components, not multi-slot layouts.
+     * Render them in a direct safe frame instead of the internal micro-grid so
+     * every variant can center itself inside the widget padding consistently.
      */
-    clockGrid.append(
-      createWidgetInnerUnit({
-        col: 1,
-        row: 1,
-        colSpan: effectiveWidgetW * 4,
-        rowSpan: size.h * 4,
-        align: "stretch",
-        justify: "stretch",
-        className: "mha-clock-widget-unit",
-        children: createClockWidgetContent({
-          variant: widget.variant || "digital",
-        }),
+    const clockFrame = document.createElement("div");
+    clockFrame.className = "mha-clock-widget-frame";
+    clockFrame.append(
+      createClockWidgetContent({
+        variant: widget.variant || "digital",
       }),
     );
-    el.append(clockGrid);
+    el.append(clockFrame);
   }
 
 

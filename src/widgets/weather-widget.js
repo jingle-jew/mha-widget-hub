@@ -3,6 +3,44 @@ import { createWeatherIcon } from "./weather-icons.js";
 
 const WEATHER_SIZE_VARIANTS = new Set(["4x1", "2x2", "3x2", "4x2"]);
 
+const WEATHER_SUMMARY_LABELS = new Map([
+  ["sunny", "Ensoleillé"],
+  ["clear-night", "Nuit claire"],
+  ["clear", "Ensoleillé"],
+  ["cloudy", "Nuageux"],
+  ["cloud", "Nuageux"],
+  ["partlycloudy", "Part. nuageux"],
+  ["partly-cloudy", "Part. nuageux"],
+  ["partly_cloudy", "Part. nuageux"],
+  ["rainy", "Pluie"],
+  ["rain", "Pluie"],
+  ["pouring", "Forte pluie"],
+  ["lightning", "Orage"],
+  ["lightning-rainy", "Orage"],
+  ["thunderstorm", "Orage"],
+  ["snowy", "Neige"],
+  ["snow", "Neige"],
+  ["snowy-rainy", "Neige/pluie"],
+  ["fog", "Brouillard"],
+  ["foggy", "Brouillard"],
+  ["windy", "Venteux"],
+  ["windy-variant", "Venteux"],
+  ["hail", "Grêle"],
+  ["exceptional", "Météo active"],
+  ["unknown", "Météo"],
+  ["unavailable", "Météo"],
+]);
+
+function normalizeWeatherCondition(condition = "") {
+  return String(condition || "unknown").trim().toLowerCase();
+}
+
+function getWeatherSummary(widget = {}) {
+  const explicit = widget.summary || widget.weatherSummary || widget.conditionText || widget.conditionLabel;
+  if (explicit) return String(explicit);
+  return WEATHER_SUMMARY_LABELS.get(normalizeWeatherCondition(widget.condition)) || "Météo";
+}
+
 export function isWeatherWidget(widget = {}) {
   const kind = widget.kind || widget.type || widget.component || "";
   return kind === "weather" || kind === "weather-widget" || widget.variant === "adaptive-weather";
@@ -41,8 +79,9 @@ function createCurrentPane(data, { className = "" } = {}) {
   const pane = document.createElement("section");
   pane.className = ["mha-weather-widget-current", className].filter(Boolean).join(" ");
   pane.append(
-    createWeatherGlyph(data.condition),
     createText("mha-weather-widget-temp", data.temperature),
+    createWeatherGlyph(data.condition),
+    createText("mha-weather-widget-summary", data.summary),
   );
   return pane;
 }
@@ -80,6 +119,7 @@ function getWeatherData(widget = {}) {
     temperature: widget.temperature || "22°",
     humidity: widget.humidity || "54%",
     wind: widget.wind || "12 km/h",
+    summary: getWeatherSummary(widget),
     forecast: widget.forecast || [
       { day: "Lun", condition: "sunny", temp: "24°" },
       { day: "Mar", condition: "partly-cloudy", temp: "22°" },
@@ -107,6 +147,7 @@ export function createWeatherWidgetContent(widget = {}, { widgetW = 2, widgetH =
   }
 
   const left = createCurrentPane(data, { className: "mha-weather-widget-current--split" });
+  left.append(createDetails(data));
   root.append(left, createForecastStack(data.forecast));
   return root;
 }

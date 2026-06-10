@@ -169,8 +169,10 @@
 
 .mha-weather-widget[data-weather-size="3x2"] .mha-weather-widget-details {
   flex-direction: column;
+  align-self: start;
+  justify-self: end;
   align-items: stretch;
-  justify-content: center;
+  justify-content: flex-start;
   inline-size: min(100%, clamp(6.1rem, 28cqi, 8.2rem));
 }
 
@@ -212,6 +214,25 @@
 .mha-weather-widget[data-weather-size="4x2"] .mha-weather-widget-current {
   align-self: stretch;
   justify-self: stretch;
+}
+
+.mha-weather-widget[data-weather-size="4x2"] .mha-weather-widget-current > .mha-weather-widget-details {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: start;
+  justify-self: end;
+  inline-size: min(100%, clamp(5.4rem, 24cqi, 7.2rem));
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: start;
+  gap: clamp(.26rem, 1.7cqb, .42rem);
+  margin-block-start: clamp(.18rem, 1.1cqb, .3rem);
+}
+
+.mha-weather-widget[data-weather-size="4x2"] .mha-weather-widget-current > .mha-weather-widget-details .mha-weather-widget-chip {
+  min-block-size: clamp(1.45rem, 6.4cqb, 1.85rem);
+  padding-inline: clamp(.46rem, 1.9cqi, .64rem);
+  font-size: var(--mha-weather-chip-compact-size, var(--mha-font-size-2xs, .68rem));
 }
 
 .mha-weather-widget-forecast {
@@ -547,4 +568,116 @@
   .mha-weather-current-icon {
     animation: none !important;
   }
+}
+
+/* Weather summary placement
+ * 4x1 stays unchanged: summary is only used by 2x2, 3x2 and 4x2.
+ */
+.mha-weather-widget-summary {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--mha-weather-muted);
+  font-size: var(--mha-type-weather-summary-size, var(--mha-font-size-sm, .88rem));
+  line-height: 1.05;
+  font-weight: var(--mha-type-weather-summary-weight, var(--mha-typography-weight, 720));
+  text-shadow: 0 10px 20px rgba(0,0,0,.10);
+}
+
+.mha-weather-widget[data-weather-size="4x1"] .mha-weather-widget-summary {
+  display: none;
+}
+
+.mha-weather-widget[data-weather-size="2x2"] .mha-weather-widget-temp,
+.mha-weather-widget[data-weather-size="3x2"] .mha-weather-widget-temp,
+.mha-weather-widget[data-weather-size="4x2"] .mha-weather-widget-temp {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: start;
+  justify-self: start;
+}
+
+.mha-weather-widget[data-weather-size="2x2"] .mha-weather-widget-summary,
+.mha-weather-widget[data-weather-size="3x2"] .mha-weather-widget-summary,
+.mha-weather-widget[data-weather-size="4x2"] .mha-weather-widget-summary {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  align-self: end;
+  justify-self: start;
+}
+
+.mha-weather-widget[data-weather-size="2x2"] .mha-weather-widget-summary {
+  font-size: var(--mha-type-weather-summary-size, clamp(.82rem, min(6cqi, 8cqb), 1rem));
+}
+
+.mha-weather-widget[data-weather-size="3x2"] .mha-weather-widget-summary,
+.mha-weather-widget[data-weather-size="4x2"] .mha-weather-widget-summary {
+  font-size: var(--mha-type-weather-summary-size, clamp(.78rem, min(4.2cqi, 7cqb), .96rem));
+}
+
+
+/* Weather temp balance + 4x1 vertical centering
+ * Keep the 4x1 horizontal layout untouched, but make both visible items share
+ * the same vertical center. Compact weather variants share one smaller temp size.
+ */
+.mha-widget[data-widget-kind="weather"] {
+  --mha-weather-temp-size: clamp(1.55rem, min(18cqi, 15cqb), 3.05rem);
+  --mha-weather-temp-compact-size: clamp(1.38rem, min(7.8cqi, 14.5cqb), 1.95rem);
+}
+
+.mha-weather-widget[data-weather-size="4x1"] {
+  align-content: center;
+  align-items: center;
+}
+
+.mha-weather-widget[data-weather-size="4x1"] .mha-weather-widget-current {
+  block-size: 100%;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-rows: 1fr;
+  align-items: center;
+}
+
+.mha-weather-widget[data-weather-size="4x1"] .mha-weather-widget-icon,
+.mha-weather-widget[data-weather-size="4x1"] .mha-weather-widget-temp {
+  grid-row: 1;
+  align-self: center;
+}
+
+.mha-weather-widget[data-weather-size="4x1"] .mha-weather-widget-temp {
+  --mha-weather-temp-size: clamp(1.65rem, min(13cqi, 38cqb), 2.65rem);
+}
+
+.mha-weather-widget[data-weather-size="2x2"] .mha-weather-widget-temp,
+.mha-weather-widget[data-weather-size="3x2"] .mha-weather-widget-temp,
+.mha-weather-widget[data-weather-size="4x2"] .mha-weather-widget-temp {
+  --mha-weather-temp-size: var(--mha-weather-temp-compact-size);
+  font-size: var(--mha-type-weather-temp-size, var(--mha-font-size-weather-temp, var(--mha-weather-temp-size)));
+}
+
+/* Corner-safe offsets
+ * The compact weather cards anchor temperature/summary near the left corners.
+ * Nudge them inward vertically so the widget radius does not visually crop them.
+ * 4x1 is explicitly excluded because it uses a centered horizontal layout.
+ */
+.mha-weather-widget[data-weather-size="2x2"],
+.mha-weather-widget[data-weather-size="3x2"],
+.mha-weather-widget[data-weather-size="4x2"] {
+  --mha-weather-corner-safe-offset-y: var(
+    --mha-weather-corner-safe-y,
+    clamp(.12rem, 1.25cqb, .26rem)
+  );
+}
+
+.mha-weather-widget[data-weather-size="2x2"] .mha-weather-widget-temp,
+.mha-weather-widget[data-weather-size="3x2"] .mha-weather-widget-temp,
+.mha-weather-widget[data-weather-size="4x2"] .mha-weather-widget-temp {
+  transform: translateY(var(--mha-weather-corner-safe-offset-y));
+}
+
+.mha-weather-widget[data-weather-size="2x2"] .mha-weather-widget-summary,
+.mha-weather-widget[data-weather-size="3x2"] .mha-weather-widget-summary,
+.mha-weather-widget[data-weather-size="4x2"] .mha-weather-widget-summary {
+  transform: translateY(calc(var(--mha-weather-corner-safe-offset-y) * -1));
 }
