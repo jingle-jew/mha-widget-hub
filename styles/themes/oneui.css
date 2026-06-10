@@ -88,3 +88,14 @@
   box-shadow: none !important;
   filter: none;
 }
+
+/* OneUI widgets: soft surfaces without visible shell borders.
+ * Keep this theme-scoped so other visual styles can keep their framed widgets.
+ * Edit/drop/resize states still draw their own outlines from edit-mode CSS.
+ */
+:host([data-theme-style="oneui"]) {
+  --mha-widget-shell-border: transparent;
+  --mha-widget-shell-border-edit: transparent;
+  --mha-widget-inner-highlight: transparent;
+}
+
