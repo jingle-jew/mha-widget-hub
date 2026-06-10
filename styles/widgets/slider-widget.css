@@ -11,8 +11,15 @@
   --mha-slider-widget-padding: var(--mha-widget-inner-padding);
 }
 
-.mha-slider-widget-grid {
-  pointer-events: none;
+.mha-slider-widget-frame {
+  position: absolute;
+  inset: var(--mha-widget-inner-padding);
+  display: grid;
+  min-inline-size: 0;
+  min-block-size: 0;
+  overflow: visible;
+  pointer-events: auto;
+  container-type: size;
 }
 
 .mha-slider-widget-unit {
@@ -47,7 +54,7 @@
  * Once the widget unit receives its allowed span, the slider must fill the
  * whole granted area.
  */
-.mha-slider-widget-grid {
+.mha-slider-widget-frame {
   inline-size: 100%;
   block-size: 100%;
   min-inline-size: 0;
@@ -97,7 +104,7 @@
   --mha-slider-widget-safe-inset: var(--mha-widget-inner-padding);
 }
 
-.mha-widget[data-widget-kind="slider"] .mha-slider-widget-grid {
+.mha-widget[data-widget-kind="slider"] .mha-slider-widget-frame {
   inset: var(--mha-slider-widget-safe-inset);
   inline-size: auto;
   block-size: auto;
@@ -165,7 +172,7 @@
  * This is intentionally widget-scoped. The reusable slider component remains
  * free to be smaller/larger when embedded in other widgets.
  */
-.mha-widget[data-widget-kind="slider"] .mha-slider-widget-grid {
+.mha-widget[data-widget-kind="slider"] .mha-slider-widget-frame {
   grid-template-columns: repeat(var(--mha-widget-w, 1), minmax(0, 1fr));
   grid-template-rows: repeat(var(--mha-widget-h, 1), minmax(0, 1fr));
 }
@@ -192,7 +199,7 @@
  * Full SliderWidget only, iOS visual style only.
  *
  * The inactive surface follows the normal widget surface token. The active fill
- * is drawn inside the widget grid layer so it stays visible under the invisible
+ * is drawn inside the widget frame layer so it stays visible under the invisible
  * full-surface input.
  */
 :host([data-theme-style="ios"]) .mha-widget[data-widget-kind="slider"] {
@@ -214,8 +221,8 @@
   -webkit-backdrop-filter: blur(calc(var(--mha-slider-widget-blur) * 1.05)) saturate(170%);
   backdrop-filter: blur(calc(var(--mha-slider-widget-blur) * 1.05)) saturate(170%);
 }
-/* The visual layers live in the widget grid, below the invisible input. */
-:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="slider"] .mha-slider-widget-grid {
+/* The visual layers live in the widget frame, below the invisible input. */
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="slider"] .mha-slider-widget-frame {
   position: absolute;
   inset: 0;
   z-index: 1;
@@ -229,7 +236,7 @@
 }
 
 /* Active fill. Horizontal fills left-to-right; vertical fills bottom-to-top. */
-:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="slider"] .mha-slider-widget-grid::before {
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="slider"] .mha-slider-widget-frame::before {
   content: "";
   position: absolute;
   z-index: 1;
@@ -242,14 +249,14 @@
     block-size 120ms linear;
 }
 
-:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="slider"]:has(.mha-slider[data-orientation="horizontal"]) .mha-slider-widget-grid::before {
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="slider"]:has(.mha-slider[data-orientation="horizontal"]) .mha-slider-widget-frame::before {
   inset-block: 0;
   inset-inline-start: 0;
   inline-size: var(--mha-slider-value, 50%);
   block-size: 100%;
 }
 
-:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="slider"]:has(.mha-slider[data-orientation="vertical"]) .mha-slider-widget-grid::before {
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="slider"]:has(.mha-slider[data-orientation="vertical"]) .mha-slider-widget-frame::before {
   inset-inline: 0;
   inset-block-end: 0;
   inline-size: 100%;
@@ -257,7 +264,7 @@
 }
 
 /* Subtle iOS glass sheen above the active/inactive layers. */
-:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="slider"] .mha-slider-widget-grid::after {
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="slider"] .mha-slider-widget-frame::after {
   content: "";
   position: absolute;
   z-index: 2;
@@ -342,7 +349,7 @@
   border-color: var(--mha-slider-widget-border);
 }
 
-.mha-widget[data-widget-kind="slider"] .mha-slider-widget-grid,
+.mha-widget[data-widget-kind="slider"] .mha-slider-widget-frame,
 .mha-widget[data-widget-kind="slider"] .mha-slider-widget-unit {
   color: inherit;
 }
