@@ -1,0 +1,930 @@
+/*
+ * MHA Settings panel.
+ */
+
+.mha-settings-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  pointer-events: none;
+}
+
+.mha-settings-scrim {
+  position: fixed;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: var(--mha-bg-overlay);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 240ms ease;
+}
+
+.mha-settings-sheet {
+  position: fixed;
+  inset-block: clamp(1rem, 2.6vw, 2rem);
+  inset-inline-end: clamp(1rem, 2.6vw, 2rem);
+  inline-size: min(27rem, calc(100vw - 2rem));
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  border: 1px solid var(--mha-border-secondary);
+  border-radius: clamp(1.4rem, 3vw, 2rem);
+  background: var(--mha-surface-panel);
+  color: var(--mha-text-primary);
+  box-shadow: var(--mha-shadow-panel);
+  -webkit-backdrop-filter: blur(var(--mha-blur-strong)) saturate(var(--mha-surface-saturation));
+  backdrop-filter: blur(var(--mha-blur-strong)) saturate(var(--mha-surface-saturation));
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(18px) scale(.98);
+  transform-origin: right center;
+  transition:
+    opacity 240ms ease,
+    transform 240ms cubic-bezier(.2,.8,.2,1);
+  overflow: hidden;
+}
+
+.mha-settings-panel[data-open="true"] {
+  pointer-events: auto;
+}
+
+.mha-settings-panel[data-open="true"] .mha-settings-scrim {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.mha-settings-panel[data-open="true"] .mha-settings-sheet {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0) scale(1);
+}
+
+.mha-settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: clamp(1rem, 2.2vw, 1.35rem);
+  border-bottom: 1px solid var(--mha-border-subtle);
+}
+
+.mha-settings-title-block {
+  display: grid;
+  gap: .2rem;
+}
+
+.mha-settings-eyebrow {
+  color: var(--mha-text-muted);
+  font-size: .78rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.mha-settings-title {
+  margin: 0;
+  font-size: clamp(1.4rem, 3vw, 1.9rem);
+  line-height: 1;
+}
+
+.mha-settings-close {
+  inline-size: 2.4rem;
+  block-size: 2.4rem;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  background: #ff3b30;
+  color: white;
+  font-size: 1.55rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.mha-settings-body {
+  min-block-size: 0;
+  overflow: auto;
+  display: grid;
+  align-content: start;
+  gap: clamp(.85rem, 2vw, 1.15rem);
+  padding: clamp(1rem, 2.2vw, 1.35rem);
+}
+
+.mha-settings-section {
+  display: grid;
+  gap: .75rem;
+  padding: clamp(.85rem, 2vw, 1.05rem);
+  border: 1px solid var(--mha-border-subtle);
+  border-radius: clamp(1rem, 2.4vw, 1.45rem);
+  background: var(--mha-surface-secondary);
+}
+
+.mha-settings-section-title {
+  margin: 0 0 .15rem;
+  color: var(--mha-text-primary);
+  font-size: .9rem;
+  font-weight: 820;
+}
+
+.mha-settings-field,
+.mha-settings-switch {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: .85rem;
+}
+
+.mha-settings-label {
+  color: var(--mha-text-primary);
+  font-size: .9rem;
+  font-weight: 700;
+}
+
+.mha-settings-select {
+  min-inline-size: 10rem;
+  border: 1px solid var(--mha-border-secondary);
+  border-radius: .9rem;
+  background: var(--mha-surface-tertiary);
+  color: var(--mha-text-primary);
+  padding: .55rem .7rem;
+  font: inherit;
+  font-size: .86rem;
+}
+
+.mha-settings-switch input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mha-settings-switch-visual {
+  inline-size: 3rem;
+  block-size: 1.65rem;
+  border-radius: 999px;
+  background: var(--mha-surface-tertiary);
+  border: 1px solid var(--mha-border-secondary);
+  position: relative;
+}
+
+.mha-settings-switch-visual::after {
+  content: "";
+  position: absolute;
+  inset-block: .18rem;
+  inline-size: calc(1.65rem - .36rem);
+  border-radius: 999px;
+  background: white;
+  transform: translateX(.18rem);
+  transition: transform 180ms cubic-bezier(.2,.8,.2,1);
+}
+
+.mha-settings-switch input:checked + .mha-settings-switch-visual {
+  background: var(--mha-accent);
+}
+
+.mha-settings-switch input:checked + .mha-settings-switch-visual::after {
+  transform: translateX(calc(3rem - 1.65rem + .18rem));
+}
+
+.mha-settings-reset {
+  min-block-size: 2.65rem;
+  border: 1px solid var(--mha-border-secondary);
+  border-radius: 1rem;
+  background: var(--mha-surface-secondary);
+  color: var(--mha-text-primary);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+:host([data-theme-style="ios"]) .mha-settings-sheet {
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.24), rgba(255,255,255,.08)),
+    rgba(18,20,28,.78);
+}
+
+:host([data-theme-style="oneui"]) .mha-settings-sheet {
+  background: rgba(246,247,252,.92);
+}
+
+:host([data-theme-style="oneui"][data-theme="dark"]) .mha-settings-sheet {
+  background: rgba(18,20,28,.94);
+}
+
+:host([data-theme-style="material"]) .mha-settings-sheet {
+  background: var(--mha-widget-surface);
+  color: var(--mha-text-primary);
+}
+
+@media (max-width: 767px) {
+  .mha-settings-sheet {
+    inset-inline: clamp(.65rem, 2.5vw, 1rem);
+    inset-block: auto clamp(.65rem, 2.5vw, 1rem);
+    inline-size: auto;
+    max-block-size: min(82vh, 42rem);
+    transform: translateY(18px) scale(.98);
+    transform-origin: bottom center;
+  }
+
+  .mha-settings-panel[data-open="true"] .mha-settings-sheet {
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mha-settings-scrim,
+  .mha-settings-sheet,
+  .mha-settings-switch-visual::after {
+    transition: none;
+  }
+}
+
+
+/* LIGHT THEME SETTINGS TEXT CONTRACT
+ * Material palette remains untouched.
+ */
+:host([data-theme="light"]:not([data-theme-style="material"])) .mha-settings-sheet {
+  color: var(--mha-text-primary);
+}
+
+:host([data-theme="light"]:not([data-theme-style="material"])) .mha-settings-section {
+  color: var(--mha-text-primary);
+}
+
+:host([data-theme="light"]:not([data-theme-style="material"])) .mha-settings-select {
+  color: var(--mha-text-primary);
+  background: rgba(255,255,255,.74);
+}
+
+:host([data-theme="light"]:not([data-theme-style="material"])) .mha-settings-reset {
+  color: var(--mha-text-primary);
+}
+
+:host([data-theme="light"]:not([data-theme-style="material"])) .mha-settings-close {
+  color: #fff;
+}
+
+/* SETTINGS MODAL BACKGROUND BLUR
+ * When the settings panel is open, blur the dashboard behind it while keeping
+ * the settings panel itself sharp.
+ */
+:host(.is-settings-open) .mha-background,
+:host(.is-settings-open) .mha-shell,
+:host(.is-settings-open) .mha-dock,
+:host(.is-settings-open) .mha-mobile-dock,
+:host(.is-settings-open) .mha-edit-button {
+  filter: blur(var(--mha-settings-background-blur, 10px)) saturate(.82) brightness(.86);
+  transform: translateZ(0) scale(.995);
+  transition:
+    filter 240ms ease,
+    transform 240ms cubic-bezier(.2,.8,.2,1);
+  pointer-events: none;
+}
+
+/* Keep modal layers crisp and interactive. */
+:host(.is-settings-open) .mha-settings-panel {
+  filter: none;
+  transform: none;
+  pointer-events: auto;
+}
+
+/* The scrim adds depth, not the blur itself. */
+.mha-settings-panel[data-open="true"] .mha-settings-scrim {
+  background: rgba(0,0,0,.22);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host(.is-settings-open) .mha-background,
+  :host(.is-settings-open) .mha-shell,
+  :host(.is-settings-open) .mha-dock,
+  :host(.is-settings-open) .mha-mobile-dock,
+  :host(.is-settings-open) .mha-edit-button {
+    transition: none;
+    transform: none;
+  }
+}
+
+/* SETTINGS USE WIDGET SURFACE TOKENS
+ * The settings panel should visually belong to the current theme.
+ * It uses widget/surface tokens instead of its own disconnected color system.
+ */
+.mha-settings-sheet {
+  background: var(--mha-widget-surface);
+  border-color: var(--mha-widget-border);
+  color: var(--mha-text-primary);
+  box-shadow: var(--mha-floating-shadow);
+}
+
+.mha-settings-section {
+  background: var(--mha-control-surface, var(--mha-widget-surface));
+  border-color: var(--mha-widget-border);
+}
+
+.mha-settings-select,
+.mha-settings-reset {
+  background: var(--mha-control-surface, var(--mha-widget-surface));
+  border-color: var(--mha-widget-border);
+  color: var(--mha-text-primary);
+}
+
+.mha-settings-switch-visual {
+  background: var(--mha-control-surface, var(--mha-widget-surface));
+  border-color: var(--mha-widget-border);
+}
+
+/* iOS light only: make settings brighter and glassier, while still aligned with widget style. */
+:host([data-theme="light"][data-theme-style="ios"]) .mha-settings-sheet {
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.78), rgba(255,255,255,.42)),
+    color-mix(in srgb, var(--mha-widget-surface) 78%, rgba(255,255,255,.68));
+  border-color: rgba(255,255,255,.62);
+  box-shadow:
+    0 26px 80px rgba(35,45,70,.16),
+    inset 0 1px 0 rgba(255,255,255,.78),
+    inset 0 -1px 0 rgba(255,255,255,.28);
+  backdrop-filter: blur(34px) saturate(170%);
+}
+
+:host([data-theme="light"][data-theme-style="ios"]) .mha-settings-section {
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.58), rgba(255,255,255,.26)),
+    color-mix(in srgb, var(--mha-widget-surface) 68%, rgba(255,255,255,.48));
+  border-color: rgba(255,255,255,.5);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.55);
+}
+
+:host([data-theme="light"][data-theme-style="ios"]) .mha-settings-select,
+:host([data-theme="light"][data-theme-style="ios"]) .mha-settings-reset {
+  background: rgba(255,255,255,.58);
+  border-color: rgba(255,255,255,.56);
+  color: var(--mha-text-primary);
+}
+
+/* iOS dark keeps glass, but still follows widget surface direction. */
+:host([data-theme="dark"][data-theme-style="ios"]) .mha-settings-sheet {
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.18), rgba(255,255,255,.07)),
+    color-mix(in srgb, var(--mha-widget-surface) 88%, rgba(255,255,255,.06));
+}
+
+/* OneUI: opaque, clean, widget-aligned. */
+:host([data-theme-style="oneui"]) .mha-settings-sheet {
+  background: var(--mha-widget-surface);
+  border-color: var(--mha-widget-border);
+}
+
+:host([data-theme-style="oneui"]) .mha-settings-section,
+:host([data-theme-style="oneui"]) .mha-settings-select,
+:host([data-theme-style="oneui"]) .mha-settings-reset {
+  background: var(--mha-control-surface, var(--mha-widget-surface));
+  border-color: var(--mha-widget-border);
+}
+
+/* Material: do not redefine palette structure; use existing widget/control tokens only. */
+:host([data-theme-style="material"]) .mha-settings-sheet {
+  background: var(--mha-widget-surface);
+  border-color: var(--mha-widget-border);
+  color: var(--mha-text-primary);
+}
+
+:host([data-theme-style="material"]) .mha-settings-section,
+:host([data-theme-style="material"]) .mha-settings-select,
+:host([data-theme-style="material"]) .mha-settings-reset,
+:host([data-theme-style="material"]) .mha-settings-switch-visual {
+  background: var(--mha-control-surface, var(--mha-widget-surface));
+  border-color: var(--mha-widget-border);
+  color: var(--mha-text-primary);
+}
+
+
+/* SETTINGS CLOSED HARD HIDE
+ * Prevents the closed settings panel from flashing during orientation re-render
+ * before async stylesheet links fully settle.
+ */
+.mha-settings-panel[hidden],
+.mha-settings-panel[aria-hidden="true"] {
+  display: none !important;
+}
+
+
+/* ACCENT SWATCH SETTINGS CONTROL */
+.mha-settings-accent-field {
+  display: grid;
+  gap: .65rem;
+}
+
+.mha-settings-accent-swatches {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: .55rem;
+}
+
+.mha-settings-accent-swatch {
+  inline-size: 100%;
+  aspect-ratio: 1 / 1;
+  min-inline-size: 2.15rem;
+  min-block-size: 2.15rem;
+  border: 2px solid transparent;
+  border-radius: var(--mha-border-radius-icon, var(--mha-icon-radius-rounded-square, 32%));
+  background: var(--mha-swatch-color, var(--mha-accent));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.28),
+    0 6px 16px rgba(0,0,0,.12);
+  cursor: pointer;
+}
+
+.mha-settings-accent-swatch[aria-pressed="true"] {
+  border-color: var(--mha-text);
+  outline: 2px solid color-mix(in srgb, var(--mha-text) 24%, transparent);
+  outline-offset: 2px;
+}
+
+.mha-settings-accent-swatches[data-theme-style="ios"] .mha-settings-accent-swatch[data-accent="blue"] { --mha-swatch-color: #0a84ff; }
+.mha-settings-accent-swatches[data-theme-style="ios"] .mha-settings-accent-swatch[data-accent="indigo"] { --mha-swatch-color: #5e5ce6; }
+.mha-settings-accent-swatches[data-theme-style="ios"] .mha-settings-accent-swatch[data-accent="purple"] { --mha-swatch-color: #bf5af2; }
+.mha-settings-accent-swatches[data-theme-style="ios"] .mha-settings-accent-swatch[data-accent="pink"] { --mha-swatch-color: #ff2d92; }
+.mha-settings-accent-swatches[data-theme-style="ios"] .mha-settings-accent-swatch[data-accent="red"] { --mha-swatch-color: #ff453a; }
+.mha-settings-accent-swatches[data-theme-style="ios"] .mha-settings-accent-swatch[data-accent="orange"] { --mha-swatch-color: #ff9f0a; }
+.mha-settings-accent-swatches[data-theme-style="ios"] .mha-settings-accent-swatch[data-accent="yellow"] { --mha-swatch-color: #ffd60a; }
+.mha-settings-accent-swatches[data-theme-style="ios"] .mha-settings-accent-swatch[data-accent="green"] { --mha-swatch-color: #32d74b; }
+.mha-settings-accent-swatches[data-theme-style="ios"] .mha-settings-accent-swatch[data-accent="mint"] { --mha-swatch-color: #66d4cf; }
+.mha-settings-accent-swatches[data-theme-style="ios"] .mha-settings-accent-swatch[data-accent="teal"] { --mha-swatch-color: #40c8e0; }
+
+.mha-settings-accent-swatches[data-theme-style="oneui"] .mha-settings-accent-swatch[data-accent="sky"] { --mha-swatch-color: #4ba3ff; }
+.mha-settings-accent-swatches[data-theme-style="oneui"] .mha-settings-accent-swatch[data-accent="blue"] { --mha-swatch-color: #3f7cff; }
+.mha-settings-accent-swatches[data-theme-style="oneui"] .mha-settings-accent-swatch[data-accent="violet"] { --mha-swatch-color: #8b72ff; }
+.mha-settings-accent-swatches[data-theme-style="oneui"] .mha-settings-accent-swatch[data-accent="pink"] { --mha-swatch-color: #ff6aa2; }
+.mha-settings-accent-swatches[data-theme-style="oneui"] .mha-settings-accent-swatch[data-accent="coral"] { --mha-swatch-color: #ff7b73; }
+.mha-settings-accent-swatches[data-theme-style="oneui"] .mha-settings-accent-swatch[data-accent="orange"] { --mha-swatch-color: #ff9b43; }
+.mha-settings-accent-swatches[data-theme-style="oneui"] .mha-settings-accent-swatch[data-accent="amber"] { --mha-swatch-color: #f7bf45; }
+.mha-settings-accent-swatches[data-theme-style="oneui"] .mha-settings-accent-swatch[data-accent="green"] { --mha-swatch-color: #54c873; }
+.mha-settings-accent-swatches[data-theme-style="oneui"] .mha-settings-accent-swatch[data-accent="aqua"] { --mha-swatch-color: #35c7c9; }
+.mha-settings-accent-swatches[data-theme-style="oneui"] .mha-settings-accent-swatch[data-accent="slate"] { --mha-swatch-color: #6f7f99; }
+
+.mha-settings-accent-swatches[data-theme-style="material"] .mha-settings-accent-swatch[data-accent="blue"] { --mha-swatch-color: #0061a4; }
+.mha-settings-accent-swatches[data-theme-style="material"] .mha-settings-accent-swatch[data-accent="indigo"] { --mha-swatch-color: #4d57a9; }
+.mha-settings-accent-swatches[data-theme-style="material"] .mha-settings-accent-swatch[data-accent="purple"] { --mha-swatch-color: #6750a4; }
+.mha-settings-accent-swatches[data-theme-style="material"] .mha-settings-accent-swatch[data-accent="pink"] { --mha-swatch-color: #984061; }
+.mha-settings-accent-swatches[data-theme-style="material"] .mha-settings-accent-swatch[data-accent="red"] { --mha-swatch-color: #ba1a1a; }
+.mha-settings-accent-swatches[data-theme-style="material"] .mha-settings-accent-swatch[data-accent="orange"] { --mha-swatch-color: #8f4c00; }
+.mha-settings-accent-swatches[data-theme-style="material"] .mha-settings-accent-swatch[data-accent="yellow"] { --mha-swatch-color: #745b00; }
+.mha-settings-accent-swatches[data-theme-style="material"] .mha-settings-accent-swatch[data-accent="green"] { --mha-swatch-color: #386a20; }
+.mha-settings-accent-swatches[data-theme-style="material"] .mha-settings-accent-swatch[data-accent="teal"] { --mha-swatch-color: #006a60; }
+.mha-settings-accent-swatches[data-theme-style="material"] .mha-settings-accent-swatch[data-accent="cyan"] { --mha-swatch-color: #006879; }
+
+/* SETTINGS BACKDROP BY VISUAL STYLE
+ * iOS and OneUI use a blurred background behind the settings sheet.
+ * Material keeps the page sharp and simply dims it with a stronger scrim.
+ */
+:host([data-theme-style="ios"].is-settings-open) .mha-background,
+:host([data-theme-style="ios"].is-settings-open) .mha-shell,
+:host([data-theme-style="ios"].is-settings-open) .mha-dock,
+:host([data-theme-style="ios"].is-settings-open) .mha-mobile-dock,
+:host([data-theme-style="ios"].is-settings-open) .mha-edit-button,
+:host([data-theme-style="oneui"].is-settings-open) .mha-background,
+:host([data-theme-style="oneui"].is-settings-open) .mha-shell,
+:host([data-theme-style="oneui"].is-settings-open) .mha-dock,
+:host([data-theme-style="oneui"].is-settings-open) .mha-mobile-dock,
+:host([data-theme-style="oneui"].is-settings-open) .mha-edit-button {
+  filter: blur(var(--mha-settings-background-blur, 10px)) saturate(.82) brightness(.86);
+  transform: translateZ(0) scale(.995);
+}
+
+:host([data-theme-style="material"].is-settings-open) .mha-background,
+:host([data-theme-style="material"].is-settings-open) .mha-shell,
+:host([data-theme-style="material"].is-settings-open) .mha-dock,
+:host([data-theme-style="material"].is-settings-open) .mha-mobile-dock,
+:host([data-theme-style="material"].is-settings-open) .mha-edit-button {
+  filter: brightness(.72) saturate(.94);
+  transform: none;
+}
+
+:host([data-theme-style="material"]) .mha-settings-panel[data-open="true"] .mha-settings-scrim {
+  background: rgba(0,0,0,.34);
+}
+
+:host([data-theme-style="material"][data-theme="light"]) .mha-settings-panel[data-open="true"] .mha-settings-scrim {
+  background: rgba(29,27,32,.24);
+}
+
+:host([data-theme-style="material"][data-theme="dark"]) .mha-settings-panel[data-open="true"] .mha-settings-scrim {
+  background: rgba(0,0,0,.42);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host([data-theme-style="ios"].is-settings-open) .mha-background,
+  :host([data-theme-style="ios"].is-settings-open) .mha-shell,
+  :host([data-theme-style="ios"].is-settings-open) .mha-dock,
+  :host([data-theme-style="ios"].is-settings-open) .mha-mobile-dock,
+  :host([data-theme-style="ios"].is-settings-open) .mha-edit-button,
+  :host([data-theme-style="oneui"].is-settings-open) .mha-background,
+  :host([data-theme-style="oneui"].is-settings-open) .mha-shell,
+  :host([data-theme-style="oneui"].is-settings-open) .mha-dock,
+  :host([data-theme-style="oneui"].is-settings-open) .mha-mobile-dock,
+  :host([data-theme-style="oneui"].is-settings-open) .mha-edit-button,
+  :host([data-theme-style="material"].is-settings-open) .mha-background,
+  :host([data-theme-style="material"].is-settings-open) .mha-shell,
+  :host([data-theme-style="material"].is-settings-open) .mha-dock,
+  :host([data-theme-style="material"].is-settings-open) .mha-mobile-dock,
+  :host([data-theme-style="material"].is-settings-open) .mha-edit-button {
+    transform: none;
+  }
+}
+
+/* MATERIAL SETTINGS DYNAMIC SURFACES
+ * Settings use Material container roles derived from the selected accent.
+ */
+:host([data-theme-style="material"]) .mha-settings-sheet {
+  background: var(--mha-material-surface-container-high);
+  border-color: var(--mha-material-outline-variant);
+  box-shadow: var(--mha-floating-shadow);
+}
+
+:host([data-theme-style="material"]) .mha-settings-section {
+  background: var(--mha-material-surface-container);
+  border-color: var(--mha-material-outline-variant);
+}
+
+:host([data-theme-style="material"]) .mha-settings-select,
+:host([data-theme-style="material"]) .mha-settings-reset {
+  background: var(--mha-material-surface-container-highest);
+  border-color: var(--mha-material-outline-variant);
+}
+
+:host([data-theme-style="material"]) .mha-settings-accent-swatch {
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--mha-accent) 18%, transparent),
+    0 2px 8px color-mix(in srgb, var(--mha-accent) 8%, transparent);
+}
+
+/* MATERIAL BORDERLESS SETTINGS SURFACES */
+:host([data-theme-style="material"]) .mha-settings-sheet,
+:host([data-theme-style="material"]) .mha-settings-section,
+:host([data-theme-style="material"]) .mha-settings-select,
+:host([data-theme-style="material"]) .mha-settings-reset {
+  border-color: transparent;
+}
+
+/* MATERIAL LIGHT SETTINGS DIM TUNING
+ * Material does not blur the page behind settings.
+ *
+ * In light mode, the previous dim was too heavy/gray. Keep the Material scrim
+ * behavior, but let the background stay lighter and more colorful.
+ */
+:host([data-theme-style="material"][data-theme="light"].is-settings-open) .mha-background,
+:host([data-theme-style="material"][data-theme="light"].is-settings-open) .mha-shell,
+:host([data-theme-style="material"][data-theme="light"].is-settings-open) .mha-dock,
+:host([data-theme-style="material"][data-theme="light"].is-settings-open) .mha-mobile-dock,
+:host([data-theme-style="material"][data-theme="light"].is-settings-open) .mha-edit-button {
+  filter: brightness(.86) saturate(.98);
+  transform: none;
+}
+
+:host([data-theme-style="material"][data-theme="light"]) .mha-settings-panel[data-open="true"] .mha-settings-scrim {
+  background: rgba(29,27,32,.16);
+}
+
+/* FINAL ACCENT SWATCH SHAPE
+ * Accent swatches mirror the effective icon shape only. Auto and manual
+ * overrides are already resolved onto data-icon-shape by the theme bridge.
+ */
+.mha-settings-panel:not([data-icon-shape="squircle"]) .mha-settings-accent-swatches > .mha-settings-accent-swatch {
+  -webkit-mask: none !important;
+  mask: none !important;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+  clip-path: none !important;
+}
+
+.mha-settings-panel[data-icon-shape="rounded-square"] .mha-settings-accent-swatches > .mha-settings-accent-swatch {
+  border-radius: var(--mha-icon-radius-rounded-square, 32%) !important;
+}
+
+.mha-settings-panel[data-icon-shape="circle"] .mha-settings-accent-swatches > .mha-settings-accent-swatch {
+  border-radius: var(--mha-icon-border-radius-circle, 999px) !important;
+}
+
+.mha-settings-panel[data-icon-shape="squircle"] .mha-settings-accent-swatches > .mha-settings-accent-swatch {
+  border: 0 !important;
+  border-radius: 0 !important;
+  overflow: hidden;
+  background-clip: border-box;
+  box-shadow: 0 6px 16px rgba(0,0,0,.12) !important;
+  clip-path: none !important;
+  -webkit-mask-image: var(--mha-icon-squircle-mask) !important;
+  mask-image: var(--mha-icon-squircle-mask) !important;
+  -webkit-mask-size: 100% 100% !important;
+  mask-size: 100% 100% !important;
+  -webkit-mask-repeat: no-repeat !important;
+  mask-repeat: no-repeat !important;
+  -webkit-mask-position: center !important;
+  mask-position: center !important;
+}
+
+.mha-settings-panel[data-icon-shape="squircle"] .mha-settings-accent-swatches > .mha-settings-accent-swatch[aria-pressed="true"] {
+  border-color: transparent !important;
+}
+
+.mha-settings-panel[data-icon-shape="squircle"] .mha-settings-accent-swatches > .mha-settings-accent-swatch::before,
+.mha-settings-panel[data-icon-shape="squircle"] .mha-settings-accent-swatches > .mha-settings-accent-swatch::after {
+  border-radius: inherit;
+  clip-path: inherit;
+  -webkit-mask: inherit;
+  mask: inherit;
+}
+
+/* ACCENT SINGLE ROW EXCEPT MOBILE PORTRAIT
+ * Accent swatches are compact and shown on one line everywhere except phone
+ * portrait, where the existing two-row launcher-style grid remains easier to tap.
+ */
+@media (min-width: 741px), (orientation: landscape) {
+  .mha-settings-panel .mha-settings-accent-field {
+    gap: clamp(.35rem, 1.5vh, .5rem) !important;
+  }
+
+  .mha-settings-panel .mha-settings-accent-swatches {
+    display: grid !important;
+    grid-template-columns: repeat(10, minmax(22px, 30px)) !important;
+    grid-auto-flow: column !important;
+    grid-auto-columns: minmax(22px, 30px) !important;
+    grid-template-rows: minmax(22px, 30px) !important;
+    gap: clamp(7px, 1.8vh, 10px) !important;
+    align-items: center !important;
+    justify-items: end !important;
+    justify-content: end !important;
+    justify-self: end !important;
+    overflow: visible !important;
+  }
+
+  .mha-settings-panel .mha-settings-accent-swatch {
+    inline-size: clamp(22px, 3.4vw, 30px) !important;
+    block-size: clamp(22px, 3.4vw, 30px) !important;
+    min-inline-size: 0 !important;
+    min-block-size: 0 !important;
+    aspect-ratio: 1 / 1 !important;
+    border-radius: clamp(7px, 1.2vw, 10px) !important;
+  }
+}
+
+/* In short landscape viewports, height is the limiting axis, so prefer vh. */
+@media (max-width: 740px) and (orientation: landscape) {
+  .mha-settings-panel .mha-settings-accent-swatch {
+    inline-size: clamp(22px, 7.2vh, 30px) !important;
+    block-size: clamp(22px, 7.2vh, 30px) !important;
+    border-radius: clamp(7px, 2vh, 10px) !important;
+  }
+}
+
+/* ACCENT SINGLE ROW SPACING SAFETY
+ * Keep compact one-row accent swatches from touching each other, including
+ * selected-state outlines.
+ */
+@media (min-width: 741px), (orientation: landscape) {
+  .mha-settings-panel .mha-settings-accent-swatch[aria-pressed="true"] {
+    outline-offset: 1px !important;
+  }
+}
+
+/* ACCENT SWATCH SELECTED CHECKMARKS
+ * Selected accent swatches use the same internal check mark in iOS, OneUI and
+ * Material. External outline/ring highlights are intentionally removed so icon
+ * shapes, especially squircle, do not clip or distort the selection state.
+ */
+.mha-settings-accent-swatch {
+  position: relative;
+}
+
+.mha-settings-accent-swatch[aria-pressed="true"],
+.mha-settings-accent-swatch.is-selected {
+  border-color: transparent !important;
+  outline: none !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.28),
+    0 6px 16px rgba(0,0,0,.12) !important;
+  transform: none !important;
+}
+
+.mha-settings-accent-swatch[aria-pressed="true"]::after,
+.mha-settings-accent-swatch.is-selected::after {
+  content: "✓";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: clamp(.95rem, 2.6vw, 1.25rem);
+  font-weight: 950;
+  line-height: 1;
+  text-shadow:
+    0 1px 3px rgba(0,0,0,.55),
+    0 0 10px rgba(0,0,0,.28);
+  pointer-events: none;
+}
+
+:host([data-theme="light"]) .mha-settings-accent-swatch[aria-pressed="true"]::after,
+:host([data-theme="light"]) .mha-settings-accent-swatch.is-selected::after {
+  text-shadow:
+    0 1px 3px rgba(0,0,0,.48),
+    0 0 8px rgba(0,0,0,.22);
+}
+
+/* Material had its own accent swatch shadow; keep the selected state consistent
+ * with iOS/OneUI by removing any external highlight ring.
+ */
+:host([data-theme-style="material"]) .mha-settings-accent-swatch[aria-pressed="true"],
+:host([data-theme-style="material"]) .mha-settings-accent-swatch.is-selected {
+  border-color: transparent !important;
+  outline: none !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.24),
+    0 6px 16px rgba(0,0,0,.12) !important;
+}
+
+/* Squircle swatches are masked, so the check mark is the only selected cue. */
+.mha-settings-panel[data-icon-shape="squircle"] .mha-settings-accent-swatch[aria-pressed="true"],
+.mha-settings-panel[data-icon-shape="squircle"] .mha-settings-accent-swatch.is-selected {
+  border-color: transparent !important;
+  outline: none !important;
+  box-shadow: 0 6px 16px rgba(0,0,0,.12) !important;
+}
+
+/* SEMANTIC PANEL TOKEN CONSUMERS
+ * Phase 3 routes settings/screensaver settings panels through the semantic
+ * token layer while preserving each theme's existing personality.
+ */
+:host([data-theme-style="ios"]) .mha-settings-sheet {
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.26), rgba(255,255,255,.08)),
+    color-mix(in srgb, var(--mha-surface-panel) 82%, transparent);
+  border-color: color-mix(in srgb, var(--mha-border-secondary) 76%, rgba(255,255,255,.34));
+}
+
+:host([data-theme-style="oneui"]) .mha-settings-sheet {
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.16), rgba(255,255,255,.055)),
+    color-mix(in srgb, var(--mha-surface-panel) 86%, transparent);
+}
+
+:host([data-theme-style="material"]) .mha-settings-sheet {
+  background: var(--mha-surface-panel);
+  border-color: var(--mha-border-subtle);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+:host([data-theme-style="material"]) .mha-settings-section {
+  background: var(--mha-surface-secondary);
+  border-color: var(--mha-border-subtle);
+  box-shadow: none;
+}
+
+/* ONEUI PANEL OPACITY TUNING
+ * Calibrates only OneUI settings-style panels after the semantic-token migration.
+ *
+ * Light mode was too transparent, so the sheet/sections are made milkier and
+ * more readable. Dark mode was too opaque, so the sheet regains more glass and
+ * background blur while keeping section readability.
+ */
+:host([data-theme-style="oneui"][data-theme="light"]) .mha-settings-sheet {
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.40), rgba(255,255,255,.20)),
+    color-mix(in srgb, var(--mha-surface-panel) 92%, rgba(255,255,255,.42));
+  border-color: color-mix(in srgb, var(--mha-border-secondary) 58%, rgba(255,255,255,.52));
+  box-shadow:
+    0 18px 48px rgba(45,52,72,.16),
+    inset 0 1px 0 rgba(255,255,255,.30);
+  -webkit-backdrop-filter: blur(calc(var(--mha-blur-strong) * 1.05)) saturate(150%);
+  backdrop-filter: blur(calc(var(--mha-blur-strong) * 1.05)) saturate(150%);
+}
+
+:host([data-theme-style="oneui"][data-theme="light"]) .mha-settings-section {
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.34), rgba(255,255,255,.18)),
+    color-mix(in srgb, var(--mha-surface-secondary) 90%, rgba(255,255,255,.34));
+  border-color: color-mix(in srgb, var(--mha-border-subtle) 62%, rgba(255,255,255,.45));
+}
+
+:host([data-theme-style="oneui"][data-theme="light"]) .mha-settings-select,
+:host([data-theme-style="oneui"][data-theme="light"]) .mha-settings-reset {
+  background: color-mix(in srgb, var(--mha-surface-tertiary) 92%, rgba(255,255,255,.42));
+  border-color: color-mix(in srgb, var(--mha-border-secondary) 60%, rgba(255,255,255,.42));
+}
+
+:host([data-theme-style="oneui"][data-theme="dark"]) .mha-settings-sheet {
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.095), rgba(255,255,255,.032)),
+    color-mix(in srgb, var(--mha-surface-panel) 68%, transparent);
+  border-color: color-mix(in srgb, var(--mha-border-secondary) 76%, rgba(255,255,255,.10));
+  box-shadow:
+    0 22px 62px rgba(0,0,0,.34),
+    inset 0 1px 0 rgba(255,255,255,.10);
+  -webkit-backdrop-filter: blur(calc(var(--mha-blur-strong) * 1.08)) saturate(145%);
+  backdrop-filter: blur(calc(var(--mha-blur-strong) * 1.08)) saturate(145%);
+}
+
+:host([data-theme-style="oneui"][data-theme="dark"]) .mha-settings-section {
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.075), rgba(255,255,255,.035)),
+    color-mix(in srgb, var(--mha-surface-secondary) 78%, transparent);
+  border-color: color-mix(in srgb, var(--mha-border-subtle) 82%, rgba(255,255,255,.08));
+}
+
+:host([data-theme-style="oneui"][data-theme="dark"]) .mha-settings-select,
+:host([data-theme-style="oneui"][data-theme="dark"]) .mha-settings-reset {
+  background: color-mix(in srgb, var(--mha-surface-tertiary) 74%, transparent);
+  border-color: color-mix(in srgb, var(--mha-border-secondary) 76%, rgba(255,255,255,.08));
+}
+
+/* IOS PANEL LIQUID GLASS TUNING
+ * Calibrates iOS settings-style panels in both light and dark themes.
+ *
+ * Goal:
+ * - less diffuse blur;
+ * - more crisp Liquid Glass;
+ * - clearer highlights and borders;
+ * - keep light transparent and dark already-balanced.
+ */
+:host([data-theme-style="ios"]) .mha-settings-sheet {
+  -webkit-backdrop-filter: blur(calc(var(--mha-blur-primary) * .72)) saturate(190%);
+  backdrop-filter: blur(calc(var(--mha-blur-primary) * .72)) saturate(190%);
+}
+
+:host([data-theme-style="ios"]) .mha-settings-sheet::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255,255,255,.34), transparent 34%),
+    linear-gradient(135deg, rgba(255,255,255,.18), transparent 48%),
+    linear-gradient(315deg, rgba(255,255,255,.075), transparent 54%);
+  opacity: .72;
+  mix-blend-mode: screen;
+}
+
+:host([data-theme-style="ios"][data-theme="light"]) .mha-settings-sheet {
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.38), rgba(255,255,255,.13)),
+    color-mix(in srgb, var(--mha-surface-panel) 48%, transparent);
+  border-color: color-mix(in srgb, var(--mha-border-secondary) 50%, rgba(255,255,255,.62));
+  box-shadow:
+    0 18px 44px rgba(44,54,74,.15),
+    inset 0 1px 0 rgba(255,255,255,.46),
+    inset 0 -1px 0 rgba(255,255,255,.16);
+}
+
+:host([data-theme-style="ios"][data-theme="light"]) .mha-settings-section {
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.44), rgba(255,255,255,.18)),
+    color-mix(in srgb, var(--mha-surface-secondary) 54%, transparent);
+  border-color: color-mix(in srgb, var(--mha-border-subtle) 48%, rgba(255,255,255,.54));
+  -webkit-backdrop-filter: blur(calc(var(--mha-blur-primary) * .48)) saturate(172%);
+  backdrop-filter: blur(calc(var(--mha-blur-primary) * .48)) saturate(172%);
+}
+
+:host([data-theme-style="ios"][data-theme="light"]) .mha-settings-select,
+:host([data-theme-style="ios"][data-theme="light"]) .mha-settings-reset {
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.50), rgba(255,255,255,.21)),
+    color-mix(in srgb, var(--mha-surface-tertiary) 52%, transparent);
+  border-color: color-mix(in srgb, var(--mha-border-secondary) 46%, rgba(255,255,255,.52));
+}
+
+:host([data-theme-style="ios"][data-theme="light"]) .mha-settings-header {
+  border-bottom-color: color-mix(in srgb, var(--mha-border-subtle) 42%, rgba(255,255,255,.42));
+}
+
+:host([data-theme-style="ios"][data-theme="dark"]) .mha-settings-sheet {
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.15), rgba(255,255,255,.045)),
+    color-mix(in srgb, var(--mha-surface-panel) 74%, transparent);
+  border-color: color-mix(in srgb, var(--mha-border-secondary) 74%, rgba(255,255,255,.12));
+  box-shadow:
+    0 20px 56px rgba(0,0,0,.34),
+    inset 0 1px 0 rgba(255,255,255,.16),
+    inset 0 -1px 0 rgba(255,255,255,.055);
+  -webkit-backdrop-filter: blur(calc(var(--mha-blur-primary) * .68)) saturate(180%);
+  backdrop-filter: blur(calc(var(--mha-blur-primary) * .68)) saturate(180%);
+}
+
+:host([data-theme-style="ios"][data-theme="dark"]) .mha-settings-sheet::before {
+  opacity: .36;
+}
+
+:host([data-theme-style="ios"][data-theme="dark"]) .mha-settings-section {
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.105), rgba(255,255,255,.038)),
+    color-mix(in srgb, var(--mha-surface-secondary) 72%, transparent);
+  border-color: color-mix(in srgb, var(--mha-border-subtle) 78%, rgba(255,255,255,.08));
+  -webkit-backdrop-filter: blur(calc(var(--mha-blur-primary) * .42)) saturate(160%);
+  backdrop-filter: blur(calc(var(--mha-blur-primary) * .42)) saturate(160%);
+}
+
+:host([data-theme-style="ios"][data-theme="dark"]) .mha-settings-select,
+:host([data-theme-style="ios"][data-theme="dark"]) .mha-settings-reset {
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.115), rgba(255,255,255,.04)),
+    color-mix(in srgb, var(--mha-surface-tertiary) 68%, transparent);
+  border-color: color-mix(in srgb, var(--mha-border-secondary) 74%, rgba(255,255,255,.08));
+}

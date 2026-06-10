@@ -1,0 +1,410 @@
+.mha-dock {
+  /*
+   * macOS-ish floating dock.
+   * Width adapts to content, while empty/min bounds remain viewport-aware.
+   */
+  --mha-dock-empty-width: min(40vw, var(--mha-dock-max-width, calc(100% - (var(--mha-page-padding) * 2))));
+  --mha-dock-empty-height: clamp(4.25rem, 7.5vw, 6.25rem);
+  --mha-dock-empty-padding-block: clamp(0.55rem, 1.15vw, 0.95rem);
+  --mha-dock-empty-padding-inline: clamp(0.85rem, 1.8vw, 1.45rem);
+
+  --mha-icon-size: clamp(2.55rem, 5.8vw, 4.15rem);
+  --mha-icon-glyph-size: 54%;
+
+  position: absolute;
+  z-index: 8;
+  left: 50%;
+  bottom: var(--mha-dock-bottom, var(--mha-floating-edge));
+  width: fit-content;
+  min-width: var(--mha-dock-empty-width);
+  max-width: var(--mha-dock-max-width, calc(100% - (var(--mha-page-padding) * 2)));
+  min-height: var(--mha-dock-empty-height);
+  transform: translateX(-50%) translateY(0);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.35rem, 1.1vw, 0.8rem);
+  padding:
+    var(--mha-dock-empty-padding-block)
+    var(--mha-dock-empty-padding-inline);
+
+  border: 1px solid var(--mha-shell-border, var(--mha-border-secondary));
+  border-radius: clamp(1.45rem, 3vw, var(--mha-dock-radius));
+  background: var(--mha-shell-dock-surface, var(--mha-surface-glass));
+  -webkit-backdrop-filter: blur(var(--mha-shell-blur, var(--mha-blur-primary))) saturate(var(--mha-surface-saturation));
+  backdrop-filter: blur(var(--mha-shell-blur, var(--mha-blur-primary))) saturate(var(--mha-surface-saturation));
+  box-shadow: var(--mha-shell-shadow, var(--mha-shadow-floating));
+  pointer-events: auto;
+
+  transition:
+    transform var(--mha-motion-duration, 260ms) var(--mha-motion-easing, ease),
+    opacity var(--mha-motion-duration, 260ms) ease,
+    width var(--mha-motion-duration, 260ms) var(--mha-motion-easing, ease),
+    min-height var(--mha-motion-duration, 260ms) var(--mha-motion-easing, ease);
+}
+
+.mha-dock-item {
+  appearance: none;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  inline-size: var(--mha-icon-size);
+  block-size: var(--mha-icon-size);
+  aspect-ratio: 1;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.mha-dock-item:focus-visible {
+  outline: 2px solid var(--mha-accent);
+  outline-offset: 3px;
+}
+
+:host(.is-dock-hidden) .mha-dock,
+:host([data-dock-hidden="true"]) .mha-dock {
+  transform: translateX(-50%) translateY(calc(100% + var(--mha-floating-edge) + 18px));
+  opacity: 0;
+}
+
+@media (max-width: 520px) and (orientation: portrait) {
+  .mha-dock {
+    --mha-dock-empty-width: min(72vw, calc(100% - (var(--mha-page-padding) * 2)));
+    --mha-dock-empty-height: clamp(4rem, 13vw, 5.4rem);
+    --mha-icon-size: clamp(2.35rem, 10.5vw, 3.4rem);
+  }
+}
+
+@media (max-height: 520px) and (orientation: landscape) {
+  .mha-dock {
+    --mha-dock-empty-width: min(46vw, calc(100% - (var(--mha-page-padding) * 2)));
+    --mha-dock-empty-height: clamp(3.75rem, 11vh, 5rem);
+    --mha-icon-size: clamp(2.2rem, 9vh, 3.25rem);
+  }
+}
+
+@media (min-width: 1180px) {
+  .mha-dock {
+    --mha-dock-empty-width: min(34vw, 36rem);
+    --mha-dock-empty-height: clamp(4.75rem, 5vw, 6.5rem);
+    --mha-icon-size: clamp(3rem, 4.2vw, 4.4rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mha-dock {
+    transition: none;
+  }
+}
+
+/* RESPONSIVE VERTICAL DOCK
+ * Mobile keeps the macOS-style bottom dock.
+ * Tablet/desktop use the right-side free space as a vertical floating dock.
+ * This remains overlay-only and does not reserve grid space.
+ */
+@media (min-width: 768px) {
+  .mha-dock {
+    --mha-dock-empty-width: clamp(4.4rem, 7vw, 6.2rem);
+    --mha-dock-empty-height: auto;
+    --mha-dock-empty-padding-block: clamp(0.75rem, 1.4vw, 1.15rem);
+    --mha-dock-empty-padding-inline: clamp(0.5rem, 0.9vw, 0.75rem);
+    --mha-icon-size: clamp(2.6rem, 4.7vw, 3.9rem);
+
+    left: auto;
+    right: max(var(--mha-safe-area-right, env(safe-area-inset-right)), clamp(0.75rem, 1.8vw, 1.25rem));
+    top: 50%;
+    bottom: auto;
+
+    width: var(--mha-dock-empty-width);
+    min-width: var(--mha-dock-empty-width);
+    max-width: var(--mha-dock-empty-width);
+    min-height: 0;
+    max-height: min(72vh, calc(100% - (var(--mha-page-padding, 1rem) * 2)));
+
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(0.35rem, 0.8vw, 0.65rem);
+    overflow: auto;
+    scrollbar-width: none;
+
+    border-radius: clamp(1.45rem, 2.4vw, 2.1rem);
+    transform: translateY(-50%);
+  }
+
+  .mha-dock::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mha-dock-item {
+    inline-size: var(--mha-icon-size);
+    block-size: var(--mha-icon-size);
+  }
+
+  :host(.is-dock-hidden) .mha-dock,
+  :host([data-dock-hidden="true"]) .mha-dock {
+    transform: translateY(-50%) translateX(calc(100% + var(--mha-floating-edge, 1rem) + 18px));
+    opacity: 0;
+  }
+}
+
+@media (min-width: 1180px) {
+  .mha-dock {
+    --mha-dock-empty-width: clamp(4.75rem, 5.2vw, 6.6rem);
+    --mha-icon-size: clamp(3rem, 3.8vw, 4.15rem);
+    right: max(var(--mha-safe-area-right, env(safe-area-inset-right)), clamp(1rem, 2vw, 1.65rem));
+    max-height: min(74vh, calc(100% - (var(--mha-page-padding, 1rem) * 2)));
+  }
+}
+
+/* DOCK AUTO-HIDE MOBILE ONLY
+ * The vertical tablet/desktop dock behaves like a persistent side rail.
+ * Scroll auto-hide only applies to the mobile bottom dock.
+ */
+@media (min-width: 768px) {
+  :host(.is-dock-hidden) .mha-dock,
+  :host([data-dock-hidden="true"]) .mha-dock {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* VERTICAL DOCK TOP ALIGNMENT
+ * On tablet/desktop, the vertical dock starts at the same vertical rhythm as
+ * the first widget row instead of floating centered on the screen.
+ */
+@media (min-width: 768px) {
+  .mha-dock {
+    --mha-dock-top: max(
+      var(--mha-statusbar-reserved-top, 0px),
+      var(--mha-page-padding, clamp(1rem, 2.6vw, 2rem))
+    );
+
+    top: var(--mha-dock-top);
+    bottom: auto;
+    transform: translateY(0);
+  }
+
+  :host(.is-dock-hidden) .mha-dock,
+  :host([data-dock-hidden="true"]) .mha-dock {
+    transform: translateX(calc(100% + var(--mha-floating-edge, 1rem) + 18px));
+    opacity: 1;
+  }
+}
+
+/* Tablet/desktop vertical dock: pages should not create horizontal groups. */
+@media (min-width: 768px) {
+  .mha-dock-pages {
+    display: contents;
+  }
+
+  .mha-dock-page {
+    display: contents;
+  }
+}
+
+/* MOBILE DOCK SIMPLE SCROLL
+ * Robust mobile dock:
+ * - simple direct dock items, no JS page wrappers;
+ * - dock width matches widget/grid width;
+ * - horizontal scroll with snap;
+ * - exactly 4 icon slots visible;
+ * - extra icons continue offscreen and scroll naturally;
+ * - odd counts work automatically.
+ */
+@media (max-width: 767px) {
+  .mha-dock {
+    --mha-dock-visible-icons: 4;
+    --mha-dock-horizontal-gutter: var(--mha-mobile-grid-gutter, var(--mha-page-padding, clamp(1rem, 2.6vw, 2rem)));
+    --mha-dock-gap: clamp(0.25rem, 1vw, 0.45rem);
+    --mha-dock-padding: clamp(0.5rem, 1.5vw, 0.75rem);
+
+    --mha-dock-width: calc(100% - (var(--mha-dock-horizontal-gutter) * 2));
+    --mha-dock-slot-width: calc(
+      (var(--mha-dock-width) - (var(--mha-dock-padding) * 2) - (var(--mha-dock-gap) * 3))
+      / 4
+    );
+    --mha-icon-size: min(var(--mha-dock-slot-width), clamp(3rem, 14vw, 4.15rem));
+    --mha-icon-glyph-size: 56%;
+
+    left: var(--mha-dock-horizontal-gutter);
+    right: var(--mha-dock-horizontal-gutter);
+    bottom: var(--mha-dock-bottom, var(--mha-floating-edge));
+    transform: translateY(0);
+
+    inline-size: var(--mha-dock-width);
+    min-inline-size: 0;
+    max-inline-size: var(--mha-dock-width);
+
+    block-size: calc((var(--mha-icon-size) * 1.5) + (var(--mha-dock-padding) * 2));
+    min-block-size: calc((var(--mha-icon-size) * 1.5) + (var(--mha-dock-padding) * 2));
+    max-block-size: clamp(5.25rem, 18vh, 6.75rem);
+
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: calc(
+      (100% - (var(--mha-dock-gap) * 3))
+      / 4
+    );
+    align-items: center;
+    justify-items: center;
+    justify-content: start;
+    gap: var(--mha-dock-gap);
+    padding: var(--mha-dock-padding);
+
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--mha-dock-padding);
+    scrollbar-width: none;
+    overscroll-behavior-inline: contain;
+  }
+
+  .mha-dock::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mha-dock-item {
+    display: grid;
+    place-items: center;
+    inline-size: var(--mha-icon-size);
+    block-size: var(--mha-icon-size);
+    min-inline-size: var(--mha-icon-size);
+    min-block-size: var(--mha-icon-size);
+    scroll-snap-align: start;
+  }
+
+  .mha-dock-item > .mha-icon {
+    inline-size: var(--mha-icon-size);
+    block-size: var(--mha-icon-size);
+    width: var(--mha-icon-size);
+    height: var(--mha-icon-size);
+    min-inline-size: var(--mha-icon-size);
+    min-block-size: var(--mha-icon-size);
+  }
+
+  :host(.is-dock-hidden) .mha-dock,
+  :host([data-dock-hidden="true"]) .mha-dock {
+    transform: translateY(calc(100% + var(--mha-floating-edge) + 18px));
+    opacity: 0;
+  }
+}
+
+/* Tablet/desktop dock remains the vertical rail. */
+@media (min-width: 768px) {
+  .mha-dock {
+    overflow-x: visible;
+  }
+}
+
+
+/* STANDARD DOCK HIDDEN ON MOBILE
+ * Mobile uses the custom floating mobile dock instead.
+ */
+@media (max-width: 767px) {
+  .mha-dock {
+    display: none;
+  }
+}
+
+/* ADAPTIVE SETTINGS-ONLY DOCK RAIL
+ * Tablet/desktop dock adapts to the number of icons inside it.
+ * With one icon, the rail collapses to a compact floating capsule.
+ */
+@media (min-width: 768px) {
+  .mha-dock {
+    --mha-dock-rail-padding-block: clamp(0.45rem, 0.9vw, 0.7rem);
+    --mha-dock-rail-padding-inline: clamp(0.45rem, 0.9vw, 0.7rem);
+    --mha-dock-rail-gap: clamp(0.35rem, 0.8vw, 0.65rem);
+    --mha-icon-size: clamp(2.85rem, 4.2vw, 3.75rem);
+
+    inline-size: calc(var(--mha-icon-size) + (var(--mha-dock-rail-padding-inline) * 2));
+    min-inline-size: 0;
+    max-inline-size: calc(var(--mha-icon-size) + (var(--mha-dock-rail-padding-inline) * 2));
+
+    block-size: auto;
+    min-block-size: 0;
+    max-block-size: calc(100% - (var(--mha-dock-top, 1rem) * 2));
+
+    padding:
+      var(--mha-dock-rail-padding-block)
+      var(--mha-dock-rail-padding-inline);
+
+    gap: var(--mha-dock-rail-gap);
+    width: auto;
+    height: auto;
+  }
+
+  .mha-dock-item {
+    inline-size: var(--mha-icon-size);
+    block-size: var(--mha-icon-size);
+  }
+
+  .mha-dock-item > .mha-icon {
+    inline-size: var(--mha-icon-size);
+    block-size: var(--mha-icon-size);
+  }
+}
+
+
+/* DOCK ORIENTATION FLASH GUARD
+ * During orientation relayout, the dock can be briefly created before the
+ * responsive rail/bottom rules settle. Hide it for the relayout window.
+ */
+:host(.is-responsive-relayouting) .mha-dock {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transition: none !important;
+}
+
+/* MATERIAL TABLET/DESKTOP DOCK PILL
+ * Material You prefers softer capsule containers.
+ *
+ * Scope this to tablet/desktop dock only:
+ * - mobile floating dock remains unchanged;
+ * - iOS and OneUI remain unchanged.
+ */
+@media (min-width: 768px) {
+  :host([data-theme-style="material"]) .mha-dock {
+    border-radius: 999px;
+  }
+}
+
+/* MATERIAL DOCK DYNAMIC SURFACE */
+:host([data-theme-style="material"]) .mha-dock {
+  background:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--mha-material-surface-tint) 48%, transparent),
+      transparent 54%
+    ),
+    var(--mha-dock-surface);
+  border-color: var(--mha-material-outline-variant);
+}
+
+/* MATERIAL BORDERLESS DOCK SURFACE */
+:host([data-theme-style="material"]) .mha-dock {
+  border-color: transparent;
+}
+
+/* SEMANTIC DOCK SHELL TOKENS
+ * Phase 4 routes the persistent dock through shell semantic roles.
+ */
+.mha-dock {
+  background: var(--mha-shell-dock-surface, var(--mha-surface-glass));
+  border-color: var(--mha-shell-border, var(--mha-border-secondary));
+  box-shadow: var(--mha-shell-shadow, var(--mha-shadow-floating));
+  -webkit-backdrop-filter: blur(var(--mha-shell-blur, var(--mha-blur-primary))) saturate(var(--mha-surface-saturation));
+  backdrop-filter: blur(var(--mha-shell-blur, var(--mha-blur-primary))) saturate(var(--mha-surface-saturation));
+}
+
+:host([data-theme-style="material"]) .mha-dock {
+  background: var(--mha-shell-dock-surface, var(--mha-surface-tonal));
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}

@@ -1,0 +1,170 @@
+:host([data-theme-style="ios"]) {
+  /*
+   * iOS visual style: tinted Liquid Glass.
+   *
+   * Direction:
+   * - still transparent and optical;
+   * - slightly tinted for readability;
+   * - small controlled blur, not heavy frosted glass;
+   * - edge highlights/reflections sell the liquid material.
+   */
+  --mha-widget-radius: 32px;
+  --mha-widget-inner-radius: 26px;
+  --mha-widget-compact-radius: 24px;
+  --mha-widget-compact-inner-radius: 18px;
+  --mha-widget-pill-radius: 32px;
+  --mha-widget-pill-inner-radius: 26px;
+  --mha-control-radius: 999px;
+  --mha-dock-radius: 28px;
+  --mha-statusbar-radius: 999px;
+  --mha-status-bar-radius: var(--mha-statusbar-radius);
+
+  /*
+   * Tinted Liquid Glass uses less blur than old frosted glass, but a little
+   * more than pure clear glass so controls remain readable.
+   */
+  --mha-surface-blur: 16px;
+  --mha-surface-saturation: 190%;
+
+  /*
+   * Optional reflection tokens. They are harmless if component CSS does not
+   * consume them yet, and useful for future Liquid Glass refinement.
+   */
+  --mha-widget-reflection-opacity: .54;
+  --mha-widget-reflection:
+    radial-gradient(circle at 18% 0%, rgba(255,255,255,.26), transparent 34%),
+    radial-gradient(circle at 100% 100%, rgba(255,255,255,.09), transparent 32%);
+}
+
+:host([data-theme-style="ios"][data-theme="dark"]) {
+  /* Dark tinted Liquid Glass: clear, but with a subtle blue-violet tint. */
+  --mha-text: rgba(255,255,255,.94);
+  --mha-muted: rgba(255,255,255,.64);
+
+  --mha-widget-surface: rgba(255,255,255,.105);
+  --mha-widget-surface-edit: rgba(255,255,255,.155);
+  --mha-widget-border: rgba(235,243,255,.31);
+  --mha-widget-border-edit: rgba(240,246,255,.48);
+  --mha-widget-inner-highlight: rgba(255,255,255,.34);
+  --mha-widget-shadow:
+    inset 0 1px 0 rgba(255,255,255,.42),
+    inset 0 -1px 0 rgba(255,255,255,.055),
+    inset 1px 0 0 rgba(255,255,255,.07),
+    0 18px 54px rgba(0,0,0,.18),
+    0 6px 24px rgba(120,150,255,.10);
+
+  --mha-dock-surface:
+    linear-gradient(145deg, rgba(215,230,255,.22), rgba(255,255,255,.075) 52%, rgba(150,175,255,.055));
+  --mha-dock-slot-surface:
+    linear-gradient(145deg, rgba(235,243,255,.25), rgba(255,255,255,.105));
+  --mha-statusbar-surface:
+    linear-gradient(145deg, rgba(215,230,255,.20), rgba(255,255,255,.070) 52%, rgba(150,175,255,.050));
+  --mha-control-surface: rgba(225,238,255,.13);
+  --mha-control-surface-edit: rgba(235,245,255,.20);
+
+  --mha-bg-base-1: #040712;
+  --mha-bg-base-2: #10182d;
+  --mha-bg-radial-1: rgba(118,150,255,.38);
+  --mha-bg-radial-2: rgba(255,111,198,.24);
+  --mha-bg-radial-3: rgba(80,215,255,.22);
+  --mha-bg-blob-1: #7898ff;
+  --mha-bg-blob-2: #ff70c8;
+  --mha-bg-blob-3: #54d8ff;
+  --mha-bg-blob-4: #b68dff;
+  --mha-bg-blob-opacity: .42;
+}
+
+:host([data-theme-style="ios"][data-theme="light"]) {
+  /* Light tinted Liquid Glass: bright, transparent, slightly milky for contrast. */
+  --mha-text: rgba(10,18,34,.92);
+  --mha-muted: rgba(10,18,34,.58);
+
+  --mha-widget-surface: rgba(255,255,255,.36);
+  --mha-widget-surface-edit: rgba(255,255,255,.46);
+  --mha-widget-border: rgba(255,255,255,.74);
+  --mha-widget-border-edit: rgba(88,110,155,.26);
+  --mha-widget-inner-highlight: rgba(255,255,255,.84);
+  --mha-widget-shadow:
+    inset 0 1px 0 rgba(255,255,255,.90),
+    inset 0 -1px 0 rgba(255,255,255,.28),
+    inset 1px 0 0 rgba(255,255,255,.18),
+    0 18px 54px rgba(78,100,145,.13),
+    0 6px 24px rgba(105,130,255,.07);
+
+  --mha-dock-surface:
+    linear-gradient(145deg, rgba(255,255,255,.62), rgba(255,255,255,.285) 52%, rgba(210,225,255,.19));
+  --mha-dock-slot-surface:
+    linear-gradient(145deg, rgba(255,255,255,.74), rgba(255,255,255,.40));
+  --mha-statusbar-surface:
+    linear-gradient(145deg, rgba(255,255,255,.60), rgba(255,255,255,.275) 52%, rgba(210,225,255,.18));
+  --mha-control-surface: rgba(255,255,255,.42);
+  --mha-control-surface-edit: rgba(255,255,255,.58);
+
+  --mha-bg-base-1: #f8fbff;
+  --mha-bg-base-2: #eaf2ff;
+  --mha-bg-radial-1: rgba(104,142,255,.28);
+  --mha-bg-radial-2: rgba(255,130,205,.17);
+  --mha-bg-radial-3: rgba(79,203,255,.17);
+  --mha-bg-blob-1: #82a0ff;
+  --mha-bg-blob-2: #ff91d0;
+  --mha-bg-blob-3: #67d5ff;
+  --mha-bg-blob-4: #c09dff;
+  --mha-bg-blob-opacity: .30;
+}
+
+
+/*
+ * iOS widget surfaces intentionally avoid gradients.
+ * Liquid Glass depth should come from transparency, blur, border, and shadow,
+ * not from a visible surface gradient.
+ */
+
+/* iOS widget overlay gradient removal
+ * Keep this after the theme tokens.
+ *
+ * Some widget/card components draw a decorative top-left shine with ::before
+ * or ::after. For iOS Liquid Glass, widgets should be uniform glass surfaces:
+ * no visible corner gradient, no diagonal wash.
+ */
+:host([data-theme-style="ios"]) .mha-widget::before,
+:host([data-theme-style="ios"]) .mha-widget::after,
+:host([data-theme-style="ios"]) .mha-widget-surface::before,
+:host([data-theme-style="ios"]) .mha-widget-surface::after,
+:host([data-theme-style="ios"]) .widget::before,
+:host([data-theme-style="ios"]) .widget::after,
+:host([data-theme-style="ios"]) .card::before,
+:host([data-theme-style="ios"]) .card::after,
+:host([data-theme-style="ios"]) [data-widget-id]::before,
+:host([data-theme-style="ios"]) [data-widget-id]::after {
+  background: none;
+  background-image: none;
+}
+
+/* Keep the widget surface itself uniform in iOS. */
+:host([data-theme-style="ios"]) .mha-widget,
+:host([data-theme-style="ios"]) .mha-widget-surface,
+:host([data-theme-style="ios"]) .widget,
+:host([data-theme-style="ios"]) [data-widget-id] {
+  background-image: none;
+}
+
+/* iOS LIGHT SOFT WIDGET DEPTH
+ * In iOS light, heavy external widget shadows stack visually and can look like
+ * one global grid shadow. Keep glass depth mostly inside the surface.
+ */
+:host([data-theme="light"][data-theme-style="ios"]) {
+  --mha-widget-shadow:
+    inset 0 1px 0 rgba(255,255,255,.92),
+    inset 0 -1px 0 rgba(255,255,255,.32),
+    inset 1px 0 0 rgba(255,255,255,.18),
+    0 8px 22px rgba(78,100,145,.055),
+    0 2px 8px rgba(78,100,145,.035);
+
+  --mha-floating-shadow:
+    0 8px 24px rgba(78,100,145,.08),
+    inset 0 1px 0 rgba(255,255,255,.55);
+
+  --mha-dock-shadow:
+    0 8px 24px rgba(78,100,145,.075),
+    inset 0 1px 0 rgba(255,255,255,.55);
+}

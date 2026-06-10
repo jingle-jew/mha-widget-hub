@@ -7,7 +7,6 @@ export const WIDGET_MANAGER_CATEGORIES = Object.freeze([
   ]},
   { id:"actions", label:"Actions", description:"Boutons et raccourcis.", icon:"●", widgets:[
     {kind:"button",variant:"simple-button",label:"Bouton simple",size:{w:2,h:1},description:"Icône, libellé et état."},
-    {kind:"button",variant:"simple-button",label:"Bouton carré",size:{w:2,h:2},description:"Tuile d’action inspirée Home."},
   ]},
   { id:"lights", label:"Lumières", description:"Contrôles rapides et intensité.", icon:"💡", widgets:[
     {kind:"empty",variant:"light-toggle",label:"Tuile lumière",size:{w:2,h:2},description:"Contrôle simple."},
@@ -15,10 +14,6 @@ export const WIDGET_MANAGER_CATEGORIES = Object.freeze([
     {kind:"slider",variant:"light-slider-vertical",label:"Intensité verticale",size:{w:1,h:4},description:"Slider vertical."},
   ]},
   { id:"climate", label:"Climat", description:"Température et confort.", icon:"🌡", widgets:[
-    {kind:"weather",variant:"adaptive-weather",label:"Météo horizontale",size:{w:4,h:1},description:"Icône et température."},
-    {kind:"weather",variant:"adaptive-weather",label:"Météo compacte",size:{w:2,h:2},description:"Icône et température."},
-    {kind:"weather",variant:"adaptive-weather",label:"Météo détails",size:{w:3,h:2},description:"Humidité et vent."},
-    {kind:"weather",variant:"adaptive-weather",label:"Météo prévisions",size:{w:4,h:2},description:"Prévisions verticales."},
     {kind:"empty",variant:"climate-compact",label:"Climat compact",size:{w:2,h:2},description:"Température rapide."},
     {kind:"empty",variant:"climate-wide",label:"Climat large",size:{w:4,h:2},description:"Température + mode."},
     {kind:"slider",variant:"temperature-slider",label:"Température slider",size:{w:4,h:1},description:"Contrôle linéaire."},
@@ -65,11 +60,6 @@ function createPreview(item) {
     button.className = "mha-widget-manager-preview-button";
     button.textContent = "⌂ On";
     shape.append(button);
-  } else if (item.kind === "weather") {
-    const weather = document.createElement("span");
-    weather.className = "mha-widget-manager-preview-button";
-    weather.textContent = "☀ 22°";
-    shape.append(weather);
   } else {
     const dot = document.createElement("span");
     dot.className = "mha-widget-manager-preview-dot";

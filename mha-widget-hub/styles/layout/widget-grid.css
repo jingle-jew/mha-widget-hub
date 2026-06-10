@@ -1,0 +1,216 @@
+/*
+ * Effective workspace and widget matrix layout.
+ *
+ * Runtime column/row counts and square-unit values remain owned by JavaScript.
+ * This file only maps those values into the stable shell rectangles.
+ */
+
+.mha-shell {
+  --mha-statusbar-widget-gap: var(--mha-page-padding) !important;
+
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  inline-size: 100%;
+  block-size: 100%;
+  min-inline-size: 0;
+  min-block-size: 0;
+  display: grid !important;
+  grid-template-rows: auto minmax(0, 1fr) !important;
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: var(--mha-statusbar-widget-gap) !important;
+  column-gap: 0 !important;
+  padding-inline: var(--mha-page-padding);
+  padding-block-end: 0;
+  overflow: hidden;
+}
+
+.mha-shell > :first-child {
+  grid-row: 1;
+  grid-column: 1;
+  z-index: 30;
+  align-self: start;
+}
+
+.mha-workspace {
+  grid-row: 2;
+  grid-column: 1;
+  box-sizing: border-box;
+  inline-size: 100%;
+  block-size: 100%;
+  min-inline-size: 0;
+  min-block-size: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--mha-dock-zone-width, clamp(4.75rem, 7vw, 6.25rem));
+  gap: clamp(0.55rem, 1vw, 0.95rem);
+  overflow: visible;
+}
+
+.mha-widget-area {
+  box-sizing: border-box;
+  grid-column: 1;
+  grid-row: 1;
+  inline-size: 100%;
+  block-size: 100%;
+  min-inline-size: 0;
+  min-block-size: 0;
+  display: grid;
+  place-items: start center;
+  --mha-widget-area-top-gutter: calc(var(--mha-page-padding) * 2) !important;
+  padding: clamp(0.35rem, 0.7vw, 0.75rem);
+  padding-block-start: var(--mha-widget-area-top-gutter) !important;
+  overflow: visible;
+}
+
+.mha-dock-zone {
+  box-sizing: border-box;
+  grid-column: 2;
+  grid-row: 1;
+  inline-size: 100%;
+  block-size: 100%;
+  min-inline-size: 0;
+  min-block-size: 0;
+  display: grid;
+  place-items: start center;
+  overflow: visible;
+  pointer-events: auto;
+}
+
+.mha-dock-zone > * {
+  pointer-events: auto;
+}
+
+.mha-grid {
+  --mha-active-grid-units: var(--mha-runtime-grid-units, 4);
+  --mha-active-grid-rows: var(--mha-runtime-grid-rows, 8);
+  --mha-square-unit-hard-min: clamp(1.5rem, 3vw, 2.5rem);
+  --mha-square-unit-max: clamp(4.5rem, 8.5vw, 8.75rem);
+  --mha-statusbar-reserved-top: 0px !important;
+
+  box-sizing: border-box;
+  inline-size: min(100%, var(--mha-grid-matrix-width, 100%));
+  block-size: min(100%, var(--mha-grid-matrix-height, 100%));
+  max-inline-size: 100%;
+  max-block-size: 100%;
+  margin: 0 !important;
+  padding: clamp(0.25rem, 0.55vw, 0.6rem) !important;
+  scroll-padding: 0 !important;
+  overflow: visible !important;
+
+  display: grid;
+  gap: var(--mha-grid-gap);
+  grid-template-columns: repeat(var(--mha-active-grid-units), var(--mha-square-unit));
+  grid-template-rows: repeat(var(--mha-active-grid-rows), var(--mha-square-unit));
+  grid-auto-rows: var(--mha-square-unit);
+  grid-auto-flow: row dense;
+  align-content: start;
+  justify-content: center;
+  align-self: start;
+  justify-self: center;
+
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.mha-grid::-webkit-scrollbar {
+  display: none !important;
+  inline-size: 0 !important;
+  block-size: 0 !important;
+}
+
+@media (max-width: 767px) {
+  :host {
+    --mha-statusbar-reserved-top: 0px;
+    --mha-mobile-grid-gutter: var(--mha-page-padding, clamp(1rem, 2.6vw, 2rem));
+  }
+
+  .mha-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mha-dock-zone {
+    display: none;
+  }
+}
+
+.mha-shell,
+.mha-workspace,
+.mha-widget-area,
+.mha-grid {
+  border-block-end: 0 !important;
+}
+
+.mha-grid::before,
+.mha-grid::after,
+.mha-shell::before,
+.mha-shell::after {
+  display: none !important;
+  content: none !important;
+}
+
+.mha-workspace {
+  grid-row: 2 !important;
+  margin-block-start: 0 !important;
+  padding-block-start: 0 !important;
+}
+
+:host([data-layout="mobile"]) .mha-widget-area,
+:host(.layout-mobile) .mha-widget-area,
+:host(.is-mobile) .mha-widget-area,
+.mha-shell[data-layout="mobile"] .mha-widget-area,
+.mha-shell.layout-mobile .mha-widget-area,
+.mha-shell.is-mobile .mha-widget-area {
+  justify-items: stretch !important;
+}
+
+:host([data-layout="mobile"]) .mha-widget-area > .mha-grid,
+:host(.layout-mobile) .mha-widget-area > .mha-grid,
+:host(.is-mobile) .mha-widget-area > .mha-grid,
+.mha-shell[data-layout="mobile"] .mha-widget-area > .mha-grid,
+.mha-shell.layout-mobile .mha-widget-area > .mha-grid,
+.mha-shell.is-mobile .mha-widget-area > .mha-grid {
+  inline-size: 100% !important;
+  width: 100% !important;
+  max-inline-size: 100% !important;
+  justify-self: stretch !important;
+  margin-inline: 0 !important;
+}
+
+:host([data-layout="mobile"]) .mha-widget-area,
+:host(.layout-mobile) .mha-widget-area,
+:host(.is-mobile) .mha-widget-area,
+.mha-shell[data-layout="mobile"] .mha-widget-area,
+.mha-shell.layout-mobile .mha-widget-area,
+.mha-shell.is-mobile .mha-widget-area {
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  overscroll-behavior-y: contain;
+}
+
+:host([data-layout="mobile"]) .mha-grid,
+:host(.layout-mobile) .mha-grid,
+:host(.is-mobile) .mha-grid,
+.mha-shell[data-layout="mobile"] .mha-grid,
+.mha-shell.layout-mobile .mha-grid,
+.mha-shell.is-mobile .mha-grid {
+  touch-action: pan-y;
+}
+
+/* GRID FRAME LEFT NUDGE
+ * Tablet/desktop only.
+ *
+ * Status bar alignment is now correct. The visible widget grid still needs a
+ * tiny optical nudge left to match the shared frame. Keep all internal padding
+ * and grid math intact; move the grid as a whole by a few pixels only.
+ */
+@media (min-width: 768px) {
+  :host {
+    --mha-grid-frame-nudge-x: clamp(4px, 0.45vw, 7px);
+  }
+
+  .mha-grid {
+    transform: translateX(calc(-1 * var(--mha-grid-frame-nudge-x)));
+  }
+}

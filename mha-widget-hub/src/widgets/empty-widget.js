@@ -2,11 +2,10 @@ import { ICONS } from "../components/icons.js";
 import { getWidgetDensity, normalizeWidgetSize, sizeToString } from "../layout/layout-engine.js";
 import { createIcon } from "../ui/icon.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
-import { createWidgetInnerGrid, createWidgetInnerUnit, createWidgetSliderUnit, createWidgetText, createWidgetUnit } from "./widget-layout.js";
+import { createWidgetInnerGrid, createWidgetSliderUnit, createWidgetText, createWidgetUnit } from "./widget-layout.js";
 import { createSliderWidgetContent, isSliderWidget } from "./slider-widget.js";
 import { createClockWidgetContent, isClockWidget } from "./clock-widget.js";
 import { createSimpleButtonWidgetContent, isSimpleButtonWidget } from "./simple-button-widget.js";
-import { createWeatherWidgetContent, isWeatherWidget } from "./weather-widget.js";
 import { createSlider } from "../ui/slider.js";
 import { createToggle } from "../ui/toggle.js";
 import { createPill } from "../ui/pill.js";
@@ -43,10 +42,6 @@ export function createEmptyWidget(
 
   if (isSimpleButtonWidget(widget)) {
     el.dataset.widgetKind = "button";
-  }
-
-  if (isWeatherWidget(widget)) {
-    el.dataset.widgetKind = "weather";
   }
   el.dataset.widgetConfiguredW = String(size.w);
   el.dataset.widgetW = String(effectiveWidgetW);
@@ -148,23 +143,13 @@ export function createEmptyWidget(
   }
 
   if (isClockWidget(widget)) {
-    const clockGrid = createWidgetInnerGrid({
-      widgetW: effectiveWidgetW,
-      widgetH: size.h,
-      className: "mha-clock-widget-grid",
-    });
-
-    /*
-     * Clock widgets live inside the quadrupled internal grid. Cover the whole
-     * inner grid instead of using the older .mha-widget-unit coordinates,
-     * otherwise clocks only occupy the first top-left cells and look cropped.
-     */
+    const clockGrid = createWidgetInnerGrid({ widgetW: effectiveWidgetW, widgetH: size.h, className: "mha-clock-widget-grid" });
     clockGrid.append(
-      createWidgetInnerUnit({
+      createWidgetUnit({
         col: 1,
         row: 1,
-        colSpan: effectiveWidgetW * 4,
-        rowSpan: size.h * 4,
+        colSpan: effectiveWidgetW,
+        rowSpan: size.h,
         align: "stretch",
         justify: "stretch",
         className: "mha-clock-widget-unit",
@@ -186,16 +171,6 @@ export function createEmptyWidget(
      */
     el.append(
       createSimpleButtonWidgetContent(widget, {
-        widgetW: effectiveWidgetW,
-        widgetH: size.h,
-      }),
-    );
-  }
-
-
-  if (isWeatherWidget(widget)) {
-    el.append(
-      createWeatherWidgetContent(widget, {
         widgetW: effectiveWidgetW,
         widgetH: size.h,
       }),

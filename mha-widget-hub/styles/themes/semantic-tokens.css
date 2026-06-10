@@ -1,0 +1,492 @@
+/*
+ * MHA Semantic Tokens — Phase 1
+ *
+ * This file introduces a role-based token layer without breaking the existing
+ * component-level token contract. Components may keep using legacy tokens such
+ * as --mha-widget-surface or --mha-dock-surface; those tokens now have a clear
+ * semantic source of truth and can be migrated gradually.
+ *
+ * Naming convention:
+ * - bg-*       page/background layers
+ * - surface-* component surfaces/elevation roles
+ * - border-*  outline/divider roles
+ * - text-*    content emphasis roles
+ * - shadow-*  elevation roles
+ * - blur-*    backdrop roles
+ * - highlight-* reflection/sheen roles
+ * - accent-*  accent color extensions
+ */
+
+:host,
+:root {
+  /* Background roles */
+  --mha-bg-primary: var(--mha-page-bg, transparent);
+  --mha-bg-secondary: color-mix(in srgb, var(--mha-bg-primary) 88%, var(--mha-text, #fff) 4%);
+  --mha-bg-elevated: color-mix(in srgb, var(--mha-bg-primary) 76%, var(--mha-text, #fff) 8%);
+  --mha-bg-overlay: rgba(0,0,0,.34);
+
+  /* Surface roles */
+  --mha-surface-primary: var(--mha-widget-surface, rgba(255,255,255,.12));
+  --mha-surface-secondary: var(--mha-control-surface, var(--mha-surface-primary));
+  --mha-surface-tertiary: color-mix(in srgb, var(--mha-surface-primary) 78%, var(--mha-text, #fff) 6%);
+  --mha-surface-glass: var(--mha-dock-surface, var(--mha-surface-primary));
+  --mha-surface-floating: var(--mha-system-button-bg, var(--mha-surface-glass));
+  --mha-surface-panel: var(--mha-panel-surface, var(--mha-surface-primary));
+  --mha-surface-tonal: var(--mha-material-surface-container, var(--mha-surface-secondary));
+
+  /* Border roles */
+  --mha-border-primary: var(--mha-widget-border, rgba(255,255,255,.16));
+  --mha-border-secondary: color-mix(in srgb, var(--mha-border-primary) 76%, transparent);
+  --mha-border-subtle: color-mix(in srgb, var(--mha-border-primary) 46%, transparent);
+  --mha-border-focus: var(--mha-accent);
+
+  /* Text roles */
+  --mha-text-primary: var(--mha-text);
+  --mha-text-secondary: color-mix(in srgb, var(--mha-text) 78%, transparent);
+  --mha-text-muted: var(--mha-muted);
+  --mha-text-inverse: var(--mha-bg-primary);
+
+  /* Effect roles */
+  --mha-blur-primary: var(--mha-surface-blur, 22px);
+  --mha-blur-strong: calc(var(--mha-blur-primary) * 1.25);
+  --mha-shadow-primary: var(--mha-widget-shadow, 0 18px 42px rgba(0,0,0,.22));
+  --mha-shadow-floating: var(--mha-dock-shadow, var(--mha-shadow-primary));
+  --mha-shadow-panel: var(--mha-panel-shadow, var(--mha-shadow-primary));
+  --mha-highlight-primary: var(--mha-widget-reflection, linear-gradient(135deg, rgba(255,255,255,.14), transparent 58%));
+  --mha-highlight-subtle: linear-gradient(135deg, color-mix(in srgb, var(--mha-text) 7%, transparent), transparent 62%);
+
+  /* Accent extensions */
+  --mha-accent-soft: color-mix(in srgb, var(--mha-accent) 18%, transparent);
+  --mha-accent-strong: color-mix(in srgb, var(--mha-accent) 88%, var(--mha-text-primary) 12%);
+  --mha-accent-contrast: #fff;
+}
+
+/* Theme-style semantic overrides.
+ * These preserve the current visual language while making the role layer
+ * explicit for future migrations.
+ */
+
+:host([data-theme-style="ios"]),
+:root[data-theme-style="ios"] {
+  --mha-surface-glass: var(--mha-dock-surface, var(--mha-surface-primary));
+  --mha-surface-floating: var(--mha-system-button-bg, var(--mha-surface-glass));
+  --mha-blur-primary: var(--mha-surface-blur, 24px);
+  --mha-highlight-primary:
+    radial-gradient(circle at 24% 12%, rgba(255,255,255,.30), transparent 34%),
+    linear-gradient(135deg, rgba(255,255,255,.14), transparent 58%);
+}
+
+:host([data-theme-style="oneui"]),
+:root[data-theme-style="oneui"] {
+  --mha-surface-glass: var(--mha-dock-surface, var(--mha-surface-primary));
+  --mha-surface-floating: var(--mha-system-button-bg, var(--mha-surface-glass));
+  --mha-highlight-primary:
+    radial-gradient(circle at 28% 18%, rgba(255,255,255,.20), transparent 34%),
+    linear-gradient(135deg, rgba(255,255,255,.08), transparent 58%);
+}
+
+:host([data-theme-style="material"]),
+:root[data-theme-style="material"] {
+  --mha-surface-primary: var(--mha-material-surface-container, var(--mha-widget-surface));
+  --mha-surface-secondary: var(--mha-material-surface-container-high, var(--mha-control-surface));
+  --mha-surface-tertiary: var(--mha-material-surface-container-highest, var(--mha-surface-secondary));
+  --mha-surface-glass: var(--mha-surface-secondary);
+  --mha-surface-floating: var(--mha-system-button-bg, var(--mha-surface-secondary));
+  --mha-surface-panel: var(--mha-material-surface-container-high, var(--mha-panel-surface));
+  --mha-surface-tonal: var(--mha-material-surface-container, var(--mha-surface-secondary));
+  --mha-shadow-primary: 0 1px 2px rgba(0,0,0,.10);
+  --mha-shadow-floating: 0 1px 2px rgba(0,0,0,.12);
+  --mha-highlight-primary:
+    linear-gradient(135deg, color-mix(in srgb, var(--mha-accent) 8%, transparent), transparent 64%);
+}
+
+/* Compatibility aliases.
+ *
+ * Existing component tokens remain valid. Phase 1 intentionally keeps them as
+ * aliases/fallbacks rather than replacing every component usage at once.
+ */
+
+:host,
+:root {
+  --mha-page-background: var(--mha-bg-primary);
+
+  --mha-widget-surface-semantic: var(--mha-surface-primary);
+  --mha-widget-border-semantic: var(--mha-border-primary);
+  --mha-widget-shadow-semantic: var(--mha-shadow-primary);
+
+  --mha-control-surface-semantic: var(--mha-surface-secondary);
+  --mha-panel-surface-semantic: var(--mha-surface-panel);
+  --mha-panel-background-semantic: var(--mha-bg-overlay);
+  --mha-dock-surface-semantic: var(--mha-surface-glass);
+  --mha-statusbar-surface-semantic: var(--mha-surface-secondary);
+  --mha-system-button-bg-semantic: var(--mha-surface-floating);
+
+  --mha-surface-blur-semantic: var(--mha-blur-primary);
+  --mha-widget-reflection-semantic: var(--mha-highlight-primary);
+}
+
+
+/* PHASE 2 SYSTEM BUTTON CONSUMERS
+ *
+ * The floating system button layer now consumes these semantic roles directly:
+ * - --mha-surface-floating
+ * - --mha-border-primary / --mha-border-subtle
+ * - --mha-shadow-floating
+ * - --mha-blur-primary
+ * - --mha-highlight-primary
+ *
+ * Component-level system-button tokens remain as the small adapter layer between
+ * semantic roles and concrete button selectors.
+ */
+
+
+/* MATERIAL OPAQUE SYSTEM BUTTON NOTE
+ * Material system buttons intentionally bypass glass/translucent surface roles.
+ * They use opaque Material tonal containers through the system-button adapter.
+ */
+:host([data-theme-style="material"]),
+:root[data-theme-style="material"] {
+  --mha-surface-floating-material-opaque:
+    var(--mha-material-surface-container-high, var(--mha-surface-tonal));
+}
+
+
+/* PHASE 3 PANEL ROLE NOTES
+ *
+ * Settings, Widget Manager, and Screensaver Settings panels now consume:
+ * - --mha-bg-overlay
+ * - --mha-surface-panel
+ * - --mha-surface-secondary
+ * - --mha-surface-tertiary
+ * - --mha-border-secondary / --mha-border-subtle
+ * - --mha-shadow-panel
+ *
+ * The legacy component tokens remain available for older components, but panel
+ * CSS should prefer the semantic roles above.
+ */
+:host,
+:root {
+  --mha-panel-scrim-bg: var(--mha-bg-overlay);
+  --mha-panel-section-surface: var(--mha-surface-secondary);
+  --mha-panel-control-surface: var(--mha-surface-tertiary);
+  --mha-panel-border: var(--mha-border-secondary);
+  --mha-panel-section-border: var(--mha-border-subtle);
+}
+
+
+/* PHASE 4 SHELL ROLE TOKENS
+ *
+ * Status bar and docks now consume shell roles:
+ * - --mha-shell-surface
+ * - --mha-shell-status-surface
+ * - --mha-shell-dock-surface
+ * - --mha-shell-panel-surface
+ * - --mha-shell-border
+ * - --mha-shell-shadow
+ * - --mha-shell-blur
+ */
+:host,
+:root {
+  --mha-shell-surface: var(--mha-surface-glass);
+  --mha-shell-status-surface: var(--mha-shell-surface);
+  --mha-shell-dock-surface: var(--mha-shell-surface);
+  --mha-shell-panel-surface: var(--mha-surface-panel);
+  --mha-shell-border: var(--mha-border-secondary);
+  --mha-shell-shadow: var(--mha-shadow-floating);
+  --mha-shell-blur: var(--mha-blur-primary);
+}
+
+:host([data-theme-style="ios"]),
+:root[data-theme-style="ios"] {
+  --mha-shell-surface: var(--mha-surface-glass);
+  --mha-shell-panel-surface: var(--mha-surface-panel);
+  --mha-shell-blur: var(--mha-blur-primary);
+}
+
+:host([data-theme-style="oneui"]),
+:root[data-theme-style="oneui"] {
+  --mha-shell-surface: var(--mha-surface-glass);
+  --mha-shell-panel-surface: var(--mha-surface-panel);
+  --mha-shell-blur: var(--mha-blur-primary);
+}
+
+:host([data-theme-style="material"]),
+:root[data-theme-style="material"] {
+  --mha-shell-surface: var(--mha-surface-tonal);
+  --mha-shell-status-surface: var(--mha-surface-tonal);
+  --mha-shell-dock-surface: var(--mha-surface-tonal);
+  --mha-shell-panel-surface: var(--mha-surface-panel);
+  --mha-shell-border: var(--mha-border-subtle);
+  --mha-shell-shadow: var(--mha-shadow-floating);
+  --mha-shell-blur: 0px;
+}
+
+
+/* PHASE 5A WIDGET SHELL ROLE TOKENS
+ *
+ * Widget shells now consume:
+ * - --mha-widget-shell-surface
+ * - --mha-widget-shell-border
+ * - --mha-widget-shell-shadow
+ * - --mha-widget-shell-highlight
+ * - --mha-widget-control-surface
+ *
+ * These roles adapt semantic tokens to widget-specific selectors while
+ * preserving legacy component tokens as fallback values.
+ */
+:host,
+:root {
+  --mha-widget-shell-surface: var(--mha-surface-primary);
+  --mha-widget-shell-border: var(--mha-border-primary);
+  --mha-widget-shell-shadow: var(--mha-shadow-primary);
+  --mha-widget-shell-highlight: var(--mha-highlight-primary);
+  --mha-widget-control-surface: var(--mha-surface-secondary);
+  --mha-widget-shell-surface-edit: var(--mha-surface-secondary);
+  --mha-widget-shell-border-edit: var(--mha-border-focus);
+}
+
+:host([data-theme-style="ios"]),
+:root[data-theme-style="ios"] {
+  --mha-widget-shell-surface: var(--mha-surface-primary);
+  --mha-widget-control-surface: var(--mha-surface-secondary);
+  --mha-widget-shell-highlight: var(--mha-highlight-primary);
+}
+
+:host([data-theme-style="oneui"]),
+:root[data-theme-style="oneui"] {
+  --mha-widget-shell-surface: var(--mha-surface-primary);
+  --mha-widget-control-surface: var(--mha-surface-secondary);
+  --mha-widget-shell-highlight: var(--mha-highlight-primary);
+}
+
+:host([data-theme-style="material"]),
+:root[data-theme-style="material"] {
+  --mha-widget-shell-surface: var(--mha-surface-primary);
+  --mha-widget-control-surface: var(--mha-surface-secondary);
+  --mha-widget-shell-highlight: var(--mha-highlight-subtle);
+  --mha-widget-shell-shadow: var(--mha-shadow-primary);
+}
+
+
+/* PHASE 5B-1 SLIDER WIDGET ROLE TOKENS
+ *
+ * Full SliderWidget internals now consume semantic roles through slider-specific
+ * adapters. This keeps SliderWidget styling consistent while preserving its
+ * theme-specific personalities.
+ */
+:host,
+:root {
+  --mha-slider-widget-surface: var(--mha-widget-shell-surface, var(--mha-surface-primary));
+  --mha-slider-widget-surface-inactive: var(--mha-surface-secondary);
+  --mha-slider-widget-surface-active: var(--mha-accent);
+  --mha-slider-widget-border: var(--mha-widget-shell-border, var(--mha-border-primary));
+  --mha-slider-widget-shadow: var(--mha-widget-shell-shadow, var(--mha-shadow-primary));
+  --mha-slider-widget-text: var(--mha-text-primary);
+  --mha-slider-widget-muted: var(--mha-text-muted);
+  --mha-slider-widget-highlight: var(--mha-highlight-primary);
+  --mha-slider-widget-blur: var(--mha-blur-primary);
+}
+
+:host([data-theme-style="ios"]),
+:root[data-theme-style="ios"] {
+  --mha-slider-widget-surface: var(--mha-widget-shell-surface, var(--mha-surface-primary));
+  --mha-slider-widget-surface-inactive: var(--mha-widget-shell-surface, var(--mha-surface-primary));
+  --mha-slider-widget-surface-active:
+    linear-gradient(
+      145deg,
+      rgba(255,255,255,.74),
+      rgba(255,255,255,.38)
+    );
+  --mha-slider-widget-highlight: var(--mha-highlight-primary);
+  --mha-slider-widget-blur: var(--mha-blur-primary);
+}
+
+:host([data-theme-style="oneui"]),
+:root[data-theme-style="oneui"] {
+  --mha-slider-widget-surface: var(--mha-widget-shell-surface, var(--mha-surface-primary));
+  --mha-slider-widget-surface-inactive: var(--mha-surface-secondary);
+  --mha-slider-widget-surface-active: var(--mha-accent);
+  --mha-slider-widget-highlight: var(--mha-highlight-primary);
+  --mha-slider-widget-blur: var(--mha-blur-primary);
+}
+
+:host([data-theme-style="material"]),
+:root[data-theme-style="material"] {
+  --mha-slider-widget-surface: var(--mha-widget-shell-surface, var(--mha-surface-primary));
+  --mha-slider-widget-surface-inactive: var(--mha-surface-secondary);
+  --mha-slider-widget-surface-active: var(--mha-accent);
+  --mha-slider-widget-border: var(--mha-border-subtle);
+  --mha-slider-widget-shadow: none;
+  --mha-slider-widget-highlight: var(--mha-highlight-subtle);
+  --mha-slider-widget-blur: 0px;
+}
+
+
+/* PHASE 5B-2 CLOCK WIDGET ROLE TOKENS
+ *
+ * ClockWidget internals and Widget Manager previews consume semantic roles
+ * through clock/preview adapters. This keeps ClockWidget styling stable while
+ * removing direct dependence on generic widget shell tokens inside the clock.
+ */
+:host,
+:root {
+  --mha-clock-widget-text: var(--mha-text-primary);
+  --mha-clock-widget-muted: var(--mha-text-muted);
+  --mha-clock-widget-face-surface: var(--mha-surface-secondary);
+  --mha-clock-widget-face-surface-strong: var(--mha-surface-tertiary);
+  --mha-clock-widget-face-border: var(--mha-border-subtle);
+  --mha-clock-widget-face-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--mha-text-primary) 7%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, var(--mha-text-primary) 4%, transparent);
+  --mha-clock-widget-mark: color-mix(in srgb, var(--mha-text-primary) 24%, transparent);
+  --mha-clock-widget-mark-major: color-mix(in srgb, var(--mha-text-primary) 48%, transparent);
+  --mha-clock-widget-hand: var(--mha-text-primary);
+  --mha-clock-widget-second-hand: var(--mha-accent);
+  --mha-clock-widget-center-dot: var(--mha-accent);
+  --mha-clock-widget-highlight: var(--mha-highlight-primary);
+  --mha-clock-widget-blur: var(--mha-blur-primary);
+
+  --mha-preview-surface: var(--mha-surface-secondary);
+  --mha-preview-surface-hover: color-mix(in srgb, var(--mha-accent) 7%, var(--mha-surface-secondary));
+  --mha-preview-border: var(--mha-border-primary);
+  --mha-preview-border-hover: color-mix(in srgb, var(--mha-accent) 34%, var(--mha-border-primary));
+  --mha-preview-accent-soft: var(--mha-accent-soft);
+  --mha-preview-text: var(--mha-text-primary);
+  --mha-preview-muted: var(--mha-text-muted);
+}
+
+:host([data-theme-style="ios"]),
+:root[data-theme-style="ios"] {
+  --mha-clock-widget-face-surface:
+    color-mix(in srgb, var(--mha-surface-secondary) 78%, transparent);
+  --mha-clock-widget-face-surface-strong:
+    color-mix(in srgb, var(--mha-surface-primary) 76%, transparent);
+  --mha-clock-widget-face-border:
+    color-mix(in srgb, var(--mha-border-primary) 70%, rgba(255,255,255,.36));
+  --mha-clock-widget-highlight: var(--mha-highlight-primary);
+  --mha-clock-widget-blur: var(--mha-blur-primary);
+}
+
+:host([data-theme-style="oneui"]),
+:root[data-theme-style="oneui"] {
+  --mha-clock-widget-face-surface:
+    color-mix(in srgb, var(--mha-surface-secondary) 82%, transparent);
+  --mha-clock-widget-face-surface-strong:
+    color-mix(in srgb, var(--mha-surface-primary) 78%, transparent);
+}
+
+:host([data-theme-style="material"]),
+:root[data-theme-style="material"] {
+  --mha-clock-widget-face-surface: var(--mha-surface-secondary);
+  --mha-clock-widget-face-surface-strong: var(--mha-surface-tertiary);
+  --mha-clock-widget-face-border: var(--mha-border-subtle);
+  --mha-clock-widget-face-shadow: none;
+  --mha-clock-widget-highlight: var(--mha-highlight-subtle);
+  --mha-clock-widget-blur: 0px;
+}
+
+
+/* MATERIAL SLIDER SHELL TOKEN PARITY
+ * In Material, SliderWidget's outer card shell intentionally follows the same
+ * widget shell roles as every other widget. Slider-specific tokens remain for
+ * the internal rail/fill/thumb only.
+ */
+:host([data-theme-style="material"]),
+:root[data-theme-style="material"] {
+  --mha-slider-widget-surface: var(--mha-widget-shell-surface);
+  --mha-slider-widget-border: var(--mha-widget-shell-border);
+  --mha-slider-widget-shadow: var(--mha-widget-shell-shadow);
+  --mha-slider-widget-surface-inactive: var(--mha-surface-secondary);
+  --mha-slider-widget-surface-active: var(--mha-accent);
+}
+
+
+/* ONEUI PANEL OPACITY TOKEN NOTE
+ * OneUI panel opacity is calibrated in settings-panel.css because the desired
+ * light/dark opacity curve is specific to modal settings sheets:
+ * - light: less transparent / milkier;
+ * - dark: more glass / less opaque.
+ */
+
+/* IOS PANEL LIQUID GLASS TOKEN NOTE
+ * iOS settings panels are calibrated in settings-panel.css for a crisper
+ * Liquid Glass look: less diffuse blur, stronger optical highlights.
+ */
+
+
+/* IOS LIGHT SLIDER WIDGET ACTIVE INACTIVE CONTRAST
+ * iOS light faders/sliders:
+ * - inactive surface should match the widget card surface;
+ * - active surface stays white Liquid Glass, but with enough contrast to read.
+ */
+:host([data-theme-style="ios"][data-theme="light"]),
+:root[data-theme-style="ios"][data-theme="light"] {
+  --mha-slider-widget-surface-inactive: var(--mha-widget-shell-surface);
+  --mha-slider-widget-surface-active:
+    linear-gradient(
+      145deg,
+      rgba(255,255,255,.86),
+      rgba(255,255,255,.50)
+    );
+}
+
+
+/* IOS DARK SLIDER WIDGET INACTIVE SURFACE PARITY
+ * iOS dark faders/sliders:
+ * - inactive surface should match the widget card surface;
+ * - active surface remains the existing white/translucent Liquid Glass fill.
+ */
+:host([data-theme-style="ios"][data-theme="dark"]),
+:root[data-theme-style="ios"][data-theme="dark"] {
+  --mha-slider-widget-surface-inactive: var(--mha-widget-shell-surface);
+}
+
+
+/* WEATHER WIDGET ROLE TOKENS
+ *
+ * Current weather widget roles. The visual treatment is theme-specific, but the
+ * widget content still follows the global widget density contract.
+ */
+:host,
+:root {
+  --mha-weather-widget-text: var(--mha-text-primary);
+  --mha-weather-widget-muted: var(--mha-text-muted);
+  --mha-weather-widget-temp: var(--mha-text-primary);
+  --mha-weather-widget-border: var(--mha-widget-shell-border);
+  --mha-weather-widget-chip: var(--mha-surface-secondary);
+  --mha-weather-widget-chip-border: var(--mha-border-subtle);
+  --mha-weather-widget-sky: #47a8ff;
+  --mha-weather-widget-sun: #ffd34d;
+}
+
+:host([data-theme-style="ios"]),
+:root[data-theme-style="ios"] {
+  --mha-weather-widget-chip: color-mix(in srgb, var(--mha-widget-shell-surface) 72%, rgba(255,255,255,.28));
+  --mha-weather-widget-chip-border: color-mix(in srgb, var(--mha-border-subtle) 60%, rgba(255,255,255,.42));
+}
+
+:host([data-theme-style="ios"][data-theme="dark"]),
+:root[data-theme-style="ios"][data-theme="dark"] {
+  --mha-weather-widget-chip: color-mix(in srgb, var(--mha-widget-shell-surface) 78%, transparent);
+  --mha-weather-widget-chip-border: color-mix(in srgb, var(--mha-border-subtle) 72%, rgba(255,255,255,.10));
+}
+
+:host([data-theme-style="oneui"]),
+:root[data-theme-style="oneui"] {
+  --mha-weather-widget-chip: color-mix(in srgb, var(--mha-surface-secondary) 82%, transparent);
+  --mha-weather-widget-chip-border: color-mix(in srgb, var(--mha-border-subtle) 78%, rgba(255,255,255,.16));
+}
+
+:host([data-theme-style="material"]),
+:root[data-theme-style="material"] {
+  --mha-weather-widget-chip: var(--mha-surface-secondary);
+  --mha-weather-widget-chip-border: var(--mha-border-subtle);
+  --mha-weather-widget-temp: var(--mha-accent);
+}
+
+
+/* WEATHER WIDGET BLUE BACKGROUND TOKEN NOTE
+ * iOS and OneUI WeatherWidget cards use explicit blue weather gradients in
+ * weather-widget.css. The semantic weather color tokens below remain the source
+ * for accent sky/sun elements and future HA-bound conditions.
+ */

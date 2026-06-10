@@ -1,0 +1,139 @@
+/*
+ * MHA Simple Button Widget
+ *
+ * Compact control-pill layout.
+ *
+ * The outer MHA grid decides where the widget lives. Inside the widget, this
+ * button uses a component-level layout instead of the generic 8x4 inner-grid:
+ * a circular icon bubble on the left and a natural text stack on the right.
+ */
+
+.mha-widget[data-widget-kind="button"] {
+  container-type: size;
+  container-name: mha-simple-button-widget;
+  overflow: hidden;
+}
+
+.mha-widget[data-widget-kind="button"] > .mha-simple-button-widget {
+  position: absolute;
+  inset: var(--mha-widget-inner-padding);
+  pointer-events: auto;
+
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  justify-content: start;
+  column-gap: clamp(.55rem, min(7cqi, 18cqb), .85rem);
+
+  min-inline-size: 0;
+  min-block-size: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.mha-simple-button-icon {
+  --mha-simple-button-icon-bubble-size: clamp(2rem, min(38cqi, 72cqb), 2.9rem);
+  --mha-icon-glyph-size: 72%;
+
+  inline-size: var(--mha-simple-button-icon-bubble-size) !important;
+  block-size: var(--mha-simple-button-icon-bubble-size) !important;
+  width: var(--mha-simple-button-icon-bubble-size) !important;
+  height: var(--mha-simple-button-icon-bubble-size) !important;
+  min-inline-size: var(--mha-simple-button-icon-bubble-size);
+  min-block-size: var(--mha-simple-button-icon-bubble-size);
+  max-inline-size: 100%;
+  max-block-size: 100%;
+  aspect-ratio: 1 / 1;
+  flex: 0 0 auto;
+
+  display: grid;
+  place-items: center;
+  place-content: center;
+
+  /* Button icon bubbles are always circular, regardless of global icon shape. */
+  border-radius: 999px !important;
+  overflow: hidden;
+  -webkit-mask: none !important;
+  mask: none !important;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+
+  background: color-mix(in srgb, var(--mha-accent) 72%, var(--mha-surface-secondary));
+  border: 1px solid color-mix(in srgb, white 20%, transparent);
+  color: var(--mha-on-accent, white);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 28%, transparent),
+    0 .35rem .85rem color-mix(in srgb, var(--mha-accent) 26%, transparent);
+}
+
+.mha-simple-button-icon::before,
+.mha-simple-button-icon::after {
+  border-radius: inherit !important;
+}
+
+.mha-simple-button-icon :is(svg, ha-icon, .mha-icon-symbol) {
+  inline-size: var(--mha-icon-glyph-size) !important;
+  block-size: var(--mha-icon-glyph-size) !important;
+  width: var(--mha-icon-glyph-size) !important;
+  height: var(--mha-icon-glyph-size) !important;
+  max-inline-size: var(--mha-icon-glyph-size) !important;
+  max-block-size: var(--mha-icon-glyph-size) !important;
+  justify-self: center;
+  align-self: center;
+}
+
+.mha-simple-button-text {
+  min-inline-size: 0;
+  min-block-size: 0;
+  max-inline-size: 100%;
+
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  gap: clamp(.16rem, 1.35cqb, .28rem);
+
+  overflow: hidden;
+  text-align: left;
+}
+
+.mha-simple-button-label,
+.mha-simple-button-state {
+  justify-self: start;
+  display: block;
+  inline-size: auto;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+  line-height: 1.05;
+}
+
+.mha-simple-button-label {
+  color: var(--mha-text-primary);
+  font-size: clamp(.84rem, min(7cqi, 24cqb), 1.22rem);
+  font-weight: 800;
+  letter-spacing: -.03em;
+}
+
+.mha-simple-button-state {
+  color: var(--mha-text-muted);
+  font-size: clamp(.62rem, min(5.2cqi, 17cqb), .86rem);
+  font-weight: 680;
+  letter-spacing: -.01em;
+}
+
+/* Material keeps system widgets opaque/tonal. */
+:host([data-theme-style="material"]) .mha-simple-button-icon {
+  background: var(--mha-surface-secondary);
+  border-color: var(--mha-border-subtle);
+  color: var(--mha-accent);
+  box-shadow: none;
+}
+
+/* iOS/OneUI use a richer icon bubble for the control-pill look. */
+:host([data-theme-style="ios"]) .mha-simple-button-icon,
+:host([data-theme-style="oneui"]) .mha-simple-button-icon {
+  background: color-mix(in srgb, var(--mha-accent) 72%, var(--mha-surface-secondary));
+}

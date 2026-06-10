@@ -244,36 +244,8 @@ export function normalizeClockWidgetSize() {
   return {w:2,h:2};
 }
 
-export function normalizeWeatherWidgetSize(size = {}) {
-  const normalized = normalizeWidgetSize(size);
-
-  /*
-   * Adaptive weather card contract.
-   * Sizes are expressed as width x height:
-   * - 4x1: horizontal current-weather glance;
-   * - 2x2: compact current-weather tile;
-   * - 3x2: current weather + humidity/wind chips;
-   * - 4x2: current weather left + vertical forecast stack right.
-   */
-  if (normalized.h <= 1) return {w:4,h:1};
-  if (normalized.w >= 4) return {w:4,h:2};
-  if (normalized.w >= 3) return {w:3,h:2};
-  return {w:2,h:2};
-}
-
-export function normalizeSimpleButtonWidgetSize(size = {}) {
-  const normalized = normalizeWidgetSize(size);
-
-  /*
-   * Simple buttons support two contracts:
-   * - OneUI/control pill: 2x1, 3x1, 4x1
-   * - Square home-control tile: 2x2
-   *
-   * Any attempt to make the button taller snaps to the square 2x2 tile.
-   */
-  if (normalized.h >= 2) return {w:2,h:2};
-
-  return {w:Math.max(2,Math.min(4,normalized.w)),h:1};
+export function normalizeSimpleButtonWidgetSize() {
+  return {w:2,h:1};
 }
 
 
@@ -284,11 +256,7 @@ export function normalizeWidgetForKind(widget={}) {
   const category=widget.category||"";
   const isSlider=kind==="slider"||kind==="slider-widget"||widget.id==="slot-f"||widget.id==="slot-i";
   const isClock=kind==="clock"||kind==="clock-widget"||(category==="utilities"&&["digital","analog","ios-analog","scientific"].includes(variant));
-  const isButton=kind==="button"||kind==="button-widget"||variant==="simple-button";
-  const isWeather=kind==="weather"||kind==="weather-widget"||variant==="adaptive-weather";
   if(isClock)return normalizeClockWidgetSize();
-  if(isButton)return normalizeSimpleButtonWidgetSize(size);
-  if(isWeather)return normalizeWeatherWidgetSize(size);
   if(!isSlider)return size;
   return normalizeSliderWidgetSize(size);
 }

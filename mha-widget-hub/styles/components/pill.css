@@ -1,0 +1,69 @@
+/*
+ * MHA Pill component.
+ */
+
+:host {
+  --mha-pill-height: clamp(1.65rem, 3vw, 2.1rem);
+  --mha-pill-radius: 999px;
+  --mha-pill-bg: var(--mha-control-surface);
+  --mha-pill-color: var(--mha-muted);
+  --mha-pill-border: var(--mha-widget-border);
+}
+
+.mha-pill {
+  min-block-size: var(--mha-pill-height);
+  padding-inline: clamp(.65rem, 1.4vw, .95rem);
+  border: 1px solid var(--mha-pill-border);
+  border-radius: var(--mha-pill-radius);
+  background: var(--mha-pill-bg);
+  color: var(--mha-pill-color);
+  display: inline-grid;
+  place-items: center;
+  font-size: clamp(.72rem, 1.1vw, .85rem);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+:host([data-theme-style="ios"]) {
+  --mha-pill-bg: rgba(255,255,255,.16);
+  --mha-pill-color: rgba(255,255,255,.92);
+  --mha-pill-border: rgba(255,255,255,.26);
+}
+
+:host([data-theme-style="oneui"]) {
+  --mha-pill-bg: rgba(255,255,255,.78);
+  --mha-pill-color: rgba(0,0,0,.74);
+  --mha-pill-border: rgba(0,0,0,.06);
+}
+
+:host([data-theme-style="material"]) {
+  --mha-pill-bg: var(--mha-material-you-icon-container, rgba(232,222,248,.98));
+  --mha-pill-color: var(--mha-material-you-symbol-1, #6750a4);
+  --mha-pill-border: color-mix(in srgb, var(--mha-pill-color) 16%, transparent);
+}
+
+
+/* LIGHT THEME PILL TEXT CONTRACT */
+:host([data-theme="light"]:not([data-theme-style="material"])) .mha-pill {
+  --mha-pill-color: var(--mha-text);
+  color: var(--mha-text);
+}
+
+
+/* ACCENT TOKENS PILL SURFACES */
+.mha-pill[data-tone="accent"] {
+  --mha-pill-bg: var(--mha-accent);
+  --mha-pill-color: var(--mha-accent-contrast);
+  --mha-pill-border: color-mix(in srgb, var(--mha-accent) 72%, white 14%);
+}
+
+/* MATERIAL PILL DYNAMIC SURFACE */
+:host([data-theme-style="material"]) .mha-pill {
+  background: var(--mha-material-surface-container-high);
+  border-color: var(--mha-material-outline-variant);
+}
+
+/* MATERIAL BORDERLESS PILL SURFACE */
+:host([data-theme-style="material"]) .mha-pill {
+  border-color: transparent;
+}

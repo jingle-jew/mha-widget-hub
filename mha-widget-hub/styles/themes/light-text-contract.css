@@ -1,0 +1,89 @@
+/*
+ * Light theme readable text contract.
+ *
+ * Rule:
+ * In light theme, normal interface text must not be white.
+ *
+ * Important:
+ * This file intentionally does not redefine the Material theme palette or
+ * Material-specific color structure. It only establishes readable default text
+ * tokens and narrowly scoped non-Material overrides.
+ *
+ * Allowed white-text exceptions:
+ * - explicit danger buttons;
+ * - explicitly dark/inverted controls;
+ * - icon glyphs when the icon theme itself requires them.
+ */
+
+:host([data-theme="light"]) {
+  --mha-text: rgba(16, 18, 24, .92);
+  --mha-text-soft: rgba(16, 18, 24, .74);
+  --mha-muted: rgba(16, 18, 24, .62);
+  --mha-subtle: rgba(16, 18, 24, .48);
+}
+
+/*
+ * iOS light often uses glass on colorful backgrounds. Keep the glass, but use
+ * dark interface text unless the component is explicitly inverted.
+ */
+:host([data-theme="light"][data-theme-style="ios"]) {
+  --mha-text: rgba(16, 18, 24, .94);
+  --mha-text-soft: rgba(16, 18, 24, .76);
+  --mha-muted: rgba(16, 18, 24, .62);
+}
+
+/*
+ * OneUI light should also use dark readable text.
+ */
+:host([data-theme="light"][data-theme-style="oneui"]) {
+  --mha-text: rgba(16, 18, 24, .92);
+  --mha-text-soft: rgba(16, 18, 24, .74);
+  --mha-muted: rgba(16, 18, 24, .58);
+}
+
+/*
+ * Do not redefine Material palette/tokens here.
+ * Material keeps its existing color structure.
+ */
+
+/* Non-Material component text normalization in light theme. */
+:host([data-theme="light"]:not([data-theme-style="material"])) .mha-settings-sheet,
+:host([data-theme="light"]:not([data-theme-style="material"])) .mha-settings-section,
+:host([data-theme="light"]:not([data-theme-style="material"])) .mha-settings-label,
+:host([data-theme="light"]:not([data-theme-style="material"])) .mha-settings-title,
+:host([data-theme="light"]:not([data-theme-style="material"])) .mha-widget-text,
+:host([data-theme="light"]:not([data-theme-style="material"])) .mha-slider,
+:host([data-theme="light"]:not([data-theme-style="material"])) .mha-button,
+:host([data-theme="light"]:not([data-theme-style="material"])) .mha-pill {
+  color: var(--mha-text);
+}
+
+:host([data-theme="light"]:not([data-theme-style="material"])) .mha-settings-eyebrow,
+:host([data-theme="light"]:not([data-theme-style="material"])) .mha-slider-label,
+:host([data-theme="light"]:not([data-theme-style="material"])) .mha-widget-text[data-tone="muted"] {
+  color: var(--mha-muted);
+}
+
+/* Light theme form controls should not default to white text. */
+:host([data-theme="light"]:not([data-theme-style="material"])) .mha-settings-select,
+:host([data-theme="light"]:not([data-theme-style="material"])) .mha-settings-reset {
+  color: var(--mha-text);
+}
+
+/* Explicit exceptions where white text is required for contrast. */
+:host([data-theme="light"]) .mha-settings-close,
+:host([data-theme="light"]) .mha-mobile-dock-close,
+:host([data-theme="light"]) .mha-tool-button[data-action="close"] {
+  color: #fff;
+}
+
+/* Explicitly inverted/dark edit controls are allowed to stay white. */
+:host([data-theme="light"]) .mha-tool-button[data-action="move"] {
+  color: #fff;
+}
+
+/*
+ * Preserve icon-specific contracts:
+ * The icon component owns glyph color according to the selected visual theme.
+ * This keeps iOS icon symbols white if the icon theme requires it.
+ */
