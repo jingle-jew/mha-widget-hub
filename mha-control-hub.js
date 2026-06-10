@@ -131,7 +131,6 @@ function syncThemeAttributes(host) {
   const accent = getStoredAccent(host, themeStyle);
   const iconShapeSetting = getStoredIconShapeSetting(host);
   const iconShape = resolveIconShape(themeStyle, iconShapeSetting);
-
   host.dataset.themeSetting = themeSetting;
   host.setAttribute("data-theme-setting", themeSetting);
   host.dataset.theme = theme;

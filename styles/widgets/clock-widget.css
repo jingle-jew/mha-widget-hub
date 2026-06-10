@@ -709,3 +709,28 @@
   display: none;
 }
 
+/* Digital clock anti-crop guard.
+ * Safari can clip bold/tabular digits when negative letter-spacing pushes the
+ * last glyph outside its painted inline box. Keep the tokenized font size as-is;
+ * only add a tiny safe inset used by both widgets and screensaver.
+ */
+.mha-clock-widget--digital {
+  box-sizing: border-box;
+  padding-inline: var(--mha-clock-digital-safe-inline, .18em);
+  overflow: visible;
+}
+
+.mha-clock-widget--digital .mha-clock-time {
+  max-inline-size: 100%;
+  padding-inline-end: var(--mha-clock-digital-glyph-safe-end, .08em);
+  overflow: visible;
+}
+
+/* Screensaver uses the same digital component, but the huge display size needs
+ * a slightly larger glyph safety buffer.
+ */
+.mha-clock-widget--screensaver.mha-clock-widget--digital {
+  --mha-clock-digital-safe-inline: .22em;
+  --mha-clock-digital-glyph-safe-end: .12em;
+}
+
