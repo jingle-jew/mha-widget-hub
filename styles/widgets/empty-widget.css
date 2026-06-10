@@ -585,7 +585,6 @@
  */
 :host(.is-editing) .mha-widget > *:not(.mha-widget-tools):not(.mha-widget-move-overlay):not(.mha-resize-handle):not(.mha-size-badge),
 :host(.is-editing) .mha-widget :is(
-  .mha-widget-inner-grid,
   .mha-widget-demo-slider,
   .mha-widget-demo-button,
   .mha-widget-demo-toggle,

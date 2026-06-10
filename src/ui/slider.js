@@ -28,9 +28,7 @@ function getSliderMeasureTarget(wrapper) {
    * previous orientation. The widget unit exposes the real available space, so
    * the rotor can use the true long axis after resize.
    */
-  return wrapper.closest(".mha-slider-widget-unit")
-    || wrapper.closest(".mha-widget-slider-unit")
-    || wrapper;
+  return wrapper.closest(".mha-slider-widget-unit") || wrapper;
 }
 
 function measureSliderBox(wrapper) {
@@ -73,7 +71,7 @@ function scheduleSliderLayout(wrapper) {
   /*
    * Safari can report an intermediate box during a resize/orientation flip.
    * Re-measure across two frames so the rotated rotor receives the final
-   * widget-unit height/width instead of the old compact axis.
+   * widget frame height/width instead of the old compact axis.
    */
   requestAnimationFrame(() => {
     applySliderLayout(wrapper);

@@ -8,12 +8,6 @@
   overflow: hidden;
 }
 
-.mha-widget[data-widget-kind="clock"] .mha-widget-inner-grid {
-  position: absolute;
-  inset: var(--mha-widget-inner-padding);
-  display: grid;
-  place-items: center;
-}
 
 .mha-clock-widget {
   inline-size: 100%;
@@ -307,19 +301,6 @@
 }
 
 
-.mha-clock-widget-unit {
-  inline-size: 100%;
-  block-size: 100%;
-  min-inline-size: 0;
-  min-block-size: 0;
-  display: grid;
-  place-items: stretch;
-}
-
-.mha-clock-widget-unit > .mha-clock-widget {
-  inline-size: 100%;
-  block-size: 100%;
-}
 
 /* SEMANTIC CLOCK WIDGET TOKEN CONSUMERS
  * Phase 5B-2 routes ClockWidget internals through clock semantic roles.
@@ -358,11 +339,6 @@
   overflow: hidden;
 }
 
-.mha-widget[data-widget-kind="clock"] .mha-widget-inner-grid {
-  container-type: size;
-  container-name: mha-clock-content;
-  overflow: hidden;
-}
 
 .mha-clock-widget {
   inline-size: 100%;
@@ -461,14 +437,11 @@
 }
 
 /* CLOCK WIDGET CONTENT FILL
- * Clock widgets already live inside .mha-widget-inner-grid, which is inset by
- * --mha-widget-inner-padding. From this point on, the clock itself should use
- * the safe content box, but analog faces still need their own optical inset:
+ * Clock widgets live inside a direct safe frame inset by
+ * --mha-widget-inner-padding. Analog faces still need their own optical inset:
  * ticks, numbers and hands visually reach past the face circle and otherwise
  * get clipped by the widget corners.
  */
-.mha-widget[data-widget-kind="clock"] .mha-clock-widget-grid,
-.mha-widget[data-widget-kind="clock"] .mha-clock-widget-unit,
 .mha-widget[data-widget-kind="clock"] .mha-clock-widget {
   inline-size: 100%;
   block-size: 100%;
@@ -478,7 +451,6 @@
   max-block-size: 100%;
 }
 
-.mha-widget[data-widget-kind="clock"] .mha-clock-widget-unit,
 .mha-widget[data-widget-kind="clock"] .mha-clock-widget {
   display: grid;
   place-items: center;
@@ -542,9 +514,8 @@
 }
 
 /* CLOCK WIDGET DIRECT SAFE FRAME
- * Clock widgets are no longer rendered through .mha-widget-inner-grid. They use
- * one direct frame inset by the global widget padding, then center the selected
- * clock variant inside that safe box.
+ * Clock widgets use one direct frame inset by the global widget padding, then
+ * center the selected clock variant inside that safe box.
  */
 .mha-widget[data-widget-kind="clock"] > .mha-clock-widget-frame {
   position: absolute;

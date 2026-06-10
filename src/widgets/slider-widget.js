@@ -10,7 +10,7 @@ import { createSlider } from "../ui/slider.js";
  * - ui/slider.js = reusable low-level control;
  * - widgets/slider-widget.js = widget-level layout/orientation/HA binding surface.
  *
- * The full SliderWidget no longer uses the legacy inner-grid system. It renders
+ * The full SliderWidget no longer uses the legacy micro-grid system. It renders
  * into a direct frame that respects the widget content inset, like the newer
  * button/weather/clock widgets.
  */

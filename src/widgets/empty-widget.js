@@ -1,16 +1,9 @@
 import { ICONS } from "../components/icons.js";
 import { getWidgetDensity, normalizeWidgetSize, sizeToString } from "../layout/layout-engine.js";
-import { createIcon } from "../ui/icon.js";
-import { createIconSymbol } from "../ui/icon-symbol.js";
-import { createWidgetInnerGrid, createWidgetSliderUnit, createWidgetText, createWidgetUnit } from "./widget-layout.js";
 import { createSliderWidgetContent, isSliderWidget } from "./slider-widget.js";
 import { createClockWidgetContent, isClockWidget } from "./clock-widget.js";
 import { createSimpleButtonWidgetContent, isSimpleButtonWidget } from "./simple-button-widget.js";
 import { createWeatherWidgetContent, isWeatherWidget } from "./weather-widget.js";
-import { createSlider } from "../ui/slider.js";
-import { createToggle } from "../ui/toggle.js";
-import { createPill } from "../ui/pill.js";
-import { createButton } from "../ui/button.js";
 
 export function createEmptyWidget(
   widget,
@@ -66,74 +59,7 @@ export function createEmptyWidget(
     el.style.gridRow = `${position.y} / span ${size.h}`;
   }
 
-  const innerGrid = createWidgetInnerGrid({ widgetW: effectiveWidgetW, widgetH: size.h });
-
-  /*
-   * Temporary test:
-   * Place one reusable icon in the first internal unit of the first widget.
-   */
-  if (widget.id === "slot-a") {
-    innerGrid.append(
-      createWidgetUnit({
-        col: 1,
-        row: 1,
-        className: "mha-widget-corner-icon-unit",
-        children: createIcon({
-          name: "home",
-          category: "home",
-          label: "Test icon",
-          className: "mha-widget-corner-icon-test mha-widget-unit-fit",
-          children: createIconSymbol({
-            name: "home",
-            label: "Test icon",
-          }),
-        }),
-      }),
-
-      createWidgetUnit({
-        col: 2,
-        row: 1,
-        colSpan: 2,
-        justify: "start",
-        className: "mha-widget-demo-title",
-        children: createWidgetText({
-          text: "Salon",
-          className: "mha-widget-demo-title",
-        }),
-      }),
-
-      createWidgetUnit({
-        col: 4,
-        row: 1,
-        className: "mha-widget-demo-pill",
-        children: createPill({ label: "21.5 °C", tone: "info" }),
-      }),
-
-      createWidgetUnit({
-        col: 1,
-        row: 2,
-        className: "mha-widget-demo-toggle",
-        children: createToggle({ label: "Activer", checked: true }),
-      }),
-
-      createWidgetUnit({
-        col: 2,
-        row: 2,
-        className: "mha-widget-demo-button",
-        children: createButton({ label: "Mode", variant: "default" }),
-      }),
-
-      createWidgetSliderUnit({
-        col: 3,
-        row: 2,
-        colSpan: 2,
-        orientation: "horizontal",
-        hasLabel: false,
-        className: "mha-widget-demo-slider",
-        children: createSlider({ value: 68 }),
-      }),
-    );
-  }
+  /* Widget internals are now rendered by each widget component directly. */
 
   if (isSliderWidget(widget) || widget.id === "slot-f" || widget.id === "slot-i") {
     el.append(
@@ -166,10 +92,8 @@ export function createEmptyWidget(
 
   if (isSimpleButtonWidget(widget)) {
     /*
-     * The button is itself a quadrupled .mha-widget-inner-grid.
-     * Keep it as the direct child of the widget shell so the inner-grid
-     * absolute inset and container sizing are calculated from the widget,
-     * not from an older .mha-widget-unit wrapper.
+     * Buttons own their layout directly. Keep them as direct children of the
+     * widget shell so their local frame uses the widget safe inset cleanly.
      */
     el.append(
       createSimpleButtonWidgetContent(widget, {
@@ -189,7 +113,6 @@ export function createEmptyWidget(
     );
   }
 
-  if (innerGrid.childElementCount > 0) el.append(innerGrid);
   const tools = document.createElement("div");
     tools.className = "mha-widget-tools";
 

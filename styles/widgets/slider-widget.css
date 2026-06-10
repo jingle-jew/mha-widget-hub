@@ -412,7 +412,7 @@
 }
 
 /* SLIDER WIDGET DIRECT-FRAME CENTERING FIX
- * SliderWidget no longer uses the legacy inner-grid. Keep the outer frame as
+ * SliderWidget no longer uses the legacy micro-grid. Keep the outer frame as
  * the only absolute/inset layer, then center a normal inner unit inside it.
  * This avoids the old `inset + width/height: 100%` drift that pushed OneUI and
  * Material sliders off-center.

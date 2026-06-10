@@ -3,7 +3,7 @@
  *
  * Clean OneUI-inspired control-pill implementation.
  *
- * This widget does not use the generic .mha-icon shell or the 8x4 inner-grid.
+ * This widget does not use the generic .mha-icon shell or the legacy micro-grid.
  * The icon bubble is local to this component so it can stay circular without
  * fighting the global icon-shape setting.
  */
