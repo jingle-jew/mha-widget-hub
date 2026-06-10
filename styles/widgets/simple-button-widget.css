@@ -472,3 +472,28 @@
     inset 0 1px 0 rgba(255,255,255,.18)
   );
 }
+
+/* OneUI flat-depth policy: ButtonWidget ------------------------------------
+ * Only depth/border/contour is flattened. Background colors and layout stay
+ * controlled by the existing ButtonWidget tokens above.
+ */
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="button"] {
+  --mha-simple-button-icon-shadow: none;
+  --mha-oneui-control-active-icon-bubble-shadow: none;
+}
+
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="button"] .mha-simple-button-icon-bubble {
+  border-color: var(
+    --mha-oneui-control-icon-bubble-flat-border,
+    color-mix(in srgb, var(--mha-text-primary) 9%, transparent)
+  ) !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="button"] > .mha-simple-button-widget,
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="button"] > .mha-simple-button-widget::before,
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="button"] > .mha-simple-button-widget::after {
+  box-shadow: none !important;
+  text-shadow: none !important;
+}

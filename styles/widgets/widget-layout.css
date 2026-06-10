@@ -72,3 +72,32 @@
 .mha-widget-text[data-tone="muted"] {
   color: var(--mha-text-muted);
 }
+
+/* OneUI flat-depth policy ---------------------------------------------------
+ * OneUI should read as soft surfaces, not glass/depth. Keep layout, sizing and
+ * background colors intact; only neutralize widget-level depth, borders and
+ * reflective contours.
+ */
+:host([data-theme-style="oneui"]) .mha-widget {
+  --mha-oneui-flat-widget-border: var(
+    --mha-oneui-widget-flat-border,
+    color-mix(in srgb, var(--mha-text-primary) 10%, transparent)
+  );
+  --mha-widget-shell-shadow: none;
+  --mha-shadow-primary: none;
+  --mha-widget-inner-highlight: transparent;
+
+  border-color: var(--mha-oneui-flat-widget-border) !important;
+  box-shadow: none !important;
+}
+
+:host([data-theme-style="oneui"]) .mha-widget::before,
+:host([data-theme-style="oneui"]) .mha-widget::after {
+  border-color: transparent !important;
+  box-shadow: none !important;
+  opacity: 0 !important;
+}
+
+:host([data-theme-style="oneui"]) .mha-widget * {
+  text-shadow: none;
+}

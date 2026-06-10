@@ -89,3 +89,13 @@
     transition: none;
   }
 }
+
+/* OneUI flat-depth policy: shared Toggle component ------------------------- */
+:host([data-theme-style="oneui"]) .mha-toggle-track,
+:host([data-theme-style="oneui"]) .mha-toggle-thumb {
+  box-shadow: none !important;
+}
+
+:host([data-theme-style="oneui"]) .mha-toggle-input:focus-visible + .mha-toggle-track {
+  box-shadow: none !important;
+}

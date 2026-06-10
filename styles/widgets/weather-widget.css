@@ -681,3 +681,23 @@
 .mha-weather-widget[data-weather-size="4x2"] .mha-weather-widget-summary {
   transform: translateY(calc(var(--mha-weather-corner-safe-offset-y) * -1));
 }
+
+/* OneUI flat-depth policy: WeatherWidget -----------------------------------
+ * Keep the weather gradient/color identity; remove depth-only effects.
+ */
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="weather"],
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="weather"] * {
+  text-shadow: none !important;
+}
+
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="weather"] .mha-weather-current-icon,
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="weather"] .mha-weather-current-icon *,
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="weather"] .mha-weather-icon,
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="weather"] .mha-weather-icon * {
+  filter: none !important;
+}
+
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="weather"] .mha-weather-chip,
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="weather"] .mha-weather-forecast-row {
+  box-shadow: none !important;
+}

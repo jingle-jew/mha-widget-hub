@@ -731,3 +731,14 @@
   display: grid;
   place-items: center;
 }
+
+/* OneUI flat-depth policy: shared Slider component ------------------------- */
+:host([data-theme-style="oneui"]) .mha-slider,
+:host([data-theme-style="oneui"]) .mha-slider-oneui-track,
+:host([data-theme-style="oneui"]) .mha-slider-oneui-fill,
+:host([data-theme-style="oneui"]) .mha-slider-input::-webkit-slider-runnable-track,
+:host([data-theme-style="oneui"]) .mha-slider-input::-webkit-slider-thumb {
+  box-shadow: none !important;
+  filter: none !important;
+  text-shadow: none !important;
+}

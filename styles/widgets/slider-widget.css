@@ -477,3 +477,17 @@
   overflow: hidden;
   border-radius: inherit;
 }
+
+/* OneUI flat-depth policy: SliderWidget ------------------------------------ */
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="slider"],
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="slider"] .mha-slider-widget-frame,
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="slider"] .mha-slider-widget-unit {
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="slider"] .mha-slider-widget-frame::before,
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="slider"] .mha-slider-widget-frame::after {
+  box-shadow: none !important;
+  opacity: 0 !important;
+}

@@ -138,3 +138,17 @@
     animation-duration: 0.01ms !important;
   }
 }
+
+/* OneUI flat-depth policy: ToggleWidget ------------------------------------ */
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="toggle"] {
+  --mha-toggle-widget-icon-shadow: none;
+}
+
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="toggle"] .mha-toggle-widget-icon-bubble {
+  border-color: var(
+    --mha-oneui-control-icon-bubble-flat-border,
+    color-mix(in srgb, var(--mha-text-primary) 9%, transparent)
+  ) !important;
+  box-shadow: none !important;
+  filter: none !important;
+}

@@ -617,3 +617,18 @@
 .mha-clock-widget--screensaver.mha-clock-widget--digital .mha-clock-date {
   font-size: var(--mha-type-clock-screensaver-date-size, 1.05rem);
 }
+
+/* OneUI flat-depth policy: ClockWidget ------------------------------------- */
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="clock"] {
+  --mha-clock-widget-face-shadow: none;
+}
+
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="clock"] .mha-clock-face,
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="clock"] .mha-clock-center,
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="clock"] .mha-clock-hand,
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="clock"] .mha-clock-digital,
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="clock"] .mha-clock-scientific {
+  box-shadow: none !important;
+  filter: none !important;
+  text-shadow: none !important;
+}

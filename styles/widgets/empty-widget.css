@@ -895,3 +895,32 @@
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
+
+/* OneUI flat-depth policy: widget shell ------------------------------------
+ * Final shell-level override, placed after base widget rules so OneUI widgets
+ * keep their surfaces/colors but lose glass-depth contours and shadows.
+ */
+:host([data-theme-style="oneui"]) .mha-widget {
+  --mha-oneui-flat-widget-border: var(
+    --mha-oneui-widget-flat-border,
+    color-mix(in srgb, var(--mha-text-primary) 10%, transparent)
+  );
+  --mha-widget-shell-shadow: none;
+  --mha-shadow-primary: none;
+  --mha-widget-inner-highlight: transparent;
+
+  border-color: var(--mha-oneui-flat-widget-border) !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+:host([data-theme-style="oneui"]) .mha-widget::before,
+:host([data-theme-style="oneui"]) .mha-widget::after {
+  border-color: transparent !important;
+  box-shadow: none !important;
+  opacity: 0 !important;
+}
+
+:host([data-theme-style="oneui"]):host(.is-editing) .mha-widget {
+  box-shadow: none !important;
+}
