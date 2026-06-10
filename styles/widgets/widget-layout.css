@@ -14,15 +14,41 @@
 
   /* Shared control icon-bubble size. Used by compact control widgets such as
    * ButtonWidget and ToggleWidget so their icon bubbles stay visually aligned.
+   * This is intentionally size-stable: widget variants change layout/content,
+   * not the visual size of shared control elements.
    */
-  --mha-control-icon-bubble-size: min(var(--mha-control-icon-size, 999rem), clamp(2.35rem, min(34cqi, 68cqb), 3.25rem));
+  --mha-control-icon-bubble-size: var(--mha-control-icon-size, 2.75rem);
+
+
+  /* Widget typography policy: widget text does not scale with widget w/h.
+   * Variants may change layout/content, but labels/states/values consume stable
+   * role tokens instead of cqi/cqb/vw-driven font-size rules.
+   */
+  --mha-type-widget-label-size: var(--mha-font-size-widget-label, 1rem);
+  --mha-type-widget-state-size: var(--mha-font-size-widget-state, .76rem);
+  --mha-type-widget-caption-size: var(--mha-font-size-widget-caption, .68rem);
+  --mha-type-widget-chip-size: var(--mha-font-size-widget-chip, .76rem);
+  --mha-type-widget-value-size: var(--mha-font-size-widget-value, 1.35rem);
+  --mha-type-widget-display-sm: var(--mha-font-size-widget-display-sm, 1.72rem);
+  --mha-type-widget-display-md: var(--mha-font-size-widget-display-md, 2.35rem);
+  --mha-type-widget-display-lg: var(--mha-font-size-widget-display-lg, 3.2rem);
+
+  --mha-type-control-label-size: var(--mha-type-widget-label-size);
+  --mha-type-control-state-size: var(--mha-type-widget-state-size);
+  --mha-type-weather-temp-size: var(--mha-font-size-weather-temp, var(--mha-type-widget-display-sm));
+  --mha-type-weather-summary-size: var(--mha-font-size-weather-summary, var(--mha-type-widget-label-size));
+  --mha-type-clock-time-size: var(--mha-font-size-clock-time, var(--mha-type-widget-display-lg));
+  --mha-type-clock-date-size: var(--mha-font-size-clock-date, var(--mha-type-widget-state-size));
+  --mha-type-clock-number-size: var(--mha-font-size-clock-number, .62rem);
+  --mha-type-clock-science-time-size: var(--mha-font-size-clock-science-time, 1.1rem);
+  --mha-type-clock-science-data-size: var(--mha-font-size-clock-science-data, .58rem);
 }
 
 @supports not (width: 1cqi) {
   .mha-widget {
     --mha-widget-content-inset: var(--mha-widget-inner-inset, clamp(0.62rem, 1.15vw, 0.95rem));
     --mha-widget-inner-padding: var(--mha-widget-content-inset);
-    --mha-control-icon-bubble-size: min(var(--mha-control-icon-size, 999rem), clamp(2.35rem, 5.2vw, 3.25rem));
+    --mha-control-icon-bubble-size: var(--mha-control-icon-size, 2.75rem);
   }
 }
 

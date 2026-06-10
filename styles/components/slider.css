@@ -33,7 +33,7 @@
 }
 
 .mha-slider-label {
-  font-size: clamp(.72rem, 1.1vw, .85rem);
+  font-size: var(--mha-type-widget-state-size, .76rem);
   color: var(--mha-muted);
   font-weight: 700;
 }

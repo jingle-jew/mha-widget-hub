@@ -27,7 +27,7 @@
 .mha-widget-demo-title {
   color: var(--mha-text-primary);
   font-weight: 780;
-  font-size: clamp(1rem, 2.1vw, 1.45rem);
+  font-size: var(--mha-type-widget-label-size, 1rem);
 }
 
 .mha-widget-demo-pill,

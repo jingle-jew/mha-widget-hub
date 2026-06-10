@@ -19,7 +19,7 @@
   color: var(--mha-pill-color);
   display: inline-grid;
   place-items: center;
-  font-size: clamp(.72rem, 1.1vw, .85rem);
+  font-size: var(--mha-type-widget-state-size, .76rem);
   font-weight: 700;
   white-space: nowrap;
 }

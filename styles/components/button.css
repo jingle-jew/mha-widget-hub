@@ -22,7 +22,7 @@
   color: var(--mha-button-color);
   box-shadow: var(--mha-button-shadow);
   font: inherit;
-  font-size: clamp(.78rem, 1.2vw, .95rem);
+  font-size: var(--mha-type-widget-label-size, 1rem);
   font-weight: 680;
   cursor: pointer;
   display: inline-grid;
