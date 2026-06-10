@@ -1,4 +1,5 @@
-import { createIconSymbol } from "../ui/icon-symbol.js";
+import { createCurrentWeatherIcon } from "./weather-current-icons.js";
+import { createWeatherIcon } from "./weather-icons.js";
 
 const WEATHER_SIZE_VARIANTS = new Set(["4x1", "2x2", "3x2", "4x2"]);
 
@@ -20,8 +21,7 @@ function createText(className, text) {
 }
 
 function createWeatherGlyph(condition = "partly-cloudy") {
-  return createIconSymbol({
-    name: condition,
+  return createCurrentWeatherIcon(condition, {
     label: "Conditions actuelles",
     className: "mha-weather-widget-icon",
   });
@@ -63,8 +63,7 @@ function createForecastStack(forecast = []) {
     row.className = "mha-weather-widget-forecast-row";
     row.append(
       createText("mha-weather-widget-forecast-day", item.day),
-      createIconSymbol({
-        name: item.condition || "partly-cloudy",
+      createWeatherIcon(item.condition || "partly-cloudy", {
         label: item.day,
         className: "mha-weather-widget-forecast-icon",
       }),
