@@ -11,12 +11,18 @@
   --mha-widget-content-inset: var(--mha-widget-inner-inset, clamp(0.62rem, min(6.6cqi, 6.6cqb), 0.95rem));
   --mha-widget-inner-padding: var(--mha-widget-content-inset);
   --mha-widget-content-gap: var(--mha-widget-gap, clamp(0.2rem, min(2.4cqi, 2.4cqb), 0.45rem));
+
+  /* Shared control icon-bubble size. Used by compact control widgets such as
+   * ButtonWidget and ToggleWidget so their icon bubbles stay visually aligned.
+   */
+  --mha-control-icon-bubble-size: min(var(--mha-control-icon-size, 999rem), clamp(2.35rem, min(34cqi, 68cqb), 3.25rem));
 }
 
 @supports not (width: 1cqi) {
   .mha-widget {
     --mha-widget-content-inset: var(--mha-widget-inner-inset, clamp(0.62rem, 1.15vw, 0.95rem));
     --mha-widget-inner-padding: var(--mha-widget-content-inset);
+    --mha-control-icon-bubble-size: min(var(--mha-control-icon-size, 999rem), clamp(2.35rem, 5.2vw, 3.25rem));
   }
 }
 

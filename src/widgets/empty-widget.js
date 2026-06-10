@@ -4,6 +4,7 @@ import { createSliderWidgetContent, isSliderWidget } from "./slider-widget.js";
 import { createClockWidgetContent, isClockWidget } from "./clock-widget.js";
 import { createSimpleButtonWidgetContent, isSimpleButtonWidget } from "./simple-button-widget.js";
 import { createWeatherWidgetContent, isWeatherWidget } from "./weather-widget.js";
+import { createToggleWidgetContent, isToggleWidget } from "./toggle-widget.js";
 
 export function createEmptyWidget(
   widget,
@@ -36,6 +37,10 @@ export function createEmptyWidget(
 
   if (isSimpleButtonWidget(widget)) {
     el.dataset.widgetKind = "button";
+  }
+
+  if (isToggleWidget(widget)) {
+    el.dataset.widgetKind = "toggle";
   }
 
   if (isWeatherWidget(widget)) {
@@ -97,6 +102,16 @@ export function createEmptyWidget(
      */
     el.append(
       createSimpleButtonWidgetContent(widget, {
+        widgetW: effectiveWidgetW,
+        widgetH: size.h,
+      }),
+    );
+  }
+
+
+  if (isToggleWidget(widget)) {
+    el.append(
+      createToggleWidgetContent(widget, {
         widgetW: effectiveWidgetW,
         widgetH: size.h,
       }),

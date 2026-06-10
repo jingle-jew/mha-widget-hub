@@ -8,6 +8,8 @@ export const WIDGET_MANAGER_CATEGORIES = Object.freeze([
   { id:"actions", label:"Actions", description:"Boutons et raccourcis.", icon:"●", widgets:[
     {kind:"button",variant:"simple-button",label:"Bouton simple",size:{w:2,h:1},description:"Icône, libellé et état."},
     {kind:"button",variant:"simple-button",label:"Bouton carré",size:{w:2,h:2},description:"Tuile d’action inspirée Home."},
+    {kind:"toggle",variant:"toggle-widget",label:"Toggle",size:{w:3,h:1},description:"Icône, état et interrupteur."},
+    {kind:"toggle",variant:"toggle-widget",label:"Toggle large",size:{w:4,h:1},description:"Interrupteur avec plus d’espace."},
   ]},
   { id:"lights", label:"Lumières", description:"Contrôles rapides et intensité.", icon:"💡", widgets:[
     {kind:"empty",variant:"light-toggle",label:"Tuile lumière",size:{w:2,h:2},description:"Contrôle simple."},
@@ -65,6 +67,11 @@ function createPreview(item) {
     button.className = "mha-widget-manager-preview-button";
     button.textContent = "⌂ On";
     shape.append(button);
+  } else if (item.kind === "toggle") {
+    const toggle = document.createElement("span");
+    toggle.className = "mha-widget-manager-preview-button";
+    toggle.textContent = "⌂ On  ◉";
+    shape.append(toggle);
   } else if (item.kind === "weather") {
     const weather = document.createElement("span");
     weather.className = "mha-widget-manager-preview-button";

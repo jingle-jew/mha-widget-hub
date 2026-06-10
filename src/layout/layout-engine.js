@@ -277,6 +277,17 @@ export function normalizeSimpleButtonWidgetSize(size = {}) {
 }
 
 
+
+export function normalizeToggleWidgetSize(size = {}) {
+  const normalized = normalizeWidgetSize(size);
+
+  /* Toggle widgets are horizontal controls only: 3x1 or 4x1. */
+  return {
+    w: Math.max(3, Math.min(4, normalized.w)),
+    h: 1,
+  };
+}
+
 export function normalizeWidgetForKind(widget={}) {
   const size=normalizeWidgetSize(widget);
   const kind=widget.kind||widget.type||widget.component;
@@ -285,9 +296,11 @@ export function normalizeWidgetForKind(widget={}) {
   const isSlider=kind==="slider"||kind==="slider-widget"||widget.id==="slot-f"||widget.id==="slot-i";
   const isClock=kind==="clock"||kind==="clock-widget"||(category==="utilities"&&["digital","analog","ios-analog","scientific"].includes(variant));
   const isButton=kind==="button"||kind==="button-widget"||variant==="simple-button";
+  const isToggle=kind==="toggle"||kind==="toggle-widget"||variant==="toggle-widget"||variant==="simple-toggle";
   const isWeather=kind==="weather"||kind==="weather-widget"||variant==="adaptive-weather";
   if(isClock)return normalizeClockWidgetSize();
   if(isButton)return normalizeSimpleButtonWidgetSize(size);
+  if(isToggle)return normalizeToggleWidgetSize(size);
   if(isWeather)return normalizeWeatherWidgetSize(size);
   if(!isSlider)return size;
   return normalizeSliderWidgetSize(size);

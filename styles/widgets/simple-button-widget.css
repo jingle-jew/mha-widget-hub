@@ -20,7 +20,7 @@
   --mha-simple-button-edge-balance: var(--mha-control-edge-balance, clamp(.24rem, 2.35cqi, .5rem));
 
   /* Icon tokens */
-  --mha-simple-button-icon-size: var(--mha-control-icon-size, clamp(2.7rem, min(48cqi, 78cqb), 3.65rem));
+  --mha-simple-button-icon-size: var(--mha-control-icon-bubble-size, min(var(--mha-control-icon-size, 999rem), clamp(2.35rem, min(34cqi, 68cqb), 3.25rem)));
   --mha-simple-button-glyph-size: var(--mha-control-icon-glyph-size, 78%);
   --mha-simple-button-icon-radius: var(--mha-widget-pill-inner-radius, 999px);
   --mha-simple-button-icon-bg: var(--mha-icon-bg, color-mix(in srgb, var(--mha-accent) 72%, var(--mha-surface-secondary)));
@@ -31,8 +31,8 @@
   /* Typography tokens. These prefer future/global control type tokens, then
    * fall back to the existing MHA text/weight contract.
    */
-  --mha-simple-button-label-size: var(--mha-type-control-label-size, var(--mha-font-size-control-label, clamp(1rem, min(8.4cqi, 29cqb), 1.38rem)));
-  --mha-simple-button-state-size: var(--mha-type-control-state-size, var(--mha-font-size-control-state, clamp(.76rem, min(6.4cqi, 22cqb), 1.02rem)));
+  --mha-simple-button-label-size: var(--mha-type-control-label-size, var(--mha-font-size-control-label, 1rem));
+  --mha-simple-button-state-size: var(--mha-type-control-state-size, var(--mha-font-size-control-state, .76rem));
   --mha-simple-button-label-weight: var(--mha-type-control-label-weight, var(--mha-typography-weight, 750));
   --mha-simple-button-state-weight: var(--mha-type-control-state-weight, 650);
   --mha-simple-button-line-height: var(--mha-type-control-line-height, 1.05);
