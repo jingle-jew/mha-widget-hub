@@ -37,9 +37,9 @@ const SCREENSAVER_DELAY_OPTIONS = [
 const CLOCK_VARIANTS = [
   { value: "none", label: "Pas d’horloge" },
   { value: "digital", label: "Numérique" },
+  { value: "digital-weather", label: "Numérique météo" },
   { value: "analog", label: "Analogique" },
   { value: "ios-analog", label: "Analogique iOS" },
-  { value: "scientific", label: "Scientifique" },
 ];
 
 function option(value, label, selectedValue) {

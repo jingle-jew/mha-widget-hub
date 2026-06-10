@@ -3,9 +3,9 @@ export { WIDGET_VARIANTS, getWidgetVariants, getNextWidgetVariantEntries } from 
 export const WIDGET_MANAGER_CATEGORIES = Object.freeze([
   { id:"utilities", label:"Utilitaires", description:"Horloges et infos rapides.", icon:"◷", widgets:[
     {kind:"clock",variant:"digital",label:"Horloge numérique",size:{w:2,h:2},description:"Heure et date."},
+    {kind:"clock",variant:"digital-weather",label:"Numérique météo",size:{w:2,h:2},description:"Heure, date et météo actuelle."},
     {kind:"clock",variant:"analog",label:"Horloge analogique",size:{w:2,h:2},description:"Cadran simple."},
     {kind:"clock",variant:"ios-analog",label:"Analogique iOS",size:{w:2,h:2},description:"Cadran classique iOS."},
-    {kind:"clock",variant:"scientific",label:"Horloge scientifique",size:{w:2,h:2},description:"Temps + indicateurs."},
   ]},
   { id:"actions", label:"Actions", description:"Boutons et raccourcis.", icon:"●", widgets:[
     {kind:"button",variant:"simple-button",label:"Bouton simple",size:{w:2,h:1},description:"Icône, libellé et état."},
@@ -62,7 +62,7 @@ function createPreview(item) {
     const clock = document.createElement("span");
     clock.className = "mha-widget-manager-preview-clock";
     clock.dataset.variant = item.variant || "digital";
-    clock.textContent = item.variant === "analog" || item.variant === "ios-analog" ? "◷" : item.variant === "scientific" ? "T+" : "12:45";
+    clock.textContent = item.variant === "analog" || item.variant === "ios-analog" ? "◷" : item.variant === "digital-weather" ? "12:45  22°" : "12:45";
     shape.append(clock);
   } else if (item.kind === "button") {
     const button = document.createElement("span");

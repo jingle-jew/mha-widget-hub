@@ -3,8 +3,9 @@ import { normalizeWidgetForKind } from "../layout/layout-engine.js";
 export const WIDGET_VARIANTS = Object.freeze({
   clock: Object.freeze([
     Object.freeze({ variant: "digital", label: "Numérique", size: Object.freeze({ w: 2, h: 2 }) }),
+    Object.freeze({ variant: "digital-weather", label: "Numérique météo", size: Object.freeze({ w: 2, h: 2 }) }),
     Object.freeze({ variant: "analog", label: "Analogique", size: Object.freeze({ w: 2, h: 2 }) }),
-    Object.freeze({ variant: "scientific", label: "Scientifique", size: Object.freeze({ w: 2, h: 2 }) }),
+    Object.freeze({ variant: "ios-analog", label: "Analogique iOS", size: Object.freeze({ w: 2, h: 2 }) }),
   ]),
 
   button: Object.freeze([
@@ -21,6 +22,18 @@ export const WIDGET_VARIANTS = Object.freeze({
     Object.freeze({ variant: "adaptive-weather", label: "Prévisions 4×2", size: Object.freeze({ w: 4, h: 2 }) }),
   ]),
 
+  sliderHorizontal: Object.freeze([
+    Object.freeze({ variant: "light-slider-horizontal", label: "Horizontal 2×1", size: Object.freeze({ w: 2, h: 1 }) }),
+    Object.freeze({ variant: "light-slider-horizontal", label: "Horizontal 3×1", size: Object.freeze({ w: 3, h: 1 }) }),
+    Object.freeze({ variant: "light-slider-horizontal", label: "Horizontal 4×1", size: Object.freeze({ w: 4, h: 1 }) }),
+  ]),
+
+  sliderVertical: Object.freeze([
+    Object.freeze({ variant: "light-slider-vertical", label: "Vertical 1×2", size: Object.freeze({ w: 1, h: 2 }) }),
+    Object.freeze({ variant: "light-slider-vertical", label: "Vertical 1×3", size: Object.freeze({ w: 1, h: 3 }) }),
+    Object.freeze({ variant: "light-slider-vertical", label: "Vertical 1×4", size: Object.freeze({ w: 1, h: 4 }) }),
+  ]),
+
   toggle: Object.freeze([
     Object.freeze({ variant: "toggle-widget", label: "Toggle 3×1", size: Object.freeze({ w: 3, h: 1 }) }),
     Object.freeze({ variant: "toggle-widget", label: "Toggle 4×1", size: Object.freeze({ w: 4, h: 1 }) }),
@@ -34,7 +47,7 @@ export function getWidgetVariantKind(widget = {}) {
   if (
     kind === "clock" ||
     kind === "clock-widget" ||
-    ["digital", "analog", "ios-analog", "scientific"].includes(variant)
+    ["digital", "digital-weather", "analog", "ios-analog"].includes(variant)
   ) return "clock";
 
   if (kind === "button" || kind === "button-widget" || variant === "simple-button") return "button";
@@ -46,6 +59,18 @@ export function getWidgetVariantKind(widget = {}) {
     variant === "toggle-widget" ||
     variant === "simple-toggle"
   ) return "toggle";
+
+  if (
+    kind === "slider" ||
+    kind === "slider-widget" ||
+    variant === "light-slider-horizontal" ||
+    variant === "light-slider-vertical" ||
+    variant === "temperature-slider" ||
+    variant === "volume-slider"
+  ) {
+    const size = normalizeWidgetForKind(widget);
+    return size.h > size.w ? "sliderVertical" : "sliderHorizontal";
+  }
 
   return kind;
 }

@@ -41,6 +41,17 @@
   text-transform: capitalize;
 }
 
+.mha-clock-weather {
+  max-inline-size: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mha-clock-widget--digital-weather {
+  gap: clamp(.22rem, .75vw, .42rem);
+}
+
 .mha-clock-face {
   position: relative;
   inline-size: min(100%, 10.5rem);

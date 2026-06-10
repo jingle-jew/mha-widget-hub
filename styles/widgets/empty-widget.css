@@ -924,3 +924,73 @@
 :host([data-theme-style="oneui"]):host(.is-editing) .mha-widget {
   box-shadow: none !important;
 }
+
+/* Edit mode no longer supports freeform drag-resizing. Size changes now go through
+   the variant button only, so legacy resize handles stay hidden if old markup is cached. */
+.mha-resize-handle,
+.mha-widget-resize,
+.mha-widget-resize-handle,
+[data-resize-handle="true"] {
+  display: none !important;
+}
+
+/* NARROW WIDGET EDIT CONTROLS
+ * Widgets that are only 1 internal grid unit wide do not have enough inline
+ * room for the normal horizontal edit toolbar. Stack their edit buttons
+ * vertically while keeping the same order and the same variant/move/close
+ * behavior.
+ */
+:host(.is-editing) .mha-widget[data-widget-w="1"] .mha-widget-tools {
+  flex-direction: column;
+  inline-size: var(--mha-tool-button-size);
+  min-inline-size: var(--mha-tool-button-size);
+  block-size: calc((var(--mha-tool-button-size) * 3) + (var(--mha-tool-gap) * 2));
+  min-block-size: calc((var(--mha-tool-button-size) * 3) + (var(--mha-tool-gap) * 2));
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+:host(.is-editing) .mha-widget[data-widget-w="1"].is-move-target .mha-widget-tools {
+  flex-direction: column;
+}
+
+:host(.is-editing) .mha-widget[data-widget-w="1"].is-move-target .mha-tool-button--move {
+  transform: translateY(calc(var(--mha-tool-button-size) + var(--mha-tool-gap))) rotate(180deg);
+}
+
+/* NARROW WIDGET EDIT TOOLS — ROTATED STACK
+ * Width-1 widgets use the iOS/Android compact vertical chrome order:
+ *   [x]
+ *   [move]
+ *   [variant]
+ * The DOM order stays variant/move/x for behavior, but the visual stack is
+ * reversed so the destructive close affordance sits at the top.
+ */
+:host(.is-editing) .mha-widget[data-widget-w="1"] .mha-widget-tools,
+:host(.is-editing) .mha-widget[data-widget-w="1"].is-move-target .mha-widget-tools {
+  flex-direction: column-reverse;
+}
+
+:host(.is-editing) .mha-widget[data-widget-w="1"].is-move-target .mha-tool-button--move {
+  transform:
+    translateY(calc(-1 * (var(--mha-tool-button-size) + var(--mha-tool-gap))))
+    rotate(-180deg);
+}
+
+/* MOVE MODE — HIDE DIRECTION ARROWS ON 1-UNIT EDGE WIDGETS
+ * Widgets that are only 1 internal unit wide and/or 1 internal unit high do not
+ * have enough surface area for the directional arrow overlay. Keep the edit
+ * toolbar and move-mode button behavior intact, but remove the arrow controls
+ * from those compact widgets.
+ */
+:host(.is-editing) .mha-widget.is-move-target:is([data-widget-w="1"], [data-widget-h="1"]) .mha-widget-move-overlay {
+  background: transparent;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+:host(.is-editing) .mha-widget:is([data-widget-w="1"], [data-widget-h="1"]) .mha-widget-move-arrow {
+  display: none !important;
+  pointer-events: none !important;
+}

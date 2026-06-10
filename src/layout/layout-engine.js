@@ -40,7 +40,20 @@ export function getInternalGridColumnCountFromLogical(logicalColumns=1){
 export function getInternalGridRowCountFromLogical(logicalRows=1){
   return Math.max(1,Math.round(Number(logicalRows)||1))*USER_WIDGET_SIZE_UNIT;
 }
-export const DEFAULT_WIDGETS=Object.freeze([{id:"slot-a",w:4,h:2},{id:"slot-b",w:4,h:2},{id:"slot-c",w:4,h:2},{id:"slot-d",w:2,h:2},{id:"slot-e",w:2,h:2},{id:"slot-f",kind:"slider",w:4,h:1},{id:"slot-g",w:3,h:2},{id:"slot-h",w:3,h:2},{id:"slot-i",kind:"slider",w:1,h:4},{id:"slot-j",w:4,h:3}]);
+/*
+ * Home defaults
+ * -------------
+ * Empty widgets used to act as visual placeholders on the home grid while the
+ * project had very few real widgets. Now that the launcher has usable widget
+ * types, first-launch home content should only contain real widgets.
+ *
+ * The widget manager can still expose unfinished/placeholder catalog entries,
+ * but the home screen itself should not be seeded with empty-widget slots.
+ */
+export const DEFAULT_WIDGETS=Object.freeze([
+  {id:"slot-f",kind:"slider",w:4,h:1},
+  {id:"slot-i",kind:"slider",w:1,h:4},
+]);
 export function normalizeWidgetSize({w=2,h=1}={}){w=Math.round(Number(w));h=Math.round(Number(h));if(!Number.isFinite(w))w=2;if(!Number.isFinite(h))h=1;w=Math.max(1,Math.min(6,w));h=Math.max(1,Math.min(6,h));if(w===1&&h===1)w=2;if(w>4&&h>4){if(w>=h)h=4;else w=4}return{w,h}}
 export function getWidgetDensity({w=2,h=1}={}){({w,h}=normalizeWidgetSize({w,h}));if(h<=1&&w<=2)return"micro";if(h<=1)return"compact";if(h===2)return"standard";if(h===3&&w>=6)return"panel";if(h===3)return"rich";if(h>=4&&w>=6)return"panel";if(h>=4)return"immersive";return"standard"}
 export const sizeToString=({w,h})=>`${w}x${h}`;
@@ -335,7 +348,7 @@ export function normalizeWidgetForKind(widget={}) {
   const variant=widget.variant||"";
   const category=widget.category||"";
   const isSlider=kind==="slider"||kind==="slider-widget"||widget.id==="slot-f"||widget.id==="slot-i";
-  const isClock=kind==="clock"||kind==="clock-widget"||(category==="utilities"&&["digital","analog","ios-analog","scientific"].includes(variant));
+  const isClock=kind==="clock"||kind==="clock-widget"||(category==="utilities"&&["digital","digital-weather","analog","ios-analog"].includes(variant));
   const isButton=kind==="button"||kind==="button-widget"||variant==="simple-button";
   const isToggle=kind==="toggle"||kind==="toggle-widget"||variant==="toggle-widget"||variant==="simple-toggle";
   const isWeather=kind==="weather"||kind==="weather-widget"||variant==="adaptive-weather";

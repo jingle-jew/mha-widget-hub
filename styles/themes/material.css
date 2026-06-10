@@ -27,11 +27,11 @@
   --mha-statusbar-surface: linear-gradient(145deg, rgba(43,41,48,.98), rgba(33,31,38,.96));
   --mha-control-surface: rgba(208,188,255,.14);
   --mha-control-surface-edit: rgba(208,188,255,.22);
-  --mha-bg-base-1: #141218;
-  --mha-bg-base-2: #211f26;
-  --mha-bg-radial-1: rgba(208,188,255,.18);
-  --mha-bg-radial-2: rgba(239,184,200,.12);
-  --mha-bg-radial-3: rgba(181,232,224,.10);
+  --mha-bg-base-1: #25212c;
+  --mha-bg-base-2: #312d38;
+  --mha-bg-radial-1: rgba(208,188,255,.22);
+  --mha-bg-radial-2: rgba(239,184,200,.16);
+  --mha-bg-radial-3: rgba(181,232,224,.14);
   --mha-bg-blob-1: #d0bcff;
   --mha-bg-blob-2: #efb8c8;
   --mha-bg-blob-3: #b5e8e0;
@@ -135,17 +135,17 @@
 }
 
 :host([data-theme-style="material"][data-theme="dark"]) {
-  --mha-base-surface: #141218;
-  --mha-base-surface-alt: #1d1b20;
+  --mha-base-surface: #211e27;
+  --mha-base-surface-alt: #2b2730;
 
   --mha-material-surface-container-low:
-    color-mix(in srgb, var(--mha-accent) 7%, #141218 93%);
+    color-mix(in srgb, var(--mha-accent) 7%, #211e27 93%);
   --mha-material-surface-container:
-    color-mix(in srgb, var(--mha-accent) 11%, #1d1b20 89%);
+    color-mix(in srgb, var(--mha-accent) 11%, #2b2730 89%);
   --mha-material-surface-container-high:
-    color-mix(in srgb, var(--mha-accent) 15%, #211f26 85%);
+    color-mix(in srgb, var(--mha-accent) 15%, #332f3a 85%);
   --mha-material-surface-container-highest:
-    color-mix(in srgb, var(--mha-accent) 20%, #2b2930 80%);
+    color-mix(in srgb, var(--mha-accent) 20%, #3d3944 80%);
 
   --mha-widget-surface: var(--mha-material-surface-container);
   --mha-widget-surface-edit: var(--mha-material-surface-container-high);
@@ -177,20 +177,95 @@
   --mha-dock-border: transparent;
 }
 
-/* MATERIAL YOU TONAL BACKGROUND
- * Material uses a calm tonal background derived from the selected accent.
- * iOS and OneUI keep their wallpaper/blob treatment.
+/* MATERIAL YOU ACCENT BACKGROUND
+ * Material uses the selected accent as the wallpaper color.
+ * Keep a small neutral mix per mode so contrast stays usable while the visual
+ * identity clearly follows the accent palette.
  */
 :host([data-theme-style="material"][data-theme="light"]) {
   --mha-material-tonal-background:
-    color-mix(in srgb, var(--mha-accent) 9%, #fef7ff 91%);
+    color-mix(in srgb, var(--mha-accent) 58%, #fef7ff 42%);
   --mha-material-tonal-background-soft:
-    color-mix(in srgb, var(--mha-accent) 6%, #fffbff 94%);
+    color-mix(in srgb, var(--mha-accent) 46%, #fffbff 54%);
 }
 
 :host([data-theme-style="material"][data-theme="dark"]) {
   --mha-material-tonal-background:
-    color-mix(in srgb, var(--mha-accent) 18%, #141218 82%);
+    color-mix(in srgb, var(--mha-accent) 48%, #15121a 52%);
   --mha-material-tonal-background-soft:
-    color-mix(in srgb, var(--mha-accent) 11%, #1d1b20 89%);
+    color-mix(in srgb, var(--mha-accent) 36%, #24202a 64%);
+}
+
+/* MATERIAL TEXT CONTRAST CONTRACT
+ * Keep the user-facing Material text model simple:
+ * - light mode = black text
+ * - dark mode = white text
+ * Secondary roles stay opacity-based from the same foreground color.
+ */
+:host([data-theme-style="material"][data-theme="light"]) {
+  --mha-text: #000000;
+  --mha-muted: rgba(0,0,0,.62);
+}
+
+:host([data-theme-style="material"][data-theme="dark"]) {
+  --mha-text: #ffffff;
+  --mha-muted: rgba(255,255,255,.70);
+}
+
+/* MATERIAL WEATHER TEXT CONTRAST
+ * Weather has its own scenic gradient contract and defines local white text
+ * tokens. In Material light mode, keep typography aligned with the Material
+ * text contract: black primary text with muted black secondary text.
+ */
+:host([data-theme-style="material"][data-theme="light"]) .mha-widget[data-widget-kind="weather"] {
+  --mha-weather-text: #000000;
+  --mha-weather-muted: rgba(0,0,0,.64);
+  --mha-weather-chip-bg: rgba(255,255,255,.36);
+  --mha-weather-chip-border: rgba(0,0,0,.10);
+}
+
+:host([data-theme-style="material"][data-theme="light"]) .mha-weather-widget-temp {
+  text-shadow: none;
+}
+
+/* MATERIAL YOU COLOR ROLE REBASE -------------------------------------------
+ * Material buttons and widgets should use semantic M3 roles instead of color
+ * swapping. These tokens approximate the Material 3 dynamic color roles from
+ * the selected accent:
+ *   surface/container roles for cards,
+ *   primary + on-primary for high-emphasis active elements,
+ *   primary-container + on-primary-container for selected/tonal controls.
+ */
+:host([data-theme-style="material"][data-theme="light"]) {
+  --mha-material-primary: var(--mha-accent);
+  --mha-material-on-primary: var(--mha-accent-contrast, #ffffff);
+  --mha-material-primary-container:
+    color-mix(in srgb, var(--mha-accent) 26%, #fef7ff 74%);
+  --mha-material-on-primary-container: #000000;
+  --mha-material-surface: color-mix(in srgb, var(--mha-accent) 3%, #fffbff 97%);
+  --mha-material-surface-container-low:
+    color-mix(in srgb, var(--mha-accent) 5%, #fdf8ff 95%);
+  --mha-material-surface-container:
+    color-mix(in srgb, var(--mha-accent) 8%, #f7f2fa 92%);
+  --mha-material-surface-container-high:
+    color-mix(in srgb, var(--mha-accent) 12%, #f1ecf4 88%);
+  --mha-material-on-surface: #000000;
+  --mha-material-on-surface-variant: rgba(0,0,0,.64);
+}
+
+:host([data-theme-style="material"][data-theme="dark"]) {
+  --mha-material-primary: color-mix(in srgb, var(--mha-accent) 82%, #ffffff 18%);
+  --mha-material-on-primary: #ffffff;
+  --mha-material-primary-container:
+    color-mix(in srgb, var(--mha-accent) 34%, #211e27 66%);
+  --mha-material-on-primary-container: #ffffff;
+  --mha-material-surface: color-mix(in srgb, var(--mha-accent) 5%, #15121a 95%);
+  --mha-material-surface-container-low:
+    color-mix(in srgb, var(--mha-accent) 7%, #211e27 93%);
+  --mha-material-surface-container:
+    color-mix(in srgb, var(--mha-accent) 11%, #2b2730 89%);
+  --mha-material-surface-container-high:
+    color-mix(in srgb, var(--mha-accent) 15%, #332f3a 85%);
+  --mha-material-on-surface: #ffffff;
+  --mha-material-on-surface-variant: rgba(255,255,255,.70);
 }

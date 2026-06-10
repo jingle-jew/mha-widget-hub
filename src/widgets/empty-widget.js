@@ -16,7 +16,6 @@ export function createEmptyWidget(
     onToggleMove,
     onMove,
     onRemove,
-    onResizeStart,
     onCycleVariant,
   } = {},
 ) {
@@ -91,6 +90,7 @@ export function createEmptyWidget(
     clockFrame.append(
       createClockWidgetContent({
         variant: widget.variant || "digital",
+        widget,
       }),
     );
     el.append(clockFrame);
@@ -161,17 +161,11 @@ export function createEmptyWidget(
 
     const moveOverlay = createMoveOverlay(widget.id, onMove);
 
-    const handle = document.createElement("button");
-    handle.className = "mha-resize-handle";
-    handle.type = "button";
-    handle.innerHTML = ICONS.resize;
-    handle.addEventListener("pointerdown", (event) => onResizeStart?.(event, widget.id));
-
     const badge = document.createElement("span");
     badge.className = "mha-size-badge";
     badge.textContent = `${sizeToString(size)} · ${density}`;
 
-    el.append(tools, moveOverlay, handle, badge);
+    el.append(tools, moveOverlay, badge);
   
 return el;
 }

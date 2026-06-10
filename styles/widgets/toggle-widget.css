@@ -16,8 +16,8 @@
   --mha-toggle-widget-edge-balance: var(--mha-control-edge-balance, clamp(.14rem, 1.5cqi, .34rem));
 
   --mha-toggle-widget-icon-size: var(--mha-control-icon-bubble-size, min(var(--mha-control-icon-size, 999rem), clamp(2.35rem, min(34cqi, 68cqb), 3.25rem)));
-  --mha-toggle-widget-glyph-size: var(--mha-control-icon-glyph-size, 76%);
-  --mha-toggle-widget-icon-radius: var(--mha-widget-pill-inner-radius, 999px);
+  --mha-toggle-widget-glyph-size: var(--mha-control-icon-glyph-size, 78%);
+  --mha-toggle-widget-icon-radius: var(--mha-control-icon-bubble-radius, var(--mha-widget-pill-inner-radius, 999px));
   --mha-toggle-widget-icon-bg: var(--mha-icon-bg, color-mix(in srgb, var(--mha-accent) 72%, var(--mha-surface-secondary)));
   --mha-toggle-widget-icon-color: var(--mha-icon-color, var(--mha-accent-contrast, #fff));
   --mha-toggle-widget-icon-border: var(--mha-icon-border, color-mix(in srgb, var(--mha-text-primary) 12%, transparent));
@@ -151,4 +151,32 @@
   ) !important;
   box-shadow: none !important;
   filter: none !important;
+}
+
+
+/* Unified widget icon bubble contract --------------------------------------
+ * Match ButtonWidget and the OneUI reference geometry in every theme.
+ */
+.mha-widget[data-widget-kind="toggle"] {
+  --mha-toggle-widget-icon-size: var(--mha-control-icon-bubble-size, 2.75rem);
+  --mha-toggle-widget-glyph-size: var(--mha-control-icon-glyph-size, 78%);
+  --mha-toggle-widget-icon-radius: var(--mha-control-icon-bubble-radius, 999px);
+}
+
+.mha-widget[data-widget-kind="toggle"] .mha-toggle-widget-icon-bubble {
+  inline-size: var(--mha-toggle-widget-icon-size) !important;
+  block-size: var(--mha-toggle-widget-icon-size) !important;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--mha-toggle-widget-icon-radius) !important;
+  display: grid;
+  place-items: center;
+  place-content: center;
+  overflow: hidden !important;
+}
+
+.mha-widget[data-widget-kind="toggle"] .mha-toggle-widget-icon-bubble .mha-icon-symbol,
+.mha-widget[data-widget-kind="toggle"] .mha-toggle-widget-glyph {
+  --mha-icon-symbol-size: var(--mha-toggle-widget-glyph-size) !important;
+  --mha-icon-symbol-color: currentColor;
+  --mha-icon-symbol-opacity: .92;
 }

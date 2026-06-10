@@ -18,6 +18,8 @@
    * not the visual size of shared control elements.
    */
   --mha-control-icon-bubble-size: var(--mha-control-icon-size, 2.75rem);
+  --mha-control-icon-glyph-size: 78%;
+  --mha-control-icon-bubble-radius: 999px;
 
 
   /* Widget typography policy: widget text does not scale with widget w/h.
@@ -49,6 +51,8 @@
     --mha-widget-content-inset: var(--mha-widget-inner-inset, clamp(0.62rem, 1.15vw, 0.95rem));
     --mha-widget-inner-padding: var(--mha-widget-content-inset);
     --mha-control-icon-bubble-size: var(--mha-control-icon-size, 2.75rem);
+    --mha-control-icon-glyph-size: 78%;
+    --mha-control-icon-bubble-radius: 999px;
   }
 }
 

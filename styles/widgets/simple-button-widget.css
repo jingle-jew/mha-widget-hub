@@ -22,7 +22,7 @@
   /* Icon tokens */
   --mha-simple-button-icon-size: var(--mha-control-icon-bubble-size, min(var(--mha-control-icon-size, 999rem), clamp(2.35rem, min(34cqi, 68cqb), 3.25rem)));
   --mha-simple-button-glyph-size: var(--mha-control-icon-glyph-size, 78%);
-  --mha-simple-button-icon-radius: var(--mha-widget-pill-inner-radius, 999px);
+  --mha-simple-button-icon-radius: var(--mha-control-icon-bubble-radius, var(--mha-widget-pill-inner-radius, 999px));
   --mha-simple-button-icon-bg: var(--mha-icon-bg, color-mix(in srgb, var(--mha-accent) 72%, var(--mha-surface-secondary)));
   --mha-simple-button-icon-color: var(--mha-icon-color, var(--mha-accent-contrast, #fff));
   --mha-simple-button-icon-border: var(--mha-icon-border, color-mix(in srgb, var(--mha-text-primary) 12%, transparent));
@@ -496,4 +496,304 @@
 :host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="button"] > .mha-simple-button-widget::after {
   box-shadow: none !important;
   text-shadow: none !important;
+}
+
+
+/* Unified widget icon bubble contract --------------------------------------
+ * Widget icon bubbles and glyphs keep the current OneUI geometry in every
+ * visual theme. Themes may still own color/surface, but not size/shape.
+ */
+.mha-widget[data-widget-kind="button"] {
+  --mha-simple-button-icon-size: var(--mha-control-icon-bubble-size, 2.75rem);
+  --mha-simple-button-glyph-size: var(--mha-control-icon-glyph-size, 78%);
+  --mha-simple-button-icon-radius: var(--mha-control-icon-bubble-radius, 999px);
+}
+
+.mha-widget[data-widget-kind="button"] .mha-simple-button-icon-bubble,
+.mha-widget[data-widget-kind="button"][data-widget-size="2x2"] .mha-simple-button-icon-bubble,
+.mha-simple-button-widget[data-button-layout="square"] .mha-simple-button-icon-bubble {
+  inline-size: var(--mha-simple-button-icon-size) !important;
+  block-size: var(--mha-simple-button-icon-size) !important;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--mha-simple-button-icon-radius) !important;
+  display: grid;
+  place-items: center;
+  place-content: center;
+  overflow: hidden !important;
+  border-width: 1px;
+  border-style: solid;
+}
+
+.mha-widget[data-widget-kind="button"] .mha-simple-button-icon-bubble .mha-icon-symbol,
+.mha-widget[data-widget-kind="button"] .mha-simple-button-glyph,
+.mha-widget[data-widget-kind="button"][data-widget-size="2x2"] .mha-simple-button-icon-bubble .mha-icon-symbol,
+.mha-widget[data-widget-kind="button"][data-widget-size="2x2"] .mha-simple-button-glyph,
+.mha-simple-button-widget[data-button-layout="square"] .mha-simple-button-icon-bubble .mha-icon-symbol,
+.mha-simple-button-widget[data-button-layout="square"] .mha-simple-button-glyph {
+  --mha-icon-symbol-size: var(--mha-simple-button-glyph-size) !important;
+  --mha-icon-symbol-color: currentColor;
+  --mha-icon-symbol-opacity: .92;
+}
+
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="button"][data-widget-size="2x2"] .mha-simple-button-icon-bubble,
+:host([data-theme-style="ios"]) .mha-simple-button-widget[data-button-layout="square"] .mha-simple-button-icon-bubble,
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"][data-widget-size="2x2"] .mha-simple-button-icon-bubble,
+:host([data-theme-style="material"]) .mha-simple-button-widget[data-button-layout="square"] .mha-simple-button-icon-bubble {
+  background: var(--mha-simple-button-icon-bg) !important;
+  color: var(--mha-simple-button-icon-color) !important;
+  border-color: var(--mha-simple-button-icon-border) !important;
+  box-shadow: var(--mha-simple-button-icon-shadow) !important;
+}
+
+/* iOS 2x2 color parity ------------------------------------------------------
+ * A 2x2 iOS button uses the same active/inactive color contract as the 2x1
+ * button. Only the layout remains square.
+ */
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="button"][data-widget-size="2x2"],
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="button"][data-widget-size="2x2"] > .mha-simple-button-widget,
+:host([data-theme-style="ios"]) .mha-simple-button-widget[data-button-layout="square"] {
+  --mha-simple-button-icon-bg: var(--mha-icon-bg, color-mix(in srgb, var(--mha-accent) 58%, rgba(255,255,255,.22)));
+  --mha-simple-button-icon-color: var(--mha-icon-color, rgba(255,255,255,.96));
+  --mha-simple-button-icon-border: var(--mha-icon-border, color-mix(in srgb, var(--mha-text-primary) 12%, transparent));
+  --mha-simple-button-icon-shadow: var(--mha-icon-shadow, inset 0 1px 0 color-mix(in srgb, var(--mha-text-primary) 18%, transparent));
+}
+
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="button"][data-widget-size="2x2"][data-active="true"] {
+  --mha-widget-shell-surface: var(--mha-simple-button-ios-active-bg, var(--mha-ios-control-active-surface, #fff));
+  --mha-widget-shell-border: var(--mha-ios-control-active-border, rgba(255,255,255,.72));
+  --mha-widget-inner-highlight: var(--mha-ios-control-active-highlight, rgba(255,255,255,.42));
+  background: var(--mha-widget-shell-surface) !important;
+  border-color: var(--mha-widget-shell-border) !important;
+  color: var(--mha-simple-button-ios-active-fg, var(--mha-ios-control-active-foreground, rgba(16, 20, 28, .92))) !important;
+}
+
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="button"][data-widget-size="2x2"][data-active="true"] .mha-simple-button-label {
+  color: var(--mha-simple-button-ios-active-fg, var(--mha-ios-control-active-foreground, rgba(16, 20, 28, .92))) !important;
+}
+
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="button"][data-widget-size="2x2"][data-active="true"] .mha-simple-button-state {
+  color: var(--mha-simple-button-ios-active-muted, var(--mha-ios-control-active-muted, rgba(16, 20, 28, .62))) !important;
+}
+
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="button"][data-widget-size="2x2"][data-active="true"] .mha-simple-button-icon-bubble,
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="button"][data-widget-size="2x2"] > .mha-simple-button-widget[data-active="true"] .mha-simple-button-icon-bubble,
+:host([data-theme-style="ios"]) .mha-simple-button-widget[data-button-layout="square"][data-active="true"] .mha-simple-button-icon-bubble {
+  background: var(--mha-simple-button-ios-home-icon-bg, var(--mha-ios-home-active-icon-bg, #ffd60a)) !important;
+  border-color: color-mix(in srgb, var(--mha-simple-button-ios-home-icon-bg, #ffd60a) 72%, rgba(255,255,255,.55)) !important;
+  color: var(--mha-simple-button-ios-home-icon-fg, var(--mha-ios-home-active-icon-fg, rgba(18, 18, 20, .9))) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.38),
+    0 8px 18px color-mix(in srgb, var(--mha-simple-button-ios-home-icon-bg, #ffd60a) 28%, transparent) !important;
+}
+
+/* iOS / Material 2x2 glyph parity -----------------------------------------
+ * Square button tiles keep the same bubble geometry as every other widget
+ * icon. Their glyph must also use the shared OneUI-sized glyph token instead
+ * of the old oversized square-tile glyph.
+ */
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="button"][data-widget-size="2x2"],
+:host([data-theme-style="ios"]) .mha-simple-button-widget[data-button-layout="square"],
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"][data-widget-size="2x2"],
+:host([data-theme-style="material"]) .mha-simple-button-widget[data-button-layout="square"] {
+  --mha-simple-button-glyph-size: var(--mha-control-icon-glyph-size, 78%) !important;
+  --mha-simple-button-square-glyph-size: var(--mha-simple-button-icon-size) !important;
+}
+
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="button"][data-widget-size="2x2"] .mha-simple-button-icon-bubble .mha-icon-symbol,
+:host([data-theme-style="ios"]) .mha-simple-button-widget[data-button-layout="square"] .mha-simple-button-icon-bubble .mha-icon-symbol,
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="button"][data-widget-size="2x2"] .mha-simple-button-glyph,
+:host([data-theme-style="ios"]) .mha-simple-button-widget[data-button-layout="square"] .mha-simple-button-glyph,
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"][data-widget-size="2x2"] .mha-simple-button-icon-bubble .mha-icon-symbol,
+:host([data-theme-style="material"]) .mha-simple-button-widget[data-button-layout="square"] .mha-simple-button-icon-bubble .mha-icon-symbol,
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"][data-widget-size="2x2"] .mha-simple-button-glyph,
+:host([data-theme-style="material"]) .mha-simple-button-widget[data-button-layout="square"] .mha-simple-button-glyph {
+  --mha-icon-symbol-size: var(--mha-control-icon-glyph-size, 78%) !important;
+}
+
+/* Material button color rotation -------------------------------------------
+ * In Material, the button behaves like a small three-color system:
+ *   inactive: widget surface + accent bubble + surface-colored glyph;
+ *   active:   widget takes the bubble color, bubble takes the glyph color,
+ *             glyph takes the widget surface color.
+ * This affects the button widget only; other Material widgets keep their
+ * existing surfaces.
+ */
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"] {
+  --mha-material-button-surface-color: var(--mha-material-surface-container, var(--mha-widget-surface));
+  --mha-material-button-bubble-color: var(--mha-accent);
+  --mha-material-button-glyph-color: var(--mha-base-surface, var(--mha-material-surface-container-low, var(--mha-widget-surface)));
+
+  --mha-simple-button-icon-bg: var(--mha-material-button-bubble-color);
+  --mha-simple-button-icon-color: var(--mha-material-button-glyph-color);
+  --mha-simple-button-icon-border: color-mix(in srgb, var(--mha-material-button-bubble-color) 78%, var(--mha-text-primary) 16%);
+  --mha-simple-button-icon-shadow: none;
+}
+
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"]:not([data-active="true"]) .mha-simple-button-icon-bubble,
+:host([data-theme-style="material"]) .mha-simple-button-widget:not([data-active="true"]) .mha-simple-button-icon-bubble {
+  background: var(--mha-material-button-bubble-color) !important;
+  color: var(--mha-material-button-glyph-color) !important;
+  border-color: color-mix(in srgb, var(--mha-material-button-bubble-color) 78%, var(--mha-text-primary) 16%) !important;
+  box-shadow: none !important;
+}
+
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"]:not([data-active="true"]) .mha-simple-button-icon-bubble .mha-icon-symbol,
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"]:not([data-active="true"]) .mha-simple-button-glyph,
+:host([data-theme-style="material"]) .mha-simple-button-widget:not([data-active="true"]) .mha-simple-button-icon-bubble .mha-icon-symbol,
+:host([data-theme-style="material"]) .mha-simple-button-widget:not([data-active="true"]) .mha-simple-button-glyph {
+  color: var(--mha-material-button-glyph-color) !important;
+  --mha-icon-symbol-color: var(--mha-material-button-glyph-color) !important;
+}
+
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"][data-active="true"] {
+  --mha-simple-button-active-bg: var(--mha-material-button-bubble-color);
+  --mha-widget-shell-surface: var(--mha-material-button-bubble-color);
+  --mha-widget-shell-border: color-mix(in srgb, var(--mha-material-button-bubble-color) 74%, var(--mha-text-primary) 18%);
+  --mha-widget-inner-highlight: color-mix(in srgb, var(--mha-material-button-glyph-color) 20%, transparent);
+
+  background: var(--mha-material-button-bubble-color) !important;
+  border-color: var(--mha-widget-shell-border) !important;
+}
+
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"][data-active="true"] .mha-simple-button-icon-bubble,
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"] > .mha-simple-button-widget[data-active="true"] .mha-simple-button-icon-bubble,
+:host([data-theme-style="material"]) .mha-simple-button-widget[data-active="true"] .mha-simple-button-icon-bubble {
+  background: var(--mha-material-button-glyph-color) !important;
+  color: var(--mha-material-button-surface-color) !important;
+  border-color: color-mix(in srgb, var(--mha-material-button-glyph-color) 78%, var(--mha-text-primary) 12%) !important;
+  box-shadow: none !important;
+}
+
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"][data-active="true"] .mha-simple-button-icon-bubble .mha-icon-symbol,
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"][data-active="true"] .mha-simple-button-glyph,
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"] > .mha-simple-button-widget[data-active="true"] .mha-simple-button-icon-bubble .mha-icon-symbol,
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"] > .mha-simple-button-widget[data-active="true"] .mha-simple-button-glyph,
+:host([data-theme-style="material"]) .mha-simple-button-widget[data-active="true"] .mha-simple-button-icon-bubble .mha-icon-symbol,
+:host([data-theme-style="material"]) .mha-simple-button-widget[data-active="true"] .mha-simple-button-glyph {
+  color: var(--mha-material-button-surface-color) !important;
+  --mha-icon-symbol-color: var(--mha-material-button-surface-color) !important;
+}
+
+/* Material You button role correction --------------------------------------
+ * Override the experimental color rotation with Material 3-style semantic
+ * roles. Inactive buttons are surface containers with a tonal icon bubble.
+ * Active buttons become primary-container tiles, with a primary icon bubble.
+ */
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"] {
+  --mha-material-button-surface-color: var(--mha-material-surface-container, var(--mha-widget-surface));
+  --mha-material-button-content-color: var(--mha-material-on-surface, var(--mha-text-primary));
+  --mha-material-button-muted-color: var(--mha-material-on-surface-variant, var(--mha-text-muted));
+  --mha-material-button-icon-container: var(--mha-material-primary-container, var(--mha-control-surface));
+  --mha-material-button-icon-content: var(--mha-material-on-primary-container, var(--mha-text-primary));
+  --mha-material-button-active-container: var(--mha-material-primary-container, var(--mha-control-surface));
+  --mha-material-button-active-content: var(--mha-material-on-primary-container, var(--mha-text-primary));
+  --mha-material-button-active-icon-container: var(--mha-material-primary, var(--mha-accent));
+  --mha-material-button-active-icon-content: var(--mha-material-on-primary, var(--mha-accent-contrast, #fff));
+
+  --mha-simple-button-active-bg: var(--mha-material-button-active-container);
+  --mha-simple-button-active-border: transparent;
+  --mha-simple-button-active-highlight: transparent;
+  --mha-simple-button-active-shadow: var(--mha-widget-shadow);
+
+  --mha-simple-button-icon-bg: var(--mha-material-button-icon-container);
+  --mha-simple-button-icon-color: var(--mha-material-button-icon-content);
+  --mha-simple-button-icon-border: transparent;
+  --mha-simple-button-icon-shadow: none;
+}
+
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"] .mha-simple-button-label {
+  color: var(--mha-material-button-content-color) !important;
+}
+
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"] .mha-simple-button-state {
+  color: var(--mha-material-button-muted-color) !important;
+}
+
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"] .mha-simple-button-icon-bubble,
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"] .mha-simple-button-glyph {
+  color: var(--mha-material-button-icon-content) !important;
+  --mha-icon-symbol-color: var(--mha-material-button-icon-content) !important;
+}
+
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"] .mha-simple-button-icon-bubble {
+  background: var(--mha-material-button-icon-container) !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"][data-active="true"] {
+  --mha-widget-shell-surface: var(--mha-material-button-active-container);
+  --mha-widget-shell-border: transparent;
+  --mha-widget-inner-highlight: transparent;
+
+  background: var(--mha-material-button-active-container) !important;
+  border-color: transparent !important;
+}
+
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"][data-active="true"] .mha-simple-button-label,
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"][data-active="true"] .mha-simple-button-state {
+  color: var(--mha-material-button-active-content) !important;
+}
+
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"][data-active="true"] .mha-simple-button-icon-bubble {
+  background: var(--mha-material-button-active-icon-container) !important;
+  color: var(--mha-material-button-active-icon-content) !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"][data-active="true"] .mha-simple-button-icon-bubble .mha-icon-symbol,
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"][data-active="true"] .mha-simple-button-glyph {
+  color: var(--mha-material-button-active-icon-content) !important;
+  --mha-icon-symbol-color: var(--mha-material-button-active-icon-content) !important;
+}
+
+/* Material You button bubble swap ------------------------------------------
+ * Keep the Material 3 surface/text contract from the rebase, but swap only
+ * the icon bubble container between inactive and active states.
+ */
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"] {
+  --mha-material-button-icon-container: var(--mha-material-primary, var(--mha-accent));
+  --mha-material-button-icon-content: var(--mha-material-on-primary, var(--mha-accent-contrast, #fff));
+  --mha-material-button-active-icon-container: var(--mha-material-primary-container, var(--mha-control-surface));
+  --mha-material-button-active-icon-content: var(--mha-material-on-primary-container, var(--mha-text-primary));
+}
+
+/* Material button final color contract --------------------------------------
+ * Button widget only:
+ * - inactive icon bubble is white with a grey glyph;
+ * - active icon bubble is the Material accent/purple with on-primary glyph.
+ * The existing Material You widget surface/text mapping stays in place.
+ */
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"] {
+  --mha-material-button-icon-container: #ffffff;
+  --mha-material-button-icon-content: var(--mha-material-button-inactive-glyph, rgba(96, 90, 104, .92));
+  --mha-material-button-active-icon-container: var(--mha-material-primary, var(--mha-accent));
+  --mha-material-button-active-icon-content: var(--mha-material-on-primary, var(--mha-accent-contrast, #ffffff));
+}
+
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"] .mha-simple-button-icon-bubble {
+  background: var(--mha-material-button-icon-container) !important;
+  color: var(--mha-material-button-icon-content) !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"] .mha-simple-button-icon-bubble .mha-icon-symbol,
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"] .mha-simple-button-glyph {
+  color: var(--mha-material-button-icon-content) !important;
+  --mha-icon-symbol-color: var(--mha-material-button-icon-content) !important;
+}
+
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"][data-active="true"] .mha-simple-button-icon-bubble {
+  background: var(--mha-material-button-active-icon-container) !important;
+  color: var(--mha-material-button-active-icon-content) !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"][data-active="true"] .mha-simple-button-icon-bubble .mha-icon-symbol,
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"][data-active="true"] .mha-simple-button-glyph {
+  color: var(--mha-material-button-active-icon-content) !important;
+  --mha-icon-symbol-color: var(--mha-material-button-active-icon-content) !important;
 }
