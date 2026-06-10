@@ -1,4 +1,45 @@
 export const WIDGET_UNIT=Object.freeze({unitsPerLogicalColumn:2});
+
+/*
+ * Public widget-size contract
+ * ---------------------------
+ * User-facing sizes follow the iOS/Android vocabulary:
+ * - 2x2 = one standard square widget
+ * - 4x2 = two standard squares wide
+ * - 2x4 = two standard squares tall
+ * - 4x4 = large square, 2 by 2 standard widget cells
+ *
+ * Internally, the CSS grid keeps twice as many small square units so widgets can
+ * still be placed and resized with the familiar 2x2 / 4x2 / 4x4 names.
+ * In other words:
+ *   1 logical grid cell = 2 internal grid units × 2 internal grid units.
+ */
+export const USER_WIDGET_SIZE_UNIT=2;
+export function widgetSpanToLogicalCellCount(span=USER_WIDGET_SIZE_UNIT){
+  const value=Number(span);
+  if(!Number.isFinite(value)||value<=0)return 1;
+  return Math.max(1,Math.ceil(value/USER_WIDGET_SIZE_UNIT));
+}
+export function widgetSizeToLogicalSize({w=USER_WIDGET_SIZE_UNIT,h=USER_WIDGET_SIZE_UNIT}={}){
+  return {
+    w:widgetSpanToLogicalCellCount(w),
+    h:widgetSpanToLogicalCellCount(h),
+  };
+}
+export function logicalSizeToWidgetSize({w=1,h=1}={}){
+  const logicalW=Math.max(1,Math.round(Number(w)||1));
+  const logicalH=Math.max(1,Math.round(Number(h)||1));
+  return {
+    w:logicalW*USER_WIDGET_SIZE_UNIT,
+    h:logicalH*USER_WIDGET_SIZE_UNIT,
+  };
+}
+export function getInternalGridColumnCountFromLogical(logicalColumns=1){
+  return Math.max(1,Math.round(Number(logicalColumns)||1))*USER_WIDGET_SIZE_UNIT;
+}
+export function getInternalGridRowCountFromLogical(logicalRows=1){
+  return Math.max(1,Math.round(Number(logicalRows)||1))*USER_WIDGET_SIZE_UNIT;
+}
 export const DEFAULT_WIDGETS=Object.freeze([{id:"slot-a",w:4,h:2},{id:"slot-b",w:4,h:2},{id:"slot-c",w:4,h:2},{id:"slot-d",w:2,h:2},{id:"slot-e",w:2,h:2},{id:"slot-f",kind:"slider",w:4,h:1},{id:"slot-g",w:3,h:2},{id:"slot-h",w:3,h:2},{id:"slot-i",kind:"slider",w:1,h:4},{id:"slot-j",w:4,h:3}]);
 export function normalizeWidgetSize({w=2,h=1}={}){w=Math.round(Number(w));h=Math.round(Number(h));if(!Number.isFinite(w))w=2;if(!Number.isFinite(h))h=1;w=Math.max(1,Math.min(6,w));h=Math.max(1,Math.min(6,h));if(w===1&&h===1)w=2;if(w>4&&h>4){if(w>=h)h=4;else w=4}return{w,h}}
 export function getWidgetDensity({w=2,h=1}={}){({w,h}=normalizeWidgetSize({w,h}));if(h<=1&&w<=2)return"micro";if(h<=1)return"compact";if(h===2)return"standard";if(h===3&&w>=6)return"panel";if(h===3)return"rich";if(h>=4&&w>=6)return"panel";if(h>=4)return"immersive";return"standard"}
@@ -77,14 +118,14 @@ function getAdaptiveBounds(layout, isLandscape) {
 
   return isLandscape
     ? {
-        minCell: 92,
-        targetCell: 112,
-        maxCell: 160,
-        minColumns: 5,
-        maxColumns: 6,
+        minCell: 88,
+        targetCell: 106,
+        maxCell: 152,
+        minColumns: 6,
+        maxColumns: 7,
         minRows: 3,
         maxRows: 4,
-        targetFillX: 0.86,
+        targetFillX: 0.9,
         targetFillY: 0.72,
       }
     : {
@@ -209,11 +250,11 @@ export function getLogicalRowCount(host, layout = getEffectiveLayout(host), metr
 }
 
 export function getActiveGridUnits(host, layout = getEffectiveLayout(host), metrics = {}) {
-  return getLogicalColumnCount(host, layout, metrics) * WIDGET_UNIT.unitsPerLogicalColumn;
+  return getInternalGridColumnCountFromLogical(getLogicalColumnCount(host, layout, metrics));
 }
 
 export function getActiveGridRows(host, layout = getEffectiveLayout(host), metrics = {}) {
-  return getLogicalRowCount(host, layout, metrics) * WIDGET_UNIT.unitsPerLogicalColumn;
+  return getInternalGridRowCountFromLogical(getLogicalRowCount(host, layout, metrics));
 }
 
 

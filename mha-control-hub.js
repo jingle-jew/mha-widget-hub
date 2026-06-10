@@ -9,7 +9,7 @@ import {updateStatusTime} from "./src/layout/status-bar.js";
 import {createEmptyWidget} from "./src/widgets/empty-widget.js";
 import { getNextWidgetVariantEntries, getVariantCandidate, sameVariantSize } from "./src/widgets/widget-variants.js";
 import {updateClockWidgets} from "./src/widgets/clock-widget.js";
-import {DEFAULT_WIDGETS,WIDGET_UNIT,getActiveGridRows,getActiveGridUnits,getEffectiveLayout,getLayoutMode,getGridPreset,getWidgetDensity,normalizeWidgetForKind,normalizeWidgetSize,sizeToString} from "./src/layout/layout-engine.js";
+import {DEFAULT_WIDGETS,getActiveGridRows,getActiveGridUnits,getEffectiveLayout,getInternalGridColumnCountFromLogical,getInternalGridRowCountFromLogical,getLayoutMode,getGridPreset,getWidgetDensity,normalizeWidgetForKind,normalizeWidgetSize,sizeToString} from "./src/layout/layout-engine.js";
 import {createScreensaver,normalizeClockVariant,updateScreensaverClock} from "./src/screensaver/screensaver.js";
 // Keeps existing local widget order/sizes after the public naming cleanup.
 
@@ -1676,8 +1676,8 @@ _syncRuntimeLayoutAttrs(){
   const layoutMode=getLayoutMode(this);
   const layout=getEffectiveLayout(this);
   const preset=this._getRuntimeGridPreset();
-  const units=preset.columns*WIDGET_UNIT.unitsPerLogicalColumn;
-  const rows=preset.rows*WIDGET_UNIT.unitsPerLogicalColumn;
+  const units=getInternalGridColumnCountFromLogical(preset.columns);
+  const rows=getInternalGridRowCountFromLogical(preset.rows);
 
   this.dataset.layoutMode=layoutMode;
   this.dataset.layout=layout;
@@ -1691,6 +1691,7 @@ _syncRuntimeLayoutAttrs(){
   this.style.setProperty("--mha-runtime-grid-rows",String(rows));
   this.style.setProperty("--mha-runtime-grid-columns",String(preset.columns));
   this.style.setProperty("--mha-runtime-logical-rows",String(preset.rows));
+  this.style.setProperty("--mha-runtime-logical-columns",String(preset.columns));
   this._lastResponsiveSignature=this._getResponsiveSignature();
 }
 _syncGridRuntimeMetrics(){
@@ -1737,11 +1738,11 @@ _getRuntimeGridPreset(){
 }
 _getRuntimeGridUnits(){
   const preset=this._getRuntimeGridPreset();
-  return preset.columns*WIDGET_UNIT.unitsPerLogicalColumn;
+  return getInternalGridColumnCountFromLogical(preset.columns);
 }
 _getRuntimeGridRows(){
   const preset=this._getRuntimeGridPreset();
-  return preset.rows*WIDGET_UNIT.unitsPerLogicalColumn;
+  return getInternalGridRowCountFromLogical(preset.rows);
 }
 _isMobileLauncherLayout(){return this._getRuntimeLayout?.()==="mobile"||this._layout==="mobile"||this.dataset.layout==="mobile"}
 _syncSquareUnit(){
@@ -1755,8 +1756,8 @@ _syncSquareUnit(){
 
   const layout=getEffectiveLayout(this);
   const preset=getGridPreset(this,layout,metrics);
-  const units=preset.columns*WIDGET_UNIT.unitsPerLogicalColumn;
-  const rows=preset.rows*WIDGET_UNIT.unitsPerLogicalColumn;
+  const units=getInternalGridColumnCountFromLogical(preset.columns);
+  const rows=getInternalGridRowCountFromLogical(preset.rows);
 
   const columnGap=Number.parseFloat(st.columnGap||st.gap||"0")||0;
   const rowGap=Number.parseFloat(st.rowGap||st.gap||"0")||0;
@@ -1803,8 +1804,8 @@ _getGridBounds(){
   return {
     columns:Math.max(1,logicalColumns),
     rows:Math.max(1,logicalRows),
-    units:Math.max(1,logicalColumns*WIDGET_UNIT.unitsPerLogicalColumn),
-    rowUnits:Math.max(1,logicalRows*WIDGET_UNIT.unitsPerLogicalColumn),
+    units:getInternalGridColumnCountFromLogical(logicalColumns),
+    rowUnits:getInternalGridRowCountFromLogical(logicalRows),
   };
 }
 /* LEGACY AUTO-PACK VALIDATOR SCOPE
@@ -1880,23 +1881,32 @@ _findFittingResize(current,requested){
   return normalizeWidgetForKind(current);
 }
 _getGridMetrics(){const grid=this.shadowRoot.querySelector(".mha-grid");if(!grid)return null;const st=getComputedStyle(grid);const col=parseFloat(st.gridTemplateColumns.split(" ")[0])||72;const gap=parseFloat(st.columnGap||st.gap||"0")||0;const row=parseFloat(st.gridAutoRows)||72;return{columnStep:col+gap,rowStep:row+gap}}
+_getInternalGridBoundsFromPreset(preset){
+  const logicalColumns=Number(preset?.columns)||Number(this.dataset.logicalColumns)||1;
+  const logicalRows=Number(preset?.rows)||Number(this.dataset.logicalRows)||1;
+  return {
+    logicalColumns:Math.max(1,logicalColumns),
+    logicalRows:Math.max(1,logicalRows),
+    units:getInternalGridColumnCountFromLogical(logicalColumns),
+    rowUnits:getInternalGridRowCountFromLogical(logicalRows),
+  };
+}
 _clampWidgetSizeToGridBounds(widget,size){
   const layout=getEffectiveLayout(this);
   const preset=this._getRuntimeGridPreset?.()||getGridPreset(this,layout,this._getWidgetAreaMetrics?.()||{});
-  const logicalColumns=Number(preset?.columns)||Number(this.dataset.logicalColumns)||1;
-  const logicalRows=Number(preset?.rows)||Number(this.dataset.logicalRows)||1;
+  const bounds=this._getInternalGridBoundsFromPreset(preset);
 
   const x=Number(widget?.x ?? widget?.col ?? widget?.column ?? 1)||1;
   const y=Number(widget?.y ?? widget?.row ?? 1)||1;
 
-  const maxW=Math.max(1,logicalColumns-x+1);
-  const maxH=Math.max(1,logicalRows-y+1);
-
+  const maxW=Math.max(1,bounds.units-x+1);
+  const maxH=Math.max(1,bounds.rowUnits-y+1);
   /*
    * Resize boundary guard:
-   * A widget can grow only inside the logical grid rectangle. This prevents
-   * resize handles from creating widgets that visually escape .mha-widget-area,
-   * especially at the bottom edge.
+   * User-facing widget names stay iOS/Android-style. A 2x2 widget still spans
+   * 2 internal grid units, which equals 1 logical column by 1 logical row.
+   * Bounds are therefore checked against the internal 2x grid, not the visible
+   * logical cell count.
    */
   return {
     ...size,
@@ -1907,19 +1917,18 @@ _clampWidgetSizeToGridBounds(widget,size){
 _clampWidgetPositionToGridBounds(widget,position){
   const layout=getEffectiveLayout(this);
   const preset=this._getRuntimeGridPreset?.()||getGridPreset(this,layout,this._getWidgetAreaMetrics?.()||{});
-  const logicalColumns=Number(preset?.columns)||Number(this.dataset.logicalColumns)||1;
-  const logicalRows=Number(preset?.rows)||Number(this.dataset.logicalRows)||1;
+  const bounds=this._getInternalGridBoundsFromPreset(preset);
 
   const w=Math.max(1,Number(widget?.w)||1);
   const h=Math.max(1,Number(widget?.h)||1);
-  const maxX=Math.max(1,logicalColumns-w+1);
-  const maxY=Math.max(1,logicalRows-h+1);
+  const maxX=Math.max(1,bounds.units-w+1);
+  const maxY=Math.max(1,bounds.rowUnits-h+1);
 
   /*
    * Drag boundary guard:
-   * A widget can move only inside the logical grid rectangle. This prevents
-   * drag/drop from placing widgets outside .mha-widget-area, especially below
-   * the bottom edge.
+   * Positions are stored on the internal square-unit grid. This keeps the public
+   * vocabulary stable: 2x2 is one logical cell, while x/y still address the
+   * precise internal CSS grid lines.
    */
   return {
     ...position,
@@ -1955,5 +1964,5 @@ _wireDrag(el){
   el.draggable=false;
   el.removeAttribute("draggable");
 }
-render(){syncThemeAttributes(this);const renderId=++this._renderId,layoutMode=getLayoutMode(this),layout=getEffectiveLayout(this),preset=this._getRuntimeGridPreset(),units=preset.columns*WIDGET_UNIT.unitsPerLogicalColumn,rows=preset.rows*WIDGET_UNIT.unitsPerLogicalColumn,cols=preset.columns,logicalRows=preset.rows,themeStyle=THEME_STYLES.has(document.documentElement.dataset.themeStyle)?document.documentElement.dataset.themeStyle:"oneui";const iconShapeSetting=getStoredIconShapeSetting(this);const iconShape=resolveIconShape(themeStyle,iconShapeSetting);this._clearGridScrollListener();this.dataset.themeStyle=themeStyle;this.dataset.iconShapeSetting=iconShapeSetting;this.setAttribute("data-icon-shape-setting",iconShapeSetting);this.dataset.iconShape=iconShape;this.setAttribute("data-icon-shape",iconShape);document.documentElement.dataset.iconShapeSetting=iconShapeSetting;document.documentElement.setAttribute("data-icon-shape-setting",iconShapeSetting);document.documentElement.dataset.iconShape=iconShape;document.documentElement.setAttribute("data-icon-shape",iconShape);const accent=normalizeAccent(themeStyle,localStorage.getItem(`mha-accent-${themeStyle}`)||localStorage.getItem("mha-accent")||"sky");this.dataset.accent=accent;this.setAttribute("data-accent",accent);document.documentElement.dataset.accent=accent;document.documentElement.setAttribute("data-accent",accent);this.dataset.layoutMode=layoutMode;this.dataset.layout=layout;this.dataset.gridDensity=preset.density;this.dataset.gridUnits=String(units);this.dataset.logicalColumns=String(cols);this.dataset.gridRows=String(rows);this.dataset.logicalRows=String(logicalRows);this.classList.toggle("is-editing",this._isEditing);this.style.setProperty("--mha-runtime-grid-units",String(units));this.style.setProperty("--mha-runtime-grid-rows",String(rows));this.shadowRoot.innerHTML=`<link rel="stylesheet" href="./styles/core/tokens.css"><link rel="stylesheet" href="./styles/components/icon.css"><link rel="stylesheet" href="./styles/components/icon-symbol.css"><link rel="stylesheet" href="./styles/components/slider.css"><link rel="stylesheet" href="./styles/components/toggle.css"><link rel="stylesheet" href="./styles/components/pill.css"><link rel="stylesheet" href="./styles/components/button.css"><link rel="stylesheet" href="./styles/themes/ios.css"><link rel="stylesheet" href="./styles/themes/oneui.css"><link rel="stylesheet" href="./styles/themes/material.css"><link rel="stylesheet" href="./styles/themes/accent-palettes.css"><link rel="stylesheet" href="./styles/themes/semantic-tokens.css"><link rel="stylesheet" href="./styles/core/background.css"><link rel="stylesheet" href="./styles/layout/shell.css"><link rel="stylesheet" href="./styles/layout/widget-grid.css"><link rel="stylesheet" href="./styles/layout/status-bar.css"><link rel="stylesheet" href="./styles/layout/dock.css"><link rel="stylesheet" href="./styles/layout/mobile-dock.css"><link rel="stylesheet" href="./styles/layout/floating-controls.css"><link rel="stylesheet" href="./styles/settings/settings-panel.css"><link rel="stylesheet" href="./styles/widget-manager/widget-manager.css"><link rel="stylesheet" href="./styles/themes/light-text-contract.css"><link rel="stylesheet" href="./styles/widgets/widget-layout.css"><link rel="stylesheet" href="./styles/widgets/empty-widget.css"><link rel="stylesheet" href="./styles/widgets/slider-widget.css"><link rel="stylesheet" href="./styles/widgets/clock-widget.css"><link rel="stylesheet" href="./styles/widgets/simple-button-widget.css"><link rel="stylesheet" href="./styles/widgets/toggle-widget.css"><link rel="stylesheet" href="./styles/widgets/weather-widget.css"><link rel="stylesheet" href="./styles/screensaver/screensaver.css">`;const links=[...this.shadowRoot.querySelectorAll('link[rel="stylesheet"]')],{bg,shell,grid}=createShell({layoutMode,layout,logicalColumns:cols,gridUnits:units,onSettings:()=>this._openSettings()});this.shadowRoot.append(bg,shell);const positions=this._getActiveWidgetPositions();this._widgets.forEach(w=>{const el=createEmptyWidget(w,{activeGridUnits:units,isEditing:this._isEditing,isMoveTarget:this._isEditing&&this._activeMoveWidgetId===w.id,position:positions?.[w.id],onToggleMove:id=>this._toggleWidgetMoveMode(id),onMove:(id,direction)=>this._moveWidgetByDirection(id,direction),onRemove:id=>this._removeWidget(id),onResizeStart:(e,id)=>this._startResize(e,id),onCycleVariant:id=>this.cycleVariant(id)});this._wireDrag(el,w);grid.append(el)});this.shadowRoot.append(createScreensaver({isVisible:this._getScreensaverVisible(),showNowBar:this._screensaverNowBar,clockVariant:this._screensaverClockVariant,onClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),onOpenScreensaverSettings:()=>this._openScreensaverSettings(),onWake:()=>this._wakeScreensaver()}));this.shadowRoot.append(createMobileDock({onSettings:()=>this._openSettings()}));this.shadowRoot.append(this._createSettingsPanel());this.shadowRoot.append(this._createWidgetManagerPanel());this.shadowRoot.append(createSettingsPanel(this._getSettingsPanelProps("screensaver")));const edit=document.createElement("button");edit.className="mha-edit-button mha-main-edit-button mha-primary-edit-button";edit.type="button";edit.innerHTML=this._isEditing?ICONS.close:ICONS.edit;edit.onclick=()=>this.toggleEditMode();this.shadowRoot.append(edit);const addWidget=document.createElement("button");addWidget.className="mha-edit-button mha-main-edit-button mha-add-widget-button";addWidget.type="button";addWidget.innerHTML=`<svg viewBox="0 0 24 24"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5Z"/></svg>`;addWidget.setAttribute("aria-label","Ajouter un widget");addWidget.hidden=!this._isEditing;addWidget.onclick=(event)=>{event.preventDefault();event.stopPropagation();this._openWidgetManager()};this.shadowRoot.append(addWidget);this._syncEditModeDom();this._wireDockAutoHide(grid);this._scheduleSquareUnitSync();Promise.all(links.map(link=>link.sheet?Promise.resolve():new Promise(resolve=>{link.addEventListener("load",resolve,{once:true});link.addEventListener("error",resolve,{once:true})}))).then(()=>{if(this._renderId!==renderId)return;const styledUnits=getActiveGridUnits(this);if(styledUnits!==units){this.render();return}this._scheduleSquareUnitSync();this._syncScreensaverVisibilityState();this._markReadyAfterPaint()});updateStatusTime(this.shadowRoot);updateClockWidgets(this.shadowRoot);this._syncWidgetDropSlots();this._markReadyAfterPaint();this._scheduleScreensaverIdleTimer()}}
+render(){syncThemeAttributes(this);const renderId=++this._renderId,layoutMode=getLayoutMode(this),layout=getEffectiveLayout(this),preset=this._getRuntimeGridPreset(),units=getInternalGridColumnCountFromLogical(preset.columns),rows=getInternalGridRowCountFromLogical(preset.rows),cols=preset.columns,logicalRows=preset.rows,themeStyle=THEME_STYLES.has(document.documentElement.dataset.themeStyle)?document.documentElement.dataset.themeStyle:"oneui";const iconShapeSetting=getStoredIconShapeSetting(this);const iconShape=resolveIconShape(themeStyle,iconShapeSetting);this._clearGridScrollListener();this.dataset.themeStyle=themeStyle;this.dataset.iconShapeSetting=iconShapeSetting;this.setAttribute("data-icon-shape-setting",iconShapeSetting);this.dataset.iconShape=iconShape;this.setAttribute("data-icon-shape",iconShape);document.documentElement.dataset.iconShapeSetting=iconShapeSetting;document.documentElement.setAttribute("data-icon-shape-setting",iconShapeSetting);document.documentElement.dataset.iconShape=iconShape;document.documentElement.setAttribute("data-icon-shape",iconShape);const accent=normalizeAccent(themeStyle,localStorage.getItem(`mha-accent-${themeStyle}`)||localStorage.getItem("mha-accent")||"sky");this.dataset.accent=accent;this.setAttribute("data-accent",accent);document.documentElement.dataset.accent=accent;document.documentElement.setAttribute("data-accent",accent);this.dataset.layoutMode=layoutMode;this.dataset.layout=layout;this.dataset.gridDensity=preset.density;this.dataset.gridUnits=String(units);this.dataset.logicalColumns=String(cols);this.dataset.gridRows=String(rows);this.dataset.logicalRows=String(logicalRows);this.classList.toggle("is-editing",this._isEditing);this.style.setProperty("--mha-runtime-grid-units",String(units));this.style.setProperty("--mha-runtime-grid-rows",String(rows));this.style.setProperty("--mha-runtime-logical-columns",String(cols));this.style.setProperty("--mha-runtime-logical-rows",String(logicalRows));this.shadowRoot.innerHTML=`<link rel="stylesheet" href="./styles/core/tokens.css"><link rel="stylesheet" href="./styles/components/icon.css"><link rel="stylesheet" href="./styles/components/icon-symbol.css"><link rel="stylesheet" href="./styles/components/slider.css"><link rel="stylesheet" href="./styles/components/toggle.css"><link rel="stylesheet" href="./styles/components/pill.css"><link rel="stylesheet" href="./styles/components/button.css"><link rel="stylesheet" href="./styles/themes/ios.css"><link rel="stylesheet" href="./styles/themes/oneui.css"><link rel="stylesheet" href="./styles/themes/material.css"><link rel="stylesheet" href="./styles/themes/accent-palettes.css"><link rel="stylesheet" href="./styles/themes/semantic-tokens.css"><link rel="stylesheet" href="./styles/core/background.css"><link rel="stylesheet" href="./styles/layout/shell.css"><link rel="stylesheet" href="./styles/layout/widget-grid.css"><link rel="stylesheet" href="./styles/layout/status-bar.css"><link rel="stylesheet" href="./styles/layout/dock.css"><link rel="stylesheet" href="./styles/layout/mobile-dock.css"><link rel="stylesheet" href="./styles/layout/floating-controls.css"><link rel="stylesheet" href="./styles/settings/settings-panel.css"><link rel="stylesheet" href="./styles/widget-manager/widget-manager.css"><link rel="stylesheet" href="./styles/themes/light-text-contract.css"><link rel="stylesheet" href="./styles/widgets/widget-layout.css"><link rel="stylesheet" href="./styles/widgets/empty-widget.css"><link rel="stylesheet" href="./styles/widgets/slider-widget.css"><link rel="stylesheet" href="./styles/widgets/clock-widget.css"><link rel="stylesheet" href="./styles/widgets/simple-button-widget.css"><link rel="stylesheet" href="./styles/widgets/toggle-widget.css"><link rel="stylesheet" href="./styles/widgets/weather-widget.css"><link rel="stylesheet" href="./styles/screensaver/screensaver.css">`;const links=[...this.shadowRoot.querySelectorAll('link[rel="stylesheet"]')],{bg,shell,grid}=createShell({layoutMode,layout,logicalColumns:cols,gridUnits:units,onSettings:()=>this._openSettings()});this.shadowRoot.append(bg,shell);const positions=this._getActiveWidgetPositions();this._widgets.forEach(w=>{const el=createEmptyWidget(w,{activeGridUnits:units,isEditing:this._isEditing,isMoveTarget:this._isEditing&&this._activeMoveWidgetId===w.id,position:positions?.[w.id],onToggleMove:id=>this._toggleWidgetMoveMode(id),onMove:(id,direction)=>this._moveWidgetByDirection(id,direction),onRemove:id=>this._removeWidget(id),onResizeStart:(e,id)=>this._startResize(e,id),onCycleVariant:id=>this.cycleVariant(id)});this._wireDrag(el,w);grid.append(el)});this.shadowRoot.append(createScreensaver({isVisible:this._getScreensaverVisible(),showNowBar:this._screensaverNowBar,clockVariant:this._screensaverClockVariant,onClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),onOpenScreensaverSettings:()=>this._openScreensaverSettings(),onWake:()=>this._wakeScreensaver()}));this.shadowRoot.append(createMobileDock({onSettings:()=>this._openSettings()}));this.shadowRoot.append(this._createSettingsPanel());this.shadowRoot.append(this._createWidgetManagerPanel());this.shadowRoot.append(createSettingsPanel(this._getSettingsPanelProps("screensaver")));const edit=document.createElement("button");edit.className="mha-edit-button mha-main-edit-button mha-primary-edit-button";edit.type="button";edit.innerHTML=this._isEditing?ICONS.close:ICONS.edit;edit.onclick=()=>this.toggleEditMode();this.shadowRoot.append(edit);const addWidget=document.createElement("button");addWidget.className="mha-edit-button mha-main-edit-button mha-add-widget-button";addWidget.type="button";addWidget.innerHTML=`<svg viewBox="0 0 24 24"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5Z"/></svg>`;addWidget.setAttribute("aria-label","Ajouter un widget");addWidget.hidden=!this._isEditing;addWidget.onclick=(event)=>{event.preventDefault();event.stopPropagation();this._openWidgetManager()};this.shadowRoot.append(addWidget);this._syncEditModeDom();this._wireDockAutoHide(grid);this._scheduleSquareUnitSync();Promise.all(links.map(link=>link.sheet?Promise.resolve():new Promise(resolve=>{link.addEventListener("load",resolve,{once:true});link.addEventListener("error",resolve,{once:true})}))).then(()=>{if(this._renderId!==renderId)return;const styledUnits=getActiveGridUnits(this);if(styledUnits!==units){this.render();return}this._scheduleSquareUnitSync();this._syncScreensaverVisibilityState();this._markReadyAfterPaint()});updateStatusTime(this.shadowRoot);updateClockWidgets(this.shadowRoot);this._syncWidgetDropSlots();this._markReadyAfterPaint();this._scheduleScreensaverIdleTimer()}}
 customElements.define("mha-control-hub",MhaControlHub);

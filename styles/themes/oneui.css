@@ -99,3 +99,10 @@
   --mha-widget-inner-highlight: transparent;
 }
 
+
+/* OneUI: remove the widget shell border entirely instead of only making it transparent.
+ * This avoids the 1px layout/edge thickness while keeping other themes unchanged.
+ */
+:host([data-theme-style="oneui"]) .mha-widget {
+  border: 0;
+}
