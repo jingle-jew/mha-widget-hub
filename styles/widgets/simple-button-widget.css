@@ -432,3 +432,43 @@
   opacity: 0 !important;
   border-color: transparent !important;
 }
+
+/* OneUI icon bubble tone ---------------------------------------------------
+ * In OneUI, the icon bubble is derived from the button surface and pushed
+ * darker so it reads as an inset/control layer instead of an unrelated accent.
+ * Active buttons use the solid active accent surface, then darken the bubble
+ * from that same visual family.
+ */
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="button"]:not([data-active="true"]) {
+  --mha-simple-button-icon-bg: var(
+    --mha-oneui-control-icon-bubble-bg,
+    color-mix(
+      in srgb,
+      var(--mha-widget-control-surface, var(--mha-surface-secondary, var(--mha-surface-primary))) 72%,
+      #000 28%
+    )
+  );
+  --mha-simple-button-icon-border: var(
+    --mha-oneui-control-icon-bubble-border,
+    color-mix(in srgb, var(--mha-simple-button-icon-bg) 74%, var(--mha-text-primary) 14%)
+  );
+}
+
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="button"][data-active="true"] {
+  --mha-simple-button-icon-bg: var(
+    --mha-oneui-control-active-icon-bubble-bg,
+    color-mix(
+      in srgb,
+      var(--mha-simple-button-oneui-active-solid-end, var(--mha-accent)) 72%,
+      #000 28%
+    )
+  );
+  --mha-simple-button-icon-border: var(
+    --mha-oneui-control-active-icon-bubble-border,
+    color-mix(in srgb, var(--mha-simple-button-icon-bg) 78%, #fff 18%)
+  );
+  --mha-simple-button-icon-shadow: var(
+    --mha-oneui-control-active-icon-bubble-shadow,
+    inset 0 1px 0 rgba(255,255,255,.18)
+  );
+}
