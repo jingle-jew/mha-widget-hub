@@ -1,4 +1,5 @@
 import { getAccentOptions, normalizeAccent } from "./accent-palettes.js";
+import { createToggle } from "../ui/toggle.js";
 /*
  * MHA Settings panel.
  *
@@ -67,23 +68,25 @@ function createSelect({ label, value, options, onChange }) {
 }
 
 function createSwitch({ label, checked = false, onChange }) {
-  const field = document.createElement("label");
+  const field = document.createElement("div");
   field.className = "mha-settings-switch";
 
   const text = document.createElement("span");
   text.className = "mha-settings-label";
   text.textContent = label;
 
-  const input = document.createElement("input");
-  input.type = "checkbox";
-  input.checked = Boolean(checked);
+  const toggle = createToggle({
+    label,
+    checked,
+    className: "mha-settings-toggle",
+    onChange: (event) => onChange?.(Boolean(event.currentTarget?.checked)),
+  });
 
-  const visual = document.createElement("span");
-  visual.className = "mha-settings-switch-visual";
+  text.addEventListener("click", () => {
+    toggle.querySelector(".mha-toggle-input")?.click();
+  });
 
-  input.addEventListener("change", () => onChange?.(input.checked));
-
-  field.append(text, input, visual);
+  field.append(text, toggle);
   return field;
 }
 

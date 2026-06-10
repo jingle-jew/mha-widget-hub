@@ -38,6 +38,52 @@
   --mha-simple-button-line-height: var(--mha-type-control-line-height, 1.05);
   --mha-simple-button-label-letter-spacing: var(--mha-type-control-label-tracking, -.025em);
   --mha-simple-button-state-letter-spacing: var(--mha-type-control-state-tracking, -.01em);
+
+  /* Active-state shell tokens. The widget shell uses these when the button is
+   * active, keeping the result accent-derived without turning into a flat
+   * saturated rectangle.
+   */
+  --mha-simple-button-active-bg: var(
+    --mha-control-active-surface,
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--mha-accent) 34%, var(--mha-widget-shell-surface, var(--mha-surface-primary)) 66%),
+      color-mix(in srgb, var(--mha-accent) 18%, var(--mha-widget-shell-surface, var(--mha-surface-primary)) 82%)
+    )
+  );
+  --mha-simple-button-active-border: var(
+    --mha-control-active-border,
+    color-mix(in srgb, var(--mha-accent) 42%, var(--mha-border-primary, transparent) 58%)
+  );
+  --mha-simple-button-active-highlight: var(
+    --mha-control-active-highlight,
+    color-mix(in srgb, var(--mha-accent) 30%, var(--mha-widget-inner-highlight, transparent) 70%)
+  );
+  --mha-simple-button-active-shadow: var(
+    --mha-control-active-shadow,
+    var(--mha-widget-shell-shadow, var(--mha-shadow-primary))
+  );
+}
+
+
+
+.mha-widget[data-widget-kind="button"][data-active="true"] {
+  --mha-widget-shell-surface: var(--mha-simple-button-active-bg);
+  --mha-widget-shell-border: var(--mha-simple-button-active-border);
+  --mha-widget-inner-highlight: var(--mha-simple-button-active-highlight);
+  --mha-widget-shell-shadow: var(--mha-simple-button-active-shadow);
+
+  background: var(--mha-simple-button-active-bg);
+  border-color: var(--mha-simple-button-active-border);
+}
+
+.mha-widget[data-widget-kind="button"][data-active="true"]::before {
+  border-color: var(--mha-simple-button-active-highlight);
+}
+
+:host(.is-editing) .mha-widget[data-widget-kind="button"][data-active="true"] {
+  background: var(--mha-simple-button-active-bg);
+  border-color: color-mix(in srgb, var(--mha-accent) 54%, var(--mha-border-focus, transparent) 46%);
 }
 
 .mha-widget[data-widget-kind="button"] > .mha-simple-button-widget {
@@ -150,6 +196,72 @@
   --mha-simple-button-icon-color: var(--mha-icon-color, rgba(255,255,255,.96));
 }
 
+
+/* Appearance-specific active/inactive state rules -------------------------
+ * OneUI active controls are intentionally opaque.
+ * Material inactive glyphs stay white when inactive.
+ * iOS active controls follow Apple Home: active surface is always white,
+ * with a yellow Apple Home icon bubble.
+ */
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="button"] {
+  --mha-simple-button-active-bg: var(
+    --mha-oneui-control-active-surface,
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--mha-accent) 74%, var(--mha-surface-primary) 26%),
+      color-mix(in srgb, var(--mha-accent) 58%, var(--mha-surface-primary) 42%)
+    )
+  );
+  --mha-simple-button-active-border: var(
+    --mha-oneui-control-active-border,
+    color-mix(in srgb, var(--mha-accent) 72%, var(--mha-border-primary, transparent) 28%)
+  );
+  --mha-simple-button-active-highlight: var(
+    --mha-oneui-control-active-highlight,
+    color-mix(in srgb, #fff 24%, var(--mha-accent) 76%)
+  );
+}
+
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"]:not([data-active="true"]) {
+  --mha-simple-button-icon-color: var(--mha-material-control-glyph-inactive, #fff);
+}
+
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="button"] {
+  --mha-simple-button-ios-active-bg: var(--mha-ios-control-active-surface, #fff);
+  --mha-simple-button-ios-active-fg: var(--mha-ios-control-active-foreground, rgba(16, 20, 28, .92));
+  --mha-simple-button-ios-active-muted: var(--mha-ios-control-active-muted, rgba(16, 20, 28, .62));
+  --mha-simple-button-active-bg: var(--mha-simple-button-ios-active-bg);
+  --mha-simple-button-active-border: var(--mha-ios-control-active-border, rgba(255,255,255,.72));
+  --mha-simple-button-active-highlight: var(--mha-ios-control-active-highlight, rgba(255,255,255,.42));
+}
+
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="button"][data-active="true"] {
+  color: var(--mha-simple-button-ios-active-fg);
+}
+
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="button"][data-active="true"] .mha-simple-button-label,
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="button"][data-active="true"] .mha-simple-button-icon-bubble {
+  color: var(--mha-simple-button-ios-active-fg);
+}
+
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="button"][data-active="true"] .mha-simple-button-state {
+  color: var(--mha-simple-button-ios-active-muted);
+}
+
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="button"] {
+  --mha-simple-button-ios-home-icon-bg: var(--mha-ios-home-active-icon-bg, #ffd60a);
+  --mha-simple-button-ios-home-icon-fg: var(--mha-ios-home-active-icon-fg, rgba(18, 18, 20, .9));
+}
+
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="button"][data-active="true"] .mha-simple-button-icon-bubble {
+  background: var(--mha-simple-button-ios-home-icon-bg);
+  border-color: color-mix(in srgb, var(--mha-simple-button-ios-home-icon-bg) 72%, rgba(255,255,255,.55));
+  color: var(--mha-simple-button-ios-home-icon-fg);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.38),
+    0 8px 18px color-mix(in srgb, var(--mha-simple-button-ios-home-icon-bg) 28%, transparent);
+}
+
 /* Square 2x2 button tile --------------------------------------------------
  * The 2x2 button is a home-control tile, not a stretched pill.
  * OneUI reuses the exact same visual element tokens as the 2x1 pill, but
@@ -244,4 +356,79 @@
   justify-self: start;
   justify-items: start;
   text-align: left;
+}
+
+/* Final appearance-state corrections. Keep these after the square tile rules
+ * so active/inactive colors win over the base iOS/Material tile adapters.
+ */
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"]:not([data-active="true"]) .mha-simple-button-icon-bubble,
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"]:not([data-active="true"]) .mha-simple-button-glyph,
+:host([data-theme-style="material"]) .mha-simple-button-widget:not([data-active="true"]) .mha-simple-button-icon-bubble,
+:host([data-theme-style="material"]) .mha-simple-button-widget:not([data-active="true"]) .mha-simple-button-glyph {
+  color: var(--mha-material-control-glyph-inactive, #fff);
+}
+
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="button"][data-active="true"] .mha-simple-button-icon-bubble,
+:host([data-theme-style="ios"]) .mha-simple-button-widget[data-active="true"] .mha-simple-button-icon-bubble {
+  inline-size: var(--mha-simple-button-icon-size);
+  block-size: var(--mha-simple-button-icon-size);
+  border-radius: var(--mha-simple-button-icon-radius);
+  overflow: hidden;
+  background: var(--mha-simple-button-ios-home-icon-bg, var(--mha-ios-home-active-icon-bg, #ffd60a));
+  border: 1px solid color-mix(in srgb, var(--mha-simple-button-ios-home-icon-bg, #ffd60a) 72%, rgba(255,255,255,.55));
+  color: var(--mha-simple-button-ios-home-icon-fg, var(--mha-ios-home-active-icon-fg, rgba(18, 18, 20, .9)));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.38),
+    0 8px 18px color-mix(in srgb, var(--mha-simple-button-ios-home-icon-bg, #ffd60a) 28%, transparent);
+}
+
+/* Local clickability only: no Home Assistant service calls yet. */
+.mha-widget[data-widget-kind="button"] > .mha-simple-button-widget {
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+.mha-widget[data-widget-kind="button"] > .mha-simple-button-widget:active {
+  transform: scale(.985);
+}
+
+.mha-widget[data-widget-kind="button"] > .mha-simple-button-widget:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--mha-accent) 72%, transparent);
+  outline-offset: 3px;
+}
+
+/* OneUI active opacity hard override ---------------------------------------
+ * Active OneUI buttons should read as solid controls, not glass cards.
+ * Keep this at the end so it wins over the shared widget shell/glass rules.
+ */
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="button"][data-active="true"] {
+  --mha-simple-button-oneui-active-solid-start: var(
+    --mha-oneui-control-active-solid-start,
+    color-mix(in srgb, var(--mha-accent) 72%, #f5f7ff 28%)
+  );
+  --mha-simple-button-oneui-active-solid-end: var(
+    --mha-oneui-control-active-solid-end,
+    color-mix(in srgb, var(--mha-accent) 54%, #dfe7ff 46%)
+  );
+  --mha-widget-shell-surface: linear-gradient(
+    135deg,
+    var(--mha-simple-button-oneui-active-solid-start),
+    var(--mha-simple-button-oneui-active-solid-end)
+  ) !important;
+  --mha-widget-shell-highlight: none !important;
+  --mha-widget-reflection-opacity: 0 !important;
+
+  background: var(--mha-widget-shell-surface) !important;
+  border-color: var(--mha-simple-button-active-border) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="button"][data-active="true"]::after,
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="button"][data-active="true"]::before {
+  background: none !important;
+  opacity: 0 !important;
+  border-color: transparent !important;
 }

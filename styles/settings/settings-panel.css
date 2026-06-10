@@ -134,6 +134,10 @@
   gap: .85rem;
 }
 
+.mha-settings-switch .mha-toggle {
+  justify-self: end;
+}
+
 .mha-settings-label {
   color: var(--mha-text-primary);
   font-size: .9rem;
@@ -151,39 +155,10 @@
   font-size: .86rem;
 }
 
-.mha-settings-switch input {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-}
 
-.mha-settings-switch-visual {
-  inline-size: 3rem;
-  block-size: 1.65rem;
-  border-radius: 999px;
-  background: var(--mha-surface-tertiary);
-  border: 1px solid var(--mha-border-secondary);
-  position: relative;
-}
 
-.mha-settings-switch-visual::after {
-  content: "";
-  position: absolute;
-  inset-block: .18rem;
-  inline-size: calc(1.65rem - .36rem);
-  border-radius: 999px;
-  background: white;
-  transform: translateX(.18rem);
-  transition: transform 180ms cubic-bezier(.2,.8,.2,1);
-}
 
-.mha-settings-switch input:checked + .mha-settings-switch-visual {
-  background: var(--mha-accent);
-}
 
-.mha-settings-switch input:checked + .mha-settings-switch-visual::after {
-  transform: translateX(calc(3rem - 1.65rem + .18rem));
-}
 
 .mha-settings-reset {
   min-block-size: 2.65rem;
@@ -233,9 +208,6 @@
 @media (prefers-reduced-motion: reduce) {
   .mha-settings-scrim,
   .mha-settings-sheet,
-  .mha-settings-switch-visual::after {
-    transition: none;
-  }
 }
 
 
@@ -326,10 +298,6 @@
   color: var(--mha-text-primary);
 }
 
-.mha-settings-switch-visual {
-  background: var(--mha-control-surface, var(--mha-widget-surface));
-  border-color: var(--mha-widget-border);
-}
 
 /* iOS light only: make settings brighter and glassier, while still aligned with widget style. */
 :host([data-theme="light"][data-theme-style="ios"]) .mha-settings-sheet {
@@ -389,8 +357,7 @@
 
 :host([data-theme-style="material"]) .mha-settings-section,
 :host([data-theme-style="material"]) .mha-settings-select,
-:host([data-theme-style="material"]) .mha-settings-reset,
-:host([data-theme-style="material"]) .mha-settings-switch-visual {
+:host([data-theme-style="material"]) .mha-settings-reset {
   background: var(--mha-control-surface, var(--mha-widget-surface));
   border-color: var(--mha-widget-border);
   color: var(--mha-text-primary);

@@ -113,9 +113,6 @@
   flex: 0 0 auto;
 }
 
-.mha-toggle-widget-control .mha-toggle-track {
-  box-shadow: inset 0 1px 1px color-mix(in srgb, black 10%, transparent);
-}
 
 :host([data-theme-style="material"]) .mha-widget[data-widget-kind="toggle"] {
   --mha-toggle-widget-icon-bg: var(--mha-surface-secondary);

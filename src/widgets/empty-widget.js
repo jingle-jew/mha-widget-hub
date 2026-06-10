@@ -2,7 +2,7 @@ import { ICONS } from "../components/icons.js";
 import { getWidgetDensity, normalizeWidgetSize, sizeToString } from "../layout/layout-engine.js";
 import { createSliderWidgetContent, isSliderWidget } from "./slider-widget.js";
 import { createClockWidgetContent, isClockWidget } from "./clock-widget.js";
-import { createSimpleButtonWidgetContent, isSimpleButtonWidget } from "./simple-button-widget.js";
+import { createSimpleButtonWidgetContent, isSimpleButtonWidget, isSimpleButtonWidgetActive } from "./simple-button-widget.js";
 import { createWeatherWidgetContent, isWeatherWidget } from "./weather-widget.js";
 import { createToggleWidgetContent, isToggleWidget } from "./toggle-widget.js";
 
@@ -37,6 +37,7 @@ export function createEmptyWidget(
 
   if (isSimpleButtonWidget(widget)) {
     el.dataset.widgetKind = "button";
+    el.dataset.active = String(isSimpleButtonWidgetActive(widget));
   }
 
   if (isToggleWidget(widget)) {
