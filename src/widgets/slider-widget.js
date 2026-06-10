@@ -42,14 +42,18 @@ export function createSliderWidgetContent(
   const frame = document.createElement("div");
   frame.className = [
     "mha-slider-widget-frame",
-    "mha-slider-widget-unit",
-    `mha-slider-widget-unit--${orientationHint}`,
     className,
   ].filter(Boolean).join(" ");
   frame.dataset.orientationMode = resolvedOrientation;
   frame.dataset.orientationHint = orientationHint;
 
-  frame.append(
+  const unit = document.createElement("div");
+  unit.className = [
+    "mha-slider-widget-unit",
+    `mha-slider-widget-unit--${orientationHint}`,
+  ].join(" ");
+
+  unit.append(
     createSlider({
       value,
       min,
@@ -59,6 +63,8 @@ export function createSliderWidgetContent(
       onInput,
     }),
   );
+
+  frame.append(unit);
 
   return frame;
 }

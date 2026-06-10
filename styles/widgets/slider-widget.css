@@ -410,3 +410,70 @@
 :host([data-theme-style="ios"][data-theme="dark"]) .mha-widget[data-widget-kind="slider"] {
   --mha-ios-slider-widget-surface: var(--mha-slider-widget-surface-inactive);
 }
+
+/* SLIDER WIDGET DIRECT-FRAME CENTERING FIX
+ * SliderWidget no longer uses the legacy inner-grid. Keep the outer frame as
+ * the only absolute/inset layer, then center a normal inner unit inside it.
+ * This avoids the old `inset + width/height: 100%` drift that pushed OneUI and
+ * Material sliders off-center.
+ */
+.mha-widget[data-widget-kind="slider"] > .mha-slider-widget-frame {
+  position: absolute;
+  inset: var(--mha-slider-widget-safe-inset, var(--mha-widget-inner-padding));
+  inline-size: auto !important;
+  width: auto !important;
+  block-size: auto !important;
+  height: auto !important;
+  min-inline-size: 0;
+  min-block-size: 0;
+  display: grid;
+  place-items: center;
+  overflow: visible;
+  pointer-events: auto;
+  container-type: size;
+  grid-template-columns: none !important;
+  grid-template-rows: none !important;
+}
+
+.mha-widget[data-widget-kind="slider"] > .mha-slider-widget-frame > .mha-slider-widget-unit {
+  position: relative;
+  inline-size: 100%;
+  width: 100%;
+  block-size: 100%;
+  height: 100%;
+  min-inline-size: 0;
+  min-block-size: 0;
+  display: grid;
+  place-items: center;
+  place-content: stretch;
+  overflow: visible;
+  grid-column: auto !important;
+  grid-row: auto !important;
+}
+
+.mha-widget[data-widget-kind="slider"] > .mha-slider-widget-frame > .mha-slider-widget-unit > .mha-slider {
+  inline-size: 100%;
+  width: 100%;
+  max-inline-size: 100%;
+  block-size: 100%;
+  height: 100%;
+  max-block-size: 100%;
+  min-inline-size: 0;
+  min-block-size: 0;
+  justify-self: stretch;
+  align-self: stretch;
+  overflow: visible;
+}
+
+/* iOS is intentionally a full-surface fader. It uses the whole widget card and
+ * should not inherit the safe inset used by OneUI/Material centered controls.
+ */
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="slider"] > .mha-slider-widget-frame {
+  inset: 0;
+  inline-size: 100% !important;
+  width: 100% !important;
+  block-size: 100% !important;
+  height: 100% !important;
+  overflow: hidden;
+  border-radius: inherit;
+}
