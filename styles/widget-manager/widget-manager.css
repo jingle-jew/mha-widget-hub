@@ -354,11 +354,6 @@
   border: 1px solid color-mix(in srgb, var(--mha-text) 22%, transparent);
 }
 
-.mha-widget-manager-preview-clock[data-variant="scientific"] {
-  color: var(--mha-accent);
-  letter-spacing: .02em;
-}
-
 /* SEMANTIC WIDGET MANAGER TOKEN CONSUMERS
  * Widget Manager tiles now follow panel/section semantic roles.
  */
@@ -402,13 +397,6 @@
   background: var(--mha-preview-surface-hover);
   border-color: var(--mha-preview-border-hover);
 }
-
-.mha-widget-manager-preview-clock[data-variant="scientific"] {
-  color: var(--mha-accent);
-}
-
-
-
 
 /* Simple button widget previews */
 .mha-widget-manager-preview-button {

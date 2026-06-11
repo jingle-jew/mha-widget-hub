@@ -2,6 +2,10 @@
  * MHA Slider component.
  */
 
+/* ==========================================================================
+   1. Tokens locaux du composant
+   ========================================================================== */
+
 :host {
   --mha-slider-h: clamp(2.2rem, 4vw, 2.8rem);
   --mha-slider-control-height: var(--mha-slider-h);
@@ -10,6 +14,10 @@
   --mha-slider-fill-bg: var(--mha-accent);
   --mha-slider-thumb-bg: var(--mha-text);
 }
+
+/* ==========================================================================
+   2. Structure / layout de base
+   ========================================================================== */
 
 .mha-slider {
   position: relative;
@@ -84,6 +92,10 @@
   box-shadow: 0 4px 12px rgba(0,0,0,.22);
 }
 
+/* ==========================================================================
+   3. Variantes de taille
+   ========================================================================== */
+
 :host([data-theme-style="ios"]) {
   --mha-slider-track-bg: rgba(255,255,255,.16);
   --mha-slider-thumb-bg: rgba(255,255,255,.96);
@@ -96,6 +108,22 @@
   --mha-slider-fill-bg: var(--mha-material-you-symbol-1, #6750a4);
   --mha-slider-thumb-bg: var(--mha-material-you-symbol-1, #6750a4);
 }
+
+/* ==========================================================================
+   4. Etats actif / inactif / disabled
+   ========================================================================== */
+/* The native range control owns interaction states; this file defines the
+ * visual structure and themed surfaces.
+ */
+
+/* ==========================================================================
+   5. Etats d'edition
+   ========================================================================== */
+/* No edit-mode rules in the shared slider component. */
+
+/* ==========================================================================
+   6. Adaptations par theme
+   ========================================================================== */
 
 /* iOS REFERENCE GLASS SLIDER
  * iOS-only slider style inspired by the visual reference:
@@ -587,20 +615,6 @@
   border-color: transparent;
 }
 
-/* EDIT MODE RESIZE HANDLE EXCLUSIVITY
- * The resize corner is reserved for resizing only.
- * It must not start widget drag-and-drop.
- */
-.mha-widget-resize,
-.mha-widget-resize-handle,
-.mha-resize-handle,
-[data-resize-handle="true"] {
-  touch-action: none;
-  user-select: none;
-  -webkit-user-drag: none;
-  cursor: nwse-resize;
-}
-
 /* MATERIAL YOU SLIDER SHAPE #1
  * Material-only slider styling inspired by the reference option #1:
  * - accent-filled active track;
@@ -742,3 +756,7 @@
   filter: none !important;
   text-shadow: none !important;
 }
+
+/* ==========================================================================
+   7. Responsive / viewport
+   ========================================================================== */

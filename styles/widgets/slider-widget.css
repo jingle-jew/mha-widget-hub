@@ -7,9 +7,17 @@
  * only define how a slider behaves when it is the widget itself.
  */
 
+/* ==========================================================================
+   1. Tokens locaux du composant
+   ========================================================================== */
+
 .mha-widget[data-widget-kind="slider"] {
   --mha-slider-widget-padding: var(--mha-widget-inner-padding);
 }
+
+/* ==========================================================================
+   2. Structure / layout de base
+   ========================================================================== */
 
 .mha-slider-widget-frame {
   position: absolute;
@@ -92,6 +100,10 @@
   block-size: 100%;
   height: 100%;
 }
+
+/* ==========================================================================
+   3. Variantes de taille
+   ========================================================================== */
 
 /* SLIDER WIDGET SAFE AREA + CENTERING
  * The full SliderWidget must never crop the slider control.
@@ -354,6 +366,10 @@
   color: inherit;
 }
 
+/* ==========================================================================
+   4. Etats actif / inactif / disabled
+   ========================================================================== */
+
 /* Material SliderWidget must remain tonal/opaque, not glass. */
 :host([data-theme-style="material"]) .mha-widget[data-widget-kind="slider"] {
   background: var(--mha-slider-widget-surface);
@@ -395,6 +411,10 @@
   background: var(--mha-widget-shell-highlight, var(--mha-highlight-subtle, none)) !important;
 }
 
+/* ==========================================================================
+   5. Etats d'edition
+   ========================================================================== */
+
 /* IOS LIGHT SLIDER ACTIVE INACTIVE CONTRAST
  * Keeps inactive fader surface aligned with the widget card, while active fill
  * remains a visible white Liquid Glass surface.
@@ -410,6 +430,10 @@
 :host([data-theme-style="ios"][data-theme="dark"]) .mha-widget[data-widget-kind="slider"] {
   --mha-ios-slider-widget-surface: var(--mha-slider-widget-surface-inactive);
 }
+
+/* ==========================================================================
+   6. Adaptations par theme
+   ========================================================================== */
 
 /* SLIDER WIDGET DIRECT-FRAME CENTERING FIX
  * SliderWidget no longer uses the legacy micro-grid. Keep the outer frame as
@@ -491,3 +515,10 @@
   box-shadow: none !important;
   opacity: 0 !important;
 }
+
+/* ==========================================================================
+   7. Responsive / viewport
+   ========================================================================== */
+/* This widget scales from the widget/container contract rather than explicit
+ * viewport breakpoints in this file.
+ */

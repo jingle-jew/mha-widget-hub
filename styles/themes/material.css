@@ -1,4 +1,5 @@
 :host([data-theme-style="material"]) {
+  /* 1. Base du theme */
   --mha-widget-radius: 20px;
   --mha-widget-inner-radius: 16px;
   --mha-widget-compact-radius: 999px;
@@ -11,48 +12,54 @@
   --mha-status-bar-radius: var(--mha-statusbar-radius);
   --mha-surface-blur: 4px;
   --mha-surface-saturation: 110%;
-}
-
-:host([data-theme-style="material"][data-theme="dark"]) {
-  --mha-text: #e6e1e5;
-  --mha-muted: #cac4d0;
-  --mha-widget-surface: linear-gradient(145deg, rgba(43,41,48,.96), rgba(33,31,38,.94));
-  --mha-widget-surface-edit: linear-gradient(145deg, rgba(57,54,64,.98), rgba(43,41,48,.96));
-  --mha-widget-border: rgba(147,143,153,.22);
-  --mha-widget-border-edit: rgba(208,188,255,.42);
-  --mha-widget-inner-highlight: rgba(208,188,255,.08);
-  --mha-widget-shadow: 0 6px 18px rgba(0,0,0,.28);
-  --mha-dock-surface: linear-gradient(145deg, rgba(43,41,48,.98), rgba(33,31,38,.96));
-  --mha-dock-slot-surface: linear-gradient(145deg, rgba(208,188,255,.24), rgba(239,184,200,.14));
-  --mha-statusbar-surface: linear-gradient(145deg, rgba(43,41,48,.98), rgba(33,31,38,.96));
-  --mha-control-surface: rgba(208,188,255,.14);
-  --mha-control-surface-edit: rgba(208,188,255,.22);
-  --mha-bg-base-1: #25212c;
-  --mha-bg-base-2: #312d38;
-  --mha-bg-radial-1: rgba(208,188,255,.22);
-  --mha-bg-radial-2: rgba(239,184,200,.16);
-  --mha-bg-radial-3: rgba(181,232,224,.14);
-  --mha-bg-blob-1: #d0bcff;
-  --mha-bg-blob-2: #efb8c8;
-  --mha-bg-blob-3: #b5e8e0;
-  --mha-bg-blob-4: #ccc2dc;
-  --mha-bg-blob-opacity: .22;
+  --mha-material-outline: transparent;
+  --mha-material-outline-variant: transparent;
+  --mha-widget-border: transparent;
+  --mha-widget-border-edit: color-mix(in srgb, var(--mha-accent) 36%, transparent);
+  --mha-widget-inner-highlight: transparent;
+  --mha-dock-border: transparent;
+  --mha-material-surface-tint: color-mix(in srgb, var(--mha-accent) 22%, transparent);
 }
 
 :host([data-theme-style="material"][data-theme="light"]) {
-  --mha-text: #1d1b20;
-  --mha-muted: #49454f;
-  --mha-widget-surface: linear-gradient(145deg, rgba(244,239,247,.98), rgba(239,234,242,.96));
-  --mha-widget-surface-edit: linear-gradient(145deg, rgba(234,221,255,.98), rgba(244,239,247,.98));
-  --mha-widget-border: rgba(121,116,126,.18);
-  --mha-widget-border-edit: rgba(103,80,164,.34);
-  --mha-widget-inner-highlight: rgba(255,255,255,.22);
+  /* 2. Mode clair */
+  --mha-base-surface: #fef7ff;
+  --mha-base-surface-alt: #f7f2fa;
+  --mha-material-primary: var(--mha-accent, #6750a4);
+  --mha-material-on-primary: var(--mha-accent-contrast, #ffffff);
+  --mha-material-primary-container:
+    color-mix(in srgb, var(--mha-accent, #6750a4) 26%, #eaddff 74%);
+  --mha-material-on-primary-container: #21005d;
+  --mha-material-secondary-container:
+    color-mix(in srgb, var(--mha-accent) 14%, var(--mha-base-surface) 86%);
+  --mha-material-tertiary-container:
+    color-mix(in srgb, var(--mha-accent) 18%, var(--mha-text) 4%, var(--mha-base-surface) 78%);
+  --mha-material-surface: #fffbfe;
+  --mha-material-surface-container-low:
+    color-mix(in srgb, var(--mha-accent, #6750a4) 5%, #fdf8ff 95%);
+  --mha-material-surface-container:
+    color-mix(in srgb, var(--mha-accent, #6750a4) 8%, #f7f2fa 92%);
+  --mha-material-surface-container-high:
+    color-mix(in srgb, var(--mha-accent, #6750a4) 12%, #f1ecf4 88%);
+  --mha-material-surface-container-highest:
+    color-mix(in srgb, var(--mha-accent) 16%, #ece6f0 84%);
+  --mha-material-on-surface: #1d1b20;
+  --mha-material-on-surface-variant: #49454f;
+  --mha-text: var(--mha-material-on-surface);
+  --mha-muted: color-mix(in srgb, var(--mha-material-on-surface-variant) 82%, transparent);
+  --mha-widget-surface: var(--mha-material-surface-container);
+  --mha-widget-surface-edit: var(--mha-material-surface-container-high);
   --mha-widget-shadow: 0 4px 14px rgba(29,27,32,.10);
-  --mha-dock-surface: linear-gradient(145deg, rgba(244,239,247,.98), rgba(234,221,255,.94));
+  --mha-dock-surface:
+    color-mix(in srgb, var(--mha-accent) 10%, rgba(255,255,255,.82) 90%);
   --mha-dock-slot-surface: linear-gradient(145deg, rgba(234,221,255,.98), rgba(255,216,228,.90));
   --mha-statusbar-surface: linear-gradient(145deg, rgba(244,239,247,.98), rgba(234,221,255,.94));
-  --mha-control-surface: rgba(103,80,164,.12);
+  --mha-control-surface: var(--mha-material-surface-container-high);
   --mha-control-surface-edit: rgba(103,80,164,.20);
+  --mha-material-you-icon-container: var(--mha-material-primary-container);
+  --mha-floating-shadow:
+    0 12px 26px color-mix(in srgb, var(--mha-accent) 9%, transparent),
+    0 2px 10px rgba(29,27,32,.08);
   --mha-bg-base-1: #fffbfe;
   --mha-bg-base-2: #f7f2fa;
   --mha-bg-radial-1: rgba(103,80,164,.14);
@@ -65,123 +72,60 @@
   --mha-bg-blob-opacity: .18;
 }
 
-/* Material dock surface alignment
- * In Material mode, the dock container uses the exact same surface token as
- * widgets. Icon surfaces remain controlled separately in icon.css.
- */
-:host([data-theme-style="material"]) {
-  --mha-dock-surface: var(--mha-widget-surface);
-}
-
-:host([data-theme-style="material"][data-theme="light"]) {
-  --mha-dock-surface: var(--mha-widget-surface);
-}
-
 :host([data-theme-style="material"][data-theme="dark"]) {
-  --mha-dock-surface: var(--mha-widget-surface);
-}
-
-/* MATERIAL YOU DYNAMIC SURFACES
- * Material surfaces are derived from the selected accent.
- *
- * Keep the accent as the source of identity, then derive subtle surface and
- * container roles from it. This gives Material a dynamic-color feel without
- * expanding the global palette or over-saturating the whole UI.
- */
-:host([data-theme-style="material"]) {
-  --mha-material-primary: var(--mha-accent);
-  --mha-material-on-primary: var(--mha-accent-contrast);
-
-  --mha-material-outline:
-    color-mix(in srgb, var(--mha-accent) 24%, var(--mha-text) 10%, transparent);
-  --mha-material-outline-variant:
-    color-mix(in srgb, var(--mha-accent) 18%, var(--mha-text) 8%, transparent);
-
-  --mha-material-primary-container:
-    color-mix(in srgb, var(--mha-accent) 26%, var(--mha-base-surface, var(--mha-widget-surface)) 74%);
-  --mha-material-secondary-container:
-    color-mix(in srgb, var(--mha-accent) 14%, var(--mha-base-surface, var(--mha-widget-surface)) 86%);
-  --mha-material-tertiary-container:
-    color-mix(in srgb, var(--mha-accent) 18%, var(--mha-text) 4%, var(--mha-base-surface, var(--mha-widget-surface)) 78%);
-
-  --mha-material-surface-tint:
-    color-mix(in srgb, var(--mha-accent) 22%, transparent);
-}
-
-:host([data-theme-style="material"][data-theme="light"]) {
-  --mha-base-surface: #fef7ff;
-  --mha-base-surface-alt: #f7f2fa;
-
-  --mha-material-surface-container-low:
-    color-mix(in srgb, var(--mha-accent) 5%, #fdf8ff 95%);
-  --mha-material-surface-container:
-    color-mix(in srgb, var(--mha-accent) 8%, #f7f2fa 92%);
-  --mha-material-surface-container-high:
-    color-mix(in srgb, var(--mha-accent) 12%, #f1ecf4 88%);
-  --mha-material-surface-container-highest:
-    color-mix(in srgb, var(--mha-accent) 16%, #ece6f0 84%);
-
-  --mha-widget-surface: var(--mha-material-surface-container);
-  --mha-widget-surface-edit: var(--mha-material-surface-container-high);
-  --mha-widget-border: var(--mha-material-outline-variant);
-  --mha-control-surface: var(--mha-material-surface-container-high);
-  --mha-dock-surface:
-    color-mix(in srgb, var(--mha-accent) 10%, rgba(255,255,255,.82) 90%);
-
-  --mha-material-you-icon-container: var(--mha-material-primary-container);
-  --mha-floating-shadow:
-    0 12px 26px color-mix(in srgb, var(--mha-accent) 9%, transparent),
-    0 2px 10px rgba(29,27,32,.08);
-}
-
-:host([data-theme-style="material"][data-theme="dark"]) {
+  /* 3. Mode sombre */
   --mha-base-surface: #211e27;
   --mha-base-surface-alt: #2b2730;
-
+  --mha-material-primary:
+    color-mix(in srgb, var(--mha-accent, #d0bcff) 82%, #ffffff 18%);
+  --mha-material-on-primary: #ffffff;
+  --mha-material-primary-container:
+    color-mix(in srgb, var(--mha-accent, #d0bcff) 34%, #4f378b 66%);
+  --mha-material-on-primary-container: #eaddff;
+  --mha-material-secondary-container:
+    color-mix(in srgb, var(--mha-accent) 14%, var(--mha-base-surface) 86%);
+  --mha-material-tertiary-container:
+    color-mix(in srgb, var(--mha-accent) 18%, var(--mha-text) 4%, var(--mha-base-surface) 78%);
+  --mha-material-surface: #141218;
   --mha-material-surface-container-low:
-    color-mix(in srgb, var(--mha-accent) 7%, #211e27 93%);
+    color-mix(in srgb, var(--mha-accent, #d0bcff) 7%, #211f26 93%);
   --mha-material-surface-container:
-    color-mix(in srgb, var(--mha-accent) 11%, #2b2730 89%);
+    color-mix(in srgb, var(--mha-accent, #d0bcff) 11%, #2b2930 89%);
   --mha-material-surface-container-high:
-    color-mix(in srgb, var(--mha-accent) 15%, #332f3a 85%);
+    color-mix(in srgb, var(--mha-accent, #d0bcff) 15%, #36343b 85%);
   --mha-material-surface-container-highest:
     color-mix(in srgb, var(--mha-accent) 20%, #3d3944 80%);
-
+  --mha-material-on-surface: #e6e0e9;
+  --mha-material-on-surface-variant: #cac4d0;
+  --mha-text: var(--mha-material-on-surface);
+  --mha-muted: color-mix(in srgb, var(--mha-material-on-surface-variant) 84%, transparent);
   --mha-widget-surface: var(--mha-material-surface-container);
   --mha-widget-surface-edit: var(--mha-material-surface-container-high);
-  --mha-widget-border: var(--mha-material-outline-variant);
-  --mha-control-surface: var(--mha-material-surface-container-high);
+  --mha-widget-shadow: 0 6px 18px rgba(0,0,0,.28);
   --mha-dock-surface:
     color-mix(in srgb, var(--mha-accent) 14%, rgba(30,28,34,.84) 86%);
-
+  --mha-dock-slot-surface: linear-gradient(145deg, rgba(208,188,255,.24), rgba(239,184,200,.14));
+  --mha-statusbar-surface: linear-gradient(145deg, rgba(43,41,48,.98), rgba(33,31,38,.96));
+  --mha-control-surface: var(--mha-material-surface-container-high);
+  --mha-control-surface-edit: rgba(208,188,255,.22);
   --mha-material-you-icon-container:
     color-mix(in srgb, var(--mha-accent) 28%, #2b2930 72%);
   --mha-floating-shadow:
     0 14px 30px rgba(0,0,0,.34),
     0 0 22px color-mix(in srgb, var(--mha-accent) 8%, transparent);
+  --mha-bg-base-1: #25212c;
+  --mha-bg-base-2: #312d38;
+  --mha-bg-radial-1: rgba(208,188,255,.22);
+  --mha-bg-radial-2: rgba(239,184,200,.16);
+  --mha-bg-radial-3: rgba(181,232,224,.14);
+  --mha-bg-blob-1: #d0bcff;
+  --mha-bg-blob-2: #efb8c8;
+  --mha-bg-blob-3: #b5e8e0;
+  --mha-bg-blob-4: #ccc2dc;
+  --mha-bg-blob-opacity: .22;
 }
 
-/* MATERIAL SURFACE BORDERLESS CONTRACT
- * Material You separates surfaces with container color, tint, and elevation
- * rather than visible outlines.
- *
- * Keep border geometry stable by making surface outline tokens transparent.
- * Interactive states/focus can still provide their own explicit feedback.
- */
-:host([data-theme-style="material"]) {
-  --mha-material-outline: transparent;
-  --mha-material-outline-variant: transparent;
-  --mha-widget-border: transparent;
-  --mha-widget-border-edit: color-mix(in srgb, var(--mha-accent) 36%, transparent);
-  --mha-widget-inner-highlight: transparent;
-  --mha-dock-border: transparent;
-}
-
-/* MATERIAL YOU ACCENT BACKGROUND
- * Material uses the selected accent as the wallpaper color.
- * Keep a small neutral mix per mode so contrast stays usable while the visual
- * identity clearly follows the accent palette.
- */
+/* 4. Background */
 :host([data-theme-style="material"][data-theme="light"]) {
   --mha-material-tonal-background:
     color-mix(in srgb, var(--mha-accent) 58%, #fef7ff 42%);
@@ -196,76 +140,4 @@
     color-mix(in srgb, var(--mha-accent) 36%, #24202a 64%);
 }
 
-/* MATERIAL TEXT CONTRAST CONTRACT
- * Keep the user-facing Material text model simple:
- * - light mode = black text
- * - dark mode = white text
- * Secondary roles stay opacity-based from the same foreground color.
- */
-:host([data-theme-style="material"][data-theme="light"]) {
-  --mha-text: #000000;
-  --mha-muted: rgba(0,0,0,.62);
-}
-
-:host([data-theme-style="material"][data-theme="dark"]) {
-  --mha-text: #ffffff;
-  --mha-muted: rgba(255,255,255,.70);
-}
-
-/* MATERIAL WEATHER TEXT CONTRAST
- * Weather has its own scenic gradient contract and defines local white text
- * tokens. In Material light mode, keep typography aligned with the Material
- * text contract: black primary text with muted black secondary text.
- */
-:host([data-theme-style="material"][data-theme="light"]) .mha-widget[data-widget-kind="weather"] {
-  --mha-weather-text: #000000;
-  --mha-weather-muted: rgba(0,0,0,.64);
-  --mha-weather-chip-bg: rgba(255,255,255,.36);
-  --mha-weather-chip-border: rgba(0,0,0,.10);
-}
-
-:host([data-theme-style="material"][data-theme="light"]) .mha-weather-widget-temp {
-  text-shadow: none;
-}
-
-/* MATERIAL YOU COLOR ROLE REBASE -------------------------------------------
- * Material buttons and widgets should use semantic M3 roles instead of color
- * swapping. These tokens approximate the Material 3 dynamic color roles from
- * the selected accent:
- *   surface/container roles for cards,
- *   primary + on-primary for high-emphasis active elements,
- *   primary-container + on-primary-container for selected/tonal controls.
- */
-:host([data-theme-style="material"][data-theme="light"]) {
-  --mha-material-primary: var(--mha-accent);
-  --mha-material-on-primary: var(--mha-accent-contrast, #ffffff);
-  --mha-material-primary-container:
-    color-mix(in srgb, var(--mha-accent) 26%, #fef7ff 74%);
-  --mha-material-on-primary-container: #000000;
-  --mha-material-surface: color-mix(in srgb, var(--mha-accent) 3%, #fffbff 97%);
-  --mha-material-surface-container-low:
-    color-mix(in srgb, var(--mha-accent) 5%, #fdf8ff 95%);
-  --mha-material-surface-container:
-    color-mix(in srgb, var(--mha-accent) 8%, #f7f2fa 92%);
-  --mha-material-surface-container-high:
-    color-mix(in srgb, var(--mha-accent) 12%, #f1ecf4 88%);
-  --mha-material-on-surface: #000000;
-  --mha-material-on-surface-variant: rgba(0,0,0,.64);
-}
-
-:host([data-theme-style="material"][data-theme="dark"]) {
-  --mha-material-primary: color-mix(in srgb, var(--mha-accent) 82%, #ffffff 18%);
-  --mha-material-on-primary: #ffffff;
-  --mha-material-primary-container:
-    color-mix(in srgb, var(--mha-accent) 34%, #211e27 66%);
-  --mha-material-on-primary-container: #ffffff;
-  --mha-material-surface: color-mix(in srgb, var(--mha-accent) 5%, #15121a 95%);
-  --mha-material-surface-container-low:
-    color-mix(in srgb, var(--mha-accent) 7%, #211e27 93%);
-  --mha-material-surface-container:
-    color-mix(in srgb, var(--mha-accent) 11%, #2b2730 89%);
-  --mha-material-surface-container-high:
-    color-mix(in srgb, var(--mha-accent) 15%, #332f3a 85%);
-  --mha-material-on-surface: #ffffff;
-  --mha-material-on-surface-variant: rgba(255,255,255,.70);
-}
+/* 5. Exceptions strictement necessaires */

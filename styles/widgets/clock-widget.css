@@ -4,6 +4,15 @@
  * 2x2 dashboard clock variants and screensaver clock presentation.
  */
 
+/* ==========================================================================
+   1. Tokens locaux du composant
+   ========================================================================== */
+/* ClockWidget mainly consumes shared semantic clock tokens. */
+
+/* ==========================================================================
+   2. Structure / layout de base
+   ========================================================================== */
+
 .mha-widget[data-widget-kind="clock"] {
   overflow: hidden;
 }
@@ -159,26 +168,11 @@
 }
 
 .mha-clock-number {
-  text-align: center;
-}
-
-.mha-clock-number {
   --mha-clock-number-upright: calc(-1 * var(--mha-clock-number-rotation));
-}
-
-.mha-clock-number {
+  text-align: center;
   line-height: 1;
-}
-
-.mha-clock-number {
   writing-mode: horizontal-tb;
-}
-
-.mha-clock-number {
   text-shadow: 0 1px 0 rgba(255,255,255,.22);
-}
-
-.mha-clock-number {
   transform: rotate(var(--mha-clock-number-rotation));
 }
 
@@ -193,69 +187,6 @@
 .mha-clock-widget--ios-analog .mha-clock-center-dot {
   background: #ff453a;
   box-shadow: 0 0 0 .2rem rgba(255,69,58,.15);
-}
-
-/* Scientific: instrument-like, dense ticks and data readout. */
-.mha-clock-widget--scientific {
-  grid-template-columns: 1fr;
-  grid-template-rows: minmax(0, 1fr) auto;
-  gap: .35rem;
-}
-
-.mha-clock-science-scope {
-  inline-size: 100%;
-  block-size: 100%;
-  min-block-size: 0;
-  display: grid;
-  place-items: center;
-}
-
-.mha-clock-widget--scientific .mha-clock-face {
-  inline-size: min(100%, 7rem);
-  block-size: min(100%, 7rem);
-  background:
-    radial-gradient(circle at 50% 50%, transparent 0 34%, color-mix(in srgb, var(--mha-accent) 10%, transparent) 35% 36%, transparent 37%),
-    color-mix(in srgb, var(--mha-clock-widget-text) 5%, transparent);
-  border-color: color-mix(in srgb, var(--mha-accent) 36%, var(--mha-clock-widget-face-border));
-}
-
-.mha-clock-widget--scientific .mha-clock-mark::before {
-  inset-block-start: .18rem;
-  block-size: .28rem;
-  background: color-mix(in srgb, var(--mha-accent) 42%, transparent);
-}
-
-.mha-clock-science-data {
-  inline-size: 100%;
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: .12rem .5rem;
-  align-items: baseline;
-  color: var(--mha-clock-widget-muted);
-  font-size: var(--mha-type-clock-science-data-size, .58rem);
-  font-weight: 760;
-  letter-spacing: .02em;
-  font-variant-numeric: tabular-nums;
-}
-
-.mha-clock-widget--scientific .mha-clock-time {
-  grid-column: 1;
-  font-size: var(--mha-type-clock-science-time-size, 1.1rem);
-  letter-spacing: -.03em;
-  color: var(--mha-clock-widget-text);
-}
-
-.mha-clock-seconds {
-  grid-column: 2;
-  color: var(--mha-clock-widget-second-hand);
-  font-size: var(--mha-type-clock-science-data-size, .58rem);
-}
-
-.mha-clock-science-day,
-.mha-clock-science-epoch,
-.mha-clock-science-beat {
-  grid-column: 1 / -1;
-  white-space: nowrap;
 }
 
 /* Screensaver usage: reuse variants without widget tile/background. */
@@ -285,15 +216,6 @@
   block-size: clamp(8.25rem, 22vw, 14rem);
 }
 
-.mha-clock-widget--screensaver.mha-clock-widget--scientific {
-  inline-size: min(28rem, 88vw);
-}
-
-.mha-clock-widget--screensaver.mha-clock-widget--scientific .mha-clock-face {
-  inline-size: clamp(7.25rem, 18vw, 11rem);
-  block-size: clamp(7.25rem, 18vw, 11rem);
-}
-
 :host([data-theme-style="material"]) .mha-clock-face {
   background: var(--mha-material-surface-container, var(--mha-clock-widget-face-surface));
   border-color: transparent;
@@ -304,6 +226,10 @@
     linear-gradient(145deg, rgba(255,255,255,.16), rgba(255,255,255,.06)),
     color-mix(in srgb, var(--mha-clock-widget-face-surface) 78%, transparent);
 }
+
+/* ==========================================================================
+   3. Variantes de taille
+   ========================================================================== */
 
 
 .mha-clock-number-inner {
@@ -320,8 +246,7 @@
   color: var(--mha-clock-widget-text);
 }
 
-.mha-clock-date,
-.mha-clock-science-data {
+.mha-clock-date {
   color: var(--mha-clock-widget-muted);
 }
 
@@ -398,31 +323,6 @@
   block-size: min(84cqi, 84cqb);
 }
 
-/* Scientific variant: allow the face/data stack to use widget density, not a
- * fixed rem cap. This prevents the tiny/shrunken look inside a 2x2 card.
- */
-.mha-clock-widget--scientific {
-  gap: clamp(.18rem, 3cqb, .48rem);
-  padding: min(4cqi, 4cqb);
-}
-
-.mha-clock-widget--scientific .mha-clock-face {
-  inline-size: min(62cqi, 54cqb);
-  block-size: min(62cqi, 54cqb);
-}
-
-.mha-clock-science-time {
-  font-size: var(--mha-type-clock-science-time-size, 1.1rem);
-  line-height: .95;
-  white-space: nowrap;
-}
-
-.mha-clock-science-data,
-.mha-clock-science-label {
-  font-size: var(--mha-type-clock-science-data-size, .58rem);
-  line-height: 1.05;
-}
-
 /* Fallback for browsers without container query units.
  * This keeps clocks usable without reverting to viewport-based sizing.
  */
@@ -441,10 +341,6 @@
     block-size: min(82%, 82%);
   }
 
-  .mha-clock-widget--scientific .mha-clock-face {
-    inline-size: 56%;
-    block-size: 56%;
-  }
 }
 
 /* CLOCK WIDGET CONTENT FILL
@@ -494,23 +390,6 @@
   block-size: min(var(--mha-clock-ios-face-fill, 90cqi), var(--mha-clock-ios-face-fill-block, 90cqb));
 }
 
-.mha-widget[data-widget-kind="clock"] .mha-clock-widget--scientific {
-  padding: 0;
-  grid-template-rows: minmax(0, 1fr) auto;
-  gap: clamp(.14rem, 2.5cqb, .42rem);
-  align-content: stretch;
-}
-
-.mha-widget[data-widget-kind="clock"] .mha-clock-science-scope {
-  min-block-size: 0;
-  overflow: hidden;
-}
-
-.mha-widget[data-widget-kind="clock"] .mha-clock-widget--scientific .mha-clock-face {
-  inline-size: min(var(--mha-clock-science-face-fill, 88cqi), var(--mha-clock-science-face-fill-block, 62cqb));
-  block-size: min(var(--mha-clock-science-face-fill, 88cqi), var(--mha-clock-science-face-fill-block, 62cqb));
-}
-
 @supports not (width: 1cqi) {
   .mha-widget[data-widget-kind="clock"] .mha-clock-face,
   .mha-widget[data-widget-kind="clock"] .mha-clock-widget--ios-analog .mha-clock-face {
@@ -518,10 +397,6 @@
     block-size: 88%;
   }
 
-  .mha-widget[data-widget-kind="clock"] .mha-clock-widget--scientific .mha-clock-face {
-    inline-size: 62%;
-    block-size: 62%;
-  }
 }
 
 /* CLOCK WIDGET DIRECT SAFE FRAME
@@ -570,29 +445,6 @@
   block-size: min(var(--mha-clock-ios-face-fill, 86cqi), var(--mha-clock-ios-face-fill-block, 86cqb));
 }
 
-.mha-widget[data-widget-kind="clock"] > .mha-clock-widget-frame > .mha-clock-widget--scientific {
-  padding: 0;
-  grid-template-rows: minmax(0, 1fr) auto;
-  align-content: center;
-  justify-content: center;
-  justify-items: center;
-  gap: clamp(.12rem, 2cqb, .34rem);
-}
-
-.mha-widget[data-widget-kind="clock"] > .mha-clock-widget-frame .mha-clock-science-scope {
-  inline-size: 100%;
-  block-size: 100%;
-  min-block-size: 0;
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-}
-
-.mha-widget[data-widget-kind="clock"] > .mha-clock-widget-frame .mha-clock-widget--scientific .mha-clock-face {
-  inline-size: min(var(--mha-clock-science-face-fill, 82cqi), var(--mha-clock-science-face-fill-block, 58cqb));
-  block-size: min(var(--mha-clock-science-face-fill, 82cqi), var(--mha-clock-science-face-fill-block, 58cqb));
-}
-
 
 /* MHA TYPOGRAPHY POLICY OVERRIDE
  * Clock text consumes stable role tokens. The clock layout/cadran may still size
@@ -610,16 +462,19 @@
   font-size: var(--mha-type-clock-number-size, .62rem);
 }
 
-.mha-widget[data-widget-kind="clock"] .mha-clock-science-time,
-.mha-widget[data-widget-kind="clock"] .mha-clock-widget--scientific .mha-clock-time {
-  font-size: var(--mha-type-clock-science-time-size, 1.1rem);
-}
+/* ==========================================================================
+   4. Etats actif / inactif / disabled
+   ========================================================================== */
+/* ClockWidget has no active/inactive visual contract. */
 
-.mha-widget[data-widget-kind="clock"] .mha-clock-science-data,
-.mha-widget[data-widget-kind="clock"] .mha-clock-science-label,
-.mha-widget[data-widget-kind="clock"] .mha-clock-seconds {
-  font-size: var(--mha-type-clock-science-data-size, .58rem);
-}
+/* ==========================================================================
+   5. Etats d'edition
+   ========================================================================== */
+/* No edit-mode-specific rules in this file. */
+
+/* ==========================================================================
+   6. Adaptations par theme
+   ========================================================================== */
 
 .mha-clock-widget--screensaver.mha-clock-widget--digital .mha-clock-time {
   font-size: var(--mha-type-clock-screensaver-time-size, 6rem);
@@ -637,8 +492,7 @@
 :host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="clock"] .mha-clock-face,
 :host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="clock"] .mha-clock-center,
 :host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="clock"] .mha-clock-hand,
-:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="clock"] .mha-clock-digital,
-:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="clock"] .mha-clock-scientific {
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="clock"] .mha-clock-digital {
   box-shadow: none !important;
   filter: none !important;
   text-shadow: none !important;
@@ -707,11 +561,6 @@
   inset: .24rem;
 }
 
-/* Keep the dense scientific variant intentionally more instrument-like. */
-.mha-clock-widget--scientific {
-  place-items: center;
-}
-
 /* iOS analog cleanup:
  * The iOS-style face already has numbers. Hide only the hour guide marks that
  * sit behind those numbers. The regular analog variant keeps its guides.
@@ -745,3 +594,9 @@
   --mha-clock-digital-glyph-safe-end: .12em;
 }
 
+/* ==========================================================================
+   7. Responsive / viewport
+   ========================================================================== */
+/* The clock responds through container sizing and @supports fallbacks rather
+ * than dedicated viewport media queries.
+ */

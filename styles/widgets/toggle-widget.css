@@ -6,6 +6,10 @@
  * middle; the icon/text group stays left and the switch remains right-aligned.
  */
 
+/* ==========================================================================
+   1. Tokens locaux du composant
+   ========================================================================== */
+
 .mha-widget[data-widget-kind="toggle"] {
   container-type: size;
   container-name: mha-toggle-widget;
@@ -30,6 +34,10 @@
   --mha-toggle-widget-line-height: var(--mha-type-control-line-height, 1.05);
   --mha-toggle-widget-stack-gap: var(--mha-type-stack-gap, clamp(.22rem, 2.1cqb, .48rem));
 }
+
+/* ==========================================================================
+   2. Structure / layout de base
+   ========================================================================== */
 
 .mha-widget[data-widget-kind="toggle"] > .mha-toggle-widget {
   position: absolute;
@@ -113,6 +121,25 @@
   flex: 0 0 auto;
 }
 
+/* ==========================================================================
+   3. Variantes de taille
+   ========================================================================== */
+/* ToggleWidget keeps one shared geometry contract across supported sizes. */
+
+/* ==========================================================================
+   4. Etats actif / inactif / disabled
+   ========================================================================== */
+/* The embedded toggle control owns the on/off state visuals. */
+
+/* ==========================================================================
+   5. Etats d'edition
+   ========================================================================== */
+/* No widget-specific edit-mode overrides in this file. */
+
+/* ==========================================================================
+   6. Adaptations par theme
+   ========================================================================== */
+
 
 :host([data-theme-style="material"]) .mha-widget[data-widget-kind="toggle"] {
   --mha-toggle-widget-icon-bg: var(--mha-surface-secondary);
@@ -129,14 +156,6 @@
 :host([data-theme-style="ios"]) .mha-widget[data-widget-kind="toggle"] {
   --mha-toggle-widget-icon-bg: var(--mha-icon-bg, color-mix(in srgb, var(--mha-accent) 58%, rgba(255,255,255,.22)));
   --mha-toggle-widget-icon-color: var(--mha-icon-color, rgba(255,255,255,.96));
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .mha-toggle-widget,
-  .mha-toggle-widget * {
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
-  }
 }
 
 /* OneUI flat-depth policy: ToggleWidget ------------------------------------ */
@@ -179,4 +198,16 @@
   --mha-icon-symbol-size: var(--mha-toggle-widget-glyph-size) !important;
   --mha-icon-symbol-color: currentColor;
   --mha-icon-symbol-opacity: .92;
+}
+
+/* ==========================================================================
+   7. Responsive / viewport
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .mha-toggle-widget,
+  .mha-toggle-widget * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }

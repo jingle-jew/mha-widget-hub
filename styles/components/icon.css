@@ -6,6 +6,10 @@
  * - .mha-icon-symbol = pictogram / sign
  */
 
+/* ==========================================================================
+   1. Tokens locaux du composant
+   ========================================================================== */
+
 :host {
   /*
    * Base adaptive icon sizing.
@@ -38,6 +42,10 @@
   --mha-icon-border: var(--mha-widget-border, rgba(255,255,255,.16));
   --mha-icon-shadow: none;
 }
+
+/* ==========================================================================
+   2. Structure / layout de base
+   ========================================================================== */
 
 /*
  * Global icon shape preference.
@@ -72,8 +80,10 @@
   box-shadow: var(--mha-icon-shadow);
   transition: border-radius var(--mha-motion-duration-fast, 160ms) var(--mha-motion-easing, ease);
 }
-
-
+/* ==========================================================================
+   3. Variantes de taille
+   ========================================================================== */
+/* Size remains token-driven in this component. */
 
 /*
  * Squircle reference:
@@ -92,6 +102,20 @@
  *
  * Icon shape remains independent and is still controlled by data-icon-shape.
  */
+
+/* ==========================================================================
+   4. Etats actif / inactif / disabled
+   ========================================================================== */
+/* Icon states are expressed through token swaps from parent contexts. */
+
+/* ==========================================================================
+   5. Etats d'edition
+   ========================================================================== */
+/* No edit-mode rules in the standalone icon component. */
+
+/* ==========================================================================
+   6. Adaptations par theme
+   ========================================================================== */
 
 /* Shared defaults / fallbacks */
 :host {
@@ -244,6 +268,11 @@
 :host([data-theme-style="material"][data-theme="dark"]) .mha-icon {
   background: var(--mha-material-you-icon-container, rgba(74, 68, 88, .96));
 }
+
+/* ==========================================================================
+   7. Responsive / viewport
+   ========================================================================== */
+/* This component stays token-driven and does not need viewport breakpoints. */
 
 /* ICON SYMBOL CENTERING CONTRACT
  * Every .mha-icon is a centering container.

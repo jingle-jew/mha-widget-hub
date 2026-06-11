@@ -5,7 +5,12 @@
  * - 3x2: the 2x2 current-weather section plus humidity/wind chips on the right.
  * - 4x2: the 2x2 current-weather section plus forecast stack on the right.
  */
+
+/* ==========================================================================
+   1. Tokens locaux du composant
+   ========================================================================== */
 .mha-widget[data-widget-kind="weather"] {
+  /* 1. Layout structurel + tokens de base */
   --mha-weather-bg-start: color-mix(in srgb, #8fd3ff 88%, white 12%);
   --mha-weather-bg-end: color-mix(in srgb, #357dff 76%, #7ee8ff 24%);
   --mha-weather-bg-glow: rgba(255,255,255,.34);
@@ -15,6 +20,7 @@
   --mha-weather-chip-border: rgba(255,255,255,.22);
   --mha-weather-icon-size: clamp(2.35rem, min(32cqi, 22cqb), 4.4rem);
   --mha-weather-temp-size: var(--mha-type-weather-temp-size, 1.72rem);
+  --mha-weather-temp-compact-size: var(--mha-type-weather-temp-size, 1.72rem);
   --mha-weather-chip-size: var(--mha-type-widget-chip-size, var(--mha-font-size-xs, .76rem));
   background:
     radial-gradient(circle at 20% 10%, var(--mha-weather-bg-glow), transparent 34%),
@@ -44,6 +50,10 @@
   overflow: hidden;
   color: var(--mha-weather-text);
 }
+
+/* ==========================================================================
+   2. Structure / layout de base
+   ========================================================================== */
 
 .mha-weather-widget-current {
   min-inline-size: 0;
@@ -76,6 +86,9 @@
   text-shadow: 0 12px 24px rgba(0,0,0,.12);
 }
 
+/* ==========================================================================
+   3. Variantes de taille
+   ========================================================================== */
 .mha-weather-widget[data-weather-size="4x1"] {
   align-content: center;
   justify-items: stretch;
@@ -288,6 +301,7 @@
   --mha-weather-bg-end: #1f78ff;
 }
 
+/* 4. Consommation des tokens de theme */
 :host([data-theme-style="material"]) .mha-widget[data-widget-kind="weather"] {
   --mha-weather-bg-start: color-mix(in srgb, #b7e4ff 70%, #ffffff 30%);
   --mha-weather-bg-end: color-mix(in srgb, #3f8cff 78%, #00bcd4 22%);
@@ -296,6 +310,13 @@
 :host([data-theme-style="material"][data-theme="dark"]) .mha-widget[data-widget-kind="weather"] {
   --mha-weather-bg-start: #0d47a1;
   --mha-weather-bg-end: #061333;
+}
+
+:host([data-theme-style="material"][data-theme="light"]) .mha-widget[data-widget-kind="weather"] {
+  --mha-weather-text: var(--mha-material-on-surface);
+  --mha-weather-muted: color-mix(in srgb, var(--mha-material-on-surface-variant) 86%, transparent);
+  --mha-weather-chip-bg: color-mix(in srgb, var(--mha-material-surface-container-high) 78%, transparent);
+  --mha-weather-chip-border: transparent;
 }
 
 /* Weather icon libraries
@@ -570,7 +591,12 @@
   }
 }
 
-/* Weather summary placement
+/* ==========================================================================
+   4. Etats actif / inactif / disabled
+   ========================================================================== */
+
+/* Etats actifs/inactifs et placements d'etat
+ * Weather summary placement
  * 4x1 stays unchanged: summary is only used by 2x2, 3x2 and 4x2.
  */
 .mha-weather-widget-summary {
@@ -617,16 +643,10 @@
   font-size: var(--mha-type-weather-summary-size, var(--mha-type-widget-label-size, .88rem));
 }
 
-
 /* Weather temp balance + 4x1 vertical centering
  * Keep the 4x1 horizontal layout untouched, but make both visible items share
  * the same vertical center. Compact weather variants share one smaller temp size.
  */
-.mha-widget[data-widget-kind="weather"] {
-  --mha-weather-temp-size: var(--mha-type-weather-temp-size, 1.72rem);
-  --mha-weather-temp-compact-size: var(--mha-type-weather-temp-size, 1.72rem);
-}
-
 .mha-weather-widget[data-weather-size="4x1"] {
   align-content: center;
   align-items: center;
@@ -682,12 +702,26 @@
   transform: translateY(calc(var(--mha-weather-corner-safe-offset-y) * -1));
 }
 
-/* OneUI flat-depth policy: WeatherWidget -----------------------------------
+/* ==========================================================================
+   5. Etats d'edition
+   ========================================================================== */
+/* No widget-specific edit-mode overrides in this file. */
+
+/* ==========================================================================
+   6. Adaptations par theme
+   ========================================================================== */
+
+/* Exceptions necessaires par theme
+ * OneUI flat-depth policy: WeatherWidget
  * Keep the weather gradient/color identity; remove depth-only effects.
  */
 :host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="weather"],
 :host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="weather"] * {
   text-shadow: none !important;
+}
+
+:host([data-theme-style="material"][data-theme="light"]) .mha-weather-widget-temp {
+  text-shadow: none;
 }
 
 :host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="weather"] .mha-weather-current-icon,
@@ -701,3 +735,8 @@
 :host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="weather"] .mha-weather-forecast-row {
   box-shadow: none !important;
 }
+
+/* ==========================================================================
+   7. Responsive / viewport
+   ========================================================================== */
+/* WeatherWidget scales from container geometry instead of viewport breakpoints. */

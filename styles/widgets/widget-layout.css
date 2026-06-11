@@ -42,8 +42,6 @@
   --mha-type-clock-time-size: var(--mha-font-size-clock-time, var(--mha-type-widget-display-lg));
   --mha-type-clock-date-size: var(--mha-font-size-clock-date, var(--mha-type-widget-state-size));
   --mha-type-clock-number-size: var(--mha-font-size-clock-number, .62rem);
-  --mha-type-clock-science-time-size: var(--mha-font-size-clock-science-time, 1.1rem);
-  --mha-type-clock-science-data-size: var(--mha-font-size-clock-science-data, .58rem);
 }
 
 @supports not (width: 1cqi) {
