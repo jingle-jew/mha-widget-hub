@@ -12,8 +12,8 @@
 }
 
 .mha-widget-manager-sheet {
-  inline-size: min(35vw, 34rem);
-  min-inline-size: min(28rem, calc(100vw - 2rem));
+  inline-size: min(72rem, calc(100vw - 2rem));
+  min-inline-size: min(22rem, calc(100vw - 2rem));
 }
 
 /* Make the Widget Manager sheet consume the same surface tokens as Settings.
@@ -150,26 +150,27 @@
 
 .mha-widget-manager-widget-list {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: clamp(.75rem, 1.5vw, 1rem);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  gap: clamp(1rem, 1.8vw, 1.35rem);
 }
 
 .mha-widget-manager-widget {
+  --mha-widget-manager-preview-block-size: 9.5rem;
   display: grid;
-  grid-template-columns: clamp(5.4rem, 9vw, 7rem) minmax(0, 1fr);
-  align-items: center;
-  gap: .9rem;
-  padding: .75rem;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
+  gap: 1rem;
+  padding: 1rem;
   text-align: left;
 }
 
-/* Previews are tiny widget surfaces inside settings-style tiles. */
-.mha-widget-manager-preview {
+.mha-widget-manager-preview-area {
   inline-size: 100%;
-  aspect-ratio: 1.35 / 1;
+  min-block-size: var(--mha-widget-manager-preview-block-size);
   display: grid;
   place-items: center;
-  border-radius: calc(var(--mha-section-radius, 1.35rem) * .78);
+  padding: .65rem;
+  border-radius: calc(var(--mha-section-radius, 1.35rem) * .82);
   background:
     radial-gradient(circle at 30% 20%, color-mix(in srgb, var(--mha-accent) 13%, transparent), transparent 34%),
     var(--mha-widget-shell-surface, var(--mha-surface-primary));
@@ -180,72 +181,310 @@
   overflow: hidden;
 }
 
-.mha-widget-manager-preview-shape {
-  inline-size: calc(min(100%, max(38%, var(--mha-preview-w) * 15%)));
-  block-size: calc(min(82%, max(22%, var(--mha-preview-h) * 13%)));
-  min-inline-size: 1.35rem;
-  min-block-size: 1.15rem;
-  border-radius: calc(var(--mha-section-radius, 1.35rem) * .42);
-  background: var(--mha-preview-surface);
-  border: 1px solid color-mix(in srgb, var(--mha-accent) 24%, var(--mha-preview-border));
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--mha-preview-text) 8%, transparent),
-    0 8px 18px rgba(0,0,0,.10);
-  position: relative;
+.mha-widget-manager-preview-media-frame {
+  inline-size: 100%;
+  block-size: 100%;
+  min-block-size: 0;
   display: grid;
   place-items: center;
+  pointer-events: none;
 }
 
-.mha-widget-manager-preview-dot {
-  inline-size: .7rem;
-  block-size: .7rem;
+.mha-widget-manager-preview-image,
+.mha-widget-manager-preview-fallback {
+  grid-area: 1 / 1;
+}
+
+.mha-widget-manager-preview-image {
+  max-width: 100%;
+  max-height: 100%;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: contain;
+  object-position: center;
+  pointer-events: none;
+  user-select: none;
+}
+
+.mha-widget-manager-preview-media-frame[data-preview-mode="image"] .mha-widget-manager-preview-fallback {
+  visibility: hidden;
+}
+
+.mha-widget-manager-preview-area[data-size="2x2"] {
+  --mha-widget-manager-preview-block-size: 10rem;
+}
+
+.mha-widget-manager-preview-area[data-size="3x2"],
+.mha-widget-manager-preview-area[data-size="4x2"] {
+  --mha-widget-manager-preview-block-size: 10.5rem;
+}
+
+.mha-widget-manager-preview-area[data-size="1x4"] {
+  --mha-widget-manager-preview-block-size: 12rem;
+}
+
+.mha-widget-manager-card-meta,
+.mha-widget-manager-widget-content {
+  min-inline-size: 0;
+  display: grid;
+  gap: .35rem;
+}
+
+.mha-widget-manager-card-title {
+  font-size: 1rem;
+  font-weight: 820;
+  line-height: 1.15;
+  letter-spacing: -.02em;
+}
+
+.mha-widget-manager-card-detail {
+  color: var(--mha-muted);
+  font-size: .8rem;
+  line-height: 1.3;
+}
+
+.mha-widget-manager-static-preview,
+.mha-widget-manager-static-preview * {
+  pointer-events: none !important;
+}
+
+.mha-widget-manager-static-preview {
+  inline-size: 100%;
+  block-size: 100%;
+  min-height: 0;
+  display: grid;
+  gap: .7rem;
+  padding: .9rem;
+  border-radius: calc(var(--mha-widget-radius, 1.25rem) * .88);
+  background: var(--mha-preview-surface, var(--mha-surface-primary));
+  border: 1px solid color-mix(in srgb, var(--mha-accent) 16%, var(--mha-preview-border));
+  color: var(--mha-preview-text);
+  overflow: hidden;
+}
+
+.mha-widget-manager-static-preview-header,
+.mha-widget-manager-static-preview-text,
+.mha-widget-manager-static-preview-clock,
+.mha-widget-manager-static-preview-weather,
+.mha-widget-manager-static-preview-status,
+.mha-widget-manager-static-preview-media {
+  min-inline-size: 0;
+  display: grid;
+  gap: .22rem;
+}
+
+.mha-widget-manager-static-preview-header {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: .45rem;
+}
+
+.mha-widget-manager-static-preview-title,
+.mha-widget-manager-static-preview-time {
+  font-size: .92rem;
+  font-weight: 820;
+  line-height: 1.05;
+  letter-spacing: -.02em;
+}
+
+.mha-widget-manager-static-preview-detail,
+.mha-widget-manager-static-preview-weather-inline,
+.mha-widget-manager-static-preview-status-row,
+.mha-widget-manager-static-preview-forecast-item {
+  font-size: .72rem;
+  line-height: 1.15;
+  color: var(--mha-muted);
+}
+
+.mha-widget-manager-preview-icon-bubble {
+  inline-size: 2.45rem;
+  block-size: 2.45rem;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
   border-radius: 999px;
-  background: var(--mha-accent);
-  position: absolute;
-  inset-block-start: .45rem;
-  inset-inline-start: .45rem;
+  background: var(--mha-control-surface, color-mix(in srgb, var(--mha-accent) 16%, var(--mha-preview-surface)));
+  color: var(--mha-accent);
+  border: 1px solid color-mix(in srgb, var(--mha-accent) 20%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--mha-preview-text) 8%, transparent);
+  font-size: 1.05rem;
 }
 
-.mha-widget-manager-preview-line {
-  inline-size: 52%;
-  block-size: .35rem;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--mha-text) 16%, transparent);
+.mha-widget-manager-static-preview-button,
+.mha-widget-manager-static-preview-toggle {
+  min-height: 0;
+  display: grid;
+  align-items: center;
+  gap: .65rem;
 }
 
-.mha-widget-manager-preview-slider {
-  border-radius: 999px;
-  background: var(--mha-accent);
-  box-shadow: 0 0 0 .35rem color-mix(in srgb, var(--mha-accent) 12%, transparent);
+.mha-widget-manager-static-preview-button[data-layout="horizontal"],
+.mha-widget-manager-static-preview-toggle {
+  grid-template-columns: auto minmax(0, 1fr) auto;
 }
 
-.mha-widget-manager-preview-slider[data-orientation="horizontal"] {
-  inline-size: 68%;
-  block-size: .38rem;
+.mha-widget-manager-static-preview-button[data-layout="square"] {
+  grid-template-columns: auto;
+  justify-items: start;
+  align-content: space-between;
 }
 
-.mha-widget-manager-preview-slider[data-orientation="vertical"] {
-  inline-size: .38rem;
-  block-size: 68%;
+.mha-widget-manager-static-preview[data-kind="button"][data-size="2x2"] {
+  align-content: space-between;
 }
 
-.mha-widget-manager-widget-label-row {
+.mha-widget-manager-preview-switch {
+  inline-size: 2.5rem;
+  block-size: 1.4rem;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: .6rem;
-  min-inline-size: 0;
+  justify-content: end;
+  padding: .15rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--mha-accent) 74%, transparent);
 }
 
-.mha-widget-manager-size-badge {
-  flex: 0 0 auto;
+.mha-widget-manager-preview-switch-thumb {
+  inline-size: 1.05rem;
+  block-size: 1.05rem;
   border-radius: 999px;
-  padding: .22rem .48rem;
-  background: color-mix(in srgb, var(--mha-accent) 12%, var(--mha-preview-surface));
-  border: 1px solid color-mix(in srgb, var(--mha-accent) 18%, var(--mha-preview-border));
-  color: var(--mha-preview-text);
-  font-size: .72rem;
-  font-weight: 800;
+  background: var(--mha-accent-contrast, #fff);
+}
+
+.mha-widget-manager-static-preview-slider {
+  min-height: 0;
+  display: grid;
+  align-items: center;
+  gap: .85rem;
+}
+
+.mha-widget-manager-static-preview-slider[data-orientation="horizontal"] {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+.mha-widget-manager-static-preview-slider[data-orientation="vertical"] {
+  grid-template-columns: auto 1fr;
+  align-content: center;
+}
+
+.mha-widget-manager-preview-slider-rail {
+  position: relative;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--mha-preview-text) 10%, transparent);
+  overflow: hidden;
+}
+
+.mha-widget-manager-static-preview-slider[data-orientation="horizontal"] .mha-widget-manager-preview-slider-rail {
+  block-size: .62rem;
+}
+
+.mha-widget-manager-static-preview-slider[data-orientation="vertical"] .mha-widget-manager-preview-slider-rail {
+  inline-size: .82rem;
+  block-size: 5.4rem;
+  justify-self: center;
+}
+
+.mha-widget-manager-preview-slider-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  inline-size: 68%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--mha-accent), color-mix(in srgb, var(--mha-accent) 56%, #fff));
+}
+
+.mha-widget-manager-static-preview-slider[data-orientation="vertical"] .mha-widget-manager-preview-slider-fill {
+  inset: auto 0 0 0;
+  inline-size: auto;
+  block-size: 68%;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--mha-accent) 42%, #fff), var(--mha-accent));
+}
+
+.mha-widget-manager-preview-clock-face {
+  inline-size: min(5.4rem, 82%);
+  block-size: min(5.4rem, 82%);
+  position: relative;
+  place-self: center;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--mha-preview-text) 16%, transparent);
+  background:
+    radial-gradient(circle at center, transparent 0 52%, color-mix(in srgb, var(--mha-preview-text) 14%, transparent) 53% 54%, transparent 55% 100%),
+    color-mix(in srgb, var(--mha-accent) 7%, var(--mha-preview-surface));
+}
+
+.mha-widget-manager-preview-clock-face[data-variant="ios-analog"] {
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.16);
+}
+
+.mha-widget-manager-preview-clock-hand,
+.mha-widget-manager-preview-clock-center {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  transform-origin: center top;
+}
+
+.mha-widget-manager-preview-clock-hand {
+  inline-size: 2px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.mha-widget-manager-preview-clock-hand--hour {
+  block-size: 1rem;
+  transform: translate(-50%, -100%) rotate(32deg);
+}
+
+.mha-widget-manager-preview-clock-hand--minute {
+  block-size: 1.45rem;
+  transform: translate(-50%, -100%) rotate(132deg);
+}
+
+.mha-widget-manager-preview-clock-center {
+  inline-size: .34rem;
+  block-size: .34rem;
+  border-radius: 999px;
+  background: currentColor;
+  transform: translate(-50%, -50%);
+}
+
+.mha-widget-manager-static-preview-weather {
+  justify-items: start;
+}
+
+.mha-widget-manager-static-preview-weather-temp {
+  font-size: 1.45rem;
+  font-weight: 830;
+  line-height: 1;
+}
+
+.mha-widget-manager-static-preview-weather-icon {
+  font-size: 1rem;
+}
+
+.mha-widget-manager-static-preview-chips,
+.mha-widget-manager-static-preview-forecast {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .38rem;
+}
+
+.mha-widget-manager-static-preview-chip,
+.mha-widget-manager-static-preview-forecast-item {
+  border-radius: 999px;
+  padding: .24rem .5rem;
+  background: color-mix(in srgb, var(--mha-accent) 10%, var(--mha-preview-surface));
+  border: 1px solid color-mix(in srgb, var(--mha-accent) 14%, transparent);
+}
+
+.mha-widget-manager-static-preview-media-line {
+  inline-size: 72%;
+  block-size: .44rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--mha-preview-text) 12%, transparent);
+}
+
+.mha-widget-manager-static-preview-media-controls {
+  font-size: .94rem;
+  letter-spacing: .08em;
 }
 
 /* THEME-SPECIFIC PARITY WITH SETTINGS */
@@ -294,9 +533,8 @@
   box-shadow: none;
 }
 
-:host([data-theme-style="material"]) .mha-widget-manager-preview,
-:host([data-theme-style="material"]) .mha-widget-manager-preview-shape,
-:host([data-theme-style="material"]) .mha-widget-manager-size-badge,
+:host([data-theme-style="material"]) .mha-widget-manager-preview-area,
+:host([data-theme-style="material"]) .mha-widget-manager-static-preview,
 :host([data-theme-style="material"]) .mha-widget-manager-category-icon {
   border-color: transparent;
 }
@@ -319,12 +557,17 @@
     grid-template-columns: 1fr;
   }
 
+  .mha-widget-manager-widget-list {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  }
+
   .mha-widget-manager-category {
     min-block-size: 5.2rem;
   }
 
   .mha-widget-manager-widget {
-    grid-template-columns: 5.2rem minmax(0, 1fr);
+    --mha-widget-manager-preview-block-size: 8.25rem;
+    padding: .9rem;
   }
 }
 
@@ -334,25 +577,6 @@
   }
 }
 
-
-/* Clock widget previews */
-.mha-widget-manager-preview-clock {
-  color: var(--mha-preview-text);
-  font-size: clamp(.78rem, 1.8vw, 1.05rem);
-  font-weight: 850;
-  letter-spacing: -.04em;
-  font-variant-numeric: tabular-nums;
-}
-
-.mha-widget-manager-preview-clock[data-variant="analog"],
-.mha-widget-manager-preview-clock[data-variant="ios-analog"] {
-  inline-size: 1.65rem;
-  block-size: 1.65rem;
-  display: grid;
-  place-items: center;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--mha-text) 22%, transparent);
-}
 
 /* SEMANTIC WIDGET MANAGER TOKEN CONSUMERS
  * Widget Manager tiles now follow panel/section semantic roles.
@@ -396,12 +620,4 @@
 .mha-widget-manager-widget:focus-visible {
   background: var(--mha-preview-surface-hover);
   border-color: var(--mha-preview-border-hover);
-}
-
-/* Simple button widget previews */
-.mha-widget-manager-preview-button {
-  color: var(--mha-preview-text);
-  font-size: clamp(.58rem, 1.5vw, .86rem);
-  font-weight: 820;
-  letter-spacing: -.02em;
 }

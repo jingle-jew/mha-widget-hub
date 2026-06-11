@@ -2,13 +2,23 @@ export { WIDGET_VARIANTS, getWidgetVariants, getNextWidgetVariantEntries } from 
 
 export const WIDGET_MANAGER_CATEGORIES = Object.freeze([
   { id:"utilities", label:"Utilitaires", description:"Horloges et infos rapides.", icon:"◷", widgets:[
-    {kind:"clock",variant:"digital",label:"Horloge numérique",size:{w:2,h:2},description:"Heure et date."},
+    {kind:"clock",variant:"digital",label:"Horloge numérique",size:{w:2,h:2},description:"Heure et date.",previewImages:{
+      ios:{
+        light:"assets/widget-previews/clock-digital-ios-light.png",
+        dark:"assets/widget-previews/clock-digital-ios-dark.png",
+      },
+      material:{
+        light:"assets/widget-previews/clock-digital-material-light.png",
+        dark:"assets/widget-previews/clock-digital-material-dark.png",
+      },
+      default:"assets/widget-previews/clock-digital-default.png",
+    }},
     {kind:"clock",variant:"digital-weather",label:"Numérique météo",size:{w:2,h:2},description:"Heure, date et météo actuelle."},
     {kind:"clock",variant:"analog",label:"Horloge analogique",size:{w:2,h:2},description:"Cadran simple."},
     {kind:"clock",variant:"ios-analog",label:"Analogique iOS",size:{w:2,h:2},description:"Cadran classique iOS."},
   ]},
   { id:"actions", label:"Actions", description:"Boutons et raccourcis.", icon:"●", widgets:[
-    {kind:"button",variant:"simple-button",label:"Bouton simple",size:{w:2,h:1},description:"Icône, libellé et état."},
+    {kind:"button",variant:"simple-button",label:"Bouton simple",size:{w:2,h:1},description:"Icône, libellé et état.",previewImage:"assets/widget-previews/button-simple-preview.png"},
     {kind:"button",variant:"simple-button",label:"Bouton carré",size:{w:2,h:2},description:"Tuile d’action inspirée Home."},
     {kind:"toggle",variant:"toggle-widget",label:"Toggle",size:{w:3,h:1},description:"Icône, état et interrupteur."},
     {kind:"toggle",variant:"toggle-widget",label:"Toggle large",size:{w:4,h:1},description:"Interrupteur avec plus d’espace."},
@@ -20,7 +30,7 @@ export const WIDGET_MANAGER_CATEGORIES = Object.freeze([
   ]},
   { id:"climate", label:"Climat", description:"Température et confort.", icon:"🌡", widgets:[
     {kind:"weather",variant:"adaptive-weather",label:"Météo horizontale",size:{w:4,h:1},description:"Icône et température."},
-    {kind:"weather",variant:"adaptive-weather",label:"Météo compacte",size:{w:2,h:2},description:"Icône et température."},
+    {kind:"weather",variant:"adaptive-weather",label:"Météo compacte",size:{w:2,h:2},description:"Icône et température.",previewImage:"assets/widget-previews/2x2-weather-widget-preview.png"},
     {kind:"weather",variant:"adaptive-weather",label:"Météo détails",size:{w:3,h:2},description:"Humidité et vent."},
     {kind:"weather",variant:"adaptive-weather",label:"Météo prévisions",size:{w:4,h:2},description:"Prévisions verticales."},
     {kind:"empty",variant:"climate-compact",label:"Climat compact",size:{w:2,h:2},description:"Température rapide."},
@@ -45,49 +55,312 @@ export const WIDGET_MANAGER_CATEGORIES = Object.freeze([
 
 const sizeLabel = (size = {}) => `${size.w || 2}×${size.h || 2}`;
 
-function createPreview(item) {
-  const preview = document.createElement("div");
-  preview.className = "mha-widget-manager-preview";
-  preview.dataset.kind = item.kind || "empty";
-  preview.style.setProperty("--mha-preview-w", String(item.size?.w || 2));
-  preview.style.setProperty("--mha-preview-h", String(item.size?.h || 2));
-  const shape = document.createElement("div");
-  shape.className = "mha-widget-manager-preview-shape";
-  if (item.kind === "slider") {
-    const rail = document.createElement("span");
-    rail.className = "mha-widget-manager-preview-slider";
-    rail.dataset.orientation = (item.size?.h || 1) > (item.size?.w || 1) ? "vertical" : "horizontal";
-    shape.append(rail);
-  } else if (item.kind === "clock") {
-    const clock = document.createElement("span");
-    clock.className = "mha-widget-manager-preview-clock";
-    clock.dataset.variant = item.variant || "digital";
-    clock.textContent = item.variant === "analog" || item.variant === "ios-analog" ? "◷" : item.variant === "digital-weather" ? "12:45  22°" : "12:45";
-    shape.append(clock);
-  } else if (item.kind === "button") {
-    const button = document.createElement("span");
-    button.className = "mha-widget-manager-preview-button";
-    button.textContent = "⌂ On";
-    shape.append(button);
-  } else if (item.kind === "toggle") {
-    const toggle = document.createElement("span");
-    toggle.className = "mha-widget-manager-preview-button";
-    toggle.textContent = "⌂ On  ◉";
-    shape.append(toggle);
-  } else if (item.kind === "weather") {
-    const weather = document.createElement("span");
-    weather.className = "mha-widget-manager-preview-button";
-    weather.textContent = "☀ 22°";
-    shape.append(weather);
-  } else {
-    const dot = document.createElement("span");
-    dot.className = "mha-widget-manager-preview-dot";
-    const line = document.createElement("span");
-    line.className = "mha-widget-manager-preview-line";
-    shape.append(dot, line);
-  }
-  preview.append(shape);
+function el(tag, className, text = "") {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text) node.textContent = text;
+  return node;
+}
+
+function previewSizeKey(item) {
+  return `${item.size?.w || 2}x${item.size?.h || 2}`;
+}
+
+function resolvePreviewImage(item, {
+  themeStyle = "oneui",
+  theme = "dark",
+} = {}) {
+  const previewImages = item?.previewImages;
+  const styleGroup = previewImages?.[themeStyle];
+  const defaultGroup = previewImages?.default;
+
+  const resolved = (
+    styleGroup?.[theme]
+    || styleGroup?.default
+    || (typeof defaultGroup === "object" ? defaultGroup?.[theme] : null)
+    || defaultGroup
+    || item?.previewImage
+    || ""
+  );
+
+  return typeof resolved === "string" ? resolved : "";
+}
+
+function readActivePreviewTheme(root) {
+  const doc = root?.ownerDocument || document;
+  const host = root?.getRootNode?.()?.host || null;
+  const themeStyle = host?.dataset?.themeStyle
+    || doc.documentElement?.dataset?.themeStyle
+    || "oneui";
+  const theme = host?.dataset?.theme
+    || doc.documentElement?.dataset?.theme
+    || "dark";
+
+  return {
+    themeStyle,
+    theme,
+  };
+}
+
+function createPreviewHeader(title = "", detail = "") {
+  const header = el("div", "mha-widget-manager-static-preview-header");
+  header.append(
+    el("span", "mha-widget-manager-static-preview-title", title),
+    el("span", "mha-widget-manager-static-preview-detail", detail),
+  );
+  return header;
+}
+
+function createIconBubble(icon = "•", { active = false } = {}) {
+  const bubble = el("span", "mha-widget-manager-preview-icon-bubble", icon);
+  if (active) bubble.dataset.active = "true";
+  return bubble;
+}
+
+function createButtonStaticPreview(item) {
+  const preview = el("div", "mha-widget-manager-static-preview");
+  preview.dataset.kind = "button";
+  preview.dataset.size = previewSizeKey(item);
+
+  const isSquare = preview.dataset.size === "2x2";
+  const content = el("div", "mha-widget-manager-static-preview-button");
+  content.dataset.layout = isSquare ? "square" : "horizontal";
+
+  const text = el("div", "mha-widget-manager-static-preview-text");
+  text.append(
+    el("span", "mha-widget-manager-static-preview-title", isSquare ? "Maison" : "Entrée"),
+    el("span", "mha-widget-manager-static-preview-detail", "Activé"),
+  );
+
+  content.append(createIconBubble("⌂"), text);
+  preview.append(content);
   return preview;
+}
+
+function createToggleStaticPreview(item) {
+  const preview = el("div", "mha-widget-manager-static-preview");
+  preview.dataset.kind = "toggle";
+  preview.dataset.size = previewSizeKey(item);
+
+  const row = el("div", "mha-widget-manager-static-preview-toggle");
+  const text = el("div", "mha-widget-manager-static-preview-text");
+  text.append(
+    el("span", "mha-widget-manager-static-preview-title", item.size?.w >= 4 ? "Salon" : "Lampe"),
+    el("span", "mha-widget-manager-static-preview-detail", "Activé"),
+  );
+
+  const control = el("span", "mha-widget-manager-preview-switch");
+  control.append(el("span", "mha-widget-manager-preview-switch-thumb"));
+
+  row.append(createIconBubble("◉"), text, control);
+  preview.append(row);
+  return preview;
+}
+
+function createSliderStaticPreview(item) {
+  const preview = el("div", "mha-widget-manager-static-preview");
+  const size = previewSizeKey(item);
+  const vertical = (item.size?.h || 1) > (item.size?.w || 1);
+  preview.dataset.kind = "slider";
+  preview.dataset.size = size;
+  preview.dataset.orientation = vertical ? "vertical" : "horizontal";
+
+  preview.append(createPreviewHeader(
+    item.variant === "temperature-slider" ? "Température" : "Intensité",
+    item.variant === "temperature-slider" ? "21°" : "68%",
+  ));
+
+  const body = el("div", "mha-widget-manager-static-preview-slider");
+  body.dataset.orientation = vertical ? "vertical" : "horizontal";
+
+  const rail = el("div", "mha-widget-manager-preview-slider-rail");
+  rail.append(el("span", "mha-widget-manager-preview-slider-fill"));
+
+  if (vertical) {
+    body.append(rail, createIconBubble("✦"));
+  } else {
+    body.append(createIconBubble(item.variant === "volume-slider" ? "♪" : "✦"), rail);
+  }
+
+  preview.append(body);
+  return preview;
+}
+
+function createClockStaticPreview(item) {
+  const preview = el("div", "mha-widget-manager-static-preview");
+  preview.dataset.kind = "clock";
+  preview.dataset.variant = item.variant || "digital";
+
+  if (item.variant === "analog" || item.variant === "ios-analog") {
+    const face = el("div", "mha-widget-manager-preview-clock-face");
+    face.dataset.variant = item.variant;
+    face.append(
+      el("span", "mha-widget-manager-preview-clock-hand mha-widget-manager-preview-clock-hand--hour"),
+      el("span", "mha-widget-manager-preview-clock-hand mha-widget-manager-preview-clock-hand--minute"),
+      el("span", "mha-widget-manager-preview-clock-center"),
+    );
+    preview.append(face);
+    return preview;
+  }
+
+  const digital = el("div", "mha-widget-manager-static-preview-clock");
+  digital.append(
+    el("span", "mha-widget-manager-static-preview-time", "12:45"),
+    el("span", "mha-widget-manager-static-preview-detail", "Mer. 12 juin"),
+  );
+  if (item.variant === "digital-weather") {
+    digital.append(el("span", "mha-widget-manager-static-preview-weather-inline", "22° · Part. nuageux"));
+  }
+  preview.append(digital);
+  return preview;
+}
+
+function createWeatherStaticPreview(item) {
+  const preview = el("div", "mha-widget-manager-static-preview");
+  const size = previewSizeKey(item);
+  preview.dataset.kind = "weather";
+  preview.dataset.size = size;
+
+  const current = el("div", "mha-widget-manager-static-preview-weather");
+  current.append(
+    el("span", "mha-widget-manager-static-preview-weather-temp", "22°"),
+    el("span", "mha-widget-manager-static-preview-weather-icon", "☀"),
+    el("span", "mha-widget-manager-static-preview-detail", "Part. nuageux"),
+  );
+  preview.append(current);
+
+  if (size === "3x2" || size === "4x2") {
+    const chips = el("div", "mha-widget-manager-static-preview-chips");
+    chips.append(
+      el("span", "mha-widget-manager-static-preview-chip", "54%"),
+      el("span", "mha-widget-manager-static-preview-chip", "12 km/h"),
+    );
+    preview.append(chips);
+  }
+
+  if (size === "4x2") {
+    const forecast = el("div", "mha-widget-manager-static-preview-forecast");
+    ["Lun", "Mar", "Mer"].forEach((day, index) => {
+      forecast.append(el("span", "mha-widget-manager-static-preview-forecast-item", `${day} ${22 - index}°`));
+    });
+    preview.append(forecast);
+  }
+
+  return preview;
+}
+
+function createMediaStaticPreview(item) {
+  const preview = el("div", "mha-widget-manager-static-preview");
+  preview.dataset.kind = "media";
+  preview.dataset.size = previewSizeKey(item);
+  preview.append(
+    createPreviewHeader("Now Playing", item.size?.w >= 4 ? "Lo-fi Evening" : "Lecture"),
+  );
+
+  const controls = el("div", "mha-widget-manager-static-preview-media");
+  controls.append(
+    el("span", "mha-widget-manager-static-preview-media-line"),
+    el("span", "mha-widget-manager-static-preview-media-controls", "◀  ⏵  ▶"),
+  );
+  preview.append(controls);
+  return preview;
+}
+
+function createStatusStaticPreview(item, {
+  kind = "system",
+  title = "Widget",
+  detail = "En ligne",
+  accent = "●",
+} = {}) {
+  const preview = el("div", "mha-widget-manager-static-preview");
+  preview.dataset.kind = kind;
+  preview.dataset.size = previewSizeKey(item);
+  preview.append(createPreviewHeader(title, detail));
+
+  const rows = el("div", "mha-widget-manager-static-preview-status");
+  rows.append(
+    el("span", "mha-widget-manager-static-preview-status-row", `${accent} Principal`),
+    el("span", "mha-widget-manager-static-preview-status-row", "— Secondaire"),
+  );
+
+  preview.append(rows);
+  return preview;
+}
+
+function createWidgetPreview(item) {
+  const area = el("div", "mha-widget-manager-preview-area");
+  area.setAttribute("aria-hidden", "true");
+  area.dataset.kind = item.kind || "empty";
+  area.dataset.size = previewSizeKey(item);
+  area.dataset.variant = item.variant || "";
+
+  const media = el("div", "mha-widget-manager-preview-media-frame");
+  area.append(media);
+
+  let preview;
+  if (item.kind === "button") preview = createButtonStaticPreview(item);
+  else if (item.kind === "toggle") preview = createToggleStaticPreview(item);
+  else if (item.kind === "slider") preview = createSliderStaticPreview(item);
+  else if (item.kind === "clock") preview = createClockStaticPreview(item);
+  else if (item.kind === "weather") preview = createWeatherStaticPreview(item);
+  else if (item.variant?.startsWith("media-")) preview = createMediaStaticPreview(item);
+  else if (item.variant?.startsWith("security-")) preview = createStatusStaticPreview(item, {
+    kind: "security",
+    title: "Sécurité",
+    detail: "Protégé",
+    accent: "●",
+  });
+  else if (item.variant?.startsWith("climate-")) preview = createStatusStaticPreview(item, {
+    kind: "climate",
+    title: "Climat",
+    detail: "21° · Auto",
+    accent: "◌",
+  });
+  else if (item.variant?.startsWith("system-")) preview = createStatusStaticPreview(item, {
+    kind: "system",
+    title: "Système",
+    detail: "Stable",
+    accent: "◆",
+  });
+  else if (item.variant === "light-toggle") preview = createStatusStaticPreview(item, {
+    kind: "lights",
+    title: "Lumière",
+    detail: "75%",
+    accent: "✦",
+  });
+  else preview = createStatusStaticPreview(item, {
+    kind: "generic",
+    title: item.label,
+    detail: "Aperçu",
+    accent: "•",
+  });
+
+  preview.classList.add("mha-widget-manager-preview-fallback");
+  media.append(preview);
+
+  const previewImage = resolvePreviewImage(item, readActivePreviewTheme(area));
+  if (previewImage) {
+    const image = document.createElement("img");
+    image.className = "mha-widget-manager-preview-image";
+    image.src = previewImage;
+    image.alt = "";
+    image.decoding = "async";
+    image.loading = "lazy";
+    image.draggable = false;
+
+    image.addEventListener("load", () => {
+      media.dataset.previewMode = "image";
+    });
+
+    image.addEventListener("error", () => {
+      media.dataset.previewMode = "fallback";
+      image.remove();
+    }, { once: true });
+
+    media.prepend(image);
+  }
+
+  return area;
 }
 
 function createCategoryButton(category, onSelectCategory) {
@@ -111,22 +384,21 @@ function createCategoryButton(category, onSelectCategory) {
 
 function createWidgetButton(category, item, onSelectWidget) {
   const button = document.createElement("button");
-  button.className = "mha-widget-manager-widget";
+  button.className = "mha-widget-manager-widget mha-widget-manager-card";
   button.type = "button";
+  button.dataset.kind = item.kind || "empty";
+  button.dataset.size = previewSizeKey(item);
+  button.dataset.variant = item.variant || "";
   const content = document.createElement("span");
-  content.className = "mha-widget-manager-widget-content";
-  const labelRow = document.createElement("span");
-  labelRow.className = "mha-widget-manager-widget-label-row";
+  content.className = "mha-widget-manager-widget-content mha-widget-manager-card-meta";
   const label = document.createElement("strong");
+  label.className = "mha-widget-manager-card-title";
   label.textContent = item.label;
-  const badge = document.createElement("span");
-  badge.className = "mha-widget-manager-size-badge";
-  badge.textContent = sizeLabel(item.size);
-  labelRow.append(label, badge);
-  const description = document.createElement("small");
-  description.textContent = item.description || "";
-  content.append(labelRow, description);
-  button.append(createPreview(item), content);
+  const meta = document.createElement("small");
+  meta.className = "mha-widget-manager-card-detail";
+  meta.textContent = [sizeLabel(item.size), item.description || ""].filter(Boolean).join(" · ");
+  content.append(label, meta);
+  button.append(createWidgetPreview(item), content);
   button.addEventListener("click", () => onSelectWidget?.({ ...item, category: category.id }));
   return button;
 }
