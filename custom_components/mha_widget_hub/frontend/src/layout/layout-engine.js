@@ -43,17 +43,12 @@ export function getInternalGridRowCountFromLogical(logicalRows=1){
 /*
  * Home defaults
  * -------------
- * Empty widgets used to act as visual placeholders on the home grid while the
- * project had very few real widgets. Now that the launcher has usable widget
- * types, first-launch home content should only contain real widgets.
+ * The home grid should start empty on first launch.
  *
- * The widget manager can still expose unfinished/placeholder catalog entries,
- * but the home screen itself should not be seeded with empty-widget slots.
+ * Users add their own widgets from the widget manager, so the code should not
+ * seed demo/default widgets that can leave stale position maps behind.
  */
-export const DEFAULT_WIDGETS=Object.freeze([
-  {id:"slot-f",kind:"slider",w:4,h:1},
-  {id:"slot-i",kind:"slider",w:1,h:4},
-]);
+export const DEFAULT_WIDGETS=Object.freeze([]);
 export function normalizeWidgetSize({w=2,h=1}={}){w=Math.round(Number(w));h=Math.round(Number(h));if(!Number.isFinite(w))w=2;if(!Number.isFinite(h))h=1;w=Math.max(1,Math.min(6,w));h=Math.max(1,Math.min(6,h));if(w===1&&h===1)w=2;if(w>4&&h>4){if(w>=h)h=4;else w=4}return{w,h}}
 export function getWidgetDensity({w=2,h=1}={}){({w,h}=normalizeWidgetSize({w,h}));if(h<=1&&w<=2)return"micro";if(h<=1)return"compact";if(h===2)return"standard";if(h===3&&w>=6)return"panel";if(h===3)return"rich";if(h>=4&&w>=6)return"panel";if(h>=4)return"immersive";return"standard"}
 export const sizeToString=({w,h})=>`${w}x${h}`;
