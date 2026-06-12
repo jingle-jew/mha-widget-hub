@@ -107,12 +107,13 @@ function getSliderHost(wrapper) {
 
 function isFullSliderWidgetPointerControl(wrapper) {
   const shell = getSliderWidgetShell(wrapper);
-  if (!shell) return false;
-
   const host = getSliderHost(wrapper);
   const isMobile = host?.dataset?.layout === "mobile";
   const isVertical = wrapper.dataset.orientation === "vertical";
   const themeStyle = host?.dataset?.themeStyle || "";
+  const isIosSlider2 = themeStyle === "ios" && wrapper.classList.contains("slider2");
+
+  if (!shell && !isIosSlider2) return false;
 
   /*
    * iOS always used custom full-widget pointer control, which is why it worked
@@ -120,7 +121,7 @@ function isFullSliderWidgetPointerControl(wrapper) {
    * need the same pointer mapping on mobile because native rotated range drag is
    * unreliable there: tap works, continuous vertical drag often does not.
    */
-  return themeStyle === "ios" || (isMobile && isVertical);
+  return isIosSlider2 || themeStyle === "ios" || (isMobile && isVertical);
 }
 
 function getFullWidgetSliderValueFromPointer(wrapper, input, event, min, max) {
@@ -154,6 +155,7 @@ export function createSlider({
   max = 100,
   value = 50,
   orientation = "horizontal",
+  disabled = false,
   className = "",
   onInput,
 } = {}) {
@@ -177,6 +179,7 @@ export function createSlider({
   input.min = String(min);
   input.max = String(max);
   input.value = String(value);
+  input.disabled = Boolean(disabled);
   input.setAttribute("aria-label", label || "Slider");
   input.setAttribute("aria-orientation", initialOrientation);
 

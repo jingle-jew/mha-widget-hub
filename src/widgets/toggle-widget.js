@@ -44,6 +44,7 @@ export function createToggleWidgetContent(widget = {}, {
   className = "",
   widgetW = Number(widget?.w) || 3,
   widgetH = Number(widget?.h) || 1,
+  disabled = false,
   onToggle,
 } = {}) {
   const data = getToggleWidgetData(widget);
@@ -81,6 +82,7 @@ export function createToggleWidgetContent(widget = {}, {
   const toggle = createToggle({
     label: data.label,
     checked: data.checked,
+    disabled,
     className: "mha-toggle-widget-control",
     onChange: (event) => {
       const checked = Boolean(event.currentTarget?.checked);

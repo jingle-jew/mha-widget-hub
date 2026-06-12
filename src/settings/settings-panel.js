@@ -15,9 +15,14 @@ const THEME_OPTIONS = [
 ];
 
 const STYLE_OPTIONS = [
-  { value: "ios", label: "iOS / Liquid Glass" },
+  { value: "ios", label: "iOS" },
   { value: "oneui", label: "OneUI" },
   { value: "material", label: "Material You" },
+];
+
+const IOS_GLASS_OPTIONS = [
+  { value: "liquid", label: "Liquid Glass" },
+  { value: "frosted", label: "Frosted Glass" },
 ];
 
 const ICON_SHAPE_OPTIONS = [
@@ -139,6 +144,7 @@ export function createSettingsPanel({
   scope = "all",
   theme = "auto",
   themeStyle = "oneui",
+  iosGlass = "liquid",
   accent = "",
   iconShape = "auto",
   effectiveIconShape = "",
@@ -150,6 +156,7 @@ export function createSettingsPanel({
   onClose,
   onThemeChange,
   onThemeStyleChange,
+  onIosGlassChange,
   onAccentChange,
   onIconShapeChange,
   onScreensaverEnabledChange,
@@ -217,7 +224,7 @@ export function createSettingsPanel({
   const sections = [];
 
   if (!isScreensaverScope) {
-    sections.push(createSection("Apparence", [
+    const appearanceControls = [
       createSelect({
         label: "Thème",
         value: theme,
@@ -230,6 +237,18 @@ export function createSettingsPanel({
         options: STYLE_OPTIONS,
         onChange: onThemeStyleChange,
       }),
+    ];
+
+    if (themeStyle === "ios") {
+      appearanceControls.push(createSelect({
+        label: "Verre iOS",
+        value: iosGlass,
+        options: IOS_GLASS_OPTIONS,
+        onChange: onIosGlassChange,
+      }));
+    }
+
+    appearanceControls.push(
       createAccentPicker({
         label: "Accent",
         themeStyle,
@@ -242,7 +261,9 @@ export function createSettingsPanel({
         options: ICON_SHAPE_OPTIONS,
         onChange: onIconShapeChange,
       }),
-    ]));
+    );
+
+    sections.push(createSection("Apparence", appearanceControls));
   } else {
     sections.push(createSection("Apparence", [
       createSelect({

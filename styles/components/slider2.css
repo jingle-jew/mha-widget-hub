@@ -1,0 +1,160 @@
+/*
+ * Compact iOS fader surface built on the generic slider primitive.
+ * The component is opt-in and remains hidden outside the iOS theme.
+ */
+
+.slider2 {
+  --slider2-height: clamp(2.2rem, 26cqb, 2.75rem);
+  --slider2-radius: clamp(.8rem, 10cqb, 1.05rem);
+  --slider2-padding-inline: clamp(.28rem, 2.4cqi, .42rem);
+  --slider2-thumb-size: clamp(1.45rem, 18cqb, 1.85rem);
+  --slider2-fill-opacity: .94;
+
+  display: none;
+}
+
+:host([data-theme-style="ios"]) .slider2 {
+  position: relative;
+  display: block;
+  inline-size: 100%;
+  block-size: var(--slider2-height);
+  min-inline-size: 0;
+  min-block-size: var(--slider2-height);
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: var(--slider2-radius);
+  touch-action: none;
+}
+
+:host([data-theme-style="ios"]) .slider2__surface,
+:host([data-theme-style="ios"]) .slider2__fill,
+:host([data-theme-style="ios"]) .slider2__sheen {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+:host([data-theme-style="ios"]) .slider2__surface {
+  z-index: 1;
+  overflow: hidden;
+  border: 1px solid var(--mha-ios-slider-track-border);
+  background: var(--mha-ios-slider-track-surface);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.2),
+    inset 0 -1px 0 rgba(0,0,0,.06);
+  -webkit-backdrop-filter:
+    blur(var(--mha-ios-slider-track-blur))
+    saturate(var(--mha-ios-slider-track-saturation));
+  backdrop-filter:
+    blur(var(--mha-ios-slider-track-blur))
+    saturate(var(--mha-ios-slider-track-saturation));
+}
+
+:host([data-theme-style="ios"]) .slider2__fill {
+  z-index: 2;
+  inset-inline-end: auto;
+  inline-size: var(--mha-slider-value, 50%);
+  opacity: var(--slider2-fill-opacity);
+  background: var(--mha-ios-slider-fill);
+  box-shadow: var(--mha-ios-slider-fill-shadow);
+  transition: inline-size 100ms linear;
+}
+
+:host([data-theme-style="ios"]) .slider2__sheen {
+  z-index: 3;
+  background:
+    radial-gradient(circle at 22% 0%, rgba(255,255,255,.3), transparent 38%),
+    linear-gradient(135deg, rgba(255,255,255,.12), transparent 55%);
+  opacity: .58;
+  mix-blend-mode: screen;
+}
+
+:host([data-theme-style="ios"]) .slider2__thumb {
+  position: absolute;
+  z-index: 4;
+  inset-block-start: 50%;
+  inset-inline-start: clamp(
+    calc(var(--slider2-padding-inline) + (var(--slider2-thumb-size) / 2)),
+    var(--mha-slider-value, 50%),
+    calc(100% - var(--slider2-padding-inline) - (var(--slider2-thumb-size) / 2))
+  );
+  inline-size: var(--slider2-thumb-size);
+  block-size: var(--slider2-thumb-size);
+  border-radius: 999px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 34% 26%, #fff, rgba(255,255,255,.96) 54%, rgba(235,240,248,.94));
+  box-shadow:
+    0 4px 12px rgba(0,0,0,.2),
+    0 1px 3px rgba(0,0,0,.16),
+    inset 0 1px 0 rgba(255,255,255,.98);
+  transition: inset-inline-start 100ms linear;
+}
+
+:host([data-theme-style="ios"]) .slider2 > .mha-slider-rotor,
+:host([data-theme-style="ios"]) .slider2 .mha-slider-input {
+  position: absolute;
+  z-index: 5;
+  inset: 0 !important;
+  inline-size: 100% !important;
+  block-size: 100% !important;
+  transform: none !important;
+}
+
+:host([data-theme-style="ios"]) .slider2 .mha-slider-input {
+  opacity: 0;
+  cursor: pointer;
+  touch-action: none;
+}
+
+:host([data-theme-style="ios"].is-editing) .mha-widget[data-widget-kind="toggle-slider"] .slider2,
+:host([data-theme-style="ios"].is-editing) .mha-widget[data-widget-kind="toggle-slider"] .slider2 .mha-slider-input {
+  pointer-events: auto !important;
+}
+
+:host([data-theme-style="ios"]) .slider2 .mha-slider-oneui-track {
+  display: none !important;
+}
+
+:host([data-theme-style="ios"]) .slider2 .mha-slider-input:focus-visible {
+  outline: none;
+}
+
+:host([data-theme-style="ios"]) .slider2:has(.mha-slider-input:focus-visible) {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--mha-accent) 38%, transparent);
+}
+
+:host([data-theme-style="ios"]) .slider2:has(.mha-slider-input:disabled) {
+  opacity: .46;
+  filter: saturate(.72);
+}
+
+:host([data-theme-style="ios"]:is([data-ios-glass="liquid"], [data-ios-glass="frosted"])) .slider2__thumb {
+  opacity: 0;
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+:host([data-theme-style="ios"][data-ios-glass="frosted"]) .slider2__surface {
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.12),
+    inset 0 -1px 0 rgba(0,0,0,.08);
+}
+
+:host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-widget[data-widget-kind="toggle-slider"] .slider2 {
+  --mha-ios-slider-track-surface: rgba(120,120,128,.22);
+}
+
+:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="dark"]) .mha-widget[data-widget-kind="toggle-slider"] .slider2 {
+  --mha-ios-slider-track-surface: rgba(180,180,190,.18);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slider2__fill,
+  .slider2__thumb {
+    transition-duration: 0.01ms !important;
+  }
+}

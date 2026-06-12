@@ -399,6 +399,39 @@
   background: linear-gradient(180deg, color-mix(in srgb, var(--mha-accent) 42%, #fff), var(--mha-accent));
 }
 
+.mha-widget-manager-static-preview[data-kind="toggle-slider"] {
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: .45rem;
+}
+
+.mha-widget-manager-static-preview[data-kind="toggle-slider"] > :last-child {
+  border-block-start: 1px solid color-mix(in srgb, var(--mha-preview-text) 10%, transparent);
+  padding-block-start: .45rem;
+}
+
+.mha-widget-manager-static-preview[data-kind="toggle-buttons"] {
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: .45rem;
+}
+
+.mha-widget-manager-static-preview-toggle-buttons {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: .35rem;
+  align-items: center;
+}
+
+.mha-widget-manager-static-preview-toggle-button,
+.mha-widget-manager-static-preview-toggle-buttons > .mha-widget-manager-preview-icon-bubble {
+  min-block-size: 2rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--mha-preview-text) 10%, transparent);
+  background: color-mix(in srgb, var(--mha-preview-surface) 84%, transparent);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+}
+
 .mha-widget-manager-preview-clock-face {
   inline-size: min(5.4rem, 82%);
   block-size: min(5.4rem, 82%);
@@ -620,4 +653,77 @@
 .mha-widget-manager-widget:focus-visible {
   background: var(--mha-preview-surface-hover);
   border-color: var(--mha-preview-border-hover);
+}
+
+/* iOS Frosted: lighter Widget Manager tiles.
+ * Category and widget tiles should read as frosted glass panels, not opaque
+ * cards, while preserving enough contrast for previews and labels.
+ */
+:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="light"]) .mha-widget-manager-category,
+:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="light"]) .mha-widget-manager-widget,
+:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="light"]) .mha-widget-manager-back {
+  background: rgba(255,255,255,.24);
+  border-color: rgba(255,255,255,.42);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.38),
+    0 8px 20px rgba(60,64,72,.045);
+}
+
+:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="light"]) .mha-widget-manager-category:hover,
+:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="light"]) .mha-widget-manager-category:focus-visible,
+:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="light"]) .mha-widget-manager-widget:hover,
+:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="light"]) .mha-widget-manager-widget:focus-visible {
+  background: rgba(255,255,255,.32);
+  border-color: rgba(255,255,255,.56);
+}
+
+:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="dark"]) .mha-widget-manager-category,
+:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="dark"]) .mha-widget-manager-widget,
+:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="dark"]) .mha-widget-manager-back {
+  background: rgba(72,72,74,.26);
+  border-color: rgba(255,255,255,.095);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.09),
+    0 10px 24px rgba(0,0,0,.12);
+}
+
+:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="dark"]) .mha-widget-manager-category:hover,
+:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="dark"]) .mha-widget-manager-category:focus-visible,
+:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="dark"]) .mha-widget-manager-widget:hover,
+:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="dark"]) .mha-widget-manager-widget:focus-visible {
+  background: rgba(84,84,86,.34);
+  border-color: rgba(255,255,255,.16);
+}
+
+/* iOS Frosted: Widget Manager tiles based on OneUI's softer glass surfaces. */
+:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="light"]) .mha-widget-manager-category,
+:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="light"]) .mha-widget-manager-widget,
+:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="light"]) .mha-widget-manager-back {
+  background: linear-gradient(145deg, rgba(255,255,255,.70), rgba(255,246,238,.52));
+  border-color: rgba(110,92,78,.12);
+  box-shadow: 0 6px 16px rgba(76,92,120,.045);
+}
+
+:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="light"]) .mha-widget-manager-category:hover,
+:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="light"]) .mha-widget-manager-category:focus-visible,
+:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="light"]) .mha-widget-manager-widget:hover,
+:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="light"]) .mha-widget-manager-widget:focus-visible {
+  background: linear-gradient(145deg, rgba(255,255,255,.82), rgba(255,240,230,.64));
+  border-color: rgba(110,92,78,.22);
+}
+
+:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="dark"]) .mha-widget-manager-category,
+:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="dark"]) .mha-widget-manager-widget,
+:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="dark"]) .mha-widget-manager-back {
+  background: linear-gradient(145deg, rgba(255,240,226,.16), rgba(255,255,255,.095));
+  border-color: rgba(255,236,219,.16);
+  box-shadow: 0 12px 30px rgba(36,21,14,.14), 0 6px 18px rgba(101,168,255,.045);
+}
+
+:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="dark"]) .mha-widget-manager-category:hover,
+:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="dark"]) .mha-widget-manager-category:focus-visible,
+:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="dark"]) .mha-widget-manager-widget:hover,
+:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="dark"]) .mha-widget-manager-widget:focus-visible {
+  background: linear-gradient(145deg, rgba(255,236,219,.24), rgba(255,255,255,.13));
+  border-color: rgba(255,236,219,.28);
 }

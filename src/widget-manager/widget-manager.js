@@ -24,6 +24,8 @@ export const WIDGET_MANAGER_CATEGORIES = Object.freeze([
     {kind:"toggle",variant:"toggle-widget",label:"Toggle large",size:{w:4,h:1},description:"Interrupteur avec plus d’espace."},
   ]},
   { id:"lights", label:"Lumières", description:"Contrôles rapides et intensité.", icon:"💡", widgets:[
+    {kind:"toggle-slider",variant:"toggle-slider",label:"Lumière combinée",size:{w:4,h:2},description:"État et intensité dans une seule tuile."},
+    {kind:"toggle-buttons",variant:"toggle-buttons",label:"Lumière + boutons",size:{w:4,h:2},description:"Toggle visuel et 4 boutons rapides."},
     {kind:"empty",variant:"light-toggle",label:"Tuile lumière",size:{w:2,h:2},description:"Contrôle simple."},
     {kind:"slider",variant:"light-slider-wide",label:"Intensité horizontale",size:{w:4,h:1},description:"Slider large."},
     {kind:"slider",variant:"light-slider-vertical",label:"Intensité verticale",size:{w:1,h:4},description:"Slider vertical."},
@@ -186,6 +188,37 @@ function createSliderStaticPreview(item) {
   return preview;
 }
 
+function createToggleSliderStaticPreview(item) {
+  const preview = el("div", "mha-widget-manager-static-preview");
+  preview.dataset.kind = "toggle-slider";
+  preview.dataset.size = previewSizeKey(item);
+
+  const toggle = createToggleStaticPreview(item).firstElementChild;
+  const slider = createSliderStaticPreview(item);
+  slider.querySelector(".mha-widget-manager-static-preview-header")?.remove();
+
+  preview.append(toggle, slider);
+  return preview;
+}
+
+function createToggleButtonsStaticPreview(item) {
+  const preview = el("div", "mha-widget-manager-static-preview");
+  preview.dataset.kind = "toggle-buttons";
+  preview.dataset.size = previewSizeKey(item);
+
+  const toggle = createToggleStaticPreview(item).firstElementChild;
+  const actions = el("div", "mha-widget-manager-static-preview-toggle-buttons");
+  actions.append(
+    createIconBubble("⏻"),
+    el("span", "mha-widget-manager-static-preview-toggle-button", "1"),
+    el("span", "mha-widget-manager-static-preview-toggle-button", "2"),
+    el("span", "mha-widget-manager-static-preview-toggle-button", "3"),
+  );
+
+  preview.append(toggle, actions);
+  return preview;
+}
+
 function createClockStaticPreview(item) {
   const preview = el("div", "mha-widget-manager-static-preview");
   preview.dataset.kind = "clock";
@@ -299,6 +332,8 @@ function createWidgetPreview(item) {
 
   let preview;
   if (item.kind === "button") preview = createButtonStaticPreview(item);
+  else if (item.kind === "toggle-slider") preview = createToggleSliderStaticPreview(item);
+  else if (item.kind === "toggle-buttons") preview = createToggleButtonsStaticPreview(item);
   else if (item.kind === "toggle") preview = createToggleStaticPreview(item);
   else if (item.kind === "slider") preview = createSliderStaticPreview(item);
   else if (item.kind === "clock") preview = createClockStaticPreview(item);

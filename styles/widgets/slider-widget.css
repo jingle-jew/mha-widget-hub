@@ -502,6 +502,63 @@
   border-radius: inherit;
 }
 
+/* iOS standalone slider keeps the same visual language as slider2, but uses
+ * the full widget surface like a dedicated wide fader tile.
+ */
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="slider"] {
+  background: var(--mha-ios-slider-track-surface) !important;
+  border-color: var(--mha-ios-slider-track-border);
+  box-shadow: var(--mha-widget-shell-shadow, var(--mha-shadow-primary));
+  -webkit-backdrop-filter:
+    blur(var(--mha-ios-slider-track-blur))
+    saturate(var(--mha-ios-slider-track-saturation));
+  backdrop-filter:
+    blur(var(--mha-ios-slider-track-blur))
+    saturate(var(--mha-ios-slider-track-saturation));
+}
+
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="slider"] > .mha-slider-widget-frame {
+  inset: 0;
+  inline-size: 100% !important;
+  width: 100% !important;
+  block-size: 100% !important;
+  height: 100% !important;
+  overflow: hidden;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.2),
+    inset 0 -1px 0 rgba(0,0,0,.06);
+}
+
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="slider"] > .mha-slider-widget-frame::before {
+  background: var(--mha-ios-slider-fill);
+  box-shadow: var(--mha-ios-slider-fill-shadow);
+  opacity: .94;
+}
+
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="slider"] > .mha-slider-widget-frame::after {
+  background:
+    radial-gradient(circle at 22% 0%, rgba(255,255,255,.3), transparent 38%),
+    linear-gradient(135deg, rgba(255,255,255,.12), transparent 55%);
+  opacity: .58;
+}
+
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="slider"] > .mha-slider-widget-frame > .mha-slider-widget-unit {
+  inset: 0 !important;
+  inline-size: 100% !important;
+  width: 100% !important;
+  block-size: 100% !important;
+  height: 100% !important;
+  overflow: hidden;
+}
+
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="slider"]:has(.mha-slider-input:disabled) > .mha-slider-widget-frame {
+  opacity: .46;
+  filter: saturate(.72);
+}
+
 /* OneUI flat-depth policy: SliderWidget ------------------------------------ */
 :host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="slider"],
 :host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="slider"] .mha-slider-widget-frame,

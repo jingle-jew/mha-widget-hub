@@ -74,6 +74,20 @@ function getStoredThemeStyle(host) {
   return normalizeThemeStyle(stored);
 }
 
+function normalizeIosGlass(iosGlass = "liquid") {
+  return ["liquid", "frosted"].includes(iosGlass) ? iosGlass : "liquid";
+}
+
+function getStoredIosGlass(host) {
+  const stored = localStorage.getItem("mha-ios-glass")
+    || localStorage.getItem("mha-dev-ios-glass")
+    || document.documentElement.dataset.iosGlass
+    || host?.dataset?.iosGlass
+    || "liquid";
+
+  return normalizeIosGlass(stored);
+}
+
 function getStoredAccent(host, themeStyle = "oneui") {
   const normalizedStyle = normalizeThemeStyle(themeStyle);
   const stored = localStorage.getItem(`mha-accent-${normalizedStyle}`)
@@ -144,6 +158,12 @@ function syncThemeAttributes(host) {
   host.setAttribute("data-theme-style", themeStyle);
   document.documentElement.dataset.themeStyle = themeStyle;
   document.documentElement.setAttribute("data-theme-style", themeStyle);
+
+  const iosGlass = getStoredIosGlass(host);
+  host.dataset.iosGlass = iosGlass;
+  host.setAttribute("data-ios-glass", iosGlass);
+  document.documentElement.dataset.iosGlass = iosGlass;
+  document.documentElement.setAttribute("data-ios-glass", iosGlass);
 
   host.dataset.accent = accent;
   host.setAttribute("data-accent", accent);
@@ -257,6 +277,46 @@ function normalizeStoredWidgetContract(widget = {}) {
     };
   }
 
+  const isToggleSlider = widget?.kind === "toggle-slider"
+    || widget?.type === "toggle-slider"
+    || widget?.component === "toggle-slider-widget"
+    || ["toggle-slider", "combined-slider-toggle", "combined-toggle-slider"].includes(widget?.variant);
+
+  if (isToggleSlider) {
+    const rawW = Math.round(Number(widget.w) || 4);
+
+    return {
+      ...widget,
+      kind: "toggle-slider",
+      type: "toggle-slider",
+      component: "toggle-slider-widget",
+      category: widget.category || "lights",
+      variant: "toggle-slider",
+      w: Math.max(3, Math.min(4, rawW)),
+      h: 2,
+    };
+  }
+
+  const isToggleButtons = widget?.kind === "toggle-buttons"
+    || widget?.type === "toggle-buttons"
+    || widget?.component === "toggle-buttons-widget"
+    || ["toggle-buttons", "combined-toggle-buttons", "toggle-button-row", "toggle-quick-buttons"].includes(widget?.variant);
+
+  if (isToggleButtons) {
+    const rawW = Math.round(Number(widget.w) || 4);
+
+    return {
+      ...widget,
+      kind: "toggle-buttons",
+      type: "toggle-buttons",
+      component: "toggle-buttons-widget",
+      category: widget.category || "lights",
+      variant: "toggle-buttons",
+      w: Math.max(3, Math.min(4, rawW)),
+      h: 2,
+    };
+  }
+
   const isToggle = widget?.kind === "toggle"
     || widget?.type === "toggle"
     || widget?.component === "toggle-widget"
@@ -367,6 +427,7 @@ _getSettingsPanelProps(scope="all"){
     scope,
     theme:getStoredThemeSetting(this),
     themeStyle,
+    iosGlass:getStoredIosGlass(this),
     accent:getStoredAccent(this,themeStyle),
     iconShape:iconShapeSetting,
     effectiveIconShape,
@@ -378,6 +439,7 @@ _getSettingsPanelProps(scope="all"){
     onClose:()=>scope==="screensaver"?this._closeScreensaverSettings():this._closeSettings(),
     onThemeChange:v=>this._applyThemeFromSettings(v),
     onThemeStyleChange:v=>this._applyThemeStyleFromSettings(v),
+    onIosGlassChange:v=>this._applyIosGlassFromSettings(v),
     onAccentChange:v=>this._applyAccentFromSettings(v),
     onIconShapeChange:v=>this._applyIconShapeFromSettings(v),
     onScreensaverEnabledChange:v=>this._applyScreensaverEnabledFromSettings(v),
@@ -435,9 +497,9 @@ _createWidgetFromCatalogItem(item){
   const random=Math.random().toString(36).slice(2,7);
   const rawKind=item?.kind||"empty";
   const rawVariant=item?.variant||rawKind;
-  const kind=rawKind==="slider"?"slider":rawKind==="weather"||rawVariant==="adaptive-weather"?"weather":rawKind==="toggle"||rawVariant==="toggle-widget"||rawVariant==="simple-toggle"?"toggle":rawKind==="button"||rawVariant==="simple-button"?"button":rawKind==="clock"||isClockCatalogVariant(rawVariant)?"clock":"empty";
-  const category=item?.category||(kind==="clock"?"utilities":kind==="button"||kind==="toggle"?"actions":kind==="weather"?"climate":"custom");
-  const baseSize=kind==="clock"?{w:2,h:2}:kind==="button"?(item?.size||{w:2,h:1}):kind==="toggle"?(item?.size||{w:3,h:1}):kind==="weather"?(item?.size||{w:2,h:2}):normalizeWidgetSize(item?.size||{w:2,h:2});
+  const kind=rawKind==="toggle-slider"||rawVariant==="toggle-slider"?"toggle-slider":rawKind==="toggle-buttons"||rawVariant==="toggle-buttons"?"toggle-buttons":rawKind==="slider"?"slider":rawKind==="weather"||rawVariant==="adaptive-weather"?"weather":rawKind==="toggle"||rawVariant==="toggle-widget"||rawVariant==="simple-toggle"?"toggle":rawKind==="button"||rawVariant==="simple-button"?"button":rawKind==="clock"||isClockCatalogVariant(rawVariant)?"clock":"empty";
+  const category=item?.category||(kind==="clock"?"utilities":kind==="button"||kind==="toggle"?"actions":kind==="toggle-slider"||kind==="toggle-buttons"?"lights":kind==="weather"?"climate":"custom");
+  const baseSize=kind==="clock"?{w:2,h:2}:kind==="button"?(item?.size||{w:2,h:1}):kind==="toggle"?(item?.size||{w:3,h:1}):kind==="toggle-slider"||kind==="toggle-buttons"?(item?.size||{w:4,h:2}):kind==="weather"?(item?.size||{w:2,h:2}):normalizeWidgetSize(item?.size||{w:2,h:2});
   const size=normalizeWidgetForKind({
     kind,
     type:kind,
@@ -450,7 +512,7 @@ _createWidgetFromCatalogItem(item){
     id:`widget-${category}-${rawVariant||kind}-${timestamp}-${random}`,
     kind,
     type:kind,
-    component:kind==="clock"?"clock-widget":kind==="slider"?"slider-widget":kind==="button"?"button-widget":kind==="toggle"?"toggle-widget":kind==="weather"?"weather-widget":"empty-widget",
+    component:kind==="clock"?"clock-widget":kind==="slider"?"slider-widget":kind==="button"?"button-widget":kind==="toggle"?"toggle-widget":kind==="toggle-slider"?"toggle-slider-widget":kind==="toggle-buttons"?"toggle-buttons-widget":kind==="weather"?"weather-widget":"empty-widget",
     category,
     variant:rawVariant,
     title:item?.label||"Widget",
@@ -561,6 +623,14 @@ _applyThemeStyleFromSettings(value="oneui"){
   localStorage.setItem("mha-accent",nextAccent);
   localStorage.setItem(`mha-accent-${nextStyle}`,nextAccent);
 
+  syncThemeAttributes(this);
+  this._syncSettingsDom();
+}
+
+_applyIosGlassFromSettings(value="liquid"){
+  const nextGlass=normalizeIosGlass(value);
+  localStorage.setItem("mha-ios-glass",nextGlass);
+  localStorage.setItem("mha-dev-ios-glass",nextGlass);
   syncThemeAttributes(this);
   this._syncSettingsDom();
 }
@@ -1962,5 +2032,5 @@ _wireDrag(el){
   el.draggable=false;
   el.removeAttribute("draggable");
 }
-render(){syncThemeAttributes(this);const renderId=++this._renderId,layoutMode=getLayoutMode(this),layout=getEffectiveLayout(this),preset=this._getRuntimeGridPreset(),units=getInternalGridColumnCountFromLogical(preset.columns),rows=getInternalGridRowCountFromLogical(preset.rows),cols=preset.columns,logicalRows=preset.rows,themeStyle=THEME_STYLES.has(document.documentElement.dataset.themeStyle)?document.documentElement.dataset.themeStyle:"oneui";const iconShapeSetting=getStoredIconShapeSetting(this);const iconShape=resolveIconShape(themeStyle,iconShapeSetting);this._clearGridScrollListener();this.dataset.themeStyle=themeStyle;this.dataset.iconShapeSetting=iconShapeSetting;this.setAttribute("data-icon-shape-setting",iconShapeSetting);this.dataset.iconShape=iconShape;this.setAttribute("data-icon-shape",iconShape);document.documentElement.dataset.iconShapeSetting=iconShapeSetting;document.documentElement.setAttribute("data-icon-shape-setting",iconShapeSetting);document.documentElement.dataset.iconShape=iconShape;document.documentElement.setAttribute("data-icon-shape",iconShape);const accent=normalizeAccent(themeStyle,localStorage.getItem(`mha-accent-${themeStyle}`)||localStorage.getItem("mha-accent")||"sky");this.dataset.accent=accent;this.setAttribute("data-accent",accent);document.documentElement.dataset.accent=accent;document.documentElement.setAttribute("data-accent",accent);this.dataset.layoutMode=layoutMode;this.dataset.layout=layout;this.dataset.gridDensity=preset.density;this.dataset.gridUnits=String(units);this.dataset.logicalColumns=String(cols);this.dataset.gridRows=String(rows);this.dataset.logicalRows=String(logicalRows);this.classList.toggle("is-editing",this._isEditing);this.style.setProperty("--mha-runtime-grid-units",String(units));this.style.setProperty("--mha-runtime-grid-rows",String(rows));this.style.setProperty("--mha-runtime-logical-columns",String(cols));this.style.setProperty("--mha-runtime-logical-rows",String(logicalRows));this.shadowRoot.innerHTML=`<link rel="stylesheet" href="./styles/core/tokens.css"><link rel="stylesheet" href="./styles/components/icon.css"><link rel="stylesheet" href="./styles/components/icon-symbol.css"><link rel="stylesheet" href="./styles/components/slider.css"><link rel="stylesheet" href="./styles/components/toggle.css"><link rel="stylesheet" href="./styles/components/pill.css"><link rel="stylesheet" href="./styles/components/button.css"><link rel="stylesheet" href="./styles/themes/ios.css"><link rel="stylesheet" href="./styles/themes/oneui.css"><link rel="stylesheet" href="./styles/themes/material.css"><link rel="stylesheet" href="./styles/themes/accent-palettes.css"><link rel="stylesheet" href="./styles/themes/semantic-tokens.css"><link rel="stylesheet" href="./styles/core/background.css"><link rel="stylesheet" href="./styles/layout/shell.css"><link rel="stylesheet" href="./styles/layout/widget-grid.css"><link rel="stylesheet" href="./styles/layout/status-bar.css"><link rel="stylesheet" href="./styles/layout/dock.css"><link rel="stylesheet" href="./styles/layout/mobile-dock.css"><link rel="stylesheet" href="./styles/layout/floating-controls.css"><link rel="stylesheet" href="./styles/settings/settings-panel.css"><link rel="stylesheet" href="./styles/widget-manager/widget-manager.css"><link rel="stylesheet" href="./styles/themes/light-text-contract.css"><link rel="stylesheet" href="./styles/widgets/widget-layout.css"><link rel="stylesheet" href="./styles/widgets/empty-widget.css"><link rel="stylesheet" href="./styles/widgets/slider-widget.css"><link rel="stylesheet" href="./styles/widgets/clock-widget.css"><link rel="stylesheet" href="./styles/widgets/simple-button-widget.css"><link rel="stylesheet" href="./styles/widgets/toggle-widget.css"><link rel="stylesheet" href="./styles/widgets/weather-widget.css"><link rel="stylesheet" href="./styles/screensaver/screensaver.css">`;const links=[...this.shadowRoot.querySelectorAll('link[rel="stylesheet"]')],{bg,shell,grid}=createShell({layoutMode,layout,logicalColumns:cols,gridUnits:units,onSettings:()=>this._openSettings()});this.shadowRoot.append(bg,shell);const positions=this._getActiveWidgetPositions();this._widgets.forEach(w=>{const el=createEmptyWidget(w,{activeGridUnits:units,isEditing:this._isEditing,isMoveTarget:this._isEditing&&this._activeMoveWidgetId===w.id,position:positions?.[w.id],onToggleMove:id=>this._toggleWidgetMoveMode(id),onMove:(id,direction)=>this._moveWidgetByDirection(id,direction),onRemove:id=>this._removeWidget(id),onCycleVariant:id=>this.cycleVariant(id)});this._wireDrag(el,w);grid.append(el)});this.shadowRoot.append(createScreensaver({isVisible:this._getScreensaverVisible(),showNowBar:this._screensaverNowBar,clockVariant:this._screensaverClockVariant,onClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),onOpenScreensaverSettings:()=>this._openScreensaverSettings(),onWake:()=>this._wakeScreensaver()}));this.shadowRoot.append(createMobileDock({onSettings:()=>this._openSettings()}));this.shadowRoot.append(this._createSettingsPanel());this.shadowRoot.append(this._createWidgetManagerPanel());this.shadowRoot.append(createSettingsPanel(this._getSettingsPanelProps("screensaver")));const edit=document.createElement("button");edit.className="mha-edit-button mha-main-edit-button mha-primary-edit-button";edit.type="button";edit.innerHTML=this._isEditing?ICONS.close:ICONS.edit;edit.onclick=()=>this.toggleEditMode();this.shadowRoot.append(edit);const addWidget=document.createElement("button");addWidget.className="mha-edit-button mha-main-edit-button mha-add-widget-button";addWidget.type="button";addWidget.innerHTML=`<svg viewBox="0 0 24 24"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5Z"/></svg>`;addWidget.setAttribute("aria-label","Ajouter un widget");addWidget.hidden=!this._isEditing;addWidget.onclick=(event)=>{event.preventDefault();event.stopPropagation();this._openWidgetManager()};this.shadowRoot.append(addWidget);this._syncEditModeDom();this._wireDockAutoHide(grid);this._scheduleSquareUnitSync();Promise.all(links.map(link=>link.sheet?Promise.resolve():new Promise(resolve=>{link.addEventListener("load",resolve,{once:true});link.addEventListener("error",resolve,{once:true})}))).then(()=>{if(this._renderId!==renderId)return;const styledUnits=getActiveGridUnits(this);if(styledUnits!==units){this.render();return}this._scheduleSquareUnitSync();this._syncScreensaverVisibilityState();this._markReadyAfterPaint()});updateStatusTime(this.shadowRoot);updateClockWidgets(this.shadowRoot);this._syncWidgetDropSlots();this._markReadyAfterPaint();this._scheduleScreensaverIdleTimer()}}
+render(){syncThemeAttributes(this);const renderId=++this._renderId,layoutMode=getLayoutMode(this),layout=getEffectiveLayout(this),preset=this._getRuntimeGridPreset(),units=getInternalGridColumnCountFromLogical(preset.columns),rows=getInternalGridRowCountFromLogical(preset.rows),cols=preset.columns,logicalRows=preset.rows,themeStyle=THEME_STYLES.has(document.documentElement.dataset.themeStyle)?document.documentElement.dataset.themeStyle:"oneui";const iconShapeSetting=getStoredIconShapeSetting(this);const iconShape=resolveIconShape(themeStyle,iconShapeSetting);this._clearGridScrollListener();this.dataset.themeStyle=themeStyle;this.dataset.iconShapeSetting=iconShapeSetting;this.setAttribute("data-icon-shape-setting",iconShapeSetting);this.dataset.iconShape=iconShape;this.setAttribute("data-icon-shape",iconShape);document.documentElement.dataset.iconShapeSetting=iconShapeSetting;document.documentElement.setAttribute("data-icon-shape-setting",iconShapeSetting);document.documentElement.dataset.iconShape=iconShape;document.documentElement.setAttribute("data-icon-shape",iconShape);const accent=normalizeAccent(themeStyle,localStorage.getItem(`mha-accent-${themeStyle}`)||localStorage.getItem("mha-accent")||"sky");this.dataset.accent=accent;this.setAttribute("data-accent",accent);document.documentElement.dataset.accent=accent;document.documentElement.setAttribute("data-accent",accent);this.dataset.layoutMode=layoutMode;this.dataset.layout=layout;this.dataset.gridDensity=preset.density;this.dataset.gridUnits=String(units);this.dataset.logicalColumns=String(cols);this.dataset.gridRows=String(rows);this.dataset.logicalRows=String(logicalRows);this.classList.toggle("is-editing",this._isEditing);this.style.setProperty("--mha-runtime-grid-units",String(units));this.style.setProperty("--mha-runtime-grid-rows",String(rows));this.style.setProperty("--mha-runtime-logical-columns",String(cols));this.style.setProperty("--mha-runtime-logical-rows",String(logicalRows));this.shadowRoot.innerHTML=`<link rel="stylesheet" href="./styles/core/tokens.css"><link rel="stylesheet" href="./styles/components/icon.css"><link rel="stylesheet" href="./styles/components/icon-symbol.css"><link rel="stylesheet" href="./styles/components/slider.css"><link rel="stylesheet" href="./styles/components/toggle.css"><link rel="stylesheet" href="./styles/components/pill.css"><link rel="stylesheet" href="./styles/components/button.css"><link rel="stylesheet" href="./styles/themes/ios.css"><link rel="stylesheet" href="./styles/themes/oneui.css"><link rel="stylesheet" href="./styles/themes/material.css"><link rel="stylesheet" href="./styles/themes/accent-palettes.css"><link rel="stylesheet" href="./styles/themes/semantic-tokens.css"><link rel="stylesheet" href="./styles/core/background.css"><link rel="stylesheet" href="./styles/layout/shell.css"><link rel="stylesheet" href="./styles/layout/widget-grid.css"><link rel="stylesheet" href="./styles/layout/status-bar.css"><link rel="stylesheet" href="./styles/layout/dock.css"><link rel="stylesheet" href="./styles/layout/mobile-dock.css"><link rel="stylesheet" href="./styles/layout/floating-controls.css"><link rel="stylesheet" href="./styles/settings/settings-panel.css"><link rel="stylesheet" href="./styles/widget-manager/widget-manager.css"><link rel="stylesheet" href="./styles/themes/light-text-contract.css"><link rel="stylesheet" href="./styles/widgets/widget-layout.css"><link rel="stylesheet" href="./styles/widgets/empty-widget.css"><link rel="stylesheet" href="./styles/widgets/slider-widget.css"><link rel="stylesheet" href="./styles/widgets/clock-widget.css"><link rel="stylesheet" href="./styles/widgets/simple-button-widget.css"><link rel="stylesheet" href="./styles/widgets/toggle-widget.css"><link rel="stylesheet" href="./styles/widgets/toggle-slider-widget.css"><link rel="stylesheet" href="./styles/widgets/toggle-buttons-widget.css"><link rel="stylesheet" href="./styles/widgets/weather-widget.css"><link rel="stylesheet" href="./styles/screensaver/screensaver.css">`;const links=[...this.shadowRoot.querySelectorAll('link[rel="stylesheet"]')],{bg,shell,grid}=createShell({layoutMode,layout,logicalColumns:cols,gridUnits:units,onSettings:()=>this._openSettings()});this.shadowRoot.append(bg,shell);const positions=this._getActiveWidgetPositions();this._widgets.forEach(w=>{const el=createEmptyWidget(w,{activeGridUnits:units,isEditing:this._isEditing,isMoveTarget:this._isEditing&&this._activeMoveWidgetId===w.id,position:positions?.[w.id],hass:this._hass,onToggleMove:id=>this._toggleWidgetMoveMode(id),onMove:(id,direction)=>this._moveWidgetByDirection(id,direction),onRemove:id=>this._removeWidget(id),onCycleVariant:id=>this.cycleVariant(id)});this._wireDrag(el,w);grid.append(el)});this.shadowRoot.append(createScreensaver({isVisible:this._getScreensaverVisible(),showNowBar:this._screensaverNowBar,clockVariant:this._screensaverClockVariant,onClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),onOpenScreensaverSettings:()=>this._openScreensaverSettings(),onWake:()=>this._wakeScreensaver()}));this.shadowRoot.append(createMobileDock({onSettings:()=>this._openSettings()}));this.shadowRoot.append(this._createSettingsPanel());this.shadowRoot.append(this._createWidgetManagerPanel());this.shadowRoot.append(createSettingsPanel(this._getSettingsPanelProps("screensaver")));const edit=document.createElement("button");edit.className="mha-edit-button mha-main-edit-button mha-primary-edit-button";edit.type="button";edit.innerHTML=this._isEditing?ICONS.close:ICONS.edit;edit.onclick=()=>this.toggleEditMode();this.shadowRoot.append(edit);const addWidget=document.createElement("button");addWidget.className="mha-edit-button mha-main-edit-button mha-add-widget-button";addWidget.type="button";addWidget.innerHTML=`<svg viewBox="0 0 24 24"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5Z"/></svg>`;addWidget.setAttribute("aria-label","Ajouter un widget");addWidget.hidden=!this._isEditing;addWidget.onclick=(event)=>{event.preventDefault();event.stopPropagation();this._openWidgetManager()};this.shadowRoot.append(addWidget);this._syncEditModeDom();this._wireDockAutoHide(grid);this._scheduleSquareUnitSync();Promise.all(links.map(link=>link.sheet?Promise.resolve():new Promise(resolve=>{link.addEventListener("load",resolve,{once:true});link.addEventListener("error",resolve,{once:true})}))).then(()=>{if(this._renderId!==renderId)return;const styledUnits=getActiveGridUnits(this);if(styledUnits!==units){this.render();return}this._scheduleSquareUnitSync();this._syncScreensaverVisibilityState();this._markReadyAfterPaint()});updateStatusTime(this.shadowRoot);updateClockWidgets(this.shadowRoot);this._syncWidgetDropSlots();this._markReadyAfterPaint();this._scheduleScreensaverIdleTimer()}}
 customElements.define("mha-control-hub",MhaControlHub);

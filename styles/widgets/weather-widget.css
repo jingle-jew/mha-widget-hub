@@ -301,6 +301,48 @@
   --mha-weather-bg-end: #1f78ff;
 }
 
+
+:host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-widget[data-widget-kind="weather"] {
+  /* iOS Frosted fait exception: surface météo expressive, façon OneUI. */
+  --mha-weather-bg-start: #8edcff;
+  --mha-weather-bg-end: #4d8dff;
+  --mha-weather-bg-glow: rgba(255,255,255,.44);
+  --mha-weather-text: rgba(255,255,255,.98);
+  --mha-weather-muted: rgba(255,255,255,.80);
+  --mha-weather-chip-bg: rgba(255,255,255,.20);
+  --mha-weather-chip-border: rgba(255,255,255,.26);
+  --mha-widget-reflection-opacity: .24;
+  background:
+    radial-gradient(circle at 16% 10%, rgba(255,255,255,.48), transparent 32%),
+    radial-gradient(circle at 92% 12%, rgba(120, 235, 255, .34), transparent 36%),
+    linear-gradient(145deg, var(--mha-weather-bg-start), var(--mha-weather-bg-end));
+  border-color: rgba(255,255,255,.32);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.34),
+    0 18px 44px rgba(44, 112, 210, .18);
+}
+
+:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="dark"]) .mha-widget[data-widget-kind="weather"] {
+  --mha-weather-bg-start: #245fbd;
+  --mha-weather-bg-end: #102b68;
+  --mha-weather-bg-glow: rgba(94, 190, 255, .34);
+  --mha-weather-chip-bg: rgba(255,255,255,.14);
+  --mha-weather-chip-border: rgba(255,255,255,.18);
+  background:
+    radial-gradient(circle at 18% 12%, rgba(120, 210, 255, .34), transparent 34%),
+    radial-gradient(circle at 88% 18%, rgba(122, 135, 255, .26), transparent 38%),
+    linear-gradient(145deg, var(--mha-weather-bg-start), var(--mha-weather-bg-end));
+  border-color: rgba(255,255,255,.18);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.18),
+    0 20px 48px rgba(0,0,0,.26);
+}
+
+:host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-widget[data-widget-kind="weather"] .mha-weather-widget-chip,
+:host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-widget[data-widget-kind="weather"] .mha-weather-widget-forecast-row {
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.16);
+}
+
 /* 4. Consommation des tokens de theme */
 :host([data-theme-style="material"]) .mha-widget[data-widget-kind="weather"] {
   --mha-weather-bg-start: color-mix(in srgb, #b7e4ff 70%, #ffffff 30%);

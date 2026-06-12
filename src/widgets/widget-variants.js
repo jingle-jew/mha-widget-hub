@@ -38,6 +38,16 @@ export const WIDGET_VARIANTS = Object.freeze({
     Object.freeze({ variant: "toggle-widget", label: "Toggle 3×1", size: Object.freeze({ w: 3, h: 1 }) }),
     Object.freeze({ variant: "toggle-widget", label: "Toggle 4×1", size: Object.freeze({ w: 4, h: 1 }) }),
   ]),
+
+  toggleSlider: Object.freeze([
+    Object.freeze({ variant: "toggle-slider", label: "Combiné 3×2", size: Object.freeze({ w: 3, h: 2 }) }),
+    Object.freeze({ variant: "toggle-slider", label: "Combiné 4×2", size: Object.freeze({ w: 4, h: 2 }) }),
+  ]),
+
+  toggleButtons: Object.freeze([
+    Object.freeze({ variant: "toggle-buttons", label: "Toggle + boutons 3×2", size: Object.freeze({ w: 3, h: 2 }) }),
+    Object.freeze({ variant: "toggle-buttons", label: "Toggle + boutons 4×2", size: Object.freeze({ w: 4, h: 2 }) }),
+  ]),
 });
 
 export function getWidgetVariantKind(widget = {}) {
@@ -52,6 +62,20 @@ export function getWidgetVariantKind(widget = {}) {
 
   if (kind === "button" || kind === "button-widget" || variant === "simple-button") return "button";
   if (kind === "weather" || kind === "weather-widget" || variant === "adaptive-weather") return "weather";
+
+  if (
+    kind === "toggle-slider" ||
+    kind === "toggle-slider-widget" ||
+    kind === "combined-slider-toggle" ||
+    ["toggle-slider", "combined-slider-toggle", "combined-toggle-slider"].includes(variant)
+  ) return "toggleSlider";
+
+  if (
+    kind === "toggle-buttons" ||
+    kind === "toggle-buttons-widget" ||
+    kind === "combined-toggle-buttons" ||
+    ["toggle-buttons", "combined-toggle-buttons", "toggle-button-row", "toggle-quick-buttons"].includes(variant)
+  ) return "toggleButtons";
 
   if (
     kind === "toggle" ||

@@ -342,6 +342,22 @@ export function normalizeToggleWidgetSize(size = {}) {
   };
 }
 
+export function normalizeToggleSliderWidgetSize(size = {}) {
+  const normalized = normalizeWidgetSize(size);
+  return {
+    w: Math.max(3, Math.min(4, normalized.w)),
+    h: 2,
+  };
+}
+
+export function normalizeToggleButtonsWidgetSize(size = {}) {
+  const normalized = normalizeWidgetSize(size);
+  return {
+    w: Math.max(3, Math.min(4, normalized.w)),
+    h: 2,
+  };
+}
+
 export function normalizeWidgetForKind(widget={}) {
   const size=normalizeWidgetSize(widget);
   const kind=widget.kind||widget.type||widget.component;
@@ -351,9 +367,13 @@ export function normalizeWidgetForKind(widget={}) {
   const isClock=kind==="clock"||kind==="clock-widget"||(category==="utilities"&&["digital","digital-weather","analog","ios-analog"].includes(variant));
   const isButton=kind==="button"||kind==="button-widget"||variant==="simple-button";
   const isToggle=kind==="toggle"||kind==="toggle-widget"||variant==="toggle-widget"||variant==="simple-toggle";
+  const isToggleSlider=kind==="toggle-slider"||kind==="toggle-slider-widget"||kind==="combined-slider-toggle"||variant==="toggle-slider"||variant==="combined-slider-toggle"||variant==="combined-toggle-slider";
+  const isToggleButtons=kind==="toggle-buttons"||kind==="toggle-buttons-widget"||kind==="combined-toggle-buttons"||variant==="toggle-buttons"||variant==="combined-toggle-buttons"||variant==="toggle-button-row"||variant==="toggle-quick-buttons";
   const isWeather=kind==="weather"||kind==="weather-widget"||variant==="adaptive-weather";
   if(isClock)return normalizeClockWidgetSize();
   if(isButton)return normalizeSimpleButtonWidgetSize(size);
+  if(isToggleSlider)return normalizeToggleSliderWidgetSize(size);
+  if(isToggleButtons)return normalizeToggleButtonsWidgetSize(size);
   if(isToggle)return normalizeToggleWidgetSize(size);
   if(isWeather)return normalizeWeatherWidgetSize(size);
   if(!isSlider)return size;

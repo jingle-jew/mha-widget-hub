@@ -299,6 +299,46 @@
     );
   --mha-slider-widget-highlight: var(--mha-highlight-primary);
   --mha-slider-widget-blur: var(--mha-blur-primary);
+
+  --mha-ios-slider-track-border: color-mix(in srgb, white 24%, var(--mha-widget-shell-border));
+  --mha-ios-slider-track-surface:
+    linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,.045)),
+    color-mix(in srgb, var(--mha-slider-widget-surface-inactive) 82%, transparent);
+  --mha-ios-slider-track-blur: 7px;
+  --mha-ios-slider-track-saturation: 165%;
+  --mha-ios-slider-fill:
+    linear-gradient(145deg, rgba(255,255,255,.82), rgba(255,255,255,.46)),
+    var(--mha-slider-widget-surface-active, var(--mha-accent));
+  --mha-ios-slider-fill-shadow:
+    inset 0 1px 0 rgba(255,255,255,.58),
+    5px 0 16px color-mix(in srgb, var(--mha-accent) 20%, transparent);
+}
+
+:host([data-theme-style="ios"][data-ios-glass="frosted"]),
+:root[data-theme-style="ios"][data-ios-glass="frosted"] {
+  --mha-ios-slider-track-border: rgba(255,255,255,.14);
+  --mha-ios-slider-track-surface: rgba(128,128,132,.32);
+  --mha-ios-slider-track-blur: 14px;
+  --mha-ios-slider-track-saturation: 112%;
+  --mha-ios-slider-fill:
+    linear-gradient(145deg, rgba(255,255,255,.98), rgba(244,246,250,.86));
+  --mha-ios-slider-fill-shadow:
+    inset 0 1px 0 rgba(255,255,255,.92),
+    4px 0 12px rgba(255,255,255,.12);
+}
+
+:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="light"]),
+:root[data-theme-style="ios"][data-ios-glass="frosted"][data-theme="light"] {
+  --mha-ios-slider-track-border: rgba(72,72,74,.14);
+  --mha-ios-slider-track-surface: rgba(118,118,122,.28);
+}
+
+:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="dark"]),
+:root[data-theme-style="ios"][data-ios-glass="frosted"][data-theme="dark"] {
+  --mha-ios-slider-track-border: rgba(255,255,255,.13);
+  --mha-ios-slider-track-surface: rgba(99,99,102,.42);
+  --mha-ios-slider-fill:
+    linear-gradient(145deg, rgba(255,255,255,1), rgba(238,240,245,.9));
 }
 
 :host([data-theme-style="oneui"]),

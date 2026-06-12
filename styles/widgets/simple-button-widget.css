@@ -530,7 +530,9 @@
   background: var(--mha-simple-button-icon-bg) !important;
   color: var(--mha-simple-button-icon-color) !important;
   border-color: var(--mha-simple-button-icon-border) !important;
-  box-shadow: var(--mha-simple-button-icon-shadow) !important;
+  box-shadow: none !important;
+  filter: none !important;
+  text-shadow: none !important;
 }
 
 /* iOS 2x2 color parity ------------------------------------------------------
@@ -569,9 +571,17 @@
   background: var(--mha-simple-button-ios-home-icon-bg, var(--mha-ios-home-active-icon-bg, #ffd60a)) !important;
   border-color: color-mix(in srgb, var(--mha-simple-button-ios-home-icon-bg, #ffd60a) 72%, rgba(255,255,255,.55)) !important;
   color: var(--mha-simple-button-ios-home-icon-fg, var(--mha-ios-home-active-icon-fg, rgba(18, 18, 20, .9))) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.38),
-    0 8px 18px color-mix(in srgb, var(--mha-simple-button-ios-home-icon-bg, #ffd60a) 28%, transparent) !important;
+  box-shadow: none !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="button"][data-widget-size="2x2"] .mha-simple-button-icon-bubble::before,
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="button"][data-widget-size="2x2"] .mha-simple-button-icon-bubble::after,
+:host([data-theme-style="ios"]) .mha-simple-button-widget[data-button-layout="square"] .mha-simple-button-icon-bubble::before,
+:host([data-theme-style="ios"]) .mha-simple-button-widget[data-button-layout="square"] .mha-simple-button-icon-bubble::after {
+  box-shadow: none !important;
+  filter: none !important;
 }
 
 /* iOS / Material 2x2 glyph parity -----------------------------------------

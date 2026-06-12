@@ -5,6 +5,7 @@
 export function createToggle({
   label = "",
   checked = false,
+  disabled = false,
   className = "",
   onChange,
 } = {}) {
@@ -15,6 +16,7 @@ export function createToggle({
   input.className = "mha-toggle-input";
   input.type = "checkbox";
   input.checked = Boolean(checked);
+  input.disabled = Boolean(disabled);
   input.setAttribute("aria-label", label || "Toggle");
 
   const track = document.createElement("span");

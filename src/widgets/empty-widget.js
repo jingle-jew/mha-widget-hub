@@ -5,6 +5,8 @@ import { createClockWidgetContent, isClockWidget } from "./clock-widget.js";
 import { createSimpleButtonWidgetContent, isSimpleButtonWidget, isSimpleButtonWidgetActive } from "./simple-button-widget.js";
 import { createWeatherWidgetContent, isWeatherWidget } from "./weather-widget.js";
 import { createToggleWidgetContent, isToggleWidget } from "./toggle-widget.js";
+import { createToggleButtonsWidgetContent, isToggleButtonsWidget } from "./toggle-buttons-widget.js";
+import { createToggleSliderWidgetContent, isToggleSliderWidget } from "./toggle-slider-widget.js";
 
 export function createEmptyWidget(
   widget,
@@ -17,6 +19,7 @@ export function createEmptyWidget(
     onMove,
     onRemove,
     onCycleVariant,
+    hass,
   } = {},
 ) {
   const size = normalizeWidgetSize(widget);
@@ -27,7 +30,11 @@ export function createEmptyWidget(
   el.className = "mha-widget";
   el.classList.toggle("is-move-target", isMoveTarget);
   el.dataset.widgetId = widget.id;
-  if (isSliderWidget(widget) || widget.id === "slot-f" || widget.id === "slot-i") {
+  if (isToggleButtonsWidget(widget)) {
+    el.dataset.widgetKind = "toggle-buttons";
+  } else if (isToggleSliderWidget(widget)) {
+    el.dataset.widgetKind = "toggle-slider";
+  } else if (isSliderWidget(widget) || widget.id === "slot-f" || widget.id === "slot-i") {
     el.dataset.widgetKind = "slider";
   }
 
@@ -40,7 +47,7 @@ export function createEmptyWidget(
     el.dataset.active = String(isSimpleButtonWidgetActive(widget));
   }
 
-  if (isToggleWidget(widget)) {
+  if (!isToggleSliderWidget(widget) && isToggleWidget(widget)) {
     el.dataset.widgetKind = "toggle";
   }
 
@@ -67,7 +74,16 @@ export function createEmptyWidget(
 
   /* Widget internals are now rendered by each widget component directly. */
 
-  if (isSliderWidget(widget) || widget.id === "slot-f" || widget.id === "slot-i") {
+  if (isToggleButtonsWidget(widget)) {
+    el.append(createToggleButtonsWidgetContent(widget, {
+      widgetW: effectiveWidgetW,
+    }));
+  } else if (isToggleSliderWidget(widget)) {
+    el.append(createToggleSliderWidgetContent(widget, {
+      hass,
+      widgetW: effectiveWidgetW,
+    }));
+  } else if (isSliderWidget(widget) || widget.id === "slot-f" || widget.id === "slot-i") {
     el.append(
       createSliderWidgetContent(widget, {
         size,
@@ -111,7 +127,7 @@ export function createEmptyWidget(
   }
 
 
-  if (isToggleWidget(widget)) {
+  if (!isToggleSliderWidget(widget) && isToggleWidget(widget)) {
     el.append(
       createToggleWidgetContent(widget, {
         widgetW: effectiveWidgetW,
