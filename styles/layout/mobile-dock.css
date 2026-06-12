@@ -260,21 +260,19 @@
   color: #fff;
 }
 
-/* HIDE MOBILE DOCK IN EDIT MODE
- * Editing mode has its own floating control. Hide the mobile dock launcher/panel
- * to avoid visual clutter and accidental overlap.
+/* Keep the mobile dock available in edit mode: it contains page navigation
+ * and the edit-only + button for creating a new grid page.
  */
 :host(.is-editing) .mha-mobile-dock {
-  opacity: 0 !important;
-  visibility: hidden !important;
-  pointer-events: none !important;
-  transform: translateY(8px) scale(.96);
+  opacity: 1;
+  visibility: visible;
+  pointer-events: none;
 }
 
-:host(.is-editing) .mha-mobile-dock-panel,
-:host(.is-editing) .mha-mobile-dock-scrim,
-:host(.is-editing) .mha-mobile-dock-launcher {
-  pointer-events: none !important;
+:host(.is-editing) .mha-mobile-dock-launcher,
+:host(.is-editing) .mha-mobile-dock[data-open="true"] .mha-mobile-dock-panel,
+:host(.is-editing) .mha-mobile-dock[data-open="true"] .mha-mobile-dock-scrim {
+  pointer-events: auto;
 }
 
 /* MATERIAL BORDERLESS MOBILE DOCK SURFACE */

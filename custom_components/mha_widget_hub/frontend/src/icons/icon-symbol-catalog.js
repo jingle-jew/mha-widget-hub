@@ -226,7 +226,7 @@ export const ICON_SYMBOL_CATALOG = Object.freeze([
   Object.freeze({ name: "error", category: "utility", viewBox: "0 0 24 24", path: "M4 12a8 8 0 0 1 16 0h-3a5 5 0 0 0-10 0H4Zm4 0a4 4 0 0 1 8 0h-3a1 1 0 0 0-2 0H8Zm3 4h2v2h-2v-2Z" }),
   Object.freeze({ name: "check", category: "utility", viewBox: "0 0 24 24", path: "M12 2 3 21h18L12 2Zm0 5 5 11H7l5-11Z" }),
   Object.freeze({ name: "close", category: "utility", viewBox: "0 0 24 24", path: "M4 4h16v4H4V4Zm0 6h16v4H4v-4Zm0 6h16v4H4v-4Z" }),
-  Object.freeze({ name: "plus", category: "utility", viewBox: "0 0 24 24", path: "M5 5h14v14H5V5Zm3 3v8h8V8H8Z" }),
+  Object.freeze({ name: "plus", category: "utility", viewBox: "0 0 24 24", path: "M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5Z" }),
   Object.freeze({ name: "minus", category: "utility", viewBox: "0 0 24 24", path: "M7 3h10v4h4v14H3V7h4V3Zm2 4h6V5H9v2Zm-4 2v10h14V9H5Z" }),
   Object.freeze({ name: "edit", category: "utility", viewBox: "0 0 24 24", path: "M12 3 2 12h4v8h12v-8h4L12 3Zm-2 15v-5h4v5h-4Z" }),
   Object.freeze({ name: "trash", category: "utility", viewBox: "0 0 24 24", path: "M12 3a9 9 0 0 0-9 9h3a6 6 0 1 1 1.8 4.3L6 14H2v7h7l-3-3a9 9 0 1 0 6-15Z" }),
