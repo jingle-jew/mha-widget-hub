@@ -409,9 +409,80 @@
   backdrop-filter: none;
 }
 
+/* Dock active page selection
+ * Structure > glow: the selected page gets a denser icon surface, a soft
+ * border/lift, and a tiny indicator pill. No neon/pulse effect.
+ */
+.mha-dock-item,
+.mha-mobile-dock-item {
+  position: relative;
+  border-radius: var(--mha-icon-radius, 999px);
+  transition:
+    transform 180ms var(--mha-motion-easing, ease),
+    opacity 180ms ease;
+}
+
+.mha-dock-item > .mha-icon:not(.mha-system-icon),
+.mha-mobile-dock-item > .mha-icon:not(.mha-system-icon) {
+  transition:
+    background 180ms var(--mha-motion-easing, ease),
+    border-color 180ms var(--mha-motion-easing, ease),
+    box-shadow 180ms var(--mha-motion-easing, ease),
+    color 180ms var(--mha-motion-easing, ease),
+    transform 180ms var(--mha-motion-easing, ease);
+}
+
 .mha-dock-item[data-active="true"],
 .mha-mobile-dock-item[data-active="true"] {
-  transform: translateY(-2px) scale(1.04);
+  transform: scale(1.035);
+}
+
+.mha-dock-item[data-active="true"] > .mha-icon:not(.mha-system-icon),
+.mha-mobile-dock-item[data-active="true"] > .mha-icon:not(.mha-system-icon) {
+  background: var(--mha-dock-active-icon-bg, var(--mha-system-icon-bg));
+  color: var(--mha-dock-active-icon-color, var(--mha-system-icon-color));
+  border-color: var(--mha-dock-active-icon-border, var(--mha-system-icon-border));
+  box-shadow: var(--mha-dock-active-icon-shadow, var(--mha-system-icon-shadow));
+  transform: translateZ(0);
+}
+
+.mha-dock-item[data-active="true"]::after,
+.mha-mobile-dock-item[data-active="true"]::after {
+  content: "";
+  position: absolute;
+  border-radius: 999px;
+  background: var(--mha-dock-active-indicator, rgba(255,255,255,.82));
+  box-shadow: 0 1px 4px rgba(0,0,0,.14);
+  pointer-events: none;
+}
+
+/* Bottom/horizontal dock fallback. */
+.mha-dock-item[data-active="true"]::after {
+  left: 50%;
+  bottom: calc(var(--mha-dock-empty-padding-block, .75rem) * -0.45);
+  inline-size: min(1.28rem, 42%);
+  block-size: .22rem;
+  transform: translateX(-50%);
+}
+
+@media (min-width: 768px) {
+  .mha-dock-item[data-active="true"]::after {
+    left: calc(var(--mha-dock-rail-padding-inline, .6rem) * -0.52);
+    top: 50%;
+    bottom: auto;
+    inline-size: .24rem;
+    block-size: min(1.36rem, 42%);
+    transform: translateY(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mha-dock-item,
+  .mha-mobile-dock-item,
+  .mha-dock-item > .mha-icon:not(.mha-system-icon),
+  .mha-mobile-dock-item > .mha-icon:not(.mha-system-icon) {
+    transition: none;
+  }
 }
 
 .mha-dock-add-page,

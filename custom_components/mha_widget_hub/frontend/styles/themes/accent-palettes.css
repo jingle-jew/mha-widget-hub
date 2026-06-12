@@ -125,6 +125,67 @@
   --mha-system-icon-shadow: 0 4px 14px rgba(0,0,0,.10);
 }
 
+
+/* Dock active-page tokens.
+ * Active state should read as selected/anchored, not as a neon glow.
+ * The dock CSS consumes these tokens structurally: denser surface, softer
+ * border, subtle lift, and a small indicator pill.
+ */
+:host {
+  --mha-dock-active-icon-bg: var(--mha-system-icon-bg);
+  --mha-dock-active-icon-color: var(--mha-system-icon-color);
+  --mha-dock-active-icon-border: color-mix(in srgb, var(--mha-accent, #4da3ff) 34%, rgba(255,255,255,.34));
+  --mha-dock-active-icon-shadow:
+    inset 0 1px 0 rgba(255,255,255,.24),
+    0 8px 20px rgba(0,0,0,.16);
+  --mha-dock-active-indicator: color-mix(in srgb, var(--mha-accent, #4da3ff) 64%, rgba(255,255,255,.78));
+}
+
+:host([data-theme-style="ios"]) {
+  --mha-dock-active-icon-bg: var(--mha-system-icon-bg);
+  --mha-dock-active-icon-color: var(--mha-system-icon-color);
+  --mha-dock-active-icon-border: color-mix(in srgb, rgba(255,255,255,.74) 58%, var(--mha-accent) 28%);
+  --mha-dock-active-icon-shadow:
+    inset 0 1px 0 rgba(255,255,255,.48),
+    inset 0 -1px 0 rgba(255,255,255,.12),
+    0 10px 22px color-mix(in srgb, var(--mha-accent) 18%, transparent);
+  --mha-dock-active-indicator: rgba(255,255,255,.86);
+}
+
+:host([data-theme-style="ios"][data-ios-glass="liquid"]) {
+  --mha-dock-active-icon-bg:
+    linear-gradient(145deg,
+      color-mix(in srgb, rgba(255,255,255,.72) 72%, var(--mha-accent) 10%),
+      color-mix(in srgb, rgba(255,255,255,.22) 78%, var(--mha-accent) 8%) 54%,
+      rgba(255,255,255,.10));
+  --mha-dock-active-icon-border: rgba(255,255,255,.70);
+  --mha-dock-active-icon-shadow:
+    inset 0 1px 0 rgba(255,255,255,.84),
+    inset 0 -1px 0 rgba(255,255,255,.18),
+    0 10px 24px rgba(48,68,110,.14);
+  --mha-dock-active-indicator: rgba(255,255,255,.82);
+}
+
+:host([data-theme-style="oneui"]) {
+  --mha-dock-active-icon-bg: color-mix(in srgb, var(--mha-accent) 88%, white 12%);
+  --mha-dock-active-icon-color: var(--mha-accent-contrast);
+  --mha-dock-active-icon-border: color-mix(in srgb, var(--mha-accent) 56%, rgba(255,255,255,.50));
+  --mha-dock-active-icon-shadow:
+    inset 0 1px 0 rgba(255,255,255,.28),
+    0 9px 20px color-mix(in srgb, var(--mha-accent) 18%, transparent);
+  --mha-dock-active-indicator: color-mix(in srgb, var(--mha-accent) 58%, rgba(255,255,255,.86));
+}
+
+:host([data-theme-style="material"]) {
+  --mha-dock-active-icon-bg: color-mix(in srgb, var(--mha-material-you-icon-container, white) 82%, var(--mha-accent) 18%);
+  --mha-dock-active-icon-color: var(--mha-material-you-symbol-1, var(--mha-accent));
+  --mha-dock-active-icon-border: color-mix(in srgb, var(--mha-dock-active-icon-color) 34%, transparent);
+  --mha-dock-active-icon-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--mha-dock-active-icon-color) 10%, transparent),
+    0 5px 12px rgba(0,0,0,.10);
+  --mha-dock-active-indicator: var(--mha-dock-active-icon-color);
+}
+
 /* Apply accent to dock/app icon containers only.
  * System buttons own their own tokens and must not inherit Material/iOS/OneUI
  * icon accent containers through their internal .mha-system-icon.

@@ -143,6 +143,15 @@
     block-size: var(--mha-icon-size);
   }
 
+  .mha-mobile-dock-item[data-active="true"]::after {
+    left: 50%;
+    bottom: -.36rem;
+    inline-size: min(1.26rem, 44%);
+    block-size: .22rem;
+    transform: translateX(-50%);
+  }
+
+
   .mha-mobile-dock-launcher > .mha-icon {
     --mha-icon-size: calc(var(--mha-mobile-dock-launcher-size) * .74);
   }
