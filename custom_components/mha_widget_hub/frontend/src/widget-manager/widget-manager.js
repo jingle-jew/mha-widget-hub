@@ -1,4 +1,5 @@
 import { createBackButton, createCloseButton } from "../system/system-buttons.js";
+import { WIDGET_PREVIEW_IMAGES } from "../widgets/widget-preview-images.js";
 export { WIDGET_VARIANTS, getWidgetVariants, getNextWidgetVariantEntries } from "../widgets/widget-variants.js";
 
 const FRONTEND_ROOT_URL = new URL("../../", import.meta.url);
@@ -9,23 +10,13 @@ function resolveFrontendAssetUrl(path = "") {
 
 export const WIDGET_MANAGER_CATEGORIES = Object.freeze([
   { id:"utilities", label:"Utilitaires", description:"Horloges et infos rapides.", icon:"◷", widgets:[
-    {kind:"clock",variant:"digital",label:"Horloge numérique",size:{w:2,h:2},description:"Heure et date.",previewImages:{
-      ios:{
-        light:"assets/widget-previews/clock-digital-ios-light.png",
-        dark:"assets/widget-previews/clock-digital-ios-dark.png",
-      },
-      material:{
-        light:"assets/widget-previews/clock-digital-material-light.png",
-        dark:"assets/widget-previews/clock-digital-material-dark.png",
-      },
-      default:"assets/widget-previews/clock-digital-default.png",
-    }},
+    {kind:"clock",variant:"digital",label:"Horloge numérique",size:{w:2,h:2},description:"Heure et date."},
     {kind:"clock",variant:"digital-weather",label:"Numérique météo",size:{w:2,h:2},description:"Heure, date et météo actuelle."},
     {kind:"clock",variant:"analog",label:"Horloge analogique",size:{w:2,h:2},description:"Cadran simple."},
     {kind:"clock",variant:"ios-analog",label:"Analogique iOS",size:{w:2,h:2},description:"Cadran classique iOS."},
   ]},
   { id:"actions", label:"Actions", description:"Boutons et raccourcis.", icon:"●", widgets:[
-    {kind:"button",variant:"simple-button",label:"Bouton simple",size:{w:2,h:1},description:"Icône, libellé et état.",previewImage:"assets/widget-previews/button-simple-preview.png"},
+    {kind:"button",variant:"simple-button",label:"Bouton simple",size:{w:2,h:1},description:"Icône, libellé et état."},
     {kind:"button",variant:"simple-button",label:"Bouton carré",size:{w:2,h:2},description:"Tuile d’action inspirée Home."},
     {kind:"toggle",variant:"toggle-widget",label:"Toggle",size:{w:3,h:1},description:"Icône, état et interrupteur."},
     {kind:"toggle",variant:"toggle-widget",label:"Toggle large",size:{w:4,h:1},description:"Interrupteur avec plus d’espace."},
@@ -39,7 +30,7 @@ export const WIDGET_MANAGER_CATEGORIES = Object.freeze([
   ]},
   { id:"climate", label:"Climat", description:"Température et confort.", icon:"🌡", widgets:[
     {kind:"weather",variant:"adaptive-weather",label:"Météo horizontale",size:{w:4,h:1},description:"Icône et température."},
-    {kind:"weather",variant:"adaptive-weather",label:"Météo compacte",size:{w:2,h:2},description:"Icône et température.",previewImage:"assets/widget-previews/2x2-weather-widget-preview.png"},
+    {kind:"weather",variant:"adaptive-weather",label:"Météo compacte",size:{w:2,h:2},description:"Icône et température."},
     {kind:"weather",variant:"adaptive-weather",label:"Météo détails",size:{w:3,h:2},description:"Humidité et vent."},
     {kind:"weather",variant:"adaptive-weather",label:"Météo prévisions",size:{w:4,h:2},description:"Prévisions verticales."},
     {kind:"empty",variant:"climate-compact",label:"Climat compact",size:{w:2,h:2},description:"Température rapide."},
@@ -75,11 +66,15 @@ function previewSizeKey(item) {
   return `${item.size?.w || 2}x${item.size?.h || 2}`;
 }
 
+function previewImageKey(item) {
+  return `${item?.kind || "empty"}:${item?.variant || "default"}:${previewSizeKey(item)}`;
+}
+
 function resolvePreviewImage(item, {
   themeStyle = "oneui",
   theme = "dark",
 } = {}) {
-  const previewImages = item?.previewImages;
+  const previewImages = WIDGET_PREVIEW_IMAGES[previewImageKey(item)];
   const styleGroup = previewImages?.[themeStyle];
   const defaultGroup = previewImages?.default;
 
@@ -88,7 +83,7 @@ function resolvePreviewImage(item, {
     || styleGroup?.default
     || (typeof defaultGroup === "object" ? defaultGroup?.[theme] : null)
     || defaultGroup
-    || item?.previewImage
+    || (typeof previewImages === "string" ? previewImages : null)
     || ""
   );
 

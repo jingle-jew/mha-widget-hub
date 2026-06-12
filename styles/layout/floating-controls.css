@@ -84,6 +84,18 @@
   --mha-floating-button-size: clamp(2.625rem, 10vw, 3rem);
 }
 
+@media (max-width: 767px) {
+  :host {
+    --mha-mobile-floating-button-size: clamp(3.125rem, 13vw, 3.5rem);
+    --mha-mobile-floating-button-icon-size: 58%;
+    --mha-floating-button-size: var(--mha-mobile-floating-button-size);
+  }
+
+  .mha-edit-button {
+    --mha-edit-icon-glyph-size: var(--mha-mobile-floating-button-icon-size);
+  }
+}
+
 /* SYSTEM BUTTON TOKENS
  * Shared shell-control surface for floating system buttons:
  * edit/X, add widget, and mobile dock launcher.
@@ -254,6 +266,7 @@
 
   .mha-mobile-dock-launcher > .mha-icon {
     --mha-icon-size: var(--mha-floating-button-size);
+    --mha-icon-glyph-size: var(--mha-mobile-floating-button-icon-size);
     --mha-icon-color: currentColor !important;
     border: 0 !important;
     background: transparent !important;
@@ -355,5 +368,4 @@
   opacity: var(--mha-system-button-highlight-opacity, .14) !important;
   mix-blend-mode: normal;
 }
-
 
