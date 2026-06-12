@@ -9,30 +9,18 @@ import { createIconSymbol } from "../ui/icon-symbol.js";
  * data-icon-shape contract.
  */
 
-const MOBILE_DOCK_ITEMS = [
-  { symbol: "gear", category: "system", label: "Paramètres", action: "settings" },
-];
-
-function createMobileDockIconButton(item, { className = "", onSettings } = {}) {
+function createMobileDockIconButton(item, { className = "", active = false, onClick } = {}) {
   const button = document.createElement("button");
   button.className = ["mha-mobile-dock-item", className].filter(Boolean).join(" ");
   button.type = "button";
   button.setAttribute("aria-label", item.label);
-  if (item.action === "settings") {
-    button.addEventListener("click", () => {
-      if (onSettings) {
-        onSettings();
-        return;
-      }
+  button.dataset.active = String(active);
+  if (item.pageId) button.dataset.pageId = item.pageId;
+  if (item.action) button.dataset.dockAction = item.action;
+  button.setAttribute("aria-current", active ? "page" : "false");
+  if (onClick) button.addEventListener("click", onClick);
 
-      button.dispatchEvent(new CustomEvent("mha-open-settings", {
-        bubbles: true,
-        composed: true,
-      }));
-    });
-  }
-
-button.append(
+  button.append(
     createIcon({
       name: item.symbol,
       category: item.category,
@@ -47,7 +35,14 @@ button.append(
   return button;
 }
 
-export function createMobileDock({ onSettings } = {}) {
+export function createMobileDock({
+  pages = [],
+  activePageId = "",
+  isEditing = false,
+  onPageSelect,
+  onAddPage,
+  onSettings,
+} = {}) {
   const root = document.createElement("div");
   root.className = "mha-mobile-dock";
   root.dataset.open = "false";
@@ -89,17 +84,61 @@ export function createMobileDock({ onSettings } = {}) {
   const grid = document.createElement("div");
   grid.className = "mha-mobile-dock-grid";
 
-  for (const item of MOBILE_DOCK_ITEMS) {
-    grid.append(createMobileDockIconButton(item, { onSettings }));
+  const pageItems = (Array.isArray(pages) && pages.length ? pages : [
+    { id: "home", name: "Accueil", icon: "home" },
+  ]).map((page, index) => ({
+    pageId: page.id,
+    symbol: page.icon || (index === 0 ? "home" : "grid"),
+    category: index === 0 ? "home" : "utility",
+    label: page.name || `Page ${index + 1}`,
+    action: "page",
+  }));
+
+  for (const item of pageItems) {
+    grid.append(createMobileDockIconButton(item, {
+      active: item.pageId === activePageId,
+      onClick: () => {
+        onPageSelect?.(item.pageId);
+        setOpen(false);
+      },
+    }));
   }
+
+  if (isEditing) {
+    grid.append(createMobileDockIconButton({
+      symbol: "plus",
+      category: "utility",
+      label: "Ajouter une page",
+      action: "add-page",
+    }, {
+      className: "mha-mobile-dock-add-page",
+      onClick: () => {
+        onAddPage?.();
+        setOpen(false);
+      },
+    }));
+  }
+
+  grid.append(createMobileDockIconButton({
+    symbol: "gear",
+    category: "system",
+    label: "Paramètres",
+    action: "settings",
+  }, {
+    onClick: () => {
+      if (onSettings) onSettings();
+      else root.dispatchEvent(new CustomEvent("mha-open-settings", { bubbles: true, composed: true }));
+      setOpen(false);
+    },
+  }));
 
   panel.append(close, grid);
   root.append(scrim, panel, launcher);
 
-  const setOpen = (open) => {
+  function setOpen(open) {
     root.dataset.open = String(open);
     launcher.setAttribute("aria-expanded", String(open));
-  };
+  }
 
   launcher.addEventListener("click", () => {
     setOpen(root.dataset.open !== "true");

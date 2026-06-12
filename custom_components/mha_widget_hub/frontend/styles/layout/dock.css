@@ -408,3 +408,13 @@
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
+
+.mha-dock-item[data-active="true"],
+.mha-mobile-dock-item[data-active="true"] {
+  transform: translateY(-2px) scale(1.04);
+}
+
+.mha-dock-add-page,
+.mha-mobile-dock-add-page {
+  opacity: 0.88;
+}

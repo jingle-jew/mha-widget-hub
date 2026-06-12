@@ -4,53 +4,96 @@ import { createIconSymbol } from "../ui/icon-symbol.js";
 /*
  * Dock container populated with normal reusable icon components.
  *
- * The dock chooses which actions/symbols appear here, but the visuals still
- * come from the generic icon and icon-symbol components.
+ * The dock now acts as a page switcher. In edit mode, the final "+"
+ * button creates a new empty grid page. Settings stays as a normal dock
+ * action and does not belong to the page set.
  */
 
-export function createDock({ onSettings } = {}) {
+function createDockIconButton(item, { className = "", active = false, onClick } = {}) {
+  const button = document.createElement("button");
+  button.className = ["mha-dock-item", className].filter(Boolean).join(" ");
+  button.type = "button";
+  button.setAttribute("aria-label", item.label);
+  button.dataset.active = String(active);
+  if (item.pageId) button.dataset.pageId = item.pageId;
+  if (item.action) button.dataset.dockAction = item.action;
+  button.setAttribute("aria-current", active ? "page" : "false");
+  if (onClick) button.addEventListener("click", onClick);
+
+  button.append(
+    createIcon({
+      name: item.symbol,
+      category: item.category,
+      label: item.label,
+      children: createIconSymbol({
+        name: item.symbol,
+        label: item.label,
+      }),
+    }),
+  );
+
+  return button;
+}
+
+export function createDock({
+  pages = [],
+  activePageId = "",
+  isEditing = false,
+  onPageSelect,
+  onAddPage,
+  onSettings,
+} = {}) {
   const dock = document.createElement("nav");
   dock.className = "mha-dock";
   dock.setAttribute("aria-label", "Dock");
 
-  const items = [
-    { symbol: "gear", category: "system", label: "Paramètres", action: "settings" },
-  ];
+  const pageItems = (Array.isArray(pages) && pages.length ? pages : [
+    { id: "home", name: "Accueil", icon: "home" },
+  ]).map((page, index) => ({
+    pageId: page.id,
+    symbol: page.icon || (index === 0 ? "home" : "grid"),
+    category: index === 0 ? "home" : "utility",
+    label: page.name || `Page ${index + 1}`,
+    action: "page",
+  }));
 
-  for (const item of items) {
-    const button = document.createElement("button");
-    button.className = "mha-dock-item";
-    button.type = "button";
-    button.setAttribute("aria-label", item.label);
-    if (item.action) button.dataset.dockAction = item.action;
-    if (item.action === "settings") {
-      button.addEventListener("click", () => {
-        if (onSettings) {
-          onSettings();
-          return;
-        }
-
-        dock.dispatchEvent(new CustomEvent("mha-open-settings", {
-          bubbles: true,
-          composed: true,
-        }));
-      });
-    }
-
-button.append(
-      createIcon({
-        name: item.symbol,
-        category: item.category,
-        label: item.label,
-        children: createIconSymbol({
-          name: item.symbol,
-          label: item.label,
-        }),
-      }),
-    );
-
-    dock.append(button);
+  for (const item of pageItems) {
+    dock.append(createDockIconButton(item, {
+      active: item.pageId === activePageId,
+      onClick: () => onPageSelect?.(item.pageId),
+    }));
   }
+
+  if (isEditing) {
+    dock.append(createDockIconButton({
+      symbol: "plus",
+      category: "utility",
+      label: "Ajouter une page",
+      action: "add-page",
+    }, {
+      className: "mha-dock-add-page",
+      onClick: () => onAddPage?.(),
+    }));
+  }
+
+  dock.append(createDockIconButton({
+    symbol: "gear",
+    category: "system",
+    label: "Paramètres",
+    action: "settings",
+  }, {
+    onClick: () => {
+      if (onSettings) {
+        onSettings();
+        return;
+      }
+
+      dock.dispatchEvent(new CustomEvent("mha-open-settings", {
+        bubbles: true,
+        composed: true,
+      }));
+    },
+  }));
 
   return dock;
 }

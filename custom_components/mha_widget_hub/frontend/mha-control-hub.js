@@ -229,7 +229,7 @@ function syncThemeAttributes(host) {
   document.documentElement.setAttribute("data-icon-shape", iconShape);
 }
 
-const ORDER="mha-grid-order",SIZES="mha-widget-sizes",REMOVED="mha-hidden-widgets",POSITIONS="mha-widget-positions",CUSTOM_WIDGETS="mha-custom-widgets",LEGACY_STORAGE_PREFIX=["mha","v2"].join("-"),THEME_STYLES=new Set(["ios","oneui","material"]);
+const ORDER="mha-grid-order",SIZES="mha-widget-sizes",REMOVED="mha-hidden-widgets",POSITIONS="mha-widget-positions",CUSTOM_WIDGETS="mha-custom-widgets",PAGES="mha-grid-pages",ACTIVE_PAGE="mha-active-page",LEGACY_STORAGE_PREFIX=["mha","v2"].join("-"),THEME_STYLES=new Set(["ios","oneui","material"]);
 const SCREENSAVER_ENABLED="mha-screensaver-enabled";
 const SCREENSAVER_DELAY="mha-screensaver-delay";
 const SCREENSAVER_NOWBAR="mha-screensaver-nowbar";
@@ -407,7 +407,7 @@ function normalizeStoredWidgetContract(widget = {}) {
 }
 
 function readMigratedJson(key,legacyKey,fallback){const current=readJson(key,null);if(current!==null)return current;const legacy=readJson(legacyKey,null);if(legacy!==null){writeJson(key,legacy);return legacy}return fallback}
-class MhaControlHub extends HTMLElement{constructor(){super();this.attachShadow({mode:"open"});this._hass=null;this._hassUpdateFrame=0;this._isEditing=false;this._activeMoveWidgetId="";this._widgetPositions=readJson(POSITIONS,{})||{};this._draggedId="";this._isResizingWidget=false;this._resizeState=null;this._squareUnitFrame=0;this._renderId=0;this._readyRaf=0;this._viewportRaf=0;this._relayoutTimer=0;this._systemThemeListener=null;this._themeTransitionTimer=0;this._themeTransitionFrame=0;this._gridScrollCleanup=null;this._screensaverPreview=false;this._screensaverActive=false;this._screensaverNowBar=readBool(SCREENSAVER_NOWBAR,true);this._screensaverClockVariant=localStorage.getItem(SCREENSAVER_CLOCK_VARIANT)||localStorage.getItem("mha-screensaver-clock")||"digital";this._screensaverIdleTimer=0;this._screensaverEnabled=readBool(SCREENSAVER_ENABLED,true);this._screensaverDelay=readNumberOption(SCREENSAVER_DELAY,30000,[15000,30000,120000,300000]);this._settingsOpen=false;this._screensaverSettingsOpen=false;this._lastResponsiveSignature="";this._responsiveRelayoutTimer=null;this._widgetManagerOpen=false;this._widgetManagerCategory="";this._pendingWidgetPlacement=null;this._widgets=this._readWidgets()}
+class MhaControlHub extends HTMLElement{constructor(){super();this.attachShadow({mode:"open"});this._hass=null;this._hassUpdateFrame=0;this._isEditing=false;this._activeMoveWidgetId="";this._widgetPositions=readJson(POSITIONS,{})||{};this._draggedId="";this._isResizingWidget=false;this._resizeState=null;this._squareUnitFrame=0;this._renderId=0;this._readyRaf=0;this._viewportRaf=0;this._relayoutTimer=0;this._systemThemeListener=null;this._themeTransitionTimer=0;this._themeTransitionFrame=0;this._gridScrollCleanup=null;this._screensaverPreview=false;this._screensaverActive=false;this._screensaverNowBar=readBool(SCREENSAVER_NOWBAR,true);this._screensaverClockVariant=localStorage.getItem(SCREENSAVER_CLOCK_VARIANT)||localStorage.getItem("mha-screensaver-clock")||"digital";this._screensaverIdleTimer=0;this._screensaverEnabled=readBool(SCREENSAVER_ENABLED,true);this._screensaverDelay=readNumberOption(SCREENSAVER_DELAY,30000,[15000,30000,120000,300000]);this._settingsOpen=false;this._screensaverSettingsOpen=false;this._lastResponsiveSignature="";this._responsiveRelayoutTimer=null;this._widgetManagerOpen=false;this._widgetManagerCategory="";this._pendingWidgetPlacement=null;this._pages=this._readPages();this._activePageId=this._readActivePageId();this._widgets=this._readWidgets()}
 set hass(h){this._hass=h;this._scheduleHassUpdate()}get hass(){return this._hass}
 _scheduleHassUpdate(){
   if(!this.isConnected||this._hassUpdateFrame)return;
@@ -815,8 +815,95 @@ toggleEditMode(){
   this._syncWidgetDropSlots();
 
   if(wasEditing!==this._isEditing)this._scheduleSquareUnitSync();
-}toggleScreensaverPreview(){this._screensaverPreview=!this._screensaverPreview;this._syncScreensaverDom()}toggleNowBarPreview(){this._screensaverNowBar=!this._screensaverNowBar;this._syncScreensaverDom()}setScreensaverClockVariant(v="digital"){this._screensaverClockVariant=normalizeClockVariant(v);this._syncScreensaverDom()}resetGrid(){localStorage.removeItem(ORDER);localStorage.removeItem(SIZES);localStorage.removeItem(REMOVED);localStorage.removeItem(POSITIONS);this._widgetPositions={};this._activeMoveWidgetId="";this._widgets=this._readWidgets();this.render()}
+}toggleScreensaverPreview(){this._screensaverPreview=!this._screensaverPreview;this._syncScreensaverDom()}toggleNowBarPreview(){this._screensaverNowBar=!this._screensaverNowBar;this._syncScreensaverDom()}setScreensaverClockVariant(v="digital"){this._screensaverClockVariant=normalizeClockVariant(v);this._syncScreensaverDom()}resetGrid(){localStorage.removeItem(ORDER);localStorage.removeItem(SIZES);localStorage.removeItem(REMOVED);localStorage.removeItem(POSITIONS);localStorage.removeItem(PAGES);localStorage.removeItem(ACTIVE_PAGE);this._widgetPositions={};this._activeMoveWidgetId="";this._pages=this._readPages();this._activePageId=this._readActivePageId();this._widgets=this._readWidgets();this.render()}
+_normalizePage(page={},index=0){
+  const id=String(page.id||`page-${index+1}`).trim()||`page-${index+1}`;
+  return {
+    id,
+    name:String(page.name||page.label||(index===0?"Accueil":`Page ${index+1}`)),
+    icon:String(page.icon||(index===0?"home":"grid")),
+    widgets:Array.isArray(page.widgets)?page.widgets.map(normalizeStoredWidgetContract):[],
+  };
+}
+_readPages(){
+  const stored=readJson(PAGES,null);
+  const pages=Array.isArray(stored)?stored.map((page,index)=>this._normalizePage(page,index)).filter(page=>page.id):[];
+  if(pages.length)return pages;
+  return [this._normalizePage({id:"home",name:"Accueil",icon:"home",widgets:this._readLegacyWidgets()},0)];
+}
+_readActivePageId(){
+  const stored=localStorage.getItem(ACTIVE_PAGE);
+  if(stored&&this._pages.some(page=>page.id===stored))return stored;
+  const fallback=this._pages[0]?.id||"home";
+  localStorage.setItem(ACTIVE_PAGE,fallback);
+  return fallback;
+}
+_getActivePage(){
+  return this._pages.find(page=>page.id===this._activePageId)||this._pages[0]||null;
+}
+_savePages(){
+  writeJson(PAGES,this._pages.map((page,index)=>this._normalizePage(page,index)));
+  localStorage.setItem(ACTIVE_PAGE,this._activePageId);
+}
 _readWidgets(){
+  const page=this._getActivePage();
+  if(!page)return [];
+  return (page.widgets||[]).map(widget=>{
+    const normalized=normalizeStoredWidgetContract(widget);
+    return {...normalized,...normalizeWidgetForKind(normalized)};
+  });
+}
+_syncActivePageWidgets(){
+  const page=this._getActivePage();
+  if(!page)return;
+  page.widgets=this._widgets.map(widget=>normalizeStoredWidgetContract(widget));
+  this._savePages();
+}
+_setActivePage(id){
+  if(!id||id===this._activePageId||!this._pages.some(page=>page.id===id))return;
+  this._activeMoveWidgetId="";
+  this._pendingWidgetPlacement=null;
+  this._widgetManagerOpen=false;
+  this._widgetManagerCategory="";
+  this._activePageId=id;
+  localStorage.setItem(ACTIVE_PAGE,id);
+  this._widgets=this._readWidgets();
+  this._refreshActiveGridOnly();
+}
+_addGridPage(){
+  const index=this._pages.length+1;
+  const id=`page-${Date.now().toString(36)}-${index}`;
+  this._pages=[...this._pages,this._normalizePage({id,name:`Page ${index}`,icon:"grid",widgets:[]},index-1)];
+  this._activePageId=id;
+  this._widgets=[];
+  this._savePages();
+  this.render();
+}
+_updateDockActiveState(){
+  this.shadowRoot?.querySelectorAll?.("[data-page-id]").forEach(button=>{
+    const active=button.dataset.pageId===this._activePageId;
+    button.dataset.active=String(active);
+    button.setAttribute("aria-current",active?"page":"false");
+  });
+}
+_refreshActiveGridOnly(){
+  const grid=this.shadowRoot?.querySelector?.(".mha-grid");
+  if(!grid){this.render();return;}
+  grid.querySelectorAll(".mha-widget,.mha-widget-drop-slot").forEach(node=>node.remove());
+  const {units}=this._getGridBounds();
+  const positions=this._getActiveWidgetPositions();
+  this._widgets.forEach(w=>{
+    const el=createEmptyWidget(w,{activeGridUnits:units,isEditing:this._isEditing,isMoveTarget:this._isEditing&&this._activeMoveWidgetId===w.id,position:positions?.[w.id],hass:this._hass,onToggleMove:id=>this._toggleWidgetMoveMode(id),onMove:(id,direction)=>this._moveWidgetByDirection(id,direction),onRemove:id=>this._removeWidget(id),onCycleVariant:id=>this.cycleVariant(id)});
+    this._wireDrag(el,w);
+    grid.append(el);
+  });
+  this._updateDockActiveState();
+  this._syncWidgetDropSlots();
+  this._scheduleSquareUnitSync();
+  updateClockWidgets(this.shadowRoot);
+}
+
+_readLegacyWidgets(){
   const custom=(readJson(CUSTOM_WIDGETS,[])||[]).filter(widget=>widget?.id).map(normalizeStoredWidgetContract);
   const baseWidgets=[...DEFAULT_WIDGETS,...custom];
   const byId=new Map(baseWidgets.map(w=>[w.id,w]));
@@ -881,6 +968,7 @@ _saveWidgets(){
     };
   });
   writeJson(SIZES,sizes);
+  this._syncActivePageWidgets();
 }
 _removeWidget(id){if(!this._widgets.some(w=>w.id===id))return;if(this._activeMoveWidgetId===id)this._activeMoveWidgetId="";this._widgets=this._widgets.filter(w=>w.id!==id);Object.values(this._widgetPositions).forEach(layout=>{if(layout&&typeof layout==="object")delete layout[id]});writeJson(POSITIONS,this._widgetPositions);const removed=new Set(readJson(REMOVED,[]));removed.add(id);writeJson(REMOVED,[...removed]);this._saveWidgets();this.shadowRoot.querySelector(`[data-widget-id="${id}"]`)?.remove();this._clearDropState();this._scheduleSquareUnitSync()}
 
@@ -933,7 +1021,7 @@ _moveWidgetDom(sourceId,targetId,placement="before"){
 }
 _getWidgetPositionKey(){
   const bounds=this._getGridBounds();
-  return `${getEffectiveLayout(this)}:${bounds.units}x${bounds.rowUnits}`;
+  return `${this._activePageId||"home"}:${getEffectiveLayout(this)}:${bounds.units}x${bounds.rowUnits}`;
 }
 _getStoredWidgetPositions(){
   const positions=this._widgetPositions[this._getWidgetPositionKey()];
@@ -2107,5 +2195,5 @@ _wireDrag(el){
   el.draggable=false;
   el.removeAttribute("draggable");
 }
-render(){syncThemeAttributes(this);const renderId=++this._renderId,layoutMode=getLayoutMode(this),layout=getEffectiveLayout(this),preset=this._getRuntimeGridPreset(),units=getInternalGridColumnCountFromLogical(preset.columns),rows=getInternalGridRowCountFromLogical(preset.rows),cols=preset.columns,logicalRows=preset.rows,themeStyle=THEME_STYLES.has(document.documentElement.dataset.themeStyle)?document.documentElement.dataset.themeStyle:"oneui";const iconShapeSetting=getStoredIconShapeSetting(this);const iconShape=resolveIconShape(themeStyle,iconShapeSetting);this._clearGridScrollListener();this.dataset.themeStyle=themeStyle;this.dataset.iconShapeSetting=iconShapeSetting;this.setAttribute("data-icon-shape-setting",iconShapeSetting);this.dataset.iconShape=iconShape;this.setAttribute("data-icon-shape",iconShape);document.documentElement.dataset.iconShapeSetting=iconShapeSetting;document.documentElement.setAttribute("data-icon-shape-setting",iconShapeSetting);document.documentElement.dataset.iconShape=iconShape;document.documentElement.setAttribute("data-icon-shape",iconShape);const accent=normalizeAccent(themeStyle,localStorage.getItem(`mha-accent-${themeStyle}`)||localStorage.getItem("mha-accent")||"sky");this.dataset.accent=accent;this.setAttribute("data-accent",accent);document.documentElement.dataset.accent=accent;document.documentElement.setAttribute("data-accent",accent);this.dataset.layoutMode=layoutMode;this.dataset.layout=layout;this.dataset.gridDensity=preset.density;this.dataset.gridUnits=String(units);this.dataset.logicalColumns=String(cols);this.dataset.gridRows=String(rows);this.dataset.logicalRows=String(logicalRows);this.classList.toggle("is-editing",this._isEditing);this.style.setProperty("--mha-runtime-grid-units",String(units));this.style.setProperty("--mha-runtime-grid-rows",String(rows));this.style.setProperty("--mha-runtime-logical-columns",String(cols));this.style.setProperty("--mha-runtime-logical-rows",String(logicalRows));this.shadowRoot.innerHTML=createFrontendStyleLinks();const links=[...this.shadowRoot.querySelectorAll('link[rel="stylesheet"]')],{bg,shell,grid}=createShell({layoutMode,layout,logicalColumns:cols,gridUnits:units,onSettings:()=>this._openSettings()});this.shadowRoot.append(bg,shell);const positions=this._getActiveWidgetPositions();this._widgets.forEach(w=>{const el=createEmptyWidget(w,{activeGridUnits:units,isEditing:this._isEditing,isMoveTarget:this._isEditing&&this._activeMoveWidgetId===w.id,position:positions?.[w.id],hass:this._hass,onToggleMove:id=>this._toggleWidgetMoveMode(id),onMove:(id,direction)=>this._moveWidgetByDirection(id,direction),onRemove:id=>this._removeWidget(id),onCycleVariant:id=>this.cycleVariant(id)});this._wireDrag(el,w);grid.append(el)});this.shadowRoot.append(createScreensaver({isVisible:this._getScreensaverVisible(),showNowBar:this._screensaverNowBar,clockVariant:this._screensaverClockVariant,onClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),onOpenScreensaverSettings:()=>this._openScreensaverSettings(),onWake:()=>this._wakeScreensaver()}));this.shadowRoot.append(createMobileDock({onSettings:()=>this._openSettings()}));this.shadowRoot.append(this._createSettingsPanel());this.shadowRoot.append(this._createWidgetManagerPanel());this.shadowRoot.append(createSettingsPanel(this._getSettingsPanelProps("screensaver")));const edit=document.createElement("button");edit.className="mha-edit-button mha-main-edit-button mha-primary-edit-button";edit.type="button";edit.innerHTML=this._isEditing?ICONS.close:ICONS.edit;edit.onclick=()=>this.toggleEditMode();this.shadowRoot.append(edit);const addWidget=document.createElement("button");addWidget.className="mha-edit-button mha-main-edit-button mha-add-widget-button";addWidget.type="button";addWidget.innerHTML=`<svg viewBox="0 0 24 24"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5Z"/></svg>`;addWidget.setAttribute("aria-label","Ajouter un widget");addWidget.hidden=!this._isEditing;addWidget.onclick=(event)=>{event.preventDefault();event.stopPropagation();this._openWidgetManager()};this.shadowRoot.append(addWidget);this._syncEditModeDom();this._wireDockAutoHide(grid);this._scheduleSquareUnitSync();Promise.all(links.map(link=>link.sheet?Promise.resolve():new Promise(resolve=>{link.addEventListener("load",resolve,{once:true});link.addEventListener("error",resolve,{once:true})}))).then(()=>{if(this._renderId!==renderId)return;const styledUnits=getActiveGridUnits(this);if(styledUnits!==units){this.render();return}this._scheduleSquareUnitSync();this._syncScreensaverVisibilityState();this._markReadyAfterPaint()});updateStatusTime(this.shadowRoot);updateClockWidgets(this.shadowRoot);this._syncWidgetDropSlots();this._markReadyAfterPaint();this._scheduleScreensaverIdleTimer()}}
+render(){syncThemeAttributes(this);const renderId=++this._renderId,layoutMode=getLayoutMode(this),layout=getEffectiveLayout(this),preset=this._getRuntimeGridPreset(),units=getInternalGridColumnCountFromLogical(preset.columns),rows=getInternalGridRowCountFromLogical(preset.rows),cols=preset.columns,logicalRows=preset.rows,themeStyle=THEME_STYLES.has(document.documentElement.dataset.themeStyle)?document.documentElement.dataset.themeStyle:"oneui";const iconShapeSetting=getStoredIconShapeSetting(this);const iconShape=resolveIconShape(themeStyle,iconShapeSetting);this._clearGridScrollListener();this.dataset.themeStyle=themeStyle;this.dataset.iconShapeSetting=iconShapeSetting;this.setAttribute("data-icon-shape-setting",iconShapeSetting);this.dataset.iconShape=iconShape;this.setAttribute("data-icon-shape",iconShape);document.documentElement.dataset.iconShapeSetting=iconShapeSetting;document.documentElement.setAttribute("data-icon-shape-setting",iconShapeSetting);document.documentElement.dataset.iconShape=iconShape;document.documentElement.setAttribute("data-icon-shape",iconShape);const accent=normalizeAccent(themeStyle,localStorage.getItem(`mha-accent-${themeStyle}`)||localStorage.getItem("mha-accent")||"sky");this.dataset.accent=accent;this.setAttribute("data-accent",accent);document.documentElement.dataset.accent=accent;document.documentElement.setAttribute("data-accent",accent);this.dataset.layoutMode=layoutMode;this.dataset.layout=layout;this.dataset.gridDensity=preset.density;this.dataset.gridUnits=String(units);this.dataset.logicalColumns=String(cols);this.dataset.gridRows=String(rows);this.dataset.logicalRows=String(logicalRows);this.classList.toggle("is-editing",this._isEditing);this.style.setProperty("--mha-runtime-grid-units",String(units));this.style.setProperty("--mha-runtime-grid-rows",String(rows));this.style.setProperty("--mha-runtime-logical-columns",String(cols));this.style.setProperty("--mha-runtime-logical-rows",String(logicalRows));this.shadowRoot.innerHTML=createFrontendStyleLinks();const links=[...this.shadowRoot.querySelectorAll('link[rel="stylesheet"]')],{bg,shell,grid}=createShell({layoutMode,layout,logicalColumns:cols,gridUnits:units,pages:this._pages,activePageId:this._activePageId,isEditing:this._isEditing,onPageSelect:id=>this._setActivePage(id),onAddPage:()=>this._addGridPage(),onSettings:()=>this._openSettings()});this.shadowRoot.append(bg,shell);const positions=this._getActiveWidgetPositions();this._widgets.forEach(w=>{const el=createEmptyWidget(w,{activeGridUnits:units,isEditing:this._isEditing,isMoveTarget:this._isEditing&&this._activeMoveWidgetId===w.id,position:positions?.[w.id],hass:this._hass,onToggleMove:id=>this._toggleWidgetMoveMode(id),onMove:(id,direction)=>this._moveWidgetByDirection(id,direction),onRemove:id=>this._removeWidget(id),onCycleVariant:id=>this.cycleVariant(id)});this._wireDrag(el,w);grid.append(el)});this.shadowRoot.append(createScreensaver({isVisible:this._getScreensaverVisible(),showNowBar:this._screensaverNowBar,clockVariant:this._screensaverClockVariant,onClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),onOpenScreensaverSettings:()=>this._openScreensaverSettings(),onWake:()=>this._wakeScreensaver()}));this.shadowRoot.append(createMobileDock({pages:this._pages,activePageId:this._activePageId,isEditing:this._isEditing,onPageSelect:id=>this._setActivePage(id),onAddPage:()=>this._addGridPage(),onSettings:()=>this._openSettings()}));this.shadowRoot.append(this._createSettingsPanel());this.shadowRoot.append(this._createWidgetManagerPanel());this.shadowRoot.append(createSettingsPanel(this._getSettingsPanelProps("screensaver")));const edit=document.createElement("button");edit.className="mha-edit-button mha-main-edit-button mha-primary-edit-button";edit.type="button";edit.innerHTML=this._isEditing?ICONS.close:ICONS.edit;edit.onclick=()=>this.toggleEditMode();this.shadowRoot.append(edit);const addWidget=document.createElement("button");addWidget.className="mha-edit-button mha-main-edit-button mha-add-widget-button";addWidget.type="button";addWidget.innerHTML=`<svg viewBox="0 0 24 24"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5Z"/></svg>`;addWidget.setAttribute("aria-label","Ajouter un widget");addWidget.hidden=!this._isEditing;addWidget.onclick=(event)=>{event.preventDefault();event.stopPropagation();this._openWidgetManager()};this.shadowRoot.append(addWidget);this._syncEditModeDom();this._wireDockAutoHide(grid);this._scheduleSquareUnitSync();Promise.all(links.map(link=>link.sheet?Promise.resolve():new Promise(resolve=>{link.addEventListener("load",resolve,{once:true});link.addEventListener("error",resolve,{once:true})}))).then(()=>{if(this._renderId!==renderId)return;const styledUnits=getActiveGridUnits(this);if(styledUnits!==units){this.render();return}this._scheduleSquareUnitSync();this._syncScreensaverVisibilityState();this._markReadyAfterPaint()});updateStatusTime(this.shadowRoot);updateClockWidgets(this.shadowRoot);this._syncWidgetDropSlots();this._markReadyAfterPaint();this._scheduleScreensaverIdleTimer()}}
 customElements.define("mha-control-hub",MhaControlHub);
