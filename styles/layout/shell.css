@@ -177,6 +177,15 @@
   visibility: visible;
 }
 
+/* Lightweight geometry-preserving shells are replaced in small frame batches. */
+.mha-widget-placeholder {
+  contain: layout paint style;
+  pointer-events: none;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
 @media (min-width: 768px) {
   :host(.is-boot-revealing) .mha-status-bar {
     animation: mha-boot-status-in 320ms cubic-bezier(.2,.8,.2,1) both;

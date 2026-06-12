@@ -49,9 +49,8 @@ if (frontendVersion) appUrl.searchParams.set("v", frontendVersion);
 
 const loaderWatchdog = window.setTimeout(() => {
   if (customElements.get("mha-control-hub")) return;
-  console.warn("[MHA] Boot fallback: the application module did not register within 2000ms.");
-  document.getElementById(BOOT_STYLE_ID)?.remove();
-}, 2000);
+  console.warn("[MHA] Boot fallback: the application module did not register within 1200ms.");
+}, 1200);
 
 import(appUrl.href)
   .catch(error => {
