@@ -470,14 +470,76 @@ function normalizeStoredWidgetContract(widget = {}) {
 }
 
 function readLegacyJson(key,legacyKey,fallback){const current=readJson(key,null);if(current!==null)return current;const legacy=readJson(legacyKey,null);return legacy!==null?legacy:fallback}
-class MhaControlHub extends HTMLElement{constructor(){super();this.attachShadow({mode:"open"});this.dataset.bootState="booting";this.dataset.dataState="loading";this.dataset.widgetsState="pending";this.dataset.ready="false";this.shadowRoot.innerHTML=createCriticalBootStyle();this._bootComplete=false;this._bootWatchdog=0;this._stylesReadyRenderId=0;this._widgetRenderFrame=0;this._secondaryUiFrame=0;this._pendingDeferredUi=null;this._hass=null;this._hassUpdateFrame=0;this._isEditing=false;this._activeMoveWidgetId="";this._migrateStorageSchema();this._widgetPositions=readJson(POSITIONS,{})||{};this._draggedId="";this._isResizingWidget=false;this._resizeState=null;this._squareUnitFrame=0;this._gridRuntimeFrame=0;this._widgetDropSlotsFrame=0;this._layoutResizeObserver=null;this._observedLayoutSize="";this._renderId=0;this._readyRaf=0;this._viewportRaf=0;this._relayoutTimer=0;this._systemThemeListener=null;this._themeTransitionTimer=0;this._themeTransitionFrame=0;this._gridScrollCleanup=null;this._screensaverPreview=false;this._screensaverActive=false;this._screensaverNowBar=readBool(SCREENSAVER_NOWBAR,true);this._screensaverClockVariant=localStorage.getItem(SCREENSAVER_CLOCK_VARIANT)||localStorage.getItem("mha-screensaver-clock")||"digital";this._screensaverIdleTimer=0;this._screensaverEnabled=readBool(SCREENSAVER_ENABLED,true);this._screensaverDelay=readNumberOption(SCREENSAVER_DELAY,30000,[15000,30000,120000,300000]);this._settingsOpen=false;this._settingsPage="main";this._dockSettingsPageId="";this._screensaverSettingsOpen=false;this._lastResponsiveSignature="";this._responsiveRelayoutTimer=null;this._widgetManagerOpen=false;this._widgetManagerCategory="";this._pendingWidgetPlacement=null;this._pageCreatorOpen=false;this._newPageIcon="grid";this._dockPosition=getStoredDockPosition();this._pages=this._readPages();this._activePageId=this._readActivePageId();this._widgets=this._readWidgets();this._upgradePredefinedProperty("hass")}
+class MhaControlHub extends HTMLElement{constructor(){super();this.attachShadow({mode:"open"});this.dataset.bootState="booting";this.dataset.dataState="loading";this.dataset.widgetsState="pending";this.dataset.ready="false";this.shadowRoot.innerHTML=createCriticalBootStyle();this._bootComplete=false;this._bootWatchdog=0;this._stylesReadyRenderId=0;this._widgetRenderFrame=0;this._secondaryUiFrame=0;this._pendingDeferredUi=null;this._hass=null;this._hassUpdateFrame=0;this._hasConnectedOnce=false;this._connectionActive=false;this._connectionListenersAttached=false;this._lifecycleRecoveryListener=null;this._visibilityRecoveryListener=null;this._isEditing=false;this._activeMoveWidgetId="";this._migrateStorageSchema();this._widgetPositions=readJson(POSITIONS,{})||{};this._draggedId="";this._isResizingWidget=false;this._resizeState=null;this._squareUnitFrame=0;this._gridRuntimeFrame=0;this._widgetDropSlotsFrame=0;this._layoutResizeObserver=null;this._observedLayoutSize="";this._renderId=0;this._readyRaf=0;this._viewportRaf=0;this._relayoutTimer=0;this._systemThemeListener=null;this._themeTransitionTimer=0;this._themeTransitionFrame=0;this._gridScrollCleanup=null;this._screensaverPreview=false;this._screensaverActive=false;this._screensaverNowBar=readBool(SCREENSAVER_NOWBAR,true);this._screensaverClockVariant=localStorage.getItem(SCREENSAVER_CLOCK_VARIANT)||localStorage.getItem("mha-screensaver-clock")||"digital";this._screensaverIdleTimer=0;this._screensaverEnabled=readBool(SCREENSAVER_ENABLED,true);this._screensaverDelay=readNumberOption(SCREENSAVER_DELAY,30000,[15000,30000,120000,300000]);this._settingsOpen=false;this._settingsPage="main";this._dockSettingsPageId="";this._screensaverSettingsOpen=false;this._lastResponsiveSignature="";this._responsiveRelayoutTimer=null;this._widgetManagerOpen=false;this._widgetManagerCategory="";this._pendingWidgetPlacement=null;this._pageCreatorOpen=false;this._newPageIcon="grid";this._dockPosition=getStoredDockPosition();this._pages=this._readPages();this._activePageId=this._readActivePageId();this._widgets=this._readWidgets();this._upgradePredefinedProperty("hass")}
 _upgradePredefinedProperty(name){
   if(!Object.prototype.hasOwnProperty.call(this,name))return;
   const value=this[name];
   delete this[name];
   this[name]=value;
 }
-set hass(h){this._hass=h;this.dataset.dataState=h?"ready":"loading";this._scheduleHassUpdate()}get hass(){return this._hass}
+set hass(h){
+  this._hass=h;
+  this.dataset.dataState=h?"ready":"loading";
+  this._ensureMounted({reason:"hass update"});
+  this._scheduleHassUpdate();
+}
+get hass(){return this._hass}
+_hasMountedApp(){
+  return Boolean(
+    this.shadowRoot?.querySelector?.(".mha-background")
+    &&this.shadowRoot?.querySelector?.(".mha-shell")
+    &&this.shadowRoot?.querySelector?.(".mha-grid"),
+  );
+}
+_ensureMounted({force=false,reason="lifecycle recovery"}={}){
+  if(!this.isConnected)return false;
+  const interruptedWidgetRender=(
+    this.dataset.widgetsState==="loading"
+    &&this._widgets.length>0
+    &&!this._widgetRenderFrame
+  );
+  if(!force&&this._hasMountedApp()&&!interruptedWidgetRender)return false;
+  try{
+    this.render();
+    return true;
+  }catch(error){
+    console.error(`[MHA] Render recovery failed after ${reason}.`,error);
+    this._finishBoot({fallback:true,reason:`render recovery failed after ${reason}`});
+    return false;
+  }
+}
+_addConnectionListeners(){
+  if(this._connectionListenersAttached)return;
+  this._connectionListenersAttached=true;
+  this._lifecycleRecoveryListener=event=>{
+    const panelPath=window.location.pathname.replace(/\/+$/,"");
+    const isPanelReturn=(
+      event?.type==="location-changed"
+      &&this._bootComplete
+      &&panelPath.endsWith("/mha-control-hub")
+    );
+    const isPageRestore=event?.type==="pageshow"&&Boolean(event.persisted);
+    this._ensureMounted({
+      force:isPanelReturn||isPageRestore,
+      reason:event?.type||"lifecycle recovery",
+    });
+  };
+  this._visibilityRecoveryListener=()=>{
+    if(document.visibilityState==="visible")this._ensureMounted({reason:"visibility change"});
+  };
+  window.addEventListener("pageshow",this._lifecycleRecoveryListener);
+  window.addEventListener("location-changed",this._lifecycleRecoveryListener);
+  document.addEventListener("visibilitychange",this._visibilityRecoveryListener);
+}
+_removeConnectionListeners(){
+  if(!this._connectionListenersAttached)return;
+  this._connectionListenersAttached=false;
+  window.removeEventListener("pageshow",this._lifecycleRecoveryListener);
+  window.removeEventListener("location-changed",this._lifecycleRecoveryListener);
+  document.removeEventListener("visibilitychange",this._visibilityRecoveryListener);
+  this._lifecycleRecoveryListener=null;
+  this._visibilityRecoveryListener=null;
+}
 _scheduleHassUpdate(){
   if(!this.isConnected||this._hassUpdateFrame)return;
   this._hassUpdateFrame=requestAnimationFrame(()=>{
@@ -563,8 +625,72 @@ _tryCompleteBoot(){
   if(this._stylesReadyRenderId!==this._renderId)return;
   this._markReadyAfterPaint(this._renderId);
 }
-connectedCallback(){this._startBootWatchdog();this._systemThemeListener=()=>{if(getStoredThemeSetting(this)==="auto")this._transitionSystemThemeChange()};window.matchMedia?.("(prefers-color-scheme: light)")?.addEventListener?.("change",this._systemThemeListener);try{if(!this.shadowRoot.querySelector(".mha-shell"))this.render()}catch(error){console.error("[MHA] Initial render failed.",error);this._finishBoot({fallback:true,reason:"initial render failed"})}this._scheduleHassUpdate();this._clockTimer=setInterval(()=>{updateStatusTime(this.shadowRoot);updateClockWidgets(this.shadowRoot);if(this._getScreensaverVisible())updateScreensaverClock(this.shadowRoot,this._screensaverClockVariant)},1000);this._activityListener=()=>this._handleUserActivity();["pointerdown","touchstart","keydown","wheel","scroll"].forEach(type=>window.addEventListener(type,this._activityListener,{passive:true}));this._scheduleScreensaverIdleTimer();this._resizeListener=()=>{this._handleUserActivity();this._handleViewportChange()};window.addEventListener("resize",this._resizeListener);window.visualViewport?.addEventListener("resize",this._resizeListener);window.addEventListener("orientationchange",this._resizeListener);this._settingsOpenListener=()=>this._openSettings();this.shadowRoot.addEventListener("mha-open-settings",this._settingsOpenListener)}
-disconnectedCallback(){window.matchMedia?.("(prefers-color-scheme: light)")?.removeEventListener?.("change",this._systemThemeListener);clearInterval(this._clockTimer);clearTimeout(this._bootWatchdog);this._bootWatchdog=0;cancelAnimationFrame(this._hassUpdateFrame);this._hassUpdateFrame=0;cancelAnimationFrame(this._readyRaf);this._readyRaf=0;cancelAnimationFrame(this._widgetRenderFrame);this._widgetRenderFrame=0;cancelAnimationFrame(this._secondaryUiFrame);this._secondaryUiFrame=0;cancelAnimationFrame(this._squareUnitFrame);cancelAnimationFrame(this._gridRuntimeFrame);this._gridRuntimeFrame=0;cancelAnimationFrame(this._widgetDropSlotsFrame);this._widgetDropSlotsFrame=0;this._disconnectLayoutResizeObserver();cancelAnimationFrame(this._themeTransitionFrame);clearTimeout(this._themeTransitionTimer);this._clearGridScrollListener();["pointerdown","touchstart","keydown","wheel","scroll"].forEach(type=>window.removeEventListener(type,this._activityListener));clearTimeout(this._screensaverIdleTimer);window.removeEventListener("resize",this._resizeListener);window.visualViewport?.removeEventListener("resize",this._resizeListener);window.removeEventListener("orientationchange",this._resizeListener);clearTimeout(this._responsiveRelayoutTimer);if(this._settingsOpenListener)this.shadowRoot.removeEventListener("mha-open-settings",this._settingsOpenListener)}
+connectedCallback(){
+  if(this._connectionActive){
+    this._ensureMounted({reason:"duplicate connection callback"});
+    this._scheduleHassUpdate();
+    return;
+  }
+  this._connectionActive=true;
+  const isReconnect=this._hasConnectedOnce;
+  this._hasConnectedOnce=true;
+  this._startBootWatchdog();
+  this._addConnectionListeners();
+  this._systemThemeListener=()=>{if(getStoredThemeSetting(this)==="auto")this._transitionSystemThemeChange()};
+  window.matchMedia?.("(prefers-color-scheme: light)")?.addEventListener?.("change",this._systemThemeListener);
+  this._ensureMounted({force:isReconnect,reason:isReconnect?"panel reconnect":"initial connection"});
+  this._scheduleHassUpdate();
+  this._clockTimer=setInterval(()=>{updateStatusTime(this.shadowRoot);updateClockWidgets(this.shadowRoot);if(this._getScreensaverVisible())updateScreensaverClock(this.shadowRoot,this._screensaverClockVariant)},1000);
+  this._activityListener=()=>this._handleUserActivity();
+  ["pointerdown","touchstart","keydown","wheel","scroll"].forEach(type=>window.addEventListener(type,this._activityListener,{passive:true}));
+  this._scheduleScreensaverIdleTimer();
+  this._resizeListener=()=>{this._handleUserActivity();this._handleViewportChange()};
+  window.addEventListener("resize",this._resizeListener);
+  window.visualViewport?.addEventListener("resize",this._resizeListener);
+  window.addEventListener("orientationchange",this._resizeListener);
+  this._settingsOpenListener=()=>this._openSettings();
+  this.shadowRoot.addEventListener("mha-open-settings",this._settingsOpenListener);
+}
+disconnectedCallback(){
+  this._connectionActive=false;
+  this._removeConnectionListeners();
+  window.matchMedia?.("(prefers-color-scheme: light)")?.removeEventListener?.("change",this._systemThemeListener);
+  clearInterval(this._clockTimer);
+  clearTimeout(this._bootWatchdog);
+  this._bootWatchdog=0;
+  cancelAnimationFrame(this._hassUpdateFrame);
+  this._hassUpdateFrame=0;
+  cancelAnimationFrame(this._readyRaf);
+  this._readyRaf=0;
+  cancelAnimationFrame(this._viewportRaf);
+  this._viewportRaf=0;
+  clearTimeout(this._relayoutTimer);
+  this._relayoutTimer=0;
+  cancelAnimationFrame(this._widgetRenderFrame);
+  this._widgetRenderFrame=0;
+  cancelAnimationFrame(this._secondaryUiFrame);
+  this._secondaryUiFrame=0;
+  cancelAnimationFrame(this._squareUnitFrame);
+  this._squareUnitFrame=0;
+  cancelAnimationFrame(this._gridRuntimeFrame);
+  this._gridRuntimeFrame=0;
+  cancelAnimationFrame(this._widgetDropSlotsFrame);
+  this._widgetDropSlotsFrame=0;
+  this._disconnectLayoutResizeObserver();
+  cancelAnimationFrame(this._themeTransitionFrame);
+  this._themeTransitionFrame=0;
+  clearTimeout(this._themeTransitionTimer);
+  this._themeTransitionTimer=0;
+  this._clearGridScrollListener();
+  ["pointerdown","touchstart","keydown","wheel","scroll"].forEach(type=>window.removeEventListener(type,this._activityListener));
+  clearTimeout(this._screensaverIdleTimer);
+  window.removeEventListener("resize",this._resizeListener);
+  window.visualViewport?.removeEventListener("resize",this._resizeListener);
+  window.removeEventListener("orientationchange",this._resizeListener);
+  clearTimeout(this._responsiveRelayoutTimer);
+  this._responsiveRelayoutTimer=null;
+  if(this._settingsOpenListener)this.shadowRoot.removeEventListener("mha-open-settings",this._settingsOpenListener);
+}
 requestRender(){this.render()}
 _syncEditModeDom(){
   if(!this._isEditing||this._isMobileLandscapeLayout()){this._activeMoveWidgetId="";this._pendingWidgetPlacement=null;this._widgetManagerOpen=false;this._widgetManagerCategory="";this._pageCreatorOpen=false;const grid=this.shadowRoot?.querySelector?.(".mha-grid");if(grid)this._renderWidgetDropSlots(grid);this._syncPageCreatorDom?.();}
@@ -2857,7 +2983,8 @@ function renderPhased(){
   this._wireDockAutoHide(grid);
   updateStatusTime(this.shadowRoot);
 
-  requestAnimationFrame(()=>{
+  this._widgetRenderFrame=requestAnimationFrame(()=>{
+    this._widgetRenderFrame=0;
     if(this._renderId!==renderId)return;
     this._startProgressiveWidgetRender({grid,units,positions,renderId});
   });
