@@ -2,7 +2,7 @@ import { getAccentOptions, normalizeAccent } from "./accent-palettes.js";
 import { createToggle } from "../ui/toggle.js";
 import { createIcon } from "../ui/icon.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
-import { createBackButton, createMoveUpButton, createMoveDownButton, createRemoveButton } from "../ui/system-buttons.js";
+import { createBackButton, createMoveUpButton, createMoveDownButton, createRemoveButton } from "../system/system-buttons.js";
 /*
  * MHA Settings panel.
  *

@@ -14,7 +14,7 @@ import {DEFAULT_WIDGETS,getActiveGridRows,getActiveGridUnits,getEffectiveLayout,
 import {createScreensaver,normalizeClockVariant,updateScreensaverClock} from "./src/screensaver/screensaver.js";
 import { createIcon } from "./src/ui/icon.js";
 import { createIconSymbol } from "./src/ui/icon-symbol.js";
-import { createCloseButton } from "./src/ui/system-buttons.js";
+import { createCloseButton } from "./src/system/system-buttons.js";
 
 const MHA_FRONTEND_ROOT_URL = new URL(".", import.meta.url);
 
@@ -26,7 +26,7 @@ const MHA_STYLE_PATHS = [
   "styles/components/toggle.css",
   "styles/components/pill.css",
   "styles/components/button.css",
-  "styles/components/system-buttons.css",
+  "styles/system/system-buttons.css",
   "styles/themes/ios.css",
   "styles/themes/oneui.css",
   "styles/themes/material.css",

@@ -1,4 +1,4 @@
-import { createBackButton } from "../ui/system-buttons.js";
+import { createBackButton } from "../system/system-buttons.js";
 export { WIDGET_VARIANTS, getWidgetVariants, getNextWidgetVariantEntries } from "../widgets/widget-variants.js";
 
 const FRONTEND_ROOT_URL = new URL("../../", import.meta.url);
