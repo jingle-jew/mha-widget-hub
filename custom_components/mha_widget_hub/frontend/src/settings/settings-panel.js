@@ -28,6 +28,13 @@ const IOS_GLASS_OPTIONS = [
   { value: "frosted", label: "Frosted Glass" },
 ];
 
+
+const DOCK_POSITION_OPTIONS = [
+  { value: "left", label: "Gauche" },
+  { value: "right", label: "Droite" },
+  { value: "bottom", label: "Bas" },
+];
+
 const ICON_SHAPE_OPTIONS = [
   { value: "auto", label: "Auto" },
   { value: "rounded-square", label: "Rounded square" },
@@ -314,6 +321,7 @@ export function createSettingsPanel({
   dockPages = [],
   activeDockPageId = "",
   selectedDockPageId = "",
+  dockPosition = "left",
   onClose,
   onThemeChange,
   onThemeStyleChange,
@@ -334,6 +342,7 @@ export function createSettingsPanel({
   onDockMainBack,
   onDockRenamePage,
   onDockIconChange,
+  onDockPositionChange,
 } = {}) {
   const isScreensaverScope = scope === "screensaver";
   const root = document.createElement("aside");
@@ -404,6 +413,14 @@ export function createSettingsPanel({
   const sections = [];
 
   if (!isScreensaverScope && settingsPage === "dock") {
+    sections.push(createSection("Position", [
+      createSelect({
+        label: "Position du dock",
+        value: dockPosition,
+        options: DOCK_POSITION_OPTIONS,
+        onChange: onDockPositionChange,
+      }),
+    ]));
     sections.push(createSection("Icônes du dock", [
       createDockSettingsList({
         pages: dockPages,

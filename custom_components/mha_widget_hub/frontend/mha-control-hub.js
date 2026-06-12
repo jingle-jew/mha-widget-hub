@@ -247,7 +247,10 @@ function syncThemeAttributes(host) {
   document.documentElement.setAttribute("data-icon-shape", iconShape);
 }
 
-const ORDER="mha-grid-order",SIZES="mha-widget-sizes",REMOVED="mha-hidden-widgets",POSITIONS="mha-widget-positions",CUSTOM_WIDGETS="mha-custom-widgets",PAGES="mha-grid-pages",ACTIVE_PAGE="mha-active-page",LEGACY_STORAGE_PREFIX=["mha","v2"].join("-"),THEME_STYLES=new Set(["ios","oneui","material"]);
+const ORDER="mha-grid-order",SIZES="mha-widget-sizes",REMOVED="mha-hidden-widgets",POSITIONS="mha-widget-positions",CUSTOM_WIDGETS="mha-custom-widgets",PAGES="mha-grid-pages",ACTIVE_PAGE="mha-active-page",DOCK_POSITION="mha-dock-position",LEGACY_STORAGE_PREFIX=["mha","v2"].join("-"),THEME_STYLES=new Set(["ios","oneui","material"]);
+const DOCK_POSITIONS=new Set(["left","right","bottom"]);
+function normalizeDockPosition(value="left"){return DOCK_POSITIONS.has(value)?value:"left";}
+function getStoredDockPosition(){return normalizeDockPosition(localStorage.getItem(DOCK_POSITION)||"left");}
 const SCREENSAVER_ENABLED="mha-screensaver-enabled";
 const SCREENSAVER_DELAY="mha-screensaver-delay";
 const SCREENSAVER_NOWBAR="mha-screensaver-nowbar";
@@ -425,7 +428,7 @@ function normalizeStoredWidgetContract(widget = {}) {
 }
 
 function readMigratedJson(key,legacyKey,fallback){const current=readJson(key,null);if(current!==null)return current;const legacy=readJson(legacyKey,null);if(legacy!==null){writeJson(key,legacy);return legacy}return fallback}
-class MhaControlHub extends HTMLElement{constructor(){super();this.attachShadow({mode:"open"});this._hass=null;this._hassUpdateFrame=0;this._isEditing=false;this._activeMoveWidgetId="";this._widgetPositions=readJson(POSITIONS,{})||{};this._draggedId="";this._isResizingWidget=false;this._resizeState=null;this._squareUnitFrame=0;this._renderId=0;this._readyRaf=0;this._viewportRaf=0;this._relayoutTimer=0;this._systemThemeListener=null;this._themeTransitionTimer=0;this._themeTransitionFrame=0;this._gridScrollCleanup=null;this._screensaverPreview=false;this._screensaverActive=false;this._screensaverNowBar=readBool(SCREENSAVER_NOWBAR,true);this._screensaverClockVariant=localStorage.getItem(SCREENSAVER_CLOCK_VARIANT)||localStorage.getItem("mha-screensaver-clock")||"digital";this._screensaverIdleTimer=0;this._screensaverEnabled=readBool(SCREENSAVER_ENABLED,true);this._screensaverDelay=readNumberOption(SCREENSAVER_DELAY,30000,[15000,30000,120000,300000]);this._settingsOpen=false;this._settingsPage="main";this._dockSettingsPageId="";this._screensaverSettingsOpen=false;this._lastResponsiveSignature="";this._responsiveRelayoutTimer=null;this._widgetManagerOpen=false;this._widgetManagerCategory="";this._pendingWidgetPlacement=null;this._pageCreatorOpen=false;this._newPageIcon="grid";this._pages=this._readPages();this._activePageId=this._readActivePageId();this._widgets=this._readWidgets()}
+class MhaControlHub extends HTMLElement{constructor(){super();this.attachShadow({mode:"open"});this._hass=null;this._hassUpdateFrame=0;this._isEditing=false;this._activeMoveWidgetId="";this._widgetPositions=readJson(POSITIONS,{})||{};this._draggedId="";this._isResizingWidget=false;this._resizeState=null;this._squareUnitFrame=0;this._renderId=0;this._readyRaf=0;this._viewportRaf=0;this._relayoutTimer=0;this._systemThemeListener=null;this._themeTransitionTimer=0;this._themeTransitionFrame=0;this._gridScrollCleanup=null;this._screensaverPreview=false;this._screensaverActive=false;this._screensaverNowBar=readBool(SCREENSAVER_NOWBAR,true);this._screensaverClockVariant=localStorage.getItem(SCREENSAVER_CLOCK_VARIANT)||localStorage.getItem("mha-screensaver-clock")||"digital";this._screensaverIdleTimer=0;this._screensaverEnabled=readBool(SCREENSAVER_ENABLED,true);this._screensaverDelay=readNumberOption(SCREENSAVER_DELAY,30000,[15000,30000,120000,300000]);this._settingsOpen=false;this._settingsPage="main";this._dockSettingsPageId="";this._screensaverSettingsOpen=false;this._lastResponsiveSignature="";this._responsiveRelayoutTimer=null;this._widgetManagerOpen=false;this._widgetManagerCategory="";this._pendingWidgetPlacement=null;this._pageCreatorOpen=false;this._newPageIcon="grid";this._dockPosition=getStoredDockPosition();this._pages=this._readPages();this._activePageId=this._readActivePageId();this._widgets=this._readWidgets()}
 set hass(h){this._hass=h;this._scheduleHassUpdate()}get hass(){return this._hass}
 _scheduleHassUpdate(){
   if(!this.isConnected||this._hassUpdateFrame)return;
@@ -521,6 +524,7 @@ _getSettingsPanelProps(scope="all"){
     dockPages:this._pages,
     activeDockPageId:this._activePageId,
     selectedDockPageId:this._dockSettingsPageId,
+    dockPosition:this._dockPosition,
     onClose:()=>scope==="screensaver"?this._closeScreensaverSettings():this._closeSettings(),
     onThemeChange:v=>this._applyThemeFromSettings(v),
     onThemeStyleChange:v=>this._applyThemeStyleFromSettings(v),
@@ -541,6 +545,7 @@ _getSettingsPanelProps(scope="all"){
     onDockMainBack:()=>this._openSettings(),
     onDockRenamePage:(id,name)=>this._renameDockPage(id,name),
     onDockIconChange:(id,icon)=>this._changeDockPageIcon(id,icon),
+    onDockPositionChange:v=>this._applyDockPositionFromSettings(v),
   };
 }
 _isMobileLandscapeLayout(){
@@ -643,6 +648,16 @@ _syncScreensaverSettingsDom(){
   this.shadowRoot.append(createSettingsPanel(this._getSettingsPanelProps("screensaver")));
 }
 
+_applyDockPositionFromSettings(position="left"){
+  const next=normalizeDockPosition(position);
+  if(next===this._dockPosition)return;
+  this._dockPosition=next;
+  localStorage.setItem(DOCK_POSITION,next);
+  this.dataset.dockPosition=next;
+  this.setAttribute("data-dock-position",next);
+  this._syncSettingsDom();
+  this._scheduleSquareUnitSync();
+}
 _openDockSettings(){
   this._settingsOpen=true;
   this._settingsPage="dock";
@@ -2121,8 +2136,8 @@ _getResponsiveSignature(){
   const layoutMode=getLayoutMode(this);
   const layout=getEffectiveLayout(this);
   const metrics=this._getWidgetAreaMetrics();
-  const preset=getGridPreset(this,layout,metrics||{});
-  return `${w}x${h}|${orientation}|${layoutMode}|${layout}|${preset.columns}|${preset.rows}|${preset.density}|${metrics?.width||0}x${metrics?.height||0}`;
+  const preset=this._getRuntimeGridPreset();
+  return `${w}x${h}|${orientation}|${layoutMode}|${layout}|${this._dockPosition}|${preset.columns}|${preset.rows}|${preset.density}|${metrics?.width||0}x${metrics?.height||0}`;
 }
 _syncRuntimeLayoutAttrs(){
   const layoutMode=getLayoutMode(this);
@@ -2198,9 +2213,21 @@ _getWidgetAreaMetrics(){
 
   return width>0&&height>0?{width,height}:null;
 }
+_getDockBottomColumnBonus(layout){
+  if(this._dockPosition!=="bottom")return 0;
+  if(layout==="mobile")return 0;
+  return layout==="desktop"?2:1;
+}
 _getRuntimeGridPreset(){
   const layout=getEffectiveLayout(this);
-  return getGridPreset(this,layout,this._getWidgetAreaMetrics()||{});
+  const base=getGridPreset(this,layout,this._getWidgetAreaMetrics()||{});
+  const bonus=this._getDockBottomColumnBonus(layout);
+  if(!bonus)return base;
+  return {
+    ...base,
+    columns:Math.max(1,(Number(base.columns)||1)+bonus),
+    density:`${base.density}-dock-bottom-${bonus}col`,
+  };
 }
 _getRuntimeGridUnits(){
   const preset=this._getRuntimeGridPreset();
@@ -2220,8 +2247,7 @@ _syncSquareUnit(){
   const metrics=this._getWidgetAreaMetrics();
   if(!metrics)return;
 
-  const layout=getEffectiveLayout(this);
-  const preset=getGridPreset(this,layout,metrics);
+  const preset=this._getRuntimeGridPreset();
   const units=getInternalGridColumnCountFromLogical(preset.columns);
   const rows=getInternalGridRowCountFromLogical(preset.rows);
 
@@ -2253,6 +2279,7 @@ _syncSquareUnit(){
     this.style.setProperty("--mha-runtime-grid-units",String(units));
     this.style.setProperty("--mha-runtime-grid-rows",String(rows));
     this.style.setProperty("--mha-runtime-grid-columns",String(preset.columns));
+    this.style.setProperty("--mha-runtime-logical-columns",String(preset.columns));
     this.style.setProperty("--mha-runtime-logical-rows",String(preset.rows));
 
     grid.style.setProperty("--mha-square-unit",`${unit}px`);
@@ -2430,5 +2457,5 @@ _wireDrag(el){
   el.draggable=false;
   el.removeAttribute("draggable");
 }
-render(){syncThemeAttributes(this);const renderId=++this._renderId,layoutMode=getLayoutMode(this),layout=getEffectiveLayout(this),preset=this._getRuntimeGridPreset(),units=getInternalGridColumnCountFromLogical(preset.columns),rows=getInternalGridRowCountFromLogical(preset.rows),cols=preset.columns,logicalRows=preset.rows,themeStyle=THEME_STYLES.has(document.documentElement.dataset.themeStyle)?document.documentElement.dataset.themeStyle:"oneui";const iconShapeSetting=getStoredIconShapeSetting(this);const iconShape=resolveIconShape(themeStyle,iconShapeSetting);this._clearGridScrollListener();this.dataset.themeStyle=themeStyle;this.dataset.iconShapeSetting=iconShapeSetting;this.setAttribute("data-icon-shape-setting",iconShapeSetting);this.dataset.iconShape=iconShape;this.setAttribute("data-icon-shape",iconShape);document.documentElement.dataset.iconShapeSetting=iconShapeSetting;document.documentElement.setAttribute("data-icon-shape-setting",iconShapeSetting);document.documentElement.dataset.iconShape=iconShape;document.documentElement.setAttribute("data-icon-shape",iconShape);const accent=normalizeAccent(themeStyle,localStorage.getItem(`mha-accent-${themeStyle}`)||localStorage.getItem("mha-accent")||"sky");this.dataset.accent=accent;this.setAttribute("data-accent",accent);document.documentElement.dataset.accent=accent;document.documentElement.setAttribute("data-accent",accent);this.dataset.layoutMode=layoutMode;this.dataset.layout=layout;this.dataset.gridDensity=preset.density;this.dataset.gridUnits=String(units);this.dataset.logicalColumns=String(cols);this.dataset.gridRows=String(rows);this.dataset.logicalRows=String(logicalRows);this.classList.toggle("is-editing",this._isEditing);this.style.setProperty("--mha-runtime-grid-units",String(units));this.style.setProperty("--mha-runtime-grid-rows",String(rows));this.style.setProperty("--mha-runtime-logical-columns",String(cols));this.style.setProperty("--mha-runtime-logical-rows",String(logicalRows));this.shadowRoot.innerHTML=createFrontendStyleLinks();const links=[...this.shadowRoot.querySelectorAll('link[rel="stylesheet"]')],{bg,shell,grid}=createShell({layoutMode,layout,logicalColumns:cols,gridUnits:units,pages:this._pages,activePageId:this._activePageId,isEditing:this._isEditing,onPageSelect:id=>this._setActivePage(id),onAddPage:()=>this._openPageCreator(),onDockSettings:()=>this._openDockSettings(),onSettings:()=>this._openSettings()});this.shadowRoot.append(bg,shell);const positions=this._getActiveWidgetPositions();this._widgets.forEach(w=>{const el=createEmptyWidget(w,{activeGridUnits:units,isEditing:this._isEditing,isMoveTarget:this._isEditing&&this._activeMoveWidgetId===w.id,position:positions?.[w.id],hass:this._hass,onToggleMove:id=>this._toggleWidgetMoveMode(id),onMove:(id,direction)=>this._moveWidgetByDirection(id,direction),onRemove:id=>this._removeWidget(id),onCycleVariant:id=>this.cycleVariant(id)});this._wireDrag(el,w);grid.append(el)});this.shadowRoot.append(createScreensaver({isVisible:this._getScreensaverVisible(),showNowBar:this._screensaverNowBar,clockVariant:this._screensaverClockVariant,onClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),onOpenScreensaverSettings:()=>this._openScreensaverSettings(),onWake:()=>this._wakeScreensaver()}));this.shadowRoot.append(createMobileDock({pages:this._pages,activePageId:this._activePageId,isEditing:this._isEditing,onPageSelect:id=>this._setActivePage(id),onAddPage:()=>this._openPageCreator(),onDockSettings:()=>this._openDockSettings(),onSettings:()=>this._openSettings()}));this.shadowRoot.append(this._createSettingsPanel());this.shadowRoot.append(this._createWidgetManagerPanel());this.shadowRoot.append(this._createPageCreatorPanel());this.shadowRoot.append(createSettingsPanel(this._getSettingsPanelProps("screensaver")));const edit=document.createElement("button");edit.className="mha-edit-button mha-main-edit-button mha-primary-edit-button";edit.type="button";edit.innerHTML=this._isEditing?ICONS.close:ICONS.edit;edit.onclick=()=>this.toggleEditMode();this.shadowRoot.append(edit);const addWidget=document.createElement("button");addWidget.className="mha-edit-button mha-main-edit-button mha-add-widget-button";addWidget.type="button";addWidget.innerHTML=`<svg viewBox="0 0 24 24"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5Z"/></svg>`;addWidget.setAttribute("aria-label","Ajouter un widget");addWidget.hidden=!this._isEditing;addWidget.onclick=(event)=>{event.preventDefault();event.stopPropagation();this._openWidgetManager()};this.shadowRoot.append(addWidget);this._syncEditModeDom();this._wireDockAutoHide(grid);this._scheduleSquareUnitSync();Promise.all(links.map(link=>link.sheet?Promise.resolve():new Promise(resolve=>{link.addEventListener("load",resolve,{once:true});link.addEventListener("error",resolve,{once:true})}))).then(()=>{if(this._renderId!==renderId)return;const styledUnits=getActiveGridUnits(this);if(styledUnits!==units){this.render();return}this._scheduleSquareUnitSync();this._syncScreensaverVisibilityState();this._markReadyAfterPaint()});updateStatusTime(this.shadowRoot);updateClockWidgets(this.shadowRoot);this._syncWidgetDropSlots();this._markReadyAfterPaint();this._scheduleScreensaverIdleTimer()}}
+render(){syncThemeAttributes(this);const renderId=++this._renderId,layoutMode=getLayoutMode(this),layout=getEffectiveLayout(this),preset=this._getRuntimeGridPreset(),units=getInternalGridColumnCountFromLogical(preset.columns),rows=getInternalGridRowCountFromLogical(preset.rows),cols=preset.columns,logicalRows=preset.rows,themeStyle=THEME_STYLES.has(document.documentElement.dataset.themeStyle)?document.documentElement.dataset.themeStyle:"oneui";const iconShapeSetting=getStoredIconShapeSetting(this);const iconShape=resolveIconShape(themeStyle,iconShapeSetting);this._clearGridScrollListener();this.dataset.themeStyle=themeStyle;this.dataset.iconShapeSetting=iconShapeSetting;this.setAttribute("data-icon-shape-setting",iconShapeSetting);this.dataset.iconShape=iconShape;this.setAttribute("data-icon-shape",iconShape);document.documentElement.dataset.iconShapeSetting=iconShapeSetting;document.documentElement.setAttribute("data-icon-shape-setting",iconShapeSetting);document.documentElement.dataset.iconShape=iconShape;document.documentElement.setAttribute("data-icon-shape",iconShape);const accent=normalizeAccent(themeStyle,localStorage.getItem(`mha-accent-${themeStyle}`)||localStorage.getItem("mha-accent")||"sky");this.dataset.accent=accent;this.setAttribute("data-accent",accent);document.documentElement.dataset.accent=accent;document.documentElement.setAttribute("data-accent",accent);this.dataset.layoutMode=layoutMode;this.dataset.layout=layout;this.dataset.dockPosition=this._dockPosition;this.setAttribute("data-dock-position",this._dockPosition);this.dataset.gridDensity=preset.density;this.dataset.gridUnits=String(units);this.dataset.logicalColumns=String(cols);this.dataset.gridRows=String(rows);this.dataset.logicalRows=String(logicalRows);this.classList.toggle("is-editing",this._isEditing);this.style.setProperty("--mha-runtime-grid-units",String(units));this.style.setProperty("--mha-runtime-grid-rows",String(rows));this.style.setProperty("--mha-runtime-logical-columns",String(cols));this.style.setProperty("--mha-runtime-logical-rows",String(logicalRows));this.shadowRoot.innerHTML=createFrontendStyleLinks();const links=[...this.shadowRoot.querySelectorAll('link[rel="stylesheet"]')],{bg,shell,grid}=createShell({layoutMode,layout,logicalColumns:cols,gridUnits:units,pages:this._pages,activePageId:this._activePageId,isEditing:this._isEditing,onPageSelect:id=>this._setActivePage(id),onAddPage:()=>this._openPageCreator(),onDockSettings:()=>this._openDockSettings(),onSettings:()=>this._openSettings()});this.shadowRoot.append(bg,shell);const positions=this._getActiveWidgetPositions();this._widgets.forEach(w=>{const el=createEmptyWidget(w,{activeGridUnits:units,isEditing:this._isEditing,isMoveTarget:this._isEditing&&this._activeMoveWidgetId===w.id,position:positions?.[w.id],hass:this._hass,onToggleMove:id=>this._toggleWidgetMoveMode(id),onMove:(id,direction)=>this._moveWidgetByDirection(id,direction),onRemove:id=>this._removeWidget(id),onCycleVariant:id=>this.cycleVariant(id)});this._wireDrag(el,w);grid.append(el)});this.shadowRoot.append(createScreensaver({isVisible:this._getScreensaverVisible(),showNowBar:this._screensaverNowBar,clockVariant:this._screensaverClockVariant,onClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),onOpenScreensaverSettings:()=>this._openScreensaverSettings(),onWake:()=>this._wakeScreensaver()}));this.shadowRoot.append(createMobileDock({pages:this._pages,activePageId:this._activePageId,isEditing:this._isEditing,onPageSelect:id=>this._setActivePage(id),onAddPage:()=>this._openPageCreator(),onDockSettings:()=>this._openDockSettings(),onSettings:()=>this._openSettings()}));this.shadowRoot.append(this._createSettingsPanel());this.shadowRoot.append(this._createWidgetManagerPanel());this.shadowRoot.append(this._createPageCreatorPanel());this.shadowRoot.append(createSettingsPanel(this._getSettingsPanelProps("screensaver")));const edit=document.createElement("button");edit.className="mha-edit-button mha-main-edit-button mha-primary-edit-button";edit.type="button";edit.innerHTML=this._isEditing?ICONS.close:ICONS.edit;edit.onclick=()=>this.toggleEditMode();this.shadowRoot.append(edit);const addWidget=document.createElement("button");addWidget.className="mha-edit-button mha-main-edit-button mha-add-widget-button";addWidget.type="button";addWidget.innerHTML=`<svg viewBox="0 0 24 24"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5Z"/></svg>`;addWidget.setAttribute("aria-label","Ajouter un widget");addWidget.hidden=!this._isEditing;addWidget.onclick=(event)=>{event.preventDefault();event.stopPropagation();this._openWidgetManager()};this.shadowRoot.append(addWidget);this._syncEditModeDom();this._wireDockAutoHide(grid);this._scheduleSquareUnitSync();Promise.all(links.map(link=>link.sheet?Promise.resolve():new Promise(resolve=>{link.addEventListener("load",resolve,{once:true});link.addEventListener("error",resolve,{once:true})}))).then(()=>{if(this._renderId!==renderId)return;const styledUnits=getActiveGridUnits(this);if(styledUnits!==units){this.render();return}this._scheduleSquareUnitSync();this._syncScreensaverVisibilityState();this._markReadyAfterPaint()});updateStatusTime(this.shadowRoot);updateClockWidgets(this.shadowRoot);this._syncWidgetDropSlots();this._markReadyAfterPaint();this._scheduleScreensaverIdleTimer()}}
 customElements.define("mha-control-hub",MhaControlHub);

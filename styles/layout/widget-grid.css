@@ -214,3 +214,97 @@
     transform: translateX(calc(-1 * var(--mha-grid-frame-nudge-x)));
   }
 }
+/* Desktop/tablet dock position
+ * Mobile keeps its dedicated bottom dock. On tablet/desktop, the dock can
+ * reserve space on the left, right, or bottom and the widget grid follows.
+ */
+@media (min-width: 768px) {
+  :host {
+    --mha-dock-zone-width: clamp(4.75rem, 7vw, 6.25rem);
+    --mha-bottom-dock-height: clamp(5rem, 8vw, 6.75rem);
+  }
+
+  :host([data-dock-position="left"]) .mha-workspace {
+    grid-template-columns: var(--mha-dock-zone-width) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  :host([data-dock-position="left"]) .mha-dock-zone {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  :host([data-dock-position="left"]) .mha-widget-area {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  :host([data-dock-position="right"]) .mha-workspace,
+  :host(:not([data-dock-position])) .mha-workspace {
+    grid-template-columns: minmax(0, 1fr) var(--mha-dock-zone-width);
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  :host([data-dock-position="right"]) .mha-widget-area,
+  :host(:not([data-dock-position])) .mha-widget-area {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  :host([data-dock-position="right"]) .mha-dock-zone,
+  :host(:not([data-dock-position])) .mha-dock-zone {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  :host([data-dock-position="bottom"]) .mha-workspace {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) var(--mha-bottom-dock-height);
+  }
+
+  :host([data-dock-position="bottom"]) .mha-widget-area {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  :host([data-dock-position="bottom"]) .mha-dock-zone {
+    grid-column: 1;
+    grid-row: 2;
+    place-items: center;
+  }
+}
+
+/* Dock bottom containment fix
+ * Desktop/tablet only: when the dock is configured at the bottom, the dock
+ * zone participates in the workspace grid instead of behaving like a side rail.
+ */
+@media (min-width: 768px) {
+  :host([data-dock-position="bottom"]) .mha-workspace {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) var(--mha-bottom-dock-height);
+    grid-auto-flow: row;
+    overflow: hidden;
+  }
+
+  :host([data-dock-position="bottom"]) .mha-widget-area {
+    grid-column: 1;
+    grid-row: 1;
+    min-block-size: 0;
+  }
+
+  :host([data-dock-position="bottom"]) .mha-dock-zone {
+    grid-column: 1;
+    grid-row: 2;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 100%;
+    block-size: var(--mha-bottom-dock-height);
+    min-inline-size: 0;
+    min-block-size: 0;
+    max-inline-size: 100%;
+    overflow: hidden;
+    place-items: initial;
+  }
+}
