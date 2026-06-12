@@ -193,6 +193,17 @@ This project is currently moving fast and prioritizes the foundation of the prod
 
 The intent is to avoid prematurely wiring Home Assistant entities before the interface model is strong enough.
 
+## Home Assistant installation
+
+The repository now includes a HACS-compatible custom integration under
+`custom_components/mha_widget_hub/`. Once installed and added from Home
+Assistant's integrations UI, it serves the bundled frontend and registers the
+`/mha-control-hub` sidebar panel automatically. No manual `panel_custom:`
+configuration is required.
+
+See [docs/installation.md](docs/installation.md) for installation and frontend
+synchronization instructions.
+
 ## Roadmap
 
 Likely next steps:

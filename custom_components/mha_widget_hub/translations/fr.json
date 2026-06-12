@@ -1,0 +1,14 @@
+{
+  "title": "MHA Widget Hub",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configurer MHA Widget Hub",
+        "description": "Enregistre le lanceur MHA dans la barre latérale de Home Assistant."
+      }
+    },
+    "abort": {
+      "already_configured": "MHA Widget Hub est déjà configuré."
+    }
+  }
+}

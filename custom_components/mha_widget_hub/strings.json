@@ -1,0 +1,15 @@
+{
+  "title": "MHA Widget Hub",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up MHA Widget Hub",
+        "description": "Register the MHA launcher panel in the Home Assistant sidebar."
+      }
+    },
+    "abort": {
+      "already_configured": "MHA Widget Hub is already configured."
+    }
+  }
+}
+

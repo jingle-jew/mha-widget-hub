@@ -1,0 +1,146 @@
+/*
+ * MHA accent palettes.
+ *
+ * The active accent is exposed through:
+ * - --mha-accent
+ * - --mha-accent-soft
+ * - --mha-accent-strong
+ * - --mha-accent-contrast
+ * - --mha-system-icon-bg/color/border/shadow
+ *
+ * The same accent selection is used in light and dark modes.
+ */
+
+/* Fallback accent */
+:host {
+  --mha-accent: #4da3ff;
+  --mha-accent-soft: color-mix(in srgb, var(--mha-accent) 18%, transparent);
+  --mha-accent-strong: color-mix(in srgb, var(--mha-accent) 86%, #000 8%);
+  --mha-accent-contrast: #fff;
+
+  --mha-system-icon-bg: var(--mha-icon-bg);
+  --mha-system-icon-color: var(--mha-icon-color);
+  --mha-system-icon-border: var(--mha-icon-border);
+  --mha-system-icon-shadow: var(--mha-icon-shadow);
+}
+
+/* iOS palette */
+:host([data-theme-style="ios"][data-accent="blue"]) { --mha-accent: #0a84ff; }
+:host([data-theme-style="ios"][data-accent="indigo"]) { --mha-accent: #5e5ce6; }
+:host([data-theme-style="ios"][data-accent="purple"]) { --mha-accent: #bf5af2; }
+:host([data-theme-style="ios"][data-accent="pink"]) { --mha-accent: #ff2d92; }
+:host([data-theme-style="ios"][data-accent="red"]) { --mha-accent: #ff453a; }
+:host([data-theme-style="ios"][data-accent="orange"]) { --mha-accent: #ff9f0a; }
+:host([data-theme-style="ios"][data-accent="yellow"]) { --mha-accent: #ffd60a; --mha-accent-contrast: rgba(0,0,0,.84); }
+:host([data-theme-style="ios"][data-accent="green"]) { --mha-accent: #32d74b; --mha-accent-contrast: rgba(0,0,0,.84); }
+:host([data-theme-style="ios"][data-accent="mint"]) { --mha-accent: #66d4cf; --mha-accent-contrast: rgba(0,0,0,.84); }
+:host([data-theme-style="ios"][data-accent="teal"]) { --mha-accent: #40c8e0; --mha-accent-contrast: rgba(0,0,0,.84); }
+
+/* OneUI palette */
+:host([data-theme-style="oneui"][data-accent="sky"]) { --mha-accent: #4ba3ff; }
+:host([data-theme-style="oneui"][data-accent="blue"]) { --mha-accent: #3f7cff; }
+:host([data-theme-style="oneui"][data-accent="violet"]) { --mha-accent: #8b72ff; }
+:host([data-theme-style="oneui"][data-accent="pink"]) { --mha-accent: #ff6aa2; }
+:host([data-theme-style="oneui"][data-accent="coral"]) { --mha-accent: #ff7b73; }
+:host([data-theme-style="oneui"][data-accent="orange"]) { --mha-accent: #ff9b43; }
+:host([data-theme-style="oneui"][data-accent="amber"]) { --mha-accent: #f7bf45; --mha-accent-contrast: rgba(0,0,0,.86); }
+:host([data-theme-style="oneui"][data-accent="green"]) { --mha-accent: #54c873; --mha-accent-contrast: rgba(0,0,0,.86); }
+:host([data-theme-style="oneui"][data-accent="aqua"]) { --mha-accent: #35c7c9; --mha-accent-contrast: rgba(0,0,0,.86); }
+:host([data-theme-style="oneui"][data-accent="slate"]) { --mha-accent: #6f7f99; }
+
+/* Material palette. Consumes Material-like tonal accent tokens without rewriting the whole Material theme. */
+:host([data-theme-style="material"][data-accent="blue"]) { --mha-accent: #0061a4; --mha-material-you-symbol-1: #0061a4; --mha-material-you-icon-container: #d1e4ff; }
+:host([data-theme-style="material"][data-accent="indigo"]) { --mha-accent: #4d57a9; --mha-material-you-symbol-1: #4d57a9; --mha-material-you-icon-container: #e0e0ff; }
+:host([data-theme-style="material"][data-accent="purple"]) { --mha-accent: #6750a4; --mha-material-you-symbol-1: #6750a4; --mha-material-you-icon-container: #e8def8; }
+:host([data-theme-style="material"][data-accent="pink"]) { --mha-accent: #984061; --mha-material-you-symbol-1: #984061; --mha-material-you-icon-container: #ffd8e7; }
+:host([data-theme-style="material"][data-accent="red"]) { --mha-accent: #ba1a1a; --mha-material-you-symbol-1: #ba1a1a; --mha-material-you-icon-container: #ffdad6; }
+:host([data-theme-style="material"][data-accent="orange"]) { --mha-accent: #8f4c00; --mha-material-you-symbol-1: #8f4c00; --mha-material-you-icon-container: #ffdcc2; }
+:host([data-theme-style="material"][data-accent="yellow"]) { --mha-accent: #745b00; --mha-material-you-symbol-1: #745b00; --mha-material-you-icon-container: #ffe08a; --mha-accent-contrast: rgba(0,0,0,.86); }
+:host([data-theme-style="material"][data-accent="green"]) { --mha-accent: #386a20; --mha-material-you-symbol-1: #386a20; --mha-material-you-icon-container: #b8f397; --mha-accent-contrast: rgba(0,0,0,.86); }
+:host([data-theme-style="material"][data-accent="teal"]) { --mha-accent: #006a60; --mha-material-you-symbol-1: #006a60; --mha-material-you-icon-container: #9ff2e5; --mha-accent-contrast: rgba(0,0,0,.86); }
+:host([data-theme-style="material"][data-accent="cyan"]) { --mha-accent: #006879; --mha-material-you-symbol-1: #006879; --mha-material-you-icon-container: #a8edff; --mha-accent-contrast: rgba(0,0,0,.86); }
+
+/* Derived accent tokens */
+:host {
+  --mha-accent-soft: color-mix(in srgb, var(--mha-accent) 18%, transparent);
+  --mha-accent-strong: color-mix(in srgb, var(--mha-accent) 86%, #000 8%);
+}
+
+/* System icons: dock, floating dock launcher/items, edit button. */
+:host([data-theme-style="ios"]) {
+  --mha-system-icon-bg:
+    linear-gradient(145deg, color-mix(in srgb, var(--mha-accent) 62%, rgba(255,255,255,.42)), color-mix(in srgb, var(--mha-accent) 78%, rgba(255,255,255,.10)));
+  --mha-system-icon-color: var(--mha-accent-contrast);
+  --mha-system-icon-border: color-mix(in srgb, var(--mha-accent) 44%, rgba(255,255,255,.38));
+  --mha-system-icon-shadow:
+    inset 0 1px 0 rgba(255,255,255,.38),
+    0 12px 30px color-mix(in srgb, var(--mha-accent) 26%, transparent);
+}
+
+:host([data-theme-style="oneui"]) {
+  --mha-system-icon-bg: var(--mha-accent);
+  --mha-system-icon-color: var(--mha-accent-contrast);
+  --mha-system-icon-border: color-mix(in srgb, var(--mha-accent) 72%, rgba(255,255,255,.25));
+  --mha-system-icon-shadow:
+    0 10px 24px color-mix(in srgb, var(--mha-accent) 22%, transparent),
+    inset 0 1px 0 rgba(255,255,255,.22);
+}
+
+:host([data-theme-style="material"]) {
+  --mha-system-icon-bg: var(--mha-material-you-icon-container, color-mix(in srgb, var(--mha-accent) 20%, white));
+  --mha-system-icon-color: var(--mha-material-you-symbol-1, var(--mha-accent));
+  --mha-system-icon-border: color-mix(in srgb, var(--mha-system-icon-color) 20%, transparent);
+  --mha-system-icon-shadow: 0 4px 14px rgba(0,0,0,.10);
+}
+
+/* Apply accent to system icon containers only. */
+.mha-dock .mha-icon,
+.mha-mobile-dock-launcher > .mha-icon,
+.mha-mobile-dock-item > .mha-icon,
+.mha-edit-button {
+  background: var(--mha-system-icon-bg);
+  color: var(--mha-system-icon-color);
+  border-color: var(--mha-system-icon-border);
+  box-shadow: var(--mha-system-icon-shadow);
+}
+
+/* Accent-aware controls. */
+.mha-toggle-input:checked + .mha-toggle-track {
+  background: var(--mha-accent);
+  border-color: color-mix(in srgb, var(--mha-accent) 72%, white 14%);
+}
+
+.mha-slider-input::-webkit-slider-runnable-track {
+  background:
+    linear-gradient(90deg, var(--mha-accent) 0 var(--mha-slider-value, 50%), var(--mha-slider-track-bg) var(--mha-slider-value, 50%) 100%);
+}
+
+.mha-slider-input::-webkit-slider-thumb {
+  background: var(--mha-accent);
+}
+
+.mha-pill[data-tone="accent"],
+.mha-button[data-variant="primary"] {
+  background: var(--mha-accent);
+  color: var(--mha-accent-contrast);
+  border-color: color-mix(in srgb, var(--mha-accent) 72%, white 14%);
+}
+
+/* EDIT BUTTON ACCENT CONTRACT
+ * The edit launcher is a system control.
+ *
+ * It follows the same accent-aware system icon tokens as dock/system controls,
+ * while shell.css remains responsible for size/position/icon glyph scale.
+ */
+.mha-edit-button {
+  background: var(--mha-system-icon-bg);
+  color: var(--mha-system-icon-color);
+  border-color: var(--mha-system-icon-border);
+  box-shadow: var(--mha-system-icon-shadow);
+}
+
+.mha-edit-button svg,
+.mha-edit-button path {
+  fill: currentColor;
+  stroke: currentColor;
+}

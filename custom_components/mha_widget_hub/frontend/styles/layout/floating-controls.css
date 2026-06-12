@@ -1,0 +1,359 @@
+/*
+ * Floating edit and mobile dock launcher controls.
+ *
+ * State-driven visibility remains in shell.css, mobile-dock.css, and
+ * settings-panel.css. This file owns control geometry and visual treatment.
+ */
+
+.mha-edit-button {
+  --mha-edit-button-edge: var(--mha-mobile-dock-edge, max(env(safe-area-inset-left), clamp(.9rem, 3vw, 1.25rem)));
+  --mha-edit-button-bottom: var(--mha-mobile-dock-bottom, max(env(safe-area-inset-bottom), clamp(.9rem, 3vw, 1.25rem)));
+  --mha-edit-icon-glyph-size: var(--mha-icon-glyph-size, 56%);
+
+  position: absolute;
+  z-index: 10;
+  right: 22px;
+  bottom: 22px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--mha-widget-border);
+  border-radius: 999px;
+  background: var(--mha-widget-surface);
+  color: var(--mha-text);
+  backdrop-filter: var(--mha-icon-backdrop-filter, none);
+  cursor: pointer;
+  box-shadow: var(--mha-widget-shadow);
+  overflow: hidden;
+  padding: 0;
+  transition:
+    opacity var(--mha-motion-duration) ease,
+    transform var(--mha-motion-duration) var(--mha-motion-easing);
+}
+
+.mha-edit-button svg {
+  inline-size: var(--mha-edit-icon-glyph-size);
+  block-size: var(--mha-edit-icon-glyph-size);
+  width: var(--mha-edit-icon-glyph-size);
+  height: var(--mha-edit-icon-glyph-size);
+  fill: currentColor;
+  stroke: currentColor;
+}
+
+.mha-edit-button path {
+  fill: currentColor;
+  stroke: currentColor;
+}
+
+@media (max-width: 767px) {
+  .mha-edit-button {
+    right: var(--mha-edit-button-edge);
+    bottom: var(--mha-edit-button-bottom);
+  }
+}
+
+@media (orientation: landscape) {
+  :host([data-layout="mobile"]) .mha-main-edit-button {
+    opacity: 0 !important;
+    transform: translateY(calc(100% + 1rem)) scale(.96) !important;
+    pointer-events: none !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .mha-edit-button {
+    position: fixed;
+    z-index: 90;
+    inset-inline-end: max(var(--mha-safe-area-right, env(safe-area-inset-right)), clamp(.9rem, 3vw, 1.25rem));
+    inset-block-end: max(var(--mha-safe-area-bottom, env(safe-area-inset-bottom)), clamp(.9rem, 3vw, 1.25rem));
+  }
+}
+
+:host([data-theme-style="ios"]) .mha-edit-button {
+  opacity: 1;
+  -webkit-backdrop-filter: var(--mha-icon-backdrop-filter, blur(var(--mha-surface-blur)) saturate(var(--mha-surface-saturation)));
+  backdrop-filter: var(--mha-icon-backdrop-filter, blur(var(--mha-surface-blur)) saturate(var(--mha-surface-saturation)));
+}
+
+:host .mha-edit-button svg,
+:host .mha-edit-button path {
+  fill: currentColor !important;
+  stroke: currentColor !important;
+}
+
+:host {
+  --mha-floating-button-size: clamp(2.625rem, 10vw, 3rem);
+}
+
+/* SYSTEM BUTTON TOKENS
+ * Shared shell-control surface for floating system buttons:
+ * edit/X, add widget, and mobile dock launcher.
+ */
+:host {
+  --mha-system-button-bg: var(--mha-surface-floating);
+  --mha-system-button-border: var(--mha-border-primary);
+  --mha-system-button-color: var(--mha-text-primary);
+  --mha-system-button-shadow: var(--mha-shadow-floating);
+  --mha-system-button-backdrop-filter:
+    blur(var(--mha-blur-primary)) saturate(var(--mha-surface-saturation));
+  --mha-system-button-highlight: var(--mha-highlight-primary);
+  --mha-system-button-highlight-opacity: var(--mha-widget-reflection-opacity, .22);
+}
+
+
+/* iOS: Liquid Glass system buttons. */
+:host([data-theme-style="ios"]) {
+  --mha-system-button-bg:
+    linear-gradient(145deg, rgba(255,255,255,.30), rgba(255,255,255,.10)),
+    color-mix(in srgb, var(--mha-surface-floating) 78%, transparent);
+  --mha-system-button-border:
+    color-mix(in srgb, var(--mha-border-primary) 70%, rgba(255,255,255,.42));
+  --mha-system-button-shadow:
+    inset 0 1px 0 rgba(255,255,255,.24),
+    var(--mha-shadow-floating);
+  --mha-system-button-backdrop-filter:
+    blur(calc(var(--mha-blur-primary) * 1.05)) saturate(175%);
+  --mha-system-button-highlight: var(--mha-highlight-primary);
+  --mha-system-button-highlight-opacity: .62;
+}
+
+:host([data-theme-style="ios"][data-theme="light"]) {
+  --mha-system-button-bg:
+    linear-gradient(145deg, rgba(255,255,255,.72), rgba(255,255,255,.36)),
+    color-mix(in srgb, var(--mha-surface-floating) 64%, rgba(255,255,255,.46));
+  --mha-system-button-border: rgba(255,255,255,.56);
+  --mha-system-button-shadow:
+    inset 0 1px 0 rgba(255,255,255,.34),
+    0 8px 20px rgba(0,0,0,.10);
+  --mha-system-button-highlight-opacity: .58;
+}
+
+:host([data-theme-style="ios"][data-theme="dark"]) {
+  --mha-system-button-bg:
+    linear-gradient(145deg, rgba(255,255,255,.18), rgba(255,255,255,.06)),
+    color-mix(in srgb, var(--mha-surface-floating) 82%, transparent);
+  --mha-system-button-border:
+    color-mix(in srgb, var(--mha-border-primary) 82%, rgba(255,255,255,.14));
+  --mha-system-button-shadow:
+    inset 0 1px 0 rgba(255,255,255,.16),
+    0 10px 24px rgba(0,0,0,.26);
+  --mha-system-button-highlight-opacity: .42;
+}
+
+/* Material: opaque tonal, flatter system buttons.
+ * Material system buttons should never be glass/translucent.
+ */
+:host([data-theme-style="material"]) {
+  --mha-system-button-bg: var(--mha-material-surface-container-high, var(--mha-surface-tonal));
+  --mha-system-button-border: var(--mha-border-subtle);
+  --mha-system-button-shadow: var(--mha-shadow-floating);
+  --mha-system-button-backdrop-filter: none;
+  --mha-system-button-highlight:
+    linear-gradient(135deg, color-mix(in srgb, var(--mha-accent) 7%, transparent), transparent 66%);
+  --mha-system-button-highlight-opacity: .18;
+}
+
+:host([data-theme-style="material"][data-theme="dark"]) {
+  --mha-system-button-bg: var(--mha-material-surface-container-high, var(--mha-surface-tonal));
+  --mha-system-button-border: var(--mha-border-subtle);
+  --mha-system-button-shadow: var(--mha-shadow-floating);
+  --mha-system-button-highlight-opacity: .12;
+}
+
+
+/* OneUI: flatter but still blurred. */
+:host([data-theme-style="oneui"]) {
+  --mha-system-button-bg:
+    linear-gradient(145deg, rgba(255,255,255,.22), rgba(255,255,255,.10)),
+    color-mix(in srgb, var(--mha-surface-floating) 76%, transparent);
+  --mha-system-button-border:
+    color-mix(in srgb, var(--mha-border-primary) 76%, rgba(255,255,255,.16));
+  --mha-system-button-shadow:
+    inset 0 1px 0 rgba(255,255,255,.20),
+    0 8px 18px rgba(0,0,0,.12),
+    0 2px 6px color-mix(in srgb, var(--mha-accent) 7%, transparent);
+  --mha-system-button-backdrop-filter: blur(20px) saturate(145%);
+  --mha-system-button-highlight:
+    radial-gradient(circle at 28% 18%, rgba(255,255,255,.20), transparent 34%),
+    linear-gradient(135deg, rgba(255,255,255,.08), transparent 58%);
+  --mha-system-button-highlight-opacity: .56;
+}
+
+:host([data-theme-style="oneui"][data-theme="dark"]) {
+  --mha-system-button-bg:
+    linear-gradient(145deg, rgba(255,255,255,.13), rgba(255,255,255,.045)),
+    color-mix(in srgb, var(--mha-surface-floating) 62%, transparent);
+  --mha-system-button-border:
+    color-mix(in srgb, var(--mha-border-primary) 84%, rgba(255,255,255,.08));
+  --mha-system-button-shadow:
+    inset 0 1px 0 rgba(255,255,255,.13),
+    0 9px 20px rgba(0,0,0,.24),
+    0 2px 7px color-mix(in srgb, var(--mha-accent) 8%, transparent);
+  --mha-system-button-highlight-opacity: .30;
+}
+
+/* System button token consumers. */
+:host .mha-edit-button.mha-main-edit-button,
+:host .mha-add-widget-button,
+:host .mha-mobile-dock-launcher {
+  background: var(--mha-system-button-bg) !important;
+  border-color: var(--mha-system-button-border) !important;
+  color: var(--mha-system-button-color) !important;
+  box-shadow: var(--mha-system-button-shadow) !important;
+  -webkit-backdrop-filter: var(--mha-system-button-backdrop-filter) !important;
+  backdrop-filter: var(--mha-system-button-backdrop-filter) !important;
+}
+
+:host .mha-edit-button.mha-main-edit-button::before,
+:host .mha-add-widget-button::before,
+:host .mha-mobile-dock-launcher::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: var(--mha-system-button-highlight);
+  opacity: var(--mha-system-button-highlight-opacity);
+}
+
+
+:host .mha-edit-button.mha-main-edit-button {
+  inline-size: var(--mha-floating-button-size) !important;
+  block-size: var(--mha-floating-button-size) !important;
+  width: var(--mha-floating-button-size) !important;
+  height: var(--mha-floating-button-size) !important;
+  aspect-ratio: 1 / 1;
+  border-radius: 999px !important;
+  -webkit-mask: none !important;
+  mask: none !important;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+  background: var(--mha-system-button-bg) !important;
+  border-color: var(--mha-system-button-border) !important;
+  color: var(--mha-system-button-color) !important;
+  box-shadow: var(--mha-system-button-shadow) !important;
+  -webkit-backdrop-filter: var(--mha-system-button-backdrop-filter) !important;
+  backdrop-filter: var(--mha-system-button-backdrop-filter) !important;
+}
+
+@media (max-width: 767px) {
+  .mha-mobile-dock-launcher {
+    inline-size: var(--mha-floating-button-size) !important;
+    block-size: var(--mha-floating-button-size) !important;
+    width: var(--mha-floating-button-size) !important;
+    height: var(--mha-floating-button-size) !important;
+    aspect-ratio: 1 / 1;
+    border: 1px solid var(--mha-widget-border) !important;
+    border-radius: 999px !important;
+    background: var(--mha-system-button-bg) !important;
+    box-shadow: var(--mha-system-button-shadow) !important;
+    color: var(--mha-system-button-color) !important;
+    -webkit-backdrop-filter: var(--mha-system-button-backdrop-filter) !important;
+    backdrop-filter: var(--mha-system-button-backdrop-filter) !important;
+    overflow: hidden;
+  }
+
+  .mha-mobile-dock-launcher > .mha-icon {
+    --mha-icon-size: var(--mha-floating-button-size);
+    --mha-icon-color: currentColor !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: inherit !important;
+  }
+
+  .mha-mobile-dock-launcher > .mha-icon .mha-icon-symbol {
+    --mha-icon-symbol-color: currentColor !important;
+    color: currentColor !important;
+    opacity: 1;
+  }
+}
+
+@media (orientation: portrait) {
+  :host([data-layout="mobile"].is-mobile-floating-controls-hidden) .mha-main-edit-button,
+  :host([data-layout="mobile"].is-mobile-floating-controls-hidden) .mha-mobile-dock-launcher {
+    opacity: 0 !important;
+    transform: translateY(calc(100% + 1rem)) scale(.96) !important;
+    pointer-events: none !important;
+  }
+}
+
+
+/* ADD WIDGET FLOATING BUTTON */
+.mha-add-widget-button {
+  transform: translateY(calc(-1 * (var(--mha-floating-button-size) + clamp(.55rem, 1.6vw, .85rem)))) !important;
+}
+
+.mha-add-widget-button[hidden] {
+  display: none !important;
+}
+
+@media (orientation: landscape) {
+  :host([data-layout="mobile"]) .mha-add-widget-button {
+    opacity: 0 !important;
+    transform: translateY(calc(100% + 1rem)) scale(.96) !important;
+    pointer-events: none !important;
+  }
+}
+
+@media (orientation: portrait) {
+  :host([data-layout="mobile"].is-mobile-floating-controls-hidden) .mha-add-widget-button {
+    opacity: 0 !important;
+    transform: translateY(calc(100% + 1rem)) scale(.96) !important;
+    pointer-events: none !important;
+  }
+}
+
+/* EDIT MODE MOBILE FLOATING CONTROLS VISIBILITY
+ * In mobile portrait, the normal scroll auto-hide can hide floating controls.
+ * While editing, the primary edit/X button and the add-widget + button must
+ * remain visible during scroll so the user can always exit edit mode or add.
+ */
+@media (orientation: portrait) {
+  :host([data-layout="mobile"].is-editing.is-mobile-floating-controls-hidden) .mha-primary-edit-button,
+  :host([data-layout="mobile"].is-editing.is-mobile-floating-controls-hidden) .mha-add-widget-button {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+
+  :host([data-layout="mobile"].is-editing.is-mobile-floating-controls-hidden) .mha-primary-edit-button {
+    transform: none !important;
+  }
+
+  :host([data-layout="mobile"].is-editing.is-mobile-floating-controls-hidden) .mha-add-widget-button {
+    transform: translateY(calc(-1 * (var(--mha-floating-button-size) + clamp(.55rem, 1.6vw, .85rem)))) !important;
+  }
+}
+
+/* STATUS BAR SAFE FRAME ALIGNMENT
+ * Keep the desktop/tablet edit button on the same right visual inset as the
+ * status bar. Shell/grid geometry remains untouched.
+ */
+@media (min-width: 768px) {
+  .mha-main-edit-button {
+    right: var(--mha-page-padding) !important;
+  }
+}
+
+
+/* MATERIAL OPAQUE SYSTEM BUTTON GUARANTEE
+ * Material You is tonal/flat here, not glass. Keep system buttons opaque even
+ * if shared/mobile rules evolve later.
+ */
+:host([data-theme-style="material"]) .mha-edit-button.mha-main-edit-button,
+:host([data-theme-style="material"]) .mha-add-widget-button,
+:host([data-theme-style="material"]) .mha-mobile-dock-launcher {
+  background-color: var(--mha-material-surface-container-high, var(--mha-surface-tonal)) !important;
+  background-image: none !important;
+  background: var(--mha-material-surface-container-high, var(--mha-surface-tonal)) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+:host([data-theme-style="material"]) .mha-edit-button.mha-main-edit-button::before,
+:host([data-theme-style="material"]) .mha-add-widget-button::before,
+:host([data-theme-style="material"]) .mha-mobile-dock-launcher::before {
+  opacity: var(--mha-system-button-highlight-opacity, .14) !important;
+  mix-blend-mode: normal;
+}
+
+

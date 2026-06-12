@@ -1,0 +1,105 @@
+/*
+ * MHA Widget Layout foundation.
+ *
+ * The legacy micro-grid system has been removed. The external dashboard grid
+ * still owns widget placement; each widget component now owns its own internal
+ * layout and reads the shared safe content inset below.
+ */
+
+.mha-widget {
+  container-type: size;
+  --mha-widget-content-inset: var(--mha-widget-inner-inset, clamp(0.62rem, min(6.6cqi, 6.6cqb), 0.95rem));
+  --mha-widget-inner-padding: var(--mha-widget-content-inset);
+  --mha-widget-content-gap: var(--mha-widget-gap, clamp(0.2rem, min(2.4cqi, 2.4cqb), 0.45rem));
+
+  /* Shared control icon-bubble size. Used by compact control widgets such as
+   * ButtonWidget and ToggleWidget so their icon bubbles stay visually aligned.
+   * This is intentionally size-stable: widget variants change layout/content,
+   * not the visual size of shared control elements.
+   */
+  --mha-control-icon-bubble-size: var(--mha-control-icon-size, 2.75rem);
+  --mha-control-icon-glyph-size: 78%;
+  --mha-control-icon-bubble-radius: 999px;
+
+
+  /* Widget typography policy: widget text does not scale with widget w/h.
+   * Variants may change layout/content, but labels/states/values consume stable
+   * role tokens instead of cqi/cqb/vw-driven font-size rules.
+   */
+  --mha-type-widget-label-size: var(--mha-font-size-widget-label, 1rem);
+  --mha-type-widget-state-size: var(--mha-font-size-widget-state, .76rem);
+  --mha-type-widget-caption-size: var(--mha-font-size-widget-caption, .68rem);
+  --mha-type-widget-chip-size: var(--mha-font-size-widget-chip, .76rem);
+  --mha-type-widget-value-size: var(--mha-font-size-widget-value, 1.35rem);
+  --mha-type-widget-display-sm: var(--mha-font-size-widget-display-sm, 1.72rem);
+  --mha-type-widget-display-md: var(--mha-font-size-widget-display-md, 2.35rem);
+  --mha-type-widget-display-lg: var(--mha-font-size-widget-display-lg, 3.2rem);
+
+  --mha-type-control-label-size: var(--mha-type-widget-label-size);
+  --mha-type-control-state-size: var(--mha-type-widget-state-size);
+  --mha-type-weather-temp-size: var(--mha-font-size-weather-temp, var(--mha-type-widget-display-sm));
+  --mha-type-weather-summary-size: var(--mha-font-size-weather-summary, var(--mha-type-widget-label-size));
+  --mha-type-clock-time-size: var(--mha-font-size-clock-time, var(--mha-type-widget-display-lg));
+  --mha-type-clock-date-size: var(--mha-font-size-clock-date, var(--mha-type-widget-state-size));
+  --mha-type-clock-number-size: var(--mha-font-size-clock-number, .62rem);
+}
+
+@supports not (width: 1cqi) {
+  .mha-widget {
+    --mha-widget-content-inset: var(--mha-widget-inner-inset, clamp(0.62rem, 1.15vw, 0.95rem));
+    --mha-widget-inner-padding: var(--mha-widget-content-inset);
+    --mha-control-icon-bubble-size: var(--mha-control-icon-size, 2.75rem);
+    --mha-control-icon-glyph-size: 78%;
+    --mha-control-icon-bubble-radius: 999px;
+  }
+}
+
+.mha-widget-content-frame {
+  position: absolute;
+  inset: var(--mha-widget-inner-padding);
+  min-inline-size: 0;
+  min-block-size: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  container-type: size;
+}
+
+.mha-widget-text {
+  min-inline-size: 0;
+  color: var(--mha-text-primary);
+  font: inherit;
+  line-height: 1.05;
+}
+
+.mha-widget-text[data-tone="muted"] {
+  color: var(--mha-text-muted);
+}
+
+/* OneUI flat-depth policy ---------------------------------------------------
+ * OneUI should read as soft surfaces, not glass/depth. Keep layout, sizing and
+ * background colors intact; only neutralize widget-level depth, borders and
+ * reflective contours.
+ */
+:host([data-theme-style="oneui"]) .mha-widget {
+  --mha-oneui-flat-widget-border: var(
+    --mha-oneui-widget-flat-border,
+    color-mix(in srgb, var(--mha-text-primary) 10%, transparent)
+  );
+  --mha-widget-shell-shadow: none;
+  --mha-shadow-primary: none;
+  --mha-widget-inner-highlight: transparent;
+
+  border-color: var(--mha-oneui-flat-widget-border) !important;
+  box-shadow: none !important;
+}
+
+:host([data-theme-style="oneui"]) .mha-widget::before,
+:host([data-theme-style="oneui"]) .mha-widget::after {
+  border-color: transparent !important;
+  box-shadow: none !important;
+  opacity: 0 !important;
+}
+
+:host([data-theme-style="oneui"]) .mha-widget * {
+  text-shadow: none;
+}

@@ -1,0 +1,101 @@
+/*
+ * MHA Toggle component.
+ *
+ * Source of truth for every switch-style control, including settings-panel
+ * switches and ToggleWidget controls.
+ */
+
+:host {
+  --mha-toggle-w: var(--mha-control-toggle-width, 3rem);
+  --mha-toggle-h: var(--mha-control-toggle-height, 1.65rem);
+  --mha-toggle-padding: var(--mha-control-toggle-padding, .18rem);
+
+  /* Mirrors the original settings-panel switch palette. */
+  --mha-toggle-track-bg: var(--mha-control-toggle-track-bg, var(--mha-surface-tertiary, var(--mha-control-surface, var(--mha-widget-surface))));
+  --mha-toggle-track-border: var(--mha-control-toggle-track-border, var(--mha-border-secondary, var(--mha-widget-border)));
+  --mha-toggle-thumb-bg: var(--mha-control-toggle-thumb-bg, #fff);
+  --mha-toggle-thumb-off-bg: var(--mha-control-toggle-thumb-off-bg, var(--mha-toggle-thumb-bg));
+  --mha-toggle-thumb-on-bg: var(--mha-control-toggle-thumb-on-bg, var(--mha-toggle-thumb-bg));
+  --mha-toggle-on-bg: var(--mha-control-toggle-on-bg, var(--mha-accent));
+  --mha-toggle-on-border: var(--mha-control-toggle-on-border, color-mix(in srgb, var(--mha-toggle-on-bg) 72%, white 14%));
+}
+:host([data-theme-style="oneui"]) {
+  --mha-toggle-thumb-off-bg: var(--mha-oneui-toggle-thumb-bg, #fff);
+  --mha-toggle-thumb-on-bg: var(--mha-oneui-toggle-thumb-bg, #fff);
+}
+
+.mha-toggle {
+  inline-size: var(--mha-toggle-w);
+  block-size: var(--mha-toggle-h);
+  display: inline-grid;
+  cursor: pointer;
+  flex: 0 0 auto;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mha-toggle-input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mha-toggle-track {
+  position: relative;
+  inline-size: 100%;
+  block-size: 100%;
+  border-radius: 999px;
+  border: 1px solid var(--mha-toggle-track-border);
+  background: var(--mha-toggle-track-bg);
+  box-sizing: border-box;
+  transition:
+    background 220ms ease,
+    border-color 220ms ease,
+    box-shadow 220ms ease;
+}
+
+.mha-toggle-thumb {
+  position: absolute;
+  inset-block: var(--mha-toggle-padding);
+  inline-size: calc(var(--mha-toggle-h) - (var(--mha-toggle-padding) * 2) - 2px);
+  border-radius: 999px;
+  background: var(--mha-toggle-thumb-off-bg);
+  box-shadow: 0 1px 2px color-mix(in srgb, black 18%, transparent);
+  transform: translateX(var(--mha-toggle-padding));
+  transition:
+    transform 220ms cubic-bezier(.2,.8,.2,1),
+    background 220ms ease,
+    box-shadow 220ms ease;
+}
+
+.mha-toggle-input:checked + .mha-toggle-track {
+  background: var(--mha-toggle-on-bg);
+  border-color: var(--mha-toggle-on-border);
+}
+
+.mha-toggle-input:checked + .mha-toggle-track .mha-toggle-thumb {
+  transform: translateX(calc(var(--mha-toggle-w) - var(--mha-toggle-h) + var(--mha-toggle-padding)));
+  background: var(--mha-toggle-thumb-on-bg);
+}
+
+.mha-toggle-input:focus-visible + .mha-toggle-track {
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--mha-accent) 24%, transparent),
+    inset 0 1px 1px color-mix(in srgb, black 10%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mha-toggle-track,
+  .mha-toggle-thumb {
+    transition: none;
+  }
+}
+
+/* OneUI flat-depth policy: shared Toggle component ------------------------- */
+:host([data-theme-style="oneui"]) .mha-toggle-track,
+:host([data-theme-style="oneui"]) .mha-toggle-thumb {
+  box-shadow: none !important;
+}
+
+:host([data-theme-style="oneui"]) .mha-toggle-input:focus-visible + .mha-toggle-track {
+  box-shadow: none !important;
+}

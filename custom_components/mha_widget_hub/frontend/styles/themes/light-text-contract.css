@@ -1,0 +1,90 @@
+/*
+ * Global readable text contract.
+ *
+ * Rule:
+ * - Light theme: interface text is black-based.
+ * - Dark theme: interface text is white-based.
+ *
+ * This contract applies to every visual style family: OneUI, iOS and
+ * Material You. Visual styles may still define surfaces, shadows, radius and
+ * accents, but normal text color follows the active light/dark theme.
+ *
+ * Allowed exceptions:
+ * - explicit danger buttons;
+ * - explicitly inverted controls;
+ * - icon glyphs/components that intentionally define their own contrast;
+ * - weather/current condition artwork and other decorative SVG fills.
+ */
+
+:host([data-theme="light"]) {
+  --mha-text: rgb(0 0 0);
+  --mha-text-soft: rgb(0 0 0 / .74);
+  --mha-muted: rgb(0 0 0 / .58);
+  --mha-subtle: rgb(0 0 0 / .46);
+
+  --mha-text-primary: rgb(0 0 0);
+  --mha-text-secondary: rgb(0 0 0 / .74);
+  --mha-text-muted: rgb(0 0 0 / .58);
+  --mha-text-inverse: rgb(255 255 255);
+}
+
+:host([data-theme="dark"]) {
+  --mha-text: rgb(255 255 255);
+  --mha-text-soft: rgb(255 255 255 / .74);
+  --mha-muted: rgb(255 255 255 / .58);
+  --mha-subtle: rgb(255 255 255 / .46);
+
+  --mha-text-primary: rgb(255 255 255);
+  --mha-text-secondary: rgb(255 255 255 / .74);
+  --mha-text-muted: rgb(255 255 255 / .58);
+  --mha-text-inverse: rgb(0 0 0);
+}
+
+/* General text consumers should inherit the global contract. */
+:host([data-theme="light"]) .mha-settings-sheet,
+:host([data-theme="light"]) .mha-settings-section,
+:host([data-theme="light"]) .mha-settings-label,
+:host([data-theme="light"]) .mha-settings-title,
+:host([data-theme="light"]) .mha-widget-text,
+:host([data-theme="light"]) .mha-slider,
+:host([data-theme="light"]) .mha-button,
+:host([data-theme="light"]) .mha-pill,
+:host([data-theme="dark"]) .mha-settings-sheet,
+:host([data-theme="dark"]) .mha-settings-section,
+:host([data-theme="dark"]) .mha-settings-label,
+:host([data-theme="dark"]) .mha-settings-title,
+:host([data-theme="dark"]) .mha-widget-text,
+:host([data-theme="dark"]) .mha-slider,
+:host([data-theme="dark"]) .mha-button,
+:host([data-theme="dark"]) .mha-pill {
+  color: var(--mha-text-primary);
+}
+
+:host([data-theme="light"]) .mha-settings-eyebrow,
+:host([data-theme="light"]) .mha-slider-label,
+:host([data-theme="light"]) .mha-widget-text[data-tone="muted"],
+:host([data-theme="dark"]) .mha-settings-eyebrow,
+:host([data-theme="dark"]) .mha-slider-label,
+:host([data-theme="dark"]) .mha-widget-text[data-tone="muted"] {
+  color: var(--mha-text-muted);
+}
+
+/* Form controls follow the same text contract. */
+:host([data-theme="light"]) .mha-settings-select,
+:host([data-theme="light"]) .mha-settings-reset,
+:host([data-theme="dark"]) .mha-settings-select,
+:host([data-theme="dark"]) .mha-settings-reset {
+  color: var(--mha-text-primary);
+}
+
+/* Explicit exceptions where white text is required for contrast. */
+:host([data-theme="light"]) .mha-settings-close,
+:host([data-theme="light"]) .mha-mobile-dock-close,
+:host([data-theme="light"]) .mha-tool-button[data-action="close"] {
+  color: #fff;
+}
+
+/* Explicitly inverted/dark edit controls are allowed to stay white. */
+:host([data-theme="light"]) .mha-tool-button[data-action="move"] {
+  color: #fff;
+}

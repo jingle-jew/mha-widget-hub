@@ -1,0 +1,20 @@
+{
+  "domain": "mha_widget_hub",
+  "name": "MHA Widget Hub",
+  "version": "0.1.0",
+  "documentation": "https://github.com/jingle-jew/mha-widget-hub",
+  "issue_tracker": "https://github.com/jingle-jew/mha-widget-hub/issues",
+  "codeowners": [
+    "@jingle-jew"
+  ],
+  "config_flow": true,
+  "single_config_entry": true,
+  "dependencies": [
+    "frontend",
+    "http",
+    "panel_custom"
+  ],
+  "integration_type": "service",
+  "requirements": []
+}
+

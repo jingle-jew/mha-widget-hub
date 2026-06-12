@@ -1,0 +1,602 @@
+/*
+ * MHA Clock Widget
+ *
+ * 2x2 dashboard clock variants and screensaver clock presentation.
+ */
+
+/* ==========================================================================
+   1. Tokens locaux du composant
+   ========================================================================== */
+/* ClockWidget mainly consumes shared semantic clock tokens. */
+
+/* ==========================================================================
+   2. Structure / layout de base
+   ========================================================================== */
+
+.mha-widget[data-widget-kind="clock"] {
+  overflow: hidden;
+}
+
+
+.mha-clock-widget {
+  inline-size: 100%;
+  block-size: 100%;
+  min-inline-size: 0;
+  min-block-size: 0;
+  display: grid;
+  place-items: center;
+  color: var(--mha-clock-widget-text);
+  user-select: none;
+}
+
+.mha-clock-widget--digital {
+  align-content: center;
+  justify-items: center;
+  gap: clamp(.35rem, 1vw, .55rem);
+}
+
+.mha-clock-time {
+  font-size: var(--mha-type-clock-time-size, var(--mha-type-widget-display-lg, 3.2rem));
+  line-height: .9;
+  letter-spacing: -.07em;
+  font-weight: 780;
+  font-variant-numeric: tabular-nums;
+}
+
+.mha-clock-date {
+  color: var(--mha-clock-widget-muted);
+  font-size: var(--mha-type-clock-date-size, var(--mha-type-widget-state-size, .76rem));
+  font-weight: 720;
+  text-transform: capitalize;
+}
+
+.mha-clock-weather {
+  max-inline-size: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mha-clock-widget--digital-weather {
+  gap: clamp(.22rem, .75vw, .42rem);
+}
+
+.mha-clock-face {
+  position: relative;
+  inline-size: min(100%, 10.5rem);
+  block-size: min(100%, 10.5rem);
+  aspect-ratio: 1 / 1;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--mha-clock-widget-face-surface) 86%, transparent), transparent 58%),
+    color-mix(in srgb, var(--mha-clock-widget-face-surface) 66%, transparent);
+  border: 1px solid color-mix(in srgb, var(--mha-clock-widget-face-border) 74%, transparent);
+  box-shadow: var(--mha-clock-widget-face-shadow);
+}
+
+.mha-clock-mark {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  inline-size: .08rem;
+  block-size: 42%;
+  transform: translate(-50%, -100%) rotate(var(--mha-clock-mark-rotation));
+  transform-origin: 50% 100%;
+}
+
+.mha-clock-mark::before {
+  content: "";
+  position: absolute;
+  inset-block-start: .34rem;
+  left: 50%;
+  inline-size: .07rem;
+  block-size: .34rem;
+  border-radius: 999px;
+  background: var(--mha-clock-widget-mark);
+  transform: translateX(-50%);
+}
+
+.mha-clock-mark[data-major="true"]::before {
+  inline-size: .12rem;
+  block-size: .56rem;
+  background: var(--mha-clock-widget-mark-major);
+}
+
+.mha-clock-hand {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  inline-size: .18rem;
+  border-radius: 999px;
+  background: var(--mha-clock-widget-hand);
+  transform-origin: 50% 100%;
+  transform: translate(-50%, -100%) rotate(var(--mha-clock-rotation));
+}
+
+.mha-clock-hand--hour {
+  block-size: 26%;
+}
+
+.mha-clock-hand--minute {
+  block-size: 36%;
+  inline-size: .14rem;
+  opacity: .88;
+}
+
+.mha-clock-hand--second {
+  block-size: 41%;
+  inline-size: .08rem;
+  background: var(--mha-clock-widget-second-hand);
+}
+
+.mha-clock-center-dot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  inline-size: .6rem;
+  block-size: .6rem;
+  border-radius: 999px;
+  background: var(--mha-clock-widget-center-dot);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 0 .25rem color-mix(in srgb, var(--mha-accent) 13%, transparent);
+}
+
+/* iOS classic analog: clean face, numbers, soft glass. */
+.mha-clock-widget--ios-analog .mha-clock-face {
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.32), rgba(255,255,255,.09)),
+    color-mix(in srgb, var(--mha-clock-widget-face-surface) 76%, transparent);
+  -webkit-backdrop-filter: blur(calc(var(--mha-clock-widget-blur) * .82)) saturate(160%);
+  backdrop-filter: blur(calc(var(--mha-clock-widget-blur) * .82)) saturate(160%);
+}
+
+.mha-clock-number {
+  position: absolute;
+  inset: .58rem;
+  display: grid;
+  place-items: start center;
+  color: color-mix(in srgb, var(--mha-clock-widget-text) 72%, transparent);
+  font-size: var(--mha-type-clock-number-size, .62rem);
+  font-weight: 760;
+  transform: rotate(var(--mha-clock-number-rotation));
+  transform-origin: center;
+}
+
+.mha-clock-number::before {
+  content: attr(style);
+  display: none;
+}
+
+.mha-clock-number {
+  --mha-clock-number-upright: calc(-1 * var(--mha-clock-number-rotation));
+  text-align: center;
+  line-height: 1;
+  writing-mode: horizontal-tb;
+  text-shadow: 0 1px 0 rgba(255,255,255,.22);
+  transform: rotate(var(--mha-clock-number-rotation));
+}
+
+.mha-clock-number {
+  /* keep text upright by nesting through an inline transform surrogate */
+}
+
+.mha-clock-widget--ios-analog .mha-clock-hand--second {
+  background: #ff453a;
+}
+
+.mha-clock-widget--ios-analog .mha-clock-center-dot {
+  background: #ff453a;
+  box-shadow: 0 0 0 .2rem rgba(255,69,58,.15);
+}
+
+/* Screensaver usage: reuse variants without widget tile/background. */
+.mha-clock-widget--screensaver {
+  inline-size: min(34rem, 92vw);
+  block-size: auto;
+  min-block-size: clamp(8rem, 22vh, 15rem);
+}
+
+.mha-clock-widget--screensaver.mha-clock-widget--digital .mha-clock-time {
+  font-size: var(--mha-type-clock-screensaver-time-size, 6rem);
+}
+
+.mha-clock-widget--screensaver.mha-clock-widget--digital .mha-clock-date {
+  margin-block-start: clamp(.6rem, 1.7vw, 1.1rem);
+  font-size: var(--mha-type-clock-screensaver-date-size, 1.05rem);
+}
+
+.mha-clock-widget--screensaver .mha-clock-face {
+  inline-size: clamp(7.5rem, 20vw, 13rem);
+  block-size: clamp(7.5rem, 20vw, 13rem);
+  background: color-mix(in srgb, var(--mha-clock-widget-face-surface) 70%, transparent);
+}
+
+.mha-clock-widget--screensaver.mha-clock-widget--ios-analog .mha-clock-face {
+  inline-size: clamp(8.25rem, 22vw, 14rem);
+  block-size: clamp(8.25rem, 22vw, 14rem);
+}
+
+:host([data-theme-style="material"]) .mha-clock-face {
+  background: var(--mha-material-surface-container, var(--mha-clock-widget-face-surface));
+  border-color: transparent;
+}
+
+:host([data-theme-style="oneui"]) .mha-clock-face {
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.16), rgba(255,255,255,.06)),
+    color-mix(in srgb, var(--mha-clock-widget-face-surface) 78%, transparent);
+}
+
+/* ==========================================================================
+   3. Variantes de taille
+   ========================================================================== */
+
+
+.mha-clock-number-inner {
+  display: inline-block;
+  transform: rotate(var(--mha-clock-number-upright));
+}
+
+
+
+/* SEMANTIC CLOCK WIDGET TOKEN CONSUMERS
+ * Phase 5B-2 routes ClockWidget internals through clock semantic roles.
+ */
+.mha-clock-widget {
+  color: var(--mha-clock-widget-text);
+}
+
+.mha-clock-date {
+  color: var(--mha-clock-widget-muted);
+}
+
+.mha-clock-face {
+  border-color: var(--mha-clock-widget-face-border);
+  box-shadow: var(--mha-clock-widget-face-shadow);
+}
+
+:host([data-theme-style="material"]) .mha-clock-face {
+  background: var(--mha-clock-widget-face-surface);
+  border-color: var(--mha-clock-widget-face-border);
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* CLOCK WIDGET DENSITY INDEPENDENCE
+ * ClockWidget content sizes only from the widget's own rectangle.
+ *
+ * No viewport-based typography/sizing here. The clock must not know about the
+ * dashboard grid, page shell, screen size, dock, or status bar.
+ */
+.mha-widget[data-widget-kind="clock"] {
+  container-type: size;
+  container-name: mha-clock-widget;
+  overflow: hidden;
+}
+
+
+.mha-clock-widget {
+  inline-size: 100%;
+  block-size: 100%;
+  max-inline-size: 100%;
+  max-block-size: 100%;
+  overflow: hidden;
+  contain: layout paint;
+}
+
+/* Digital clock: scale from the widget content box, never from viewport width. */
+.mha-clock-widget--digital {
+  gap: clamp(.18rem, 5cqb, .62rem);
+  padding: min(5cqi, 5cqb);
+}
+
+.mha-clock-time {
+  max-inline-size: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip;
+  font-size: var(--mha-type-clock-time-size, var(--mha-type-widget-display-lg, 3.2rem));
+  line-height: .9;
+}
+
+.mha-clock-date {
+  max-inline-size: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: var(--mha-type-clock-date-size, var(--mha-type-widget-state-size, .76rem));
+  line-height: 1.05;
+}
+
+/* Analog faces: no fixed rem cap. The face follows the widget content box. */
+.mha-clock-face {
+  inline-size: min(82cqi, 82cqb);
+  block-size: min(82cqi, 82cqb);
+  max-inline-size: 100%;
+  max-block-size: 100%;
+}
+
+/* iOS analog keeps the same face contract as other analog clocks. */
+.mha-clock-widget--ios-analog .mha-clock-face {
+  inline-size: min(84cqi, 84cqb);
+  block-size: min(84cqi, 84cqb);
+}
+
+/* Fallback for browsers without container query units.
+ * This keeps clocks usable without reverting to viewport-based sizing.
+ */
+@supports not (width: 1cqi) {
+  .mha-clock-time {
+    font-size: var(--mha-type-clock-time-size, var(--mha-type-widget-display-lg, 3.2rem));
+  }
+
+  .mha-clock-date {
+    font-size: var(--mha-type-clock-date-size, var(--mha-type-widget-state-size, .76rem));
+  }
+
+  .mha-clock-face,
+  .mha-clock-widget--ios-analog .mha-clock-face {
+    inline-size: min(82%, 82%);
+    block-size: min(82%, 82%);
+  }
+
+}
+
+/* CLOCK WIDGET CONTENT FILL
+ * Clock widgets live inside a direct safe frame inset by
+ * --mha-widget-inner-padding. Analog faces still need their own optical inset:
+ * ticks, numbers and hands visually reach past the face circle and otherwise
+ * get clipped by the widget corners.
+ */
+.mha-widget[data-widget-kind="clock"] .mha-clock-widget {
+  inline-size: 100%;
+  block-size: 100%;
+  min-inline-size: 0;
+  min-block-size: 0;
+  max-inline-size: 100%;
+  max-block-size: 100%;
+}
+
+.mha-widget[data-widget-kind="clock"] .mha-clock-widget {
+  display: grid;
+  place-items: center;
+}
+
+.mha-widget[data-widget-kind="clock"] .mha-clock-widget--digital {
+  padding: 0;
+  gap: clamp(.14rem, 3.8cqb, .5rem);
+  align-content: center;
+  justify-items: center;
+}
+
+.mha-widget[data-widget-kind="clock"] .mha-clock-time {
+  font-size: var(--mha-type-clock-time-size, var(--mha-type-widget-display-lg, 3.2rem));
+}
+
+.mha-widget[data-widget-kind="clock"] .mha-clock-date {
+  font-size: var(--mha-type-clock-date-size, var(--mha-type-widget-state-size, .76rem));
+}
+
+.mha-widget[data-widget-kind="clock"] .mha-clock-face {
+  inline-size: min(var(--mha-clock-face-fill, 88cqi), var(--mha-clock-face-fill-block, 88cqb));
+  block-size: min(var(--mha-clock-face-fill, 88cqi), var(--mha-clock-face-fill-block, 88cqb));
+  max-inline-size: 100%;
+  max-block-size: 100%;
+}
+
+.mha-widget[data-widget-kind="clock"] .mha-clock-widget--ios-analog .mha-clock-face {
+  inline-size: min(var(--mha-clock-ios-face-fill, 90cqi), var(--mha-clock-ios-face-fill-block, 90cqb));
+  block-size: min(var(--mha-clock-ios-face-fill, 90cqi), var(--mha-clock-ios-face-fill-block, 90cqb));
+}
+
+@supports not (width: 1cqi) {
+  .mha-widget[data-widget-kind="clock"] .mha-clock-face,
+  .mha-widget[data-widget-kind="clock"] .mha-clock-widget--ios-analog .mha-clock-face {
+    inline-size: 88%;
+    block-size: 88%;
+  }
+
+}
+
+/* CLOCK WIDGET DIRECT SAFE FRAME
+ * Clock widgets use one direct frame inset by the global widget padding, then
+ * center the selected clock variant inside that safe box.
+ */
+.mha-widget[data-widget-kind="clock"] > .mha-clock-widget-frame {
+  position: absolute;
+  inset: var(--mha-widget-inner-padding);
+  display: grid;
+  place-items: center;
+  min-inline-size: 0;
+  min-block-size: 0;
+  overflow: hidden;
+  container-type: size;
+  container-name: mha-clock-content;
+}
+
+.mha-widget[data-widget-kind="clock"] > .mha-clock-widget-frame > .mha-clock-widget {
+  inline-size: 100%;
+  block-size: 100%;
+  min-inline-size: 0;
+  min-block-size: 0;
+  max-inline-size: 100%;
+  max-block-size: 100%;
+  display: grid;
+  place-items: center;
+  place-content: center;
+  overflow: hidden;
+}
+
+.mha-widget[data-widget-kind="clock"] > .mha-clock-widget-frame > .mha-clock-widget--digital {
+  padding: 0;
+  align-content: center;
+  justify-items: center;
+}
+
+.mha-widget[data-widget-kind="clock"] > .mha-clock-widget-frame .mha-clock-face {
+  inline-size: min(var(--mha-clock-face-fill, 84cqi), var(--mha-clock-face-fill-block, 84cqb));
+  block-size: min(var(--mha-clock-face-fill, 84cqi), var(--mha-clock-face-fill-block, 84cqb));
+  place-self: center;
+}
+
+.mha-widget[data-widget-kind="clock"] > .mha-clock-widget-frame .mha-clock-widget--ios-analog .mha-clock-face {
+  inline-size: min(var(--mha-clock-ios-face-fill, 86cqi), var(--mha-clock-ios-face-fill-block, 86cqb));
+  block-size: min(var(--mha-clock-ios-face-fill, 86cqi), var(--mha-clock-ios-face-fill-block, 86cqb));
+}
+
+
+/* MHA TYPOGRAPHY POLICY OVERRIDE
+ * Clock text consumes stable role tokens. The clock layout/cadran may still size
+ * itself to the available box, but text does not scale with widget dimensions.
+ */
+.mha-widget[data-widget-kind="clock"] .mha-clock-time {
+  font-size: var(--mha-type-clock-time-size, var(--mha-type-widget-display-lg, 3.2rem));
+}
+
+.mha-widget[data-widget-kind="clock"] .mha-clock-date {
+  font-size: var(--mha-type-clock-date-size, var(--mha-type-widget-state-size, .76rem));
+}
+
+.mha-widget[data-widget-kind="clock"] .mha-clock-number {
+  font-size: var(--mha-type-clock-number-size, .62rem);
+}
+
+/* ==========================================================================
+   4. Etats actif / inactif / disabled
+   ========================================================================== */
+/* ClockWidget has no active/inactive visual contract. */
+
+/* ==========================================================================
+   5. Etats d'edition
+   ========================================================================== */
+/* No edit-mode-specific rules in this file. */
+
+/* ==========================================================================
+   6. Adaptations par theme
+   ========================================================================== */
+
+.mha-clock-widget--screensaver.mha-clock-widget--digital .mha-clock-time {
+  font-size: var(--mha-type-clock-screensaver-time-size, 6rem);
+}
+
+.mha-clock-widget--screensaver.mha-clock-widget--digital .mha-clock-date {
+  font-size: var(--mha-type-clock-screensaver-date-size, 1.05rem);
+}
+
+/* OneUI flat-depth policy: ClockWidget ------------------------------------- */
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="clock"] {
+  --mha-clock-widget-face-shadow: none;
+}
+
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="clock"] .mha-clock-face,
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="clock"] .mha-clock-center,
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="clock"] .mha-clock-hand,
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="clock"] .mha-clock-digital {
+  box-shadow: none !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+/* CLOCK WIDGET CENTERING CONTRACT
+ * The widget shell is the positioning parent. Clock content must occupy a
+ * single centered grid cell so analog faces never drift toward a corner when
+ * the variant is swapped or when edit overlays are present.
+ */
+.mha-widget[data-widget-kind="clock"] {
+  display: grid;
+  place-items: center;
+}
+
+.mha-widget[data-widget-kind="clock"] > .mha-clock-widget-frame {
+  grid-area: 1 / 1;
+  inline-size: 100%;
+  block-size: 100%;
+  min-inline-size: 0;
+  min-block-size: 0;
+  display: grid;
+  place-items: center;
+  align-self: center;
+  justify-self: center;
+}
+
+.mha-widget[data-widget-kind="clock"] .mha-clock-widget {
+  inline-size: 100%;
+  block-size: 100%;
+  display: grid;
+  place-items: center;
+  align-self: center;
+  justify-self: center;
+}
+
+.mha-clock-widget--analog .mha-clock-face,
+.mha-clock-widget--ios-analog .mha-clock-face {
+  inline-size: calc(100% - var(--mha-clock-face-edge-gap, .65rem));
+  block-size: calc(100% - var(--mha-clock-face-edge-gap, .65rem));
+  max-inline-size: none;
+  max-block-size: none;
+  aspect-ratio: 1 / 1;
+  align-self: center;
+  justify-self: center;
+}
+
+/* Move analog guides/ticks closer to the edge of the clock face. */
+.mha-clock-widget--analog .mha-clock-mark,
+.mha-clock-widget--ios-analog .mha-clock-mark {
+  block-size: 48%;
+}
+
+.mha-clock-widget--analog .mha-clock-mark::before,
+.mha-clock-widget--ios-analog .mha-clock-mark::before {
+  inset-block-start: .1rem;
+  block-size: .36rem;
+}
+
+.mha-clock-widget--analog .mha-clock-mark[data-major="true"]::before,
+.mha-clock-widget--ios-analog .mha-clock-mark[data-major="true"]::before {
+  block-size: .54rem;
+}
+
+.mha-clock-widget--ios-analog .mha-clock-number {
+  inset: .24rem;
+}
+
+/* iOS analog cleanup:
+ * The iOS-style face already has numbers. Hide only the hour guide marks that
+ * sit behind those numbers. The regular analog variant keeps its guides.
+ */
+.mha-clock-widget--ios-analog .mha-clock-mark[data-major="true"]::before {
+  display: none;
+}
+
+/* Digital clock anti-crop guard.
+ * Safari can clip bold/tabular digits when negative letter-spacing pushes the
+ * last glyph outside its painted inline box. Keep the tokenized font size as-is;
+ * only add a tiny safe inset used by both widgets and screensaver.
+ */
+.mha-clock-widget--digital {
+  box-sizing: border-box;
+  padding-inline: var(--mha-clock-digital-safe-inline, .18em);
+  overflow: visible;
+}
+
+.mha-clock-widget--digital .mha-clock-time {
+  max-inline-size: 100%;
+  padding-inline-end: var(--mha-clock-digital-glyph-safe-end, .08em);
+  overflow: visible;
+}
+
+/* Screensaver uses the same digital component, but the huge display size needs
+ * a slightly larger glyph safety buffer.
+ */
+.mha-clock-widget--screensaver.mha-clock-widget--digital {
+  --mha-clock-digital-safe-inline: .22em;
+  --mha-clock-digital-glyph-safe-end: .12em;
+}
+
+/* ==========================================================================
+   7. Responsive / viewport
+   ========================================================================== */
+/* The clock responds through container sizing and @supports fallbacks rather
+ * than dedicated viewport media queries.
+ */
