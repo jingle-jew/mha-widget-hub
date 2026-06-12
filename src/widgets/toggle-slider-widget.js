@@ -1,73 +1,12 @@
+import { getEntityState, getWidgetEntityId } from "../ha/entity.js";
+import { runSliderAction, runToggleAction } from "../ha/actions.js";
+import { getSliderBinding } from "../ha/slider.js";
+import { isToggleEntityOn, supportsToggleEntity } from "../ha/toggle.js";
 import { createSlider } from "../ui/slider.js";
 import { createSlider2 } from "../ui/slider2.js";
 import { createToggleWidgetContent } from "./toggle-widget.js";
 
 export const TOGGLE_SLIDER_WIDGET_KIND = "toggle-slider";
-
-const TOGGLE_DOMAINS = new Set([
-  "fan",
-  "humidifier",
-  "input_boolean",
-  "light",
-  "media_player",
-  "switch",
-]);
-
-function getEntityId(widget = {}) {
-  return widget.entityId || widget.entity_id || widget.entity || "";
-}
-
-function getEntityState(widget = {}, hass) {
-  const entityId = getEntityId(widget);
-  return entityId ? hass?.states?.[entityId] || null : null;
-}
-
-function getSliderBinding(widget = {}, entityState) {
-  const attributes = entityState?.attributes || {};
-  const domain = getEntityId(widget).split(".")[0];
-
-  if (Number.isFinite(Number(attributes.brightness)) || domain === "light") {
-    return {
-      value: Math.round((Number(attributes.brightness) || 0) / 2.55),
-      min: 0,
-      max: 100,
-      service: "turn_on",
-      data: (value) => ({ brightness_pct: Math.round(value) }),
-    };
-  }
-
-  if (Number.isFinite(Number(attributes.percentage)) || domain === "fan") {
-    return {
-      value: Number(attributes.percentage) || 0,
-      min: 0,
-      max: 100,
-      service: "set_percentage",
-      data: (value) => ({ percentage: Math.round(value) }),
-    };
-  }
-
-  if (Number.isFinite(Number(attributes.volume_level)) || domain === "media_player") {
-    return {
-      value: Math.round((Number(attributes.volume_level) || 0) * 100),
-      min: 0,
-      max: 100,
-      service: "volume_set",
-      data: (value) => ({ volume_level: Number(value) / 100 }),
-    };
-  }
-
-  if (Number.isFinite(Number(attributes.position))) {
-    return {
-      value: Number(attributes.position),
-      min: 0,
-      max: 100,
-      service: "set_cover_position",
-      data: (value) => ({ position: Math.round(value) }),
-    };
-  }
-
-  return null;
-}
 
 export function isToggleSliderWidget(widget = {}) {
   const kind = widget?.kind || widget?.type || widget?.component;
@@ -88,16 +27,13 @@ export function createToggleSliderWidgetContent(widget = {}, {
   onToggle,
   onSliderInput,
 } = {}) {
-  const entityId = getEntityId(widget);
-  const entityState = getEntityState(widget, hass);
-  const domain = entityId.split(".")[0];
+  const entityId = getWidgetEntityId(widget);
+  const entityState = getEntityState(hass, widget);
   const hasEntity = Boolean(entityState);
-  const supportsToggle = widget.supportsToggle ?? (!entityId || (hasEntity && TOGGLE_DOMAINS.has(domain)));
-  const sliderBinding = getSliderBinding(widget, entityState);
+  const supportsToggle = widget.supportsToggle ?? (!entityId || (hasEntity && supportsToggleEntity(entityState)));
+  const sliderBinding = getSliderBinding(entityState);
   const supportsSlider = widget.supportsSlider ?? (!entityId || Boolean(sliderBinding));
-  const checked = hasEntity
-    ? !["off", "closed", "idle", "standby", "unavailable", "unknown"].includes(entityState.state)
-    : widget.checked;
+  const checked = hasEntity ? isToggleEntityOn(entityState) : widget.checked;
 
   const root = document.createElement("div");
   root.className = "combined-toggle-slider";
@@ -116,9 +52,7 @@ export function createToggleSliderWidgetContent(widget = {}, {
     widgetH: 1,
     disabled: !supportsToggle,
     onToggle: (nextChecked, currentWidget, event) => {
-      if (entityId && hass?.callService) {
-        hass.callService(domain, nextChecked ? "turn_on" : "turn_off", { entity_id: entityId });
-      }
+      if (entityId) runToggleAction(hass, entityState);
       onToggle?.(nextChecked, currentWidget, event);
     },
   }));
@@ -140,12 +74,7 @@ export function createToggleSliderWidgetContent(widget = {}, {
     onInput: (event) => {
       const nextValue = Number(event.currentTarget.value);
       sliderValue.textContent = `${Math.round(nextValue)}%`;
-      if (entityId && sliderBinding && hass?.callService) {
-        hass.callService(domain, sliderBinding.service, {
-          entity_id: entityId,
-          ...sliderBinding.data(nextValue),
-        });
-      }
+      if (entityId && sliderBinding) runSliderAction(hass, entityState, nextValue);
       onSliderInput?.(nextValue, widget, event);
     },
   };
