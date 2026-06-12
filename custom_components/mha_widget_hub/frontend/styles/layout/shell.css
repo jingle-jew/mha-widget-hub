@@ -169,6 +169,14 @@
   pointer-events: none;
 }
 
+:host([data-boot-state="ready"]) .mha-shell,
+:host([data-boot-state="ready"]) .mha-status-bar,
+:host([data-boot-state="ready"]) .mha-dock,
+:host([data-boot-state="ready"]) .mha-grid,
+:host([data-boot-state="ready"]) .mha-edit-button {
+  visibility: visible;
+}
+
 @media (min-width: 768px) {
   :host(.is-boot-revealing) .mha-status-bar {
     animation: mha-boot-status-in 320ms cubic-bezier(.2,.8,.2,1) both;

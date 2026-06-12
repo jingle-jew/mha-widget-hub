@@ -46,4 +46,16 @@ if (!document.getElementById(BOOT_STYLE_ID)) {
 const appUrl = new URL("./mha-control-hub.js", import.meta.url);
 const frontendVersion = new URL(import.meta.url).searchParams.get("v");
 if (frontendVersion) appUrl.searchParams.set("v", frontendVersion);
-import(appUrl.href);
+
+const loaderWatchdog = window.setTimeout(() => {
+  if (customElements.get("mha-control-hub")) return;
+  console.warn("[MHA] Boot fallback: the application module did not register within 2000ms.");
+  document.getElementById(BOOT_STYLE_ID)?.remove();
+}, 2000);
+
+import(appUrl.href)
+  .catch(error => {
+    console.error("[MHA] Failed to load the application module.", error);
+    document.getElementById(BOOT_STYLE_ID)?.remove();
+  })
+  .finally(() => window.clearTimeout(loaderWatchdog));

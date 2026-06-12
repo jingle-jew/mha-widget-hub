@@ -194,7 +194,9 @@
     setIconShape(readDevPreference("mha-dev-icon-shape", `${legacyDevPrefix}-icon-shape`, "squircle"));
     setLayoutMode(readDevPreference("mha-dev-layout-mode", `${legacyDevPrefix}-layout-mode`, "auto"));
 
-    hub.hass = { states: {}, language: "fr" };
+    if (!new URLSearchParams(location.search).has("no-hass")) {
+      hub.hass = { states: {}, language: "fr" };
+    }
 
     window.__MHA_ICON_SHAPE_DEBUG__ = () => {
       const select = document.querySelector('[data-dev-action="icon-shape"]');

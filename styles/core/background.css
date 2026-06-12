@@ -1,6 +1,8 @@
 .mha-background{
   position:absolute;
   inset:-20%;
+  z-index:0;
+  pointer-events:none;
   overflow:hidden;
   background:
     radial-gradient(circle at 20% 15%,var(--mha-bg-radial-1),transparent 30%),
