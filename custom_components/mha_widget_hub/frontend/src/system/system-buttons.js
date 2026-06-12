@@ -1,4 +1,3 @@
-import { createIcon } from "../ui/icon.js";
 import { createSystemIconSymbol, getSystemIconName } from "./system-icons.js";
 
 const SYSTEM_ICON_META = Object.freeze({
@@ -33,13 +32,12 @@ export function createSystemIconButton({
   button.setAttribute("aria-label", label);
   if (onClick) button.addEventListener("click", onClick);
 
-  button.append(createIcon({
-    name: systemIconName,
-    category: "system",
-    label,
-    className: "mha-system-icon",
-    children: createSystemIconSymbol({ name: systemIconName, label }),
-  }));
+  const iconElement = document.createElement("span");
+  iconElement.className = "mha-system-icon";
+  iconElement.dataset.systemIcon = systemIconName;
+  iconElement.setAttribute("aria-hidden", "true");
+  iconElement.append(createSystemIconSymbol({ name: systemIconName }));
+  button.append(iconElement);
 
   return button;
 }

@@ -1,8 +1,7 @@
 /* Shared system controls: back, close, arrows, delete, add, edit.
  *
- * System buttons are not app/page/widget icons. They use system-icons.js and
- * their own local tokens, so theme icon-shape/accent tokens must not draw an
- * extra icon container inside the button.
+ * System buttons are not app/page/widget icons. Their pictograms deliberately
+ * do not use .mha-icon, so theme shape and accent rules cannot affect them.
  */
 .mha-system-button {
   --mha-system-button-size: 2.4rem;
@@ -92,25 +91,14 @@
 }
 
 .mha-system-button .mha-system-icon {
-  --mha-icon-size: var(--mha-system-button-icon-size);
-  --mha-icon-bg: transparent;
-  --mha-icon-color: var(--mha-system-button-color);
-  --mha-icon-border: transparent;
-  --mha-icon-shadow: none;
-  --mha-icon-backdrop-filter: none;
-
   inline-size: var(--mha-system-button-icon-size);
   block-size: var(--mha-system-button-icon-size);
-  border: 0;
-  border-radius: 0;
-  background: transparent;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
   color: var(--mha-system-button-color);
-  box-shadow: none;
-  -webkit-mask: none;
-  mask: none;
-  -webkit-mask-image: none;
-  mask-image: none;
-  backdrop-filter: none;
+  line-height: 1;
+  pointer-events: none;
 }
 
 .mha-system-button .mha-system-icon .mha-system-icon-symbol,

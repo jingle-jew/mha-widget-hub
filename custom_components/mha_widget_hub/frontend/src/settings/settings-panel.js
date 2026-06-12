@@ -89,6 +89,7 @@ function createSelect({ label, value, options, onChange }) {
 
   const select = document.createElement("select");
   select.className = "mha-settings-select";
+  select.dataset.settingsControl = label;
   select.append(...options.map((item) => option(item.value, item.label, value)));
   select.addEventListener("change", () => onChange?.(select.value));
 
@@ -261,6 +262,7 @@ function createDockPageEditor({ page, onBack, onRename, onIconChange } = {}) {
   nameLabel.textContent = "Nom";
   const input = document.createElement("input");
   input.className = "mha-settings-select mha-settings-text-input";
+  input.dataset.settingsControl = "dock-page-name";
   input.value = page?.name || "";
   input.addEventListener("change", () => onRename?.(page.id, input.value));
   input.addEventListener("keydown", (event) => { if (event.key === "Enter") input.blur(); });
@@ -348,6 +350,7 @@ export function createSettingsPanel({
   const root = document.createElement("aside");
   root.className = "mha-settings-panel";
   root.dataset.settingsScope = scope;
+  root.dataset.settingsPage = isScreensaverScope ? "screensaver" : settingsPage;
   root.dataset.open = String(Boolean(open));
   root.dataset.iconShape = effectiveIconShape;
   root.setAttribute("aria-hidden", String(!open));

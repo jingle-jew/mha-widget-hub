@@ -108,11 +108,15 @@
  */
 @media (min-width: 768px) {
   .mha-dock {
-    --mha-dock-empty-width: clamp(4.4rem, 7vw, 6.2rem);
+    --mha-dock-empty-width: var(--mha-dock-unit-size);
     --mha-dock-empty-height: auto;
-    --mha-dock-empty-padding-block: clamp(0.75rem, 1.4vw, 1.15rem);
-    --mha-dock-empty-padding-inline: clamp(0.5rem, 0.9vw, 0.75rem);
-    --mha-icon-size: clamp(2.6rem, 4.7vw, 3.9rem);
+    --mha-dock-empty-padding-block: var(--mha-grid-gap);
+    --mha-dock-empty-padding-inline: min(var(--mha-grid-gap), 5%);
+    --mha-icon-size: clamp(
+      calc(var(--mha-square-unit) - var(--mha-grid-gap) - var(--mha-grid-gap)),
+      calc(var(--mha-square-unit) - var(--mha-grid-gap)),
+      var(--mha-square-unit)
+    );
 
     left: auto;
     right: max(var(--mha-safe-area-right, env(safe-area-inset-right)), clamp(0.75rem, 1.8vw, 1.25rem));
@@ -122,13 +126,14 @@
     width: var(--mha-dock-empty-width);
     min-width: var(--mha-dock-empty-width);
     max-width: var(--mha-dock-empty-width);
+    box-sizing: border-box;
     min-height: 0;
     max-height: min(72vh, calc(100% - (var(--mha-page-padding, 1rem) * 2)));
 
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: clamp(0.35rem, 0.8vw, 0.65rem);
+    gap: var(--mha-grid-gap);
     overflow: auto;
     scrollbar-width: none;
 
@@ -149,15 +154,6 @@
   :host([data-dock-hidden="true"]) .mha-dock {
     transform: translateY(-50%) translateX(calc(100% + var(--mha-floating-edge, 1rem) + 18px));
     opacity: 0;
-  }
-}
-
-@media (min-width: 1180px) {
-  .mha-dock {
-    --mha-dock-empty-width: clamp(4.75rem, 5.2vw, 6.6rem);
-    --mha-icon-size: clamp(3rem, 3.8vw, 4.15rem);
-    right: max(var(--mha-safe-area-right, env(safe-area-inset-right)), clamp(1rem, 2vw, 1.65rem));
-    max-height: min(74vh, calc(100% - (var(--mha-page-padding, 1rem) * 2)));
   }
 }
 
@@ -317,14 +313,18 @@
  */
 @media (min-width: 768px) {
   .mha-dock {
-    --mha-dock-rail-padding-block: clamp(0.45rem, 0.9vw, 0.7rem);
-    --mha-dock-rail-padding-inline: clamp(0.45rem, 0.9vw, 0.7rem);
-    --mha-dock-rail-gap: clamp(0.35rem, 0.8vw, 0.65rem);
-    --mha-icon-size: clamp(2.85rem, 4.2vw, 3.75rem);
+    --mha-dock-rail-padding-block: var(--mha-grid-gap);
+    --mha-dock-rail-padding-inline: min(var(--mha-grid-gap), 5%);
+    --mha-dock-rail-gap: var(--mha-grid-gap);
+    --mha-icon-size: clamp(
+      calc(var(--mha-square-unit) - var(--mha-grid-gap) - var(--mha-grid-gap)),
+      calc(var(--mha-square-unit) - var(--mha-grid-gap)),
+      var(--mha-square-unit)
+    );
 
-    inline-size: calc(var(--mha-icon-size) + (var(--mha-dock-rail-padding-inline) * 2));
-    min-inline-size: 0;
-    max-inline-size: calc(var(--mha-icon-size) + (var(--mha-dock-rail-padding-inline) * 2));
+    inline-size: var(--mha-dock-unit-size);
+    min-inline-size: var(--mha-dock-unit-size);
+    max-inline-size: var(--mha-dock-unit-size);
 
     block-size: auto;
     min-block-size: 0;
@@ -335,7 +335,6 @@
       var(--mha-dock-rail-padding-inline);
 
     gap: var(--mha-dock-rail-gap);
-    width: auto;
     height: auto;
   }
 
@@ -664,10 +663,14 @@
 
   :host([data-dock-position="bottom"]) .mha-dock {
     --mha-dock-empty-width: min(100%, var(--mha-grid-matrix-width, 42rem));
-    --mha-dock-empty-height: clamp(4.35rem, 6.2vw, 5.8rem);
-    --mha-dock-empty-padding-block: clamp(0.48rem, 0.85vw, 0.72rem);
-    --mha-dock-empty-padding-inline: clamp(0.75rem, 1.25vw, 1.05rem);
-    --mha-icon-size: clamp(2.55rem, 4vw, 3.55rem);
+    --mha-dock-empty-height: var(--mha-dock-unit-size);
+    --mha-dock-empty-padding-block: min(var(--mha-grid-gap), 5%);
+    --mha-dock-empty-padding-inline: var(--mha-grid-gap);
+    --mha-icon-size: clamp(
+      calc(var(--mha-square-unit) - var(--mha-grid-gap) - var(--mha-grid-gap)),
+      calc(var(--mha-square-unit) - var(--mha-grid-gap)),
+      var(--mha-square-unit)
+    );
 
     position: static;
     left: auto;
@@ -680,8 +683,10 @@
     min-inline-size: 0;
     max-width: min(100%, calc(100% - (var(--mha-page-padding, 1rem) * 2)));
     max-inline-size: min(100%, calc(100% - (var(--mha-page-padding, 1rem) * 2)));
-    min-height: var(--mha-dock-empty-height);
-    max-height: none;
+    height: var(--mha-dock-unit-size);
+    min-height: var(--mha-dock-unit-size);
+    max-height: var(--mha-dock-unit-size);
+    box-sizing: border-box;
     flex-direction: row;
     overflow-x: auto;
     overflow-y: hidden;
@@ -721,10 +726,14 @@
 @media (min-width: 768px) {
   :host([data-dock-position="bottom"]) .mha-dock-zone > .mha-dock {
     --mha-dock-empty-width: min(var(--mha-grid-matrix-width, 44rem), calc(100% - (var(--mha-page-padding, 1rem) * 2)));
-    --mha-dock-empty-height: clamp(4.35rem, 6.2vw, 5.8rem);
-    --mha-dock-empty-padding-block: clamp(0.48rem, 0.85vw, 0.72rem);
-    --mha-dock-empty-padding-inline: clamp(0.75rem, 1.25vw, 1.05rem);
-    --mha-icon-size: clamp(2.55rem, 4vw, 3.55rem);
+    --mha-dock-empty-height: var(--mha-dock-unit-size);
+    --mha-dock-empty-padding-block: min(var(--mha-grid-gap), 5%);
+    --mha-dock-empty-padding-inline: var(--mha-grid-gap);
+    --mha-icon-size: clamp(
+      calc(var(--mha-square-unit) - var(--mha-grid-gap) - var(--mha-grid-gap)),
+      calc(var(--mha-square-unit) - var(--mha-grid-gap)),
+      var(--mha-square-unit)
+    );
 
     position: relative;
     inset: auto;
@@ -743,9 +752,10 @@
     min-width: 0;
     max-inline-size: calc(100% - (var(--mha-page-padding, 1rem) * 2));
     max-width: calc(100% - (var(--mha-page-padding, 1rem) * 2));
-    block-size: auto;
-    min-block-size: var(--mha-dock-empty-height);
-    max-block-size: calc(var(--mha-bottom-dock-height, 6rem) - clamp(0.35rem, 0.8vw, 0.65rem));
+    block-size: var(--mha-dock-unit-size);
+    min-block-size: var(--mha-dock-unit-size);
+    max-block-size: var(--mha-dock-unit-size);
+    box-sizing: border-box;
 
     overflow-x: auto;
     overflow-y: hidden;
