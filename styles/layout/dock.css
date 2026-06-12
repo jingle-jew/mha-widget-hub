@@ -65,6 +65,10 @@
   outline-offset: 3px;
 }
 
+:host(.is-editing) [data-dock-action="settings"] {
+  display: none;
+}
+
 :host(.is-dock-hidden) .mha-dock,
 :host([data-dock-hidden="true"]) .mha-dock {
   transform: translateX(-50%) translateY(calc(100% + var(--mha-floating-edge) + 18px));

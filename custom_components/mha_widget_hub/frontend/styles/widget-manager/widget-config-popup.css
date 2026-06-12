@@ -1,0 +1,56 @@
+.mha-widget-config-popup {
+  z-index: 150;
+}
+
+.mha-widget-config-sheet {
+  inline-size: min(34rem, calc(100vw - 2rem));
+}
+
+.mha-widget-config-fields {
+  display: grid;
+  gap: .9rem;
+}
+
+.mha-widget-config-field {
+  display: grid;
+  gap: .45rem;
+}
+
+.mha-widget-config-label {
+  color: var(--mha-text-primary, #fff);
+  font-size: .86rem;
+  font-weight: 750;
+}
+
+.mha-widget-config-control {
+  inline-size: 100%;
+  min-block-size: 2.8rem;
+  border: 1px solid var(--mha-widget-border, rgba(255,255,255,.2));
+  border-radius: .9rem;
+  padding: 0 .85rem;
+  background: color-mix(in srgb, var(--mha-widget-surface, rgba(255,255,255,.14)) 76%, transparent);
+  color: var(--mha-text-primary, #fff);
+  font: inherit;
+  outline: none;
+}
+
+.mha-widget-config-control:focus {
+  border-color: var(--mha-accent, var(--mha-accent-primary, #5aa7ff));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--mha-accent, #5aa7ff) 18%, transparent);
+}
+
+.mha-widget-config-control:disabled {
+  opacity: .58;
+  cursor: not-allowed;
+}
+
+.mha-widget-config-note {
+  color: var(--mha-text-secondary, rgba(255,255,255,.72));
+  font-size: .78rem;
+  line-height: 1.3;
+}
+
+.mha-widget-config-primary:disabled {
+  opacity: .46;
+  cursor: not-allowed;
+}

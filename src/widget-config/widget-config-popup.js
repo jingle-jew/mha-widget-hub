@@ -1,0 +1,167 @@
+import { createCloseButton } from "../system/system-buttons.js";
+import {
+  buildToggleSliderWidgetConfig,
+  createToggleSliderConfigDraft,
+  reconcileToggleSliderConfigDraft,
+  updateToggleSliderLabel,
+  updateToggleSliderLight,
+} from "./toggle-slider-config.js";
+
+const CONFIGURABLE_KINDS = new Set(["toggle-slider"]);
+
+function getWidgetKind(widget = {}) {
+  return widget.kind || widget.type || widget.component || "";
+}
+
+export function supportsWidgetConfiguration(widget = {}) {
+  return CONFIGURABLE_KINDS.has(getWidgetKind(widget))
+    || widget.component === "toggle-slider-widget";
+}
+
+export function createWidgetConfigSession(widget, hass, { mode = "create" } = {}) {
+  if (!supportsWidgetConfiguration(widget)) return null;
+  return {
+    mode,
+    widget,
+    draft: createToggleSliderConfigDraft(widget, hass).draft,
+  };
+}
+
+export function buildConfiguredWidget(session, hass) {
+  if (!session) return null;
+  return buildToggleSliderWidgetConfig(session.widget, session.draft, hass);
+}
+
+function createField(labelText, control, { hint = "" } = {}) {
+  const field = document.createElement("label");
+  field.className = "mha-widget-config-field";
+
+  const label = document.createElement("span");
+  label.className = "mha-widget-config-label";
+  label.textContent = labelText;
+  field.append(label, control);
+
+  if (hint) {
+    const note = document.createElement("small");
+    note.className = "mha-widget-config-note";
+    note.textContent = hint;
+    field.append(note);
+  }
+  return field;
+}
+
+function createToggleSliderFields(session, hass, onChange) {
+  const { draft, options, selected } = reconcileToggleSliderConfigDraft(session.draft, hass);
+  const fields = document.createElement("div");
+  fields.className = "mha-widget-config-fields";
+
+  const nameInput = document.createElement("input");
+  nameInput.className = "mha-widget-config-control";
+  nameInput.type = "text";
+  nameInput.value = draft.label;
+  nameInput.placeholder = selected?.label || "Salon";
+  nameInput.autocomplete = "off";
+  nameInput.addEventListener("input", event => {
+    updateToggleSliderLabel(draft, event.currentTarget.value);
+    onChange?.();
+  });
+
+  const lightSelect = document.createElement("select");
+  lightSelect.className = "mha-widget-config-control";
+  lightSelect.disabled = !options.length;
+  if (!options.length) {
+    const empty = document.createElement("option");
+    empty.value = "";
+    empty.textContent = "Aucune lumière disponible";
+    lightSelect.append(empty);
+  } else {
+    options.forEach(option => {
+      const item = document.createElement("option");
+      item.value = option.value;
+      item.textContent = option.label;
+      item.selected = option.value === draft.lightEntityId;
+      lightSelect.append(item);
+    });
+  }
+  lightSelect.addEventListener("change", event => {
+    updateToggleSliderLight(draft, event.currentTarget.value, options);
+    onChange?.({ rerender: true });
+  });
+
+  const modeSelect = document.createElement("select");
+  modeSelect.className = "mha-widget-config-control";
+  const brightness = document.createElement("option");
+  brightness.value = "brightness";
+  brightness.textContent = "Luminosité";
+  modeSelect.append(brightness);
+  modeSelect.value = "brightness";
+
+  fields.append(
+    createField("Nom affiché", nameInput),
+    createField("Lumière", lightSelect),
+    createField("Contrôle du curseur", modeSelect),
+  );
+  return { fields, canSave: Boolean(selected) };
+}
+
+export function createWidgetConfigPopup({
+  session,
+  hass,
+  onCancel,
+  onSave,
+  onChange,
+} = {}) {
+  const panel = document.createElement("section");
+  panel.className = "mha-widget-config-popup mha-page-creator";
+  panel.dataset.open = String(Boolean(session));
+  panel.setAttribute("aria-hidden", String(!session));
+
+  const scrim = document.createElement("button");
+  scrim.className = "mha-widget-config-scrim mha-page-creator-scrim";
+  scrim.type = "button";
+  scrim.setAttribute("aria-label", "Fermer la configuration");
+  scrim.onclick = () => onCancel?.();
+
+  const sheet = document.createElement("div");
+  sheet.className = "mha-widget-config-sheet mha-page-creator-sheet";
+  sheet.setAttribute("role", "dialog");
+  sheet.setAttribute("aria-modal", "true");
+  sheet.setAttribute("aria-label", "Configurer le widget");
+
+  const header = document.createElement("div");
+  header.className = "mha-widget-config-header mha-page-creator-header";
+  const title = document.createElement("h2");
+  title.textContent = "Configurer la lumière";
+  header.append(title, createCloseButton({
+    label: "Fermer",
+    className: "mha-widget-config-close mha-page-creator-close",
+    onClick: () => onCancel?.(),
+  }));
+
+  const hint = document.createElement("p");
+  hint.className = "mha-widget-config-hint mha-page-creator-hint";
+  hint.textContent = "Choisis la lumière et le contrôle à afficher.";
+
+  const content = session
+    ? createToggleSliderFields(session, hass, onChange)
+    : { fields: document.createElement("div"), canSave: false };
+
+  const actions = document.createElement("div");
+  actions.className = "mha-widget-config-actions mha-page-creator-actions";
+  const cancel = document.createElement("button");
+  cancel.className = "mha-widget-config-secondary mha-page-creator-secondary";
+  cancel.type = "button";
+  cancel.textContent = "Annuler";
+  cancel.onclick = () => onCancel?.();
+  const save = document.createElement("button");
+  save.className = "mha-widget-config-primary mha-page-creator-primary";
+  save.type = "button";
+  save.textContent = session?.mode === "edit" ? "Enregistrer" : "Continuer";
+  save.disabled = !content.canSave;
+  save.onclick = () => onSave?.();
+  actions.append(cancel, save);
+
+  sheet.append(header, hint, content.fields, actions);
+  panel.append(scrim, sheet);
+  return panel;
+}

@@ -1,5 +1,5 @@
 export function getWidgetEntityId(widget = {}) {
-  return widget?.entityId || widget?.entity_id || widget?.entity || "";
+  return widget?.lightEntityId || widget?.entityId || widget?.entity_id || widget?.entity || "";
 }
 
 export function getEntityDomain(entityId = "") {

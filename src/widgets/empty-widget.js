@@ -19,6 +19,7 @@ export function createEmptyWidget(
     onMove,
     onRemove,
     onCycleVariant,
+    onConfigure,
     hass,
   } = {},
 ) {
@@ -149,15 +150,21 @@ export function createEmptyWidget(
   const tools = document.createElement("div");
     tools.className = "mha-widget-tools";
 
-    const dimensionButton = tool("Variante suivante", "resize", () => {}, {
-      className: "mha-tool-button--dimension",
-    });
-    dimensionButton.addEventListener("pointerdown", (event) => {
-      if (isMoveTarget) return;
-      event.preventDefault();
-      event.stopPropagation();
-      onCycleVariant?.(widget.id);
-    });
+    const dimensionButton = isToggleSliderWidget(widget)
+      ? tool("Configurer le widget", "edit", () => onConfigure?.(widget.id), {
+        className: "mha-tool-button--dimension",
+      })
+      : tool("Variante suivante", "resize", () => {}, {
+        className: "mha-tool-button--dimension",
+      });
+    if (!isToggleSliderWidget(widget)) {
+      dimensionButton.addEventListener("pointerdown", (event) => {
+        if (isMoveTarget) return;
+        event.preventDefault();
+        event.stopPropagation();
+        onCycleVariant?.(widget.id);
+      });
+    }
 
     const moveButton = tool(
       isMoveTarget ? "Terminer le déplacement" : "Déplacer le widget",

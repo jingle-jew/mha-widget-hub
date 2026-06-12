@@ -5,6 +5,12 @@ import {createDock} from "./src/layout/dock.js";
 import {createMobileDock} from "./src/layout/mobile-dock.js";
 import {createSettingsPanel} from "./src/settings/settings-panel.js";
 import {createWidgetManager, WIDGET_MANAGER_CATEGORIES} from "./src/widget-manager/widget-manager.js";
+import {
+  buildConfiguredWidget,
+  createWidgetConfigPopup,
+  createWidgetConfigSession,
+  supportsWidgetConfiguration,
+} from "./src/widget-config/widget-config-popup.js";
 import { normalizeAccent } from "./src/settings/accent-palettes.js";
 import {updateStatusTime} from "./src/layout/status-bar.js";
 import {createEmptyWidget} from "./src/widgets/empty-widget.js";
@@ -42,6 +48,7 @@ const MHA_STYLE_PATHS = [
   "styles/layout/floating-controls.css",
   "styles/settings/settings-panel.css",
   "styles/widget-manager/widget-manager.css",
+  "styles/widget-manager/widget-config-popup.css",
   "styles/themes/light-text-contract.css",
   "styles/widgets/widget-layout.css",
   "styles/widgets/empty-widget.css",
@@ -402,6 +409,9 @@ function normalizeStoredWidgetContract(widget = {}) {
       component: "toggle-slider-widget",
       category: widget.category || "lights",
       variant: "toggle-slider",
+      lightEntityId: widget.lightEntityId || widget.entityId || widget.entity_id || "",
+      entityId: widget.lightEntityId || widget.entityId || widget.entity_id || "",
+      sliderMode: "brightness",
       w: Math.max(3, Math.min(4, rawW)),
       h: 2,
     };
@@ -521,6 +531,8 @@ constructor(){
   this._responsiveRelayoutTimer=null;
   this._widgetManagerOpen=false;
   this._widgetManagerCategory="";
+  this._widgetConfigSession=null;
+  this._widgetConfigHassReady=false;
   this._pendingWidgetPlacement=null;
   this._pageCreatorOpen=false;
   this._newPageIcon="grid";
@@ -565,6 +577,10 @@ _upgradePredefinedProperty(name){
 set hass(h){
   this._hass=h;
   this.dataset.dataState=h?"ready":"loading";
+  if(this._widgetConfigSession&&h&&!this._widgetConfigHassReady){
+    this._widgetConfigHassReady=true;
+    this._syncWidgetConfigDom();
+  }
   this._ensureMounted({reason:"hass update"});
   this._scheduleHassUpdate();
 }
@@ -779,7 +795,19 @@ disconnectedCallback(){
 }
 requestRender(){this.render()}
 _syncEditModeDom(){
-  if(!this._isEditing||this._isMobileLandscapeLayout()){this._activeMoveWidgetId="";this._pendingWidgetPlacement=null;this._widgetManagerOpen=false;this._widgetManagerCategory="";this._pageCreatorOpen=false;const grid=this.shadowRoot?.querySelector?.(".mha-grid");if(grid)this._renderWidgetDropSlots(grid);this._syncPageCreatorDom?.();}
+  if(!this._isEditing||this._isMobileLandscapeLayout()){
+    const hadWidgetConfig=Boolean(this._widgetConfigSession);
+    this._activeMoveWidgetId="";
+    this._pendingWidgetPlacement=null;
+    this._widgetManagerOpen=false;
+    this._widgetManagerCategory="";
+    this._widgetConfigSession=null;
+    this._pageCreatorOpen=false;
+    const grid=this.shadowRoot?.querySelector?.(".mha-grid");
+    if(grid)this._renderWidgetDropSlots(grid);
+    this._syncPageCreatorDom?.();
+    if(hadWidgetConfig)this._syncWidgetConfigDom?.();
+  }
   this.classList.toggle("is-editing",this._isEditing);
   this.classList.toggle("is-placing-widget",Boolean(this._pendingWidgetPlacement));
   this.dataset.editing=String(this._isEditing);
@@ -976,6 +1004,18 @@ _createWidgetFromCatalogItem(item){
 _beginWidgetPlacement(item){
   if(!this._isEditing||this._isMobileLandscapeLayout())return;
   const widget=this._createWidgetFromCatalogItem(item);
+  if(supportsWidgetConfiguration(widget)){
+    this._widgetManagerOpen=false;
+    this._widgetManagerCategory="";
+    this._widgetConfigSession=createWidgetConfigSession(widget,this._hass,{mode:"create"});
+    this._widgetConfigHassReady=Boolean(this._hass);
+    this._syncWidgetManagerDom();
+    this._syncWidgetConfigDom();
+    return;
+  }
+  this._startWidgetPlacement(widget);
+}
+_startWidgetPlacement(widget){
   this._pendingWidgetPlacement=widget;
   this._widgetManagerOpen=false;
   this._widgetManagerCategory="";
@@ -983,6 +1023,58 @@ _beginWidgetPlacement(item){
   this._syncWidgetManagerDom();
   this._syncEditModeDom();
   this._syncWidgetDropSlots();
+}
+_createWidgetConfigPanel(){
+  return createWidgetConfigPopup({
+    session:this._widgetConfigSession,
+    hass:this._hass,
+    onCancel:()=>this._closeWidgetConfig(),
+    onSave:()=>this._saveWidgetConfig(),
+    onChange:change=>{
+      if(change?.rerender)this._syncWidgetConfigDom();
+    },
+  });
+}
+_syncWidgetConfigDom(){
+  const existing=this.shadowRoot?.querySelector?.(".mha-widget-config-popup");
+  if(existing)existing.remove();
+  this.shadowRoot?.append?.(this._createWidgetConfigPanel());
+}
+_closeWidgetConfig(){
+  this._widgetConfigSession=null;
+  this._widgetConfigHassReady=false;
+  this._syncWidgetConfigDom();
+}
+_saveWidgetConfig(){
+  const session=this._widgetConfigSession;
+  const configured=buildConfiguredWidget(session,this._hass);
+  if(!session||!configured)return;
+  this._widgetConfigSession=null;
+  this._widgetConfigHassReady=false;
+  this._syncWidgetConfigDom();
+  if(session.mode==="create"){
+    this._startWidgetPlacement(configured);
+    return;
+  }
+  const index=this._widgets.findIndex(widget=>widget.id===configured.id);
+  if(index<0)return;
+  this._widgets=[
+    ...this._widgets.slice(0,index),
+    normalizeStoredWidgetContract(configured),
+    ...this._widgets.slice(index+1),
+  ];
+  this._saveWidgets();
+  this._replaceWidgetDom(configured.id);
+}
+_openWidgetConfig(id){
+  if(!this._isEditing||this._isMobileLandscapeLayout())return;
+  const widget=this._widgets.find(item=>item.id===id);
+  if(!supportsWidgetConfiguration(widget))return;
+  this._activeMoveWidgetId="";
+  this._widgetConfigSession=createWidgetConfigSession(widget,this._hass,{mode:"edit"});
+  this._widgetConfigHassReady=Boolean(this._hass);
+  this._syncEditModeDom();
+  this._syncWidgetConfigDom();
 }
 _createSettingsPanel(){
   return createSettingsPanel(this._getSettingsPanelProps("all"));
@@ -1531,7 +1623,7 @@ _refreshActiveGridOnly(){
   const {units}=this._getGridBounds();
   const positions=this._getActiveWidgetPositions({create:true});
   this._widgets.forEach(w=>{
-    const el=createEmptyWidget(w,{activeGridUnits:units,isEditing:this._isEditing,isMoveTarget:this._isEditing&&this._activeMoveWidgetId===w.id,position:positions?.[w.id],hass:this._hass,onToggleMove:id=>this._toggleWidgetMoveMode(id),onMove:(id,direction)=>this._moveWidgetByDirection(id,direction),onRemove:id=>this._removeWidget(id),onCycleVariant:id=>this.cycleVariant(id)});
+    const el=createEmptyWidget(w,{activeGridUnits:units,isEditing:this._isEditing,isMoveTarget:this._isEditing&&this._activeMoveWidgetId===w.id,position:positions?.[w.id],hass:this._hass,onToggleMove:id=>this._toggleWidgetMoveMode(id),onMove:(id,direction)=>this._moveWidgetByDirection(id,direction),onRemove:id=>this._removeWidget(id),onCycleVariant:id=>this.cycleVariant(id),onConfigure:id=>this._openWidgetConfig(id)});
     this._wireDrag(el,w);
     grid.append(el);
   });
@@ -2271,6 +2363,7 @@ _placePendingWidgetAtSlot(x,y){
       onMove:(id,direction)=>this._moveWidgetByDirection(id,direction),
       onRemove:id=>this._removeWidget(id),
       onCycleVariant:id=>this.cycleVariant(id),
+      onConfigure:id=>this._openWidgetConfig(id),
     });
 
     this._wireDrag(el,widget);
@@ -2455,6 +2548,7 @@ _replaceWidgetDom(id){
     onMove:(widgetId,direction)=>this._moveWidgetByDirection(widgetId,direction),
     onRemove:widgetId=>this._removeWidget(widgetId),
     onCycleVariant:widgetId=>this.cycleVariant(widgetId),
+    onConfigure:widgetId=>this._openWidgetConfig(widgetId),
   });
 
   this._wireDrag(next,widget);
@@ -2879,6 +2973,7 @@ _createWidgetElement(widget,{units,position}){
     onMove:(id,direction)=>this._moveWidgetByDirection(id,direction),
     onRemove:id=>this._removeWidget(id),
     onCycleVariant:id=>this.cycleVariant(id),
+    onConfigure:id=>this._openWidgetConfig(id),
   });
   this._wireDrag(el,widget);
   return el;
@@ -2988,6 +3083,7 @@ _appendDeferredUi({layout,renderId}){
     this.shadowRoot.append(this._createSettingsPanel());
     this.shadowRoot.append(this._createWidgetManagerPanel());
     this.shadowRoot.append(this._createPageCreatorPanel());
+    this.shadowRoot.append(this._createWidgetConfigPanel());
     this.shadowRoot.append(createSettingsPanel(this._getSettingsPanelProps("screensaver")));
     this._syncEditModeDom();
     this._syncScreensaverVisibilityState();

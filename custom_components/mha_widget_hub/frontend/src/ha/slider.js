@@ -1,5 +1,16 @@
 import { getEntityDomain } from "./entity.js";
 
+const LEGACY_LIGHT_SUPPORT_BRIGHTNESS = 1;
+
+function supportsLightBrightness(attributes = {}) {
+  const colorModes = Array.isArray(attributes.supported_color_modes)
+    ? attributes.supported_color_modes
+    : [];
+  return colorModes.some(mode => mode !== "onoff")
+    || Boolean((Number(attributes.supported_features) || 0) & LEGACY_LIGHT_SUPPORT_BRIGHTNESS)
+    || (attributes.brightness != null && Number.isFinite(Number(attributes.brightness)));
+}
+
 function createSliderBinding({
   value = 0,
   min = 0,
@@ -22,7 +33,10 @@ export function getSliderBinding(entityState) {
   const attributes = entityState.attributes || {};
   const domain = getEntityDomain(entityState.entity_id || "");
 
-  if (Number.isFinite(Number(attributes.brightness)) || domain === "light") {
+  if (
+    (attributes.brightness != null && Number.isFinite(Number(attributes.brightness)))
+    || (domain === "light" && supportsLightBrightness(attributes))
+  ) {
     return createSliderBinding({
       value: Math.round((Number(attributes.brightness) || 0) / 2.55),
       service: "turn_on",
