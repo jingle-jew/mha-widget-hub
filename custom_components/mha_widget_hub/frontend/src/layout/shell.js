@@ -28,7 +28,14 @@ export function createShell(meta = {}) {
   dockZone.className = "mha-dock-zone";
   dockZone.setAttribute("aria-label", "Zone du dock");
 
-  dockZone.append(createDock({ onSettings: meta.onSettings }));
+  dockZone.append(createDock({
+    pages: meta.pages,
+    activePageId: meta.activePageId,
+    isEditing: meta.isEditing,
+    onPageSelect: meta.onPageSelect,
+    onAddPage: meta.onAddPage,
+    onSettings: meta.onSettings,
+  }));
   widgetArea.append(grid);
   workspace.append(widgetArea, dockZone);
   shell.append(statusBar, workspace);
