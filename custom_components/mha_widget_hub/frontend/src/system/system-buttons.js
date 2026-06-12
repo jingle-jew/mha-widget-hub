@@ -1,18 +1,18 @@
 import { createIcon } from "../ui/icon.js";
-import { createIconSymbol } from "../ui/icon-symbol.js";
+import { createSystemIconSymbol, getSystemIconName } from "./system-icons.js";
 
 const SYSTEM_ICON_META = Object.freeze({
-  back: { name: "arrow-left", label: "Retour" },
-  close: { name: "close", label: "Fermer" },
-  up: { name: "arrow-up", label: "Monter" },
-  down: { name: "arrow-down", label: "Descendre" },
-  delete: { name: "trash", label: "Supprimer" },
-  add: { name: "plus", label: "Ajouter" },
-  edit: { name: "edit", label: "Modifier" },
+  back: { icon: "back", label: "Retour" },
+  close: { icon: "close", label: "Fermer" },
+  up: { icon: "up", label: "Monter" },
+  down: { icon: "down", label: "Descendre" },
+  delete: { icon: "delete", label: "Supprimer" },
+  add: { icon: "add", label: "Ajouter" },
+  edit: { icon: "edit", label: "Modifier" },
 });
 
 export function createSystemIconButton({
-  icon = "plus",
+  icon = "add",
   label = "Action",
   variant = "ghost",
   size = "md",
@@ -20,6 +20,7 @@ export function createSystemIconButton({
   disabled = false,
   onClick,
 } = {}) {
+  const systemIconName = getSystemIconName(icon);
   const button = document.createElement("button");
   button.className = [
     "mha-system-button",
@@ -33,10 +34,10 @@ export function createSystemIconButton({
   if (onClick) button.addEventListener("click", onClick);
 
   button.append(createIcon({
-    name: icon,
-    category: "utility",
+    name: systemIconName,
+    category: "system",
     label,
-    children: createIconSymbol({ name: icon, label }),
+    children: createSystemIconSymbol({ name: systemIconName, label }),
   }));
 
   return button;
@@ -45,7 +46,7 @@ export function createSystemIconButton({
 function systemButton(kind, { label, className = "", ...rest } = {}) {
   const meta = SYSTEM_ICON_META[kind] || SYSTEM_ICON_META.add;
   return createSystemIconButton({
-    icon: meta.name,
+    icon: meta.icon,
     label: label || meta.label,
     className: [`mha-system-button--${kind}`, className].filter(Boolean).join(" "),
     ...rest,
