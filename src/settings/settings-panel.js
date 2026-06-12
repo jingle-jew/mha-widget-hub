@@ -1,5 +1,7 @@
 import { getAccentOptions, normalizeAccent } from "./accent-palettes.js";
 import { createToggle } from "../ui/toggle.js";
+import { createIcon } from "../ui/icon.js";
+import { createIconSymbol } from "../ui/icon-symbol.js";
 /*
  * MHA Settings panel.
  *
@@ -37,6 +39,20 @@ const SCREENSAVER_DELAY_OPTIONS = [
   { value: "30000", label: "30 secondes" },
   { value: "120000", label: "2 minutes" },
   { value: "300000", label: "5 minutes" },
+];
+
+
+const DOCK_ICON_OPTIONS = [
+  { name: "home", label: "Accueil", category: "home" },
+  { name: "dashboard", label: "Dashboard", category: "navigation" },
+  { name: "apps", label: "Applications", category: "system" },
+  { name: "grid", label: "Grille", category: "navigation" },
+  { name: "light", label: "Lumières", category: "lighting" },
+  { name: "weather", label: "Météo", category: "weather" },
+  { name: "media-player", label: "Média", category: "media_player" },
+  { name: "calendar", label: "Calendrier", category: "utility" },
+  { name: "star", label: "Favori", category: "utility" },
+  { name: "gear", label: "Réglages", category: "system" },
 ];
 
 const CLOCK_VARIANTS = [
@@ -127,6 +143,149 @@ function createAccentPicker({ label, themeStyle = "oneui", value = "", onChange 
   return field;
 }
 
+
+function createSettingsNavTile({ icon = "gear", label, description = "", onClick }) {
+  const button = document.createElement("button");
+  button.className = "mha-settings-nav-tile";
+  button.type = "button";
+  button.addEventListener("click", () => onClick?.());
+
+  button.append(createIcon({
+    name: icon,
+    category: "utility",
+    label,
+    children: createIconSymbol({ name: icon, label }),
+  }));
+
+  const text = document.createElement("span");
+  text.className = "mha-settings-nav-text";
+  const title = document.createElement("strong");
+  title.textContent = label;
+  const desc = document.createElement("small");
+  desc.textContent = description;
+  text.append(title, desc);
+
+  const chevron = document.createElement("span");
+  chevron.className = "mha-settings-nav-chevron";
+  chevron.textContent = "›";
+  button.append(text, chevron);
+  return button;
+}
+
+function createDockPageRow(page, index, pages, { activePageId = "", onSelect, onMove, onDelete } = {}) {
+  const row = document.createElement("div");
+  row.className = "mha-settings-dock-row";
+  row.dataset.active = String(page.id === activePageId);
+  row.setAttribute("role", "button");
+  row.tabIndex = 0;
+  row.addEventListener("click", () => onSelect?.(page.id));
+  row.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      onSelect?.(page.id);
+    }
+  });
+
+  row.append(createIcon({
+    name: page.icon || "grid",
+    category: "utility",
+    label: page.name || `Page ${index + 1}`,
+    children: createIconSymbol({ name: page.icon || "grid", label: page.name || `Page ${index + 1}` }),
+  }));
+
+  const text = document.createElement("span");
+  text.className = "mha-settings-dock-row-text";
+  const title = document.createElement("strong");
+  title.textContent = page.name || `Page ${index + 1}`;
+  const meta = document.createElement("small");
+  const count = Array.isArray(page.widgets) ? page.widgets.length : 0;
+  meta.textContent = `${count} widget${count > 1 ? "s" : ""}`;
+  text.append(title, meta);
+
+  const actions = document.createElement("span");
+  actions.className = "mha-settings-dock-row-actions";
+  const up = document.createElement("button");
+  up.className = "mha-settings-mini-button";
+  up.type = "button";
+  up.textContent = "↑";
+  up.disabled = index === 0;
+  up.setAttribute("aria-label", `Monter ${page.name || "la page"}`);
+  up.addEventListener("click", (event) => { event.stopPropagation(); onMove?.(page.id, -1); });
+  const down = document.createElement("button");
+  down.className = "mha-settings-mini-button";
+  down.type = "button";
+  down.textContent = "↓";
+  down.disabled = index >= pages.length - 1;
+  down.setAttribute("aria-label", `Descendre ${page.name || "la page"}`);
+  down.addEventListener("click", (event) => { event.stopPropagation(); onMove?.(page.id, 1); });
+  const remove = document.createElement("button");
+  remove.className = "mha-settings-mini-button mha-settings-mini-button-danger";
+  remove.type = "button";
+  remove.textContent = "×";
+  remove.disabled = pages.length <= 1;
+  remove.setAttribute("aria-label", `Supprimer ${page.name || "la page"}`);
+  remove.addEventListener("click", (event) => { event.stopPropagation(); onDelete?.(page.id); });
+  actions.append(up, down, remove);
+
+  row.append(text, actions);
+  return row;
+}
+
+function createDockSettingsList({ pages = [], activePageId = "", onSelect, onMove, onDelete } = {}) {
+  const list = document.createElement("div");
+  list.className = "mha-settings-dock-list";
+  const normalized = Array.isArray(pages) ? pages : [];
+  normalized.forEach((page, index) => list.append(createDockPageRow(page, index, normalized, { activePageId, onSelect, onMove, onDelete })));
+  return list;
+}
+
+function createDockPageEditor({ page, onBack, onRename, onIconChange } = {}) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "mha-settings-dock-editor";
+
+  const back = document.createElement("button");
+  back.className = "mha-settings-back";
+  back.type = "button";
+  back.textContent = "‹ Dock";
+  back.addEventListener("click", () => onBack?.());
+
+  const nameField = document.createElement("label");
+  nameField.className = "mha-settings-field";
+  const nameLabel = document.createElement("span");
+  nameLabel.className = "mha-settings-label";
+  nameLabel.textContent = "Nom";
+  const input = document.createElement("input");
+  input.className = "mha-settings-select mha-settings-text-input";
+  input.value = page?.name || "";
+  input.addEventListener("change", () => onRename?.(page.id, input.value));
+  input.addEventListener("keydown", (event) => { if (event.key === "Enter") input.blur(); });
+  nameField.append(nameLabel, input);
+
+  const iconGrid = document.createElement("div");
+  iconGrid.className = "mha-settings-icon-grid";
+  DOCK_ICON_OPTIONS.forEach(option => {
+    const button = document.createElement("button");
+    button.className = "mha-settings-icon-option";
+    button.type = "button";
+    button.dataset.selected = String((page?.icon || "grid") === option.name);
+    button.setAttribute("aria-label", option.label);
+    button.append(createIcon({
+      name: option.name,
+      category: option.category,
+      label: option.label,
+      children: createIconSymbol({ name: option.name, label: option.label }),
+    }));
+    const label = document.createElement("span");
+    label.textContent = option.label;
+    button.append(label);
+    button.addEventListener("click", () => onIconChange?.(page.id, option.name));
+    iconGrid.append(button);
+  });
+
+  wrapper.append(back, nameField, createSection("Icône", [iconGrid]));
+  return wrapper;
+}
+
 function createSection(title, children = []) {
   const section = document.createElement("section");
   section.className = "mha-settings-section";
@@ -153,6 +312,10 @@ export function createSettingsPanel({
   screensaverPreview = false,
   screensaverNowBar = true,
   screensaverClockVariant = "digital",
+  settingsPage = "main",
+  dockPages = [],
+  activeDockPageId = "",
+  selectedDockPageId = "",
   onClose,
   onThemeChange,
   onThemeStyleChange,
@@ -165,6 +328,14 @@ export function createSettingsPanel({
   onScreensaverNowBarChange,
   onScreensaverClockVariantChange,
   onResetGrid,
+  onOpenDockSettings,
+  onDockBack,
+  onDockPageSelect,
+  onDockMovePage,
+  onDockDeletePage,
+  onDockMainBack,
+  onDockRenamePage,
+  onDockIconChange,
 } = {}) {
   const isScreensaverScope = scope === "screensaver";
   const root = document.createElement("aside");
@@ -205,7 +376,7 @@ export function createSettingsPanel({
 
   const h2 = document.createElement("h2");
   h2.className = "mha-settings-title";
-  h2.textContent = isScreensaverScope ? "Économiseur d’écran" : "Paramètres";
+  h2.textContent = isScreensaverScope ? "Économiseur d’écran" : settingsPage === "dock" ? "Dock" : settingsPage === "dock-detail" ? "Icône du dock" : "Paramètres";
 
   title.append(eyebrow, h2);
 
@@ -222,6 +393,46 @@ export function createSettingsPanel({
   body.className = "mha-settings-body";
 
   const sections = [];
+
+  if (!isScreensaverScope && settingsPage === "dock") {
+    const back = document.createElement("button");
+    back.className = "mha-settings-back";
+    back.type = "button";
+    back.textContent = "‹ Paramètres";
+    back.addEventListener("click", () => onDockMainBack?.());
+    body.append(back);
+    sections.push(createSection("Icônes du dock", [
+      createDockSettingsList({
+        pages: dockPages,
+        activePageId: activeDockPageId,
+        onSelect: onDockPageSelect,
+        onMove: onDockMovePage,
+        onDelete: onDockDeletePage,
+      }),
+    ]));
+    body.append(...sections);
+    sheet.append(header, body);
+    root.append(scrim, sheet);
+    root.addEventListener("keydown", (event) => { if (event.key === "Escape") onClose?.(); });
+    return root;
+  }
+
+  if (!isScreensaverScope && settingsPage === "dock-detail") {
+    const selectedDockPage = dockPages.find(page => page.id === selectedDockPageId) || dockPages[0];
+    sections.push(createSection(selectedDockPage?.name || "Page", [
+      createDockPageEditor({
+        page: selectedDockPage,
+        onBack: onDockBack,
+        onRename: onDockRenamePage,
+        onIconChange: onDockIconChange,
+      }),
+    ]));
+    body.append(...sections);
+    sheet.append(header, body);
+    root.append(scrim, sheet);
+    root.addEventListener("keydown", (event) => { if (event.key === "Escape") onClose?.(); });
+    return root;
+  }
 
   if (!isScreensaverScope) {
     const appearanceControls = [
@@ -264,6 +475,14 @@ export function createSettingsPanel({
     );
 
     sections.push(createSection("Apparence", appearanceControls));
+    sections.push(createSection("Navigation", [
+      createSettingsNavTile({
+        icon: "apps",
+        label: "Dock",
+        description: "Réorganiser les pages du dock et changer leurs icônes.",
+        onClick: onOpenDockSettings,
+      }),
+    ]));
   } else {
     sections.push(createSection("Apparence", [
       createSelect({

@@ -41,6 +41,7 @@ export function createMobileDock({
   isEditing = false,
   onPageSelect,
   onAddPage,
+  onDockSettings,
   onSettings,
 } = {}) {
   const root = document.createElement("div");
@@ -114,6 +115,19 @@ export function createMobileDock({
       className: "mha-mobile-dock-add-page",
       onClick: () => {
         onAddPage?.();
+        setOpen(false);
+      },
+    }));
+
+    grid.append(createMobileDockIconButton({
+      symbol: "edit",
+      category: "utility",
+      label: "Gérer le dock",
+      action: "dock-settings",
+    }, {
+      className: "mha-mobile-dock-edit",
+      onClick: () => {
+        onDockSettings?.();
         setOpen(false);
       },
     }));

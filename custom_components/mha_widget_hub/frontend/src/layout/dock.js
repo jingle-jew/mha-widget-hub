@@ -41,6 +41,7 @@ export function createDock({
   isEditing = false,
   onPageSelect,
   onAddPage,
+  onDockSettings,
   onSettings,
 } = {}) {
   const dock = document.createElement("nav");
@@ -73,6 +74,16 @@ export function createDock({
     }, {
       className: "mha-dock-add-page",
       onClick: () => onAddPage?.(),
+    }));
+
+    dock.append(createDockIconButton({
+      symbol: "edit",
+      category: "utility",
+      label: "Gérer le dock",
+      action: "dock-settings",
+    }, {
+      className: "mha-dock-edit",
+      onClick: () => onDockSettings?.(),
     }));
   }
 

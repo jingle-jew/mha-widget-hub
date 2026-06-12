@@ -1001,3 +1001,145 @@
   border-color: rgba(255,236,219,.16);
   box-shadow: 0 10px 24px rgba(36,21,14,.13);
 }
+
+/* Dock settings reuse the standard settings drawer/sheet. */
+.mha-settings-nav-tile,
+.mha-settings-dock-row {
+  appearance: none;
+  width: 100%;
+  border: 1px solid color-mix(in srgb, var(--mha-border-secondary, rgba(255,255,255,.18)) 76%, transparent);
+  border-radius: 1.15rem;
+  background: color-mix(in srgb, var(--mha-surface-panel, rgba(255,255,255,.14)) 74%, transparent);
+  color: inherit;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: .85rem;
+  padding: .72rem .78rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mha-settings-nav-tile .mha-icon,
+.mha-settings-dock-row .mha-icon,
+.mha-settings-icon-option .mha-icon {
+  --mha-icon-size: 2.35rem;
+  --mha-icon-glyph-size: 54%;
+  flex: 0 0 auto;
+}
+
+.mha-settings-nav-text,
+.mha-settings-dock-row-text {
+  min-width: 0;
+  display: grid;
+  gap: .16rem;
+}
+
+.mha-settings-nav-text strong,
+.mha-settings-dock-row-text strong {
+  font-size: .95rem;
+  font-weight: 680;
+  letter-spacing: -.01em;
+}
+
+.mha-settings-nav-text small,
+.mha-settings-dock-row-text small {
+  font-size: .76rem;
+  opacity: .68;
+  line-height: 1.25;
+}
+
+.mha-settings-nav-chevron {
+  font-size: 1.65rem;
+  opacity: .46;
+  line-height: 1;
+}
+
+.mha-settings-dock-list {
+  display: grid;
+  gap: .62rem;
+}
+
+.mha-settings-dock-row[data-active="true"] {
+  border-color: color-mix(in srgb, var(--mha-accent, #8b72ff) 42%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mha-accent, #8b72ff) 22%, transparent);
+}
+
+.mha-settings-dock-row-actions {
+  display: inline-flex;
+  gap: .35rem;
+  align-items: center;
+}
+
+.mha-settings-mini-button,
+.mha-settings-back {
+  appearance: none;
+  border: 1px solid color-mix(in srgb, var(--mha-border-secondary, rgba(255,255,255,.18)) 70%, transparent);
+  background: color-mix(in srgb, var(--mha-surface-glass, rgba(255,255,255,.12)) 70%, transparent);
+  color: inherit;
+  border-radius: .8rem;
+  min-inline-size: 2rem;
+  min-block-size: 2rem;
+  padding: 0 .65rem;
+  cursor: pointer;
+}
+
+.mha-settings-mini-button:disabled {
+  opacity: .28;
+  cursor: default;
+}
+
+.mha-settings-mini-button-danger {
+  color: color-mix(in srgb, #ff4d67 82%, var(--mha-text-primary, currentColor));
+}
+
+.mha-settings-mini-button-danger:not(:disabled) {
+  border-color: color-mix(in srgb, #ff4d67 42%, transparent);
+}
+
+.mha-settings-back {
+  justify-self: start;
+  margin-block-end: .25rem;
+  font-weight: 650;
+}
+
+.mha-settings-dock-editor {
+  display: grid;
+  gap: .85rem;
+}
+
+.mha-settings-text-input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.mha-settings-icon-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .55rem;
+}
+
+.mha-settings-icon-option {
+  appearance: none;
+  min-width: 0;
+  border: 1px solid color-mix(in srgb, var(--mha-border-secondary, rgba(255,255,255,.18)) 70%, transparent);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--mha-surface-panel, rgba(255,255,255,.14)) 68%, transparent);
+  color: inherit;
+  display: grid;
+  justify-items: center;
+  gap: .35rem;
+  padding: .7rem .45rem;
+  cursor: pointer;
+}
+
+.mha-settings-icon-option[data-selected="true"] {
+  border-color: color-mix(in srgb, var(--mha-accent, #8b72ff) 48%, transparent);
+  background: color-mix(in srgb, var(--mha-accent, #8b72ff) 18%, var(--mha-surface-panel, rgba(255,255,255,.14)));
+}
+
+.mha-settings-icon-option span {
+  font-size: .72rem;
+  opacity: .78;
+  white-space: nowrap;
+}

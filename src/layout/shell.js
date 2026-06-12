@@ -34,6 +34,7 @@ export function createShell(meta = {}) {
     isEditing: meta.isEditing,
     onPageSelect: meta.onPageSelect,
     onAddPage: meta.onAddPage,
+    onDockSettings: meta.onDockSettings,
     onSettings: meta.onSettings,
   }));
   widgetArea.append(grid);
