@@ -470,7 +470,92 @@ function normalizeStoredWidgetContract(widget = {}) {
 }
 
 function readLegacyJson(key,legacyKey,fallback){const current=readJson(key,null);if(current!==null)return current;const legacy=readJson(legacyKey,null);return legacy!==null?legacy:fallback}
-class MhaControlHub extends HTMLElement{constructor(){super();this.attachShadow({mode:"open"});this.dataset.bootState="booting";this.dataset.dataState="loading";this.dataset.widgetsState="pending";this.dataset.ready="false";this.shadowRoot.innerHTML=createCriticalBootStyle();this._bootComplete=false;this._bootWatchdog=0;this._stylesReadyRenderId=0;this._widgetRenderFrame=0;this._secondaryUiFrame=0;this._pendingDeferredUi=null;this._hass=null;this._hassUpdateFrame=0;this._hasConnectedOnce=false;this._connectionActive=false;this._connectionListenersAttached=false;this._lifecycleRecoveryListener=null;this._visibilityRecoveryListener=null;this._isEditing=false;this._activeMoveWidgetId="";this._migrateStorageSchema();this._widgetPositions=readJson(POSITIONS,{})||{};this._draggedId="";this._isResizingWidget=false;this._resizeState=null;this._squareUnitFrame=0;this._gridRuntimeFrame=0;this._widgetDropSlotsFrame=0;this._layoutResizeObserver=null;this._observedLayoutSize="";this._renderId=0;this._readyRaf=0;this._viewportRaf=0;this._relayoutTimer=0;this._systemThemeListener=null;this._themeTransitionTimer=0;this._themeTransitionFrame=0;this._gridScrollCleanup=null;this._screensaverPreview=false;this._screensaverActive=false;this._screensaverNowBar=readBool(SCREENSAVER_NOWBAR,true);this._screensaverClockVariant=localStorage.getItem(SCREENSAVER_CLOCK_VARIANT)||localStorage.getItem("mha-screensaver-clock")||"digital";this._screensaverIdleTimer=0;this._screensaverEnabled=readBool(SCREENSAVER_ENABLED,true);this._screensaverDelay=readNumberOption(SCREENSAVER_DELAY,30000,[15000,30000,120000,300000]);this._settingsOpen=false;this._settingsPage="main";this._dockSettingsPageId="";this._screensaverSettingsOpen=false;this._lastResponsiveSignature="";this._responsiveRelayoutTimer=null;this._widgetManagerOpen=false;this._widgetManagerCategory="";this._pendingWidgetPlacement=null;this._pageCreatorOpen=false;this._newPageIcon="grid";this._dockPosition=getStoredDockPosition();this._pages=this._readPages();this._activePageId=this._readActivePageId();this._widgets=this._readWidgets();this._upgradePredefinedProperty("hass")}
+class MhaControlHub extends HTMLElement{
+constructor(){
+  super();
+  this._initialized=false;
+  this._bootComplete=false;
+  this._bootWatchdog=0;
+  this._stylesReadyRenderId=0;
+  this._widgetRenderFrame=0;
+  this._secondaryUiFrame=0;
+  this._pendingDeferredUi=null;
+  this._hass=null;
+  this._hassUpdateFrame=0;
+  this._hasConnectedOnce=false;
+  this._connectionActive=false;
+  this._connectionListenersAttached=false;
+  this._lifecycleRecoveryListener=null;
+  this._visibilityRecoveryListener=null;
+  this._isEditing=false;
+  this._activeMoveWidgetId="";
+  this._widgetPositions={};
+  this._draggedId="";
+  this._isResizingWidget=false;
+  this._resizeState=null;
+  this._squareUnitFrame=0;
+  this._gridRuntimeFrame=0;
+  this._widgetDropSlotsFrame=0;
+  this._layoutResizeObserver=null;
+  this._observedLayoutSize="";
+  this._renderId=0;
+  this._readyRaf=0;
+  this._viewportRaf=0;
+  this._relayoutTimer=0;
+  this._systemThemeListener=null;
+  this._themeTransitionTimer=0;
+  this._themeTransitionFrame=0;
+  this._gridScrollCleanup=null;
+  this._screensaverPreview=false;
+  this._screensaverActive=false;
+  this._screensaverNowBar=true;
+  this._screensaverClockVariant="digital";
+  this._screensaverIdleTimer=0;
+  this._screensaverEnabled=true;
+  this._screensaverDelay=30000;
+  this._settingsOpen=false;
+  this._settingsPage="main";
+  this._dockSettingsPageId="";
+  this._screensaverSettingsOpen=false;
+  this._lastResponsiveSignature="";
+  this._responsiveRelayoutTimer=null;
+  this._widgetManagerOpen=false;
+  this._widgetManagerCategory="";
+  this._pendingWidgetPlacement=null;
+  this._pageCreatorOpen=false;
+  this._newPageIcon="grid";
+  this._dockPosition="left";
+  this._pages=[];
+  this._activePageId="";
+  this._widgets=[];
+}
+_initialize(){
+  if(this._initialized)return;
+  this._initialized=true;
+  this.attachShadow({mode:"open"});
+  this.dataset.bootState="booting";
+  this.dataset.dataState=this._hass?"ready":"loading";
+  this.dataset.widgetsState="pending";
+  this.dataset.ready="false";
+  this.shadowRoot.innerHTML=createCriticalBootStyle();
+  this._migrateStorageSchema();
+  this._widgetPositions=readJson(POSITIONS,{})||{};
+  this._screensaverNowBar=readBool(SCREENSAVER_NOWBAR,true);
+  this._screensaverClockVariant=localStorage.getItem(SCREENSAVER_CLOCK_VARIANT)
+    ||localStorage.getItem("mha-screensaver-clock")
+    ||"digital";
+  this._screensaverEnabled=readBool(SCREENSAVER_ENABLED,true);
+  this._screensaverDelay=readNumberOption(
+    SCREENSAVER_DELAY,
+    30000,
+    [15000,30000,120000,300000],
+  );
+  this._dockPosition=getStoredDockPosition();
+  this._pages=this._readPages();
+  this._activePageId=this._readActivePageId();
+  this._widgets=this._readWidgets();
+  this._upgradePredefinedProperty("hass");
+}
 _upgradePredefinedProperty(name){
   if(!Object.prototype.hasOwnProperty.call(this,name))return;
   const value=this[name];
@@ -626,6 +711,7 @@ _tryCompleteBoot(){
   this._markReadyAfterPaint(this._renderId);
 }
 connectedCallback(){
+  this._initialize();
   if(this._connectionActive){
     this._ensureMounted({reason:"duplicate connection callback"});
     this._scheduleHassUpdate();
