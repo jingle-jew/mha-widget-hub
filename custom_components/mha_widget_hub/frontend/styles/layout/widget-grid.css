@@ -222,7 +222,13 @@
   :host {
     --mha-dock-unit-size: var(--mha-square-unit);
     --mha-dock-zone-width: var(--mha-dock-unit-size);
-    --mha-bottom-dock-height: var(--mha-dock-unit-size);
+    --mha-bottom-dock-clearance: max(
+      env(safe-area-inset-bottom),
+      var(--mha-grid-gap)
+    );
+    --mha-bottom-dock-height: calc(
+      var(--mha-dock-unit-size) + var(--mha-bottom-dock-clearance)
+    );
   }
 
   :host([data-dock-position="left"]) .mha-workspace {
@@ -271,7 +277,7 @@
   :host([data-dock-position="bottom"]) .mha-dock-zone {
     grid-column: 1;
     grid-row: 2;
-    place-items: center;
+    place-items: start center;
   }
 }
 
@@ -298,14 +304,14 @@
     grid-row: 2;
     position: relative;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     inline-size: 100%;
     block-size: var(--mha-bottom-dock-height);
     min-inline-size: 0;
     min-block-size: 0;
     max-inline-size: 100%;
-    overflow: hidden;
+    overflow: visible;
     place-items: initial;
   }
 }

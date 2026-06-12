@@ -742,7 +742,7 @@
     top: auto;
     bottom: auto;
     transform: none;
-    align-self: center;
+    align-self: flex-start;
     justify-self: center;
     flex-direction: row;
 
