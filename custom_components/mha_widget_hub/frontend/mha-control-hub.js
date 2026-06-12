@@ -17,6 +17,7 @@ import { createIconSymbol } from "./src/ui/icon-symbol.js";
 import { createCloseButton } from "./src/system/system-buttons.js";
 
 const MHA_FRONTEND_ROOT_URL = new URL(".", import.meta.url);
+const MHA_FRONTEND_VERSION = new URL(import.meta.url).searchParams.get("v");
 
 const MHA_STYLE_PATHS = [
   "styles/core/tokens.css",
@@ -68,13 +69,52 @@ const PAGE_ICON_OPTIONS = Object.freeze([
 ]);
 
 function resolveFrontendAssetUrl(path = "") {
-  return new URL(String(path).replace(/^\/+/, ""), MHA_FRONTEND_ROOT_URL).href;
+  const url = new URL(String(path).replace(/^\/+/, ""), MHA_FRONTEND_ROOT_URL);
+  if (MHA_FRONTEND_VERSION) url.searchParams.set("v", MHA_FRONTEND_VERSION);
+  return url.href;
 }
 
 function createFrontendStyleLinks() {
   return MHA_STYLE_PATHS
     .map(path => `<link rel="stylesheet" href="${resolveFrontendAssetUrl(path)}">`)
     .join("");
+}
+
+function createCriticalBootStyle() {
+  /*
+   * External theme styles can take several seconds through Home Assistant.
+   * Keep a styled wallpaper visible and all application content hidden until
+   * those styles and the first measured layout are ready.
+   */
+  return `<style data-mha-critical-boot>
+    :host {
+      display: block;
+      position: relative;
+      inline-size: 100%;
+      block-size: 100dvh;
+      overflow: hidden;
+      color: transparent;
+      background:
+        radial-gradient(circle at 20% 15%, rgba(113,128,255,.32), transparent 30%),
+        radial-gradient(circle at 78% 28%, rgba(255,112,178,.28), transparent 32%),
+        radial-gradient(circle at 52% 90%, rgba(56,209,255,.22), transparent 36%),
+        linear-gradient(135deg, #171b30 0%, #242844 100%);
+    }
+    :host([data-boot-state="booting"]) > :not(style):not(link):not(.mha-background) {
+      opacity: 0 !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+    }
+    :host([data-boot-state="booting"]) .mha-background {
+      position: absolute;
+      inset: -20%;
+      background:
+        radial-gradient(circle at 20% 15%, var(--mha-bg-radial-1, rgba(113,128,255,.32)), transparent 30%),
+        radial-gradient(circle at 78% 28%, var(--mha-bg-radial-2, rgba(255,112,178,.28)), transparent 32%),
+        radial-gradient(circle at 52% 90%, var(--mha-bg-radial-3, rgba(56,209,255,.22)), transparent 36%),
+        linear-gradient(135deg, var(--mha-bg-base-1, #171b30), var(--mha-bg-base-2, #242844));
+    }
+  </style>`;
 }
 // Keeps existing local widget order/sizes after the public naming cleanup.
 
@@ -428,8 +468,14 @@ function normalizeStoredWidgetContract(widget = {}) {
 }
 
 function readLegacyJson(key,legacyKey,fallback){const current=readJson(key,null);if(current!==null)return current;const legacy=readJson(legacyKey,null);return legacy!==null?legacy:fallback}
-class MhaControlHub extends HTMLElement{constructor(){super();this.attachShadow({mode:"open"});this._hass=null;this._hassUpdateFrame=0;this._isEditing=false;this._activeMoveWidgetId="";this._migrateStorageSchema();this._widgetPositions=readJson(POSITIONS,{})||{};this._draggedId="";this._isResizingWidget=false;this._resizeState=null;this._squareUnitFrame=0;this._widgetDropSlotsFrame=0;this._renderId=0;this._readyRaf=0;this._viewportRaf=0;this._relayoutTimer=0;this._systemThemeListener=null;this._themeTransitionTimer=0;this._themeTransitionFrame=0;this._gridScrollCleanup=null;this._screensaverPreview=false;this._screensaverActive=false;this._screensaverNowBar=readBool(SCREENSAVER_NOWBAR,true);this._screensaverClockVariant=localStorage.getItem(SCREENSAVER_CLOCK_VARIANT)||localStorage.getItem("mha-screensaver-clock")||"digital";this._screensaverIdleTimer=0;this._screensaverEnabled=readBool(SCREENSAVER_ENABLED,true);this._screensaverDelay=readNumberOption(SCREENSAVER_DELAY,30000,[15000,30000,120000,300000]);this._settingsOpen=false;this._settingsPage="main";this._dockSettingsPageId="";this._screensaverSettingsOpen=false;this._lastResponsiveSignature="";this._responsiveRelayoutTimer=null;this._widgetManagerOpen=false;this._widgetManagerCategory="";this._pendingWidgetPlacement=null;this._pageCreatorOpen=false;this._newPageIcon="grid";this._dockPosition=getStoredDockPosition();this._pages=this._readPages();this._activePageId=this._readActivePageId();this._widgets=this._readWidgets()}
-set hass(h){this._hass=h;this._scheduleHassUpdate()}get hass(){return this._hass}
+class MhaControlHub extends HTMLElement{constructor(){super();this.attachShadow({mode:"open"});this.dataset.bootState="booting";this.dataset.ready="false";this.shadowRoot.innerHTML=createCriticalBootStyle();this._bootComplete=false;this._stylesReadyRenderId=0;this._hass=null;this._hassUpdateFrame=0;this._isEditing=false;this._activeMoveWidgetId="";this._migrateStorageSchema();this._widgetPositions=readJson(POSITIONS,{})||{};this._draggedId="";this._isResizingWidget=false;this._resizeState=null;this._squareUnitFrame=0;this._gridRuntimeFrame=0;this._widgetDropSlotsFrame=0;this._layoutResizeObserver=null;this._observedLayoutSize="";this._renderId=0;this._readyRaf=0;this._viewportRaf=0;this._relayoutTimer=0;this._systemThemeListener=null;this._themeTransitionTimer=0;this._themeTransitionFrame=0;this._gridScrollCleanup=null;this._screensaverPreview=false;this._screensaverActive=false;this._screensaverNowBar=readBool(SCREENSAVER_NOWBAR,true);this._screensaverClockVariant=localStorage.getItem(SCREENSAVER_CLOCK_VARIANT)||localStorage.getItem("mha-screensaver-clock")||"digital";this._screensaverIdleTimer=0;this._screensaverEnabled=readBool(SCREENSAVER_ENABLED,true);this._screensaverDelay=readNumberOption(SCREENSAVER_DELAY,30000,[15000,30000,120000,300000]);this._settingsOpen=false;this._settingsPage="main";this._dockSettingsPageId="";this._screensaverSettingsOpen=false;this._lastResponsiveSignature="";this._responsiveRelayoutTimer=null;this._widgetManagerOpen=false;this._widgetManagerCategory="";this._pendingWidgetPlacement=null;this._pageCreatorOpen=false;this._newPageIcon="grid";this._dockPosition=getStoredDockPosition();this._pages=this._readPages();this._activePageId=this._readActivePageId();this._widgets=this._readWidgets();this._upgradePredefinedProperty("hass")}
+_upgradePredefinedProperty(name){
+  if(!Object.prototype.hasOwnProperty.call(this,name))return;
+  const value=this[name];
+  delete this[name];
+  this[name]=value;
+}
+set hass(h){this._hass=h;this._scheduleHassUpdate();this._tryCompleteBoot()}get hass(){return this._hass}
 _scheduleHassUpdate(){
   if(!this.isConnected||this._hassUpdateFrame)return;
   this._hassUpdateFrame=requestAnimationFrame(()=>{
@@ -442,17 +488,48 @@ updateFromHass(){
     component.__mhaUpdateFromHass?.(this._hass);
   });
 }
-_markReadyAfterPaint(){
+_markReadyAfterPaint(renderId=this._renderId){
+  if(this._bootComplete)return;
   cancelAnimationFrame(this._readyRaf);
-  this.dataset.ready="false";
-  this.setAttribute("data-ready","false");
   this._readyRaf=requestAnimationFrame(()=>requestAnimationFrame(()=>{
-    this.dataset.ready="true";
-    this.setAttribute("data-ready","true");
+    if(this._renderId!==renderId||!this.isConnected)return;
+    this._syncGridRuntimeMetrics();
+    this._readyRaf=requestAnimationFrame(()=>{
+      if(this._renderId!==renderId||!this.isConnected)return;
+      this._bootComplete=true;
+      this.dataset.bootState="ready";
+      this.setAttribute("data-boot-state","ready");
+      this.classList.add("is-boot-revealing");
+      const grid=this.shadowRoot?.querySelector?.(".mha-grid");
+      const finishReveal=()=>{
+        this.classList.remove("is-boot-revealing");
+        document.getElementById("mha-control-hub-boot-style")?.remove();
+      };
+      if(window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches||!grid){
+        requestAnimationFrame(finishReveal);
+      }else{
+        requestAnimationFrame(()=>{
+          const animations=grid.getAnimations?.().filter(animation=>animation.effect?.getTiming?.().iterations!==Infinity)||[];
+          if(!animations.length){
+            finishReveal();
+            return;
+          }
+          Promise.allSettled(animations.map(animation=>animation.finished)).then(finishReveal);
+        });
+      }
+      // Ready means settings, styles, HA data and measured layout are all usable.
+      this.dataset.ready="true";
+      this.setAttribute("data-ready","true");
+    });
   }));
 }
+_tryCompleteBoot(){
+  if(this._bootComplete||!this._hass)return;
+  if(this._stylesReadyRenderId!==this._renderId)return;
+  this._markReadyAfterPaint(this._renderId);
+}
 connectedCallback(){this._systemThemeListener=()=>{if(getStoredThemeSetting(this)==="auto")this._transitionSystemThemeChange()};window.matchMedia?.("(prefers-color-scheme: light)")?.addEventListener?.("change",this._systemThemeListener);if(!this.shadowRoot.querySelector(".mha-shell"))this.render();this._scheduleHassUpdate();this._clockTimer=setInterval(()=>{updateStatusTime(this.shadowRoot);updateClockWidgets(this.shadowRoot);if(this._getScreensaverVisible())updateScreensaverClock(this.shadowRoot,this._screensaverClockVariant)},1000);this._activityListener=()=>this._handleUserActivity();["pointerdown","touchstart","keydown","wheel","scroll"].forEach(type=>window.addEventListener(type,this._activityListener,{passive:true}));this._scheduleScreensaverIdleTimer();this._resizeListener=()=>{this._handleUserActivity();this._handleViewportChange()};window.addEventListener("resize",this._resizeListener);window.visualViewport?.addEventListener("resize",this._resizeListener);window.addEventListener("orientationchange",this._resizeListener);this._settingsOpenListener=()=>this._openSettings();this.shadowRoot.addEventListener("mha-open-settings",this._settingsOpenListener)}
-disconnectedCallback(){window.matchMedia?.("(prefers-color-scheme: light)")?.removeEventListener?.("change",this._systemThemeListener);clearInterval(this._clockTimer);cancelAnimationFrame(this._hassUpdateFrame);this._hassUpdateFrame=0;cancelAnimationFrame(this._squareUnitFrame);cancelAnimationFrame(this._widgetDropSlotsFrame);this._widgetDropSlotsFrame=0;cancelAnimationFrame(this._themeTransitionFrame);clearTimeout(this._themeTransitionTimer);this._clearGridScrollListener();["pointerdown","touchstart","keydown","wheel","scroll"].forEach(type=>window.removeEventListener(type,this._activityListener));clearTimeout(this._screensaverIdleTimer);window.removeEventListener("resize",this._resizeListener);window.visualViewport?.removeEventListener("resize",this._resizeListener);window.removeEventListener("orientationchange",this._resizeListener);clearTimeout(this._responsiveRelayoutTimer);if(this._settingsOpenListener)this.shadowRoot.removeEventListener("mha-open-settings",this._settingsOpenListener)}
+disconnectedCallback(){window.matchMedia?.("(prefers-color-scheme: light)")?.removeEventListener?.("change",this._systemThemeListener);clearInterval(this._clockTimer);cancelAnimationFrame(this._hassUpdateFrame);this._hassUpdateFrame=0;cancelAnimationFrame(this._readyRaf);this._readyRaf=0;cancelAnimationFrame(this._squareUnitFrame);cancelAnimationFrame(this._gridRuntimeFrame);this._gridRuntimeFrame=0;cancelAnimationFrame(this._widgetDropSlotsFrame);this._widgetDropSlotsFrame=0;this._disconnectLayoutResizeObserver();cancelAnimationFrame(this._themeTransitionFrame);clearTimeout(this._themeTransitionTimer);this._clearGridScrollListener();["pointerdown","touchstart","keydown","wheel","scroll"].forEach(type=>window.removeEventListener(type,this._activityListener));clearTimeout(this._screensaverIdleTimer);window.removeEventListener("resize",this._resizeListener);window.visualViewport?.removeEventListener("resize",this._resizeListener);window.removeEventListener("orientationchange",this._resizeListener);clearTimeout(this._responsiveRelayoutTimer);if(this._settingsOpenListener)this.shadowRoot.removeEventListener("mha-open-settings",this._settingsOpenListener)}
 requestRender(){this.render()}
 _syncEditModeDom(){
   if(!this._isEditing||this._isMobileLandscapeLayout()){this._activeMoveWidgetId="";this._pendingWidgetPlacement=null;this._widgetManagerOpen=false;this._widgetManagerCategory="";this._pageCreatorOpen=false;const grid=this.shadowRoot?.querySelector?.(".mha-grid");if(grid)this._renderWidgetDropSlots(grid);this._syncPageCreatorDom?.();}
@@ -2212,6 +2289,7 @@ _handleViewportChange(){
   cancelAnimationFrame(this._viewportRaf);
   this._viewportRaf=requestAnimationFrame(()=>{
     this._syncGridRuntimeMetrics();
+    this._observeLayoutSize();
     this._wireDockAutoHide(this.shadowRoot?.querySelector?.(".mha-grid"));
     this._syncEditModeDom();
     this._syncWidgetDropSlots();
@@ -2230,7 +2308,51 @@ const scrollContainer=grid.closest(".mha-widget-area");const isMobileLayout=()=>
 if(!scrollContainer||!isMobileLayout())return;
 if(isLandscape()){this.classList.add("is-mobile-floating-controls-hidden");return}
 let previousScrollTop=scrollContainer.scrollTop;const threshold=10;const onScroll=()=>{if(!isMobileLayout()||isLandscape()){this.classList.toggle("is-mobile-floating-controls-hidden",isMobileLayout()&&isLandscape());previousScrollTop=scrollContainer.scrollTop;return}const currentScrollTop=scrollContainer.scrollTop;if(currentScrollTop<=4){this.classList.remove("is-mobile-floating-controls-hidden");previousScrollTop=currentScrollTop;return}const delta=currentScrollTop-previousScrollTop;if(delta>threshold)this.classList.add("is-mobile-floating-controls-hidden");else if(delta<-threshold)this.classList.remove("is-mobile-floating-controls-hidden");if(Math.abs(delta)>threshold)previousScrollTop=currentScrollTop};scrollContainer.addEventListener("scroll",onScroll,{passive:true});this._gridScrollCleanup=()=>scrollContainer.removeEventListener("scroll",onScroll)}
-_scheduleSquareUnitSync(){cancelAnimationFrame(this._squareUnitFrame);this._squareUnitFrame=requestAnimationFrame(()=>{this._squareUnitFrame=requestAnimationFrame(()=>this._syncSquareUnit())})}
+_scheduleSquareUnitSync(){
+  cancelAnimationFrame(this._squareUnitFrame);
+  if(getEffectiveLayout(this)==="mobile"){
+    this._squareUnitFrame=requestAnimationFrame(()=>{
+      this._squareUnitFrame=requestAnimationFrame(()=>{
+        this._squareUnitFrame=0;
+        this._syncSquareUnit();
+      });
+    });
+    return;
+  }
+  this._squareUnitFrame=0;
+  this._observeLayoutSize();
+  this._scheduleGridRuntimeSync();
+}
+_scheduleGridRuntimeSync(){
+  cancelAnimationFrame(this._gridRuntimeFrame);
+  this._gridRuntimeFrame=requestAnimationFrame(()=>{
+    this._gridRuntimeFrame=requestAnimationFrame(()=>{
+      this._gridRuntimeFrame=0;
+      if(!this.isConnected)return;
+      this._syncGridRuntimeMetrics();
+    });
+  });
+}
+_disconnectLayoutResizeObserver(){
+  this._layoutResizeObserver?.disconnect();
+  this._layoutResizeObserver=null;
+  this._observedLayoutSize="";
+}
+_observeLayoutSize(){
+  this._disconnectLayoutResizeObserver();
+  if(typeof ResizeObserver!=="function"||getEffectiveLayout(this)==="mobile")return;
+  const area=this.shadowRoot?.querySelector?.(".mha-widget-area");
+  if(!area)return;
+  this._layoutResizeObserver=new ResizeObserver(entries=>{
+    const rect=entries[0]?.contentRect;
+    if(!rect)return;
+    const signature=`${Math.round(rect.width)}x${Math.round(rect.height)}`;
+    if(signature===this._observedLayoutSize)return;
+    this._observedLayoutSize=signature;
+    this._scheduleGridRuntimeSync();
+  });
+  this._layoutResizeObserver.observe(area);
+}
 _getWidgetAreaMetrics(){
   const area=this.shadowRoot?.querySelector?.(".mha-widget-area");
   if(!area)return null;
@@ -2499,5 +2621,5 @@ _wireDrag(el){
   el.draggable=false;
   el.removeAttribute("draggable");
 }
-render(){syncThemeAttributes(this);const renderId=++this._renderId,layoutMode=getLayoutMode(this),layout=getEffectiveLayout(this),preset=this._getRuntimeGridPreset(),units=getInternalGridColumnCountFromLogical(preset.columns),rows=getInternalGridRowCountFromLogical(preset.rows),cols=preset.columns,logicalRows=preset.rows,themeStyle=THEME_STYLES.has(document.documentElement.dataset.themeStyle)?document.documentElement.dataset.themeStyle:"oneui";const iconShapeSetting=getStoredIconShapeSetting(this);const iconShape=resolveIconShape(themeStyle,iconShapeSetting);this._clearGridScrollListener();this.dataset.themeStyle=themeStyle;this.dataset.iconShapeSetting=iconShapeSetting;this.setAttribute("data-icon-shape-setting",iconShapeSetting);this.dataset.iconShape=iconShape;this.setAttribute("data-icon-shape",iconShape);document.documentElement.dataset.iconShapeSetting=iconShapeSetting;document.documentElement.setAttribute("data-icon-shape-setting",iconShapeSetting);document.documentElement.dataset.iconShape=iconShape;document.documentElement.setAttribute("data-icon-shape",iconShape);const accent=normalizeAccent(themeStyle,localStorage.getItem(`mha-accent-${themeStyle}`)||localStorage.getItem("mha-accent")||"sky");this.dataset.accent=accent;this.setAttribute("data-accent",accent);document.documentElement.dataset.accent=accent;document.documentElement.setAttribute("data-accent",accent);this.dataset.layoutMode=layoutMode;this.dataset.layout=layout;this.dataset.dockPosition=this._dockPosition;this.setAttribute("data-dock-position",this._dockPosition);this.dataset.gridDensity=preset.density;this.dataset.gridUnits=String(units);this.dataset.logicalColumns=String(cols);this.dataset.gridRows=String(rows);this.dataset.logicalRows=String(logicalRows);this.classList.toggle("is-editing",this._isEditing);this.style.setProperty("--mha-runtime-grid-units",String(units));this.style.setProperty("--mha-runtime-grid-rows",String(rows));this.style.setProperty("--mha-runtime-logical-columns",String(cols));this.style.setProperty("--mha-runtime-logical-rows",String(logicalRows));this.shadowRoot.innerHTML=createFrontendStyleLinks();const links=[...this.shadowRoot.querySelectorAll('link[rel="stylesheet"]')],{bg,shell,grid}=createShell({layoutMode,layout,logicalColumns:cols,gridUnits:units,pages:this._pages,activePageId:this._activePageId,isEditing:this._isEditing,onPageSelect:id=>this._setActivePage(id),onAddPage:()=>this._openPageCreator(),onDockSettings:()=>this._openDockSettings(),onSettings:()=>this._openSettings()});this.shadowRoot.append(bg,shell);const positions=this._getActiveWidgetPositions({create:true});this._widgets.forEach(w=>{const el=createEmptyWidget(w,{activeGridUnits:units,isEditing:this._isEditing,isMoveTarget:this._isEditing&&this._activeMoveWidgetId===w.id,position:positions?.[w.id],hass:this._hass,onToggleMove:id=>this._toggleWidgetMoveMode(id),onMove:(id,direction)=>this._moveWidgetByDirection(id,direction),onRemove:id=>this._removeWidget(id),onCycleVariant:id=>this.cycleVariant(id)});this._wireDrag(el,w);grid.append(el)});this.shadowRoot.append(createScreensaver({isVisible:this._getScreensaverVisible(),showNowBar:this._screensaverNowBar,clockVariant:this._screensaverClockVariant,onClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),onOpenScreensaverSettings:()=>this._openScreensaverSettings(),onWake:()=>this._wakeScreensaver()}));this.shadowRoot.append(createMobileDock({pages:this._pages,activePageId:this._activePageId,isEditing:this._isEditing,onPageSelect:id=>this._setActivePage(id),onAddPage:()=>this._openPageCreator(),onDockSettings:()=>this._openDockSettings(),onSettings:()=>this._openSettings()}));this.shadowRoot.append(this._createSettingsPanel());this.shadowRoot.append(this._createWidgetManagerPanel());this.shadowRoot.append(this._createPageCreatorPanel());this.shadowRoot.append(createSettingsPanel(this._getSettingsPanelProps("screensaver")));const edit=document.createElement("button");edit.className="mha-edit-button mha-main-edit-button mha-primary-edit-button";edit.type="button";edit.innerHTML=this._isEditing?ICONS.close:ICONS.edit;edit.onclick=()=>this.toggleEditMode();this.shadowRoot.append(edit);const addWidget=document.createElement("button");addWidget.className="mha-edit-button mha-main-edit-button mha-add-widget-button";addWidget.type="button";addWidget.innerHTML=`<svg viewBox="0 0 24 24"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5Z"/></svg>`;addWidget.setAttribute("aria-label","Ajouter un widget");addWidget.hidden=!this._isEditing;addWidget.onclick=(event)=>{event.preventDefault();event.stopPropagation();this._openWidgetManager()};this.shadowRoot.append(addWidget);this._syncEditModeDom();this._wireDockAutoHide(grid);this._scheduleSquareUnitSync();Promise.all(links.map(link=>link.sheet?Promise.resolve():new Promise(resolve=>{link.addEventListener("load",resolve,{once:true});link.addEventListener("error",resolve,{once:true})}))).then(()=>{if(this._renderId!==renderId)return;const styledUnits=getActiveGridUnits(this);if(styledUnits!==units){this.render();return}this._scheduleSquareUnitSync();this._syncScreensaverVisibilityState();this._markReadyAfterPaint()});updateStatusTime(this.shadowRoot);updateClockWidgets(this.shadowRoot);this._syncWidgetDropSlots();this._markReadyAfterPaint();this._scheduleScreensaverIdleTimer()}}
+render(){syncThemeAttributes(this);const renderId=++this._renderId,layoutMode=getLayoutMode(this),layout=getEffectiveLayout(this),preset=this._getRuntimeGridPreset(),units=getInternalGridColumnCountFromLogical(preset.columns),rows=getInternalGridRowCountFromLogical(preset.rows),cols=preset.columns,logicalRows=preset.rows,themeStyle=THEME_STYLES.has(document.documentElement.dataset.themeStyle)?document.documentElement.dataset.themeStyle:"oneui";const iconShapeSetting=getStoredIconShapeSetting(this);const iconShape=resolveIconShape(themeStyle,iconShapeSetting);this._clearGridScrollListener();this._stylesReadyRenderId=0;this.dataset.themeStyle=themeStyle;this.dataset.iconShapeSetting=iconShapeSetting;this.setAttribute("data-icon-shape-setting",iconShapeSetting);this.dataset.iconShape=iconShape;this.setAttribute("data-icon-shape",iconShape);document.documentElement.dataset.iconShapeSetting=iconShapeSetting;document.documentElement.setAttribute("data-icon-shape-setting",iconShapeSetting);document.documentElement.dataset.iconShape=iconShape;document.documentElement.setAttribute("data-icon-shape",iconShape);const accent=normalizeAccent(themeStyle,localStorage.getItem(`mha-accent-${themeStyle}`)||localStorage.getItem("mha-accent")||"sky");this.dataset.accent=accent;this.setAttribute("data-accent",accent);document.documentElement.dataset.accent=accent;document.documentElement.setAttribute("data-accent",accent);this.dataset.layoutMode=layoutMode;this.dataset.layout=layout;this.dataset.dockPosition=this._dockPosition;this.setAttribute("data-dock-position",this._dockPosition);this.dataset.gridDensity=preset.density;this.dataset.gridUnits=String(units);this.dataset.logicalColumns=String(cols);this.dataset.gridRows=String(rows);this.dataset.logicalRows=String(logicalRows);this.classList.toggle("is-editing",this._isEditing);this.style.setProperty("--mha-runtime-grid-units",String(units));this.style.setProperty("--mha-runtime-grid-rows",String(rows));this.style.setProperty("--mha-runtime-logical-columns",String(cols));this.style.setProperty("--mha-runtime-logical-rows",String(logicalRows));this.shadowRoot.innerHTML=createCriticalBootStyle()+createFrontendStyleLinks();const links=[...this.shadowRoot.querySelectorAll('link[rel="stylesheet"]')],{bg,shell,grid}=createShell({layoutMode,layout,logicalColumns:cols,gridUnits:units,pages:this._pages,activePageId:this._activePageId,isEditing:this._isEditing,onPageSelect:id=>this._setActivePage(id),onAddPage:()=>this._openPageCreator(),onDockSettings:()=>this._openDockSettings(),onSettings:()=>this._openSettings()});this.shadowRoot.append(bg,shell);const positions=this._getActiveWidgetPositions({create:true});this._widgets.forEach(w=>{const el=createEmptyWidget(w,{activeGridUnits:units,isEditing:this._isEditing,isMoveTarget:this._isEditing&&this._activeMoveWidgetId===w.id,position:positions?.[w.id],hass:this._hass,onToggleMove:id=>this._toggleWidgetMoveMode(id),onMove:(id,direction)=>this._moveWidgetByDirection(id,direction),onRemove:id=>this._removeWidget(id),onCycleVariant:id=>this.cycleVariant(id)});this._wireDrag(el,w);grid.append(el)});this.shadowRoot.append(createScreensaver({isVisible:this._getScreensaverVisible(),showNowBar:this._screensaverNowBar,clockVariant:this._screensaverClockVariant,onClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),onOpenScreensaverSettings:()=>this._openScreensaverSettings(),onWake:()=>this._wakeScreensaver()}));this.shadowRoot.append(createMobileDock({pages:this._pages,activePageId:this._activePageId,isEditing:this._isEditing,onPageSelect:id=>this._setActivePage(id),onAddPage:()=>this._openPageCreator(),onDockSettings:()=>this._openDockSettings(),onSettings:()=>this._openSettings()}));this.shadowRoot.append(this._createSettingsPanel());this.shadowRoot.append(this._createWidgetManagerPanel());this.shadowRoot.append(this._createPageCreatorPanel());this.shadowRoot.append(createSettingsPanel(this._getSettingsPanelProps("screensaver")));const edit=document.createElement("button");edit.className="mha-edit-button mha-main-edit-button mha-primary-edit-button";edit.type="button";edit.innerHTML=this._isEditing?ICONS.close:ICONS.edit;edit.onclick=()=>this.toggleEditMode();this.shadowRoot.append(edit);const addWidget=document.createElement("button");addWidget.className="mha-edit-button mha-main-edit-button mha-add-widget-button";addWidget.type="button";addWidget.innerHTML=`<svg viewBox="0 0 24 24"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5Z"/></svg>`;addWidget.setAttribute("aria-label","Ajouter un widget");addWidget.hidden=!this._isEditing;addWidget.onclick=(event)=>{event.preventDefault();event.stopPropagation();this._openWidgetManager()};this.shadowRoot.append(addWidget);this._syncEditModeDom();this._wireDockAutoHide(grid);this._scheduleSquareUnitSync();Promise.all(links.map(link=>link.sheet?Promise.resolve():new Promise(resolve=>{link.addEventListener("load",resolve,{once:true});link.addEventListener("error",resolve,{once:true})}))).then(()=>{if(this._renderId!==renderId)return;const styledUnits=getActiveGridUnits(this);if(styledUnits!==units){this.render();return}this._scheduleSquareUnitSync();this._syncScreensaverVisibilityState();this._stylesReadyRenderId=renderId;this._tryCompleteBoot()});updateStatusTime(this.shadowRoot);updateClockWidgets(this.shadowRoot);this._syncWidgetDropSlots();this._scheduleScreensaverIdleTimer()}}
 customElements.define("mha-control-hub",MhaControlHub);

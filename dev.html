@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>MHA</title>
   <style>
-    html,body{width:100%;min-height:100%;margin:0;background:#050509;color:white;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;overflow:hidden}
+    html,body{width:100%;min-height:100%;margin:0;background:linear-gradient(135deg,#171b30,#242844);color:white;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;overflow:hidden}
     .dev-menu{position:fixed;z-index:9999;top:max(14px,env(safe-area-inset-top));right:max(14px,env(safe-area-inset-right));font-size:12px;font-weight:750}
     .dev-toggle{appearance:none;border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:9px 13px;background:rgba(10,10,18,.62);color:inherit;font:inherit;cursor:pointer;backdrop-filter:blur(22px) saturate(150%);box-shadow:0 14px 42px rgba(0,0,0,.28)}
     .dev-toggle:hover,.dev-toggle[aria-expanded="true"]{background:rgba(255,255,255,.16)}
@@ -34,7 +34,7 @@
 
   <mha-control-hub></mha-control-hub>
   <script type="module">
-    import "./mha-control-hub.js";
+    import "./mha-control-hub-loader.js?v=dev-boot-1";
 
     const hub = document.querySelector("mha-control-hub");
     const devMenu = document.querySelector("[data-dev-menu]");
@@ -163,7 +163,7 @@
       hub.requestRender?.();
     }
 
-    devToggle.onclick = () => setDevMenuOpen(devPanel.hidden);
+    if (devToggle) devToggle.onclick = () => setDevMenuOpen(devPanel.hidden);
 
     document.addEventListener("click", (event) => {
       if (!devPanel.hidden && !devMenu.contains(event.target)) setDevMenuOpen(false);

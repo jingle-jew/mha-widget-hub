@@ -9,4 +9,4 @@ PANEL_TITLE = "MHA"
 PANEL_ICON = "mdi:view-dashboard"
 
 STATIC_URL_PATH = "/mha_widget_hub_static"
-FRONTEND_MODULE = "mha-control-hub.js"
+FRONTEND_MODULE = "mha-control-hub-loader.js"

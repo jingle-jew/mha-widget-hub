@@ -11,6 +11,7 @@ const integrationRoot = path.join(
 const frontendRoot = path.join(integrationRoot, "frontend");
 
 const frontendSources = [
+  ["mha-control-hub-loader.js", "mha-control-hub-loader.js"],
   ["mha-control-hub.js", "mha-control-hub.js"],
   ["src", "src"],
   ["styles", "styles"],
