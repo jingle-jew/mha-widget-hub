@@ -208,6 +208,16 @@ export function createSlider({
     sliderWidget?.style?.setProperty("--mha-slider-value", percentValue);
   };
 
+  wrapper.__mhaSliderApi = {
+    setValue(nextValue) {
+      input.value = String(nextValue);
+      syncValue(nextValue);
+    },
+    setDisabled(nextDisabled) {
+      input.disabled = Boolean(nextDisabled);
+    },
+  };
+
   syncValue(value);
 
   input.addEventListener("input", (event) => {

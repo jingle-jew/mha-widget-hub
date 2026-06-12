@@ -28,31 +28,28 @@ export function createToggleSliderWidgetContent(widget = {}, {
   onSliderInput,
 } = {}) {
   const entityId = getWidgetEntityId(widget);
-  const entityState = getEntityState(hass, widget);
-  const hasEntity = Boolean(entityState);
-  const supportsToggle = widget.supportsToggle ?? (!entityId || (hasEntity && supportsToggleEntity(entityState)));
-  const sliderBinding = getSliderBinding(entityState);
-  const supportsSlider = widget.supportsSlider ?? (!entityId || Boolean(sliderBinding));
-  const checked = hasEntity ? isToggleEntityOn(entityState) : widget.checked;
+  const context = {
+    hass,
+    entityState: null,
+    sliderBinding: null,
+  };
 
   const root = document.createElement("div");
   root.className = "combined-toggle-slider";
   root.dataset.widgetComponent = "toggle-slider";
-  root.dataset.toggleSupported = String(Boolean(supportsToggle));
-  root.dataset.sliderSupported = String(Boolean(supportsSlider));
 
   const toggleSection = document.createElement("div");
   toggleSection.className = "combined-toggle-slider__toggle";
   toggleSection.append(createToggleWidgetContent({
     ...widget,
-    checked,
-    state: entityState?.state || widget.state,
+    checked: widget.checked,
+    state: widget.state,
   }, {
     widgetW,
     widgetH: 1,
-    disabled: !supportsToggle,
+    disabled: false,
     onToggle: (nextChecked, currentWidget, event) => {
-      if (entityId) runToggleAction(hass, entityState);
+      if (entityId) runToggleAction(context.hass, context.entityState);
       onToggle?.(nextChecked, currentWidget, event);
     },
   }));
@@ -60,21 +57,23 @@ export function createToggleSliderWidgetContent(widget = {}, {
   const sliderSection = document.createElement("div");
   sliderSection.className = "combined-toggle-slider__slider";
 
-  const value = sliderBinding?.value ?? widget.value ?? 68;
+  const value = widget.value ?? 68;
   const sliderValue = document.createElement("span");
   sliderValue.className = "combined-toggle-slider__slider-value";
   sliderValue.textContent = `${Math.round(Number(value) || 0)}%`;
 
   const sliderOptions = {
     value,
-    min: sliderBinding?.min ?? widget.min ?? 0,
-    max: sliderBinding?.max ?? widget.max ?? 100,
+    min: widget.min ?? 0,
+    max: widget.max ?? 100,
     orientation: "horizontal",
-    disabled: !supportsSlider,
+    disabled: false,
     onInput: (event) => {
       const nextValue = Number(event.currentTarget.value);
       sliderValue.textContent = `${Math.round(nextValue)}%`;
-      if (entityId && sliderBinding) runSliderAction(hass, entityState, nextValue);
+      if (entityId && context.sliderBinding) {
+        runSliderAction(context.hass, context.entityState, nextValue);
+      }
       onSliderInput?.(nextValue, widget, event);
     },
   };
@@ -91,5 +90,50 @@ export function createToggleSliderWidgetContent(widget = {}, {
 
   sliderSection.append(sliderValue, slider, slider2);
   root.append(toggleSection, sliderSection);
+
+  root.__mhaUpdateFromHass = (nextHass) => {
+    context.hass = nextHass;
+    context.entityState = getEntityState(nextHass, widget);
+    context.sliderBinding = getSliderBinding(context.entityState);
+
+    const hasEntity = Boolean(context.entityState);
+    const supportsToggle = widget.supportsToggle
+      ?? (!entityId || (hasEntity && supportsToggleEntity(context.entityState)));
+    const supportsSlider = widget.supportsSlider
+      ?? (!entityId || Boolean(context.sliderBinding));
+    const checked = hasEntity ? isToggleEntityOn(context.entityState) : Boolean(widget.checked);
+    const nextValue = context.sliderBinding?.value ?? widget.value ?? 68;
+
+    root.dataset.toggleSupported = String(Boolean(supportsToggle));
+    root.dataset.sliderSupported = String(Boolean(supportsSlider));
+
+    const toggleRoot = toggleSection.querySelector(".mha-toggle-widget");
+    const toggleInput = toggleSection.querySelector(".mha-toggle-input");
+    const toggleState = toggleSection.querySelector(".mha-toggle-widget-state");
+    if (toggleRoot) toggleRoot.dataset.checked = String(checked);
+    if (toggleInput) {
+      toggleInput.checked = checked;
+      toggleInput.disabled = !supportsToggle;
+    }
+    if (toggleState) {
+      toggleState.textContent = checked
+        ? widget.stateOn || "Activé"
+        : widget.stateOff || "Désactivé";
+    }
+
+    const isSliderDragging = [slider, slider2]
+      .some((control) => control.classList.contains("is-slider-dragging"));
+    if (!isSliderDragging) {
+      sliderValue.textContent = `${Math.round(Number(nextValue) || 0)}%`;
+    }
+    [slider, slider2].forEach((control) => {
+      control.__mhaSliderApi?.setDisabled(!supportsSlider);
+      if (!isSliderDragging) {
+        control.__mhaSliderApi?.setValue(nextValue);
+      }
+    });
+  };
+
+  root.__mhaUpdateFromHass(hass);
   return root;
 }
