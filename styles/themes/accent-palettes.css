@@ -77,6 +77,38 @@
     0 12px 30px color-mix(in srgb, var(--mha-accent) 26%, transparent);
 }
 
+/* iOS variants separate app/dock icon personality:
+ * - Frosted keeps the saturated, colorful app-icon treatment above.
+ * - Liquid makes dock icons read as translucent glass objects instead of
+ *   opaque accent tiles.
+ */
+:host([data-theme-style="ios"][data-ios-glass="liquid"]) {
+  --mha-system-icon-bg:
+    linear-gradient(145deg,
+      color-mix(in srgb, rgba(255,255,255,.58) 58%, var(--mha-accent) 14%),
+      color-mix(in srgb, rgba(255,255,255,.16) 72%, var(--mha-accent) 8%) 48%,
+      rgba(255,255,255,.07));
+  --mha-system-icon-color: rgba(255,255,255,.94);
+  --mha-system-icon-border: rgba(255,255,255,.48);
+  --mha-system-icon-shadow:
+    inset 0 1px 0 rgba(255,255,255,.58),
+    inset 0 -1px 0 rgba(255,255,255,.14),
+    0 14px 32px rgba(32,52,92,.16);
+}
+
+:host([data-theme-style="ios"][data-ios-glass="liquid"][data-theme="light"]) {
+  --mha-system-icon-bg:
+    linear-gradient(145deg,
+      color-mix(in srgb, rgba(255,255,255,.72) 70%, var(--mha-accent) 10%),
+      color-mix(in srgb, rgba(255,255,255,.24) 76%, var(--mha-accent) 8%) 52%,
+      rgba(255,255,255,.10));
+  --mha-system-icon-border: rgba(255,255,255,.72);
+  --mha-system-icon-shadow:
+    inset 0 1px 0 rgba(255,255,255,.82),
+    inset 0 -1px 0 rgba(255,255,255,.18),
+    0 12px 28px rgba(78,100,145,.14);
+}
+
 :host([data-theme-style="oneui"]) {
   --mha-system-icon-bg: var(--mha-accent);
   --mha-system-icon-color: var(--mha-accent-contrast);
@@ -93,11 +125,24 @@
   --mha-system-icon-shadow: 0 4px 14px rgba(0,0,0,.10);
 }
 
-/* Apply accent to system icon containers only. */
-.mha-dock .mha-icon,
-.mha-mobile-dock-launcher > .mha-icon,
-.mha-mobile-dock-item > .mha-icon,
+/* Apply accent to dock/app icon containers only.
+ * System buttons own their own tokens and must not inherit Material/iOS/OneUI
+ * icon accent containers through their internal .mha-system-icon.
+ */
+.mha-dock .mha-icon:not(.mha-system-icon),
+.mha-mobile-dock-launcher > .mha-icon:not(.mha-system-icon),
+.mha-mobile-dock-item > .mha-icon:not(.mha-system-icon),
 .mha-edit-button {
+  background: var(--mha-system-icon-bg);
+  color: var(--mha-system-icon-color);
+  border-color: var(--mha-system-icon-border);
+  box-shadow: var(--mha-system-icon-shadow);
+}
+
+/* iOS page creator icon choices use the same app-icon personality as the
+ * dock: Frosted stays colorful, Liquid uses the translucent glass token set.
+ */
+:host([data-theme-style="ios"]) .mha-page-creator-icon > .mha-icon:not(.mha-system-icon) {
   background: var(--mha-system-icon-bg);
   color: var(--mha-system-icon-color);
   border-color: var(--mha-system-icon-border);

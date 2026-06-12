@@ -1030,9 +1030,9 @@
   cursor: pointer;
 }
 
-.mha-settings-nav-tile .mha-icon,
-.mha-settings-dock-row .mha-icon,
-.mha-settings-icon-option .mha-icon {
+.mha-settings-nav-tile .mha-icon:not(.mha-system-icon),
+.mha-settings-dock-row .mha-icon:not(.mha-system-icon),
+.mha-settings-icon-option .mha-icon:not(.mha-system-icon) {
   --mha-icon-size: 2.35rem;
   --mha-icon-glyph-size: 54%;
   flex: 0 0 auto;
@@ -1159,49 +1159,26 @@
   white-space: nowrap;
 }
 
-/* System back buttons are intentionally theme-independent: white surface, black arrow. */
-.mha-system-button--back,
-.mha-system-button--back.mha-system-button,
-.mha-widget-manager-back.mha-system-button,
-.mha-settings-back.mha-system-button {
-  inline-size: 2.4rem !important;
-  block-size: 2.4rem !important;
-  min-inline-size: 2.4rem !important;
-  min-block-size: 2.4rem !important;
-  padding: 0 !important;
-  border: 0 !important;
-  background: #fff !important;
-  color: #000 !important;
-  box-shadow: 0 8px 18px rgba(0,0,0,.14) !important;
+:host([data-theme-style="ios"][data-theme="light"]) .mha-settings-dock-row,
+:host([data-theme-style="ios"][data-theme="light"]) .mha-settings-dock-row-text,
+:host([data-theme-style="ios"][data-theme="light"]) .mha-settings-dock-row-text strong,
+:host([data-theme-style="ios"][data-theme="light"]) .mha-settings-dock-row-text small,
+:host([data-theme-style="ios"][data-theme="light"]) .mha-settings-dock-editor,
+:host([data-theme-style="ios"][data-theme="light"]) .mha-settings-icon-option,
+:host([data-theme-style="ios"][data-theme="light"]) .mha-settings-icon-option span {
+  color: #000;
 }
 
-.mha-system-button--back .mha-icon,
-.mha-system-button--back.mha-system-button .mha-icon,
-.mha-widget-manager-back.mha-system-button .mha-icon,
-.mha-settings-back.mha-system-button .mha-icon {
-  --mha-icon-size: 1.26rem !important;
-  --mha-icon-bg: transparent !important;
-  --mha-icon-color: #000 !important;
-  --mha-icon-border: transparent !important;
-  --mha-icon-shadow: none !important;
-  inline-size: 1.26rem !important;
-  block-size: 1.26rem !important;
-  background: transparent !important;
-  color: #000 !important;
-  border-color: transparent !important;
-  box-shadow: none !important;
-}
 
-.mha-system-button--back .mha-icon-symbol,
-.mha-system-button--back .mha-icon-symbol svg,
-.mha-system-button--back .mha-icon-symbol path,
-.mha-widget-manager-back.mha-system-button .mha-icon-symbol,
-.mha-widget-manager-back.mha-system-button .mha-icon-symbol svg,
-.mha-widget-manager-back.mha-system-button .mha-icon-symbol path,
-.mha-settings-back.mha-system-button .mha-icon-symbol,
-.mha-settings-back.mha-system-button .mha-icon-symbol svg,
-.mha-settings-back.mha-system-button .mha-icon-symbol path {
-  color: #000 !important;
-  fill: currentColor !important;
-  stroke: none !important;
+
+/* iOS Frosted: settings navigation and Dock Manager page icons borrow the
+ * colorful dock/app icon treatment. Liquid intentionally stays glassier.
+ */
+:host([data-theme-style="ios"][data-ios-glass="frosted"]) button.mha-settings-nav-tile > .mha-icon:not(.mha-system-icon),
+:host([data-theme-style="ios"][data-ios-glass="frosted"]) button.mha-setting-nav-tile > .mha-icon:not(.mha-system-icon),
+:host([data-theme-style="ios"][data-ios-glass="frosted"]) div.mha-settings-dock-row > .mha-icon:not(.mha-system-icon) {
+  background: var(--mha-system-icon-bg);
+  color: var(--mha-system-icon-color);
+  border-color: var(--mha-system-icon-border);
+  box-shadow: var(--mha-system-icon-shadow);
 }

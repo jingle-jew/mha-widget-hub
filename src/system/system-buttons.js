@@ -37,6 +37,7 @@ export function createSystemIconButton({
     name: systemIconName,
     category: "system",
     label,
+    className: "mha-system-icon",
     children: createSystemIconSymbol({ name: systemIconName, label }),
   }));
 

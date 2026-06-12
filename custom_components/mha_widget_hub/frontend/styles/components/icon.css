@@ -201,42 +201,42 @@
 /* Local per-symbol color slots.
  * These are generic and based on order, so any icon library symbol can use them.
  */
-:host([data-theme-style="oneui"]) .mha-icon:nth-of-type(8n + 1) { --mha-icon-bg: var(--mha-icon-oneui-bg-1); }
-:host([data-theme-style="oneui"]) .mha-icon:nth-of-type(8n + 2) { --mha-icon-bg: var(--mha-icon-oneui-bg-2); }
-:host([data-theme-style="oneui"]) .mha-icon:nth-of-type(8n + 3) { --mha-icon-bg: var(--mha-icon-oneui-bg-3); }
-:host([data-theme-style="oneui"]) .mha-icon:nth-of-type(8n + 4) { --mha-icon-bg: var(--mha-icon-oneui-bg-4); }
-:host([data-theme-style="oneui"]) .mha-icon:nth-of-type(8n + 5) { --mha-icon-bg: var(--mha-icon-oneui-bg-5); }
-:host([data-theme-style="oneui"]) .mha-icon:nth-of-type(8n + 6) { --mha-icon-bg: var(--mha-icon-oneui-bg-6); }
-:host([data-theme-style="oneui"]) .mha-icon:nth-of-type(8n + 7) { --mha-icon-bg: var(--mha-icon-oneui-bg-7); }
-:host([data-theme-style="oneui"]) .mha-icon:nth-of-type(8n + 8) { --mha-icon-bg: var(--mha-icon-oneui-bg-8); }
+:host([data-theme-style="oneui"]) .mha-icon:not(.mha-system-icon):nth-of-type(8n + 1) { --mha-icon-bg: var(--mha-icon-oneui-bg-1); }
+:host([data-theme-style="oneui"]) .mha-icon:not(.mha-system-icon):nth-of-type(8n + 2) { --mha-icon-bg: var(--mha-icon-oneui-bg-2); }
+:host([data-theme-style="oneui"]) .mha-icon:not(.mha-system-icon):nth-of-type(8n + 3) { --mha-icon-bg: var(--mha-icon-oneui-bg-3); }
+:host([data-theme-style="oneui"]) .mha-icon:not(.mha-system-icon):nth-of-type(8n + 4) { --mha-icon-bg: var(--mha-icon-oneui-bg-4); }
+:host([data-theme-style="oneui"]) .mha-icon:not(.mha-system-icon):nth-of-type(8n + 5) { --mha-icon-bg: var(--mha-icon-oneui-bg-5); }
+:host([data-theme-style="oneui"]) .mha-icon:not(.mha-system-icon):nth-of-type(8n + 6) { --mha-icon-bg: var(--mha-icon-oneui-bg-6); }
+:host([data-theme-style="oneui"]) .mha-icon:not(.mha-system-icon):nth-of-type(8n + 7) { --mha-icon-bg: var(--mha-icon-oneui-bg-7); }
+:host([data-theme-style="oneui"]) .mha-icon:not(.mha-system-icon):nth-of-type(8n + 8) { --mha-icon-bg: var(--mha-icon-oneui-bg-8); }
 
-:host([data-theme-style="material"]) .mha-icon:nth-of-type(8n + 1) { --mha-icon-color: var(--mha-material-you-symbol-1); }
-:host([data-theme-style="material"]) .mha-icon:nth-of-type(8n + 2) { --mha-icon-color: var(--mha-material-you-symbol-2); }
-:host([data-theme-style="material"]) .mha-icon:nth-of-type(8n + 3) { --mha-icon-color: var(--mha-material-you-symbol-3); }
-:host([data-theme-style="material"]) .mha-icon:nth-of-type(8n + 4) { --mha-icon-color: var(--mha-material-you-symbol-4); }
-:host([data-theme-style="material"]) .mha-icon:nth-of-type(8n + 5) { --mha-icon-color: var(--mha-material-you-symbol-5); }
-:host([data-theme-style="material"]) .mha-icon:nth-of-type(8n + 6) { --mha-icon-color: var(--mha-material-you-symbol-6); }
-:host([data-theme-style="material"]) .mha-icon:nth-of-type(8n + 7) { --mha-icon-color: var(--mha-material-you-symbol-7); }
-:host([data-theme-style="material"]) .mha-icon:nth-of-type(8n + 8) { --mha-icon-color: var(--mha-material-you-symbol-8); }
+:host([data-theme-style="material"]) .mha-icon:not(.mha-system-icon):nth-of-type(8n + 1) { --mha-icon-color: var(--mha-material-you-symbol-1); }
+:host([data-theme-style="material"]) .mha-icon:not(.mha-system-icon):nth-of-type(8n + 2) { --mha-icon-color: var(--mha-material-you-symbol-2); }
+:host([data-theme-style="material"]) .mha-icon:not(.mha-system-icon):nth-of-type(8n + 3) { --mha-icon-color: var(--mha-material-you-symbol-3); }
+:host([data-theme-style="material"]) .mha-icon:not(.mha-system-icon):nth-of-type(8n + 4) { --mha-icon-color: var(--mha-material-you-symbol-4); }
+:host([data-theme-style="material"]) .mha-icon:not(.mha-system-icon):nth-of-type(8n + 5) { --mha-icon-color: var(--mha-material-you-symbol-5); }
+:host([data-theme-style="material"]) .mha-icon:not(.mha-system-icon):nth-of-type(8n + 6) { --mha-icon-color: var(--mha-material-you-symbol-6); }
+:host([data-theme-style="material"]) .mha-icon:not(.mha-system-icon):nth-of-type(8n + 7) { --mha-icon-color: var(--mha-material-you-symbol-7); }
+:host([data-theme-style="material"]) .mha-icon:not(.mha-system-icon):nth-of-type(8n + 8) { --mha-icon-color: var(--mha-material-you-symbol-8); }
 
 /* Category hints for semantic tinting.
  * These remain local to the icon component and do not affect icon shape.
  */
-:host([data-theme-style="oneui"]) .mha-icon[data-icon-category="lighting"] { --mha-icon-bg: #ffd36e; }
-:host([data-theme-style="oneui"]) .mha-icon[data-icon-category="climate"] { --mha-icon-bg: #8edcff; }
-:host([data-theme-style="oneui"]) .mha-icon[data-icon-category="media_player"] { --mha-icon-bg: #b7a0ff; }
-:host([data-theme-style="oneui"]) .mha-icon[data-icon-category="security"] { --mha-icon-bg: #ff9ba8; }
-:host([data-theme-style="oneui"]) .mha-icon[data-icon-category="network"] { --mha-icon-bg: #8de8ef; }
-:host([data-theme-style="oneui"]) .mha-icon[data-icon-category="energy"] { --mha-icon-bg: #9ee58f; }
-:host([data-theme-style="oneui"]) .mha-icon[data-icon-category="system"] { --mha-icon-bg: #c8d1dc; }
+:host([data-theme-style="oneui"]) .mha-icon:not(.mha-system-icon)[data-icon-category="lighting"] { --mha-icon-bg: #ffd36e; }
+:host([data-theme-style="oneui"]) .mha-icon:not(.mha-system-icon)[data-icon-category="climate"] { --mha-icon-bg: #8edcff; }
+:host([data-theme-style="oneui"]) .mha-icon:not(.mha-system-icon)[data-icon-category="media_player"] { --mha-icon-bg: #b7a0ff; }
+:host([data-theme-style="oneui"]) .mha-icon:not(.mha-system-icon)[data-icon-category="security"] { --mha-icon-bg: #ff9ba8; }
+:host([data-theme-style="oneui"]) .mha-icon:not(.mha-system-icon)[data-icon-category="network"] { --mha-icon-bg: #8de8ef; }
+:host([data-theme-style="oneui"]) .mha-icon:not(.mha-system-icon)[data-icon-category="energy"] { --mha-icon-bg: #9ee58f; }
+:host([data-theme-style="oneui"]) .mha-icon:not(.mha-system-icon)[data-icon-category="system"] { --mha-icon-bg: #c8d1dc; }
 
-:host([data-theme-style="material"]) .mha-icon[data-icon-category="lighting"] { --mha-icon-color: #8c5000; }
-:host([data-theme-style="material"]) .mha-icon[data-icon-category="climate"] { --mha-icon-color: #006874; }
-:host([data-theme-style="material"]) .mha-icon[data-icon-category="media_player"] { --mha-icon-color: #6750a4; }
-:host([data-theme-style="material"]) .mha-icon[data-icon-category="security"] { --mha-icon-color: #984061; }
-:host([data-theme-style="material"]) .mha-icon[data-icon-category="network"] { --mha-icon-color: #006a6a; }
-:host([data-theme-style="material"]) .mha-icon[data-icon-category="energy"] { --mha-icon-color: #386a20; }
-:host([data-theme-style="material"]) .mha-icon[data-icon-category="system"] { --mha-icon-color: #625b71; }
+:host([data-theme-style="material"]) .mha-icon:not(.mha-system-icon)[data-icon-category="lighting"] { --mha-icon-color: #8c5000; }
+:host([data-theme-style="material"]) .mha-icon:not(.mha-system-icon)[data-icon-category="climate"] { --mha-icon-color: #006874; }
+:host([data-theme-style="material"]) .mha-icon:not(.mha-system-icon)[data-icon-category="media_player"] { --mha-icon-color: #6750a4; }
+:host([data-theme-style="material"]) .mha-icon:not(.mha-system-icon)[data-icon-category="security"] { --mha-icon-color: #984061; }
+:host([data-theme-style="material"]) .mha-icon:not(.mha-system-icon)[data-icon-category="network"] { --mha-icon-color: #006a6a; }
+:host([data-theme-style="material"]) .mha-icon:not(.mha-system-icon)[data-icon-category="energy"] { --mha-icon-color: #386a20; }
+:host([data-theme-style="material"]) .mha-icon:not(.mha-system-icon)[data-icon-category="system"] { --mha-icon-color: #625b71; }
 
 /* Ensure the actual icon shell consumes the active theme-bound tokens. */
 .mha-icon {
@@ -251,7 +251,7 @@
  * Squircle uses a mask, so it intentionally avoids regular borders.
  * A soft inset highlight can be added later with a mask-aware pseudo-layer.
  */
-:host([data-icon-shape="squircle"]) .mha-icon {
+:host([data-icon-shape="squircle"]) .mha-icon:not(.mha-system-icon) {
   box-shadow:
     var(--mha-icon-shadow),
     inset 0 1px 0 rgba(255,255,255,.10);
@@ -261,11 +261,11 @@
  * Dock uses widget surface through material.css.
  * Icons must remain a distinct Material You tonal container.
  */
-:host([data-theme-style="material"]) .mha-icon {
+:host([data-theme-style="material"]) .mha-icon:not(.mha-system-icon) {
   background: var(--mha-material-you-icon-container, rgba(232, 222, 248, .98));
 }
 
-:host([data-theme-style="material"][data-theme="dark"]) .mha-icon {
+:host([data-theme-style="material"][data-theme="dark"]) .mha-icon:not(.mha-system-icon) {
   background: var(--mha-material-you-icon-container, rgba(74, 68, 88, .96));
 }
 
@@ -298,13 +298,13 @@
  * Contexts may override size, surface, color, glyph size, or shadow.
  * Contexts must not own icon shape.
  */
-:host([data-icon-shape="rounded-square"]) .mha-icon {
+:host([data-icon-shape="rounded-square"]) .mha-icon:not(.mha-system-icon) {
   border-radius: var(--mha-icon-radius-rounded-square);
   -webkit-mask-image: none;
   mask-image: none;
 }
 
-:host([data-icon-shape="squircle"]) .mha-icon {
+:host([data-icon-shape="squircle"]) .mha-icon:not(.mha-system-icon) {
   /*
    * Squircle uses the SVG mask for a true superellipse-like shape.
    * The normal border is disabled because a CSS border does not follow the
@@ -323,7 +323,7 @@
   mask-position: center;
 }
 
-:host([data-icon-shape="circle"]) .mha-icon {
+:host([data-icon-shape="circle"]) .mha-icon:not(.mha-system-icon) {
   border-radius: var(--mha-icon-border-radius-circle);
   -webkit-mask-image: none;
   mask-image: none;
@@ -348,23 +348,23 @@
  * that mask, otherwise Safari can keep a stale squircle cutout over the new
  * radius and create clipped/border artifacts.
  */
-:host([data-icon-shape="rounded-square"]) .mha-icon,
-:host([data-icon-shape="circle"]) .mha-icon {
-  -webkit-mask-image: none !important;
-  mask-image: none !important;
-  -webkit-mask-size: auto !important;
-  mask-size: auto !important;
+:host([data-icon-shape="rounded-square"]) .mha-icon:not(.mha-system-icon),
+:host([data-icon-shape="circle"]) .mha-icon:not(.mha-system-icon) {
+  -webkit-mask-image: none;
+  mask-image: none;
+  -webkit-mask-size: auto;
+  mask-size: auto;
 }
 
-:host([data-icon-shape="rounded-square"]) .mha-icon {
+:host([data-icon-shape="rounded-square"]) .mha-icon:not(.mha-system-icon) {
   border-radius: var(--mha-icon-radius-rounded-square, 32%);
 }
 
-:host([data-icon-shape="circle"]) .mha-icon {
+:host([data-icon-shape="circle"]) .mha-icon:not(.mha-system-icon) {
   border-radius: var(--mha-icon-border-radius-circle, 999px);
 }
 
-:host([data-icon-shape="squircle"]) .mha-icon {
+:host([data-icon-shape="squircle"]) .mha-icon:not(.mha-system-icon) {
   border-radius: 0;
   -webkit-mask-image: var(--mha-icon-squircle-mask);
   mask-image: var(--mha-icon-squircle-mask);
@@ -379,25 +379,25 @@
  * effective shape explicitly removes masks, including possible stale WebKit
  * mask state after settings changes.
  */
-:host(:not([data-icon-shape="squircle"])) .mha-icon {
-  -webkit-mask: none !important;
-  mask: none !important;
-  -webkit-mask-image: none !important;
-  mask-image: none !important;
+:host(:not([data-icon-shape="squircle"])) .mha-icon:not(.mha-system-icon) {
+  -webkit-mask: none;
+  mask: none;
+  -webkit-mask-image: none;
+  mask-image: none;
 }
 
-:host([data-icon-shape="rounded-square"]) .mha-icon {
-  border-radius: var(--mha-icon-radius-rounded-square, 32%) !important;
+:host([data-icon-shape="rounded-square"]) .mha-icon:not(.mha-system-icon) {
+  border-radius: var(--mha-icon-radius-rounded-square, 32%);
 }
 
-:host([data-icon-shape="circle"]) .mha-icon {
-  border-radius: var(--mha-icon-border-radius-circle, 999px) !important;
+:host([data-icon-shape="circle"]) .mha-icon:not(.mha-system-icon) {
+  border-radius: var(--mha-icon-border-radius-circle, 999px);
 }
 
-:host([data-icon-shape="squircle"]) .mha-icon {
-  border-radius: 0 !important;
-  -webkit-mask-image: var(--mha-icon-squircle-mask) !important;
-  mask-image: var(--mha-icon-squircle-mask) !important;
-  -webkit-mask-size: 100% 100% !important;
-  mask-size: 100% 100% !important;
+:host([data-icon-shape="squircle"]) .mha-icon:not(.mha-system-icon) {
+  border-radius: 0;
+  -webkit-mask-image: var(--mha-icon-squircle-mask);
+  mask-image: var(--mha-icon-squircle-mask);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
 }
