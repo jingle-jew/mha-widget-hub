@@ -1,4 +1,4 @@
-import { createBackButton } from "../system/system-buttons.js";
+import { createBackButton, createCloseButton } from "../system/system-buttons.js";
 export { WIDGET_VARIANTS, getWidgetVariants, getNextWidgetVariantEntries } from "../widgets/widget-variants.js";
 
 const FRONTEND_ROOT_URL = new URL("../../", import.meta.url);
@@ -487,12 +487,11 @@ export function createWidgetManager({open=false,activeCategory="",categories=WID
     });
     actions.append(back);
   }
-  const close = document.createElement("button");
-  close.className = "mha-settings-close";
-  close.type = "button";
-  close.setAttribute("aria-label", "Fermer");
-  close.textContent = "×";
-  close.addEventListener("click", () => onClose?.());
+  const close = createCloseButton({
+    label: "Fermer",
+    className: "mha-settings-close",
+    onClick: () => onClose?.(),
+  });
   actions.append(close);
   header.append(title, actions);
   const body = document.createElement("div");

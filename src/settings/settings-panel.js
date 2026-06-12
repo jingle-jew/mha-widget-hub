@@ -2,7 +2,7 @@ import { getAccentOptions, normalizeAccent } from "./accent-palettes.js";
 import { createToggle } from "../ui/toggle.js";
 import { createIcon } from "../ui/icon.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
-import { createBackButton, createMoveUpButton, createMoveDownButton, createRemoveButton } from "../system/system-buttons.js";
+import { createBackButton, createCloseButton, createMoveUpButton, createMoveDownButton, createRemoveButton } from "../system/system-buttons.js";
 /*
  * MHA Settings panel.
  *
@@ -378,12 +378,11 @@ export function createSettingsPanel({
 
   title.append(eyebrow, h2);
 
-  const close = document.createElement("button");
-  close.className = "mha-settings-close";
-  close.type = "button";
-  close.setAttribute("aria-label", "Fermer");
-  close.textContent = "×";
-  close.addEventListener("click", () => onClose?.());
+  const close = createCloseButton({
+    label: "Fermer",
+    className: "mha-settings-close",
+    onClick: () => onClose?.(),
+  });
 
   const headerActions = document.createElement("div");
   headerActions.className = "mha-settings-header-actions";

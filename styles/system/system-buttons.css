@@ -165,3 +165,70 @@
   fill: currentColor !important;
   stroke: none !important;
 }
+
+
+/* System X buttons are danger controls, not accent/theme icon buttons.
+ * Keep the existing MHA red, force a white larger X, and ignore icon shape/accent tokens.
+ */
+.mha-system-button--close.mha-system-button--danger,
+.mha-system-button--remove.mha-system-button--danger {
+  inline-size: 2.4rem;
+  block-size: 2.4rem;
+  min-inline-size: 2.4rem;
+  min-block-size: 2.4rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: #ff3b30;
+  color: #fff;
+  box-shadow: 0 10px 22px rgba(255, 59, 48, .28);
+}
+
+.mha-system-button--close.mha-system-button--danger:not(:disabled):hover,
+.mha-system-button--close.mha-system-button--danger:not(:disabled):focus-visible,
+.mha-system-button--remove.mha-system-button--danger:not(:disabled):hover,
+.mha-system-button--remove.mha-system-button--danger:not(:disabled):focus-visible {
+  border-color: transparent;
+  background: #ff453a;
+  color: #fff;
+}
+
+.mha-system-button--close.mha-system-button--danger .mha-icon,
+.mha-system-button--remove.mha-system-button--danger .mha-icon {
+  --mha-icon-size: 1.52rem;
+  --mha-icon-bg: transparent;
+  --mha-icon-border: transparent;
+  --mha-icon-color: #fff;
+  --mha-icon-shadow: none;
+  inline-size: 1.52rem;
+  block-size: 1.52rem;
+  color: #fff;
+  background: transparent;
+  border-color: transparent;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.mha-system-button--close.mha-system-button--danger .mha-icon-symbol,
+.mha-system-button--close.mha-system-button--danger .mha-icon-symbol svg,
+.mha-system-button--close.mha-system-button--danger .mha-icon-symbol path,
+.mha-system-button--remove.mha-system-button--danger .mha-icon-symbol,
+.mha-system-button--remove.mha-system-button--danger .mha-icon-symbol svg,
+.mha-system-button--remove.mha-system-button--danger .mha-icon-symbol path {
+  color: #fff;
+  fill: currentColor;
+  stroke: none;
+}
+
+.mha-system-button--sm.mha-system-button--remove.mha-system-button--danger {
+  inline-size: 2rem;
+  block-size: 2rem;
+  min-inline-size: 2rem;
+  min-block-size: 2rem;
+}
+
+.mha-system-button--sm.mha-system-button--remove.mha-system-button--danger .mha-icon {
+  --mha-icon-size: 1.22rem;
+  inline-size: 1.22rem;
+  block-size: 1.22rem;
+}
