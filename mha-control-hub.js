@@ -1,6 +1,7 @@
 import {readJson,writeJson} from "./src/core/storage.js";
 import {ICONS} from "./src/components/icons.js";
 import {createShell} from "./src/layout/shell.js";
+import {createDock} from "./src/layout/dock.js";
 import {createMobileDock} from "./src/layout/mobile-dock.js";
 import {createSettingsPanel} from "./src/settings/settings-panel.js";
 import {createWidgetManager, WIDGET_MANAGER_CATEGORIES} from "./src/widget-manager/widget-manager.js";
@@ -812,6 +813,7 @@ toggleEditMode(){
   }
 
   this._syncEditModeDom();
+  this._syncDocksDom();
   this._syncWidgetDropSlots();
 
   if(wasEditing!==this._isEditing)this._scheduleSquareUnitSync();
@@ -869,7 +871,9 @@ _setActivePage(id){
   localStorage.setItem(ACTIVE_PAGE,id);
   this._widgets=this._readWidgets();
   this._refreshActiveGridOnly();
+  this._syncDocksDom();
 }
+
 _addGridPage(){
   const index=this._pages.length+1;
   const id=`page-${Date.now().toString(36)}-${index}`;
@@ -877,14 +881,37 @@ _addGridPage(){
   this._activePageId=id;
   this._widgets=[];
   this._savePages();
-  this.render();
+  this._syncDocksDom();
+  this._refreshActiveGridOnly();
+  this._syncWidgetDropSlots();
 }
+
 _updateDockActiveState(){
   this.shadowRoot?.querySelectorAll?.("[data-page-id]").forEach(button=>{
     const active=button.dataset.pageId===this._activePageId;
     button.dataset.active=String(active);
     button.setAttribute("aria-current",active?"page":"false");
   });
+}
+_getDockProps(){
+  return {
+    pages:this._pages,
+    activePageId:this._activePageId,
+    isEditing:this._isEditing,
+    onPageSelect:id=>this._setActivePage(id),
+    onAddPage:()=>this._addGridPage(),
+    onSettings:()=>this._openSettings(),
+  };
+}
+_syncDocksDom(){
+  const root=this.shadowRoot;
+  if(!root)return;
+  const props=this._getDockProps();
+  const dock=root.querySelector(".mha-dock");
+  if(dock)dock.replaceWith(createDock(props));
+  const mobileDock=root.querySelector(".mha-mobile-dock");
+  if(mobileDock)mobileDock.replaceWith(createMobileDock(props));
+  this._updateDockActiveState();
 }
 _refreshActiveGridOnly(){
   const grid=this.shadowRoot?.querySelector?.(".mha-grid");
