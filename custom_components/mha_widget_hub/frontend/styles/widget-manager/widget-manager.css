@@ -727,3 +727,78 @@
   background: linear-gradient(145deg, rgba(255,236,219,.24), rgba(255,255,255,.13));
   border-color: rgba(255,236,219,.28);
 }
+
+/* Migrated system back button: keep the old widget-manager class for layout
+ * compatibility, but let the shared system button draw the actual surface.
+ */
+.mha-widget-manager-back.mha-system-button {
+  inline-size: 2.4rem;
+  block-size: 2.4rem;
+  min-inline-size: 2.4rem;
+  min-block-size: 2.4rem;
+  padding: 0;
+  border: 0;
+  background: var(--mha-preview-surface, var(--mha-surface-secondary, rgba(255,255,255,.18)));
+  color: var(--mha-preview-text, var(--mha-text-primary, currentColor));
+  box-shadow: none;
+  font-size: inherit;
+}
+
+.mha-widget-manager-back.mha-system-button .mha-icon {
+  --mha-icon-size: 1.26rem;
+  --mha-icon-bg: transparent;
+  --mha-icon-border: transparent;
+  --mha-icon-shadow: none;
+  inline-size: 1.26rem;
+  block-size: 1.26rem;
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+/* System back buttons are intentionally theme-independent: white surface, black arrow. */
+.mha-system-button--back,
+.mha-system-button--back.mha-system-button,
+.mha-widget-manager-back.mha-system-button,
+.mha-settings-back.mha-system-button {
+  inline-size: 2.4rem !important;
+  block-size: 2.4rem !important;
+  min-inline-size: 2.4rem !important;
+  min-block-size: 2.4rem !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: #fff !important;
+  color: #000 !important;
+  box-shadow: 0 8px 18px rgba(0,0,0,.14) !important;
+}
+
+.mha-system-button--back .mha-icon,
+.mha-system-button--back.mha-system-button .mha-icon,
+.mha-widget-manager-back.mha-system-button .mha-icon,
+.mha-settings-back.mha-system-button .mha-icon {
+  --mha-icon-size: 1.26rem !important;
+  --mha-icon-bg: transparent !important;
+  --mha-icon-color: #000 !important;
+  --mha-icon-border: transparent !important;
+  --mha-icon-shadow: none !important;
+  inline-size: 1.26rem !important;
+  block-size: 1.26rem !important;
+  background: transparent !important;
+  color: #000 !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.mha-system-button--back .mha-icon-symbol,
+.mha-system-button--back .mha-icon-symbol svg,
+.mha-system-button--back .mha-icon-symbol path,
+.mha-widget-manager-back.mha-system-button .mha-icon-symbol,
+.mha-widget-manager-back.mha-system-button .mha-icon-symbol svg,
+.mha-widget-manager-back.mha-system-button .mha-icon-symbol path,
+.mha-settings-back.mha-system-button .mha-icon-symbol,
+.mha-settings-back.mha-system-button .mha-icon-symbol svg,
+.mha-settings-back.mha-system-button .mha-icon-symbol path {
+  color: #000 !important;
+  fill: currentColor !important;
+  stroke: none !important;
+}

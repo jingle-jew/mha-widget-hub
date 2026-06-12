@@ -1,3 +1,4 @@
+import { createBackButton } from "../ui/system-buttons.js";
 export { WIDGET_VARIANTS, getWidgetVariants, getNextWidgetVariantEntries } from "../widgets/widget-variants.js";
 
 const FRONTEND_ROOT_URL = new URL("../../", import.meta.url);
@@ -479,12 +480,11 @@ export function createWidgetManager({open=false,activeCategory="",categories=WID
   const actions = document.createElement("div");
   actions.className = "mha-widget-manager-actions";
   if (selectedCategory) {
-    const back = document.createElement("button");
-    back.className = "mha-widget-manager-back";
-    back.type = "button";
-    back.textContent = "‹";
-    back.setAttribute("aria-label", "Retour aux catégories");
-    back.addEventListener("click", () => onBack?.());
+    const back = createBackButton({
+      label: "Retour aux catégories",
+      className: "mha-widget-manager-back",
+      onClick: () => onBack?.(),
+    });
     actions.append(back);
   }
   const close = document.createElement("button");

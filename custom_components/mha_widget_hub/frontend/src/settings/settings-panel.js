@@ -2,6 +2,7 @@ import { getAccentOptions, normalizeAccent } from "./accent-palettes.js";
 import { createToggle } from "../ui/toggle.js";
 import { createIcon } from "../ui/icon.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
+import { createBackButton, createMoveUpButton, createMoveDownButton, createRemoveButton } from "../ui/system-buttons.js";
 /*
  * MHA Settings panel.
  *
@@ -204,27 +205,24 @@ function createDockPageRow(page, index, pages, { activePageId = "", onSelect, on
 
   const actions = document.createElement("span");
   actions.className = "mha-settings-dock-row-actions";
-  const up = document.createElement("button");
-  up.className = "mha-settings-mini-button";
-  up.type = "button";
-  up.textContent = "↑";
-  up.disabled = index === 0;
-  up.setAttribute("aria-label", `Monter ${page.name || "la page"}`);
-  up.addEventListener("click", (event) => { event.stopPropagation(); onMove?.(page.id, -1); });
-  const down = document.createElement("button");
-  down.className = "mha-settings-mini-button";
-  down.type = "button";
-  down.textContent = "↓";
-  down.disabled = index >= pages.length - 1;
-  down.setAttribute("aria-label", `Descendre ${page.name || "la page"}`);
-  down.addEventListener("click", (event) => { event.stopPropagation(); onMove?.(page.id, 1); });
-  const remove = document.createElement("button");
-  remove.className = "mha-settings-mini-button mha-settings-mini-button-danger";
-  remove.type = "button";
-  remove.textContent = "×";
-  remove.disabled = pages.length <= 1;
-  remove.setAttribute("aria-label", `Supprimer ${page.name || "la page"}`);
-  remove.addEventListener("click", (event) => { event.stopPropagation(); onDelete?.(page.id); });
+  const up = createMoveUpButton({
+    label: `Monter ${page.name || "la page"}`,
+    className: "mha-settings-mini-button",
+    disabled: index === 0,
+    onClick: (event) => { event.stopPropagation(); onMove?.(page.id, -1); },
+  });
+  const down = createMoveDownButton({
+    label: `Descendre ${page.name || "la page"}`,
+    className: "mha-settings-mini-button",
+    disabled: index >= pages.length - 1,
+    onClick: (event) => { event.stopPropagation(); onMove?.(page.id, 1); },
+  });
+  const remove = createRemoveButton({
+    label: `Supprimer ${page.name || "la page"}`,
+    className: "mha-settings-mini-button mha-settings-mini-button-danger",
+    disabled: pages.length <= 1,
+    onClick: (event) => { event.stopPropagation(); onDelete?.(page.id); },
+  });
   actions.append(up, down, remove);
 
   row.append(text, actions);
@@ -243,11 +241,11 @@ function createDockPageEditor({ page, onBack, onRename, onIconChange } = {}) {
   const wrapper = document.createElement("div");
   wrapper.className = "mha-settings-dock-editor";
 
-  const back = document.createElement("button");
-  back.className = "mha-settings-back";
-  back.type = "button";
-  back.textContent = "‹ Dock";
-  back.addEventListener("click", () => onBack?.());
+  const back = createBackButton({
+    label: "Retour au dock",
+    className: "mha-settings-back",
+    onClick: () => onBack?.(),
+  });
 
   const nameField = document.createElement("label");
   nameField.className = "mha-settings-field";
@@ -387,7 +385,19 @@ export function createSettingsPanel({
   close.textContent = "×";
   close.addEventListener("click", () => onClose?.());
 
-  header.append(title, close);
+  const headerActions = document.createElement("div");
+  headerActions.className = "mha-settings-header-actions";
+
+  if (!isScreensaverScope && settingsPage === "dock") {
+    headerActions.append(createBackButton({
+      label: "Retour aux paramètres",
+      className: "mha-settings-back",
+      onClick: () => onDockMainBack?.(),
+    }));
+  }
+
+  headerActions.append(close);
+  header.append(title, headerActions);
 
   const body = document.createElement("div");
   body.className = "mha-settings-body";
@@ -395,12 +405,6 @@ export function createSettingsPanel({
   const sections = [];
 
   if (!isScreensaverScope && settingsPage === "dock") {
-    const back = document.createElement("button");
-    back.className = "mha-settings-back";
-    back.type = "button";
-    back.textContent = "‹ Paramètres";
-    back.addEventListener("click", () => onDockMainBack?.());
-    body.append(back);
     sections.push(createSection("Icônes du dock", [
       createDockSettingsList({
         pages: dockPages,

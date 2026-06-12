@@ -482,17 +482,9 @@
   line-height: 1.1;
 }
 
-.mha-page-creator-close {
-  inline-size: 2.25rem;
-  block-size: 2.25rem;
-  border: 0;
-  border-radius: 999px;
-  display: grid;
-  place-items: center;
-  background: color-mix(in srgb, var(--mha-text-primary, #fff) 12%, transparent);
-  color: var(--mha-text-primary, #fff);
-  font-size: 1.4rem;
-  cursor: pointer;
+.mha-page-creator-close.mha-system-button {
+  inline-size: 2.4rem;
+  block-size: 2.4rem;
 }
 
 .mha-page-creator-hint {

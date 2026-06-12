@@ -14,6 +14,7 @@ import {DEFAULT_WIDGETS,getActiveGridRows,getActiveGridUnits,getEffectiveLayout,
 import {createScreensaver,normalizeClockVariant,updateScreensaverClock} from "./src/screensaver/screensaver.js";
 import { createIcon } from "./src/ui/icon.js";
 import { createIconSymbol } from "./src/ui/icon-symbol.js";
+import { createCloseButton } from "./src/ui/system-buttons.js";
 
 const MHA_FRONTEND_ROOT_URL = new URL(".", import.meta.url);
 
@@ -25,6 +26,7 @@ const MHA_STYLE_PATHS = [
   "styles/components/toggle.css",
   "styles/components/pill.css",
   "styles/components/button.css",
+  "styles/components/system-buttons.css",
   "styles/themes/ios.css",
   "styles/themes/oneui.css",
   "styles/themes/material.css",
@@ -1034,12 +1036,11 @@ _createPageCreatorPanel(){
   header.className="mha-page-creator-header";
   const title=document.createElement("h2");
   title.textContent="Nouvelle page";
-  const close=document.createElement("button");
-  close.className="mha-page-creator-close";
-  close.type="button";
-  close.textContent="×";
-  close.setAttribute("aria-label","Fermer");
-  close.onclick=()=>this._closePageCreator();
+  const close=createCloseButton({
+    label:"Fermer",
+    className:"mha-page-creator-close",
+    onClick:()=>this._closePageCreator(),
+  });
   header.append(title,close);
 
   const hint=document.createElement("p");

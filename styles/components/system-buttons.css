@@ -1,0 +1,167 @@
+/* Shared system controls: back, close, arrows, delete, add, edit. */
+.mha-system-button {
+  appearance: none;
+  inline-size: 2.4rem;
+  block-size: 2.4rem;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border: 1px solid var(--mha-preview-border, var(--mha-border-secondary, rgba(255,255,255,.18)));
+  border-radius: 999px;
+  background: var(--mha-preview-surface, color-mix(in srgb, var(--mha-surface-glass, rgba(255,255,255,.12)) 70%, transparent));
+  color: var(--mha-preview-text, var(--mha-text-primary, currentColor));
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, currentColor 8%, transparent),
+    0 6px 16px rgba(0,0,0,.10);
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    transform 160ms cubic-bezier(.2,.8,.2,1),
+    background 160ms ease,
+    border-color 160ms ease,
+    opacity 160ms ease;
+}
+
+.mha-system-button .mha-icon {
+  --mha-icon-size: 1.22rem;
+  --mha-icon-bg: transparent;
+  --mha-icon-border: transparent;
+  --mha-icon-shadow: none;
+  inline-size: 1.22rem;
+  block-size: 1.22rem;
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.mha-system-button--sm {
+  inline-size: 2rem;
+  block-size: 2rem;
+}
+
+.mha-system-button--sm .mha-icon {
+  inline-size: 1.02rem;
+  block-size: 1.02rem;
+}
+
+.mha-system-button:not(:disabled):hover,
+.mha-system-button:not(:disabled):focus-visible {
+  transform: translateY(-1px);
+  border-color: var(--mha-preview-border-hover, color-mix(in srgb, currentColor 24%, transparent));
+  outline: none;
+}
+
+.mha-system-button:disabled {
+  opacity: .28;
+  cursor: default;
+  transform: none;
+}
+
+.mha-system-button--danger {
+  color: color-mix(in srgb, #ff4d67 82%, var(--mha-preview-text, var(--mha-text-primary, currentColor)));
+}
+
+.mha-system-button--danger:not(:disabled) {
+  border-color: color-mix(in srgb, #ff4d67 42%, transparent);
+}
+
+.mha-system-button--close.mha-system-button--danger {
+  border-color: transparent;
+  background: #ff3b30;
+  color: #fff;
+  box-shadow: 0 10px 22px rgba(255, 59, 48, .28);
+}
+
+.mha-system-button--close.mha-system-button--danger:not(:disabled):hover,
+.mha-system-button--close.mha-system-button--danger:not(:disabled):focus-visible {
+  border-color: transparent;
+  background: #ff453a;
+}
+
+.mha-system-button--back .mha-icon {
+  inline-size: 1.28rem;
+  block-size: 1.28rem;
+}
+
+.mha-system-button--close .mha-icon {
+  inline-size: 1.12rem;
+  block-size: 1.12rem;
+}
+
+/* Header system buttons should render as one full-size surface.
+ * When a migrated button keeps an old feature-specific class (for example
+ * .mha-widget-manager-back), prevent that legacy class from drawing a second
+ * inner icon bubble or a dark outer ring.
+ */
+.mha-system-button--back,
+.mha-widget-manager-back.mha-system-button {
+  inline-size: 2.4rem;
+  block-size: 2.4rem;
+  min-inline-size: 2.4rem;
+  min-block-size: 2.4rem;
+  padding: 0;
+  border: 0;
+  background: #fff;
+  color: #2f2840;
+  box-shadow: 0 8px 18px rgba(0,0,0,.14);
+}
+
+.mha-system-button--back .mha-icon,
+.mha-widget-manager-back.mha-system-button .mha-icon {
+  --mha-icon-size: 1.26rem;
+  --mha-icon-bg: transparent;
+  --mha-icon-border: transparent;
+  inline-size: 1.26rem;
+  block-size: 1.26rem;
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+/* System back buttons are intentionally theme-independent: white surface, black arrow. */
+.mha-system-button--back,
+.mha-system-button--back.mha-system-button,
+.mha-widget-manager-back.mha-system-button,
+.mha-settings-back.mha-system-button {
+  inline-size: 2.4rem !important;
+  block-size: 2.4rem !important;
+  min-inline-size: 2.4rem !important;
+  min-block-size: 2.4rem !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: #fff !important;
+  color: #000 !important;
+  box-shadow: 0 8px 18px rgba(0,0,0,.14) !important;
+}
+
+.mha-system-button--back .mha-icon,
+.mha-system-button--back.mha-system-button .mha-icon,
+.mha-widget-manager-back.mha-system-button .mha-icon,
+.mha-settings-back.mha-system-button .mha-icon {
+  --mha-icon-size: 1.26rem !important;
+  --mha-icon-bg: transparent !important;
+  --mha-icon-color: #000 !important;
+  --mha-icon-border: transparent !important;
+  --mha-icon-shadow: none !important;
+  inline-size: 1.26rem !important;
+  block-size: 1.26rem !important;
+  background: transparent !important;
+  color: #000 !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.mha-system-button--back .mha-icon-symbol,
+.mha-system-button--back .mha-icon-symbol svg,
+.mha-system-button--back .mha-icon-symbol path,
+.mha-widget-manager-back.mha-system-button .mha-icon-symbol,
+.mha-widget-manager-back.mha-system-button .mha-icon-symbol svg,
+.mha-widget-manager-back.mha-system-button .mha-icon-symbol path,
+.mha-settings-back.mha-system-button .mha-icon-symbol,
+.mha-settings-back.mha-system-button .mha-icon-symbol svg,
+.mha-settings-back.mha-system-button .mha-icon-symbol path {
+  color: #000 !important;
+  fill: currentColor !important;
+  stroke: none !important;
+}
