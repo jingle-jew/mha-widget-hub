@@ -1,4 +1,10 @@
-import {readJson,writeJson} from "./src/core/storage.js";
+import {
+  createStorageBackup,
+  readJson,
+  readJsonResult,
+  writeJson,
+  writeStorageValue,
+} from "./src/core/storage.js";
 import {destroyDomSubtree} from "./src/core/dom-lifecycle.js";
 import {ICONS} from "./src/components/icons.js";
 import {createShell} from "./src/layout/shell.js";
@@ -152,7 +158,7 @@ function readNumberOption(key, fallback, allowed = []) {
   return allowed.includes(value) ? value : fallback;
 }
 
-const ORDER="mha-grid-order",SIZES="mha-widget-sizes",REMOVED="mha-hidden-widgets",POSITIONS="mha-widget-positions",CUSTOM_WIDGETS="mha-custom-widgets",PAGES="mha-grid-pages",ACTIVE_PAGE="mha-active-page",DOCK_POSITION="mha-dock-position",STORAGE_SCHEMA_VERSION="mha-storage-schema-version",CURRENT_STORAGE_SCHEMA_VERSION=1,LEGACY_STORAGE_PREFIX=["mha","v2"].join("-");
+const ORDER="mha-grid-order",SIZES="mha-widget-sizes",REMOVED="mha-hidden-widgets",POSITIONS="mha-widget-positions",CUSTOM_WIDGETS="mha-custom-widgets",PAGES="mha-grid-pages",ACTIVE_PAGE="mha-active-page",DOCK_POSITION="mha-dock-position",STORAGE_SCHEMA_VERSION="mha-storage-schema-version",CURRENT_STORAGE_SCHEMA_VERSION=1,STORAGE_MIGRATION_BACKUP="mha-storage-backup-before-v1",LEGACY_STORAGE_PREFIX=["mha","v2"].join("-");
 const DOCK_POSITIONS=new Set(["left","right","bottom"]);
 function normalizeDockPosition(value="left"){return DOCK_POSITIONS.has(value)?value:"left";}
 function getStoredDockPosition(){return normalizeDockPosition(localStorage.getItem(DOCK_POSITION)||"left");}
@@ -802,7 +808,7 @@ _applyDockPositionFromSettings(position="left"){
   const next=normalizeDockPosition(position);
   if(next===this._dockPosition)return;
   this._dockPosition=next;
-  localStorage.setItem(DOCK_POSITION,next);
+  this._recordPersistenceResult(writeStorageValue(DOCK_POSITION,next));
   this.dataset.dockPosition=next;
   this.setAttribute("data-dock-position",next);
   this._syncSettingsDom();
@@ -871,12 +877,13 @@ _deleteDockPage(id=""){
       removedWidgetIds.forEach(widgetId=>delete layout[widgetId]);
     }
   });
-  writeJson(POSITIONS,this._widgetPositions);
+  const positionsSaved=writeJson(POSITIONS,this._widgetPositions);
   if(this._dockSettingsPageId===id){
     this._settingsPage="dock";
     this._dockSettingsPageId="";
   }
-  this._savePages();
+  const pagesSaved=this._savePages();
+  this._recordPersistenceResult(positionsSaved&&pagesSaved);
   this._syncDocksDom();
   this._syncSettingsDom();
   this._refreshActiveGridOnly();
@@ -991,7 +998,7 @@ _handleUserActivity(){
 }
 _applyScreensaverEnabledFromSettings(enabled=false){
   this._screensaverEnabled=Boolean(enabled);
-  localStorage.setItem(SCREENSAVER_ENABLED,String(this._screensaverEnabled));
+  this._recordPersistenceResult(writeStorageValue(SCREENSAVER_ENABLED,this._screensaverEnabled));
   if(!this._screensaverEnabled){
     this._setScreensaverActive(false);
   }
@@ -1002,7 +1009,7 @@ _applyScreensaverEnabledFromSettings(enabled=false){
 _applyScreensaverDelayFromSettings(delay=30000){
   const numeric=Number(delay);
   this._screensaverDelay=[15000,30000,120000,300000].includes(numeric)?numeric:30000;
-  localStorage.setItem(SCREENSAVER_DELAY,String(this._screensaverDelay));
+  this._recordPersistenceResult(writeStorageValue(SCREENSAVER_DELAY,this._screensaverDelay));
   this._scheduleScreensaverIdleTimer();
   this._syncSettingsDom();
   this._syncScreensaverSettingsDom();
@@ -1016,15 +1023,16 @@ _applyScreensaverPreviewFromSettings(enabled=false){
 }
 _applyScreensaverNowBarFromSettings(enabled=true){
   this._screensaverNowBar=Boolean(enabled);
-  localStorage.setItem(SCREENSAVER_NOWBAR,String(this._screensaverNowBar));
+  this._recordPersistenceResult(writeStorageValue(SCREENSAVER_NOWBAR,this._screensaverNowBar));
   this._syncScreensaverDom();
   this._syncSettingsDom();
   this._syncScreensaverSettingsDom();
 }
 _applyScreensaverClockVariantFromSettings(variant="digital"){
   this._screensaverClockVariant=normalizeClockVariant(variant);
-  localStorage.setItem(SCREENSAVER_CLOCK_VARIANT,this._screensaverClockVariant);
-  localStorage.setItem("mha-screensaver-clock",this._screensaverClockVariant);
+  const saved=writeStorageValue(SCREENSAVER_CLOCK_VARIANT,this._screensaverClockVariant)
+    &&writeStorageValue("mha-screensaver-clock",this._screensaverClockVariant);
+  this._recordPersistenceResult(saved);
   this._syncScreensaverDom();
   this._syncSettingsDom();
   this._syncScreensaverSettingsDom();
@@ -1069,16 +1077,33 @@ _migrateStorageSchema(){
   const version=Number(localStorage.getItem(STORAGE_SCHEMA_VERSION))||0;
   if(version>=CURRENT_STORAGE_SCHEMA_VERSION)return;
 
-  const rawPages=localStorage.getItem(PAGES);
-  let storedPages=readJson(PAGES,null);
+  const legacyOrderKey=`${LEGACY_STORAGE_PREFIX}-grid-order`;
+  const legacySizesKey=`${LEGACY_STORAGE_PREFIX}-widget-sizes`;
+  const backupCreated=createStorageBackup(
+    STORAGE_MIGRATION_BACKUP,
+    [PAGES,ACTIVE_PAGE,POSITIONS,ORDER,SIZES,REMOVED,CUSTOM_WIDGETS,legacyOrderKey,legacySizesKey],
+    {fromSchemaVersion:version,toSchemaVersion:CURRENT_STORAGE_SCHEMA_VERSION},
+  );
+  if(!backupCreated){
+    this._recordPersistenceResult(false);
+    return;
+  }
+
+  const pagesResult=readJsonResult(PAGES);
+  let storedPages=pagesResult.ok?pagesResult.value:null;
   if(!Array.isArray(storedPages)||!storedPages.length){
-    const widgets=rawPages===null?this._readLegacyWidgets():[];
-    writeJson(PAGES,[this._normalizePage({id:"home",name:"Accueil",icon:"home",widgets},0)]);
-    storedPages=readJson(PAGES,null);
+    const widgets=this._readLegacyWidgets();
+    storedPages=[this._normalizePage({id:"home",name:"Accueil",icon:"home",widgets},0)];
+    if(!writeJson(PAGES,storedPages)){
+      this._recordPersistenceResult(false);
+      return;
+    }
   }
 
   if(!Array.isArray(storedPages)||!storedPages.length)return;
-  localStorage.setItem(STORAGE_SCHEMA_VERSION,String(CURRENT_STORAGE_SCHEMA_VERSION));
+  this._recordPersistenceResult(
+    writeStorageValue(STORAGE_SCHEMA_VERSION,CURRENT_STORAGE_SCHEMA_VERSION),
+  );
 }
 _normalizePage(page={},index=0){
   const id=String(page.id||`page-${index+1}`).trim()||`page-${index+1}`;
@@ -1107,26 +1132,31 @@ _readPages(){
     return id===baseId?normalized:{...normalized,id};
   }).filter(page=>page.id):[];
   if(pages.length){
-    if(repaired)writeJson(PAGES,pages);
+    if(repaired)this._recordPersistenceResult(writeJson(PAGES,pages));
     return pages;
   }
   const fallback=[this._normalizePage({id:"home",name:"Accueil",icon:"home",widgets:[]},0)];
-  writeJson(PAGES,fallback);
+  this._recordPersistenceResult(writeJson(PAGES,fallback));
   return fallback;
 }
 _readActivePageId(){
   const stored=localStorage.getItem(ACTIVE_PAGE);
   if(stored&&this._pages.some(page=>page.id===stored))return stored;
   const fallback=this._pages[0]?.id||"home";
-  localStorage.setItem(ACTIVE_PAGE,fallback);
+  this._recordPersistenceResult(writeStorageValue(ACTIVE_PAGE,fallback));
   return fallback;
 }
 _getActivePage(){
   return this._pages.find(page=>page.id===this._activePageId)||this._pages[0]||null;
 }
+_recordPersistenceResult(success){
+  this.dataset.persistenceState=success?"saved":"error";
+  return success;
+}
 _savePages(){
-  writeJson(PAGES,this._pages.map((page,index)=>this._normalizePage(page,index)));
-  localStorage.setItem(ACTIVE_PAGE,this._activePageId);
+  const pagesSaved=writeJson(PAGES,this._pages.map((page,index)=>this._normalizePage(page,index)));
+  const activePageSaved=writeStorageValue(ACTIVE_PAGE,this._activePageId);
+  return this._recordPersistenceResult(pagesSaved&&activePageSaved);
 }
 _readWidgets(){
   const page=this._getActivePage();
@@ -1138,9 +1168,9 @@ _readWidgets(){
 }
 _syncActivePageWidgets(){
   const page=this._getActivePage();
-  if(!page)return;
+  if(!page)return false;
   page.widgets=this._widgets.map(widget=>normalizeStoredWidgetContract(widget));
-  this._savePages();
+  return this._savePages();
 }
 _setActivePage(id){
   if(!id||id===this._activePageId||!this._pages.some(page=>page.id===id))return;
@@ -1149,7 +1179,7 @@ _setActivePage(id){
   this._widgetManagerOpen=false;
   this._widgetManagerCategory="";
   this._activePageId=id;
-  localStorage.setItem(ACTIVE_PAGE,id);
+  this._recordPersistenceResult(writeStorageValue(ACTIVE_PAGE,id));
   this._widgets=this._readWidgets();
   this._refreshActiveGridOnly();
   this._syncDocksDom();
@@ -1343,9 +1373,9 @@ _saveWidgets(){
    */
   this._widgets=this._normalizeWidgetsToGridBounds(this._widgets.map(normalizeStoredWidgetContract));
 
-  this._syncActivePageWidgets();
+  return this._syncActivePageWidgets();
 }
-_removeWidget(id){if(!this._widgets.some(w=>w.id===id))return;if(this._activeMoveWidgetId===id)this._activeMoveWidgetId="";this._widgets=this._widgets.filter(w=>w.id!==id);Object.values(this._widgetPositions).forEach(layout=>{if(layout&&typeof layout==="object")delete layout[id]});writeJson(POSITIONS,this._widgetPositions);this._saveWidgets();const element=this.shadowRoot.querySelector(`[data-widget-id="${id}"]`);if(element){destroyDomSubtree(element);element.remove()}this._clearDropState();this._scheduleSquareUnitSync()}
+_removeWidget(id){if(!this._widgets.some(w=>w.id===id))return;if(this._activeMoveWidgetId===id)this._activeMoveWidgetId="";this._widgets=this._widgets.filter(w=>w.id!==id);Object.values(this._widgetPositions).forEach(layout=>{if(layout&&typeof layout==="object")delete layout[id]});const positionsSaved=writeJson(POSITIONS,this._widgetPositions);const widgetsSaved=this._saveWidgets();this._recordPersistenceResult(positionsSaved&&widgetsSaved);const element=this.shadowRoot.querySelector(`[data-widget-id="${id}"]`);if(element){destroyDomSubtree(element);element.remove()}this._clearDropState();this._scheduleSquareUnitSync()}
 
 _isResizeHandleEvent(event){
   return Boolean(event?.target?.closest?.(
@@ -1410,25 +1440,25 @@ _getStoredWidgetPositions(){
     const y=Number(position?.y);
     if(!Number.isInteger(x)||!Number.isInteger(y)){
       delete this._widgetPositions[key];
-      writeJson(POSITIONS,this._widgetPositions);
+      this._recordPersistenceResult(writeJson(POSITIONS,this._widgetPositions));
       return null;
     }
     normalized[widget.id]={x,y};
   }
   if(!this._isPositionMapValidForWidgets(normalized,this._widgets,units,rowUnits)){
     delete this._widgetPositions[key];
-    writeJson(POSITIONS,this._widgetPositions);
+    this._recordPersistenceResult(writeJson(POSITIONS,this._widgetPositions));
     return null;
   }
   if(Object.keys(positions).length!==Object.keys(normalized).length){
     this._widgetPositions[key]=normalized;
-    writeJson(POSITIONS,this._widgetPositions);
+    this._recordPersistenceResult(writeJson(POSITIONS,this._widgetPositions));
   }
   return normalized;
 }
 _saveCurrentWidgetPositions(positions){
   this._widgetPositions[this._getWidgetPositionKey()]=positions;
-  writeJson(POSITIONS,this._widgetPositions);
+  return this._recordPersistenceResult(writeJson(POSITIONS,this._widgetPositions));
 }
 _applyWidgetPositionsToDom(positions){
   if(!positions)return;
@@ -1446,7 +1476,7 @@ _clearCurrentWidgetPositions(){
   const key=this._getWidgetPositionKey();
   if(!this._widgetPositions[key])return;
   delete this._widgetPositions[key];
-  writeJson(POSITIONS,this._widgetPositions);
+  this._recordPersistenceResult(writeJson(POSITIONS,this._widgetPositions));
   this.shadowRoot.querySelectorAll(".mha-widget").forEach(el=>{
     el.style.removeProperty("grid-column");
     el.style.removeProperty("grid-row");
