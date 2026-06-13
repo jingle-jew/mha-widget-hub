@@ -30,12 +30,20 @@ export function getLightCapabilities(entityState) {
 }
 
 export function getLightOptions(hass) {
+  return getEntityOptionsByDomain(hass, "light")
+    .map(({ entityState, ...option }) => ({
+      ...option,
+      ...getLightCapabilities(entityState),
+    }));
+}
+
+export function getEntityOptionsByDomain(hass, domain) {
   return Object.entries(hass?.states || {})
-    .filter(([entityId]) => getEntityDomain(entityId) === "light")
+    .filter(([entityId]) => getEntityDomain(entityId) === domain)
     .map(([entityId, entityState]) => ({
       value: entityId,
       label: getEntityDisplayName(entityState, entityId),
-      ...getLightCapabilities(entityState),
+      entityState,
     }))
     .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" }));
 }

@@ -17,6 +17,11 @@ import {
   callHomeAssistantService,
   createLatestValueAction,
 } from "../src/ha/actions.js";
+import {
+  buildSliderWidgetConfig,
+  createSliderConfigDraft,
+  updateSliderAction,
+} from "../src/widget-config/slider-config.js";
 
 const entity = (entityId, state, attributes = {}) => ({
   entity_id: entityId,
@@ -130,4 +135,45 @@ test("latest-value actions coalesce drag updates and preserve the final value", 
 
   assert.deepEqual(started, [10, 40]);
   pending.shift()();
+});
+
+test("slider configuration filters entities by action and stores only the selected id", () => {
+  const hass = {
+    states: {
+      "light.kitchen": entity("light.kitchen", "on", {
+        friendly_name: "Cuisine",
+        brightness: 128,
+      }),
+      "media_player.salon": entity("media_player.salon", "playing", {
+        friendly_name: "Haut-parleur du salon",
+        volume_level: 0.3,
+      }),
+      "sensor.temperature": entity("sensor.temperature", "21", {
+        friendly_name: "Température",
+      }),
+    },
+  };
+
+  const brightness = createSliderConfigDraft({
+    kind: "slider",
+    variant: "light-slider-wide",
+  }, hass);
+  assert.deepEqual(brightness.options.map(option => option.label), ["Cuisine"]);
+  assert.equal(brightness.draft.entityId, "light.kitchen");
+  assert.equal(brightness.draft.label, "Cuisine");
+
+  const volume = updateSliderAction(brightness.draft, "volume", hass);
+  assert.deepEqual(volume.options.map(option => option.label), ["Haut-parleur du salon"]);
+
+  const configured = buildSliderWidgetConfig({
+    kind: "slider",
+    variant: "light-slider-wide",
+  }, volume.draft, hass);
+  assert.deepEqual(configured, {
+    kind: "slider",
+    variant: "light-slider-wide",
+    entityId: "media_player.salon",
+    label: "Haut-parleur du salon",
+    sliderAction: "volume",
+  });
 });

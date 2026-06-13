@@ -37,10 +37,11 @@ const WIDGET_CONTENT_RENDERERS = Object.freeze({
     }),
   },
   slider: {
-    render: ({ widget, size, activeGridUnits }) => createSliderWidgetContent(widget, {
+    render: ({ widget, size, activeGridUnits, hass }) => createSliderWidgetContent(widget, {
       size,
       activeGridUnits,
-      value: 68,
+      hass,
+      value: widget.value ?? 68,
       orientation: "auto",
       className: "mha-widget-demo-slider",
     }),

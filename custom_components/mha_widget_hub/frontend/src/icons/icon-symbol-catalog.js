@@ -107,6 +107,7 @@ export const ICON_SYMBOL_CATALOG = Object.freeze([
   Object.freeze({ name: "next", category: "media_player", viewBox: "0 0 24 24", path: "M7 3h10v18H7V3Zm2 2v14h6V5H9Z" }),
   Object.freeze({ name: "previous", category: "media_player", viewBox: "0 0 24 24", path: "M4 9h16v10H4V9Zm2 2v6h12v-6H6Zm3-5h6v2H9V6Z" }),
   Object.freeze({ name: "volume", category: "media_player", viewBox: "0 0 24 24", path: "M12 3a6 6 0 0 0-4 10.5V17h8v-3.5A6 6 0 0 0 12 3Zm-3 16h6v2H9v-2Z" }),
+  Object.freeze({ name: "speaker-volume", category: "media_player", viewBox: "0 0 24 24", path: "M3 9v6h4l5 4V5L7 9H3Zm12.5-.5a5 5 0 0 1 0 7l-1.4-1.4a3 3 0 0 0 0-4.2l1.4-1.4Zm2.8-2.8a9 9 0 0 1 0 12.6l-1.4-1.4a7 7 0 0 0 0-9.8l1.4-1.4Z" }),
   Object.freeze({ name: "volume-muted", category: "media_player", viewBox: "0 0 24 24", path: "M6 4h12v3H6V4Zm2 5h8v11H8V9Z" }),
   Object.freeze({ name: "music", category: "media_player", viewBox: "0 0 24 24", path: "M4 10h16v4H4v-4Zm2-6h12v4H6V4Zm0 12h12v4H6v-4Z" }),
   Object.freeze({ name: "playlist", category: "media_player", viewBox: "0 0 24 24", path: "M7 5h10v14H7V5Zm2 2v10h6V7H9Z" }),

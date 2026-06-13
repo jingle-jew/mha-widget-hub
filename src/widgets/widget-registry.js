@@ -61,6 +61,7 @@ const DEFINITIONS = {
     category: "lights",
     renderer: "slider",
     preview: "slider",
+    config: "slider",
     aliases: ["slider-widget"],
     variantAliases: [
       "light-slider-horizontal",
@@ -271,6 +272,12 @@ export function normalizeWidgetContract(widget = {}, normalizeBaseSize) {
     normalized.variant = widget.variant;
   } else if (kind === "slider") {
     normalized.variant = widget.variant || normalized.variant;
+    normalized.entityId = widget.entityId || widget.entity_id || "";
+    normalized.sliderAction = widget.sliderAction === "volume" || widget.sliderAction === "brightness"
+      ? widget.sliderAction
+      : widget.variant === "volume-slider"
+        ? "volume"
+        : "brightness";
   }
 
   if (kind === "toggle-slider") {

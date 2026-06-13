@@ -49,6 +49,34 @@ test("normalization migrates toggle-slider entity aliases", () => {
   );
 });
 
+test("normalization preserves standalone slider configuration", () => {
+  const widget = normalizeWidgetContract({
+    kind: "slider",
+    variant: "volume-slider",
+    entity_id: "media_player.salon",
+    label: "Salon",
+    w: 4,
+    h: 1,
+  }, normalizeWidgetSize);
+
+  assert.deepEqual(
+    {
+      kind: widget.kind,
+      variant: widget.variant,
+      entityId: widget.entityId,
+      sliderAction: widget.sliderAction,
+      label: widget.label,
+    },
+    {
+      kind: "slider",
+      variant: "volume-slider",
+      entityId: "media_player.salon",
+      sliderAction: "volume",
+      label: "Salon",
+    },
+  );
+});
+
 test("slider variants follow widget orientation", () => {
   const horizontal = getWidgetVariants({ kind: "slider", w: 4, h: 1 });
   const vertical = getWidgetVariants({ kind: "slider", w: 1, h: 4 });
