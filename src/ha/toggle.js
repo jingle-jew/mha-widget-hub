@@ -1,4 +1,8 @@
-import { getEntityDomain, normalizeEntityStateValue } from "./entity.js";
+import {
+  getEntityDomain,
+  isEntityAvailable,
+  normalizeEntityStateValue,
+} from "./entity.js";
 
 const TOGGLE_DOMAINS = new Set([
   "fan",
@@ -29,6 +33,8 @@ export function getToggleService(entityState) {
 }
 
 export function buildToggleServiceCall(entityState) {
+  if (!isEntityAvailable(entityState)) return null;
+
   const entityId = entityState?.entity_id || "";
   const domain = getEntityDomain(entityId);
 

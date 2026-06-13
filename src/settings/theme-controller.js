@@ -1,0 +1,203 @@
+import { normalizeAccent } from "./accent-palettes.js";
+
+export const THEME_STYLES = new Set(["ios", "oneui", "material"]);
+
+function getSystemThemePreference() {
+  return window.matchMedia?.("(prefers-color-scheme: light)")?.matches
+    ? "light"
+    : "dark";
+}
+
+export function normalizeThemeSetting(theme = "auto") {
+  return ["auto", "dark", "light"].includes(theme) ? theme : "auto";
+}
+
+function resolveTheme(themeSetting = "auto") {
+  const normalized = normalizeThemeSetting(themeSetting);
+  return normalized === "auto" ? getSystemThemePreference() : normalized;
+}
+
+export function getStoredThemeSetting(host) {
+  const stored = localStorage.getItem("mha-theme")
+    || localStorage.getItem("mha-dev-theme")
+    || host?.dataset?.themeSetting
+    || "auto";
+
+  return normalizeThemeSetting(stored);
+}
+
+export function normalizeThemeStyle(themeStyle = "oneui") {
+  return THEME_STYLES.has(themeStyle) ? themeStyle : "oneui";
+}
+
+export function getStoredThemeStyle(host) {
+  const stored = localStorage.getItem("mha-theme-style")
+    || localStorage.getItem("mha-dev-theme-style")
+    || document.documentElement.dataset.themeStyle
+    || host?.dataset?.themeStyle
+    || "oneui";
+
+  return normalizeThemeStyle(stored);
+}
+
+export function normalizeIosGlass(iosGlass = "liquid") {
+  return ["liquid", "frosted"].includes(iosGlass) ? iosGlass : "liquid";
+}
+
+export function getStoredIosGlass(host) {
+  const stored = localStorage.getItem("mha-ios-glass")
+    || localStorage.getItem("mha-dev-ios-glass")
+    || document.documentElement.dataset.iosGlass
+    || host?.dataset?.iosGlass
+    || "liquid";
+
+  return normalizeIosGlass(stored);
+}
+
+export function getStoredAccent(host, themeStyle = "oneui") {
+  const normalizedStyle = normalizeThemeStyle(themeStyle);
+  const stored = localStorage.getItem(`mha-accent-${normalizedStyle}`)
+    || localStorage.getItem("mha-accent")
+    || document.documentElement.dataset.accent
+    || host?.dataset?.accent
+    || "";
+
+  return normalizeAccent(normalizedStyle, stored);
+}
+
+function getDefaultIconShapeForThemeStyle(themeStyle = "oneui") {
+  if (themeStyle === "ios") return "rounded-square";
+  if (themeStyle === "material") return "circle";
+  return "squircle";
+}
+
+export function normalizeIconShapeSetting(iconShapeSetting = "auto") {
+  return ["auto", "rounded-square", "squircle", "circle"].includes(iconShapeSetting)
+    ? iconShapeSetting
+    : "auto";
+}
+
+export function resolveIconShape(themeStyle = "oneui", iconShapeSetting = "auto") {
+  const normalized = normalizeIconShapeSetting(iconShapeSetting);
+  return normalized === "auto"
+    ? getDefaultIconShapeForThemeStyle(themeStyle)
+    : normalized;
+}
+
+export function getStoredIconShapeSetting(host) {
+  const stored = localStorage.getItem("mha-icon-shape")
+    || document.documentElement.dataset.iconShapeSetting
+    || host.dataset.iconShapeSetting
+    || "auto";
+
+  return normalizeIconShapeSetting(stored);
+}
+
+export function readThemeState(host) {
+  const themeSetting = getStoredThemeSetting(host);
+  const theme = resolveTheme(themeSetting);
+  const themeStyle = getStoredThemeStyle(host);
+  const iosGlass = getStoredIosGlass(host);
+  const accent = getStoredAccent(host, themeStyle);
+  const iconShapeSetting = getStoredIconShapeSetting(host);
+  const iconShape = resolveIconShape(themeStyle, iconShapeSetting);
+
+  return {
+    themeSetting,
+    theme,
+    themeStyle,
+    iosGlass,
+    accent,
+    iconShapeSetting,
+    iconShape,
+  };
+}
+
+function setAttribute(target, name, value) {
+  target.dataset[name] = value;
+  target.setAttribute(
+    `data-${name.replace(/[A-Z]/g, letter => `-${letter.toLowerCase()}`)}`,
+    value,
+  );
+}
+
+export function syncThemeAttributes(host) {
+  const state = readThemeState(host);
+  const root = document.documentElement;
+
+  setAttribute(host, "themeSetting", state.themeSetting);
+  setAttribute(host, "theme", state.theme);
+  setAttribute(host, "themeStyle", state.themeStyle);
+  setAttribute(host, "iosGlass", state.iosGlass);
+  setAttribute(host, "accent", state.accent);
+  setAttribute(host, "iconShapeSetting", state.iconShapeSetting);
+  setAttribute(host, "iconShape", state.iconShape);
+
+  setAttribute(root, "themeSetting", state.themeSetting);
+  setAttribute(root, "theme", state.theme);
+  setAttribute(root, "themeStyle", state.themeStyle);
+  setAttribute(root, "iosGlass", state.iosGlass);
+  setAttribute(root, "accent", state.accent);
+  setAttribute(root, "iconShapeSetting", state.iconShapeSetting);
+  setAttribute(root, "iconShape", state.iconShape);
+
+  return state;
+}
+
+export class ThemeController {
+  constructor(host) {
+    this.host = host;
+  }
+
+  read() {
+    return readThemeState(this.host);
+  }
+
+  sync() {
+    return syncThemeAttributes(this.host);
+  }
+
+  setTheme(value = "auto") {
+    const themeSetting = normalizeThemeSetting(value);
+    localStorage.setItem("mha-theme", themeSetting);
+    localStorage.setItem("mha-dev-theme", themeSetting);
+    return this.sync();
+  }
+
+  setThemeStyle(value = "oneui") {
+    const themeStyle = normalizeThemeStyle(value);
+    localStorage.setItem("mha-theme-style", themeStyle);
+    localStorage.setItem("mha-dev-theme-style", themeStyle);
+
+    const accent = getStoredAccent(this.host, themeStyle);
+    localStorage.setItem("mha-accent", accent);
+    localStorage.setItem(`mha-accent-${themeStyle}`, accent);
+    return this.sync();
+  }
+
+  setIosGlass(value = "liquid") {
+    const iosGlass = normalizeIosGlass(value);
+    localStorage.setItem("mha-ios-glass", iosGlass);
+    localStorage.setItem("mha-dev-ios-glass", iosGlass);
+    return this.sync();
+  }
+
+  setAccent(value = "") {
+    const themeStyle = getStoredThemeStyle(this.host);
+    const accent = normalizeAccent(themeStyle, value);
+    localStorage.setItem("mha-accent", accent);
+    localStorage.setItem(`mha-accent-${themeStyle}`, accent);
+    return this.sync();
+  }
+
+  setIconShape(value = "auto") {
+    const iconShape = normalizeIconShapeSetting(value);
+    localStorage.setItem("mha-icon-shape", iconShape);
+    localStorage.setItem("mha-dev-icon-shape", iconShape);
+    return this.sync();
+  }
+}
+
+export function createThemeController(host) {
+  return new ThemeController(host);
+}

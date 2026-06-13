@@ -11,7 +11,9 @@ import {
   createWidgetConfigSession,
   supportsWidgetConfiguration,
 } from "./src/widget-config/widget-config-popup.js";
-import { normalizeAccent } from "./src/settings/accent-palettes.js";
+import {
+  createThemeController,
+} from "./src/settings/theme-controller.js";
 import {updateStatusTime} from "./src/layout/status-bar.js";
 import {createEmptyWidget} from "./src/widgets/empty-widget.js";
 import { getNextWidgetVariantEntries, getVariantCandidate, sameVariantSize } from "./src/widgets/widget-variants.js";
@@ -141,162 +143,7 @@ function readNumberOption(key, fallback, allowed = []) {
   return allowed.includes(value) ? value : fallback;
 }
 
-function getSystemThemePreference() {
-  return window.matchMedia?.("(prefers-color-scheme: light)")?.matches ? "light" : "dark";
-}
-
-function normalizeThemeSetting(theme = "auto") {
-  return ["auto", "dark", "light"].includes(theme) ? theme : "auto";
-}
-
-function resolveTheme(themeSetting = "auto") {
-  const normalized = normalizeThemeSetting(themeSetting);
-  return normalized === "auto" ? getSystemThemePreference() : normalized;
-}
-
-function getStoredThemeSetting(host) {
-  /*
-   * data-theme is the effective light/dark theme.
-   * data-theme-setting is the user preference: auto / dark / light.
-   *
-   * First-launch rule:
-   * - localStorage is the source of persisted user choice;
-   * - host data-theme-setting may provide an explicit embedding override;
-   * - documentElement data-theme-setting is ignored as a default source because
-   *   some bootstrap/theme code can leave it as the effective "dark/light",
-   *   making a fresh install appear as "Sombre" instead of "Auto".
-   */
-  const stored = localStorage.getItem("mha-theme")
-    || localStorage.getItem("mha-dev-theme")
-    || host?.dataset?.themeSetting
-    || "auto";
-
-  return normalizeThemeSetting(stored);
-}
-
-function normalizeThemeStyle(themeStyle = "oneui") {
-  return THEME_STYLES.has(themeStyle) ? themeStyle : "oneui";
-}
-
-function getStoredThemeStyle(host) {
-  const stored = localStorage.getItem("mha-theme-style")
-    || localStorage.getItem("mha-dev-theme-style")
-    || document.documentElement.dataset.themeStyle
-    || host?.dataset?.themeStyle
-    || "oneui";
-
-  return normalizeThemeStyle(stored);
-}
-
-function normalizeIosGlass(iosGlass = "liquid") {
-  return ["liquid", "frosted"].includes(iosGlass) ? iosGlass : "liquid";
-}
-
-function getStoredIosGlass(host) {
-  const stored = localStorage.getItem("mha-ios-glass")
-    || localStorage.getItem("mha-dev-ios-glass")
-    || document.documentElement.dataset.iosGlass
-    || host?.dataset?.iosGlass
-    || "liquid";
-
-  return normalizeIosGlass(stored);
-}
-
-function getStoredAccent(host, themeStyle = "oneui") {
-  const normalizedStyle = normalizeThemeStyle(themeStyle);
-  const stored = localStorage.getItem(`mha-accent-${normalizedStyle}`)
-    || localStorage.getItem("mha-accent")
-    || document.documentElement.dataset.accent
-    || host?.dataset?.accent
-    || "";
-
-  return normalizeAccent(normalizedStyle, stored);
-}
-
-function getDefaultIconShapeForThemeStyle(themeStyle = "oneui") {
-  if (themeStyle === "ios") return "rounded-square";
-  if (themeStyle === "material") return "circle";
-  return "squircle";
-}
-
-function normalizeIconShapeSetting(iconShapeSetting = "auto") {
-  return ["auto", "rounded-square", "squircle", "circle"].includes(iconShapeSetting)
-    ? iconShapeSetting
-    : "auto";
-}
-
-function resolveIconShape(themeStyle = "oneui", iconShapeSetting = "auto") {
-  const normalized = normalizeIconShapeSetting(iconShapeSetting);
-
-  if (normalized !== "auto") {
-    return normalized;
-  }
-
-  return getDefaultIconShapeForThemeStyle(themeStyle);
-}
-
-function getStoredIconShapeSetting(host) {
-  /*
-   * Important:
-   * - data-icon-shape is the effective CSS shape.
-   * - data-icon-shape-setting is the user preference.
-   *
-   * Never use data-icon-shape as the first source for the setting, otherwise
-   * Auto gets replaced by the previously resolved effective shape.
-   */
-  const stored = localStorage.getItem("mha-icon-shape")
-    || document.documentElement.dataset.iconShapeSetting
-    || host.dataset.iconShapeSetting
-    || "auto";
-
-  return normalizeIconShapeSetting(stored);
-}
-
-function syncThemeAttributes(host) {
-  const themeSetting = getStoredThemeSetting(host);
-  const theme = resolveTheme(themeSetting);
-  const themeStyle = getStoredThemeStyle(host);
-  const accent = getStoredAccent(host, themeStyle);
-  const iconShapeSetting = getStoredIconShapeSetting(host);
-  const iconShape = resolveIconShape(themeStyle, iconShapeSetting);
-  host.dataset.themeSetting = themeSetting;
-  host.setAttribute("data-theme-setting", themeSetting);
-  host.dataset.theme = theme;
-  host.setAttribute("data-theme", theme);
-  document.documentElement.dataset.themeSetting = themeSetting;
-  document.documentElement.setAttribute("data-theme-setting", themeSetting);
-  document.documentElement.dataset.theme = theme;
-  document.documentElement.setAttribute("data-theme", theme);
-
-  host.dataset.themeStyle = themeStyle;
-  host.setAttribute("data-theme-style", themeStyle);
-  document.documentElement.dataset.themeStyle = themeStyle;
-  document.documentElement.setAttribute("data-theme-style", themeStyle);
-
-  const iosGlass = getStoredIosGlass(host);
-  host.dataset.iosGlass = iosGlass;
-  host.setAttribute("data-ios-glass", iosGlass);
-  document.documentElement.dataset.iosGlass = iosGlass;
-  document.documentElement.setAttribute("data-ios-glass", iosGlass);
-
-  host.dataset.accent = accent;
-  host.setAttribute("data-accent", accent);
-  document.documentElement.dataset.accent = accent;
-  document.documentElement.setAttribute("data-accent", accent);
-
-  host.dataset.iconShapeSetting = iconShapeSetting;
-  host.setAttribute("data-icon-shape-setting", iconShapeSetting);
-
-  host.dataset.iconShape = iconShape;
-  host.setAttribute("data-icon-shape", iconShape);
-
-  document.documentElement.dataset.iconShapeSetting = iconShapeSetting;
-  document.documentElement.setAttribute("data-icon-shape-setting", iconShapeSetting);
-  document.documentElement.dataset.iconShape = iconShape;
-  document.documentElement.setAttribute("data-icon-shape", iconShape);
-}
-
-const ORDER="mha-grid-order",SIZES="mha-widget-sizes",REMOVED="mha-hidden-widgets",POSITIONS="mha-widget-positions",CUSTOM_WIDGETS="mha-custom-widgets",PAGES="mha-grid-pages",ACTIVE_PAGE="mha-active-page",DOCK_POSITION="mha-dock-position",STORAGE_SCHEMA_VERSION="mha-storage-schema-version",CURRENT_STORAGE_SCHEMA_VERSION=1,LEGACY_STORAGE_PREFIX=["mha","v2"].join("-"),THEME_STYLES=new Set(["ios","oneui","material"]);
+const ORDER="mha-grid-order",SIZES="mha-widget-sizes",REMOVED="mha-hidden-widgets",POSITIONS="mha-widget-positions",CUSTOM_WIDGETS="mha-custom-widgets",PAGES="mha-grid-pages",ACTIVE_PAGE="mha-active-page",DOCK_POSITION="mha-dock-position",STORAGE_SCHEMA_VERSION="mha-storage-schema-version",CURRENT_STORAGE_SCHEMA_VERSION=1,LEGACY_STORAGE_PREFIX=["mha","v2"].join("-");
 const DOCK_POSITIONS=new Set(["left","right","bottom"]);
 function normalizeDockPosition(value="left"){return DOCK_POSITIONS.has(value)?value:"left";}
 function getStoredDockPosition(){return normalizeDockPosition(localStorage.getItem(DOCK_POSITION)||"left");}
@@ -483,6 +330,7 @@ function readLegacyJson(key,legacyKey,fallback){const current=readJson(key,null)
 class MhaControlHub extends HTMLElement{
 constructor(){
   super();
+  this._themeController=createThemeController(this);
   this._initialized=false;
   this._bootComplete=false;
   this._bootWatchdog=0;
@@ -738,7 +586,7 @@ connectedCallback(){
   this._hasConnectedOnce=true;
   this._startBootWatchdog();
   this._addConnectionListeners();
-  this._systemThemeListener=()=>{if(getStoredThemeSetting(this)==="auto")this._transitionSystemThemeChange()};
+  this._systemThemeListener=()=>{if(this._themeController.read().themeSetting==="auto")this._transitionSystemThemeChange()};
   window.matchMedia?.("(prefers-color-scheme: light)")?.addEventListener?.("change",this._systemThemeListener);
   this._ensureMounted({force:isReconnect,reason:isReconnect?"panel reconnect":"initial connection"});
   this._scheduleHassUpdate();
@@ -883,19 +731,20 @@ _syncSettingsDom(){
   this._replacePanelPreservingUiState(existing,this._createSettingsPanel());
 }
 _getSettingsPanelProps(scope="all"){
-  const themeStyle=getStoredThemeStyle(this);
-  const iconShapeSetting=getStoredIconShapeSetting(this);
+  const themeState=this._themeController.read();
+  const themeStyle=themeState.themeStyle;
+  const iconShapeSetting=themeState.iconShapeSetting;
   const effectiveIconShape=this.dataset.iconShape
     || document.documentElement.dataset.iconShape
-    || resolveIconShape(themeStyle,iconShapeSetting);
+    || themeState.iconShape;
 
   return {
     open:scope==="screensaver"?this._screensaverSettingsOpen:this._settingsOpen,
     scope,
-    theme:getStoredThemeSetting(this),
+    theme:themeState.themeSetting,
     themeStyle,
-    iosGlass:getStoredIosGlass(this),
-    accent:getStoredAccent(this,themeStyle),
+    iosGlass:themeState.iosGlass,
+    accent:themeState.accent,
     iconShape:iconShapeSetting,
     effectiveIconShape,
     screensaverEnabled:this._screensaverEnabled,
@@ -1193,10 +1042,7 @@ _deleteDockPage(id=""){
  * Keep this block together when cleaning/refactoring the theme system.
  */
 _applyThemeFromSettings(value="auto"){
-  const themeSetting=normalizeThemeSetting(value);
-  localStorage.setItem("mha-theme",themeSetting);
-  localStorage.setItem("mha-dev-theme",themeSetting);
-  syncThemeAttributes(this);
+  this._themeController.setTheme(value);
   this._syncSettingsDom();
   this._syncScreensaverSettingsDom();
 }
@@ -1216,7 +1062,7 @@ _transitionSystemThemeChange(){
   clearTimeout(this._themeTransitionTimer);
   cancelAnimationFrame(this._themeTransitionFrame);
 
-  syncThemeAttributes(this);
+  this._themeController.sync();
 
   const finish=()=>{
     cover.dataset.state="revealing";
@@ -1239,45 +1085,22 @@ _transitionSystemThemeChange(){
 }
 
 _applyThemeStyleFromSettings(value="oneui"){
-  const nextStyle=normalizeThemeStyle(value);
-  localStorage.setItem("mha-theme-style",nextStyle);
-  localStorage.setItem("mha-dev-theme-style",nextStyle);
-
-  /*
-   * Accent and icon shape both depend on the active visual style.
-   * Re-normalize the current accent so a value from another style does not
-   * leave the UI stuck on the first/default swatch.
-   */
-  const nextAccent=getStoredAccent(this,nextStyle);
-  localStorage.setItem("mha-accent",nextAccent);
-  localStorage.setItem(`mha-accent-${nextStyle}`,nextAccent);
-
-  syncThemeAttributes(this);
+  this._themeController.setThemeStyle(value);
   this._syncSettingsDom();
 }
 
 _applyIosGlassFromSettings(value="liquid"){
-  const nextGlass=normalizeIosGlass(value);
-  localStorage.setItem("mha-ios-glass",nextGlass);
-  localStorage.setItem("mha-dev-ios-glass",nextGlass);
-  syncThemeAttributes(this);
+  this._themeController.setIosGlass(value);
   this._syncSettingsDom();
 }
 
 _applyAccentFromSettings(value=""){
-  const style=getStoredThemeStyle(this);
-  const nextAccent=normalizeAccent(style,value);
-  localStorage.setItem("mha-accent",nextAccent);
-  localStorage.setItem(`mha-accent-${style}`,nextAccent);
-  syncThemeAttributes(this);
+  this._themeController.setAccent(value);
   this._syncSettingsDom();
 }
 
 _applyIconShapeFromSettings(value="auto"){
-  const nextShape=normalizeIconShapeSetting(value);
-  localStorage.setItem("mha-icon-shape",nextShape);
-  localStorage.setItem("mha-dev-icon-shape",nextShape);
-  syncThemeAttributes(this);
+  this._themeController.setIconShape(value);
   this._syncSettingsDom();
 }
 
@@ -3089,9 +2912,8 @@ _appendDeferredUi({layout,renderId}){
     this._syncScreensaverVisibilityState();
   });
 }
-render(){syncThemeAttributes(this);const renderId=++this._renderId,layoutMode=getLayoutMode(this),layout=getEffectiveLayout(this),preset=this._getRuntimeGridPreset(),units=getInternalGridColumnCountFromLogical(preset.columns),rows=getInternalGridRowCountFromLogical(preset.rows),cols=preset.columns,logicalRows=preset.rows,themeStyle=THEME_STYLES.has(document.documentElement.dataset.themeStyle)?document.documentElement.dataset.themeStyle:"oneui";const iconShapeSetting=getStoredIconShapeSetting(this);const iconShape=resolveIconShape(themeStyle,iconShapeSetting);this._clearGridScrollListener();this._stylesReadyRenderId=0;this.dataset.themeStyle=themeStyle;this.dataset.iconShapeSetting=iconShapeSetting;this.setAttribute("data-icon-shape-setting",iconShapeSetting);this.dataset.iconShape=iconShape;this.setAttribute("data-icon-shape",iconShape);document.documentElement.dataset.iconShapeSetting=iconShapeSetting;document.documentElement.setAttribute("data-icon-shape-setting",iconShapeSetting);document.documentElement.dataset.iconShape=iconShape;document.documentElement.setAttribute("data-icon-shape",iconShape);const accent=normalizeAccent(themeStyle,localStorage.getItem(`mha-accent-${themeStyle}`)||localStorage.getItem("mha-accent")||"sky");this.dataset.accent=accent;this.setAttribute("data-accent",accent);document.documentElement.dataset.accent=accent;document.documentElement.setAttribute("data-accent",accent);this.dataset.layoutMode=layoutMode;this.dataset.layout=layout;this.dataset.dockPosition=this._dockPosition;this.setAttribute("data-dock-position",this._dockPosition);this.dataset.gridDensity=preset.density;this.dataset.gridUnits=String(units);this.dataset.logicalColumns=String(cols);this.dataset.gridRows=String(rows);this.dataset.logicalRows=String(logicalRows);this.classList.toggle("is-editing",this._isEditing);this.style.setProperty("--mha-runtime-grid-units",String(units));this.style.setProperty("--mha-runtime-grid-rows",String(rows));this.style.setProperty("--mha-runtime-logical-columns",String(cols));this.style.setProperty("--mha-runtime-logical-rows",String(logicalRows));this.shadowRoot.innerHTML=createCriticalBootStyle()+createFrontendStyleLinks();const links=[...this.shadowRoot.querySelectorAll('link[rel="stylesheet"]')],{bg,shell,grid}=createShell({layoutMode,layout,logicalColumns:cols,gridUnits:units,pages:this._pages,activePageId:this._activePageId,isEditing:this._isEditing,onPageSelect:id=>this._setActivePage(id),onAddPage:()=>this._openPageCreator(),onDockSettings:()=>this._openDockSettings(),onSettings:()=>this._openSettings()});this.shadowRoot.append(bg,shell);const positions=this._getActiveWidgetPositions({create:true});this._widgets.forEach(w=>{const el=createEmptyWidget(w,{activeGridUnits:units,isEditing:this._isEditing,isMoveTarget:this._isEditing&&this._activeMoveWidgetId===w.id,position:positions?.[w.id],hass:this._hass,onToggleMove:id=>this._toggleWidgetMoveMode(id),onMove:(id,direction)=>this._moveWidgetByDirection(id,direction),onRemove:id=>this._removeWidget(id),onCycleVariant:id=>this.cycleVariant(id)});this._wireDrag(el,w);grid.append(el)});this.shadowRoot.append(createScreensaver({isVisible:this._getScreensaverVisible(),showNowBar:this._screensaverNowBar,clockVariant:this._screensaverClockVariant,onClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),onOpenScreensaverSettings:()=>this._openScreensaverSettings(),onWake:()=>this._wakeScreensaver()}));this.shadowRoot.append(createMobileDock({pages:this._pages,activePageId:this._activePageId,isEditing:this._isEditing,onPageSelect:id=>this._setActivePage(id),onAddPage:()=>this._openPageCreator(),onDockSettings:()=>this._openDockSettings(),onSettings:()=>this._openSettings()}));this.shadowRoot.append(this._createSettingsPanel());this.shadowRoot.append(this._createWidgetManagerPanel());this.shadowRoot.append(this._createPageCreatorPanel());this.shadowRoot.append(createSettingsPanel(this._getSettingsPanelProps("screensaver")));const edit=document.createElement("button");edit.className="mha-edit-button mha-main-edit-button mha-primary-edit-button";edit.type="button";edit.innerHTML=this._isEditing?ICONS.close:ICONS.edit;edit.onclick=()=>this.toggleEditMode();this.shadowRoot.append(edit);const addWidget=document.createElement("button");addWidget.className="mha-edit-button mha-main-edit-button mha-add-widget-button";addWidget.type="button";addWidget.innerHTML=`<svg viewBox="0 0 24 24"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5Z"/></svg>`;addWidget.setAttribute("aria-label","Ajouter un widget");addWidget.hidden=!this._isEditing;addWidget.onclick=(event)=>{event.preventDefault();event.stopPropagation();this._openWidgetManager()};this.shadowRoot.append(addWidget);this._syncEditModeDom();this._wireDockAutoHide(grid);this._scheduleSquareUnitSync();Promise.all(links.map(link=>link.sheet?Promise.resolve():new Promise(resolve=>{link.addEventListener("load",resolve,{once:true});link.addEventListener("error",resolve,{once:true})}))).then(()=>{if(this._renderId!==renderId)return;const styledUnits=getActiveGridUnits(this);if(styledUnits!==units){this.render();return}this._scheduleSquareUnitSync();this._syncScreensaverVisibilityState();this._stylesReadyRenderId=renderId;this._tryCompleteBoot()});updateStatusTime(this.shadowRoot);updateClockWidgets(this.shadowRoot);this._syncWidgetDropSlots();this._scheduleScreensaverIdleTimer()}}
-function renderPhased(){
-  syncThemeAttributes(this);
+render(){
+  const themeState=this._themeController.sync();
   const renderId=++this._renderId;
   const layoutMode=getLayoutMode(this);
   const layout=getEffectiveLayout(this);
@@ -3100,11 +2922,7 @@ function renderPhased(){
   const rows=getInternalGridRowCountFromLogical(preset.rows);
   const cols=preset.columns;
   const logicalRows=preset.rows;
-  const themeStyle=THEME_STYLES.has(document.documentElement.dataset.themeStyle)
-    ?document.documentElement.dataset.themeStyle
-    :"oneui";
-  const iconShapeSetting=getStoredIconShapeSetting(this);
-  const iconShape=resolveIconShape(themeStyle,iconShapeSetting);
+  const {themeStyle,iconShapeSetting,iconShape,accent}=themeState;
 
   cancelAnimationFrame(this._widgetRenderFrame);
   cancelAnimationFrame(this._secondaryUiFrame);
@@ -3128,12 +2946,6 @@ function renderPhased(){
   this.style.setProperty("--mha-runtime-logical-columns",String(cols));
   this.style.setProperty("--mha-runtime-logical-rows",String(logicalRows));
 
-  const accent=normalizeAccent(
-    themeStyle,
-    localStorage.getItem(`mha-accent-${themeStyle}`)
-      ||localStorage.getItem("mha-accent")
-      ||"sky",
-  );
   this.dataset.accent=accent;
   document.documentElement.dataset.accent=accent;
   document.documentElement.dataset.iconShapeSetting=iconShapeSetting;
@@ -3200,8 +3012,6 @@ function renderPhased(){
 
   this._scheduleScreensaverIdleTimer();
 }
-
-// Keep the public render contract while the boot path is split into phases.
-MhaControlHub.prototype.render=renderPhased;
+}
 
 customElements.define("mha-control-hub",MhaControlHub);

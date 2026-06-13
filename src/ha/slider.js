@@ -1,4 +1,4 @@
-import { getEntityDomain } from "./entity.js";
+import { getEntityDomain, isEntityAvailable } from "./entity.js";
 
 const LEGACY_LIGHT_SUPPORT_BRIGHTNESS = 1;
 
@@ -28,7 +28,7 @@ function createSliderBinding({
 }
 
 export function getSliderBinding(entityState) {
-  if (!entityState) return null;
+  if (!isEntityAvailable(entityState)) return null;
 
   const attributes = entityState.attributes || {};
   const domain = getEntityDomain(entityState.entity_id || "");

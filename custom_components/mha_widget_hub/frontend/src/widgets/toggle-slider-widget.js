@@ -1,5 +1,9 @@
-import { getEntityState, getWidgetEntityId } from "../ha/entity.js";
-import { runSliderAction, runToggleAction } from "../ha/actions.js";
+import { getEntityState, getWidgetEntityId, isEntityAvailable } from "../ha/entity.js";
+import {
+  createLatestValueAction,
+  runSliderAction,
+  runToggleAction,
+} from "../ha/actions.js";
 import { getSliderBinding } from "../ha/slider.js";
 import { isToggleEntityOn, supportsToggleEntity } from "../ha/toggle.js";
 import { createSlider } from "../ui/slider.js";
@@ -7,6 +11,7 @@ import { createSlider2 } from "../ui/slider2.js";
 import { createToggleWidgetContent } from "./toggle-widget.js";
 
 export const TOGGLE_SLIDER_WIDGET_KIND = "toggle-slider";
+const SLIDER_SERVICE_INTERVAL_MS = 80;
 
 export function isToggleSliderWidget(widget = {}) {
   const kind = widget?.kind || widget?.type || widget?.component;
@@ -32,7 +37,12 @@ export function createToggleSliderWidgetContent(widget = {}, {
     hass,
     entityState: null,
     sliderBinding: null,
+    entityAvailable: false,
   };
+  const sliderAction = createLatestValueAction(
+    (nextValue) => runSliderAction(context.hass, context.entityState, nextValue),
+    { intervalMs: SLIDER_SERVICE_INTERVAL_MS },
+  );
 
   const root = document.createElement("div");
   root.className = "combined-toggle-slider";
@@ -49,7 +59,9 @@ export function createToggleSliderWidgetContent(widget = {}, {
     widgetH: 1,
     disabled: false,
     onToggle: (nextChecked, currentWidget, event) => {
-      if (entityId) runToggleAction(context.hass, context.entityState);
+      if (entityId && context.entityAvailable) {
+        runToggleAction(context.hass, context.entityState);
+      }
       onToggle?.(nextChecked, currentWidget, event);
     },
   }));
@@ -71,10 +83,16 @@ export function createToggleSliderWidgetContent(widget = {}, {
     onInput: (event) => {
       const nextValue = Number(event.currentTarget.value);
       sliderValue.textContent = `${Math.round(nextValue)}%`;
-      if (entityId && context.sliderBinding) {
-        runSliderAction(context.hass, context.entityState, nextValue);
+      if (entityId && context.entityAvailable && context.sliderBinding) {
+        sliderAction.update(nextValue);
       }
       onSliderInput?.(nextValue, widget, event);
+    },
+    onChange: (event) => {
+      const nextValue = Number(event.currentTarget.value);
+      if (entityId && context.entityAvailable && context.sliderBinding) {
+        sliderAction.commit(nextValue);
+      }
     },
   };
 
@@ -95,17 +113,24 @@ export function createToggleSliderWidgetContent(widget = {}, {
     context.hass = nextHass;
     context.entityState = getEntityState(nextHass, widget);
     context.sliderBinding = getSliderBinding(context.entityState);
+    context.entityAvailable = !entityId || isEntityAvailable(context.entityState);
 
     const hasEntity = Boolean(context.entityState);
-    const supportsToggle = widget.supportsToggle
-      ?? (!entityId || (hasEntity && supportsToggleEntity(context.entityState)));
-    const supportsSlider = widget.supportsSlider
-      ?? (!entityId || Boolean(context.sliderBinding));
+    const supportsToggle = context.entityAvailable && (
+      widget.supportsToggle
+      ?? (!entityId || (hasEntity && supportsToggleEntity(context.entityState)))
+    );
+    const supportsSlider = context.entityAvailable && (
+      widget.supportsSlider
+      ?? (!entityId || Boolean(context.sliderBinding))
+    );
     const checked = hasEntity ? isToggleEntityOn(context.entityState) : Boolean(widget.checked);
     const nextValue = context.sliderBinding?.value ?? widget.value ?? 68;
 
+    root.dataset.entityAvailable = String(context.entityAvailable);
     root.dataset.toggleSupported = String(Boolean(supportsToggle));
     root.dataset.sliderSupported = String(Boolean(supportsSlider));
+    if (!context.entityAvailable) sliderAction.clear();
 
     const toggleRoot = toggleSection.querySelector(".mha-toggle-widget");
     const toggleInput = toggleSection.querySelector(".mha-toggle-input");
@@ -116,9 +141,11 @@ export function createToggleSliderWidgetContent(widget = {}, {
       toggleInput.disabled = !supportsToggle;
     }
     if (toggleState) {
-      toggleState.textContent = checked
-        ? widget.stateOn || "Activé"
-        : widget.stateOff || "Désactivé";
+      toggleState.textContent = context.entityAvailable
+        ? checked
+          ? widget.stateOn || "Activé"
+          : widget.stateOff || "Désactivé"
+        : "Indisponible";
     }
 
     const isSliderDragging = [slider, slider2]

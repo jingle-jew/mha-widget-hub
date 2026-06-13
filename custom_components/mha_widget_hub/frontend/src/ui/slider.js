@@ -158,6 +158,7 @@ export function createSlider({
   disabled = false,
   className = "",
   onInput,
+  onChange,
 } = {}) {
   const resolvedOrientation = normalizeSliderOrientation(orientation);
   const initialOrientation = resolvedOrientation === "auto" ? "horizontal" : resolvedOrientation;
@@ -223,6 +224,10 @@ export function createSlider({
   input.addEventListener("input", (event) => {
     syncValue(event.currentTarget.value);
     onInput?.(event);
+  });
+  input.addEventListener("change", (event) => {
+    syncValue(event.currentTarget.value);
+    onChange?.(event);
   });
 
   let activePointerId = null;
@@ -294,6 +299,7 @@ export function createSlider({
     if (event.pointerId !== undefined && event.pointerId !== activeFullWidgetPointerId) return;
 
     const pointerId = activeFullWidgetPointerId;
+    const hadActivePointer = pointerId !== null;
     activeFullWidgetPointerId = null;
     wrapper.classList.remove("is-slider-dragging");
     activeFullWidgetScrollContainer?.classList.remove("is-mobile-slider-dragging");
@@ -301,6 +307,10 @@ export function createSlider({
 
     if (event.type !== "lostpointercapture" && pointerId !== null && input.hasPointerCapture?.(pointerId)) {
       input.releasePointerCapture?.(pointerId);
+    }
+
+    if (hadActivePointer) {
+      input.dispatchEvent(new Event("change", { bubbles: true }));
     }
 
     event.preventDefault?.();
