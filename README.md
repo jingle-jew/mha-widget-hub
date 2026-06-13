@@ -6,835 +6,223 @@
 
 > **The family-first Home Assistant launcher.**
 
-MHA Widget Hub is an experimental custom Home Assistant launcher/dashboard project focused on a premium, spatial, widget-based interface for family homes.
+MHA Widget Hub is a custom Home Assistant launcher built around a spatial,
+widget-based interface for shared family spaces.
 
-The current project already includes a visual shell, responsive grid system, edit mode, widget placement tools, a widget manager MVP, theme styles, and reusable UI components. It is **not yet explicitly connected to Home Assistant entities/services** in this prototype stage. The foundation is being built first: interface, layout, interaction model, and design system.
+Instead of presenting a traditional stack of dashboard cards, MHA provides a
+launcher surface where widgets have deliberate sizes, positions and visual
+hierarchy. A power user configures the home; everyone else gets a calm,
+touch-friendly interface.
 
-## Summary
+The project includes a functional HACS-compatible integration, automatic
+sidebar panel registration, persistent multi-page layouts, Home Assistant
+entity/service helpers, a configurable light widget and a growing widget
+system. It remains under active development: some catalog entries are complete
+widgets, while others are still visual prototypes.
 
-MHA Widget Hub aims to make Home Assistant feel less like a technical dashboard and more like a polished home launcher.
+## Project Status
 
-Instead of thinking in cards stacked in a dashboard, MHA thinks in widgets placed on a spatial grid. The user can enter edit mode, choose widgets from a manager, see valid ghost placement slots, and build a layout visually. The long-term goal is simple: a clean interface for the family, with enough power behind it for the person managing the smart home.
+Current state: **working Home Assistant custom integration and evolving
+launcher product**.
 
-## Project status
+### Operational today
 
-Current state: **visual/interaction prototype with working layout systems**.
+- HACS-compatible custom integration under `custom_components/mha_widget_hub`;
+- automatic `/mha-control-hub` sidebar panel registration;
+- responsive layouts for mobile, tablet and desktop;
+- persistent multi-page launcher;
+- edit, add, move, resize, variant-cycle and delete workflows;
+- collision-aware placement with visible ghost slots;
+- widget registry with canonical `kind`, variants and size contracts;
+- OneUI, iOS-inspired and Material-inspired visual systems;
+- configurable screensaver with clock variants and Now Bar;
+- local persistence with migration backup and observable failures;
+- automated syntax, unit and source/bundle synchronization checks.
 
-Present today:
+### Home Assistant support
 
-- custom shell and launcher-style UI;
-- responsive widget grid for mobile, tablet, and desktop;
-- edit mode;
-- widget move mode with arrow-based movement;
-- ghost drop slots for valid placement;
-- widget manager MVP;
-- placeholder widgets and slider widgets;
-- visual themes: OneUI, iOS-inspired, and Material-inspired;
-- accent palettes and icon shape options;
-- screensaver UI;
-- floating controls;
-- mobile portrait/landscape behavior rules;
-- reusable UI primitives such as sliders, toggles, buttons, icons, and pills.
+The frontend receives the Home Assistant `hass` object through the registered
+panel. Reusable helpers handle entity availability, toggle calls, light
+brightness, fan percentage, media volume, cover position and throttled slider
+updates.
 
-Not present yet:
+The **combined light toggle + slider widget** currently has the most complete
+end-to-end configuration and HA binding. It can select a light entity, reflect
+its state and brightness, disable unavailable controls and call the appropriate
+Home Assistant services.
 
-- explicit Home Assistant entity binding;
-- service calls;
-- real widget configuration flow;
-- production-ready HACS packaging;
-- multi-user/family permissions;
-- polished documentation for installation inside Home Assistant.
+Other widgets are at different maturity levels. Clock, weather, button, toggle,
+slider and composed widgets have real renderers and variants, but several still
+use configured or demonstration data. Placeholder entries remain in parts of
+the Media, Security, Climate and System catalogs.
 
-## Why “launcher”?
+See [Architecture](docs/architecture.md) for the widget maturity table, HA
+service contracts, responsive matrix and persistence model.
 
-MHA Widget Hub is designed around the idea that a smart home interface should feel like the home screen of the house.
+## Product Vision
 
-A launcher is not just a page of cards. It is a place where the most important controls live, where layout matters, and where visual hierarchy helps everyone understand what to touch.
+MHA aims to make Home Assistant feel less like a technical dashboard and more
+like the home screen of the house.
 
-MHA uses that model for Home Assistant:
-
-- widgets are placed spatially;
-- available positions are shown visually;
-- the grid prevents invalid placement;
-- editing is intentional and separated from everyday use;
-- the normal interface stays clean for non-technical users.
-
-## Design goals
+> **Made for the family, managed by the power user.**
 
 ### Family-first
 
-The everyday interface should be obvious, calm, and touch-friendly. The goal is not to expose every entity at once. The goal is to make the right controls easy to find.
+The everyday interface should be obvious, calm and comfortable on touch
+screens. It should expose the right controls instead of every possible entity.
 
 ### Power-user managed
 
-The advanced user can design the layout, tune widgets, choose styles, and eventually bind entities. The rest of the household should not need to understand the machinery underneath.
+The advanced user chooses pages, widgets, entities, variants and visual style.
+The rest of the household should not need to understand the underlying Home
+Assistant model.
 
 ### Spatial editing
 
-MHA avoids freeform chaos. Widget placement is guided by the grid. When adding or moving a widget, the interface shows valid ghost slots so the user chooses from legal positions instead of fighting collisions.
+Widget placement is constrained by the grid. When adding or moving a widget,
+MHA presents valid positions instead of allowing ambiguous overlaps.
 
 ### Premium visual language
 
-The interface is inspired by modern mobile operating systems: soft surfaces, clear typography, blurred floating controls, adaptive themes, and launcher-like interaction patterns.
+The UI borrows useful patterns from modern mobile operating systems: clear
+hierarchy, adaptive surfaces, restrained depth, large touch targets and
+launcher-like interactions.
 
-## Core interaction model
-
-The current editor is built around three main concepts:
+## Interaction Model
 
 ### Add
 
-Enter edit mode, tap the `+` button, choose a category, choose a widget variant, then pick a ghost slot on the grid.
+Enter edit mode, open the widget manager, choose a category and widget variant,
+then select one of the valid placement slots.
 
 ### Move
 
-Use the widget move button to enter move mode. From there, widgets can be moved with directional arrows and smart swap logic.
+Activate move mode and use the directional controls. The layout engine supports
+direct swaps and group-aware movement where geometry permits.
 
-### Place
+### Resize and variants
 
-Ghost slots show only valid positions for the selected widget size. This keeps the layout legal and predictable.
+Widgets follow registry-defined size contracts. Compatible widgets can be
+resized or cycled through their registered variants without producing illegal
+dimensions.
 
-Free browser drag-and-drop has intentionally been removed. The official movement model is now slot-based placement and arrow-based movement.
+### Multi-page launcher
 
-## Current widget manager MVP
+Pages can be created, renamed, reordered, assigned an icon and removed. Widget
+content and placement are persisted per page and responsive layout.
 
-The widget manager currently includes common starter categories:
-
-- Weather;
-- Lights;
-- Climate;
-- Media;
-- Security;
-- System.
-
-These categories include placeholder widgets and slider widgets in useful sizes. They are meant to validate the complete flow before real Home Assistant configuration is added.
-
-## Responsive behavior
-
-MHA currently treats layouts differently depending on screen class:
-
-### Desktop and tablet
-
-- non-scroll-first launcher surface;
-- larger grid;
-- editing tools available;
-- widget manager opens as a wider settings-style panel.
-
-### Mobile portrait
-
-- scrollable launcher;
-- floating controls;
-- edit mode available;
-- widget manager uses mobile sheet dimensions;
-- categories appear as a single-column list.
-
-### Mobile landscape
-
-- edit mode disabled;
-- widget manager hidden;
-- floating edit/add controls hidden.
+Free browser drag-and-drop is not the primary movement model. MHA favors
+explicit slots and directional movement for predictable mouse and touch
+behavior.
 
 ## Themes
 
-MHA currently includes three visual style directions:
+MHA ships three visual directions:
 
-### OneUI
+- **OneUI:** soft surfaces, rounded geometry and a warm family-oriented look;
+- **iOS-inspired:** liquid/frosted glass and Control Center-inspired controls;
+- **Material-inspired:** tonal surfaces and Material You-inspired controls.
 
-Soft, warm, rounded, translucent, and family-friendly.
+The themes share semantic tokens for surfaces, borders, shadows, text and
+controls. Fresh installs default to Auto theme, OneUI style, automatic icon
+shape, enabled screensaver, 30-second delay, Now Bar and digital clock.
 
-### iOS-inspired
+Stored preferences always take precedence over defaults.
 
-Glassier and more reflective, with an emphasis on soft depth.
+## Installation
 
-### Material-inspired
+### HACS
 
-Tonal containers, flatter elevation, and Material-like structure.
+1. Add `https://github.com/jingle-jew/mha-widget-hub` as a custom HACS
+   repository of type **Integration**.
+2. Install **MHA Widget Hub**.
+3. Restart Home Assistant.
+4. Open **Settings > Devices & services > Add integration**.
+5. Search for **MHA Widget Hub** and submit the setup form.
 
-Each style supports accent color choices and icon shape preferences.
+The integration serves its bundled frontend and registers the sidebar panel
+automatically. No manual `panel_custom:` entry is required.
 
-## Repository structure
+The current package targets Home Assistant `2025.7.0` or newer.
 
-The project is intentionally modular:
+See [Installation](docs/installation.md) for manual installation and integration
+details.
 
-```text
-mha-control-hub.js              Main custom element / shell orchestration
-src/
-  components/                   Icon primitives
-  core/                         Storage helpers
-  icons/                        Icon symbol catalog
-  layout/                       Shell, dock, status bar, layout engine
-  screensaver/                  Screensaver UI
-  settings/                     Settings panel and accent palettes
-  ui/                           Reusable UI controls
-  widget-manager/               Widget Manager MVP
-  widgets/                      Widget renderers and widget layout helpers
-styles/
-  components/                   UI primitive styles
-  core/                         Tokens and background
-  layout/                       Shell/grid/dock/floating controls/status bar
-  screensaver/                  Screensaver styles
-  settings/                     Settings panel styles
-  themes/                       OneUI/iOS/Material theme styles
-  widget-manager/               Widget Manager styles
-  widgets/                      Widget styles
-assets/
-  brand/                        Logo and icon assets
+## Documentation
+
+- [Architecture](docs/architecture.md): widgets, HA bindings, responsive,
+  themes, persistence and repository structure.
+- [Development](docs/development.md): local server, tests, CI and bundle
+  synchronization.
+- [Installation](docs/installation.md): HACS and manual Home Assistant setup.
+- [CSS layout audit](docs/layout-css-audit.md): historical layout and styling
+  analysis.
+
+## Quick Development Start
+
+Requires Node.js 22 or newer.
+
+```bash
+npm ci
+python3 -m http.server 4173
 ```
 
-## Development notes
+Open `http://localhost:4173/dev.html`, then run the complete quality suite with:
 
-This project is currently moving fast and prioritizes the foundation of the product:
+```bash
+npm run check
+```
 
-1. visual shell;
-2. responsive grid;
-3. editor model;
-4. widget manager;
-5. theme system;
-6. then Home Assistant binding.
+The integration bundle is generated from the root frontend source:
 
-The intent is to avoid prematurely wiring Home Assistant entities before the interface model is strong enough.
+```bash
+npm run sync:frontend
+```
 
-## Home Assistant installation
+Never edit `custom_components/mha_widget_hub/frontend/` directly. See
+[Development](docs/development.md) for the full workflow.
 
-The repository now includes a HACS-compatible custom integration under
-`custom_components/mha_widget_hub/`. Once installed and added from Home
-Assistant's integrations UI, it serves the bundled frontend and registers the
-`/mha-control-hub` sidebar panel automatically. No manual `panel_custom:`
-configuration is required.
+## Current Limitations
 
-See [docs/installation.md](docs/installation.md) for installation and frontend
-synchronization instructions.
+- HA configuration is complete only for a subset of widgets;
+- several catalog entries remain placeholders or demonstration surfaces;
+- weather does not yet have a complete HA entity-selection flow;
+- layouts are stored per browser/device;
+- family roles and permissions are not implemented;
+- accessibility and keyboard behavior need broader end-to-end review;
+- the main orchestrator remains large and is being decomposed progressively;
+- historical CSS overrides still need consolidation.
 
 ## Roadmap
 
-Likely next steps:
+### Near term
 
-- real widget configuration flow;
-- Home Assistant entity selectors;
-- service-call bindings;
-- weather/media/light/climate widget implementations;
-- layout import/export;
-- multi-page launcher support;
-- HACS-ready packaging;
-- documentation for installation and usage;
-- app/webview launcher strategy for family devices.
+- extend entity configuration to generic toggle, slider, weather and button
+  widgets;
+- continue extracting layout, placement, persistence and theme controllers;
+- add tests for storage migration and extracted placement logic;
+- expose persistence errors in the visible UI;
+- continue consolidating responsive and semantic CSS contracts.
+
+### Medium term
+
+- real HA-backed media, climate, security and system widgets;
+- layout import/export and recovery tools;
+- richer registry-driven previews;
+- broader keyboard, focus and screen-reader support;
+- visual regression coverage.
+
+### Longer term
+
+- optional user/profile-aware layouts;
+- cross-device synchronization strategy;
+- kiosk/app/webview launcher workflows for shared family devices.
 
 ## Name
 
-**MHA Widget Hub** means a widget-first hub for managing the smart home experience.
-
-The product idea is simple:
-
-> Made for the family, managed by the power-user.
+**MHA Widget Hub** describes a widget-first hub for managing the smart-home
+experience.
 
 ## License
 
-License not selected yet.
-
-
-## Accent swatch selected checkmarks
-
-Accent swatches now use the same internal check mark selected state across iOS,
-OneUI and Material. External contour/ring highlights were removed to keep the
-selection treatment clean and compatible with squircle masking.
-
-
-## First launch defaults
-
-On a fresh browser/device with no saved preferences, MHA Widget Hub opens with:
-
-- theme: Auto;
-- visual style: OneUI;
-- accent: first OneUI blue;
-- icon shape: Auto;
-- screensaver: enabled;
-- screensaver delay: 30 seconds;
-- Now Bar: enabled;
-- clock: digital.
-
-These are only fallback values. Once the user changes a setting, the saved
-localStorage preference remains persistent and is not overwritten by the defaults.
-
-
-## Theme Auto first-launch fix
-
-The theme setting now defaults to `Auto` on first launch. Persisted user choices
-from localStorage still win, but document-level effective theme bootstrap values
-are no longer allowed to make a fresh install appear as `Sombre`.
-
-
-## Widget Manager settings token parity
-
-The Widget Manager now follows the Settings panel visual contract more closely:
-same sheet class, same surface tokens, and category/widget tiles styled like
-settings sections across iOS, OneUI, and Material.
-
-
-## Status bar safe frame alignment
-
-The experimental centered-shell content frame was rolled back. Tablet/desktop
-status bar alignment now uses a safer CSS-only frame: the shell and grid math
-remain untouched, while the status bar and floating edit button use the same
-left/right page padding inset.
-
-
-## Status bar padding compensation
-
-Tablet/desktop status bar alignment now compensates for the existing horizontal
-padding inside `.mha-widget-area` and `.mha-grid` instead of removing that
-padding. The internal grid padding remains intact, while the status bar left
-inset is adjusted so the visual widget edge aligns with the right-side frame.
-
-
-## Grid frame left nudge
-
-After status bar alignment, tablet/desktop grid placement received a very small
-left nudge. This does not change grid math, widget positions, or internal
-padding; it only optically aligns the visible widget frame.
-
-
-## Grid vertical nudge rollback
-
-The previous vertical grid compensation was too aggressive and made the widget
-grid sit too high. The grid is restored to the earlier horizontal-only nudge,
-while the status bar shadow remains removed.
-
-
-## Material You slider shape #1
-
-Material sliders now follow the reference #1 shape: accent active track, pale
-inactive track, vertical handle, and a small stop indicator dot. All colors are
-driven by `--mha-accent` and Material surface tokens; iOS and OneUI sliders are
-unchanged.
-
-
-## Status bar theme token surfaces
-
-The status bar now follows the active visual style tokens without changing its
-geometry: iOS uses a liquid glass surface, OneUI uses a soft widget-aligned
-surface, and Material uses tonal container surfaces. The status bar remains
-shadowless.
-
-
-## iOS Control Center SliderWidget
-
-Full SliderWidget instances now use an iOS Control Center-style treatment when
-the visual style is iOS. The widget itself becomes the slider surface and fill,
-while the reusable slider component remains unchanged for embedded sliders and
-for OneUI/Material.
-
-
-## iOS SliderWidget fill fix
-
-The iOS Control Center-style SliderWidget now receives `--mha-slider-value` on
-the widget shell itself, so the active/inactive regions are visible. The hidden
-native input also covers the full widget surface instead of appearing as a small
-centered control.
-
-
-## iOS SliderWidget active fill layer
-
-The iOS Control Center-style SliderWidget now draws its active fill on the
-internal widget grid layer, below the invisible full-surface input. The inactive
-surface follows `--mha-widget-surface`, while the active region follows
-`--mha-accent`.
-
-
-## iOS SliderWidget white fill and pointer fix
-
-The iOS Control Center-style SliderWidget active region now uses translucent
-iOS white instead of the accent color. Full-surface pointer handling was added
-for iOS SliderWidget instances so dragging/clicking works across the widget and
-vertical sliders increase upward/decrease downward.
-
-
-## iOS SliderWidget drag direction fix
-
-The iOS Control Center-style SliderWidget now uses custom full-surface pointer
-mapping. Dragging works across the whole widget, and vertical sliders map bottom
-to min / top to max. The native mobile vertical slider handler is skipped for
-this iOS full-widget treatment to avoid inverted behavior.
-
-
-## iOS SliderWidget inactive soft gray
-
-The inactive region of the iOS Control Center-style SliderWidget now uses a
-subtle iOS gray glass surface that is more transparent than the active white
-fill. This improves the active/inactive distinction without making the inactive
-surface feel dark.
-
-
-## iOS SliderWidget inactive widget surface
-
-The inactive region of the iOS Control Center-style SliderWidget now uses the
-exact widget surface token, `--mha-widget-surface`, instead of a separate gray
-overlay. The active region remains translucent white, and the glass sheen was
-reduced so the inactive area matches regular widgets.
-
-
-## Screensaver edit hotspot
-
-In screensaver mode, the primary edit/settings entry point is intentionally
-invisible but remains clickable as a larger top-left hotspot. This keeps the
-screensaver clean while avoiding unreliable long-press gestures on mobile
-WebViews.
-
-
-## Screensaver real settings hotspot
-
-The invisible screensaver settings hotspot now targets the real screensaver
-settings button instead of the main dashboard edit button. The hotspot is moved
-to the top-left and enlarged, while the dashboard edit/+ controls remain hidden
-and non-interactive during screensaver mode.
-
-
-## Clock widget variants
-
-A 2×2 Clock Widget is available in the Widget Manager under Utilitaires with four
-variants: digital, analog, iOS analog, and scientific. The screensaver reuses the
-same clock variants without a widget tile background so its lockscreen-style
-presentation stays clean.
-
-
-## Clock widget persistence fix
-
-Clock widgets created from the Widget Manager now persist as `kind: "clock"`
-custom widgets instead of falling back to empty widgets. The renderer also
-recognizes earlier utility clock entries by category/variant, so previously
-created clock entries can render correctly after refresh.
-
-
-## Clock widget persistence fix 3
-
-Widget persistence no longer depends on the legacy auto-pack layout validator.
-Explicit ghost-slot placement is already validated before saving, so
-`_saveWidgets()` now writes the current widget contract/order/sizes directly.
-This prevents multiple 2×2 ClockWidgets from appearing temporarily but
-disappearing after browser refresh.
-
-
-## Clock widget persistence fix 4
-
-The legacy auto-pack validator is no longer used as a global save gate. It is
-kept only as a fallback/resize heuristic, while widget persistence now follows
-the explicit ghost-slot position map. This prevents valid multi-clock layouts
-from disappearing after refresh.
-
-
-## OneUI flatter floating buttons
-
-The OneUI main edit button and mobile floating dock button now share the same
-blurred surface treatment. Their shadows were reduced for a flatter, cleaner
-look while keeping the OneUI glass/blur identity.
-
-
-## System button tokens
-
-Floating shell controls now share `--mha-system-button-*` tokens. The edit/add
-buttons and the mobile dock launcher consume the same background, border,
-shadow, blur, and highlight tokens. OneUI defines a flatter blurred treatment,
-and `mobile-dock.css` now explicitly respects those tokens so the dock launcher
-matches the edit button.
-
-
-## System button tokens for iOS and Material
-
-iOS and Material now define their own `--mha-system-button-*` tokens. iOS keeps
-the Liquid Glass-style blurred/translucent controls, while Material uses flatter
-tonal container surfaces with minimal shadow and no glass blur. The existing
-shared consumers remain unchanged.
-
-
-## Semantic tokens phase 1
-
-A new role-based token layer was added in `styles/themes/semantic-tokens.css`.
-It introduces background, surface, border, text, shadow, blur, highlight, and
-accent roles such as `--mha-surface-primary`, `--mha-surface-floating`,
-`--mha-bg-primary`, and `--mha-border-primary`.
-
-Existing component tokens remain in place for compatibility. This phase creates
-the semantic source of truth and compatibility aliases without mass-replacing
-component CSS.
-
-
-## Semantic tokens phase 2
-
-System buttons now consume semantic roles directly. The edit button, add button,
-and mobile dock launcher still use the `--mha-system-button-*` adapter tokens,
-but those adapter tokens are now routed through semantic roles such as
-`--mha-surface-floating`, `--mha-border-primary`, `--mha-shadow-floating`,
-`--mha-blur-primary`, and `--mha-highlight-primary`.
-
-
-## Material opaque system buttons
-
-Material system buttons are now explicitly opaque tonal containers. The edit
-button, add button, and mobile dock launcher no longer use translucent/glass
-surfaces in Material mode, and their backdrop filter is forced to `none`.
-
-
-## Semantic tokens phase 3
-
-Settings panels, screensaver settings, and the Widget Manager now consume the
-semantic panel roles: `--mha-bg-overlay`, `--mha-surface-panel`,
-`--mha-surface-secondary`, `--mha-surface-tertiary`, `--mha-border-subtle`,
-and `--mha-shadow-panel`. Theme-specific panel treatments remain intact:
-iOS/OneUI keep glass-style panels, while Material panels stay opaque/tonal.
-
-
-## Semantic tokens phase 4
-
-The status bar, persistent dock, mobile dock panel, and mobile dock scrim now
-consume shell semantic roles such as `--mha-shell-surface`,
-`--mha-shell-dock-surface`, `--mha-shell-status-surface`,
-`--mha-shell-border`, `--mha-shell-shadow`, and `--mha-shell-blur`.
-
-iOS and OneUI keep their glass/blurred shell surfaces. Material shell surfaces
-are routed to opaque tonal containers with `backdrop-filter: none`.
-
-
-## Semantic tokens phase 5A
-
-Widget shells now route through semantic widget roles:
-`--mha-widget-shell-surface`, `--mha-widget-shell-border`,
-`--mha-widget-shell-shadow`, `--mha-widget-shell-highlight`, and
-`--mha-widget-control-surface`.
-
-This phase migrates the widget card shell and lightweight helper controls. It
-does not deeply refactor specialized widget internals yet; SliderWidget and
-ClockWidget keep their existing layout/behavior while consuming the new semantic
-surface/text/border adapters where safe.
-
-
-## Semantic token reference
-
-A human-readable token reference is available at `styles/SEMANTIC_TOKENS.md`.
-It lists the semantic design tokens, adapter tokens, compatibility aliases, and
-simple usage guidance for future UI work.
-
-
-## Semantic tokens phase 5B-1
-
-SliderWidget internals now consume slider-specific semantic adapter roles such
-as `--mha-slider-widget-surface`, `--mha-slider-widget-surface-inactive`,
-`--mha-slider-widget-surface-active`, `--mha-slider-widget-border`, and
-`--mha-slider-widget-blur`. Layout and pointer behavior are unchanged.
-
-
-## Semantic tokens phase 5B-2
-
-ClockWidget internals and Widget Manager previews now consume dedicated semantic
-adapter roles. Clock faces, tick marks, hands, muted date text, and manager
-preview tiles are routed through `--mha-clock-widget-*` and `--mha-preview-*`
-tokens. Layout and behavior are unchanged.
-
-
-## Material SliderWidget shell parity
-
-Material SliderWidget cards now follow the same shell surface, border, shadow,
-and edit-state tokens as other Material widgets. Slider-specific tokens remain
-for the internal slider rail/fill/thumb only.
-
-
-## OneUI panel opacity tuning
-
-OneUI settings-style panels were visually calibrated after the semantic-token
-migration. Light mode panels are now less transparent/milkier for readability,
-while dark mode panels are less opaque and more glass-like.
-
-
-## iOS light panel transparency tuning
-
-iOS light settings-style panels are now more transparent/Liquid Glass while
-keeping inner sections readable. iOS dark mode is intentionally unchanged.
-
-
-## iOS panel Liquid Glass tuning
-
-iOS settings-style panels now use less diffuse blur and stronger Liquid
-Glass-style highlights in both light and dark themes. Light mode keeps its
-transparent glass character, while dark mode keeps its existing balance with a
-cleaner, less foggy glass surface.
-
-
-## iOS light SliderWidget active/inactive contrast
-
-iOS light SliderWidget/fader inactive surfaces now match the widget card
-surface, while the active fill remains a more visible white Liquid Glass layer.
-iOS dark, OneUI, Material, and slider behavior are unchanged.
-
-
-## iOS dark SliderWidget inactive surface parity
-
-iOS dark SliderWidget/fader inactive surfaces now match the widget card surface.
-The active Liquid Glass fill, iOS light tuning, OneUI, Material, and slider
-behavior are unchanged.
-
-
-## Screensaver horizontal center alignment
-
-The screensaver clock and Now Bar are now centered against the full viewport
-instead of inheriting dashboard grid/page/dock alignment. This keeps both
-elements on the same horizontal axis.
-
-
-## Screensaver Now Bar box center fix
-
-The screensaver alignment fix now centers the actual `.mha-screensaver-nowbar`
-box and `.mha-screensaver-clock-region` box, instead of centering text or inner
-Now Bar implementation layers.
-
-
-## Screensaver mobile Now Bar viewport center fix
-
-On mobile screensaver layouts, the Now Bar and clock region are centered against
-the viewport axis instead of the padded grid content box. Desktop/tablet
-screensaver alignment is unchanged.
-
-
-## ClockWidget density independence
-
-ClockWidget content now sizes from its own widget rectangle using container query
-units. Digital, analog, iOS analog, and scientific clock variants no longer
-depend on viewport sizing or fixed rem caps for their main content.
-
-A global widget content density rule was also documented: widget internals must
-size from the widget itself, not from the viewport, grid, shell, dock, or page.
-
-
-## WeatherWidget 2x2
-
-Added the first WeatherWidget: a 2x2 current-conditions card without hourly
-forecast. It has theme-specific styling for iOS, OneUI, and Material You, while
-following the widget density rule: content sizes from the widget rectangle, not
-from the viewport/grid/shell.
-
-
-## Widget inner padding tuning
-
-The global widget inner padding was reduced so widget content uses more of the
-card area while keeping a modern/coherent gap from the widget edge. The padding
-now follows the widget's own container size using container query units, with a
-viewport-based fallback for older browsers.
-
-
-## WeatherWidget vertical rhythm tuning
-
-WeatherWidget now has a slightly larger vertical gap between its internal
-sections so the top and bottom breathing room feels balanced with the left/right
-edge spacing, without changing the global widget padding.
-
-
-## WeatherWidget size variants
-
-WeatherWidget now supports three official sizes:
-
-- `2x2`: current weather compact card;
-- `3x2`: current weather, wider layout, hidden from the widget manager;
-- `4x2`: current weather on the left and a vertical 5-day forecast stack on the right.
-
-The WeatherWidget dimension button cycles `2x2 → 3x2 → 4x2 → 2x2`. Manual resize snaps to the same allowed sizes.
-
-
-## WeatherWidget 4x2 width and rhythm tuning
-
-The 4x2 WeatherWidget now stretches its current-weather and forecast panes to
-the full inner widget width while respecting the global widget padding. All
-WeatherWidget variants also have a slightly roomier vertical rhythm.
-
-
-## WeatherWidget 4x2 meta and width fix
-
-The 4x2 WeatherWidget now keeps its current-weather detail chips horizontal like
-the 2x2/3x2 variants. The current and forecast panes also stretch to the full
-inner widget width instead of visually shrinking toward the center.
-
-
-## WeatherWidget variant padding parity
-
-WeatherWidget variants now share the same internal padding in 2x2, 3x2, and
-4x2. The variant may change layout, but the inset from the widget edge remains
-constant.
-
-
-## WeatherWidget 4x2 single inset fix
-
-The 4x2 WeatherWidget now uses a single outer inset, matching the 2x2/3x2
-variants. The forecast pane no longer creates a second nested-card padding that
-pulls the content toward the center.
-
-
-## WeatherWidget 4x2 full width forecast fix
-
-WeatherWidget wrappers now stretch to the full inner widget box, preventing the
-4x2 content from staying at a min-content width. The 4x2 forecast pane is also
-wider, using a balanced 1fr/1fr split with safer forecast row columns.
-
-
-## WeatherWidget full width padded bounds fix
-
-WeatherWidget internals now stretch inside the padded widget content box instead
-of overflowing past it. The 4x2 forecast layout keeps the wider forecast pane,
-but respects the same internal padding contract as 2x2 and 3x2.
-
-
-## WeatherWidget icon/forecast/background tuning
-
-WeatherWidget current-condition icons are now constrained so the sun/cloud icon
-does not overflow in 2x2 or 3x2. The 4x2 forecast rows are more horizontally
-compact between day, icon, and temperatures. iOS and OneUI WeatherWidget cards
-also get blue weather-style gradients in both light and dark themes.
-
-
-## WeatherWidget crop and forecast compact fix
-
-WeatherWidget 2x2/4x2 content is now clipped inside the widget box so the
-weather icon no longer crops or overflows on the right side. The 4x2 forecast
-rows are also more compact horizontally between day, icon, and temperatures.
-
-
-## WeatherWidget icon top-right and compact meta
-
-WeatherWidget current-weather icons are now anchored to the top-right of the
-current section and align with the title/header area. The 2x2 variant no longer
-renders detail chips, letting the temperature/range content use the freed space.
-The 4x2 forecast rows are more compact horizontally, with temperatures closer to
-forecast icons but padded away from the widget edge.
-
-
-## WeatherWidget composition polish
-
-WeatherWidget composition was tuned across its three size variants: 2x2 has less
-top emptiness, 3x2 removes the accidental left inset, 4x2 gives the forecast
-section more usable room while increasing the gap between current conditions and
-forecast. The current-condition icon is anchored to the top-right of the current
-section and aligned with the title/header area.
-
-
-## Widget unit stretch audit and cleanup
-
-Audit found that `createWidgetUnit()` was already emitting
-`data-align="stretch"` and `data-justify="stretch"` for WeatherWidget and
-ClockWidget full-card units, but the generic CSS contract did not force direct
-children to fill those units. `widget-layout.css` now honors stretch units by
-stretching their direct children to the full internal widget-unit rectangle.
-
-WeatherWidget CSS was cleaned up to remove several compensating width/overflow
-patches that were trying to solve the wrapper issue locally. WeatherWidget now
-relies on the generic unit stretch contract, then applies only its own content
-composition rules.
-
-
-## Internal Widget Grid phase A
-
-Added a shared Internal Widget Grid System for future widgets.
-
-The outer dashboard grid places widgets. The internal widget grid defines common
-regions inside a widget:
-
-- header
-- hero
-- body
-- meta
-- secondary
-- footer
-
-New helpers in `src/widgets/widget-layout.js`:
-
-- `createWidgetContentGrid()`
-- `createWidgetContentRegion()`
-- `createWidgetContentText()`
-
-Supported internal layouts:
-
-- `compact`
-- `wide`
-- `split`
-- `stack`
-- `hero`
-- `custom`
-
-This phase adds the contract and CSS without migrating existing widgets yet.
-
-
-## WeatherWidget removed + doubled inner-grid foundation
-
-WeatherWidget was removed for now. The previous implementation had accumulated
-too many compensating patches and was no longer a reliable foundation.
-
-A new doubled internal grid foundation was added:
-
-- external `2x2` widget -> internal `4x4` grid
-- external `3x2` widget -> internal `6x4` grid
-- external `4x2` widget -> internal `8x4` grid
-
-Rules:
-
-- `.mha-grid` places widgets on the dashboard.
-- `.mha-widget` owns the shell, surface, and one equal internal padding.
-- `.mha-widget-inner-grid` fills the padded area.
-- `.mha-widget-inner-unit` places content/components inside the doubled grid.
-
-New/updated helpers:
-
-- `createWidgetInnerGrid({ widgetW, widgetH, scale })`
-- `createWidgetInnerUnit({ col, row, colSpan, rowSpan })`
-
-This is now the foundation for rebuilding WeatherWidget and future rich widgets.
-
-
-## Vertical SliderWidget mobile pointer fix
-
-The full-widget pointer mapping that previously made the iOS SliderWidget
-reliable is now shared by mobile vertical SliderWidget controls in OneUI and
-Material as well. This fixes Android mobile vertical sliders where tap/click
-worked but continuous vertical dragging did not.
-
-
-## Simple Button Widget
-
-Added the first widget built on the doubled inner-grid foundation.
-
-External size:
-
-- `2x1`
-
-Internal grid:
-
-- `4x2`
-
-Placement:
-
-- `Icon  col 1-2 row 1-2`
-- `Label col 3-4 row 1`
-- `State col 3-4 row 2`
-
-The widget is available in the widget manager as **Bouton simple** under the
-Actions category.
-
-
-## Widget text and icon defaults
-
-Widget text now aligns left/start by default. Exceptions should be explicit in
-the widget/component CSS.
-
-Icons placed inside an inner-grid unit now fill 100% of the unit reserved for
-them. The Simple Button widget was updated to keep label/state text left-aligned
-and make the icon fill its `col 1-2 row 1-2` area.
-
-
-## Inner-grid scale 4
-
-The internal widget grid now uses `scale: 4` by default instead of `scale: 2`.
-
-Examples:
-
-- external `2x1` widget -> internal `8x4` grid
-- external `2x2` widget -> internal `8x8` grid
-- external `3x2` widget -> internal `12x8` grid
-- external `4x2` widget -> internal `16x8` grid
-
-Simple Button was updated to the new 8x4 inner-grid:
-
-- `Icon  col 1-4 row 1-4`
-- `Label col 5-8 row 1-2`
-- `State col 5-8 row 3-4`
+A license has not been selected yet.
