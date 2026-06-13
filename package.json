@@ -9,7 +9,7 @@
   "scripts": {
     "test": "node --test",
     "check:syntax": "node tools/check-syntax.mjs",
-    "check:sync": "node tools/check-frontend-sync.mjs",
+    "check:sync": "node tools/sync-integration-frontend.mjs --check",
     "check": "npm run check:syntax && npm test && npm run check:sync",
     "sync:frontend": "node tools/sync-integration-frontend.mjs"
   }

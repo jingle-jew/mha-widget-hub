@@ -4,7 +4,7 @@ import {
   readJsonResult,
   writeJson,
   writeStorageValue,
-} from "./src/core/storage.js";
+} from "./src/core/storage.js?v=storage-v1";
 import {destroyDomSubtree} from "./src/core/dom-lifecycle.js";
 import {ICONS} from "./src/components/icons.js";
 import {createShell} from "./src/layout/shell.js";

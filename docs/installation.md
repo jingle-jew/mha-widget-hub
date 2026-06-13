@@ -51,9 +51,20 @@ The frontend source of truth stays at the repository root:
 After changing those files, synchronize the HACS bundle with:
 
 ```bash
-node tools/sync-integration-frontend.mjs
+npm run sync:frontend
 ```
 
 The generated runtime copy lives in
 `custom_components/mha_widget_hub/frontend/` and must be committed with the
-source change. The existing `dev.html` workflow remains unchanged.
+source change. Never edit files in that generated directory directly: make the
+change in the root source, then run the synchronization command.
+
+To verify the bundle without modifying files:
+
+```bash
+npm run check:sync
+```
+
+This runs `sync-integration-frontend.mjs --check`. CI executes the same check
+and fails when a file is missing, extra or different. The existing `dev.html`
+workflow remains unchanged.
