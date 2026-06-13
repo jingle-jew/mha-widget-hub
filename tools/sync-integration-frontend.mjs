@@ -1,27 +1,19 @@
 import { cp, mkdir, rm } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import {
+  BRAND_FILES,
+  FRONTEND_SOURCES,
+  INTEGRATION_FRONTEND,
+} from "./frontend-files.mjs";
 
 const repoRoot = fileURLToPath(new URL("../", import.meta.url));
-const integrationRoot = path.join(
-  repoRoot,
-  "custom_components",
-  "mha_widget_hub",
-);
-const frontendRoot = path.join(integrationRoot, "frontend");
-
-const frontendSources = [
-  ["mha-control-hub-loader.js", "mha-control-hub-loader.js"],
-  ["mha-control-hub.js", "mha-control-hub.js"],
-  ["src", "src"],
-  ["styles", "styles"],
-  ["assets", "assets"],
-];
+const frontendRoot = path.join(repoRoot, INTEGRATION_FRONTEND);
 
 await rm(frontendRoot, { recursive: true, force: true });
 await mkdir(frontendRoot, { recursive: true });
 
-for (const [source, destination] of frontendSources) {
+for (const [source, destination] of FRONTEND_SOURCES) {
   await cp(
     path.join(repoRoot, source),
     path.join(frontendRoot, destination),
@@ -32,11 +24,9 @@ for (const [source, destination] of frontendSources) {
   );
 }
 
-const brandRoot = path.join(integrationRoot, "brand");
-await mkdir(brandRoot, { recursive: true });
-await cp(
-  path.join(repoRoot, "assets", "brand", "mha-widget-hub-icon.png"),
-  path.join(brandRoot, "icon.png"),
-);
+for (const [source, destination] of BRAND_FILES) {
+  await mkdir(path.dirname(path.join(repoRoot, destination)), { recursive: true });
+  await cp(path.join(repoRoot, source), path.join(repoRoot, destination));
+}
 
 console.log(`Synced integration frontend to ${frontendRoot}`);

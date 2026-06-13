@@ -153,6 +153,15 @@ export function createToggleSliderWidgetContent(widget = {}, {
     });
   };
 
+  root.__mhaDestroy = () => {
+    sliderAction.clear();
+    context.hass = null;
+    context.entityState = null;
+    context.sliderBinding = null;
+    context.entityAvailable = false;
+    delete root.__mhaUpdateFromHass;
+  };
+
   root.__mhaUpdateFromHass(hass);
   return root;
 }

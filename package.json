@@ -1,0 +1,16 @@
+{
+  "name": "mha-widget-hub",
+  "version": "0.1.1",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test",
+    "check:syntax": "node tools/check-syntax.mjs",
+    "check:sync": "node tools/check-frontend-sync.mjs",
+    "check": "npm run check:syntax && npm test && npm run check:sync",
+    "sync:frontend": "node tools/sync-integration-frontend.mjs"
+  }
+}

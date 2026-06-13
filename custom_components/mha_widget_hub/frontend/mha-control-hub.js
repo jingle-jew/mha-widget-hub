@@ -1,4 +1,5 @@
 import {readJson,writeJson} from "./src/core/storage.js";
+import {destroyDomSubtree} from "./src/core/dom-lifecycle.js";
 import {ICONS} from "./src/components/icons.js";
 import {createShell} from "./src/layout/shell.js";
 import {createDock} from "./src/layout/dock.js";
@@ -493,6 +494,7 @@ disconnectedCallback(){
   clearTimeout(this._responsiveRelayoutTimer);
   this._responsiveRelayoutTimer=null;
   if(this._settingsOpenListener)this.shadowRoot.removeEventListener("mha-open-settings",this._settingsOpenListener);
+  destroyDomSubtree(this.shadowRoot);
 }
 requestRender(){this.render()}
 _syncEditModeDom(){
@@ -1295,7 +1297,10 @@ _syncDocksDom(){
 _refreshActiveGridOnly(){
   const grid=this.shadowRoot?.querySelector?.(".mha-grid");
   if(!grid){this.render();return;}
-  grid.querySelectorAll(".mha-widget,.mha-widget-drop-slot").forEach(node=>node.remove());
+  grid.querySelectorAll(".mha-widget,.mha-widget-drop-slot").forEach(node=>{
+    destroyDomSubtree(node);
+    node.remove();
+  });
   const {units}=this._getGridBounds();
   const positions=this._getActiveWidgetPositions({create:true});
   this._widgets.forEach(w=>{
@@ -1340,7 +1345,7 @@ _saveWidgets(){
 
   this._syncActivePageWidgets();
 }
-_removeWidget(id){if(!this._widgets.some(w=>w.id===id))return;if(this._activeMoveWidgetId===id)this._activeMoveWidgetId="";this._widgets=this._widgets.filter(w=>w.id!==id);Object.values(this._widgetPositions).forEach(layout=>{if(layout&&typeof layout==="object")delete layout[id]});writeJson(POSITIONS,this._widgetPositions);this._saveWidgets();this.shadowRoot.querySelector(`[data-widget-id="${id}"]`)?.remove();this._clearDropState();this._scheduleSquareUnitSync()}
+_removeWidget(id){if(!this._widgets.some(w=>w.id===id))return;if(this._activeMoveWidgetId===id)this._activeMoveWidgetId="";this._widgets=this._widgets.filter(w=>w.id!==id);Object.values(this._widgetPositions).forEach(layout=>{if(layout&&typeof layout==="object")delete layout[id]});writeJson(POSITIONS,this._widgetPositions);this._saveWidgets();const element=this.shadowRoot.querySelector(`[data-widget-id="${id}"]`);if(element){destroyDomSubtree(element);element.remove()}this._clearDropState();this._scheduleSquareUnitSync()}
 
 _isResizeHandleEvent(event){
   return Boolean(event?.target?.closest?.(
@@ -2228,6 +2233,7 @@ _replaceWidgetDom(id){
   });
 
   this._wireDrag(next,widget);
+  destroyDomSubtree(existing);
   existing.replaceWith(next);
   this._applyWidgetPositionsToDom(positions);
   updateClockWidgets(this.shadowRoot);
@@ -2804,6 +2810,7 @@ render(){
   document.documentElement.dataset.iconShapeSetting=iconShapeSetting;
   document.documentElement.dataset.iconShape=iconShape;
 
+  destroyDomSubtree(this.shadowRoot);
   this.shadowRoot.innerHTML=createCriticalBootStyle()+createFrontendStyleLinks();
   const links=[...this.shadowRoot.querySelectorAll('link[rel="stylesheet"]')];
   const {bg,shell,grid}=createShell({

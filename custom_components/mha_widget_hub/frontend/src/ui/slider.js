@@ -65,34 +65,52 @@ function applySliderLayout(wrapper) {
   input?.setAttribute("aria-orientation", nextOrientation);
 }
 
-function scheduleSliderLayout(wrapper) {
-  applySliderLayout(wrapper);
-
-  /*
-   * Safari can report an intermediate box during a resize/orientation flip.
-   * Re-measure across two frames so the rotated rotor receives the final
-   * widget frame height/width instead of the old compact axis.
-   */
-  requestAnimationFrame(() => {
-    applySliderLayout(wrapper);
-    requestAnimationFrame(() => applySliderLayout(wrapper));
-  });
-}
-
 function observeSliderLayout(wrapper) {
+  let resizeObserver = null;
+  let destroyed = false;
+  const frameIds = new Set();
+
+  const scheduleFrame = (callback) => {
+    const frameId = requestAnimationFrame(() => {
+      frameIds.delete(frameId);
+      if (!destroyed) callback();
+    });
+    frameIds.add(frameId);
+  };
+
+  const scheduleLayout = () => {
+    if (destroyed) return;
+    applySliderLayout(wrapper);
+
+    /*
+     * Safari can report an intermediate box during a resize/orientation flip.
+     * Re-measure across two frames so the rotated rotor receives the final
+     * widget frame height/width instead of the old compact axis.
+     */
+    scheduleFrame(() => {
+      applySliderLayout(wrapper);
+      scheduleFrame(() => applySliderLayout(wrapper));
+    });
+  };
+
   if (!("ResizeObserver" in window)) {
-    requestAnimationFrame(() => scheduleSliderLayout(wrapper));
-    return;
+    scheduleFrame(scheduleLayout);
+  } else {
+    scheduleFrame(() => {
+      const measureTarget = getSliderMeasureTarget(wrapper);
+      resizeObserver = new ResizeObserver(scheduleLayout);
+      resizeObserver.observe(measureTarget);
+      scheduleLayout();
+    });
   }
 
-  requestAnimationFrame(() => {
-    const measureTarget = getSliderMeasureTarget(wrapper);
-    const resizeObserver = new ResizeObserver(() => scheduleSliderLayout(wrapper));
-
-    resizeObserver.observe(measureTarget);
-    wrapper.__mhaSliderResizeObserver = resizeObserver;
-    scheduleSliderLayout(wrapper);
-  });
+  return () => {
+    destroyed = true;
+    resizeObserver?.disconnect();
+    resizeObserver = null;
+    frameIds.forEach(frameId => cancelAnimationFrame(frameId));
+    frameIds.clear();
+  };
 }
 
 
@@ -326,7 +344,18 @@ export function createSlider({
   rotor.append(oneUiTrack, input);
   wrapper.append(rotor);
 
-  observeSliderLayout(wrapper);
+  const stopObservingLayout = observeSliderLayout(wrapper);
+  wrapper.__mhaDestroy = () => {
+    stopObservingLayout();
+    wrapper.classList.remove("is-slider-dragging");
+    activeScrollContainer?.classList.remove("is-mobile-slider-dragging");
+    activeFullWidgetScrollContainer?.classList.remove("is-mobile-slider-dragging");
+    activePointerId = null;
+    activeFullWidgetPointerId = null;
+    activeScrollContainer = null;
+    activeFullWidgetScrollContainer = null;
+    delete wrapper.__mhaSliderApi;
+  };
 
   return wrapper;
 }
