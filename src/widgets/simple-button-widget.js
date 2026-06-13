@@ -9,17 +9,12 @@
  */
 
 import { createIconSymbol } from "../ui/icon-symbol.js";
+import { isWidgetKind } from "./widget-registry.js";
 
 export const SIMPLE_BUTTON_WIDGET_KIND = "button";
 
 export function isSimpleButtonWidget(widget = {}) {
-  const kind = widget?.kind || widget?.type || widget?.component;
-  const variant = widget?.variant || "";
-
-  return kind === "button"
-    || kind === "button-widget"
-    || widget?.component === "button-widget"
-    || variant === "simple-button";
+  return isWidgetKind(widget, SIMPLE_BUTTON_WIDGET_KIND);
 }
 
 export function isSimpleButtonWidgetActive(widget = {}) {

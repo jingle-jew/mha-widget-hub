@@ -1,6 +1,7 @@
 import { createIconSymbol } from "../ui/icon-symbol.js";
 import { createButton } from "../ui/button.js";
 import { createToggleWidgetContent } from "./toggle-widget.js";
+import { isWidgetKind } from "./widget-registry.js";
 
 export const TOGGLE_BUTTONS_WIDGET_KIND = "toggle-buttons";
 
@@ -12,16 +13,7 @@ const BUTTON_SLOTS = Object.freeze([
 ]);
 
 export function isToggleButtonsWidget(widget = {}) {
-  const kind = widget?.kind || widget?.type || widget?.component;
-  const variant = widget?.variant || "";
-
-  return kind === TOGGLE_BUTTONS_WIDGET_KIND
-    || kind === "combined-toggle-buttons"
-    || widget?.component === "toggle-buttons-widget"
-    || variant === "toggle-buttons"
-    || variant === "combined-toggle-buttons"
-    || variant === "toggle-button-row"
-    || variant === "toggle-quick-buttons";
+  return isWidgetKind(widget, TOGGLE_BUTTONS_WIDGET_KIND);
 }
 
 function getMockChecked(widget = {}) {

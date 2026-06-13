@@ -11,18 +11,12 @@
 
 import { createIconSymbol } from "../ui/icon-symbol.js";
 import { createToggle } from "../ui/toggle.js";
+import { isWidgetKind } from "./widget-registry.js";
 
 export const TOGGLE_WIDGET_KIND = "toggle";
 
 export function isToggleWidget(widget = {}) {
-  const kind = widget?.kind || widget?.type || widget?.component;
-  const variant = widget?.variant || "";
-
-  return kind === "toggle"
-    || kind === "toggle-widget"
-    || widget?.component === "toggle-widget"
-    || variant === "toggle-widget"
-    || variant === "simple-toggle";
+  return isWidgetKind(widget, TOGGLE_WIDGET_KIND);
 }
 
 function getToggleWidgetData(widget = {}) {

@@ -1,12 +1,13 @@
 import { ICONS } from "../components/icons.js";
 import { getWidgetDensity, normalizeWidgetSize, sizeToString } from "../layout/layout-engine.js";
-import { createSliderWidgetContent, isSliderWidget } from "./slider-widget.js";
-import { createClockWidgetContent, isClockWidget } from "./clock-widget.js";
-import { createSimpleButtonWidgetContent, isSimpleButtonWidget, isSimpleButtonWidgetActive } from "./simple-button-widget.js";
-import { createWeatherWidgetContent, isWeatherWidget } from "./weather-widget.js";
-import { createToggleWidgetContent, isToggleWidget } from "./toggle-widget.js";
-import { createToggleButtonsWidgetContent, isToggleButtonsWidget } from "./toggle-buttons-widget.js";
-import { createToggleSliderWidgetContent, isToggleSliderWidget } from "./toggle-slider-widget.js";
+import { createSliderWidgetContent } from "./slider-widget.js";
+import { createClockWidgetContent } from "./clock-widget.js";
+import { createSimpleButtonWidgetContent, isSimpleButtonWidgetActive } from "./simple-button-widget.js";
+import { createWeatherWidgetContent } from "./weather-widget.js";
+import { createToggleWidgetContent } from "./toggle-widget.js";
+import { createToggleButtonsWidgetContent } from "./toggle-buttons-widget.js";
+import { createToggleSliderWidgetContent } from "./toggle-slider-widget.js";
+import { getWidgetDefinition, resolveWidgetKind } from "./widget-registry.js";
 
 export function createEmptyWidget(
   widget,
@@ -23,6 +24,8 @@ export function createEmptyWidget(
     hass,
   } = {},
 ) {
+  const widgetKind = resolveWidgetKind(widget);
+  const widgetDefinition = getWidgetDefinition(widgetKind);
   const size = normalizeWidgetSize(widget);
   const density = getWidgetDensity(size);
   const effectiveWidgetW = Math.min(size.w, activeGridUnits);
@@ -31,29 +34,11 @@ export function createEmptyWidget(
   el.className = "mha-widget";
   el.classList.toggle("is-move-target", isMoveTarget);
   el.dataset.widgetId = widget.id;
-  if (isToggleButtonsWidget(widget)) {
-    el.dataset.widgetKind = "toggle-buttons";
-  } else if (isToggleSliderWidget(widget)) {
-    el.dataset.widgetKind = "toggle-slider";
-  } else if (isSliderWidget(widget) || widget.id === "slot-f" || widget.id === "slot-i") {
-    el.dataset.widgetKind = "slider";
+  if (widgetDefinition?.renderer !== "empty") {
+    el.dataset.widgetKind = widgetKind;
   }
-
-  if (isClockWidget(widget)) {
-    el.dataset.widgetKind = "clock";
-  }
-
-  if (isSimpleButtonWidget(widget)) {
-    el.dataset.widgetKind = "button";
+  if (widgetKind === "button") {
     el.dataset.active = String(isSimpleButtonWidgetActive(widget));
-  }
-
-  if (!isToggleSliderWidget(widget) && isToggleWidget(widget)) {
-    el.dataset.widgetKind = "toggle";
-  }
-
-  if (isWeatherWidget(widget)) {
-    el.dataset.widgetKind = "weather";
   }
   el.dataset.widgetConfiguredW = String(size.w);
   el.dataset.widgetW = String(effectiveWidgetW);
@@ -75,16 +60,16 @@ export function createEmptyWidget(
 
   /* Widget internals are now rendered by each widget component directly. */
 
-  if (isToggleButtonsWidget(widget)) {
+  if (widgetKind === "toggle-buttons") {
     el.append(createToggleButtonsWidgetContent(widget, {
       widgetW: effectiveWidgetW,
     }));
-  } else if (isToggleSliderWidget(widget)) {
+  } else if (widgetKind === "toggle-slider") {
     el.append(createToggleSliderWidgetContent(widget, {
       hass,
       widgetW: effectiveWidgetW,
     }));
-  } else if (isSliderWidget(widget) || widget.id === "slot-f" || widget.id === "slot-i") {
+  } else if (widgetKind === "slider") {
     el.append(
       createSliderWidgetContent(widget, {
         size,
@@ -96,7 +81,7 @@ export function createEmptyWidget(
     );
   }
 
-  if (isClockWidget(widget)) {
+  if (widgetKind === "clock") {
     /*
      * Clocks are single centered visual components, not multi-slot layouts.
      * Render them in a direct safe frame instead of the internal micro-grid so
@@ -114,7 +99,7 @@ export function createEmptyWidget(
   }
 
 
-  if (isSimpleButtonWidget(widget)) {
+  if (widgetKind === "button") {
     /*
      * Buttons own their layout directly. Keep them as direct children of the
      * widget shell so their local frame uses the widget safe inset cleanly.
@@ -128,7 +113,7 @@ export function createEmptyWidget(
   }
 
 
-  if (!isToggleSliderWidget(widget) && isToggleWidget(widget)) {
+  if (widgetKind === "toggle") {
     el.append(
       createToggleWidgetContent(widget, {
         widgetW: effectiveWidgetW,
@@ -138,7 +123,7 @@ export function createEmptyWidget(
   }
 
 
-  if (isWeatherWidget(widget)) {
+  if (widgetKind === "weather") {
     el.append(
       createWeatherWidgetContent(widget, {
         widgetW: effectiveWidgetW,
@@ -150,14 +135,14 @@ export function createEmptyWidget(
   const tools = document.createElement("div");
     tools.className = "mha-widget-tools";
 
-    const dimensionButton = isToggleSliderWidget(widget)
+    const dimensionButton = widgetDefinition?.config
       ? tool("Configurer le widget", "edit", () => onConfigure?.(widget.id), {
         className: "mha-tool-button--dimension",
       })
       : tool("Variante suivante", "resize", () => {}, {
         className: "mha-tool-button--dimension",
       });
-    if (!isToggleSliderWidget(widget)) {
+    if (!widgetDefinition?.config) {
       dimensionButton.addEventListener("pointerdown", (event) => {
         if (isMoveTarget) return;
         event.preventDefault();

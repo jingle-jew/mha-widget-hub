@@ -1,5 +1,6 @@
 import { normalizeSliderWidgetSize } from "../layout/layout-engine.js";
 import { createSlider } from "../ui/slider.js";
+import { isWidgetKind } from "./widget-registry.js";
 
 /*
  * SliderWidget
@@ -70,5 +71,5 @@ export function createSliderWidgetContent(
 }
 
 export function isSliderWidget(widget) {
-  return widget?.type === "slider" || widget?.kind === "slider" || widget?.component === "slider-widget";
+  return isWidgetKind(widget, "slider");
 }

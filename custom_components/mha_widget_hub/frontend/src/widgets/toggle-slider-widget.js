@@ -9,21 +9,13 @@ import { isToggleEntityOn, supportsToggleEntity } from "../ha/toggle.js";
 import { createSlider } from "../ui/slider.js";
 import { createSlider2 } from "../ui/slider2.js";
 import { createToggleWidgetContent } from "./toggle-widget.js";
+import { isWidgetKind } from "./widget-registry.js";
 
 export const TOGGLE_SLIDER_WIDGET_KIND = "toggle-slider";
 const SLIDER_SERVICE_INTERVAL_MS = 80;
 
 export function isToggleSliderWidget(widget = {}) {
-  const kind = widget?.kind || widget?.type || widget?.component;
-  const variant = widget?.variant || "";
-
-  return kind === TOGGLE_SLIDER_WIDGET_KIND
-    || kind === "combined-slider-toggle"
-    || kind === "combined-toggle-slider"
-    || widget?.component === "toggle-slider-widget"
-    || variant === "toggle-slider"
-    || variant === "combined-slider-toggle"
-    || variant === "combined-toggle-slider";
+  return isWidgetKind(widget, TOGGLE_SLIDER_WIDGET_KIND);
 }
 
 export function createToggleSliderWidgetContent(widget = {}, {

@@ -17,6 +17,11 @@ import {
 import {updateStatusTime} from "./src/layout/status-bar.js";
 import {createEmptyWidget} from "./src/widgets/empty-widget.js";
 import { getNextWidgetVariantEntries, getVariantCandidate, sameVariantSize } from "./src/widgets/widget-variants.js";
+import {
+  getWidgetDefinition,
+  normalizeWidgetContract,
+  resolveWidgetKind,
+} from "./src/widgets/widget-registry.js";
 import {updateClockWidgets} from "./src/widgets/clock-widget.js";
 import {DEFAULT_WIDGETS,getActiveGridRows,getActiveGridUnits,getEffectiveLayout,getInternalGridColumnCountFromLogical,getInternalGridRowCountFromLogical,getLayoutMode,getGridPreset,getWidgetDensity,normalizeWidgetForKind,normalizeWidgetSize,sizeToString} from "./src/layout/layout-engine.js";
 import {createScreensaver,normalizeClockVariant,updateScreensaverClock} from "./src/screensaver/screensaver.js";
@@ -167,163 +172,8 @@ const SCREENSAVER_CLOCK_VARIANT="mha-screensaver-clock-variant";
  */
 
 
-function isClockCatalogVariant(variant = "") {
-  return ["digital","digital-weather","analog","ios-analog"].includes(variant);
-}
-
 function normalizeStoredWidgetContract(widget = {}) {
-  const variant = widget?.variant || "";
-  const isClock = widget?.kind === "clock"
-    || widget?.type === "clock"
-    || widget?.component === "clock-widget"
-    || isClockCatalogVariant(variant);
-
-  if (isClock) {
-    return {
-      ...widget,
-      kind: "clock",
-      type: "clock",
-      component: "clock-widget",
-      category: widget.category || "utilities",
-      variant: isClockCatalogVariant(variant) ? variant : "digital",
-      w: 2,
-      h: 2,
-    };
-  }
-
-
-  const isButton = widget?.kind === "button"
-    || widget?.type === "button"
-    || widget?.component === "button-widget"
-    || widget?.variant === "simple-button";
-
-  const isWeather = widget?.kind === "weather"
-    || widget?.type === "weather"
-    || widget?.component === "weather-widget"
-    || widget?.variant === "adaptive-weather";
-
-  if (isWeather) {
-    const rawW = Math.round(Number(widget.w) || 2);
-    const rawH = Math.round(Number(widget.h) || 2);
-    let size = { w: 2, h: 2 };
-    if (rawH <= 1) size = { w: 4, h: 1 };
-    else if (rawW >= 4) size = { w: 4, h: 2 };
-    else if (rawW >= 3) size = { w: 3, h: 2 };
-
-    return {
-      ...widget,
-      kind: "weather",
-      type: "weather",
-      component: "weather-widget",
-      category: widget.category || "climate",
-      variant: "adaptive-weather",
-      w: size.w,
-      h: size.h,
-    };
-  }
-
-  if (isButton) {
-    const rawW = Math.round(Number(widget.w) || 2);
-    const rawH = Math.round(Number(widget.h) || 1);
-    const square = rawH >= 2;
-    const width = square ? 2 : Math.max(2, Math.min(4, rawW));
-
-    return {
-      ...widget,
-      kind: "button",
-      type: "button",
-      component: "button-widget",
-      category: widget.category || "actions",
-      variant: "simple-button",
-      // Supported contracts: 2x1, 3x1, 4x1 control-pill and 2x2 square tile.
-      w: width,
-      h: square ? 2 : 1,
-    };
-  }
-
-  const isToggleSlider = widget?.kind === "toggle-slider"
-    || widget?.type === "toggle-slider"
-    || widget?.component === "toggle-slider-widget"
-    || ["toggle-slider", "combined-slider-toggle", "combined-toggle-slider"].includes(widget?.variant);
-
-  if (isToggleSlider) {
-    const rawW = Math.round(Number(widget.w) || 4);
-
-    return {
-      ...widget,
-      kind: "toggle-slider",
-      type: "toggle-slider",
-      component: "toggle-slider-widget",
-      category: widget.category || "lights",
-      variant: "toggle-slider",
-      lightEntityId: widget.lightEntityId || widget.entityId || widget.entity_id || "",
-      entityId: widget.lightEntityId || widget.entityId || widget.entity_id || "",
-      sliderMode: "brightness",
-      w: Math.max(3, Math.min(4, rawW)),
-      h: 2,
-    };
-  }
-
-  const isToggleButtons = widget?.kind === "toggle-buttons"
-    || widget?.type === "toggle-buttons"
-    || widget?.component === "toggle-buttons-widget"
-    || ["toggle-buttons", "combined-toggle-buttons", "toggle-button-row", "toggle-quick-buttons"].includes(widget?.variant);
-
-  if (isToggleButtons) {
-    const rawW = Math.round(Number(widget.w) || 4);
-
-    return {
-      ...widget,
-      kind: "toggle-buttons",
-      type: "toggle-buttons",
-      component: "toggle-buttons-widget",
-      category: widget.category || "lights",
-      variant: "toggle-buttons",
-      w: Math.max(3, Math.min(4, rawW)),
-      h: 2,
-    };
-  }
-
-  const isToggle = widget?.kind === "toggle"
-    || widget?.type === "toggle"
-    || widget?.component === "toggle-widget"
-    || widget?.variant === "toggle-widget"
-    || widget?.variant === "simple-toggle";
-
-  if (isToggle) {
-    const rawW = Math.round(Number(widget.w) || 3);
-
-    return {
-      ...widget,
-      kind: "toggle",
-      type: "toggle",
-      component: "toggle-widget",
-      category: widget.category || "actions",
-      variant: "toggle-widget",
-      // Supported contracts: 3x1 and 4x1.
-      w: Math.max(3, Math.min(4, rawW)),
-      h: 1,
-    };
-  }
-
-  const isSlider = widget?.kind === "slider"
-    || widget?.type === "slider"
-    || widget?.component === "slider-widget";
-
-  if (isSlider) {
-    return {
-      ...widget,
-      kind: "slider",
-      type: "slider",
-      component: widget.component || "slider-widget",
-    };
-  }
-
-  return {
-    ...widget,
-    kind: widget.kind || widget.type || "empty",
-    type: widget.type || widget.kind || "empty",
-  };
+  return normalizeWidgetContract(widget,normalizeWidgetSize);
 }
 
 function readLegacyJson(key,legacyKey,fallback){const current=readJson(key,null);if(current!==null)return current;const legacy=readJson(legacyKey,null);return legacy!==null?legacy:fallback}
@@ -825,11 +675,11 @@ _selectWidgetManagerCategory(id){
 _createWidgetFromCatalogItem(item){
   const timestamp=Date.now().toString(36);
   const random=Math.random().toString(36).slice(2,7);
-  const rawKind=item?.kind||"empty";
-  const rawVariant=item?.variant||rawKind;
-  const kind=rawKind==="toggle-slider"||rawVariant==="toggle-slider"?"toggle-slider":rawKind==="toggle-buttons"||rawVariant==="toggle-buttons"?"toggle-buttons":rawKind==="slider"?"slider":rawKind==="weather"||rawVariant==="adaptive-weather"?"weather":rawKind==="toggle"||rawVariant==="toggle-widget"||rawVariant==="simple-toggle"?"toggle":rawKind==="button"||rawVariant==="simple-button"?"button":rawKind==="clock"||isClockCatalogVariant(rawVariant)?"clock":"empty";
-  const category=item?.category||(kind==="clock"?"utilities":kind==="button"||kind==="toggle"?"actions":kind==="toggle-slider"||kind==="toggle-buttons"?"lights":kind==="weather"?"climate":"custom");
-  const baseSize=kind==="clock"?{w:2,h:2}:kind==="button"?(item?.size||{w:2,h:1}):kind==="toggle"?(item?.size||{w:3,h:1}):kind==="toggle-slider"||kind==="toggle-buttons"?(item?.size||{w:4,h:2}):kind==="weather"?(item?.size||{w:2,h:2}):normalizeWidgetSize(item?.size||{w:2,h:2});
+  const kind=resolveWidgetKind(item);
+  const definition=getWidgetDefinition(kind);
+  const rawVariant=item?.variant||definition?.defaultVariant||kind;
+  const category=item?.category||definition?.category||"custom";
+  const baseSize=item?.size||definition?.defaultSize||{w:2,h:2};
   const size=normalizeWidgetForKind({
     kind,
     type:kind,
@@ -842,7 +692,7 @@ _createWidgetFromCatalogItem(item){
     id:`widget-${category}-${rawVariant||kind}-${timestamp}-${random}`,
     kind,
     type:kind,
-    component:kind==="clock"?"clock-widget":kind==="slider"?"slider-widget":kind==="button"?"button-widget":kind==="toggle"?"toggle-widget":kind==="toggle-slider"?"toggle-slider-widget":kind==="toggle-buttons"?"toggle-buttons-widget":kind==="weather"?"weather-widget":"empty-widget",
+    component:definition?.component||"empty-widget",
     category,
     variant:rawVariant,
     title:item?.label||"Widget",

@@ -1,5 +1,6 @@
 import { createCurrentWeatherIcon } from "./weather-current-icons.js";
 import { createWeatherIcon } from "./weather-icons.js";
+import { isWidgetKind } from "./widget-registry.js";
 
 const WEATHER_SIZE_VARIANTS = new Set(["4x1", "2x2", "3x2", "4x2"]);
 
@@ -42,8 +43,7 @@ function getWeatherSummary(widget = {}) {
 }
 
 export function isWeatherWidget(widget = {}) {
-  const kind = widget.kind || widget.type || widget.component || "";
-  return kind === "weather" || kind === "weather-widget" || widget.variant === "adaptive-weather";
+  return isWidgetKind(widget, "weather");
 }
 
 function sizeKey({ widgetW = 2, widgetH = 2 } = {}) {

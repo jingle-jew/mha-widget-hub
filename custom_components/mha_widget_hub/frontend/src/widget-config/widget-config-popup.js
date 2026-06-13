@@ -6,16 +6,10 @@ import {
   updateToggleSliderLabel,
   updateToggleSliderLight,
 } from "./toggle-slider-config.js";
-
-const CONFIGURABLE_KINDS = new Set(["toggle-slider"]);
-
-function getWidgetKind(widget = {}) {
-  return widget.kind || widget.type || widget.component || "";
-}
+import { getWidgetDefinition } from "../widgets/widget-registry.js";
 
 export function supportsWidgetConfiguration(widget = {}) {
-  return CONFIGURABLE_KINDS.has(getWidgetKind(widget))
-    || widget.component === "toggle-slider-widget";
+  return Boolean(getWidgetDefinition(widget)?.config);
 }
 
 export function createWidgetConfigSession(widget, hass, { mode = "create" } = {}) {

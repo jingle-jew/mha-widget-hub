@@ -1,107 +1,37 @@
-import { normalizeWidgetForKind } from "../layout/layout-engine.js";
+import { normalizeWidgetForKind, normalizeWidgetSize } from "../layout/layout-engine.js";
+import {
+  getRegisteredWidgetVariants,
+  resolveWidgetKind,
+  WIDGET_REGISTRY,
+} from "./widget-registry.js";
 
 export const WIDGET_VARIANTS = Object.freeze({
-  clock: Object.freeze([
-    Object.freeze({ variant: "digital", label: "Numérique", size: Object.freeze({ w: 2, h: 2 }) }),
-    Object.freeze({ variant: "digital-weather", label: "Numérique météo", size: Object.freeze({ w: 2, h: 2 }) }),
-    Object.freeze({ variant: "analog", label: "Analogique", size: Object.freeze({ w: 2, h: 2 }) }),
-    Object.freeze({ variant: "ios-analog", label: "Analogique iOS", size: Object.freeze({ w: 2, h: 2 }) }),
-  ]),
-
-  button: Object.freeze([
-    Object.freeze({ variant: "simple-button", label: "Pilule 2×1", size: Object.freeze({ w: 2, h: 1 }) }),
-    Object.freeze({ variant: "simple-button", label: "Pilule 3×1", size: Object.freeze({ w: 3, h: 1 }) }),
-    Object.freeze({ variant: "simple-button", label: "Pilule 4×1", size: Object.freeze({ w: 4, h: 1 }) }),
-    Object.freeze({ variant: "simple-button", label: "Carré 2×2", size: Object.freeze({ w: 2, h: 2 }) }),
-  ]),
-
-  weather: Object.freeze([
-    Object.freeze({ variant: "adaptive-weather", label: "Horizontal 4×1", size: Object.freeze({ w: 4, h: 1 }) }),
-    Object.freeze({ variant: "adaptive-weather", label: "Compact 2×2", size: Object.freeze({ w: 2, h: 2 }) }),
-    Object.freeze({ variant: "adaptive-weather", label: "Détails 3×2", size: Object.freeze({ w: 3, h: 2 }) }),
-    Object.freeze({ variant: "adaptive-weather", label: "Prévisions 4×2", size: Object.freeze({ w: 4, h: 2 }) }),
-  ]),
-
-  sliderHorizontal: Object.freeze([
-    Object.freeze({ variant: "light-slider-horizontal", label: "Horizontal 2×1", size: Object.freeze({ w: 2, h: 1 }) }),
-    Object.freeze({ variant: "light-slider-horizontal", label: "Horizontal 3×1", size: Object.freeze({ w: 3, h: 1 }) }),
-    Object.freeze({ variant: "light-slider-horizontal", label: "Horizontal 4×1", size: Object.freeze({ w: 4, h: 1 }) }),
-  ]),
-
-  sliderVertical: Object.freeze([
-    Object.freeze({ variant: "light-slider-vertical", label: "Vertical 1×2", size: Object.freeze({ w: 1, h: 2 }) }),
-    Object.freeze({ variant: "light-slider-vertical", label: "Vertical 1×3", size: Object.freeze({ w: 1, h: 3 }) }),
-    Object.freeze({ variant: "light-slider-vertical", label: "Vertical 1×4", size: Object.freeze({ w: 1, h: 4 }) }),
-  ]),
-
-  toggle: Object.freeze([
-    Object.freeze({ variant: "toggle-widget", label: "Toggle 3×1", size: Object.freeze({ w: 3, h: 1 }) }),
-    Object.freeze({ variant: "toggle-widget", label: "Toggle 4×1", size: Object.freeze({ w: 4, h: 1 }) }),
-  ]),
-
-  toggleSlider: Object.freeze([
-    Object.freeze({ variant: "toggle-slider", label: "Combiné 3×2", size: Object.freeze({ w: 3, h: 2 }) }),
-    Object.freeze({ variant: "toggle-slider", label: "Combiné 4×2", size: Object.freeze({ w: 4, h: 2 }) }),
-  ]),
-
-  toggleButtons: Object.freeze([
-    Object.freeze({ variant: "toggle-buttons", label: "Toggle + boutons 3×2", size: Object.freeze({ w: 3, h: 2 }) }),
-    Object.freeze({ variant: "toggle-buttons", label: "Toggle + boutons 4×2", size: Object.freeze({ w: 4, h: 2 }) }),
-  ]),
+  clock: WIDGET_REGISTRY.clock.variants,
+  button: WIDGET_REGISTRY.button.variants,
+  weather: WIDGET_REGISTRY.weather.variants,
+  sliderHorizontal: WIDGET_REGISTRY.slider.variantGroups.horizontal,
+  sliderVertical: WIDGET_REGISTRY.slider.variantGroups.vertical,
+  toggle: WIDGET_REGISTRY.toggle.variants,
+  toggleSlider: WIDGET_REGISTRY["toggle-slider"].variants,
+  toggleButtons: WIDGET_REGISTRY["toggle-buttons"].variants,
 });
 
 export function getWidgetVariantKind(widget = {}) {
-  const kind = widget.kind || widget.type || widget.component || "empty";
-  const variant = widget.variant || "";
-
-  if (
-    kind === "clock" ||
-    kind === "clock-widget" ||
-    ["digital", "digital-weather", "analog", "ios-analog"].includes(variant)
-  ) return "clock";
-
-  if (kind === "button" || kind === "button-widget" || variant === "simple-button") return "button";
-  if (kind === "weather" || kind === "weather-widget" || variant === "adaptive-weather") return "weather";
-
-  if (
-    kind === "toggle-slider" ||
-    kind === "toggle-slider-widget" ||
-    kind === "combined-slider-toggle" ||
-    ["toggle-slider", "combined-slider-toggle", "combined-toggle-slider"].includes(variant)
-  ) return "toggleSlider";
-
-  if (
-    kind === "toggle-buttons" ||
-    kind === "toggle-buttons-widget" ||
-    kind === "combined-toggle-buttons" ||
-    ["toggle-buttons", "combined-toggle-buttons", "toggle-button-row", "toggle-quick-buttons"].includes(variant)
-  ) return "toggleButtons";
-
-  if (
-    kind === "toggle" ||
-    kind === "toggle-widget" ||
-    variant === "toggle-widget" ||
-    variant === "simple-toggle"
-  ) return "toggle";
-
-  if (
-    kind === "slider" ||
-    kind === "slider-widget" ||
-    variant === "light-slider-horizontal" ||
-    variant === "light-slider-vertical" ||
-    variant === "temperature-slider" ||
-    variant === "volume-slider"
-  ) {
+  const kind = resolveWidgetKind(widget);
+  if (kind === "toggle-slider") return "toggleSlider";
+  if (kind === "toggle-buttons") return "toggleButtons";
+  if (kind === "slider") {
     const size = normalizeWidgetForKind(widget);
     return size.h > size.w ? "sliderVertical" : "sliderHorizontal";
   }
-
   return kind;
 }
 
 export function getWidgetVariants(widgetOrKind = {}) {
-  const kind = typeof widgetOrKind === "string" ? widgetOrKind : getWidgetVariantKind(widgetOrKind);
-  return WIDGET_VARIANTS[kind] || [];
+  if (typeof widgetOrKind === "string" && WIDGET_VARIANTS[widgetOrKind]) {
+    return WIDGET_VARIANTS[widgetOrKind];
+  }
+  return getRegisteredWidgetVariants(widgetOrKind, normalizeWidgetSize);
 }
 
 export function sameVariantSize(a = {}, b = {}) {

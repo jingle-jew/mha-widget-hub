@@ -1,5 +1,6 @@
 import { createBackButton, createCloseButton } from "../system/system-buttons.js";
 import { WIDGET_PREVIEW_IMAGES } from "../widgets/widget-preview-images.js";
+import { getWidgetDefinition, resolveWidgetKind } from "../widgets/widget-registry.js";
 export { WIDGET_VARIANTS, getWidgetVariants, getNextWidgetVariantEntries } from "../widgets/widget-variants.js";
 
 const FRONTEND_ROOT_URL = new URL("../../", import.meta.url);
@@ -323,9 +324,11 @@ function createStatusStaticPreview(item, {
 }
 
 function createWidgetPreview(item) {
+  const kind = resolveWidgetKind(item);
+  const previewKind = getWidgetDefinition(kind)?.preview;
   const area = el("div", "mha-widget-manager-preview-area");
   area.setAttribute("aria-hidden", "true");
-  area.dataset.kind = item.kind || "empty";
+  area.dataset.kind = kind;
   area.dataset.size = previewSizeKey(item);
   area.dataset.variant = item.variant || "";
 
@@ -333,13 +336,13 @@ function createWidgetPreview(item) {
   area.append(media);
 
   let preview;
-  if (item.kind === "button") preview = createButtonStaticPreview(item);
-  else if (item.kind === "toggle-slider") preview = createToggleSliderStaticPreview(item);
-  else if (item.kind === "toggle-buttons") preview = createToggleButtonsStaticPreview(item);
-  else if (item.kind === "toggle") preview = createToggleStaticPreview(item);
-  else if (item.kind === "slider") preview = createSliderStaticPreview(item);
-  else if (item.kind === "clock") preview = createClockStaticPreview(item);
-  else if (item.kind === "weather") preview = createWeatherStaticPreview(item);
+  if (previewKind === "button") preview = createButtonStaticPreview(item);
+  else if (previewKind === "toggle-slider") preview = createToggleSliderStaticPreview(item);
+  else if (previewKind === "toggle-buttons") preview = createToggleButtonsStaticPreview(item);
+  else if (previewKind === "toggle") preview = createToggleStaticPreview(item);
+  else if (previewKind === "slider") preview = createSliderStaticPreview(item);
+  else if (previewKind === "clock") preview = createClockStaticPreview(item);
+  else if (previewKind === "weather") preview = createWeatherStaticPreview(item);
   else if (item.variant?.startsWith("media-")) preview = createMediaStaticPreview(item);
   else if (item.variant?.startsWith("security-")) preview = createStatusStaticPreview(item, {
     kind: "security",

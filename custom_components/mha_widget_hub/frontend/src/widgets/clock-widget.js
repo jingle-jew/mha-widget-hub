@@ -4,6 +4,8 @@
  * Shared 2x2 clock variants for dashboard widgets and screensaver clocks.
  */
 
+import { isWidgetKind } from "./widget-registry.js";
+
 export const CLOCK_WIDGET_VARIANTS = Object.freeze([
   "digital",
   "digital-weather",
@@ -263,11 +265,5 @@ export function createClockWidgetContent({ variant = "digital", className = "", 
 }
 
 export function isClockWidget(widget) {
-  const variant = widget?.variant || "";
-  const category = widget?.category || "";
-
-  return widget?.type === "clock"
-    || widget?.kind === "clock"
-    || widget?.component === "clock-widget"
-    || (category === "utilities" && CLOCK_WIDGET_VARIANTS.includes(variant));
+  return isWidgetKind(widget, "clock");
 }
