@@ -52,10 +52,11 @@
 }
 
 @media (orientation: landscape) {
-  :host([data-layout="mobile"]) .mha-main-edit-button {
-    opacity: 0 !important;
-    transform: translateY(calc(100% + 1rem)) scale(.96) !important;
-    pointer-events: none !important;
+  :host([data-layout="mobile"]) .mha-main-edit-button,
+  :host([data-layout="mobile"]) .mha-add-widget-button {
+    opacity: 0;
+    transform: translateY(calc(100% + 1rem)) scale(.96);
+    pointer-events: none;
   }
 }
 
@@ -283,37 +284,22 @@
 
 @media (orientation: portrait) {
   :host([data-layout="mobile"].is-mobile-floating-controls-hidden) .mha-main-edit-button,
-  :host([data-layout="mobile"].is-mobile-floating-controls-hidden) .mha-mobile-dock-launcher {
-    opacity: 0 !important;
-    transform: translateY(calc(100% + 1rem)) scale(.96) !important;
-    pointer-events: none !important;
+  :host([data-layout="mobile"].is-mobile-floating-controls-hidden) .mha-mobile-dock-launcher,
+  :host([data-layout="mobile"].is-mobile-floating-controls-hidden) .mha-add-widget-button {
+    opacity: 0;
+    transform: translateY(calc(100% + 1rem)) scale(.96);
+    pointer-events: none;
   }
 }
 
 
 /* ADD WIDGET FLOATING BUTTON */
 .mha-add-widget-button {
-  transform: translateY(calc(-1 * (var(--mha-floating-button-size) + clamp(.55rem, 1.6vw, .85rem)))) !important;
+  transform: translateY(calc(-1 * (var(--mha-floating-button-size) + clamp(.55rem, 1.6vw, .85rem))));
 }
 
 .mha-add-widget-button[hidden] {
   display: none !important;
-}
-
-@media (orientation: landscape) {
-  :host([data-layout="mobile"]) .mha-add-widget-button {
-    opacity: 0 !important;
-    transform: translateY(calc(100% + 1rem)) scale(.96) !important;
-    pointer-events: none !important;
-  }
-}
-
-@media (orientation: portrait) {
-  :host([data-layout="mobile"].is-mobile-floating-controls-hidden) .mha-add-widget-button {
-    opacity: 0 !important;
-    transform: translateY(calc(100% + 1rem)) scale(.96) !important;
-    pointer-events: none !important;
-  }
 }
 
 /* EDIT MODE MOBILE FLOATING CONTROLS VISIBILITY
@@ -324,16 +310,16 @@
 @media (orientation: portrait) {
   :host([data-layout="mobile"].is-editing.is-mobile-floating-controls-hidden) .mha-primary-edit-button,
   :host([data-layout="mobile"].is-editing.is-mobile-floating-controls-hidden) .mha-add-widget-button {
-    opacity: 1 !important;
-    pointer-events: auto !important;
+    opacity: 1;
+    pointer-events: auto;
   }
 
   :host([data-layout="mobile"].is-editing.is-mobile-floating-controls-hidden) .mha-primary-edit-button {
-    transform: none !important;
+    transform: none;
   }
 
   :host([data-layout="mobile"].is-editing.is-mobile-floating-controls-hidden) .mha-add-widget-button {
-    transform: translateY(calc(-1 * (var(--mha-floating-button-size) + clamp(.55rem, 1.6vw, .85rem)))) !important;
+    transform: translateY(calc(-1 * (var(--mha-floating-button-size) + clamp(.55rem, 1.6vw, .85rem))));
   }
 }
 
@@ -368,4 +354,3 @@
   opacity: var(--mha-system-button-highlight-opacity, .14) !important;
   mix-blend-mode: normal;
 }
-

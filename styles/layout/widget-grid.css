@@ -154,47 +154,21 @@
   padding-block-start: 0 !important;
 }
 
-:host([data-layout="mobile"]) .mha-widget-area,
-:host(.layout-mobile) .mha-widget-area,
-:host(.is-mobile) .mha-widget-area,
-.mha-shell[data-layout="mobile"] .mha-widget-area,
-.mha-shell.layout-mobile .mha-widget-area,
-.mha-shell.is-mobile .mha-widget-area {
-  justify-items: stretch !important;
-}
-
-:host([data-layout="mobile"]) .mha-widget-area > .mha-grid,
-:host(.layout-mobile) .mha-widget-area > .mha-grid,
-:host(.is-mobile) .mha-widget-area > .mha-grid,
-.mha-shell[data-layout="mobile"] .mha-widget-area > .mha-grid,
-.mha-shell.layout-mobile .mha-widget-area > .mha-grid,
-.mha-shell.is-mobile .mha-widget-area > .mha-grid {
-  inline-size: 100% !important;
-  width: 100% !important;
-  max-inline-size: 100% !important;
-  justify-self: stretch !important;
-  margin-inline: 0 !important;
-}
-
-:host([data-layout="mobile"]) .mha-widget-area,
-:host(.layout-mobile) .mha-widget-area,
-:host(.is-mobile) .mha-widget-area,
-.mha-shell[data-layout="mobile"] .mha-widget-area,
-.mha-shell.layout-mobile .mha-widget-area,
-.mha-shell.is-mobile .mha-widget-area {
-  overflow-x: hidden !important;
-  overflow-y: auto !important;
+:host([data-layout="mobile"]) .mha-widget-area {
+  justify-items: stretch;
+  overflow-x: hidden;
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
   overscroll-behavior-y: contain;
 }
 
-:host([data-layout="mobile"]) .mha-grid,
-:host(.layout-mobile) .mha-grid,
-:host(.is-mobile) .mha-grid,
-.mha-shell[data-layout="mobile"] .mha-grid,
-.mha-shell.layout-mobile .mha-grid,
-.mha-shell.is-mobile .mha-grid {
+:host([data-layout="mobile"]) .mha-widget-area > .mha-grid {
+  inline-size: 100%;
+  width: 100%;
+  max-inline-size: 100%;
+  justify-self: stretch;
+  margin-inline: 0;
   touch-action: pan-y;
 }
 

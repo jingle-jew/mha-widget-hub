@@ -69,7 +69,7 @@
 }
 
 :host([data-layout="mobile"]) .mha-widget-area.is-mobile-slider-dragging {
-  overflow-y: hidden !important;
+  overflow-y: hidden;
   touch-action: none;
 }
 

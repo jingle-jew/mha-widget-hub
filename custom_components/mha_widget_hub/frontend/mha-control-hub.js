@@ -15,7 +15,7 @@ import {
   createThemeController,
 } from "./src/settings/theme-controller.js";
 import {updateStatusTime} from "./src/layout/status-bar.js";
-import {createEmptyWidget} from "./src/widgets/empty-widget.js";
+import {createWidgetShell} from "./src/widgets/widget-shell.js";
 import { getNextWidgetVariantEntries, getVariantCandidate, sameVariantSize } from "./src/widgets/widget-variants.js";
 import {
   getWidgetDefinition,
@@ -32,41 +32,41 @@ import { createCloseButton } from "./src/system/system-buttons.js";
 const MHA_FRONTEND_ROOT_URL = new URL(".", import.meta.url);
 const MHA_FRONTEND_VERSION = new URL(import.meta.url).searchParams.get("v");
 
-const MHA_STYLE_PATHS = [
-  "styles/core/tokens.css",
-  "styles/components/icon.css",
-  "styles/components/icon-symbol.css",
-  "styles/components/slider.css",
-  "styles/components/toggle.css",
-  "styles/components/pill.css",
-  "styles/components/button.css",
-  "styles/system/system-buttons.css",
-  "styles/themes/ios.css",
-  "styles/themes/oneui.css",
-  "styles/themes/material.css",
-  "styles/themes/accent-palettes.css",
-  "styles/themes/semantic-tokens.css",
-  "styles/core/background.css",
-  "styles/layout/shell.css",
-  "styles/layout/widget-grid.css",
-  "styles/layout/status-bar.css",
-  "styles/layout/dock.css",
-  "styles/layout/mobile-dock.css",
-  "styles/layout/floating-controls.css",
-  "styles/settings/settings-panel.css",
-  "styles/widget-manager/widget-manager.css",
-  "styles/widget-manager/widget-config-popup.css",
-  "styles/themes/light-text-contract.css",
-  "styles/widgets/widget-layout.css",
-  "styles/widgets/empty-widget.css",
-  "styles/widgets/slider-widget.css",
-  "styles/widgets/clock-widget.css",
-  "styles/widgets/simple-button-widget.css",
-  "styles/widgets/toggle-widget.css",
-  "styles/widgets/toggle-slider-widget.css",
-  "styles/widgets/toggle-buttons-widget.css",
-  "styles/widgets/weather-widget.css",
-  "styles/screensaver/screensaver.css",
+const MHA_STYLE_MANIFEST = [
+  ["styles/core/tokens.css", "tokens"],
+  ["styles/components/icon.css", "component"],
+  ["styles/components/icon-symbol.css", "component"],
+  ["styles/components/slider.css", "component"],
+  ["styles/components/toggle.css", "component"],
+  ["styles/components/pill.css", "component"],
+  ["styles/components/button.css", "component"],
+  ["styles/system/system-buttons.css", "component"],
+  ["styles/themes/ios.css", "theme"],
+  ["styles/themes/oneui.css", "theme"],
+  ["styles/themes/material.css", "theme"],
+  ["styles/themes/accent-palettes.css", "theme"],
+  ["styles/themes/semantic-tokens.css", "theme"],
+  ["styles/core/background.css", "structure"],
+  ["styles/layout/shell.css", "structure"],
+  ["styles/layout/widget-grid.css", "structure"],
+  ["styles/layout/status-bar.css", "structure"],
+  ["styles/layout/dock.css", "structure"],
+  ["styles/layout/mobile-dock.css", "structure"],
+  ["styles/layout/floating-controls.css", "structure"],
+  ["styles/settings/settings-panel.css", "component"],
+  ["styles/widget-manager/widget-manager.css", "component"],
+  ["styles/widget-manager/widget-config-popup.css", "component"],
+  ["styles/themes/light-text-contract.css", "theme"],
+  ["styles/widgets/widget-layout.css", "structure"],
+  ["styles/widgets/widget-shell.css", "structure"],
+  ["styles/widgets/slider-widget.css", "component"],
+  ["styles/widgets/clock-widget.css", "component"],
+  ["styles/widgets/simple-button-widget.css", "component"],
+  ["styles/widgets/toggle-widget.css", "component"],
+  ["styles/widgets/toggle-slider-widget.css", "component"],
+  ["styles/widgets/toggle-buttons-widget.css", "component"],
+  ["styles/widgets/weather-widget.css", "component"],
+  ["styles/screensaver/screensaver.css", "component"],
 ];
 
 const PAGE_ICON_OPTIONS = Object.freeze([
@@ -89,8 +89,10 @@ function resolveFrontendAssetUrl(path = "") {
 }
 
 function createFrontendStyleLinks() {
-  return MHA_STYLE_PATHS
-    .map(path => `<link rel="stylesheet" href="${resolveFrontendAssetUrl(path)}">`)
+  return MHA_STYLE_MANIFEST
+    .map(([path, layer]) => (
+      `<link rel="stylesheet" data-mha-style-layer="${layer}" href="${resolveFrontendAssetUrl(path)}">`
+    ))
     .join("");
 }
 
@@ -1296,7 +1298,7 @@ _refreshActiveGridOnly(){
   const {units}=this._getGridBounds();
   const positions=this._getActiveWidgetPositions({create:true});
   this._widgets.forEach(w=>{
-    const el=createEmptyWidget(w,{activeGridUnits:units,isEditing:this._isEditing,isMoveTarget:this._isEditing&&this._activeMoveWidgetId===w.id,position:positions?.[w.id],hass:this._hass,onToggleMove:id=>this._toggleWidgetMoveMode(id),onMove:(id,direction)=>this._moveWidgetByDirection(id,direction),onRemove:id=>this._removeWidget(id),onCycleVariant:id=>this.cycleVariant(id),onConfigure:id=>this._openWidgetConfig(id)});
+    const el=createWidgetShell(w,{activeGridUnits:units,isEditing:this._isEditing,isMoveTarget:this._isEditing&&this._activeMoveWidgetId===w.id,position:positions?.[w.id],hass:this._hass,onToggleMove:id=>this._toggleWidgetMoveMode(id),onMove:(id,direction)=>this._moveWidgetByDirection(id,direction),onRemove:id=>this._removeWidget(id),onCycleVariant:id=>this.cycleVariant(id),onConfigure:id=>this._openWidgetConfig(id)});
     this._wireDrag(el,w);
     grid.append(el);
   });
@@ -2026,7 +2028,7 @@ _placePendingWidgetAtSlot(x,y){
 
   const grid=this.shadowRoot?.querySelector?.(".mha-grid");
   if(grid){
-    const el=createEmptyWidget(widget,{
+    const el=createWidgetShell(widget,{
       activeGridUnits:units,
       isEditing:this._isEditing,
       isMoveTarget:false,
@@ -2211,7 +2213,7 @@ _replaceWidgetDom(id){
 
   const {units}=this._getGridBounds();
   const positions=this._getActiveWidgetPositions({create:true});
-  const next=createEmptyWidget(widget,{
+  const next=createWidgetShell(widget,{
     activeGridUnits:units,
     isEditing:this._isEditing,
     isMoveTarget:this._isEditing&&this._activeMoveWidgetId===id,
@@ -2636,7 +2638,7 @@ _wireDrag(el){
   el.removeAttribute("draggable");
 }
 _createWidgetElement(widget,{units,position}){
-  const el=createEmptyWidget(widget,{
+  const el=createWidgetShell(widget,{
     activeGridUnits:units,
     isEditing:this._isEditing,
     isMoveTarget:this._isEditing&&this._activeMoveWidgetId===widget.id,
