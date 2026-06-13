@@ -1,4 +1,5 @@
 import { normalizeRegisteredWidgetSize } from "../widgets/widget-registry.js";
+import { getLayoutForWidth } from "./responsive.js";
 
 export const WIDGET_UNIT=Object.freeze({unitsPerLogicalColumn:2});
 
@@ -55,7 +56,7 @@ export function normalizeWidgetSize({w=2,h=1}={}){w=Math.round(Number(w));h=Math
 export function getWidgetDensity({w=2,h=1}={}){({w,h}=normalizeWidgetSize({w,h}));if(h<=1&&w<=2)return"micro";if(h<=1)return"compact";if(h===2)return"standard";if(h===3&&w>=6)return"panel";if(h===3)return"rich";if(h>=4&&w>=6)return"panel";if(h>=4)return"immersive";return"standard"}
 export const sizeToString=({w,h})=>`${w}x${h}`;
 export function getLayoutMode(host){const explicit=host?.dataset?.layout||document.documentElement.dataset.layout;const mode=host?.dataset?.layoutMode||document.documentElement.dataset.layoutMode||explicit||"auto";return mode==="wallpanel"?"tablet":(["auto","mobile","tablet","desktop"].includes(mode)?mode:"auto")}
-export function getEffectiveLayout(host){const mode=getLayoutMode(host);if(mode!=="auto")return mode;const width=host?.getBoundingClientRect?.().width||window.innerWidth||0;if(width>=1180)return"desktop";if(width>=700)return"tablet";return"mobile"}
+export function getEffectiveLayout(host){const mode=getLayoutMode(host);if(mode!=="auto")return mode;const width=host?.getBoundingClientRect?.().width||window.innerWidth||0;return getLayoutForWidth(width)}
 function cssPx(host,name,fallback){const value=host?Number.parseFloat(getComputedStyle(host).getPropertyValue(name)):NaN;return Number.isFinite(value)&&value>0?value:fallback}
 
 function clampNumber(value, min, max) {

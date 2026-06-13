@@ -24,6 +24,7 @@ import {
 } from "./src/widgets/widget-registry.js";
 import {updateClockWidgets} from "./src/widgets/clock-widget.js";
 import {DEFAULT_WIDGETS,getActiveGridRows,getActiveGridUnits,getEffectiveLayout,getInternalGridColumnCountFromLogical,getInternalGridRowCountFromLogical,getLayoutMode,getGridPreset,getWidgetDensity,normalizeWidgetForKind,normalizeWidgetSize,sizeToString} from "./src/layout/layout-engine.js";
+import { RESPONSIVE_BREAKPOINTS } from "./src/layout/responsive.js";
 import {createScreensaver,normalizeClockVariant,updateScreensaverClock} from "./src/screensaver/screensaver.js";
 import { createIcon } from "./src/ui/icon.js";
 import { createIconSymbol } from "./src/ui/icon-symbol.js";
@@ -2383,7 +2384,7 @@ _getDockBottomColumnBonus(layout,base,metrics={}){
   if(this._dockPosition!=="bottom")return 0;
   if(layout==="mobile")return 0;
   const hostWidth=this.getBoundingClientRect?.().width||window.innerWidth||0;
-  if(hostWidth<768)return 0;
+  if(hostWidth<RESPONSIVE_BREAKPOINTS.tablet)return 0;
 
   const requestedBonus=layout==="desktop"?2:1;
   const baseColumns=Math.max(1,Number(base?.columns)||1);

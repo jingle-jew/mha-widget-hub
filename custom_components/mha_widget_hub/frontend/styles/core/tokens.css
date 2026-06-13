@@ -1,3 +1,8 @@
+/*
+ * Responsive matrix mirrored by src/layout/responsive.js:
+ * mobile < 768px; tablet 768px..1179px; desktop >= 1180px.
+ * Orientation refines these layouts. The 520px dock threshold is local only.
+ */
 :host{
   --mha-page-padding-mobile:14px;
   --mha-page-padding-tablet:20px;
