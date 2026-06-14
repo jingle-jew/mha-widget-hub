@@ -49,6 +49,111 @@ const SCREENSAVER_DELAY_OPTIONS = [
   { value: "300000", label: "5 minutes" },
 ];
 
+const WALLPAPER_STORAGE_MAX_BYTES = 5 * 1024 * 1024;
+const WALLPAPER_ALLOWED_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+const WALLPAPER_ALLOWED_EXTENSIONS = new Set(["jpg", "jpeg", "png", "webp"]);
+
+function formatImportDate(value = "") {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+}
+
+function validateWallpaperFile(file) {
+  if (!file) return "Aucun fichier sélectionné.";
+  const extension = String(file.name || "").split(".").pop()?.toLowerCase() || "";
+  if (!WALLPAPER_ALLOWED_MIME_TYPES.has(file.type) || !WALLPAPER_ALLOWED_EXTENSIONS.has(extension)) {
+    return "Ce format n’est pas accepté. Choisis une image JPG, PNG ou WebP.";
+  }
+  if (file.size > WALLPAPER_STORAGE_MAX_BYTES) {
+    return "Cette image est trop lourde. La limite est de 5 Mo pour cette version.";
+  }
+  return "";
+}
+
+function createWallpaperControls({ wallpaper, onImport, onReset } = {}) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "mha-settings-wallpaper";
+
+  const status = document.createElement("p");
+  status.className = "mha-settings-wallpaper-status";
+
+  const message = document.createElement("p");
+  message.className = "mha-settings-wallpaper-message";
+  message.setAttribute("role", "status");
+  message.setAttribute("aria-live", "polite");
+
+  const hasWallpaper = Boolean(wallpaper?.dataUrl);
+  const importedDate = formatImportDate(wallpaper?.importedAt);
+  status.textContent = hasWallpaper
+    ? `Image actuelle : ${wallpaper.name || "image importée"}${importedDate ? ` · ${importedDate}` : ""}`
+    : "Aucun fond personnalisé sur cet appareil.";
+
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp";
+  input.className = "mha-settings-wallpaper-input";
+
+  const importButton = document.createElement("button");
+  importButton.className = "mha-settings-reset mha-settings-wallpaper-button";
+  importButton.type = "button";
+  importButton.textContent = "Importer une image";
+  importButton.addEventListener("click", () => input.click());
+
+  const resetButton = document.createElement("button");
+  resetButton.className = "mha-settings-reset mha-settings-wallpaper-button";
+  resetButton.type = "button";
+  resetButton.textContent = "Réinitialiser";
+  resetButton.disabled = !hasWallpaper;
+  resetButton.addEventListener("click", () => onReset?.());
+
+  input.addEventListener("change", () => {
+    const file = input.files?.[0];
+    const validationMessage = validateWallpaperFile(file);
+    if (validationMessage) {
+      message.textContent = validationMessage;
+      input.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.addEventListener("load", () => {
+      const dataUrl = String(reader.result || "");
+      if (!dataUrl.startsWith("data:image/")) {
+        message.textContent = "L’image n’a pas pu être lue correctement.";
+        input.value = "";
+        return;
+      }
+      try {
+        onImport?.({
+          dataUrl,
+          name: file.name,
+          importedAt: new Date().toISOString(),
+          mime: file.type,
+        });
+        message.textContent = "Fond d’écran appliqué sur cet appareil.";
+      } catch (error) {
+        message.textContent = "Impossible de sauvegarder cette image localement. Essaie une image plus légère.";
+      } finally {
+        input.value = "";
+      }
+    });
+    reader.addEventListener("error", () => {
+      message.textContent = "Impossible de lire cette image.";
+      input.value = "";
+    });
+    reader.readAsDataURL(file);
+  });
+
+  const actions = document.createElement("div");
+  actions.className = "mha-settings-wallpaper-actions";
+  actions.append(importButton, resetButton);
+
+  wrapper.append(status, actions, input, message);
+  return wrapper;
+}
+
 
 const DOCK_ICON_OPTIONS = [
   { name: "home", label: "Accueil", category: "home" },
@@ -324,6 +429,7 @@ export function createSettingsPanel({
   activeDockPageId = "",
   selectedDockPageId = "",
   dockPosition = "left",
+  customWallpaper = null,
   onClose,
   onThemeChange,
   onThemeStyleChange,
@@ -345,6 +451,8 @@ export function createSettingsPanel({
   onDockRenamePage,
   onDockIconChange,
   onDockPositionChange,
+  onCustomWallpaperImport,
+  onCustomWallpaperReset,
 } = {}) {
   const isScreensaverScope = scope === "screensaver";
   const root = document.createElement("aside");
@@ -498,6 +606,13 @@ export function createSettingsPanel({
     );
 
     sections.push(createSection("Apparence", appearanceControls));
+    sections.push(createSection("Fond d’écran", [
+      createWallpaperControls({
+        wallpaper: customWallpaper,
+        onImport: onCustomWallpaperImport,
+        onReset: onCustomWallpaperReset,
+      }),
+    ]));
     sections.push(createSection("Navigation", [
       createSettingsNavTile({
         icon: "apps",

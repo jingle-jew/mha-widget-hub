@@ -142,6 +142,12 @@ function createCriticalBootStyle() {
         radial-gradient(circle at 52% 90%, var(--mha-bg-radial-3, rgba(56,209,255,.22)), transparent 36%),
         linear-gradient(135deg, var(--mha-bg-base-1, #171b30), var(--mha-bg-base-2, #242844));
     }
+    :host([data-boot-state="booting"][data-custom-wallpaper="true"]) .mha-background {
+      background-image: var(--mha-custom-wallpaper-image) !important;
+      background-size: cover !important;
+      background-position: center !important;
+      background-repeat: no-repeat !important;
+    }
   </style>`;
 }
 // Keeps existing local widget order/sizes after the public naming cleanup.
@@ -168,6 +174,7 @@ const SCREENSAVER_ENABLED="mha-screensaver-enabled";
 const SCREENSAVER_DELAY="mha-screensaver-delay";
 const SCREENSAVER_NOWBAR="mha-screensaver-nowbar";
 const SCREENSAVER_CLOCK_VARIANT="mha-screensaver-clock-variant";
+const CUSTOM_WALLPAPER="mha_custom_wallpaper";
 
 /*
  * FIRST LAUNCH DEFAULTS
@@ -249,6 +256,7 @@ constructor(){
   this._pageCreatorOpen=false;
   this._newPageIcon="grid";
   this._dockPosition="left";
+  this._customWallpaper=null;
   this._pages=[];
   this._activePageId="";
   this._widgets=[];
@@ -275,6 +283,8 @@ _initialize(){
     [15000,30000,120000,300000],
   );
   this._dockPosition=getStoredDockPosition();
+  this._customWallpaper=this._readCustomWallpaper();
+  this._applyCustomWallpaperState();
   this._pages=this._readPages();
   this._activePageId=this._readActivePageId();
   this._widgets=this._readWidgets();
@@ -637,6 +647,7 @@ _getSettingsPanelProps(scope="all"){
     activeDockPageId:this._activePageId,
     selectedDockPageId:this._dockSettingsPageId,
     dockPosition:this._dockPosition,
+    customWallpaper:this._customWallpaper,
     onClose:()=>scope==="screensaver"?this._closeScreensaverSettings():this._closeSettings(),
     onThemeChange:v=>this._applyThemeFromSettings(v),
     onThemeStyleChange:v=>this._applyThemeStyleFromSettings(v),
@@ -658,7 +669,52 @@ _getSettingsPanelProps(scope="all"){
     onDockRenamePage:(id,name)=>this._renameDockPage(id,name),
     onDockIconChange:(id,icon)=>this._changeDockPageIcon(id,icon),
     onDockPositionChange:v=>this._applyDockPositionFromSettings(v),
+    onCustomWallpaperImport:payload=>this._saveCustomWallpaper(payload),
+    onCustomWallpaperReset:()=>this._resetCustomWallpaper(),
   };
+}
+
+_readCustomWallpaper(){
+  const raw=localStorage.getItem(CUSTOM_WALLPAPER);
+  if(!raw)return null;
+  try{
+    const data=JSON.parse(raw);
+    const dataUrl=String(data?.dataUrl||"");
+    const mime=String(data?.mime||"");
+    if(!dataUrl.startsWith("data:image/")||!/^image\/(jpeg|png|webp)$/.test(mime))return null;
+    return {
+      dataUrl,
+      name:String(data?.name||"Image importée"),
+      importedAt:String(data?.importedAt||""),
+      mime,
+    };
+  }catch(error){
+    console.warn("[MHA] Custom wallpaper could not be read.",error);
+    return null;
+  }
+}
+_applyCustomWallpaperState(){
+  const wallpaper=this._customWallpaper||this._readCustomWallpaper();
+  this._customWallpaper=wallpaper;
+  const hasWallpaper=Boolean(wallpaper?.dataUrl);
+  this.dataset.customWallpaper=String(hasWallpaper);
+  if(hasWallpaper){
+    this.style.setProperty("--mha-custom-wallpaper-image",`url("${wallpaper.dataUrl}")`);
+  }else{
+    this.style.removeProperty("--mha-custom-wallpaper-image");
+  }
+}
+_saveCustomWallpaper(payload){
+  localStorage.setItem(CUSTOM_WALLPAPER,JSON.stringify(payload));
+  this._customWallpaper=this._readCustomWallpaper();
+  this._applyCustomWallpaperState();
+  this._syncSettingsDom();
+}
+_resetCustomWallpaper(){
+  localStorage.removeItem(CUSTOM_WALLPAPER);
+  this._customWallpaper=null;
+  this._applyCustomWallpaperState();
+  this._syncSettingsDom();
 }
 _isMobileLandscapeLayout(){
   return this._isMobileLauncherLayout()&&window.matchMedia?.("(orientation: landscape)")?.matches;
@@ -2836,6 +2892,7 @@ _appendDeferredUi({layout,renderId}){
 }
 render(){
   const themeState=this._themeController.sync();
+  this._applyCustomWallpaperState();
   const renderId=++this._renderId;
   const layoutMode=getLayoutMode(this);
   const layout=getEffectiveLayout(this);

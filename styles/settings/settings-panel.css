@@ -1182,3 +1182,38 @@
   border-color: var(--mha-system-icon-border);
   box-shadow: var(--mha-system-icon-shadow);
 }
+
+/* Custom wallpaper setting */
+.mha-settings-wallpaper {
+  display: grid;
+  gap: .7rem;
+}
+
+.mha-settings-wallpaper-status,
+.mha-settings-wallpaper-message {
+  margin: 0;
+  color: var(--mha-text-muted);
+  font-size: .84rem;
+  line-height: 1.35;
+}
+
+.mha-settings-wallpaper-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .65rem;
+}
+
+.mha-settings-wallpaper-input {
+  display: none;
+}
+
+.mha-settings-wallpaper-button:disabled {
+  opacity: .48;
+  cursor: not-allowed;
+}
+
+@media (max-width: 420px) {
+  .mha-settings-wallpaper-actions {
+    grid-template-columns: 1fr;
+  }
+}
