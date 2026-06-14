@@ -14,50 +14,148 @@ launcher surface where widgets have deliberate sizes, positions and visual
 hierarchy. A power user configures the home; everyone else gets a calm,
 touch-friendly interface.
 
-The project includes a functional HACS-compatible integration, automatic
-sidebar panel registration, persistent multi-page layouts, Home Assistant
-entity/service helpers, a configurable light widget and a growing widget
-system. It remains under active development: some catalog entries are complete
-widgets, while others are still visual prototypes.
+The project includes a HACS-compatible Home Assistant integration, automatic
+sidebar panel registration, configurable widgets, multiple visual systems,
+responsive layouts and a dedicated administration panel for entity visibility
+management.
 
 ## Project Status
 
-Current state: **working Home Assistant custom integration and evolving
-launcher product**.
+Current state: **functional Home Assistant launcher platform with configurable
+widgets, multi-page layouts and administrative entity filtering.**
 
 ### Operational today
 
-- HACS-compatible custom integration under `custom_components/mha_widget_hub`;
-- automatic `/mha-control-hub` sidebar panel registration;
+- HACS-compatible custom integration;
+- automatic sidebar registration of:
+  - `/mha-control-hub`
+  - `/mha-admin`
 - responsive layouts for mobile, tablet and desktop;
 - persistent multi-page launcher;
-- edit, add, move, resize, variant-cycle and delete workflows;
-- collision-aware placement with visible ghost slots;
-- widget registry with canonical `kind`, variants and size contracts;
-- OneUI, iOS-inspired and Material-inspired visual systems;
-- configurable screensaver with clock variants and Now Bar;
-- local persistence with migration backup and observable failures;
+- widget manager with previews;
+- widget configuration flows before placement;
+- widget variant system;
+- collision-aware placement engine;
+- OneUI, iOS Liquid Glass, iOS Frosted Glass and Material-inspired themes;
+- configurable screensaver and clock system;
+- Home Assistant entity abstraction layer (`src/ha`);
+- user-specific entity visibility management through MHA Admin;
+- local persistence and migration support;
 - automated syntax, unit and source/bundle synchronization checks.
 
-### Home Assistant support
+## Home Assistant Support
 
 The frontend receives the Home Assistant `hass` object through the registered
-panel. Reusable helpers handle entity availability, toggle calls, light
-brightness, fan percentage, media volume, cover position and throttled slider
-updates.
+panel.
 
-The **combined light toggle + slider widget** currently has the most complete
-end-to-end configuration and HA binding. It can select a light entity, reflect
-its state and brightness, disable unavailable controls and call the appropriate
-Home Assistant services.
+Reusable helpers inside `src/ha` provide:
 
-Other widgets are at different maturity levels. Clock, weather, button, toggle,
-slider and composed widgets have real renderers and variants, but several still
-use configured or demonstration data. Placeholder entries remain in parts of
-the Media, Security, Climate and System catalogs.
+- entity lookup;
+- entity availability detection;
+- state normalization;
+- toggle actions;
+- brightness control;
+- media volume control;
+- throttled slider updates;
+- service abstraction for future widgets.
 
-See [Architecture](docs/architecture.md) for the widget maturity table, HA
-service contracts, responsive matrix and persistence model.
+### Currently configurable widgets
+
+#### Toggle Widget
+
+Supported domains:
+
+- `light`
+- `switch`
+- `input_boolean`
+
+Features:
+
+- real-time state updates;
+- unavailable detection;
+- Home Assistant service calls;
+- friendly-name entity selection.
+
+#### Slider Widget
+
+Supported actions:
+
+- light brightness;
+- media player volume.
+
+Features:
+
+- entity selection flow;
+- theme-aware rendering;
+- horizontal and vertical variants;
+- throttled service updates.
+
+#### Combined Toggle + Slider Widget
+
+Supported domains:
+
+- `light`
+
+Features:
+
+- light on/off control;
+- brightness control;
+- entity selection;
+- brightness-capable light filtering;
+- unavailable handling;
+- Home Assistant service integration.
+
+### Widget Categories
+
+Current catalog includes:
+
+- Utilities
+- Actions
+- Lights
+- Climate
+- Media
+- Security
+- System
+
+Some categories already contain functional widgets while others remain in
+active development.
+
+## MHA Admin
+
+MHA Admin is a dedicated administrative panel automatically added to the Home
+Assistant sidebar.
+
+Purpose:
+
+- manage which entities are exposed inside MHA;
+- control which entities users can select during widget configuration;
+- prepare future family-oriented launcher experiences.
+
+### Supported Domains
+
+- `light`
+- `switch`
+- `input_boolean`
+- `weather`
+- `media_player`
+- `climate`
+- `sensor`
+- `binary_sensor`
+
+### Features
+
+- Home Assistant user selection;
+- per-domain entity filtering;
+- entity search;
+- friendly-name display;
+- persistent configuration storage;
+- visibility management integrated with widget configuration flows.
+
+### Important
+
+MHA Admin controls visibility within MHA only.
+
+It does **not** replace Home Assistant's native security or permission system.
 
 ## Product Vision
 
@@ -92,42 +190,72 @@ launcher-like interactions.
 
 ### Add
 
-Enter edit mode, open the widget manager, choose a category and widget variant,
-then select one of the valid placement slots.
+Enter edit mode, open the widget manager, choose a category, choose a widget,
+complete the configuration flow if required and place it into a valid slot.
 
 ### Move
 
-Activate move mode and use the directional controls. The layout engine supports
+Activate move mode and use directional controls. The layout engine supports
 direct swaps and group-aware movement where geometry permits.
 
-### Resize and variants
+### Variants
 
-Widgets follow registry-defined size contracts. Compatible widgets can be
-resized or cycled through their registered variants without producing illegal
-dimensions.
+Widgets follow registry-defined size contracts.
+
+The variant button cycles through compatible widget variants while preserving
+layout constraints.
 
 ### Multi-page launcher
 
-Pages can be created, renamed, reordered, assigned an icon and removed. Widget
-content and placement are persisted per page and responsive layout.
+Pages can be created, renamed, reordered, assigned an icon and removed.
 
-Free browser drag-and-drop is not the primary movement model. MHA favors
-explicit slots and directional movement for predictable mouse and touch
-behavior.
+Widget content and placement are persisted per page and responsive layout.
+
+### Dock
+
+Supported positions:
+
+- left
+- right
+- bottom
+
+The layout automatically adapts to the selected dock position.
 
 ## Themes
 
-MHA ships three visual directions:
+MHA currently ships four visual styles:
 
-- **OneUI:** soft surfaces, rounded geometry and a warm family-oriented look;
-- **iOS-inspired:** liquid/frosted glass and Control Center-inspired controls;
-- **Material-inspired:** tonal surfaces and Material You-inspired controls.
+### OneUI
 
-The themes share semantic tokens for surfaces, borders, shadows, text and
-controls. Fresh installs default to Auto theme, OneUI style, automatic icon
-shape, enabled screensaver, 30-second delay, Now Bar and digital clock.
+Soft surfaces, rounded geometry and a family-friendly presentation inspired by
+Samsung's One UI.
 
-Stored preferences always take precedence over defaults.
+### iOS Liquid Glass
+
+Floating translucent controls inspired by modern iOS glass surfaces.
+
+### iOS Frosted Glass
+
+Frosted translucent surfaces inspired by earlier iOS and macOS design language.
+
+Includes distinct weather styling and stronger visual separation than Liquid
+Glass.
+
+### Material
+
+Material You-inspired controls, tonal surfaces and Android-inspired interaction
+patterns.
+
+### Shared Design System
+
+All themes share:
+
+- semantic tokens;
+- widget contracts;
+- layout behavior;
+- configuration panels;
+- screensaver components;
+- MHA Admin styling.
 
 ## Installation
 
@@ -138,25 +266,23 @@ Stored preferences always take precedence over defaults.
 2. Install **MHA Widget Hub**.
 3. Restart Home Assistant.
 4. Open **Settings > Devices & services > Add integration**.
-5. Search for **MHA Widget Hub** and submit the setup form.
+5. Search for **MHA Widget Hub** and complete setup.
 
-The integration serves its bundled frontend and registers the sidebar panel
-automatically. No manual `panel_custom:` entry is required.
+The integration serves its bundled frontend and automatically registers both
+sidebar panels.
+
+No manual `panel_custom:` configuration is required.
 
 The current package targets Home Assistant `2025.7.0` or newer.
 
-See [Installation](docs/installation.md) for manual installation and integration
-details.
+See [Installation](docs/installation.md) for additional details.
 
 ## Documentation
 
-- [Architecture](docs/architecture.md): widgets, HA bindings, responsive,
-  themes, persistence and repository structure.
-- [Development](docs/development.md): local server, tests, CI and bundle
-  synchronization.
-- [Installation](docs/installation.md): HACS and manual Home Assistant setup.
-- [CSS layout audit](docs/layout-css-audit.md): historical layout and styling
-  analysis.
+- [Architecture](docs/architecture.md)
+- [Development](docs/development.md)
+- [Installation](docs/installation.md)
+- [CSS layout audit](docs/layout-css-audit.md)
 
 ## Quick Development Start
 
@@ -165,64 +291,62 @@ Requires Node.js 22 or newer.
 ```bash
 npm ci
 python3 -m http.server 4173
-```
 
-Open `http://localhost:4173/dev.html`, then run the complete quality suite with:
+Open:
+http://localhost:4173/dev.html
 
-```bash
+Run validation:
 npm run check
-```
 
-The integration bundle is generated from the root frontend source:
-
-```bash
+Synchronize frontend bundle:
 npm run sync:frontend
-```
 
-Never edit `custom_components/mha_widget_hub/frontend/` directly. See
-[Development](docs/development.md) for the full workflow.
+Never edit directly:
+custom_components/mha_widget_hub/frontend/
 
-## Current Limitations
+The root frontend source remains the single source of truth.
 
-- HA configuration is complete only for a subset of widgets;
-- several catalog entries remain placeholders or demonstration surfaces;
-- weather does not yet have a complete HA entity-selection flow;
-- layouts are stored per browser/device;
-- family roles and permissions are not implemented;
-- accessibility and keyboard behavior need broader end-to-end review;
-- the main orchestrator remains large and is being decomposed progressively;
-- historical CSS overrides still need consolidation.
+Current Limitations
+
+* not every widget category is fully connected to Home Assistant yet;
+* media, climate, security and system widgets are still evolving;
+* some catalog entries remain visual placeholders;
+* entity visibility rules currently affect MHA only;
+* layouts remain browser/device specific;
+* import/export workflows are not implemented yet;
+* accessibility and keyboard navigation require additional review;
+* the main orchestrator is still being progressively decomposed into dedicated controllers;
+* historical CSS overrides continue to be consolidated.
 
 ## Roadmap
 
-### Near term
+## Near Term
 
-- extend entity configuration to generic toggle, slider, weather and button
-  widgets;
-- continue extracting layout, placement, persistence and theme controllers;
-- add tests for storage migration and extracted placement logic;
-- expose persistence errors in the visible UI;
-- continue consolidating responsive and semantic CSS contracts.
+* complete Home Assistant bindings for additional widget categories;
+* continue migration toward registry-driven widget definitions;
+* extend configuration flows to all supported widgets;
+* improve preview generation and variant management;
+* reduce CSS override complexity and consolidate design tokens.
 
-### Medium term
+## Medium Term
 
-- real HA-backed media, climate, security and system widgets;
-- layout import/export and recovery tools;
-- richer registry-driven previews;
-- broader keyboard, focus and screen-reader support;
-- visual regression coverage.
+* fully functional media widgets;
+* climate widgets;
+* security widgets;
+* room widgets;
+* import/export support;
+* backup and recovery tools;
+* broader accessibility support.
 
-### Longer term
+## Longer Term
 
-- optional user/profile-aware layouts;
-- cross-device synchronization strategy;
-- kiosk/app/webview launcher workflows for shared family devices.
+* profile-aware launcher experiences;
+* synchronized layouts;
+* advanced family controls;
+* kiosk and wall-panel deployments;
+* expanded administrative tooling.
 
-## Name
 
-**MHA Widget Hub** describes a widget-first hub for managing the smart-home
-experience.
-
-## License
+License
 
 A license has not been selected yet.
