@@ -1,17 +1,23 @@
 import {
-  createStorageBackup,
   readBoolean,
   readJson,
-  readJsonResult,
   readNumberOption,
   writeJson,
   writeStorageValue,
 } from "./src/core/storage.js?v=storage-v1";
 import {
-  CURRENT_STORAGE_SCHEMA_VERSION,
-  LEGACY_STORAGE_PREFIX,
   STORAGE_KEYS,
 } from "./src/core/storage-keys.js";
+import {
+  getActivePage,
+  normalizePage,
+} from "./src/pages/page-model.js";
+import {
+  migratePageStorage,
+  readActivePageId,
+  readPages,
+  savePages,
+} from "./src/pages/page-store.js";
 import {destroyDomSubtree} from "./src/core/dom-lifecycle.js";
 import {ICONS} from "./src/components/icons.js";
 import {createShell} from "./src/layout/shell.js";
@@ -185,12 +191,9 @@ const {
   widgetSizes:SIZES,
   hiddenWidgets:REMOVED,
   widgetPositions:POSITIONS,
-  customWidgets:CUSTOM_WIDGETS,
   gridPages:PAGES,
   activePage:ACTIVE_PAGE,
   dockPosition:DOCK_POSITION,
-  schemaVersion:STORAGE_SCHEMA_VERSION,
-  schemaMigrationBackup:STORAGE_MIGRATION_BACKUP,
   screensaverEnabled:SCREENSAVER_ENABLED,
   screensaverDelay:SCREENSAVER_DELAY,
   screensaverNowBar:SCREENSAVER_NOWBAR,
@@ -220,7 +223,6 @@ function normalizeStoredWidgetContract(widget = {}) {
   return normalizeWidgetContract(widget,normalizeWidgetSize);
 }
 
-function readLegacyJson(key,legacyKey,fallback){const current=readJson(key,null);if(current!==null)return current;const legacy=readJson(legacyKey,null);return legacy!==null?legacy:fallback}
 class MhaControlHub extends HTMLElement{
 constructor(){
   super();
@@ -1225,89 +1227,39 @@ toggleEditMode(){
   if(wasEditing!==this._isEditing)this._scheduleSquareUnitSync();
 }toggleScreensaverPreview(){this._screensaverPreview=!this._screensaverPreview;this._syncScreensaverDom()}toggleNowBarPreview(){this._screensaverNowBar=!this._screensaverNowBar;this._syncScreensaverDom()}setScreensaverClockVariant(v="digital"){this._screensaverClockVariant=normalizeClockVariant(v);this._syncScreensaverDom()}resetGrid(){localStorage.removeItem(ORDER);localStorage.removeItem(SIZES);localStorage.removeItem(REMOVED);localStorage.removeItem(POSITIONS);localStorage.removeItem(PAGES);localStorage.removeItem(ACTIVE_PAGE);this._widgetPositions={};this._activeMoveWidgetId="";this._pages=this._readPages();this._activePageId=this._readActivePageId();this._widgets=this._readWidgets();this.render()}
 _migrateStorageSchema(){
-  const version=Number(localStorage.getItem(STORAGE_SCHEMA_VERSION))||0;
-  if(version>=CURRENT_STORAGE_SCHEMA_VERSION)return;
-
-  const legacyOrderKey=`${LEGACY_STORAGE_PREFIX}-grid-order`;
-  const legacySizesKey=`${LEGACY_STORAGE_PREFIX}-widget-sizes`;
-  const backupCreated=createStorageBackup(
-    STORAGE_MIGRATION_BACKUP,
-    [PAGES,ACTIVE_PAGE,POSITIONS,ORDER,SIZES,REMOVED,CUSTOM_WIDGETS,legacyOrderKey,legacySizesKey],
-    {fromSchemaVersion:version,toSchemaVersion:CURRENT_STORAGE_SCHEMA_VERSION},
-  );
-  if(!backupCreated){
-    this._recordPersistenceResult(false);
-    return;
-  }
-
-  const pagesResult=readJsonResult(PAGES);
-  let storedPages=pagesResult.ok?pagesResult.value:null;
-  if(!Array.isArray(storedPages)||!storedPages.length){
-    const widgets=this._readLegacyWidgets();
-    storedPages=[this._normalizePage({id:"home",name:"Accueil",icon:"home",widgets},0)];
-    if(!writeJson(PAGES,storedPages)){
-      this._recordPersistenceResult(false);
-      return;
-    }
-  }
-
-  if(!Array.isArray(storedPages)||!storedPages.length)return;
-  this._recordPersistenceResult(
-    writeStorageValue(STORAGE_SCHEMA_VERSION,CURRENT_STORAGE_SCHEMA_VERSION),
-  );
+  const result=migratePageStorage({
+    defaultWidgets:DEFAULT_WIDGETS,
+    normalizeWidget:normalizeStoredWidgetContract,
+    normalizeWidgetForGrid:normalizeWidgetForKind,
+  });
+  if(result.migrated)this._recordPersistenceResult(result.success);
 }
 _normalizePage(page={},index=0){
-  const id=String(page.id||`page-${index+1}`).trim()||`page-${index+1}`;
-  return {
-    id,
-    name:String(page.name||page.label||(index===0?"Accueil":`Page ${index+1}`)),
-    icon:String(page.icon||(index===0?"home":"grid")),
-    widgets:Array.isArray(page.widgets)?page.widgets.map(normalizeStoredWidgetContract):[],
-  };
+  return normalizePage(page,index,{normalizeWidget:normalizeStoredWidgetContract});
 }
 _readPages(){
-  const stored=readJson(PAGES,null);
-  const usedIds=new Set();
-  let repaired=false;
-  const pages=Array.isArray(stored)?stored.map((page,index)=>{
-    const normalized=this._normalizePage(page,index);
-    const baseId=normalized.id;
-    let id=baseId;
-    let suffix=2;
-    while(usedIds.has(id)){
-      id=`${baseId}-${suffix}`;
-      suffix+=1;
-    }
-    usedIds.add(id);
-    if(id!==baseId)repaired=true;
-    return id===baseId?normalized:{...normalized,id};
-  }).filter(page=>page.id):[];
-  if(pages.length){
-    if(repaired)this._recordPersistenceResult(writeJson(PAGES,pages));
-    return pages;
-  }
-  const fallback=[this._normalizePage({id:"home",name:"Accueil",icon:"home",widgets:[]},0)];
-  this._recordPersistenceResult(writeJson(PAGES,fallback));
-  return fallback;
+  const result=readPages({normalizeWidget:normalizeStoredWidgetContract});
+  if(result.persistenceResult!==null)this._recordPersistenceResult(result.persistenceResult);
+  return result.pages;
 }
 _readActivePageId(){
-  const stored=localStorage.getItem(ACTIVE_PAGE);
-  if(stored&&this._pages.some(page=>page.id===stored))return stored;
-  const fallback=this._pages[0]?.id||"home";
-  this._recordPersistenceResult(writeStorageValue(ACTIVE_PAGE,fallback));
-  return fallback;
+  const result=readActivePageId(this._pages);
+  if(result.persistenceResult!==null)this._recordPersistenceResult(result.persistenceResult);
+  return result.activePageId;
 }
 _getActivePage(){
-  return this._pages.find(page=>page.id===this._activePageId)||this._pages[0]||null;
+  return getActivePage(this._pages,this._activePageId);
 }
 _recordPersistenceResult(success){
   this.dataset.persistenceState=success?"saved":"error";
   return success;
 }
 _savePages(){
-  const pagesSaved=writeJson(PAGES,this._pages.map((page,index)=>this._normalizePage(page,index)));
-  const activePageSaved=writeStorageValue(ACTIVE_PAGE,this._activePageId);
-  return this._recordPersistenceResult(pagesSaved&&activePageSaved);
+  return this._recordPersistenceResult(savePages(
+    this._pages,
+    this._activePageId,
+    {normalizeWidget:normalizeStoredWidgetContract},
+  ));
 }
 _readWidgets(){
   const page=this._getActivePage();
@@ -1495,21 +1447,6 @@ _refreshActiveGridOnly(){
   updateClockWidgets(this.shadowRoot);
 }
 
-_readLegacyWidgets(){
-  const custom=(readJson(CUSTOM_WIDGETS,[])||[]).filter(widget=>widget?.id).map(normalizeStoredWidgetContract);
-  const baseWidgets=[...DEFAULT_WIDGETS,...custom];
-  const byId=new Map(baseWidgets.map(w=>[w.id,w]));
-  const removed=new Set(readJson(REMOVED,[]).filter?.(id=>byId.has(id))||[]);
-  const order=readLegacyJson(ORDER,`${LEGACY_STORAGE_PREFIX}-grid-order`,DEFAULT_WIDGETS.map(w=>w.id)).filter?.(id=>byId.has(id)&&!removed.has(id))||[];
-  DEFAULT_WIDGETS.forEach(w=>{if(!removed.has(w.id)&&!order.includes(w.id))order.push(w.id)});
-  custom.forEach(w=>{if(!removed.has(w.id)&&!order.includes(w.id))order.push(w.id)});
-  const sizes=readLegacyJson(SIZES,`${LEGACY_STORAGE_PREFIX}-widget-sizes`,{});
-  return order.map(id=>{
-    const base=byId.get(id);
-    const merged=normalizeStoredWidgetContract({...base,...(sizes[id]||{})});
-    return {...merged,...normalizeWidgetForKind(merged)};
-  });
-}
 _saveWidgets(){
   /*
    * Persistence is independent from the legacy auto-pack validator.
