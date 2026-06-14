@@ -36,6 +36,23 @@ function createOption(value, label, selected) {
   return option;
 }
 
+function describeLoadError(label, error) {
+  return {
+    source: label,
+    raw: error,
+    message: error?.message || String(error || "Erreur inconnue"),
+    code: error?.code || "",
+    stack: error?.stack || "",
+  };
+}
+
+function createLoadFailure(source, cause, fallbackMessage) {
+  return {
+    mhaLoadSource: source,
+    cause: cause || new Error(fallbackMessage),
+  };
+}
+
 class MhaAdminPanel extends HTMLElement {
   constructor() {
     super();
@@ -78,17 +95,41 @@ class MhaAdminPanel extends HTMLElement {
     this._loading = true;
     this._error = "";
     this.render();
+    const [usersResult, configResult] = await Promise.allSettled([
+      loadHomeAssistantUsers(this._hass),
+      loadEntityVisibilityConfig(this._hass),
+    ]);
+
     try {
-      const [users, config] = await Promise.all([
-        loadHomeAssistantUsers(this._hass),
-        loadEntityVisibilityConfig(this._hass),
-      ]);
+      if (usersResult.status === "rejected") {
+        throw createLoadFailure(
+          "users/list",
+          usersResult.reason,
+          "Impossible de charger les utilisateurs Home Assistant.",
+        );
+      }
+      if (configResult.status === "rejected") {
+        throw createLoadFailure(
+          "entity_visibility/get",
+          configResult.reason,
+          "Impossible de charger la configuration MHA.",
+        );
+      }
+
+      const users = usersResult.value;
       this._users = users;
-      this._config = config;
+      this._config = normalizeEntityVisibilityConfig(configResult.value);
       this._selectedUserId = this._selectedUserId || users[0]?.id || "";
     } catch (error) {
-      console.error("[MHA Admin] Loading failed.", error);
-      this._error = "Impossible de charger la configuration MHA.";
+      const source = error?.mhaLoadSource || "chargement";
+      const cause = error?.cause || error;
+      console.error(
+        "[MHA Admin] Loading failed.",
+        describeLoadError(source, cause),
+      );
+      this._error = source === "users/list"
+        ? "Impossible de charger les utilisateurs Home Assistant."
+        : "Impossible de charger la configuration MHA.";
     } finally {
       this._loading = false;
       this.render();

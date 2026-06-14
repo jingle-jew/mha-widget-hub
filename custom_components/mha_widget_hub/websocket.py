@@ -105,6 +105,7 @@ async def websocket_get_entity_visibility(
         vol.Required("config"): dict,
     }
 )
+@websocket_api.require_admin
 @websocket_api.async_response
 async def websocket_save_entity_visibility(
     hass: HomeAssistant,
@@ -112,7 +113,6 @@ async def websocket_save_entity_visibility(
     msg: dict[str, Any],
 ) -> None:
     """Persist MHA visibility settings. Admin access is mandatory."""
-    connection.require_admin()
     config = _normalize_config(msg["config"])
     await _get_store(hass).async_save(config)
     connection.send_result(msg["id"], config)
@@ -121,6 +121,7 @@ async def websocket_save_entity_visibility(
 @websocket_api.websocket_command(
     {vol.Required("type"): "mha_widget_hub/users/list"}
 )
+@websocket_api.require_admin
 @websocket_api.async_response
 async def websocket_list_users(
     hass: HomeAssistant,
@@ -128,7 +129,6 @@ async def websocket_list_users(
     msg: dict[str, Any],
 ) -> None:
     """List stable Home Assistant user IDs for the MHA admin panel."""
-    connection.require_admin()
     users = [
         {
             "id": user.id,

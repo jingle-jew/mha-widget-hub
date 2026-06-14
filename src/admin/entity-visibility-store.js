@@ -1,30 +1,54 @@
 import { normalizeEntityVisibilityConfig } from "./entity-permissions.js";
 
-const GET_COMMAND = "mha_widget_hub/entity_visibility/get";
-const SAVE_COMMAND = "mha_widget_hub/entity_visibility/save";
-const USERS_COMMAND = "mha_widget_hub/users/list";
+export const GET_COMMAND = "mha_widget_hub/entity_visibility/get";
+export const SAVE_COMMAND = "mha_widget_hub/entity_visibility/save";
+export const USERS_COMMAND = "mha_widget_hub/users/list";
+
+function serializeWebSocketError(error) {
+  return {
+    raw: error,
+    message: error?.message || String(error || "Erreur WebSocket inconnue"),
+    code: error?.code || "",
+    stack: error?.stack || "",
+  };
+}
+
+async function callMhaWebSocket(hass, payload) {
+  if (typeof hass?.callWS !== "function") {
+    const error = new Error("Connexion Home Assistant indisponible.");
+    console.error("[MHA Admin] WebSocket unavailable.", {
+      type: payload?.type,
+      payload,
+      ...serializeWebSocketError(error),
+    });
+    throw error;
+  }
+
+  try {
+    return await hass.callWS(payload);
+  } catch (error) {
+    console.error("[MHA Admin] WebSocket call failed.", {
+      type: payload?.type,
+      payload,
+      ...serializeWebSocketError(error),
+    });
+    throw error;
+  }
+}
 
 export async function loadEntityVisibilityConfig(hass) {
-  if (typeof hass?.callWS !== "function") {
-    return normalizeEntityVisibilityConfig(null);
-  }
-  return normalizeEntityVisibilityConfig(
-    await hass.callWS({ type: GET_COMMAND }),
-  );
+  const response = await callMhaWebSocket(hass, { type: GET_COMMAND });
+  return normalizeEntityVisibilityConfig(response);
 }
 
 export async function saveEntityVisibilityConfig(hass, config) {
-  if (typeof hass?.callWS !== "function") {
-    throw new Error("Connexion Home Assistant indisponible.");
-  }
-  return normalizeEntityVisibilityConfig(await hass.callWS({
+  return normalizeEntityVisibilityConfig(await callMhaWebSocket(hass, {
     type: SAVE_COMMAND,
     config: normalizeEntityVisibilityConfig(config),
   }));
 }
 
 export async function loadHomeAssistantUsers(hass) {
-  if (typeof hass?.callWS !== "function") return [];
-  const response = await hass.callWS({ type: USERS_COMMAND });
+  const response = await callMhaWebSocket(hass, { type: USERS_COMMAND });
   return Array.isArray(response?.users) ? response.users : [];
 }
