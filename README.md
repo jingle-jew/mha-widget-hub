@@ -305,7 +305,7 @@ Never edit directly:
 custom_components/mha_widget_hub/frontend/
 
 The root frontend source remains the single source of truth.
-``
+```
 
 ### Current Limitations
 
