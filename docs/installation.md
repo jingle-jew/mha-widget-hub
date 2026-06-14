@@ -43,7 +43,7 @@ not use `panel_custom:`.
 The frontend source of truth stays at the repository root:
 
 - `mha-control-hub-loader.js`;
-- `mha-control-hub.js`;
+- `mha-widget-hub.js`;
 - `src/`;
 - `styles/`;
 - `assets/`.

@@ -13,7 +13,7 @@ MHA Widget Hub has two runtime layers:
 2. a browser frontend built from native ES modules, Web Components, CSS and
    Home Assistant's `hass` object.
 
-The application root is `mha-control-hub.js`. It currently orchestrates pages,
+The application root is `mha-widget-hub.js`. It currently orchestrates pages,
 layout, widget placement, rendering, settings, persistence and lifecycle.
 Focused modules own lower-level behavior so this orchestrator can be decomposed
 progressively rather than rewritten.
@@ -190,7 +190,7 @@ and references.
 
 ```text
 mha-control-hub-loader.js       Frontend boot loader
-mha-control-hub.js              Main custom element and orchestration
+mha-widget-hub.js               Main custom element and orchestration
 dev.html                        Standalone development surface
 
 src/

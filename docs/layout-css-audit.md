@@ -107,7 +107,7 @@ Final approximate `!important` counts:
 Static validation completed:
 
 - `git diff --check`;
-- `node --check mha-control-hub.js`;
+- `node --check mha-widget-hub.js`;
 - extracted stylesheets are present in `render()` in dependency order;
 - local HTTP responses are successful for the extracted stylesheets;
 - the edit button DOM retains both `mha-edit-button` and

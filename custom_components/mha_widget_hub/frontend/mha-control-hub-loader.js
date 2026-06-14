@@ -43,7 +43,7 @@ if (!document.getElementById(BOOT_STYLE_ID)) {
   document.head.append(style);
 }
 
-const appUrl = new URL("./mha-control-hub.js", import.meta.url);
+const appUrl = new URL("./mha-widget-hub.js", import.meta.url);
 const frontendVersion = new URL(import.meta.url).searchParams.get("v");
 if (frontendVersion) appUrl.searchParams.set("v", frontendVersion);
 

@@ -7,7 +7,7 @@ const repoRoot = fileURLToPath(new URL("../", import.meta.url));
 const roots = [
   "mha-control-hub-loader.js",
   "mha-admin-loader.js",
-  "mha-control-hub.js",
+  "mha-widget-hub.js",
   "src",
   "tools",
   "tests",

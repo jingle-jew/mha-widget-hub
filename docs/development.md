@@ -81,7 +81,7 @@ Canonical frontend files live at the repository root:
 
 ```text
 mha-control-hub-loader.js
-mha-control-hub.js
+mha-widget-hub.js
 src/
 styles/
 assets/

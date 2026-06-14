@@ -227,3 +227,23 @@
     will-change: auto;
   }
 }
+
+/* CUSTOM LOCAL WALLPAPER
+ * Frontend-only wallpaper override stored in this browser/device.
+ * Theme surfaces, overlays and blur remain active above it.
+ */
+:host([data-custom-wallpaper="true"]) .mha-background {
+  background-image: var(--mha-custom-wallpaper-image) !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+
+:host([data-custom-wallpaper="true"]) .mha-background span,
+:host([data-custom-wallpaper="true"]) .mha-background::before,
+:host([data-custom-wallpaper="true"]) .mha-background::after {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  animation: none !important;
+}
