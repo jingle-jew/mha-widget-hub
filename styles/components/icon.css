@@ -49,7 +49,7 @@
 
 /*
  * Global icon shape preference.
- * Every .mha-icon in <mha-control-hub> reads the same token.
+ * Every .mha-icon in <mha-widget-hub> reads the same token.
  */
 :host([data-icon-shape="rounded-square"]) {
   --mha-border-radius-icon: var(--mha-icon-radius-rounded-square);
@@ -292,7 +292,7 @@
 /* GLOBAL ICON SHAPE CONTRACT
  * Keep this at the very end of icon.css.
  *
- * Every .mha-icon inside <mha-control-hub> follows the same configured shape,
+ * Every .mha-icon inside <mha-widget-hub> follows the same configured shape,
  * no matter where it is rendered: dock, widget, status bar, popup, or future UI.
  *
  * Contexts may override size, surface, color, glyph size, or shadow.

@@ -1,7 +1,7 @@
 # Home Assistant installation
 
 MHA Widget Hub is packaged as a HACS custom integration. The integration serves
-its bundled frontend and registers the `mha-control-hub` panel automatically
+its bundled frontend and registers the `mha-widget-hub` panel automatically
 after the integration has been configured once.
 
 ## Install with HACS
@@ -16,8 +16,8 @@ The integration then registers:
 
 - sidebar title: `MHA`;
 - sidebar icon: `mdi:view-dashboard`;
-- panel URL: `/mha-control-hub`;
-- frontend loader URL: `/mha_widget_hub_static/mha-control-hub-loader.js`.
+- panel URL: `/mha-widget-hub`;
+- frontend loader URL: `/mha_widget_hub_static/mha-widget-hub-loader.js`.
 
 No `panel_custom:` entry is required. HACS installs files but cannot create a
 Home Assistant config entry by itself, so step 4 is required once. After that,
@@ -42,7 +42,7 @@ not use `panel_custom:`.
 
 The frontend source of truth stays at the repository root:
 
-- `mha-control-hub-loader.js`;
+- `mha-widget-hub-loader.js`;
 - `mha-widget-hub.js`;
 - `src/`;
 - `styles/`;

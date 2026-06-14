@@ -15,7 +15,7 @@
     .dev-panel button:hover,.dev-panel select:hover{background:rgba(255,255,255,.2)}
     .dev-panel select{grid-column:1/-1;width:100%}
     @media (max-width:420px){.dev-panel{grid-template-columns:1fr;width:min(260px,calc(100vw - 24px))}.dev-panel button,.dev-panel select{width:100%}}
-    mha-control-hub{width:100vw;height:100vh;display:block}
+    mha-widget-hub{width:100vw;height:100vh;display:block}
   </style>
 </head>
 <body>
@@ -32,11 +32,11 @@
     </div>
   </div>
 
-  <mha-control-hub></mha-control-hub>
+  <mha-widget-hub></mha-widget-hub>
   <script type="module">
-    import "./mha-control-hub-loader.js?v=dev-boot-2";
+    import "./mha-widget-hub-loader.js?v=dev-boot-2";
 
-    const hub = document.querySelector("mha-control-hub");
+    const hub = document.querySelector("mha-widget-hub");
     const devMenu = document.querySelector("[data-dev-menu]");
     const devToggle = document.querySelector("[data-dev-toggle]");
     const devPanel = document.querySelector("#dev-panel");

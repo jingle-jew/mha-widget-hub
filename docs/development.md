@@ -80,7 +80,7 @@ Current tests cover:
 Canonical frontend files live at the repository root:
 
 ```text
-mha-control-hub-loader.js
+mha-widget-hub-loader.js
 mha-widget-hub.js
 src/
 styles/

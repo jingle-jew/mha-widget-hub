@@ -354,7 +354,7 @@ _addConnectionListeners(){
     const isPanelReturn=(
       event?.type==="location-changed"
       &&this._bootComplete
-      &&panelPath.endsWith("/mha-control-hub")
+      &&panelPath.endsWith("/mha-widget-hub")
     );
     const isPageRestore=event?.type==="pageshow"&&Boolean(event.persisted);
     this._ensureMounted({
@@ -409,7 +409,7 @@ _finishBoot({fallback=false,reason=""}={}){
   const grid=this.shadowRoot?.querySelector?.(".mha-grid");
   const finishReveal=()=>{
     this.classList.remove("is-boot-revealing");
-    document.getElementById("mha-control-hub-boot-style")?.remove();
+    document.getElementById("mha-widget-hub-boot-style")?.remove();
     const pending=this._pendingDeferredUi;
     this._pendingDeferredUi=null;
     if(pending)this._appendDeferredUi(pending);
@@ -2994,4 +2994,4 @@ render(){
 }
 }
 
-customElements.define("mha-control-hub",MhaControlHub);
+customElements.define("mha-widget-hub",MhaControlHub);

@@ -28,7 +28,7 @@ widgets, multi-page layouts and administrative entity filtering.**
 
 - HACS-compatible custom integration;
 - automatic sidebar registration of:
-  - `/mha-control-hub`
+  - `/mha-widget-hub`
   - `/mha-admin`
 - responsive layouts for mobile, tablet and desktop;
 - persistent multi-page launcher;

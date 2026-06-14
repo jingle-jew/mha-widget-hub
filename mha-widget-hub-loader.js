@@ -3,13 +3,13 @@
  * graph. It prevents the undefined panel element from exposing fallback text
  * while the real custom element and its styles are still downloading.
  */
-const BOOT_STYLE_ID = "mha-control-hub-boot-style";
+const BOOT_STYLE_ID = "mha-widget-hub-boot-style";
 
 if (!document.getElementById(BOOT_STYLE_ID)) {
   const style = document.createElement("style");
   style.id = BOOT_STYLE_ID;
   style.textContent = `
-    mha-control-hub:not(:defined) {
+    mha-widget-hub:not(:defined) {
       color: transparent !important;
       font-size: 0 !important;
       overflow: hidden !important;
@@ -24,7 +24,7 @@ if (!document.getElementById(BOOT_STYLE_ID)) {
       visibility: hidden !important;
     }
 
-    mha-control-hub:not(:defined) {
+    mha-widget-hub:not(:defined) {
       display: block !important;
       inline-size: 100% !important;
       block-size: 100dvh !important;
@@ -36,7 +36,7 @@ if (!document.getElementById(BOOT_STYLE_ID)) {
         linear-gradient(135deg, #171b30 0%, #242844 100%) !important;
     }
 
-    mha-control-hub:not(:defined) > * {
+    mha-widget-hub:not(:defined) > * {
       display: none !important;
     }
   `;
@@ -48,7 +48,7 @@ const frontendVersion = new URL(import.meta.url).searchParams.get("v");
 if (frontendVersion) appUrl.searchParams.set("v", frontendVersion);
 
 const loaderWatchdog = window.setTimeout(() => {
-  if (customElements.get("mha-control-hub")) return;
+  if (customElements.get("mha-widget-hub")) return;
   console.warn("[MHA] Boot fallback: the application module did not register within 1200ms.");
 }, 1200);
 

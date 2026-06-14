@@ -189,7 +189,7 @@ and references.
 ## Repository Structure
 
 ```text
-mha-control-hub-loader.js       Frontend boot loader
+mha-widget-hub-loader.js        Frontend boot loader
 mha-widget-hub.js               Main custom element and orchestration
 dev.html                        Standalone development surface
 

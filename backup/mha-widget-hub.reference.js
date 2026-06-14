@@ -1105,4 +1105,4 @@ const CSS = `
   }
 `;
 
-customElements.define("mha-control-hub", MhaControlHub);
+customElements.define("mha-widget-hub", MhaControlHub);
