@@ -431,8 +431,8 @@
   --mha-ios-frosted-tile-border: rgba(255,255,255,.10);
   --mha-ios-frosted-tile-shadow: 0 10px 26px rgba(0,0,0,.16);
   --mha-ios-frosted-shadow:
-    0 18px 46px rgba(36,21,14,.18),
-    0 8px 22px rgba(101,168,255,.07);
+    0 18px 46px rgba(0,0,0,.20),
+    0 6px 18px rgba(0,0,0,.12);
   --mha-widget-surface: var(--mha-ios-frosted-surface);
   --mha-widget-surface-edit: var(--mha-ios-frosted-surface-active);
   --mha-widget-border: var(--mha-ios-frosted-border);
@@ -445,4 +445,54 @@
   --mha-ios-control-active-surface: var(--mha-ios-frosted-surface-active);
   --mha-ios-control-active-border: var(--mha-ios-frosted-border-active);
   --mha-bg-blob-opacity: .26;
+}
+
+
+/* 10. iOS no-glow policy
+ * Keep glass/blur/surface depth, remove decorative halos/neon effects only for iOS.
+ */
+:host([data-theme-style="ios"]) {
+  --mha-ios-slider-fill-shadow: inset 0 1px 0 rgba(255,255,255,.42);
+  --mha-clock-widget-face-shadow: none;
+  --mha-icon-shadow: none;
+  --mha-button-shadow: none;
+  --mha-toggle-widget-icon-shadow: none;
+  --mha-simple-button-icon-shadow: none;
+  --mha-dock-active-icon-shadow: none;
+}
+
+:host([data-theme-style="ios"]) .mha-widget,
+:host([data-theme-style="ios"]) .mha-widget *,
+:host([data-theme-style="ios"]) .mha-dock,
+:host([data-theme-style="ios"]) .mha-dock *,
+:host([data-theme-style="ios"]) .mha-widget-manager,
+:host([data-theme-style="ios"]) .mha-widget-manager *,
+:host([data-theme-style="ios"]) .mha-settings-panel,
+:host([data-theme-style="ios"]) .mha-settings-panel * {
+  text-shadow: none !important;
+}
+
+:host([data-theme-style="ios"]) .mha-weather-widget,
+:host([data-theme-style="ios"]) .mha-weather-widget *,
+:host([data-theme-style="ios"]) .mha-weather-current-icon,
+:host([data-theme-style="ios"]) .mha-weather-current-icon *,
+:host([data-theme-style="ios"]) .mha-weather-icon,
+:host([data-theme-style="ios"]) .mha-weather-icon *,
+:host([data-theme-style="ios"]) .mha-widget-move-arrow {
+  filter: none !important;
+}
+
+:host([data-theme-style="ios"]) .mha-weather-current-glow,
+:host([data-theme-style="ios"]) .mha-weather-current-moon-glow {
+  display: none !important;
+}
+
+:host([data-theme-style="ios"].is-editing) .mha-widget {
+  animation: mha-widget-edit-dance 1450ms ease-in-out infinite;
+  box-shadow: var(--mha-widget-shell-shadow, var(--mha-shadow-primary));
+  will-change: transform;
+}
+
+:host([data-theme-style="ios"]) .slider2:has(.mha-slider-input:focus-visible) {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mha-text-primary) 18%, transparent);
 }
