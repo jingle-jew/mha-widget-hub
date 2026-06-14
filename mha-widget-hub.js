@@ -46,10 +46,9 @@ import {updateStatusTime} from "./src/layout/status-bar.js";
 import {createWidgetShell} from "./src/widgets/widget-shell.js";
 import { getNextWidgetVariantEntries, getVariantCandidate, sameVariantSize } from "./src/widgets/widget-variants.js";
 import {
-  getWidgetDefinition,
   normalizeWidgetContract,
-  resolveWidgetKind,
 } from "./src/widgets/widget-registry.js";
+import { createWidgetFromCatalogItem } from "./src/widgets/widget-factory.js";
 import {updateClockWidgets} from "./src/widgets/clock-widget.js";
 import {DEFAULT_WIDGETS,getActiveGridRows,getActiveGridUnits,getEffectiveLayout,getInternalGridColumnCountFromLogical,getInternalGridRowCountFromLogical,getLayoutMode,getGridPreset,getWidgetDensity,normalizeWidgetForKind,normalizeWidgetSize,sizeToString} from "./src/layout/layout-engine.js";
 import {
@@ -810,32 +809,7 @@ _selectWidgetManagerCategory(id){
   this._syncWidgetManagerDom();
 }
 _createWidgetFromCatalogItem(item){
-  const timestamp=Date.now().toString(36);
-  const random=Math.random().toString(36).slice(2,7);
-  const kind=resolveWidgetKind(item);
-  const definition=getWidgetDefinition(kind);
-  const rawVariant=item?.variant||definition?.defaultVariant||kind;
-  const category=item?.category||definition?.category||"custom";
-  const baseSize=item?.size||definition?.defaultSize||{w:2,h:2};
-  const size=normalizeWidgetForKind({
-    kind,
-    type:kind,
-    category,
-    variant:rawVariant,
-    ...baseSize,
-  });
-
-  return normalizeStoredWidgetContract({
-    id:`widget-${category}-${rawVariant||kind}-${timestamp}-${random}`,
-    kind,
-    type:kind,
-    component:definition?.component||"empty-widget",
-    category,
-    variant:rawVariant,
-    title:item?.label||"Widget",
-    w:size.w,
-    h:size.h,
-  });
+  return createWidgetFromCatalogItem(item);
 }
 _beginWidgetPlacement(item){
   if(!this._isEditing||this._isMobileLandscapeLayout())return;
