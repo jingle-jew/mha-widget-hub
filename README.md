@@ -305,6 +305,7 @@ Never edit directly:
 custom_components/mha_widget_hub/frontend/
 
 The root frontend source remains the single source of truth.
+``
 
 ### Current Limitations
 
@@ -318,7 +319,7 @@ The root frontend source remains the single source of truth.
 * the main orchestrator is still being progressively decomposed into dedicated controllers;
 * historical CSS overrides continue to be consolidated.
 
-## Roadmap
+### Roadmap
 
 ## Near Term
 
@@ -345,6 +346,7 @@ The root frontend source remains the single source of truth.
 * advanced family controls;
 * kiosk and wall-panel deployments;
 * expanded administrative tooling.
+
 
 
 License
