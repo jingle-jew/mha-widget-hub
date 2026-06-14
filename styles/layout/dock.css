@@ -539,6 +539,10 @@
   transition: transform 220ms cubic-bezier(.2,.8,.2,1);
 }
 
+:host([data-theme-style="oneui"]) .mha-page-creator-sheet {
+  background: var(--mha-oneui-panel-surface, var(--mha-surface-panel));
+}
+
 .mha-page-creator[data-open="true"] .mha-page-creator-sheet {
   transform: translateY(0) scale(1);
 }

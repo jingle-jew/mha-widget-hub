@@ -82,6 +82,7 @@
 :root[data-theme-style="oneui"] {
   --mha-surface-glass: var(--mha-dock-surface, var(--mha-surface-primary));
   --mha-surface-floating: var(--mha-system-button-bg, var(--mha-surface-glass));
+  --mha-surface-panel: var(--mha-oneui-panel-surface, var(--mha-panel-surface, var(--mha-surface-primary)));
   --mha-highlight-primary:
     radial-gradient(circle at 28% 18%, rgba(255,255,255,.20), transparent 34%),
     linear-gradient(135deg, rgba(255,255,255,.08), transparent 58%);

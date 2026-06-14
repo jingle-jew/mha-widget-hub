@@ -737,9 +737,7 @@
 }
 
 :host([data-theme-style="oneui"]) .mha-settings-sheet {
-  background:
-    linear-gradient(145deg, rgba(255,255,255,.16), rgba(255,255,255,.055)),
-    color-mix(in srgb, var(--mha-surface-panel) 86%, transparent);
+  background: var(--mha-oneui-panel-surface, var(--mha-surface-panel));
 }
 
 :host([data-theme-style="material"]) .mha-settings-sheet {
@@ -763,9 +761,7 @@
  * background blur while keeping section readability.
  */
 :host([data-theme-style="oneui"][data-theme="light"]) .mha-settings-sheet {
-  background:
-    linear-gradient(145deg, rgba(255,255,255,.40), rgba(255,255,255,.20)),
-    color-mix(in srgb, var(--mha-surface-panel) 92%, rgba(255,255,255,.42));
+  background: var(--mha-oneui-panel-surface, var(--mha-surface-panel));
   border-color: color-mix(in srgb, var(--mha-border-secondary) 58%, rgba(255,255,255,.52));
   box-shadow:
     0 18px 48px rgba(45,52,72,.16),
@@ -788,9 +784,7 @@
 }
 
 :host([data-theme-style="oneui"][data-theme="dark"]) .mha-settings-sheet {
-  background:
-    linear-gradient(145deg, rgba(255,255,255,.095), rgba(255,255,255,.032)),
-    color-mix(in srgb, var(--mha-surface-panel) 68%, transparent);
+  background: var(--mha-oneui-panel-surface, var(--mha-surface-panel));
   border-color: color-mix(in srgb, var(--mha-border-secondary) 76%, rgba(255,255,255,.10));
   box-shadow:
     0 22px 62px rgba(0,0,0,.34),

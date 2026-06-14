@@ -18,11 +18,24 @@ import {
   readPages,
   savePages,
 } from "./src/pages/page-store.js";
+import {
+  addPage,
+  changePageIcon,
+  deletePage,
+  movePage,
+  removePageWidgetPositions,
+  renamePage,
+  selectPage,
+} from "./src/pages/page-controller.js";
 import {destroyDomSubtree} from "./src/core/dom-lifecycle.js";
 import {ICONS} from "./src/components/icons.js";
 import {createShell} from "./src/layout/shell.js";
-import {createDock} from "./src/layout/dock.js";
 import {createMobileDock} from "./src/layout/mobile-dock.js";
+import {
+  createDockProps,
+  syncDockActiveState,
+  syncDocks,
+} from "./src/layout/dock-controller.js";
 import {createSettingsPanel} from "./src/settings/settings-panel.js";
 import {createWidgetManager, WIDGET_MANAGER_CATEGORIES} from "./src/widget-manager/widget-manager.js";
 import {
@@ -948,53 +961,41 @@ _openDockPageSettings(id=""){
   this._syncSettingsDom();
 }
 _moveDockPage(id="",direction=0){
-  const from=this._pages.findIndex(page=>page.id===id);
-  if(from<0)return;
-  const to=from+(Number(direction)<0?-1:1);
-  if(to<0||to>=this._pages.length)return;
-  const pages=[...this._pages];
-  const [page]=pages.splice(from,1);
-  pages.splice(to,0,page);
-  this._pages=pages;
+  const result=movePage(this._pages,id,direction);
+  if(!result)return;
+  this._pages=result.pages;
   this._savePages();
   this._syncDocksDom();
   this._syncSettingsDom();
 }
 _renameDockPage(id="",name=""){
-  const clean=String(name||"").trim();
-  if(!clean)return;
-  this._pages=this._pages.map(page=>page.id===id?{...page,name:clean}:page);
+  const result=renamePage(this._pages,id,name);
+  if(!result)return;
+  this._pages=result.pages;
   this._savePages();
   this._syncDocksDom();
   this._syncSettingsDom();
 }
 _changeDockPageIcon(id="",icon="grid"){
-  const next=String(icon||"grid");
-  this._pages=this._pages.map(page=>page.id===id?{...page,icon:next}:page);
+  const result=changePageIcon(this._pages,id,icon);
+  this._pages=result.pages;
   this._savePages();
   this._syncDocksDom();
   this._syncSettingsDom();
 }
 _deleteDockPage(id=""){
-  if(!id||this._pages.length<=1)return;
-  const page=this._pages.find(page=>page.id===id);
-  if(!page)return;
-  const removedWidgetIds=new Set((page.widgets||[]).map(widget=>widget?.id).filter(Boolean));
-  this._pages=this._pages.filter(page=>page.id!==id);
-  if(this._activePageId===id){
-    this._activePageId=this._pages[0]?.id||"home";
+  const result=deletePage(this._pages,this._activePageId,id);
+  if(!result)return;
+  this._pages=result.pages;
+  this._activePageId=result.activePageId;
+  if(result.activePageChanged){
     this._widgets=this._readWidgets();
   }
-  Object.keys(this._widgetPositions||{}).forEach(key=>{
-    if(key.startsWith(`${id}:`)){
-      delete this._widgetPositions[key];
-      return;
-    }
-    const layout=this._widgetPositions[key];
-    if(layout&&typeof layout==="object"){
-      removedWidgetIds.forEach(widgetId=>delete layout[widgetId]);
-    }
-  });
+  this._widgetPositions=removePageWidgetPositions(
+    this._widgetPositions,
+    id,
+    result.removedWidgetIds,
+  );
   const positionsSaved=writeJson(POSITIONS,this._widgetPositions);
   if(this._dockSettingsPageId===id){
     this._settingsPage="dock";
@@ -1250,23 +1251,26 @@ _syncActivePageWidgets(){
   return this._savePages();
 }
 _setActivePage(id){
-  if(!id||id===this._activePageId||!this._pages.some(page=>page.id===id))return;
+  const result=selectPage(this._pages,this._activePageId,id);
+  if(!result)return;
   this._activeMoveWidgetId="";
   this._pendingWidgetPlacement=null;
   this._widgetManagerOpen=false;
   this._widgetManagerCategory="";
-  this._activePageId=id;
-  this._recordPersistenceResult(writeStorageValue(ACTIVE_PAGE,id));
+  this._activePageId=result.activePageId;
+  this._recordPersistenceResult(writeStorageValue(ACTIVE_PAGE,result.activePageId));
   this._widgets=this._readWidgets();
   this._refreshActiveGridOnly();
   this._syncDocksDom();
 }
 
 _addGridPage({icon="grid"}={}){
-  const index=this._pages.length+1;
-  const id=`page-${Date.now().toString(36)}-${index}`;
-  this._pages=[...this._pages,this._normalizePage({id,name:`Page ${index}`,icon,widgets:[]},index-1)];
-  this._activePageId=id;
+  const result=addPage(this._pages,{
+    icon,
+    normalizeWidget:normalizeStoredWidgetContract,
+  });
+  this._pages=result.pages;
+  this._activePageId=result.activePageId;
   this._widgets=[];
   this._pageCreatorOpen=false;
   this._newPageIcon="grid";
@@ -1374,14 +1378,10 @@ _syncPageCreatorDom(){
 }
 
 _updateDockActiveState(){
-  this.shadowRoot?.querySelectorAll?.("[data-page-id]").forEach(button=>{
-    const active=button.dataset.pageId===this._activePageId;
-    button.dataset.active=String(active);
-    button.setAttribute("aria-current",active?"page":"false");
-  });
+  syncDockActiveState(this.shadowRoot,this._activePageId);
 }
 _getDockProps(){
-  return {
+  return createDockProps({
     pages:this._pages,
     activePageId:this._activePageId,
     isEditing:this._isEditing,
@@ -1389,17 +1389,10 @@ _getDockProps(){
     onAddPage:()=>this._openPageCreator(),
     onDockSettings:()=>this._openDockSettings(),
     onSettings:()=>this._openSettings(),
-  };
+  });
 }
 _syncDocksDom(){
-  const root=this.shadowRoot;
-  if(!root)return;
-  const props=this._getDockProps();
-  const dock=root.querySelector(".mha-dock");
-  if(dock)dock.replaceWith(createDock(props));
-  const mobileDock=root.querySelector(".mha-mobile-dock");
-  if(mobileDock)mobileDock.replaceWith(createMobileDock(props));
-  this._updateDockActiveState();
+  syncDocks(this.shadowRoot,this._getDockProps());
 }
 _refreshActiveGridOnly(){
   const grid=this.shadowRoot?.querySelector?.(".mha-grid");

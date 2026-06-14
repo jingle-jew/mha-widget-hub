@@ -36,6 +36,12 @@
   --mha-statusbar-surface: linear-gradient(145deg, rgba(255,255,255,.80), rgba(255,246,238,.62));
   --mha-control-surface: rgba(255,255,255,.58);
   --mha-control-surface-edit: rgba(255,255,255,.74);
+  --mha-oneui-panel-surface:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--mha-accent) 10%, rgba(255,255,255,.88)),
+      color-mix(in srgb, var(--mha-accent) 6%, rgba(246,248,255,.78))
+    );
   --mha-bg-base-1: #fbf8f5;
   --mha-bg-base-2: #eef3ff;
   --mha-bg-radial-1: rgba(101,168,255,.22);
@@ -63,6 +69,12 @@
   --mha-statusbar-surface: linear-gradient(145deg, rgba(255,240,226,.20), rgba(255,255,255,.115));
   --mha-control-surface: rgba(255,240,226,.16);
   --mha-control-surface-edit: rgba(255,240,226,.24);
+  --mha-oneui-panel-surface:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--mha-accent) 14%, rgba(24,22,31,.84)),
+      color-mix(in srgb, var(--mha-accent) 8%, rgba(14,15,22,.76))
+    );
   --mha-bg-base-1: #07070d;
   --mha-bg-base-2: #16131f;
   --mha-bg-radial-1: rgba(101,168,255,.30);

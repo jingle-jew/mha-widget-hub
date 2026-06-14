@@ -24,6 +24,10 @@
   color: var(--mha-preview-text);
 }
 
+:host([data-theme-style="oneui"]) .mha-widget-manager-sheet.mha-settings-sheet {
+  background: var(--mha-oneui-panel-surface, var(--mha-surface-panel));
+}
+
 .mha-widget-manager-actions {
   display: flex;
   align-items: center;
