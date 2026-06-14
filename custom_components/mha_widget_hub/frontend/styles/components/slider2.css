@@ -145,11 +145,7 @@
 }
 
 :host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-widget[data-widget-kind="toggle-slider"] .slider2 {
-  --mha-ios-slider-track-surface: rgba(120,120,128,.22);
-}
-
-:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="dark"]) .mha-widget[data-widget-kind="toggle-slider"] .slider2 {
-  --mha-ios-slider-track-surface: rgba(180,180,190,.18);
+  --mha-ios-slider-track-surface: var(--mha-ios-frosted-surface-muted);
 }
 
 @media (prefers-reduced-motion: reduce) {

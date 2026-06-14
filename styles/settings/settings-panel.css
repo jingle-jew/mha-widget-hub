@@ -956,60 +956,61 @@
   background: rgba(72, 72, 74, .36);
 }
 
-/* iOS Frosted: lighter nested settings sections.
- * Keeps the classic grey blur material, but prevents sections from becoming
- * too opaque inside the already-frosted settings sheet.
- */
-:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="light"]) .mha-settings-section {
-  background: rgba(255,255,255,.24);
-  border-color: rgba(255,255,255,.42);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.38),
-    0 8px 20px rgba(60,64,72,.045);
+/* Liquid Glass keeps structure through blur and spacing, without panel frames. */
+:host([data-theme-style="ios"][data-ios-glass="liquid"]) .mha-settings-sheet {
+  background: var(--mha-widget-shell-surface, var(--mha-ios-liquid-surface));
+  border-color: transparent;
+  box-shadow: var(--mha-widget-shell-shadow, var(--mha-ios-liquid-shadow));
+  -webkit-backdrop-filter: blur(var(--mha-ios-liquid-blur)) saturate(190%);
+  backdrop-filter: blur(var(--mha-ios-liquid-blur)) saturate(190%);
 }
 
-:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="dark"]) .mha-settings-section {
-  background: rgba(72,72,74,.26);
-  border-color: rgba(255,255,255,.095);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.09),
-    0 10px 24px rgba(0,0,0,.12);
+:host([data-theme-style="ios"][data-ios-glass="liquid"]) .mha-settings-sheet::before {
+  background: none;
+  opacity: 0;
 }
 
-/* iOS Frosted: settings panels aligned with OneUI surface density.
- * Keeps iOS radii/structure, but uses the softer translucent grey OneUI feel.
- */
-:host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-settings-sheet {
-  -webkit-backdrop-filter: blur(calc(var(--mha-blur-primary) * .72)) saturate(145%);
-  backdrop-filter: blur(calc(var(--mha-blur-primary) * .72)) saturate(145%);
+:host([data-theme-style="ios"][data-ios-glass="liquid"]) .mha-settings-section {
+  background: var(--mha-ios-liquid-surface-muted);
+  border-color: transparent;
+  box-shadow: none;
 }
 
+:host([data-theme-style="ios"][data-ios-glass="liquid"]) .mha-settings-header {
+  border-bottom-color: transparent;
+}
+
+/* Frosted reuses OneUI's panel calibration while retaining iOS text tokens. */
 :host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="light"]) .mha-settings-sheet {
-  background: linear-gradient(145deg, rgba(255,255,255,.72), rgba(255,246,238,.54));
-  border-color: rgba(110,92,78,.12);
-  box-shadow: 0 8px 22px rgba(76,92,120,.075);
-}
-
-:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="light"]) .mha-settings-section,
-:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="light"]) .mha-settings-select,
-:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="light"]) .mha-settings-reset {
-  background: rgba(255,255,255,.58);
-  border-color: rgba(110,92,78,.12);
-  box-shadow: 0 6px 16px rgba(76,92,120,.045);
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.40), rgba(255,255,255,.20)),
+    color-mix(in srgb, var(--mha-surface-panel) 92%, rgba(255,255,255,.42));
+  border-color: color-mix(in srgb, var(--mha-border-secondary) 58%, rgba(255,255,255,.52));
+  box-shadow:
+    0 18px 48px rgba(45,52,72,.16),
+    inset 0 1px 0 rgba(255,255,255,.30);
+  -webkit-backdrop-filter: blur(calc(var(--mha-blur-strong) * 1.05)) saturate(150%);
+  backdrop-filter: blur(calc(var(--mha-blur-strong) * 1.05)) saturate(150%);
 }
 
 :host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="dark"]) .mha-settings-sheet {
-  background: linear-gradient(145deg, rgba(255,240,226,.18), rgba(255,255,255,.105));
-  border-color: rgba(255,236,219,.18);
-  box-shadow: 0 18px 46px rgba(36,21,14,.18), 0 8px 22px rgba(101,168,255,.07);
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.095), rgba(255,255,255,.032)),
+    color-mix(in srgb, var(--mha-surface-panel) 68%, transparent);
+  border-color: color-mix(in srgb, var(--mha-border-secondary) 76%, rgba(255,255,255,.10));
+  box-shadow:
+    0 22px 62px rgba(0,0,0,.34),
+    inset 0 1px 0 rgba(255,255,255,.10);
+  -webkit-backdrop-filter: blur(calc(var(--mha-blur-strong) * 1.08)) saturate(145%);
+  backdrop-filter: blur(calc(var(--mha-blur-strong) * 1.08)) saturate(145%);
 }
 
-:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="dark"]) .mha-settings-section,
-:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="dark"]) .mha-settings-select,
-:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="dark"]) .mha-settings-reset {
-  background: rgba(255,240,226,.14);
-  border-color: rgba(255,236,219,.16);
-  box-shadow: 0 10px 24px rgba(36,21,14,.13);
+:host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-settings-section,
+:host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-settings-select,
+:host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-settings-reset {
+  background: var(--mha-ios-frosted-tile-surface);
+  border-color: var(--mha-ios-frosted-tile-border);
+  box-shadow: var(--mha-ios-frosted-tile-shadow);
 }
 
 /* Dock settings reuse the standard settings drawer/sheet. */
@@ -1246,6 +1247,36 @@
   background: var(--mha-surface-floating);
   color: var(--mha-text-disabled);
   font-size: .8rem;
+}
+
+/* Structural Liquid tiles stay borderless; selected and active controls keep
+ * their state borders from the rules above.
+ */
+:host([data-theme-style="ios"][data-ios-glass="liquid"]) .mha-settings-nav-tile,
+:host([data-theme-style="ios"][data-ios-glass="liquid"]) .mha-settings-dock-row:not([data-active="true"]),
+:host([data-theme-style="ios"][data-ios-glass="liquid"]) .mha-settings-icon-option:not([data-selected="true"]),
+:host([data-theme-style="ios"][data-ios-glass="liquid"]) .mha-settings-wallpaper-preview {
+  border-color: transparent;
+}
+
+:host([data-theme-style="ios"][data-ios-glass="liquid"]) .mha-settings-wallpaper-preview {
+  box-shadow: none;
+}
+
+:host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-settings-nav-tile,
+:host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-settings-dock-row,
+:host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-settings-icon-option:not([data-selected="true"]),
+:host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-settings-wallpaper-preview {
+  background: var(--mha-ios-frosted-tile-surface);
+  border-color: var(--mha-ios-frosted-tile-border);
+  box-shadow: var(--mha-ios-frosted-tile-shadow);
+}
+
+:host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-settings-nav-tile:hover,
+:host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-settings-nav-tile:focus-visible,
+:host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-settings-dock-row:hover,
+:host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-settings-icon-option:not([data-selected="true"]):hover {
+  background: var(--mha-ios-frosted-tile-surface-hover);
 }
 
 @media (max-width: 420px) {

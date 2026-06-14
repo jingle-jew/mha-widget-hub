@@ -254,9 +254,7 @@
   background: var(--mha-simple-button-ios-home-icon-bg);
   border-color: color-mix(in srgb, var(--mha-simple-button-ios-home-icon-bg) 72%, rgba(255,255,255,.55));
   color: var(--mha-simple-button-ios-home-icon-fg);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.38),
-    0 8px 18px color-mix(in srgb, var(--mha-simple-button-ios-home-icon-bg) 28%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.38);
 }
 
 /* ==========================================================================

@@ -128,8 +128,8 @@
 :host([data-theme-style="ios"]) .mha-widget[data-widget-kind="toggle-buttons"] {
   --mha-toggle-widget-icon-bg: var(--mha-icon-bg, color-mix(in srgb, var(--mha-accent) 58%, rgba(255,255,255,.22)));
   --mha-toggle-widget-icon-color: var(--mha-icon-color, rgba(255,255,255,.96));
-  --mha-toggle-buttons-button-bg: linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,.08));
-  --mha-toggle-buttons-button-border: rgba(255,255,255,.18);
+  --mha-toggle-buttons-button-bg: var(--mha-widget-control-surface, var(--mha-control-surface));
+  --mha-toggle-buttons-button-border: var(--mha-widget-shell-border, var(--mha-widget-border));
   --mha-toggle-buttons-button-shadow: none;
   --mha-toggle-buttons-button-active-bg: color-mix(in srgb, var(--mha-accent) 46%, rgba(255,255,255,.24));
   --mha-toggle-buttons-button-active-color: rgba(255,255,255,.98);
