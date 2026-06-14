@@ -291,21 +291,21 @@ Requires Node.js 22 or newer.
 ```bash
 npm ci
 python3 -m http.server 4173
+```
 
-Open:
-http://localhost:4173/dev.html
+Open: 
+`http://localhost:4173/dev.html`
 
 Run validation:
-npm run check
+`npm run check`
 
 Synchronize frontend bundle:
-npm run sync:frontend
+`npm run sync:frontend`
 
 Never edit directly:
 custom_components/mha_widget_hub/frontend/
 
 The root frontend source remains the single source of truth.
-```
 
 ### Current Limitations
 
@@ -319,9 +319,9 @@ The root frontend source remains the single source of truth.
 * the main orchestrator is still being progressively decomposed into dedicated controllers;
 * historical CSS overrides continue to be consolidated.
 
-### Roadmap
+## Roadmap
 
-## Near Term
+### Near Term
 
 * complete Home Assistant bindings for additional widget categories;
 * continue migration toward registry-driven widget definitions;
@@ -329,7 +329,7 @@ The root frontend source remains the single source of truth.
 * improve preview generation and variant management;
 * reduce CSS override complexity and consolidate design tokens.
 
-## Medium Term
+### Medium Term
 
 * fully functional media widgets;
 * climate widgets;
@@ -337,9 +337,10 @@ The root frontend source remains the single source of truth.
 * room widgets;
 * import/export support;
 * backup and recovery tools;
-* broader accessibility support.
+* broader accessibility support;
+* dedicated Android WebView-based app.
 
-## Longer Term
+### Longer Term
 
 * profile-aware launcher experiences;
 * synchronized layouts;
