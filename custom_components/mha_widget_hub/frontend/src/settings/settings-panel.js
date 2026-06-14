@@ -3,6 +3,7 @@ import { createToggle } from "../ui/toggle.js";
 import { createIcon } from "../ui/icon.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
 import { createBackButton, createCloseButton, createMoveUpButton, createMoveDownButton, createRemoveButton } from "../system/system-buttons.js";
+import { validateWallpaperFile } from "./wallpaper-storage.js";
 /*
  * MHA Settings panel.
  *
@@ -49,10 +50,6 @@ const SCREENSAVER_DELAY_OPTIONS = [
   { value: "300000", label: "5 minutes" },
 ];
 
-const WALLPAPER_STORAGE_MAX_BYTES = 5 * 1024 * 1024;
-const WALLPAPER_ALLOWED_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
-const WALLPAPER_ALLOWED_EXTENSIONS = new Set(["jpg", "jpeg", "png", "webp"]);
-
 function formatImportDate(value = "") {
   if (!value) return "";
   const date = new Date(value);
@@ -60,19 +57,7 @@ function formatImportDate(value = "") {
   return date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
 }
 
-function validateWallpaperFile(file) {
-  if (!file) return "Aucun fichier sélectionné.";
-  const extension = String(file.name || "").split(".").pop()?.toLowerCase() || "";
-  if (!WALLPAPER_ALLOWED_MIME_TYPES.has(file.type) || !WALLPAPER_ALLOWED_EXTENSIONS.has(extension)) {
-    return "Ce format n’est pas accepté. Choisis une image JPG, PNG ou WebP.";
-  }
-  if (file.size > WALLPAPER_STORAGE_MAX_BYTES) {
-    return "Cette image est trop lourde. La limite est de 5 Mo pour cette version.";
-  }
-  return "";
-}
-
-function createWallpaperControls({ wallpaper, onImport, onReset } = {}) {
+function createWallpaperControls({ mode, wallpaper, onImport, onReset } = {}) {
   const wrapper = document.createElement("div");
   wrapper.className = "mha-settings-wallpaper";
 
@@ -87,8 +72,8 @@ function createWallpaperControls({ wallpaper, onImport, onReset } = {}) {
   const hasWallpaper = Boolean(wallpaper?.dataUrl);
   const importedDate = formatImportDate(wallpaper?.importedAt);
   status.textContent = hasWallpaper
-    ? `Image actuelle : ${wallpaper.name || "image importée"}${importedDate ? ` · ${importedDate}` : ""}`
-    : "Aucun fond personnalisé sur cet appareil.";
+    ? `${wallpaper.name || "Image importée"}${importedDate ? ` · ${importedDate}` : ""}`
+    : `Aucun fond personnalisé pour le thème ${mode === "dark" ? "sombre" : "clair"}.`;
 
   const input = document.createElement("input");
   input.type = "file";
@@ -106,7 +91,7 @@ function createWallpaperControls({ wallpaper, onImport, onReset } = {}) {
   resetButton.type = "button";
   resetButton.textContent = "Réinitialiser";
   resetButton.disabled = !hasWallpaper;
-  resetButton.addEventListener("click", () => onReset?.());
+  resetButton.addEventListener("click", () => onReset?.(mode));
 
   input.addEventListener("change", () => {
     const file = input.files?.[0];
@@ -125,19 +110,28 @@ function createWallpaperControls({ wallpaper, onImport, onReset } = {}) {
         input.value = "";
         return;
       }
-      try {
-        onImport?.({
-          dataUrl,
-          name: file.name,
-          importedAt: new Date().toISOString(),
-          mime: file.type,
-        });
-        message.textContent = "Fond d’écran appliqué sur cet appareil.";
-      } catch (error) {
-        message.textContent = "Impossible de sauvegarder cette image localement. Essaie une image plus légère.";
-      } finally {
+
+      const image = new Image();
+      image.addEventListener("load", () => {
+        try {
+          onImport?.(mode, {
+            dataUrl,
+            name: file.name,
+            importedAt: new Date().toISOString(),
+            mime: file.type,
+          });
+          message.textContent = `Fond ${mode === "dark" ? "sombre" : "clair"} enregistré sur cet appareil.`;
+        } catch (error) {
+          message.textContent = "Impossible de sauvegarder cette image localement. Essaie une image plus légère.";
+        } finally {
+          input.value = "";
+        }
+      }, { once: true });
+      image.addEventListener("error", () => {
+        message.textContent = "Ce fichier ne contient pas une image valide.";
         input.value = "";
-      }
+      }, { once: true });
+      image.src = dataUrl;
     });
     reader.addEventListener("error", () => {
       message.textContent = "Impossible de lire cette image.";
@@ -150,7 +144,25 @@ function createWallpaperControls({ wallpaper, onImport, onReset } = {}) {
   actions.className = "mha-settings-wallpaper-actions";
   actions.append(importButton, resetButton);
 
-  wrapper.append(status, actions, input, message);
+  const preview = document.createElement("div");
+  preview.className = "mha-settings-wallpaper-preview";
+  preview.dataset.empty = String(!hasWallpaper);
+  preview.setAttribute("role", "img");
+  preview.setAttribute(
+    "aria-label",
+    hasWallpaper
+      ? `Aperçu du fond ${mode === "dark" ? "sombre" : "clair"}`
+      : `Aucun aperçu pour le thème ${mode === "dark" ? "sombre" : "clair"}`,
+  );
+  if (hasWallpaper) {
+    preview.style.backgroundImage = `url("${wallpaper.dataUrl}")`;
+  } else {
+    const empty = document.createElement("span");
+    empty.textContent = "Aucune image";
+    preview.append(empty);
+  }
+
+  wrapper.append(status, actions, input, message, preview);
   return wrapper;
 }
 
@@ -429,7 +441,7 @@ export function createSettingsPanel({
   activeDockPageId = "",
   selectedDockPageId = "",
   dockPosition = "left",
-  customWallpaper = null,
+  customWallpapers = {},
   onClose,
   onThemeChange,
   onThemeStyleChange,
@@ -442,6 +454,8 @@ export function createSettingsPanel({
   onScreensaverNowBarChange,
   onScreensaverClockVariantChange,
   onResetGrid,
+  onOpenWallpaperSettings,
+  onWallpaperMainBack,
   onOpenDockSettings,
   onDockBack,
   onDockPageSelect,
@@ -451,8 +465,8 @@ export function createSettingsPanel({
   onDockRenamePage,
   onDockIconChange,
   onDockPositionChange,
-  onCustomWallpaperImport,
-  onCustomWallpaperReset,
+  onWallpaperImport,
+  onWallpaperReset,
 } = {}) {
   const isScreensaverScope = scope === "screensaver";
   const root = document.createElement("aside");
@@ -494,7 +508,15 @@ export function createSettingsPanel({
 
   const h2 = document.createElement("h2");
   h2.className = "mha-settings-title";
-  h2.textContent = isScreensaverScope ? "Économiseur d’écran" : settingsPage === "dock" ? "Dock" : settingsPage === "dock-detail" ? "Icône du dock" : "Paramètres";
+  h2.textContent = isScreensaverScope
+    ? "Économiseur d’écran"
+    : settingsPage === "dock"
+      ? "Dock"
+      : settingsPage === "dock-detail"
+        ? "Icône du dock"
+        : settingsPage === "wallpaper"
+          ? "Fond d’écran"
+          : "Paramètres";
 
   title.append(eyebrow, h2);
 
@@ -507,11 +529,13 @@ export function createSettingsPanel({
   const headerActions = document.createElement("div");
   headerActions.className = "mha-settings-header-actions";
 
-  if (!isScreensaverScope && settingsPage === "dock") {
+  if (!isScreensaverScope && (settingsPage === "dock" || settingsPage === "wallpaper")) {
     headerActions.append(createBackButton({
       label: "Retour aux paramètres",
       className: "mha-settings-back",
-      onClick: () => onDockMainBack?.(),
+      onClick: () => settingsPage === "wallpaper"
+        ? onWallpaperMainBack?.()
+        : onDockMainBack?.(),
     }));
   }
 
@@ -565,6 +589,30 @@ export function createSettingsPanel({
     return root;
   }
 
+  if (!isScreensaverScope && settingsPage === "wallpaper") {
+    sections.push(createSection("Thème clair", [
+      createWallpaperControls({
+        mode: "light",
+        wallpaper: customWallpapers.light,
+        onImport: onWallpaperImport,
+        onReset: onWallpaperReset,
+      }),
+    ]));
+    sections.push(createSection("Thème sombre", [
+      createWallpaperControls({
+        mode: "dark",
+        wallpaper: customWallpapers.dark,
+        onImport: onWallpaperImport,
+        onReset: onWallpaperReset,
+      }),
+    ]));
+    body.append(...sections);
+    sheet.append(header, body);
+    root.append(scrim, sheet);
+    root.addEventListener("keydown", (event) => { if (event.key === "Escape") onClose?.(); });
+    return root;
+  }
+
   if (!isScreensaverScope) {
     const appearanceControls = [
       createSelect({
@@ -606,11 +654,12 @@ export function createSettingsPanel({
     );
 
     sections.push(createSection("Apparence", appearanceControls));
-    sections.push(createSection("Fond d’écran", [
-      createWallpaperControls({
-        wallpaper: customWallpaper,
-        onImport: onCustomWallpaperImport,
-        onReset: onCustomWallpaperReset,
+    sections.push(createSection("Personnalisation", [
+      createSettingsNavTile({
+        icon: "dashboard",
+        label: "Fond d’écran",
+        description: "Choisir une image distincte pour les thèmes clair et sombre.",
+        onClick: onOpenWallpaperSettings,
       }),
     ]));
     sections.push(createSection("Navigation", [

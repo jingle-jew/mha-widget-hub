@@ -1212,6 +1212,35 @@
   cursor: not-allowed;
 }
 
+.mha-settings-wallpaper-preview {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: clamp(8.5rem, 22vw, 12rem);
+  overflow: hidden;
+  border: 1px solid var(--mha-border-secondary);
+  border-radius: calc(var(--mha-widget-radius, 1.5rem) * .72);
+  background-color: color-mix(in srgb, var(--mha-surface-secondary) 82%, transparent);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, white 5%, transparent);
+}
+
+.mha-settings-wallpaper-preview[data-empty="true"] {
+  background-image:
+    linear-gradient(135deg, transparent 25%, color-mix(in srgb, var(--mha-text-muted) 7%, transparent) 25% 50%, transparent 50% 75%, color-mix(in srgb, var(--mha-text-muted) 7%, transparent) 75%);
+  background-size: 1.4rem 1.4rem;
+}
+
+.mha-settings-wallpaper-preview span {
+  padding: .45rem .7rem;
+  border-radius: 999px;
+  background: var(--mha-surface-floating);
+  color: var(--mha-text-muted);
+  font-size: .8rem;
+}
+
 @media (max-width: 420px) {
   .mha-settings-wallpaper-actions {
     grid-template-columns: 1fr;

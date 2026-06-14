@@ -21,6 +21,13 @@ import {
 import {
   createThemeController,
 } from "./src/settings/theme-controller.js";
+import {
+  migrateLegacyWallpaper,
+  readLegacyWallpaper,
+  readWallpapers,
+  resetWallpaper,
+  saveWallpaper,
+} from "./src/settings/wallpaper-storage.js";
 import {updateStatusTime} from "./src/layout/status-bar.js";
 import {createWidgetShell} from "./src/widgets/widget-shell.js";
 import { getNextWidgetVariantEntries, getVariantCandidate, sameVariantSize } from "./src/widgets/widget-variants.js";
@@ -174,7 +181,6 @@ const SCREENSAVER_ENABLED="mha-screensaver-enabled";
 const SCREENSAVER_DELAY="mha-screensaver-delay";
 const SCREENSAVER_NOWBAR="mha-screensaver-nowbar";
 const SCREENSAVER_CLOCK_VARIANT="mha-screensaver-clock-variant";
-const CUSTOM_WALLPAPER="mha_custom_wallpaper";
 
 /*
  * FIRST LAUNCH DEFAULTS
@@ -256,7 +262,7 @@ constructor(){
   this._pageCreatorOpen=false;
   this._newPageIcon="grid";
   this._dockPosition="left";
-  this._customWallpaper=null;
+  this._customWallpapers={light:null,dark:null};
   this._pages=[];
   this._activePageId="";
   this._widgets=[];
@@ -283,7 +289,8 @@ _initialize(){
     [15000,30000,120000,300000],
   );
   this._dockPosition=getStoredDockPosition();
-  this._customWallpaper=this._readCustomWallpaper();
+  this._migrateLegacyCustomWallpaper();
+  this._customWallpapers=this._readCustomWallpapers();
   this._applyCustomWallpaperState();
   this._pages=this._readPages();
   this._activePageId=this._readActivePageId();
@@ -647,7 +654,7 @@ _getSettingsPanelProps(scope="all"){
     activeDockPageId:this._activePageId,
     selectedDockPageId:this._dockSettingsPageId,
     dockPosition:this._dockPosition,
-    customWallpaper:this._customWallpaper,
+    customWallpapers:this._customWallpapers,
     onClose:()=>scope==="screensaver"?this._closeScreensaverSettings():this._closeSettings(),
     onThemeChange:v=>this._applyThemeFromSettings(v),
     onThemeStyleChange:v=>this._applyThemeStyleFromSettings(v),
@@ -660,6 +667,8 @@ _getSettingsPanelProps(scope="all"){
     onScreensaverNowBarChange:v=>this._applyScreensaverNowBarFromSettings(v),
     onScreensaverClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),
     onResetGrid:()=>this.resetGrid(),
+    onOpenWallpaperSettings:()=>this._openWallpaperSettings(),
+    onWallpaperMainBack:()=>this._openSettings(),
     onOpenDockSettings:()=>this._openDockSettings(),
     onDockBack:()=>this._openDockSettings(),
     onDockPageSelect:id=>this._openDockPageSettings(id),
@@ -669,33 +678,26 @@ _getSettingsPanelProps(scope="all"){
     onDockRenamePage:(id,name)=>this._renameDockPage(id,name),
     onDockIconChange:(id,icon)=>this._changeDockPageIcon(id,icon),
     onDockPositionChange:v=>this._applyDockPositionFromSettings(v),
-    onCustomWallpaperImport:payload=>this._saveCustomWallpaper(payload),
-    onCustomWallpaperReset:()=>this._resetCustomWallpaper(),
+    onWallpaperImport:(mode,payload)=>this._saveCustomWallpaper(mode,payload),
+    onWallpaperReset:mode=>this._resetCustomWallpaper(mode),
   };
 }
 
-_readCustomWallpaper(){
-  const raw=localStorage.getItem(CUSTOM_WALLPAPER);
-  if(!raw)return null;
-  try{
-    const data=JSON.parse(raw);
-    const dataUrl=String(data?.dataUrl||"");
-    const mime=String(data?.mime||"");
-    if(!dataUrl.startsWith("data:image/")||!/^image\/(jpeg|png|webp)$/.test(mime))return null;
-    return {
-      dataUrl,
-      name:String(data?.name||"Image importée"),
-      importedAt:String(data?.importedAt||""),
-      mime,
-    };
-  }catch(error){
-    console.warn("[MHA] Custom wallpaper could not be read.",error);
-    return null;
-  }
+_migrateLegacyCustomWallpaper(){
+  const effectiveTheme=this._themeController.read().theme;
+  migrateLegacyWallpaper(localStorage,effectiveTheme);
 }
-_applyCustomWallpaperState(){
-  const wallpaper=this._customWallpaper||this._readCustomWallpaper();
-  this._customWallpaper=wallpaper;
+_readCustomWallpapers(){
+  const wallpapers=readWallpapers(localStorage);
+  const effectiveTheme=this._themeController.read().theme;
+  if(!wallpapers[effectiveTheme]){
+    wallpapers[effectiveTheme]=readLegacyWallpaper(localStorage);
+  }
+  return wallpapers;
+}
+_applyCustomWallpaperState(theme=this._themeController.read().theme){
+  this._customWallpapers=this._readCustomWallpapers();
+  const wallpaper=this._customWallpapers[theme];
   const hasWallpaper=Boolean(wallpaper?.dataUrl);
   this.dataset.customWallpaper=String(hasWallpaper);
   if(hasWallpaper){
@@ -704,15 +706,15 @@ _applyCustomWallpaperState(){
     this.style.removeProperty("--mha-custom-wallpaper-image");
   }
 }
-_saveCustomWallpaper(payload){
-  localStorage.setItem(CUSTOM_WALLPAPER,JSON.stringify(payload));
-  this._customWallpaper=this._readCustomWallpaper();
+_saveCustomWallpaper(mode,payload){
+  if(!saveWallpaper(localStorage,mode,payload))throw new Error("Invalid wallpaper payload");
+  this._customWallpapers=this._readCustomWallpapers();
   this._applyCustomWallpaperState();
   this._syncSettingsDom();
 }
-_resetCustomWallpaper(){
-  localStorage.removeItem(CUSTOM_WALLPAPER);
-  this._customWallpaper=null;
+_resetCustomWallpaper(mode){
+  resetWallpaper(localStorage,mode);
+  this._customWallpapers=this._readCustomWallpapers();
   this._applyCustomWallpaperState();
   this._syncSettingsDom();
 }
@@ -907,6 +909,13 @@ _openDockSettings(){
   this._syncSettingsModalState();
   this._syncSettingsDom();
 }
+_openWallpaperSettings(){
+  this._settingsOpen=true;
+  this._settingsPage="wallpaper";
+  this._dockSettingsPageId="";
+  this._syncSettingsModalState();
+  this._syncSettingsDom();
+}
 _openDockPageSettings(id=""){
   if(!this._pages.some(page=>page.id===id))return;
   this._settingsOpen=true;
@@ -990,7 +999,8 @@ _deleteDockPage(id=""){
  * Keep this block together when cleaning/refactoring the theme system.
  */
 _applyThemeFromSettings(value="auto"){
-  this._themeController.setTheme(value);
+  const themeState=this._themeController.setTheme(value);
+  this._applyCustomWallpaperState(themeState.theme);
   this._syncSettingsDom();
   this._syncScreensaverSettingsDom();
 }
@@ -1010,7 +1020,8 @@ _transitionSystemThemeChange(){
   clearTimeout(this._themeTransitionTimer);
   cancelAnimationFrame(this._themeTransitionFrame);
 
-  this._themeController.sync();
+  const themeState=this._themeController.sync();
+  this._applyCustomWallpaperState(themeState.theme);
 
   const finish=()=>{
     cover.dataset.state="revealing";
