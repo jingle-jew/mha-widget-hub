@@ -306,7 +306,7 @@ custom_components/mha_widget_hub/frontend/
 
 The root frontend source remains the single source of truth.
 
-Current Limitations
+## Current Limitations
 
 * not every widget category is fully connected to Home Assistant yet;
 * media, climate, security and system widgets are still evolving;
