@@ -1,7 +1,5 @@
 import {
-  readBoolean,
   readJson,
-  readNumberOption,
   writeJson,
   writeStorageValue,
 } from "./src/core/storage.js?v=storage-v1";
@@ -48,13 +46,7 @@ import {
   createThemeController,
 } from "./src/settings/theme-controller.js";
 import { extractAccentFromWallpaper } from "./src/settings/wallpaper-accent.js";
-import {
-  migrateLegacyWallpaper,
-  readLegacyWallpaper,
-  readWallpapers,
-  resetWallpaper,
-  saveWallpaper,
-} from "./src/settings/wallpaper-storage.js";
+import { createWallpaperController } from "./src/settings/wallpaper-controller.js";
 import {updateStatusTime} from "./src/layout/status-bar.js";
 import {createWidgetShell} from "./src/widgets/widget-shell.js";
 import { getNextWidgetVariantEntries, getVariantCandidate, sameVariantSize } from "./src/widgets/widget-variants.js";
@@ -76,6 +68,7 @@ import {
 } from "./src/layout/placement-geometry.js";
 import { RESPONSIVE_BREAKPOINTS } from "./src/layout/responsive.js";
 import {createScreensaver,normalizeClockVariant,updateScreensaverClock} from "./src/screensaver/screensaver.js";
+import { createScreensaverController } from "./src/screensaver/screensaver-controller.js";
 import { createIcon } from "./src/ui/icon.js";
 import { createIconSymbol } from "./src/ui/icon-symbol.js";
 import { createCloseButton } from "./src/system/system-buttons.js";
@@ -206,11 +199,6 @@ const {
   gridPages:PAGES,
   activePage:ACTIVE_PAGE,
   dockPosition:DOCK_POSITION,
-  screensaverEnabled:SCREENSAVER_ENABLED,
-  screensaverDelay:SCREENSAVER_DELAY,
-  screensaverNowBar:SCREENSAVER_NOWBAR,
-  screensaverClockVariant:SCREENSAVER_CLOCK_VARIANT,
-  legacyScreensaverClockVariant:LEGACY_SCREENSAVER_CLOCK_VARIANT,
 }=STORAGE_KEYS;
 const DOCK_POSITIONS=new Set(["left","right","bottom"]);
 function normalizeDockPosition(value="left"){return DOCK_POSITIONS.has(value)?value:"left";}
@@ -239,6 +227,14 @@ class MhaControlHub extends HTMLElement{
 constructor(){
   super();
   this._themeController=createThemeController(this);
+  this._wallpaperController=createWallpaperController(this,{
+    getTheme:()=>this._themeController.read().theme,
+  });
+  this._screensaverController=createScreensaverController({
+    normalizeClockVariant,
+    isBlocked:()=>this._isScreensaverBlocked(),
+    onIdle:()=>this._setScreensaverActive(true),
+  });
   this._initialized=false;
   this._bootComplete=false;
   this._bootWatchdog=0;
@@ -274,13 +270,6 @@ constructor(){
   this._themeTransitionTimer=0;
   this._themeTransitionFrame=0;
   this._gridScrollCleanup=null;
-  this._screensaverPreview=false;
-  this._screensaverActive=false;
-  this._screensaverNowBar=true;
-  this._screensaverClockVariant="digital";
-  this._screensaverIdleTimer=0;
-  this._screensaverEnabled=true;
-  this._screensaverDelay=30000;
   this._settingsOpen=false;
   this._settingsPage="main";
   this._dockSettingsPageId="";
@@ -312,16 +301,7 @@ _initialize(){
   this.shadowRoot.innerHTML=createCriticalBootStyle();
   this._migrateStorageSchema();
   this._widgetPositions=readJson(POSITIONS,{})||{};
-  this._screensaverNowBar=readBoolean(SCREENSAVER_NOWBAR,true);
-  this._screensaverClockVariant=localStorage.getItem(SCREENSAVER_CLOCK_VARIANT)
-    ||localStorage.getItem(LEGACY_SCREENSAVER_CLOCK_VARIANT)
-    ||"digital";
-  this._screensaverEnabled=readBoolean(SCREENSAVER_ENABLED,true);
-  this._screensaverDelay=readNumberOption(
-    SCREENSAVER_DELAY,
-    30000,
-    [15000,30000,120000,300000],
-  );
+  this._screensaverController.load();
   this._dockPosition=getStoredDockPosition();
   this._migrateLegacyCustomWallpaper();
   this._customWallpapers=this._readCustomWallpapers();
@@ -521,7 +501,14 @@ connectedCallback(){
   window.matchMedia?.("(prefers-color-scheme: light)")?.addEventListener?.("change",this._systemThemeListener);
   this._ensureMounted({force:isReconnect,reason:isReconnect?"panel reconnect":"initial connection"});
   this._scheduleHassUpdate();
-  this._clockTimer=setInterval(()=>{updateStatusTime(this.shadowRoot);updateClockWidgets(this.shadowRoot);if(this._getScreensaverVisible())updateScreensaverClock(this.shadowRoot,this._screensaverClockVariant)},1000);
+  this._clockTimer=setInterval(()=>{
+    updateStatusTime(this.shadowRoot);
+    updateClockWidgets(this.shadowRoot);
+    const screensaverState=this._screensaverController.read();
+    if(this._getScreensaverVisible()){
+      updateScreensaverClock(this.shadowRoot,screensaverState.clockVariant);
+    }
+  },1000);
   this._activityListener=()=>this._handleUserActivity();
   ["pointerdown","touchstart","keydown","wheel","scroll"].forEach(type=>window.addEventListener(type,this._activityListener,{passive:true}));
   this._scheduleScreensaverIdleTimer();
@@ -564,7 +551,7 @@ disconnectedCallback(){
   this._themeTransitionTimer=0;
   this._clearGridScrollListener();
   ["pointerdown","touchstart","keydown","wheel","scroll"].forEach(type=>window.removeEventListener(type,this._activityListener));
-  clearTimeout(this._screensaverIdleTimer);
+  this._screensaverController.destroy();
   window.removeEventListener("resize",this._resizeListener);
   window.visualViewport?.removeEventListener("resize",this._resizeListener);
   window.removeEventListener("orientationchange",this._resizeListener);
@@ -609,7 +596,7 @@ _openSettings(page="main"){
   this._settingsPage=page||"main";
   if(this._settingsPage!=="dock-detail")this._dockSettingsPageId="";
   this._setScreensaverActive(false);
-  clearTimeout(this._screensaverIdleTimer);
+  this._screensaverController.clearIdleTimer();
   this._syncSettingsModalState();
   this._syncSettingsDom();
 }
@@ -664,6 +651,7 @@ _syncSettingsDom(){
 }
 _getSettingsPanelProps(scope="all"){
   const themeState=this._themeController.read();
+  const screensaverState=this._screensaverController.read();
   const themeStyle=themeState.themeStyle;
   const iconShapeSetting=themeState.iconShapeSetting;
   const effectiveIconShape=this.dataset.iconShape
@@ -680,11 +668,11 @@ _getSettingsPanelProps(scope="all"){
     accentMode:themeState.accentMode,
     iconShape:iconShapeSetting,
     effectiveIconShape,
-    screensaverEnabled:this._screensaverEnabled,
-    screensaverDelay:this._screensaverDelay,
-    screensaverPreview:this._screensaverPreview,
-    screensaverNowBar:this._screensaverNowBar,
-    screensaverClockVariant:this._screensaverClockVariant,
+    screensaverEnabled:screensaverState.enabled,
+    screensaverDelay:screensaverState.delay,
+    screensaverPreview:screensaverState.preview,
+    screensaverNowBar:screensaverState.nowBar,
+    screensaverClockVariant:screensaverState.clockVariant,
     settingsPage:this._settingsPage,
     dockPages:this._pages,
     activeDockPageId:this._activePageId,
@@ -721,39 +709,21 @@ _getSettingsPanelProps(scope="all"){
 }
 
 _migrateLegacyCustomWallpaper(){
-  const effectiveTheme=this._themeController.read().theme;
-  migrateLegacyWallpaper(localStorage,effectiveTheme);
+  this._wallpaperController.migrateLegacy();
 }
 _readCustomWallpapers(){
-  const wallpapers=readWallpapers(localStorage);
-  const effectiveTheme=this._themeController.read().theme;
-  if(!wallpapers[effectiveTheme]){
-    wallpapers[effectiveTheme]=readLegacyWallpaper(localStorage);
-  }
-  return wallpapers;
+  return this._wallpaperController.read();
 }
 _applyCustomWallpaperState(theme=this._themeController.read().theme){
-  this._customWallpapers=this._readCustomWallpapers();
-  const wallpaper=this._customWallpapers[theme];
-  const hasWallpaper=Boolean(wallpaper?.dataUrl);
-  this.dataset.customWallpaper=String(hasWallpaper);
-  if(hasWallpaper){
-    this.style.setProperty("--mha-custom-wallpaper-image",`url("${wallpaper.dataUrl}")`);
-  }else{
-    this.style.removeProperty("--mha-custom-wallpaper-image");
-  }
+  this._customWallpapers=this._wallpaperController.apply(theme);
 }
 _saveCustomWallpaper(mode,payload){
-  if(!saveWallpaper(localStorage,mode,payload))throw new Error("Invalid wallpaper payload");
-  this._customWallpapers=this._readCustomWallpapers();
-  this._applyCustomWallpaperState();
+  this._customWallpapers=this._wallpaperController.save(mode,payload);
   this._syncAutoAccentFromWallpaper();
   this._syncSettingsDom();
 }
 _resetCustomWallpaper(mode){
-  resetWallpaper(localStorage,mode);
-  this._customWallpapers=this._readCustomWallpapers();
-  this._applyCustomWallpaperState();
+  this._customWallpapers=this._wallpaperController.reset(mode);
   this._syncAutoAccentFromWallpaper();
   this._syncSettingsDom();
 }
@@ -1098,69 +1068,46 @@ _isScreensaverBlocked(){
   return this._settingsOpen||this._isEditing;
 }
 _getScreensaverVisible(){
-  return Boolean(this._screensaverPreview||this._screensaverActive);
+  return this._screensaverController.isVisible();
 }
 _setScreensaverActive(active=false){
-  const next=Boolean(active)&&this._screensaverEnabled&&!this._isScreensaverBlocked();
-  if(this._screensaverActive===next){
-    this._syncScreensaverVisibilityState();
-    this._syncScreensaverDom();
-    return;
-  }
-  this._screensaverActive=next;
+  this._screensaverController.setActive(active);
   this._syncScreensaverDom();
 }
 _scheduleScreensaverIdleTimer(){
-  clearTimeout(this._screensaverIdleTimer);
-  if(!this._screensaverEnabled||this._isScreensaverBlocked())return;
-  this._screensaverIdleTimer=setTimeout(()=>{
-    this._setScreensaverActive(true);
-  },this._screensaverDelay);
+  this._screensaverController.scheduleIdleTimer();
 }
 _handleUserActivity(){
-  if(this._screensaverSettingsOpen)return;
-  if(this._screensaverActive){
-    this._setScreensaverActive(false);
-  }
-  this._scheduleScreensaverIdleTimer();
+  const deactivated=this._screensaverController.handleActivity({
+    settingsOpen:this._screensaverSettingsOpen,
+  });
+  if(deactivated)this._syncScreensaverDom();
 }
 _applyScreensaverEnabledFromSettings(enabled=false){
-  this._screensaverEnabled=Boolean(enabled);
-  this._recordPersistenceResult(writeStorageValue(SCREENSAVER_ENABLED,this._screensaverEnabled));
-  if(!this._screensaverEnabled){
-    this._setScreensaverActive(false);
-  }
-  this._scheduleScreensaverIdleTimer();
+  this._recordPersistenceResult(this._screensaverController.setEnabled(enabled));
+  this._syncScreensaverDom();
   this._syncSettingsDom();
   this._syncScreensaverSettingsDom();
 }
 _applyScreensaverDelayFromSettings(delay=30000){
-  const numeric=Number(delay);
-  this._screensaverDelay=[15000,30000,120000,300000].includes(numeric)?numeric:30000;
-  this._recordPersistenceResult(writeStorageValue(SCREENSAVER_DELAY,this._screensaverDelay));
-  this._scheduleScreensaverIdleTimer();
+  this._recordPersistenceResult(this._screensaverController.setDelay(delay));
   this._syncSettingsDom();
   this._syncScreensaverSettingsDom();
 }
 _applyScreensaverPreviewFromSettings(enabled=false){
-  this._screensaverPreview=Boolean(enabled);
+  this._screensaverController.setPreview(enabled);
   this._syncScreensaverDom();
   this._syncSettingsDom();
   this._syncScreensaverSettingsDom();
-  this._scheduleScreensaverIdleTimer();
 }
 _applyScreensaverNowBarFromSettings(enabled=true){
-  this._screensaverNowBar=Boolean(enabled);
-  this._recordPersistenceResult(writeStorageValue(SCREENSAVER_NOWBAR,this._screensaverNowBar));
+  this._recordPersistenceResult(this._screensaverController.setNowBar(enabled));
   this._syncScreensaverDom();
   this._syncSettingsDom();
   this._syncScreensaverSettingsDom();
 }
 _applyScreensaverClockVariantFromSettings(variant="digital"){
-  this._screensaverClockVariant=normalizeClockVariant(variant);
-  const saved=writeStorageValue(SCREENSAVER_CLOCK_VARIANT,this._screensaverClockVariant)
-    &&writeStorageValue(LEGACY_SCREENSAVER_CLOCK_VARIANT,this._screensaverClockVariant);
-  this._recordPersistenceResult(saved);
+  this._recordPersistenceResult(this._screensaverController.setClockVariant(variant));
   this._syncScreensaverDom();
   this._syncSettingsDom();
   this._syncScreensaverSettingsDom();
@@ -1174,10 +1121,11 @@ _syncScreensaverDom(){
   this._syncScreensaverVisibilityState();
   const existing=this.shadowRoot.querySelector(".mha-screensaver");
   if(!existing)return;
+  const screensaverState=this._screensaverController.read();
   const next=createScreensaver({
     isVisible:this._getScreensaverVisible(),
-    showNowBar:this._screensaverNowBar,
-    clockVariant:this._screensaverClockVariant,
+    showNowBar:screensaverState.nowBar,
+    clockVariant:screensaverState.clockVariant,
     onClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),
     onOpenScreensaverSettings:()=>this._openScreensaverSettings(),
     onWake:()=>this._wakeScreensaver(),
@@ -1200,7 +1148,7 @@ toggleEditMode(){
   this._syncWidgetDropSlots();
 
   if(wasEditing!==this._isEditing)this._scheduleSquareUnitSync();
-}toggleScreensaverPreview(){this._screensaverPreview=!this._screensaverPreview;this._syncScreensaverDom()}toggleNowBarPreview(){this._screensaverNowBar=!this._screensaverNowBar;this._syncScreensaverDom()}setScreensaverClockVariant(v="digital"){this._screensaverClockVariant=normalizeClockVariant(v);this._syncScreensaverDom()}resetGrid(){localStorage.removeItem(ORDER);localStorage.removeItem(SIZES);localStorage.removeItem(REMOVED);localStorage.removeItem(POSITIONS);localStorage.removeItem(PAGES);localStorage.removeItem(ACTIVE_PAGE);this._widgetPositions={};this._activeMoveWidgetId="";this._pages=this._readPages();this._activePageId=this._readActivePageId();this._widgets=this._readWidgets();this.render()}
+}toggleScreensaverPreview(){const state=this._screensaverController.read();this._screensaverController.setPreviewState(!state.preview);this._syncScreensaverDom()}toggleNowBarPreview(){const state=this._screensaverController.read();this._screensaverController.setNowBarState(!state.nowBar);this._syncScreensaverDom()}setScreensaverClockVariant(v="digital"){this._screensaverController.setClockVariantState(v);this._syncScreensaverDom()}resetGrid(){localStorage.removeItem(ORDER);localStorage.removeItem(SIZES);localStorage.removeItem(REMOVED);localStorage.removeItem(POSITIONS);localStorage.removeItem(PAGES);localStorage.removeItem(ACTIVE_PAGE);this._widgetPositions={};this._activeMoveWidgetId="";this._pages=this._readPages();this._activePageId=this._readActivePageId();this._widgets=this._readWidgets();this.render()}
 _migrateStorageSchema(){
   const result=migratePageStorage({
     defaultWidgets:DEFAULT_WIDGETS,
@@ -2748,10 +2696,11 @@ _appendDeferredUi({layout,renderId}){
     if(layout!=="mobile"){
       this.shadowRoot.append(createMobileDock(this._getDockProps()));
     }
+    const screensaverState=this._screensaverController.read();
     this.shadowRoot.append(createScreensaver({
       isVisible:this._getScreensaverVisible(),
-      showNowBar:this._screensaverNowBar,
-      clockVariant:this._screensaverClockVariant,
+      showNowBar:screensaverState.nowBar,
+      clockVariant:screensaverState.clockVariant,
       onClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),
       onOpenScreensaverSettings:()=>this._openScreensaverSettings(),
       onWake:()=>this._wakeScreensaver(),
