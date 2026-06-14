@@ -77,6 +77,7 @@ import {
   packTranslatedSwapBand,
   packWidgets,
 } from "./src/layout/placement-calculations.js";
+import { createPlacementController } from "./src/layout/placement-controller.js";
 import { RESPONSIVE_BREAKPOINTS } from "./src/layout/responsive.js";
 import {createScreensaver,normalizeClockVariant,updateScreensaverClock} from "./src/screensaver/screensaver.js";
 import { createScreensaverController } from "./src/screensaver/screensaver-controller.js";
@@ -300,6 +301,29 @@ constructor(){
   this._pages=[];
   this._activePageId="";
   this._widgets=[];
+  this._placementController=createPlacementController({
+    getWidgets:()=>this._widgets,
+    getPositions:()=>this._getActiveWidgetPositions({create:true}),
+    getGridBounds:()=>this._getGridBounds(),
+    isMobileLayout:()=>this._isMobileLauncherLayout(),
+    canMoveWidget:id=>this._isEditing&&this._activeMoveWidgetId===id,
+    savePositions:positions=>this._saveCurrentWidgetPositions(positions),
+    applyPositions:positions=>this._applyWidgetPositionsToDom(positions),
+    applySinglePosition:({widgetId,position,width,height})=>{
+      const el=this.shadowRoot?.querySelector?.(`[data-widget-id="${widgetId}"]`);
+      if(!el)return;
+      el.style.gridColumn=`${position.x} / span ${width}`;
+      el.style.gridRow=`${position.y} / span ${height}`;
+    },
+    setActiveMoveWidgetId:id=>{this._activeMoveWidgetId=id},
+    refreshDropSlots:()=>{
+      const grid=this.shadowRoot?.querySelector?.(".mha-grid");
+      if(grid)this._renderWidgetDropSlots(grid);
+    },
+    syncEditMode:()=>this._syncEditModeDom(),
+    scheduleLayoutSync:()=>this._scheduleSquareUnitSync(),
+    syncDropSlots:()=>this._syncWidgetDropSlots(),
+  });
 }
 _initialize(){
   if(this._initialized)return;
@@ -1577,81 +1601,25 @@ _packTranslatedSwapBand(id,group,direction,positions,units,rowUnits){
   );
 }
 _tryTranslatedGroupSwap(id,direction,positions,units,rowUnits){
-  const widget=this._widgets.find(item=>item.id===id);
-  const current=positions?.[id];
-  if(!widget||!current)return false;
-
-  const activeRect=this._getWidgetRectFromPosition(widget,current,units);
-  const group=this._getAdjacentWidgetGroupInDirection(id,direction,positions,units);
-  if(!group.length)return false;
-  if(!this._isGroupInternallyValid(group,positions,units))return false;
-
-  const groupRect=this._getGroupBoundingRect(group,positions,units);
-  if(!groupRect)return false;
-
-  const isAxisAdjacent=
-    direction==="right"?groupRect.x>=activeRect.x+activeRect.w:
-    direction==="left"?groupRect.x+groupRect.w<=activeRect.x:
-    direction==="down"?groupRect.y>=activeRect.y+activeRect.h:
-    direction==="up"?groupRect.y+groupRect.h<=activeRect.y:
-    false;
-
-  if(!isAxisAdjacent)return false;
-
-  const bandCompatible=
-    direction==="right"||direction==="left"
-      ? groupRect.y<=activeRect.y&&groupRect.y+groupRect.h>=activeRect.y+activeRect.h
-      : groupRect.x<=activeRect.x&&groupRect.x+groupRect.w>=activeRect.x+activeRect.w;
-
-  if(!bandCompatible)return false;
-
-  const packedPositions=this._packTranslatedSwapBand(id,group,direction,positions,units,rowUnits);
-  if(!packedPositions)return false;
-
-  this._saveCurrentWidgetPositions(packedPositions);
-  this._applyWidgetPositionsToDom(packedPositions);
-  this._scheduleSquareUnitSync();
-  return true;
+  return this._placementController.tryTranslatedGroupSwap(
+    id,
+    direction,
+    positions,
+    units,
+    rowUnits,
+  );
 }
 _getDirectNeighborInDirection(id,direction,positions,units){
   return getDirectNeighborInDirection(this._widgets,id,direction,positions,units);
 }
 _tryDirectNeighborSwap(id,direction,positions,units,rowUnits){
-  const active=this._widgets.find(widget=>widget.id===id);
-  const activePosition=positions?.[id];
-  if(!active||!activePosition)return false;
-
-  const activeRect=this._getWidgetRectFromPosition(active,activePosition,units);
-  const neighbor=this._getDirectNeighborInDirection(id,direction,positions,units);
-  if(!neighbor)return false;
-
-  const next={...positions};
-  const neighborRect=neighbor.rect;
-
-  if(direction==="right"||direction==="left"){
-    const fromX=Math.min(activeRect.x,neighborRect.x);
-    const leftFirst=direction==="right"?neighbor: {widget:active,rect:activeRect};
-    const rightSecond=direction==="right"?{widget:active,rect:activeRect}:neighbor;
-
-    next[leftFirst.widget.id]={x:fromX,y:leftFirst.rect.y};
-    next[rightSecond.widget.id]={x:fromX+leftFirst.rect.w,y:rightSecond.rect.y};
-  }else if(direction==="down"||direction==="up"){
-    const fromY=Math.min(activeRect.y,neighborRect.y);
-    const topFirst=direction==="down"?neighbor:{widget:active,rect:activeRect};
-    const bottomSecond=direction==="down"?{widget:active,rect:activeRect}:neighbor;
-
-    next[topFirst.widget.id]={x:topFirst.rect.x,y:fromY};
-    next[bottomSecond.widget.id]={x:bottomSecond.rect.x,y:fromY+topFirst.rect.h};
-  }else{
-    return false;
-  }
-
-  if(!this._isPositionMapValid(next,units,rowUnits))return false;
-
-  this._saveCurrentWidgetPositions(next);
-  this._applyWidgetPositionsToDom(next);
-  this._scheduleSquareUnitSync();
-  return true;
+  return this._placementController.tryDirectNeighborSwap(
+    id,
+    direction,
+    positions,
+    units,
+    rowUnits,
+  );
 }
 _getAvailableDropSlotsForCandidate(candidateWidget,positions=this._getActiveWidgetPositions({create:true}),currentPosition=null){
   const {units,rowUnits}=this._getGridBounds();
@@ -1763,110 +1731,10 @@ _placePendingWidgetAtSlot(x,y){
   this._scheduleSquareUnitSync();
 }
 _moveWidgetToDropSlot(id,x,y){
-  if(!this._isEditing||this._activeMoveWidgetId!==id)return;
-  const positions=this._getActiveWidgetPositions({create:true});
-  const {units,rowUnits}=this._getGridBounds();
-  const next={...positions,[id]:{x:Number(x)||1,y:Number(y)||1}};
-  if(!this._isPositionMapValid(next,units,rowUnits))return;
-
-  this._saveCurrentWidgetPositions(next);
-  this._activeMoveWidgetId="";
-
-  this._applyWidgetPositionsToDom(next);
-
-  const grid=this.shadowRoot?.querySelector?.(".mha-grid");
-  if(grid)this._renderWidgetDropSlots(grid);
-
-  this._syncEditModeDom();
-  this._scheduleSquareUnitSync();
+  return this._placementController.moveToDropSlot(id,x,y);
 }
 _moveWidgetByDirection(id,direction){
-  if(!this._isEditing||this._activeMoveWidgetId!==id)return;
-  const positions=this._getActiveWidgetPositions({create:true});
-  const current=positions?.[id];
-  const widget=this._widgets.find(item=>item.id===id);
-  if(!positions||!current||!widget)return;
-
-  const delta={
-    up:{x:0,y:-1},
-    right:{x:1,y:0},
-    down:{x:0,y:1},
-    left:{x:-1,y:0},
-  }[direction];
-  if(!delta)return;
-
-  const {units,rowUnits}=this._getGridBounds();
-  const size=normalizeWidgetForKind(widget);
-  const w=Math.min(units,size.w);
-  const h=size.h;
-  const currentRect={x:current.x,y:current.y,w,h};
-  const maxY=this._isMobileLauncherLayout()?Number.POSITIVE_INFINITY:rowUnits-h+1;
-
-  const isCandidateInBounds=candidate=>!(
-    candidate.x<1||
-    candidate.x+w-1>units||
-    candidate.y<1||
-    candidate.y>maxY
-  );
-
-  const applyEmptyMove=candidate=>{
-    positions[id]=candidate;
-    this._saveCurrentWidgetPositions(positions);
-    const el=this.shadowRoot.querySelector(`[data-widget-id="${id}"]`);
-    if(el){
-      el.style.gridColumn=`${candidate.x} / span ${w}`;
-      el.style.gridRow=`${candidate.y} / span ${h}`;
-    }
-    this._scheduleSquareUnitSync();this._syncWidgetDropSlots();
-  };
-
-  const tryGroupSwap=candidate=>{
-    if(!isCandidateInBounds(candidate))return false;
-
-    const candidateRect={...candidate,w,h};
-    const occupants=this._getWidgetsInCandidateRect(id,candidateRect,positions,units);
-    if(!occupants.length)return false;
-    if(!this._doesWidgetGroupExactlyFillRect(occupants,candidateRect,positions,units))return false;
-
-    let nextPositions={
-      ...positions,
-      [id]:{x:candidateRect.x,y:candidateRect.y},
-    };
-    nextPositions=this._translateWidgetGroupPositions(occupants,candidateRect,currentRect,nextPositions);
-
-    if(!this._canSwapWidgetPositions(id,occupants.map(widget=>widget.id).join(","),nextPositions,units))return false;
-
-    this._saveCurrentWidgetPositions(nextPositions);
-    this._applyWidgetPositionsToDom(nextPositions);
-    this._scheduleSquareUnitSync();this._syncWidgetDropSlots();
-    return true;
-  };
-
-  const unitCandidate={x:current.x+delta.x,y:current.y+delta.y};
-  if(!isCandidateInBounds(unitCandidate))return;
-
-  const unitRect={...unitCandidate,w,h};
-  const unitOccupants=this._getWidgetsInCandidateRect(id,unitRect,positions,units);
-
-  if(!unitOccupants.length){
-    applyEmptyMove(unitCandidate);
-    return;
-  }
-
-  if(this._doesWidgetGroupExactlyFillRect(unitOccupants,unitRect,positions,units)&&tryGroupSwap(unitCandidate))return;
-
-  if(this._tryDirectNeighborSwap(id,direction,positions,units,rowUnits))return;
-
-  const adjacentCandidate={
-    x:current.x+(delta.x*w),
-    y:current.y+(delta.y*h),
-  };
-
-  if(!(adjacentCandidate.x===unitCandidate.x&&adjacentCandidate.y===unitCandidate.y)){
-    if(tryGroupSwap(adjacentCandidate))return;
-  }
-
-  this._tryTranslatedGroupSwap(id,direction,positions,units,rowUnits);
+  return this._placementController.moveByDirection(id,direction);
 }
 _canApplyVariant(id,candidateWidget){
   if(!id||!candidateWidget)return false;
