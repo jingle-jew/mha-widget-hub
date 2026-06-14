@@ -121,6 +121,12 @@
   flex: 0 0 auto;
 }
 
+.mha-toggle-widget[data-entity-available="false"] .mha-toggle-widget-icon-bubble,
+.mha-toggle-widget[data-toggle-supported="false"] .mha-toggle-widget-icon-bubble {
+  opacity: .46;
+  filter: saturate(.72);
+}
+
 /* ==========================================================================
    3. Variantes de taille
    ========================================================================== */

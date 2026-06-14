@@ -11,6 +11,9 @@
 
 import { createIconSymbol } from "../ui/icon-symbol.js";
 import { createToggle } from "../ui/toggle.js";
+import { runToggleAction } from "../ha/actions.js";
+import { getEntityState, getWidgetEntityId, isEntityAvailable } from "../ha/entity.js";
+import { isToggleEntityOn, supportsToggleEntity } from "../ha/toggle.js";
 import { isWidgetKind } from "./widget-registry.js";
 
 export const TOGGLE_WIDGET_KIND = "toggle";
@@ -39,9 +42,17 @@ export function createToggleWidgetContent(widget = {}, {
   widgetW = Number(widget?.w) || 3,
   widgetH = Number(widget?.h) || 1,
   disabled = false,
+  bindToHass = false,
+  hass,
   onToggle,
 } = {}) {
   const data = getToggleWidgetData(widget);
+  const entityId = getWidgetEntityId(widget);
+  const context = {
+    hass,
+    entityState: null,
+    entityAvailable: false,
+  };
 
   const root = document.createElement("div");
   root.className = ["mha-toggle-widget", className].filter(Boolean).join(" ");
@@ -82,11 +93,53 @@ export function createToggleWidgetContent(widget = {}, {
       const checked = Boolean(event.currentTarget?.checked);
       root.dataset.checked = String(checked);
       state.textContent = checked ? data.stateOn : data.stateOff;
+      if (bindToHass && entityId && context.entityAvailable) {
+        runToggleAction(context.hass, context.entityState, checked);
+      }
       onToggle?.(checked, widget, event);
     },
   });
 
   root.append(iconBubble, textStack, toggle);
+
+  if (bindToHass) {
+    root.__mhaUpdateFromHass = nextHass => {
+      context.hass = nextHass;
+      context.entityState = getEntityState(nextHass, widget);
+      context.entityAvailable = isEntityAvailable(context.entityState);
+
+      const supportsToggle = context.entityAvailable
+        && supportsToggleEntity(context.entityState);
+      const checked = supportsToggle
+        ? isToggleEntityOn(context.entityState)
+        : false;
+      const input = toggle.querySelector(".mha-toggle-input");
+
+      root.dataset.entityAvailable = String(context.entityAvailable);
+      root.dataset.toggleSupported = String(Boolean(supportsToggle));
+      root.dataset.checked = String(checked);
+      if (input) {
+        input.checked = checked;
+        input.disabled = !supportsToggle;
+      }
+      state.textContent = context.entityAvailable
+        ? supportsToggle
+          ? checked
+            ? data.stateOn
+            : data.stateOff
+          : "Non pris en charge"
+        : "Indisponible";
+    };
+
+    root.__mhaDestroy = () => {
+      context.hass = null;
+      context.entityState = null;
+      context.entityAvailable = false;
+      delete root.__mhaUpdateFromHass;
+    };
+
+    root.__mhaUpdateFromHass(hass);
+  }
 
   return root;
 }

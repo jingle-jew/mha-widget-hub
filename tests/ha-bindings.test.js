@@ -22,6 +22,14 @@ import {
   createSliderConfigDraft,
   updateSliderAction,
 } from "../src/widget-config/slider-config.js";
+import {
+  createToggleSliderConfigDraft,
+} from "../src/widget-config/toggle-slider-config.js";
+import {
+  buildToggleWidgetConfig,
+  createToggleConfigDraft,
+  updateToggleDeviceType,
+} from "../src/widget-config/toggle-config.js";
 
 const entity = (entityId, state, attributes = {}) => ({
   entity_id: entityId,
@@ -91,6 +99,16 @@ test("toggle calls reject unsupported and unavailable entities", () => {
     domain: "switch",
     service: "turn_off",
     data: { entity_id: "switch.coffee" },
+  });
+  assert.deepEqual(buildToggleServiceCall(entity("input_boolean.guest", "off"), true), {
+    domain: "input_boolean",
+    service: "turn_on",
+    data: { entity_id: "input_boolean.guest" },
+  });
+  assert.deepEqual(buildToggleServiceCall(entity("light.kitchen", "on"), false), {
+    domain: "light",
+    service: "turn_off",
+    data: { entity_id: "light.kitchen" },
   });
 });
 
@@ -175,5 +193,109 @@ test("slider configuration filters entities by action and stores only the select
     entityId: "media_player.salon",
     label: "Haut-parleur du salon",
     sliderAction: "volume",
+  });
+});
+
+test("toggle-slider configuration only exposes available brightness-capable lights", () => {
+  const hass = {
+    states: {
+      "light.brightness": entity("light.brightness", "on", {
+        friendly_name: "Lampe réglable",
+        supported_color_modes: ["brightness"],
+      }),
+      "light.color": entity("light.color", "off", {
+        friendly_name: "Lampe couleur",
+        supported_color_modes: ["hs"],
+      }),
+      "light.on_off": entity("light.on_off", "on", {
+        friendly_name: "Relais lumière",
+        supported_color_modes: ["onoff"],
+      }),
+      "light.unsupported_mode": entity("light.unsupported_mode", "on", {
+        friendly_name: "Mode non reconnu",
+        supported_color_modes: ["unsupported"],
+      }),
+      "light.unavailable": entity("light.unavailable", "unavailable", {
+        friendly_name: "Lampe indisponible",
+        supported_color_modes: ["brightness"],
+      }),
+      "light.unknown": entity("light.unknown", "unknown", {
+        friendly_name: "Lampe inconnue",
+        brightness: 120,
+      }),
+    },
+  };
+
+  const config = createToggleSliderConfigDraft({
+    kind: "toggle-slider",
+    entityId: "light.on_off",
+  }, hass);
+
+  assert.deepEqual(
+    config.options.map(option => option.label),
+    ["Lampe couleur", "Lampe réglable"],
+  );
+  assert.equal(config.draft.lightEntityId, "light.color");
+  assert.ok(config.options.every(option => option.supportsBrightness));
+  assert.ok(config.options.every(option => !option.label.includes("light.")));
+});
+
+test("toggle-slider configuration returns no selection without compatible lights", () => {
+  const config = createToggleSliderConfigDraft({}, {
+    states: {
+      "light.on_off": entity("light.on_off", "on", {
+        friendly_name: "Relais lumière",
+        supported_color_modes: ["onoff"],
+      }),
+      "light.offline": entity("light.offline", "unavailable", {
+        friendly_name: "Lampe hors ligne",
+        supported_color_modes: ["brightness"],
+      }),
+    },
+  });
+
+  assert.deepEqual(config.options, []);
+  assert.equal(config.draft.lightEntityId, "");
+  assert.equal(config.selected, null);
+});
+
+test("toggle configuration filters supported domains and stores one entity id", () => {
+  const hass = {
+    states: {
+      "light.kitchen": entity("light.kitchen", "on", {
+        friendly_name: "Cuisine",
+      }),
+      "switch.coffee": entity("switch.coffee", "off", {
+        friendly_name: "Cafetière",
+      }),
+      "input_boolean.guest": entity("input_boolean.guest", "off", {
+        friendly_name: "Mode invités",
+      }),
+      "switch.offline": entity("switch.offline", "unavailable", {
+        friendly_name: "Interrupteur hors ligne",
+      }),
+    },
+  };
+
+  const light = createToggleConfigDraft({}, hass);
+  assert.deepEqual(light.options.map(option => option.label), ["Cuisine"]);
+  assert.equal(light.draft.entityId, "light.kitchen");
+  assert.equal(light.draft.label, "Cuisine");
+
+  const switchConfig = updateToggleDeviceType(light.draft, "switch", hass);
+  assert.deepEqual(switchConfig.options.map(option => option.label), ["Cafetière"]);
+
+  const booleanConfig = updateToggleDeviceType(light.draft, "input_boolean", hass);
+  assert.deepEqual(booleanConfig.options.map(option => option.label), ["Mode invités"]);
+
+  const configured = buildToggleWidgetConfig({
+    kind: "toggle",
+    variant: "toggle-widget",
+  }, booleanConfig.draft, hass);
+  assert.deepEqual(configured, {
+    kind: "toggle",
+    variant: "toggle-widget",
+    entityId: "input_boolean.guest",
+    label: "Mode invités",
   });
 });

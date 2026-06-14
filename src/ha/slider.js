@@ -1,15 +1,5 @@
 import { getEntityDomain, isEntityAvailable } from "./entity.js";
-
-const LEGACY_LIGHT_SUPPORT_BRIGHTNESS = 1;
-
-function supportsLightBrightness(attributes = {}) {
-  const colorModes = Array.isArray(attributes.supported_color_modes)
-    ? attributes.supported_color_modes
-    : [];
-  return colorModes.some(mode => mode !== "onoff")
-    || Boolean((Number(attributes.supported_features) || 0) & LEGACY_LIGHT_SUPPORT_BRIGHTNESS)
-    || (attributes.brightness != null && Number.isFinite(Number(attributes.brightness)));
-}
+import { supportsLightBrightness } from "./capabilities.js";
 
 function createSliderBinding({
   value = 0,

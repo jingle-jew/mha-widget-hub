@@ -77,6 +77,31 @@ test("normalization preserves standalone slider configuration", () => {
   );
 });
 
+test("normalization preserves standalone toggle entity configuration", () => {
+  const widget = normalizeWidgetContract({
+    kind: "toggle",
+    entity_id: "switch.coffee",
+    label: "Cafetière",
+    w: 4,
+    h: 1,
+  }, normalizeWidgetSize);
+
+  assert.deepEqual(
+    {
+      kind: widget.kind,
+      variant: widget.variant,
+      entityId: widget.entityId,
+      label: widget.label,
+    },
+    {
+      kind: "toggle",
+      variant: "toggle-widget",
+      entityId: "switch.coffee",
+      label: "Cafetière",
+    },
+  );
+});
+
 test("slider variants follow widget orientation", () => {
   const horizontal = getWidgetVariants({ kind: "slider", w: 4, h: 1 });
   const vertical = getWidgetVariants({ kind: "slider", w: 1, h: 4 });

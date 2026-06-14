@@ -15,6 +15,15 @@ import {
   updateSliderEntity,
   updateSliderLabel,
 } from "./slider-config.js";
+import {
+  buildToggleWidgetConfig,
+  createToggleConfigDraft,
+  reconcileToggleConfigDraft,
+  TOGGLE_DEVICE_TYPES,
+  updateToggleConfigLabel,
+  updateToggleDeviceType,
+  updateToggleEntity,
+} from "./toggle-config.js";
 import { getWidgetDefinition } from "../widgets/widget-registry.js";
 
 export function supportsWidgetConfiguration(widget = {}) {
@@ -30,7 +39,9 @@ export function createWidgetConfigSession(widget, hass, { mode = "create" } = {}
     configType,
     draft: configType === "slider"
       ? createSliderConfigDraft(widget, hass).draft
-      : createToggleSliderConfigDraft(widget, hass).draft,
+      : configType === "toggle"
+        ? createToggleConfigDraft(widget, hass).draft
+        : createToggleSliderConfigDraft(widget, hass).draft,
   };
 }
 
@@ -38,7 +49,9 @@ export function buildConfiguredWidget(session, hass) {
   if (!session) return null;
   return session.configType === "slider"
     ? buildSliderWidgetConfig(session.widget, session.draft, hass)
-    : buildToggleSliderWidgetConfig(session.widget, session.draft, hass);
+    : session.configType === "toggle"
+      ? buildToggleWidgetConfig(session.widget, session.draft, hass)
+      : buildToggleSliderWidgetConfig(session.widget, session.draft, hass);
 }
 
 function createField(labelText, control, { hint = "" } = {}) {
@@ -81,7 +94,7 @@ function createToggleSliderFields(session, hass, onChange) {
   if (!options.length) {
     const empty = document.createElement("option");
     empty.value = "";
-    empty.textContent = "Aucune lumière disponible";
+    empty.textContent = "Aucune lumière compatible avec la luminosité trouvée.";
     lightSelect.append(empty);
   } else {
     options.forEach(option => {
@@ -174,6 +187,67 @@ function createSliderFields(session, hass, onChange) {
   return { fields, canSave: Boolean(reconciled.selected) };
 }
 
+function createToggleFields(session, hass, onChange) {
+  const reconciled = reconcileToggleConfigDraft(session.draft, hass);
+  const { draft } = reconciled;
+  const fields = document.createElement("div");
+  fields.className = "mha-widget-config-fields";
+
+  const typeSelect = document.createElement("select");
+  typeSelect.className = "mha-widget-config-control";
+  TOGGLE_DEVICE_TYPES.forEach(deviceType => {
+    const item = document.createElement("option");
+    item.value = deviceType.value;
+    item.textContent = deviceType.label;
+    item.selected = deviceType.value === draft.deviceType;
+    typeSelect.append(item);
+  });
+  typeSelect.addEventListener("change", event => {
+    updateToggleDeviceType(draft, event.currentTarget.value, hass);
+    onChange?.({ rerender: true });
+  });
+
+  const deviceSelect = document.createElement("select");
+  deviceSelect.className = "mha-widget-config-control";
+  deviceSelect.disabled = !reconciled.options.length;
+  if (!reconciled.options.length) {
+    const empty = document.createElement("option");
+    empty.value = "";
+    empty.textContent = reconciled.deviceType.emptyLabel;
+    deviceSelect.append(empty);
+  } else {
+    reconciled.options.forEach(option => {
+      const item = document.createElement("option");
+      item.value = option.value;
+      item.textContent = option.label;
+      item.selected = option.value === draft.entityId;
+      deviceSelect.append(item);
+    });
+  }
+  deviceSelect.addEventListener("change", event => {
+    updateToggleEntity(draft, event.currentTarget.value, reconciled.options);
+    onChange?.({ rerender: true });
+  });
+
+  const nameInput = document.createElement("input");
+  nameInput.className = "mha-widget-config-control";
+  nameInput.type = "text";
+  nameInput.value = draft.label;
+  nameInput.placeholder = reconciled.selected?.label || "Salon";
+  nameInput.autocomplete = "off";
+  nameInput.addEventListener("input", event => {
+    updateToggleConfigLabel(draft, event.currentTarget.value);
+    onChange?.();
+  });
+
+  fields.append(
+    createField("Type d’appareil", typeSelect),
+    createField("Appareil", deviceSelect),
+    createField("Nom affiché", nameInput),
+  );
+  return { fields, canSave: Boolean(reconciled.selected) };
+}
+
 export function createWidgetConfigPopup({
   session,
   hass,
@@ -202,7 +276,12 @@ export function createWidgetConfigPopup({
   header.className = "mha-widget-config-header mha-page-creator-header";
   const title = document.createElement("h2");
   const isSlider = session?.configType === "slider";
-  title.textContent = isSlider ? "Configurer le slider" : "Configurer la lumière";
+  const isToggle = session?.configType === "toggle";
+  title.textContent = isSlider
+    ? "Configurer le slider"
+    : isToggle
+      ? "Configurer le toggle"
+      : "Configurer la lumière";
   header.append(title, createCloseButton({
     label: "Fermer",
     className: "mha-widget-config-close mha-page-creator-close",
@@ -213,12 +292,16 @@ export function createWidgetConfigPopup({
   hint.className = "mha-widget-config-hint mha-page-creator-hint";
   hint.textContent = isSlider
     ? "Choisis l’action, l’appareil et le nom à afficher."
-    : "Choisis la lumière et le contrôle à afficher.";
+    : isToggle
+      ? "Choisis le type d’appareil, l’entité et le nom à afficher."
+      : "Choisis la lumière et le contrôle à afficher.";
 
   const content = session
     ? isSlider
       ? createSliderFields(session, hass, onChange)
-      : createToggleSliderFields(session, hass, onChange)
+      : isToggle
+        ? createToggleFields(session, hass, onChange)
+        : createToggleSliderFields(session, hass, onChange)
     : { fields: document.createElement("div"), canSave: false };
 
   const actions = document.createElement("div");

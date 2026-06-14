@@ -15,8 +15,9 @@ export function createToggleSliderConfigDraft(widget = {}, hass) {
 
 export function reconcileToggleSliderConfigDraft(draft, hass) {
   const options = getLightOptions(hass);
-  if (!draft.lightEntityId && options.length) {
-    draft.lightEntityId = options[0].value;
+  const currentIsValid = options.some(option => option.value === draft.lightEntityId);
+  if (!currentIsValid) {
+    draft.lightEntityId = options[0]?.value || "";
   }
 
   const selected = options.find(option => option.value === draft.lightEntityId) || null;

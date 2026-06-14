@@ -47,9 +47,11 @@ const WIDGET_CONTENT_RENDERERS = Object.freeze({
     }),
   },
   toggle: {
-    render: ({ widget, widgetW, widgetH }) => createToggleWidgetContent(widget, {
+    render: ({ widget, widgetW, widgetH, hass }) => createToggleWidgetContent(widget, {
       widgetW,
       widgetH,
+      bindToHass: true,
+      hass,
     }),
   },
   "toggle-slider": {

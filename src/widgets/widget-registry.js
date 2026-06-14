@@ -92,6 +92,7 @@ const DEFINITIONS = {
     category: "actions",
     renderer: "toggle",
     preview: "toggle",
+    config: "toggle",
     aliases: ["toggle-widget"],
     variantAliases: ["toggle-widget", "simple-toggle"],
     defaultVariant: "toggle-widget",
@@ -278,6 +279,8 @@ export function normalizeWidgetContract(widget = {}, normalizeBaseSize) {
       : widget.variant === "volume-slider"
         ? "volume"
         : "brightness";
+  } else if (kind === "toggle") {
+    normalized.entityId = widget.entityId || widget.entity_id || "";
   }
 
   if (kind === "toggle-slider") {

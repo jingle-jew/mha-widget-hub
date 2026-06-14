@@ -28,11 +28,14 @@ export function isToggleEntityOn(entityState) {
   return !OFF_STATES.has(normalizeEntityStateValue(entityState.state));
 }
 
-export function getToggleService(entityState) {
+export function getToggleService(entityState, nextOn) {
+  if (typeof nextOn === "boolean") {
+    return nextOn ? "turn_on" : "turn_off";
+  }
   return isToggleEntityOn(entityState) ? "turn_off" : "turn_on";
 }
 
-export function buildToggleServiceCall(entityState) {
+export function buildToggleServiceCall(entityState, nextOn) {
   if (!isEntityAvailable(entityState)) return null;
 
   const entityId = entityState?.entity_id || "";
@@ -42,7 +45,7 @@ export function buildToggleServiceCall(entityState) {
 
   return {
     domain,
-    service: getToggleService(entityState),
+    service: getToggleService(entityState, nextOn),
     data: { entity_id: entityId },
   };
 }

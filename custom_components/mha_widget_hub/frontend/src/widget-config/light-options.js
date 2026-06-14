@@ -1,6 +1,5 @@
-import { getEntityDomain } from "../ha/entity.js";
-
-const LEGACY_SUPPORT_BRIGHTNESS = 1;
+import { getEntityDomain, isEntityAvailable } from "../ha/entity.js";
+import { supportsLightBrightness } from "../ha/capabilities.js";
 
 export function humanizeEntityId(entityId = "") {
   const objectId = String(entityId).split(".").slice(1).join(".") || String(entityId);
@@ -18,15 +17,7 @@ export function getEntityDisplayName(entityState, entityId = "") {
 
 export function getLightCapabilities(entityState) {
   const attributes = entityState?.attributes || {};
-  const colorModes = Array.isArray(attributes.supported_color_modes)
-    ? attributes.supported_color_modes
-    : [];
-  const supportedFeatures = Number(attributes.supported_features) || 0;
-  const supportsBrightness = colorModes.some(mode => mode !== "onoff")
-    || Boolean(supportedFeatures & LEGACY_SUPPORT_BRIGHTNESS)
-    || (attributes.brightness != null && Number.isFinite(Number(attributes.brightness)));
-
-  return { supportsBrightness };
+  return { supportsBrightness: supportsLightBrightness(attributes) };
 }
 
 export function getLightOptions(hass) {
@@ -34,12 +25,16 @@ export function getLightOptions(hass) {
     .map(({ entityState, ...option }) => ({
       ...option,
       ...getLightCapabilities(entityState),
-    }));
+    }))
+    .filter(option => option.supportsBrightness);
 }
 
 export function getEntityOptionsByDomain(hass, domain) {
   return Object.entries(hass?.states || {})
-    .filter(([entityId]) => getEntityDomain(entityId) === domain)
+    .filter(([entityId, entityState]) => (
+      getEntityDomain(entityId) === domain
+      && isEntityAvailable(entityState)
+    ))
     .map(([entityId, entityState]) => ({
       value: entityId,
       label: getEntityDisplayName(entityState, entityId),

@@ -74,8 +74,8 @@ export async function callHomeAssistantService(hass, serviceCall) {
   }
 }
 
-export function runToggleAction(hass, entityState) {
-  return callHomeAssistantService(hass, buildToggleServiceCall(entityState));
+export function runToggleAction(hass, entityState, nextOn) {
+  return callHomeAssistantService(hass, buildToggleServiceCall(entityState, nextOn));
 }
 
 export function runSliderAction(hass, entityState, value) {
