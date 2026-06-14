@@ -388,3 +388,48 @@
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
+
+/* iOS status bar glass routing only.
+ * Frosted keeps the approved denser material below.
+ * Liquid status bar now follows the same surface/border contract as Liquid
+ * widgets, instead of borrowing the old Frosted material.
+ */
+:host([data-theme-style="ios"][data-ios-glass="liquid"]) .mha-status-bar {
+  background: var(--mha-widget-surface);
+  border-color: var(--mha-widget-border);
+  -webkit-backdrop-filter: blur(var(--mha-surface-blur)) saturate(var(--mha-surface-saturation));
+  backdrop-filter: blur(var(--mha-surface-blur)) saturate(var(--mha-surface-saturation));
+}
+
+:host([data-theme-style="ios"][data-ios-glass="liquid"]) .mha-status-bar::after {
+  opacity: var(--mha-widget-reflection-opacity, 0);
+  background: var(--mha-widget-shell-highlight, var(--mha-widget-reflection, none));
+  mix-blend-mode: screen;
+}
+
+:host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-status-bar {
+  background: var(--mha-statusbar-surface, var(--mha-shell-status-surface, var(--mha-shell-surface)));
+  border-color: color-mix(in srgb, var(--mha-border-primary) 76%, transparent);
+  -webkit-backdrop-filter: blur(calc(var(--mha-surface-blur) * .42)) saturate(190%);
+  backdrop-filter: blur(calc(var(--mha-surface-blur) * .42)) saturate(190%);
+}
+
+:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="light"]) .mha-status-bar {
+  background: rgba(242, 242, 247, .72);
+  border-color: rgba(255,255,255,.56);
+}
+
+:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="dark"]) .mha-status-bar {
+  background: rgba(44, 44, 46, .68);
+  border-color: rgba(255,255,255,.14);
+}
+
+:host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-status-bar::after {
+  opacity: .18;
+  background: linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,.055) 42%, transparent 72%);
+  mix-blend-mode: screen;
+}
+
+:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="dark"]) .mha-status-bar::after {
+  opacity: .12;
+}

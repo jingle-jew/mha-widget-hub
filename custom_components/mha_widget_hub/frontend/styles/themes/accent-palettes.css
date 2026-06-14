@@ -35,6 +35,15 @@
 :host([data-theme-style="ios"][data-accent="green"]) { --mha-accent: #32d74b; --mha-accent-contrast: rgba(0,0,0,.84); }
 :host([data-theme-style="ios"][data-accent="mint"]) { --mha-accent: #66d4cf; --mha-accent-contrast: rgba(0,0,0,.84); }
 :host([data-theme-style="ios"][data-accent="teal"]) { --mha-accent: #40c8e0; --mha-accent-contrast: rgba(0,0,0,.84); }
+:host([data-theme-style="ios"][data-accent="cyan"]) { --mha-accent: #64d2ff; --mha-accent-contrast: rgba(0,0,0,.84); }
+:host([data-theme-style="ios"][data-accent="lime"]) { --mha-accent: #a4e65f; --mha-accent-contrast: rgba(0,0,0,.84); }
+:host([data-theme-style="ios"][data-accent="seafoam"]) { --mha-accent: #7ee0c3; --mha-accent-contrast: rgba(0,0,0,.84); }
+:host([data-theme-style="ios"][data-accent="lavender"]) { --mha-accent: #a78bfa; }
+:host([data-theme-style="ios"][data-accent="rose"]) { --mha-accent: #ff6b9a; }
+:host([data-theme-style="ios"][data-accent="berry"]) { --mha-accent: #d96cff; }
+:host([data-theme-style="ios"][data-accent="brown"]) { --mha-accent: #ac8e68; }
+:host([data-theme-style="ios"][data-accent="graphite"]) { --mha-accent: #8e8e93; }
+:host([data-theme-style="ios"][data-accent="gray"]) { --mha-accent: #aeaeb2; --mha-accent-contrast: rgba(0,0,0,.84); }
 
 /* OneUI palette */
 :host([data-theme-style="oneui"][data-accent="sky"]) { --mha-accent: #4ba3ff; }
@@ -47,6 +56,15 @@
 :host([data-theme-style="oneui"][data-accent="green"]) { --mha-accent: #54c873; --mha-accent-contrast: rgba(0,0,0,.86); }
 :host([data-theme-style="oneui"][data-accent="aqua"]) { --mha-accent: #35c7c9; --mha-accent-contrast: rgba(0,0,0,.86); }
 :host([data-theme-style="oneui"][data-accent="slate"]) { --mha-accent: #6f7f99; }
+:host([data-theme-style="oneui"][data-accent="lavender"]) { --mha-accent: #a991ff; }
+:host([data-theme-style="oneui"][data-accent="lilac"]) { --mha-accent: #c77dff; }
+:host([data-theme-style="oneui"][data-accent="rose"]) { --mha-accent: #ff5c8a; }
+:host([data-theme-style="oneui"][data-accent="magenta"]) { --mha-accent: #e85ddf; }
+:host([data-theme-style="oneui"][data-accent="peach"]) { --mha-accent: #ffad8a; --mha-accent-contrast: rgba(0,0,0,.86); }
+:host([data-theme-style="oneui"][data-accent="lemon"]) { --mha-accent: #f7d85c; --mha-accent-contrast: rgba(0,0,0,.86); }
+:host([data-theme-style="oneui"][data-accent="lime"]) { --mha-accent: #9bdc5a; --mha-accent-contrast: rgba(0,0,0,.86); }
+:host([data-theme-style="oneui"][data-accent="emerald"]) { --mha-accent: #2fbe7d; --mha-accent-contrast: rgba(0,0,0,.86); }
+:host([data-theme-style="oneui"][data-accent="navy"]) { --mha-accent: #4664c8; }
 
 /* Material palette. Consumes Material-like tonal accent tokens without rewriting the whole Material theme. */
 :host([data-theme-style="material"][data-accent="blue"]) { --mha-accent: #0061a4; --mha-material-you-symbol-1: #0061a4; --mha-material-you-icon-container: #d1e4ff; }
@@ -59,6 +77,29 @@
 :host([data-theme-style="material"][data-accent="green"]) { --mha-accent: #386a20; --mha-material-you-symbol-1: #386a20; --mha-material-you-icon-container: #b8f397; --mha-accent-contrast: rgba(0,0,0,.86); }
 :host([data-theme-style="material"][data-accent="teal"]) { --mha-accent: #006a60; --mha-material-you-symbol-1: #006a60; --mha-material-you-icon-container: #9ff2e5; --mha-accent-contrast: rgba(0,0,0,.86); }
 :host([data-theme-style="material"][data-accent="cyan"]) { --mha-accent: #006879; --mha-material-you-symbol-1: #006879; --mha-material-you-icon-container: #a8edff; --mha-accent-contrast: rgba(0,0,0,.86); }
+:host([data-theme-style="material"][data-accent="brown"]) { --mha-accent: #7a5630; --mha-material-you-symbol-1: #7a5630; --mha-material-you-icon-container: #ffdcc2; }
+:host([data-theme-style="material"][data-accent="lime"]) { --mha-accent: #516600; --mha-material-you-symbol-1: #516600; --mha-material-you-icon-container: #d8ed85; --mha-accent-contrast: rgba(0,0,0,.86); }
+:host([data-theme-style="material"][data-accent="olive"]) { --mha-accent: #5d6300; --mha-material-you-symbol-1: #5d6300; --mha-material-you-icon-container: #e2e885; --mha-accent-contrast: rgba(0,0,0,.86); }
+:host([data-theme-style="material"][data-accent="emerald"]) { --mha-accent: #006d3f; --mha-material-you-symbol-1: #006d3f; --mha-material-you-icon-container: #a1f5bf; --mha-accent-contrast: rgba(0,0,0,.86); }
+:host([data-theme-style="material"][data-accent="sea"]) { --mha-accent: #006b5b; --mha-material-you-symbol-1: #006b5b; --mha-material-you-icon-container: #9cf2df; --mha-accent-contrast: rgba(0,0,0,.86); }
+:host([data-theme-style="material"][data-accent="sky"]) { --mha-accent: #00658f; --mha-material-you-symbol-1: #00658f; --mha-material-you-icon-container: #c7e7ff; }
+:host([data-theme-style="material"][data-accent="navy"]) { --mha-accent: #2451a6; --mha-material-you-symbol-1: #2451a6; --mha-material-you-icon-container: #d8e2ff; }
+:host([data-theme-style="material"][data-accent="lavender"]) { --mha-accent: #7350b8; --mha-material-you-symbol-1: #7350b8; --mha-material-you-icon-container: #eddcff; }
+:host([data-theme-style="material"][data-accent="magenta"]) { --mha-accent: #9c3d8f; --mha-material-you-symbol-1: #9c3d8f; --mha-material-you-icon-container: #ffd7f3; }
+
+/* Dynamic wallpaper accent used only when accent mode is Auto.
+ * Keep the selector at the same specificity as the manual palette rules
+ * ([data-theme-style] + [data-accent]) so Auto can win without !important.
+ */
+:host([data-theme-style][data-accent-mode="auto"]) {
+  --mha-accent: var(--mha-accent-auto, #4da3ff);
+  --mha-accent-contrast: var(--mha-accent-auto-contrast, #fff);
+}
+
+:host([data-theme-style="material"][data-accent-mode="auto"]) {
+  --mha-material-you-symbol-1: var(--mha-accent);
+  --mha-material-you-icon-container: color-mix(in srgb, var(--mha-accent) 18%, white 82%);
+}
 
 /* Derived accent tokens */
 :host {

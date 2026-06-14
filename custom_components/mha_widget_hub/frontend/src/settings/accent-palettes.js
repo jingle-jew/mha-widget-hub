@@ -1,7 +1,7 @@
 /*
  * MHA accent palettes.
  *
- * Each visual style owns a curated 10-color accent palette.
+ * Each visual style owns a curated 19-color accent palette.
  * Accent selection is stable across light/dark theme.
  */
 
@@ -17,6 +17,15 @@ export const ACCENT_PALETTES = Object.freeze({
     { value: "green", label: "Green" },
     { value: "mint", label: "Mint" },
     { value: "teal", label: "Teal" },
+    { value: "cyan", label: "Cyan" },
+    { value: "lime", label: "Lime" },
+    { value: "seafoam", label: "Seafoam" },
+    { value: "lavender", label: "Lavender" },
+    { value: "rose", label: "Rose" },
+    { value: "berry", label: "Berry" },
+    { value: "brown", label: "Brown" },
+    { value: "graphite", label: "Graphite" },
+    { value: "gray", label: "Gray" },
   ]),
 
   oneui: Object.freeze([
@@ -30,6 +39,15 @@ export const ACCENT_PALETTES = Object.freeze({
     { value: "green", label: "Green" },
     { value: "aqua", label: "Aqua" },
     { value: "slate", label: "Slate" },
+    { value: "lavender", label: "Lavender" },
+    { value: "lilac", label: "Lilac" },
+    { value: "rose", label: "Rose" },
+    { value: "magenta", label: "Magenta" },
+    { value: "peach", label: "Peach" },
+    { value: "lemon", label: "Lemon" },
+    { value: "lime", label: "Lime" },
+    { value: "emerald", label: "Emerald" },
+    { value: "navy", label: "Navy" },
   ]),
 
   material: Object.freeze([
@@ -43,11 +61,41 @@ export const ACCENT_PALETTES = Object.freeze({
     { value: "green", label: "Green" },
     { value: "teal", label: "Teal" },
     { value: "cyan", label: "Cyan" },
+    { value: "brown", label: "Brown" },
+    { value: "lime", label: "Lime" },
+    { value: "olive", label: "Olive" },
+    { value: "emerald", label: "Emerald" },
+    { value: "sea", label: "Sea" },
+    { value: "sky", label: "Sky" },
+    { value: "navy", label: "Navy" },
+    { value: "lavender", label: "Lavender" },
+    { value: "magenta", label: "Magenta" },
   ]),
 });
 
 
 export const ACCENT_REFERENCE_COLORS = Object.freeze({
+  ios: Object.freeze({
+    blue: "#0a84ff",
+    indigo: "#5e5ce6",
+    purple: "#bf5af2",
+    pink: "#ff2d92",
+    red: "#ff453a",
+    orange: "#ff9f0a",
+    yellow: "#ffd60a",
+    green: "#32d74b",
+    mint: "#66d4cf",
+    teal: "#40c8e0",
+    cyan: "#64d2ff",
+    lime: "#a4e65f",
+    seafoam: "#7ee0c3",
+    lavender: "#a78bfa",
+    rose: "#ff6b9a",
+    berry: "#d96cff",
+    brown: "#ac8e68",
+    graphite: "#8e8e93",
+    gray: "#aeaeb2",
+  }),
   oneui: Object.freeze({
     sky: "#4ba3ff",
     blue: "#3f7cff",
@@ -59,6 +107,15 @@ export const ACCENT_REFERENCE_COLORS = Object.freeze({
     green: "#54c873",
     aqua: "#35c7c9",
     slate: "#6f7f99",
+    lavender: "#a991ff",
+    lilac: "#c77dff",
+    rose: "#ff5c8a",
+    magenta: "#e85ddf",
+    peach: "#ffad8a",
+    lemon: "#f7d85c",
+    lime: "#9bdc5a",
+    emerald: "#2fbe7d",
+    navy: "#4664c8",
   }),
   material: Object.freeze({
     blue: "#0061a4",
@@ -71,10 +128,19 @@ export const ACCENT_REFERENCE_COLORS = Object.freeze({
     green: "#386a20",
     teal: "#006a60",
     cyan: "#006879",
+    brown: "#7a5630",
+    lime: "#516600",
+    olive: "#5d6300",
+    emerald: "#006d3f",
+    sea: "#006b5b",
+    sky: "#00658f",
+    navy: "#2451a6",
+    lavender: "#7350b8",
+    magenta: "#9c3d8f",
   }),
 });
 
-export const AUTO_ACCENT_STYLES = new Set(["oneui", "material"]);
+export const AUTO_ACCENT_STYLES = new Set(["ios", "oneui", "material"]);
 
 export function supportsAutoAccent(themeStyle = "oneui") {
   return AUTO_ACCENT_STYLES.has(themeStyle);

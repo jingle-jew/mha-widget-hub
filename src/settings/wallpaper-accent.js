@@ -1,4 +1,4 @@
-import { findClosestAccent, supportsAutoAccent } from "./accent-palettes.js";
+import { supportsAutoAccent } from "./accent-palettes.js";
 
 const ANALYSIS_SIZE = 72;
 const HUE_BUCKETS = 24;
@@ -157,13 +157,48 @@ function getWallpaperColorProfile(imageData) {
   };
 }
 
+function hslToCss({ h, s, l }) {
+  const hue = Math.round(((h % 1) + 1) % 1 * 360);
+  const saturation = Math.round(clamp(s, 0, 1) * 100);
+  const lightness = Math.round(clamp(l, 0, 1) * 100);
+  return `hsl(${hue} ${saturation}% ${lightness}%)`;
+}
+
+function resolveDynamicAccent(profile, themeStyle = "oneui") {
+  if (!profile) return null;
+
+  const base = typeof profile.h === "number" && typeof profile.s === "number" && typeof profile.l === "number"
+    ? { h: profile.h, s: profile.s, l: profile.l }
+    : rgbToHsl(profile.r, profile.g, profile.b);
+
+  // Auto must be wallpaper-native, not snapped to the theme palette. We only
+  // polish saturation/lightness enough to keep controls readable in every style.
+  const styleTuning = themeStyle === "material"
+    ? { minS: 0.46, maxS: 0.78, light: 0.42 }
+    : themeStyle === "ios"
+      ? { minS: 0.52, maxS: 0.9, light: 0.56 }
+      : { minS: 0.48, maxS: 0.84, light: 0.54 };
+
+  const saturation = clamp(base.s * 1.14, styleTuning.minS, styleTuning.maxS);
+  const lightness = styleTuning.light;
+  const accent = { h: base.h, s: saturation, l: lightness };
+  const contrast = lightness > 0.62 ? "rgba(0,0,0,.86)" : "#fff";
+
+  return {
+    color: hslToCss(accent),
+    contrast,
+    hue: Math.round(((base.h % 1) + 1) % 1 * 360),
+    source: "wallpaper",
+  };
+}
+
 export async function extractAccentFromWallpaper(dataUrl = "", themeStyle = "oneui") {
-  if (!supportsAutoAccent(themeStyle) || !dataUrl) return "";
+  if (!supportsAutoAccent(themeStyle) || !dataUrl) return null;
 
   const image = await loadImage(dataUrl);
   const canvas = document.createElement("canvas");
   const context = canvas.getContext("2d", { willReadFrequently: true });
-  if (!context) return "";
+  if (!context) return null;
 
   const ratio = image.naturalWidth && image.naturalHeight
     ? image.naturalWidth / image.naturalHeight
@@ -173,5 +208,5 @@ export async function extractAccentFromWallpaper(dataUrl = "", themeStyle = "one
 
   context.drawImage(image, 0, 0, canvas.width, canvas.height);
   const colorProfile = getWallpaperColorProfile(context.getImageData(0, 0, canvas.width, canvas.height));
-  return findClosestAccent(themeStyle, colorProfile);
+  return resolveDynamicAccent(colorProfile, themeStyle);
 }

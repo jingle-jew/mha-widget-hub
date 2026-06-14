@@ -772,16 +772,22 @@ async _syncAutoAccentFromWallpaper(){
   const themeState=this._themeController.read();
   const wallpaper=this._customWallpapers?.[themeState.theme];
   const dataUrl=wallpaper?.dataUrl||"";
-  if(!dataUrl)return;
 
-  for(const themeStyle of ["oneui","material"]){
-    try{
-      const accent=await extractAccentFromWallpaper(dataUrl,themeStyle);
-      if(requestId!==this._autoAccentRequestId)return;
-      if(accent)this._themeController.setAutoAccent(themeStyle,accent);
-    }catch(error){
-      console.warn(`[MHA] Auto accent could not be extracted for ${themeStyle}.`,error);
+  if(!dataUrl){
+    this.style.removeProperty("--mha-accent-auto");
+    this.style.removeProperty("--mha-accent-auto-contrast");
+    return;
+  }
+
+  try{
+    const accent=await extractAccentFromWallpaper(dataUrl,themeState.themeStyle);
+    if(requestId!==this._autoAccentRequestId)return;
+    if(accent?.color){
+      this.style.setProperty("--mha-accent-auto",accent.color);
+      this.style.setProperty("--mha-accent-auto-contrast",accent.contrast||"#fff");
     }
+  }catch(error){
+    console.warn(`[MHA] Auto accent could not be extracted for ${themeState.themeStyle}.`,error);
   }
 
   if(requestId===this._autoAccentRequestId){

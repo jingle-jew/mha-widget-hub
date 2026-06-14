@@ -453,6 +453,15 @@
 .mha-settings-accent-swatches[data-theme-style="ios"] .mha-settings-accent-swatch[data-accent="green"] { --mha-swatch-color: #32d74b; }
 .mha-settings-accent-swatches[data-theme-style="ios"] .mha-settings-accent-swatch[data-accent="mint"] { --mha-swatch-color: #66d4cf; }
 .mha-settings-accent-swatches[data-theme-style="ios"] .mha-settings-accent-swatch[data-accent="teal"] { --mha-swatch-color: #40c8e0; }
+.mha-settings-accent-swatches[data-theme-style="ios"] .mha-settings-accent-swatch[data-accent="cyan"] { --mha-swatch-color: #64d2ff; }
+.mha-settings-accent-swatches[data-theme-style="ios"] .mha-settings-accent-swatch[data-accent="lime"] { --mha-swatch-color: #a4e65f; }
+.mha-settings-accent-swatches[data-theme-style="ios"] .mha-settings-accent-swatch[data-accent="seafoam"] { --mha-swatch-color: #7ee0c3; }
+.mha-settings-accent-swatches[data-theme-style="ios"] .mha-settings-accent-swatch[data-accent="lavender"] { --mha-swatch-color: #a78bfa; }
+.mha-settings-accent-swatches[data-theme-style="ios"] .mha-settings-accent-swatch[data-accent="rose"] { --mha-swatch-color: #ff6b9a; }
+.mha-settings-accent-swatches[data-theme-style="ios"] .mha-settings-accent-swatch[data-accent="berry"] { --mha-swatch-color: #d96cff; }
+.mha-settings-accent-swatches[data-theme-style="ios"] .mha-settings-accent-swatch[data-accent="brown"] { --mha-swatch-color: #ac8e68; }
+.mha-settings-accent-swatches[data-theme-style="ios"] .mha-settings-accent-swatch[data-accent="graphite"] { --mha-swatch-color: #8e8e93; }
+.mha-settings-accent-swatches[data-theme-style="ios"] .mha-settings-accent-swatch[data-accent="gray"] { --mha-swatch-color: #aeaeb2; }
 
 .mha-settings-accent-swatches[data-theme-style="oneui"] .mha-settings-accent-swatch[data-accent="sky"] { --mha-swatch-color: #4ba3ff; }
 .mha-settings-accent-swatches[data-theme-style="oneui"] .mha-settings-accent-swatch[data-accent="blue"] { --mha-swatch-color: #3f7cff; }
@@ -464,6 +473,15 @@
 .mha-settings-accent-swatches[data-theme-style="oneui"] .mha-settings-accent-swatch[data-accent="green"] { --mha-swatch-color: #54c873; }
 .mha-settings-accent-swatches[data-theme-style="oneui"] .mha-settings-accent-swatch[data-accent="aqua"] { --mha-swatch-color: #35c7c9; }
 .mha-settings-accent-swatches[data-theme-style="oneui"] .mha-settings-accent-swatch[data-accent="slate"] { --mha-swatch-color: #6f7f99; }
+.mha-settings-accent-swatches[data-theme-style="oneui"] .mha-settings-accent-swatch[data-accent="lavender"] { --mha-swatch-color: #a991ff; }
+.mha-settings-accent-swatches[data-theme-style="oneui"] .mha-settings-accent-swatch[data-accent="lilac"] { --mha-swatch-color: #c77dff; }
+.mha-settings-accent-swatches[data-theme-style="oneui"] .mha-settings-accent-swatch[data-accent="rose"] { --mha-swatch-color: #ff5c8a; }
+.mha-settings-accent-swatches[data-theme-style="oneui"] .mha-settings-accent-swatch[data-accent="magenta"] { --mha-swatch-color: #e85ddf; }
+.mha-settings-accent-swatches[data-theme-style="oneui"] .mha-settings-accent-swatch[data-accent="peach"] { --mha-swatch-color: #ffad8a; }
+.mha-settings-accent-swatches[data-theme-style="oneui"] .mha-settings-accent-swatch[data-accent="lemon"] { --mha-swatch-color: #f7d85c; }
+.mha-settings-accent-swatches[data-theme-style="oneui"] .mha-settings-accent-swatch[data-accent="lime"] { --mha-swatch-color: #9bdc5a; }
+.mha-settings-accent-swatches[data-theme-style="oneui"] .mha-settings-accent-swatch[data-accent="emerald"] { --mha-swatch-color: #2fbe7d; }
+.mha-settings-accent-swatches[data-theme-style="oneui"] .mha-settings-accent-swatch[data-accent="navy"] { --mha-swatch-color: #4664c8; }
 
 .mha-settings-accent-swatches[data-theme-style="material"] .mha-settings-accent-swatch[data-accent="blue"] { --mha-swatch-color: #0061a4; }
 .mha-settings-accent-swatches[data-theme-style="material"] .mha-settings-accent-swatch[data-accent="indigo"] { --mha-swatch-color: #4d57a9; }
@@ -475,6 +493,15 @@
 .mha-settings-accent-swatches[data-theme-style="material"] .mha-settings-accent-swatch[data-accent="green"] { --mha-swatch-color: #386a20; }
 .mha-settings-accent-swatches[data-theme-style="material"] .mha-settings-accent-swatch[data-accent="teal"] { --mha-swatch-color: #006a60; }
 .mha-settings-accent-swatches[data-theme-style="material"] .mha-settings-accent-swatch[data-accent="cyan"] { --mha-swatch-color: #006879; }
+.mha-settings-accent-swatches[data-theme-style="material"] .mha-settings-accent-swatch[data-accent="brown"] { --mha-swatch-color: #7a5630; }
+.mha-settings-accent-swatches[data-theme-style="material"] .mha-settings-accent-swatch[data-accent="lime"] { --mha-swatch-color: #516600; }
+.mha-settings-accent-swatches[data-theme-style="material"] .mha-settings-accent-swatch[data-accent="olive"] { --mha-swatch-color: #5d6300; }
+.mha-settings-accent-swatches[data-theme-style="material"] .mha-settings-accent-swatch[data-accent="emerald"] { --mha-swatch-color: #006d3f; }
+.mha-settings-accent-swatches[data-theme-style="material"] .mha-settings-accent-swatch[data-accent="sea"] { --mha-swatch-color: #006b5b; }
+.mha-settings-accent-swatches[data-theme-style="material"] .mha-settings-accent-swatch[data-accent="sky"] { --mha-swatch-color: #00658f; }
+.mha-settings-accent-swatches[data-theme-style="material"] .mha-settings-accent-swatch[data-accent="navy"] { --mha-swatch-color: #2451a6; }
+.mha-settings-accent-swatches[data-theme-style="material"] .mha-settings-accent-swatch[data-accent="lavender"] { --mha-swatch-color: #7350b8; }
+.mha-settings-accent-swatches[data-theme-style="material"] .mha-settings-accent-swatch[data-accent="magenta"] { --mha-swatch-color: #9c3d8f; }
 
 /* SETTINGS BACKDROP BY VISUAL STYLE
  * iOS and OneUI use a blurred background behind the settings sheet.
