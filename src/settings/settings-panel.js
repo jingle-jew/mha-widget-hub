@@ -1,4 +1,4 @@
-import { getAccentOptions, normalizeAccent } from "./accent-palettes.js";
+import { getAccentOptions, normalizeAccent, supportsAutoAccent } from "./accent-palettes.js";
 import { createToggle } from "../ui/toggle.js";
 import { createIcon } from "../ui/icon.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
@@ -238,9 +238,10 @@ function createSwitch({ label, checked = false, onChange }) {
 }
 
 
-function createAccentPicker({ label, themeStyle = "oneui", value = "", onChange }) {
+function createAccentPicker({ label, themeStyle = "oneui", value = "", accentMode = "manual", onChange, onModeChange }) {
   const options = getAccentOptions(themeStyle);
   const resolved = normalizeAccent(themeStyle, value);
+  const isAuto = supportsAutoAccent(themeStyle) && accentMode === "auto";
 
   const field = document.createElement("div");
   field.className = "mha-settings-accent-field";
@@ -253,13 +254,26 @@ function createAccentPicker({ label, themeStyle = "oneui", value = "", onChange 
   swatches.className = "mha-settings-accent-swatches";
   swatches.dataset.themeStyle = themeStyle;
 
+  if (supportsAutoAccent(themeStyle)) {
+    const button = document.createElement("button");
+    button.className = "mha-settings-accent-swatch mha-settings-accent-swatch-auto";
+    button.type = "button";
+    button.dataset.accent = "auto";
+    button.setAttribute("aria-label", "Automatique selon le fond d’écran");
+    button.setAttribute("aria-pressed", String(isAuto));
+    button.title = "Auto";
+    button.textContent = "A";
+    button.addEventListener("click", () => onModeChange?.("auto"));
+    swatches.append(button);
+  }
+
   for (const item of options) {
     const button = document.createElement("button");
     button.className = "mha-settings-accent-swatch";
     button.type = "button";
     button.dataset.accent = item.value;
     button.setAttribute("aria-label", item.label);
-    button.setAttribute("aria-pressed", String(item.value === resolved));
+    button.setAttribute("aria-pressed", String(!isAuto && item.value === resolved));
     button.title = item.label;
     button.addEventListener("click", () => onChange?.(item.value));
     swatches.append(button);
@@ -429,6 +443,7 @@ export function createSettingsPanel({
   themeStyle = "oneui",
   iosGlass = "liquid",
   accent = "",
+  accentMode = "manual",
   iconShape = "auto",
   effectiveIconShape = "",
   screensaverEnabled = false,
@@ -447,6 +462,7 @@ export function createSettingsPanel({
   onThemeStyleChange,
   onIosGlassChange,
   onAccentChange,
+  onAccentModeChange,
   onIconShapeChange,
   onScreensaverEnabledChange,
   onScreensaverDelayChange,
@@ -643,7 +659,9 @@ export function createSettingsPanel({
         label: "Accent",
         themeStyle,
         value: accent,
+        accentMode,
         onChange: onAccentChange,
+        onModeChange: onAccentModeChange,
       }),
       createSelect({
         label: "Forme des icônes",

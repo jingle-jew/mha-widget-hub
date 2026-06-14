@@ -21,6 +21,7 @@ import {
 import {
   createThemeController,
 } from "./src/settings/theme-controller.js";
+import { extractAccentFromWallpaper } from "./src/settings/wallpaper-accent.js";
 import {
   migrateLegacyWallpaper,
   readLegacyWallpaper,
@@ -263,6 +264,7 @@ constructor(){
   this._newPageIcon="grid";
   this._dockPosition="left";
   this._customWallpapers={light:null,dark:null};
+  this._autoAccentRequestId=0;
   this._pages=[];
   this._activePageId="";
   this._widgets=[];
@@ -292,6 +294,7 @@ _initialize(){
   this._migrateLegacyCustomWallpaper();
   this._customWallpapers=this._readCustomWallpapers();
   this._applyCustomWallpaperState();
+  this._syncAutoAccentFromWallpaper();
   this._pages=this._readPages();
   this._activePageId=this._readActivePageId();
   this._widgets=this._readWidgets();
@@ -642,6 +645,7 @@ _getSettingsPanelProps(scope="all"){
     themeStyle,
     iosGlass:themeState.iosGlass,
     accent:themeState.accent,
+    accentMode:themeState.accentMode,
     iconShape:iconShapeSetting,
     effectiveIconShape,
     screensaverEnabled:this._screensaverEnabled,
@@ -660,6 +664,7 @@ _getSettingsPanelProps(scope="all"){
     onThemeStyleChange:v=>this._applyThemeStyleFromSettings(v),
     onIosGlassChange:v=>this._applyIosGlassFromSettings(v),
     onAccentChange:v=>this._applyAccentFromSettings(v),
+    onAccentModeChange:v=>this._applyAccentModeFromSettings(v),
     onIconShapeChange:v=>this._applyIconShapeFromSettings(v),
     onScreensaverEnabledChange:v=>this._applyScreensaverEnabledFromSettings(v),
     onScreensaverDelayChange:v=>this._applyScreensaverDelayFromSettings(v),
@@ -710,13 +715,37 @@ _saveCustomWallpaper(mode,payload){
   if(!saveWallpaper(localStorage,mode,payload))throw new Error("Invalid wallpaper payload");
   this._customWallpapers=this._readCustomWallpapers();
   this._applyCustomWallpaperState();
+  this._syncAutoAccentFromWallpaper();
   this._syncSettingsDom();
 }
 _resetCustomWallpaper(mode){
   resetWallpaper(localStorage,mode);
   this._customWallpapers=this._readCustomWallpapers();
   this._applyCustomWallpaperState();
+  this._syncAutoAccentFromWallpaper();
   this._syncSettingsDom();
+}
+async _syncAutoAccentFromWallpaper(){
+  const requestId=++this._autoAccentRequestId;
+  const themeState=this._themeController.read();
+  const wallpaper=this._customWallpapers?.[themeState.theme];
+  const dataUrl=wallpaper?.dataUrl||"";
+  if(!dataUrl)return;
+
+  for(const themeStyle of ["oneui","material"]){
+    try{
+      const accent=await extractAccentFromWallpaper(dataUrl,themeStyle);
+      if(requestId!==this._autoAccentRequestId)return;
+      if(accent)this._themeController.setAutoAccent(themeStyle,accent);
+    }catch(error){
+      console.warn(`[MHA] Auto accent could not be extracted for ${themeStyle}.`,error);
+    }
+  }
+
+  if(requestId===this._autoAccentRequestId){
+    this._themeController.sync();
+    this._syncSettingsDom();
+  }
 }
 _isMobileLandscapeLayout(){
   return this._isMobileLauncherLayout()&&window.matchMedia?.("(orientation: landscape)")?.matches;
@@ -1045,6 +1074,7 @@ _transitionSystemThemeChange(){
 
 _applyThemeStyleFromSettings(value="oneui"){
   this._themeController.setThemeStyle(value);
+  this._syncAutoAccentFromWallpaper();
   this._syncSettingsDom();
 }
 
@@ -1055,6 +1085,12 @@ _applyIosGlassFromSettings(value="liquid"){
 
 _applyAccentFromSettings(value=""){
   this._themeController.setAccent(value);
+  this._syncSettingsDom();
+}
+
+_applyAccentModeFromSettings(value="manual"){
+  this._themeController.setAccentMode(value);
+  if(value==="auto")this._syncAutoAccentFromWallpaper();
   this._syncSettingsDom();
 }
 

@@ -1,4 +1,4 @@
-import { normalizeAccent } from "./accent-palettes.js";
+import { normalizeAccent, supportsAutoAccent } from "./accent-palettes.js";
 
 export const THEME_STYLES = new Set(["ios", "oneui", "material"]);
 
@@ -54,7 +54,22 @@ export function getStoredIosGlass(host) {
   return normalizeIosGlass(stored);
 }
 
-export function getStoredAccent(host, themeStyle = "oneui") {
+export function normalizeAccentMode(themeStyle = "oneui", mode = "manual") {
+  return supportsAutoAccent(themeStyle) && mode === "auto" ? "auto" : "manual";
+}
+
+export function getStoredAccentMode(host, themeStyle = "oneui") {
+  const normalizedStyle = normalizeThemeStyle(themeStyle);
+  const stored = localStorage.getItem(`mha-accent-mode-${normalizedStyle}`)
+    || localStorage.getItem("mha-accent-mode")
+    || document.documentElement.dataset.accentMode
+    || host?.dataset?.accentMode
+    || "manual";
+
+  return normalizeAccentMode(normalizedStyle, stored);
+}
+
+export function getStoredManualAccent(host, themeStyle = "oneui") {
   const normalizedStyle = normalizeThemeStyle(themeStyle);
   const stored = localStorage.getItem(`mha-accent-${normalizedStyle}`)
     || localStorage.getItem("mha-accent")
@@ -63,6 +78,24 @@ export function getStoredAccent(host, themeStyle = "oneui") {
     || "";
 
   return normalizeAccent(normalizedStyle, stored);
+}
+
+export function getStoredAutoAccent(host, themeStyle = "oneui") {
+  const normalizedStyle = normalizeThemeStyle(themeStyle);
+  const stored = localStorage.getItem(`mha-accent-auto-${normalizedStyle}`)
+    || document.documentElement.dataset.autoAccent
+    || host?.dataset?.autoAccent
+    || "";
+
+  return normalizeAccent(normalizedStyle, stored);
+}
+
+export function getStoredAccent(host, themeStyle = "oneui") {
+  const normalizedStyle = normalizeThemeStyle(themeStyle);
+  const mode = getStoredAccentMode(host, normalizedStyle);
+  return mode === "auto"
+    ? getStoredAutoAccent(host, normalizedStyle)
+    : getStoredManualAccent(host, normalizedStyle);
 }
 
 function getDefaultIconShapeForThemeStyle(themeStyle = "oneui") {
@@ -98,6 +131,7 @@ export function readThemeState(host) {
   const theme = resolveTheme(themeSetting);
   const themeStyle = getStoredThemeStyle(host);
   const iosGlass = getStoredIosGlass(host);
+  const accentMode = getStoredAccentMode(host, themeStyle);
   const accent = getStoredAccent(host, themeStyle);
   const iconShapeSetting = getStoredIconShapeSetting(host);
   const iconShape = resolveIconShape(themeStyle, iconShapeSetting);
@@ -108,6 +142,7 @@ export function readThemeState(host) {
     themeStyle,
     iosGlass,
     accent,
+    accentMode,
     iconShapeSetting,
     iconShape,
   };
@@ -130,6 +165,7 @@ export function syncThemeAttributes(host) {
   setAttribute(host, "themeStyle", state.themeStyle);
   setAttribute(host, "iosGlass", state.iosGlass);
   setAttribute(host, "accent", state.accent);
+  setAttribute(host, "accentMode", state.accentMode);
   setAttribute(host, "iconShapeSetting", state.iconShapeSetting);
   setAttribute(host, "iconShape", state.iconShape);
 
@@ -138,6 +174,7 @@ export function syncThemeAttributes(host) {
   setAttribute(root, "themeStyle", state.themeStyle);
   setAttribute(root, "iosGlass", state.iosGlass);
   setAttribute(root, "accent", state.accent);
+  setAttribute(root, "accentMode", state.accentMode);
   setAttribute(root, "iconShapeSetting", state.iconShapeSetting);
   setAttribute(root, "iconShape", state.iconShape);
 
@@ -171,7 +208,9 @@ export class ThemeController {
 
     const accent = getStoredAccent(this.host, themeStyle);
     localStorage.setItem("mha-accent", accent);
-    localStorage.setItem(`mha-accent-${themeStyle}`, accent);
+    if (getStoredAccentMode(this.host, themeStyle) === "manual") {
+      localStorage.setItem(`mha-accent-${themeStyle}`, accent);
+    }
     return this.sync();
   }
 
@@ -185,8 +224,30 @@ export class ThemeController {
   setAccent(value = "") {
     const themeStyle = getStoredThemeStyle(this.host);
     const accent = normalizeAccent(themeStyle, value);
+    localStorage.setItem("mha-accent-mode", "manual");
+    localStorage.setItem(`mha-accent-mode-${themeStyle}`, "manual");
     localStorage.setItem("mha-accent", accent);
     localStorage.setItem(`mha-accent-${themeStyle}`, accent);
+    return this.sync();
+  }
+
+  setAccentMode(value = "manual") {
+    const themeStyle = getStoredThemeStyle(this.host);
+    const mode = normalizeAccentMode(themeStyle, value);
+    localStorage.setItem("mha-accent-mode", mode);
+    localStorage.setItem(`mha-accent-mode-${themeStyle}`, mode);
+    localStorage.setItem("mha-accent", getStoredAccent(this.host, themeStyle));
+    return this.sync();
+  }
+
+  setAutoAccent(themeStyle = "oneui", value = "") {
+    const normalizedStyle = normalizeThemeStyle(themeStyle);
+    if (!supportsAutoAccent(normalizedStyle)) return this.sync();
+    const accent = normalizeAccent(normalizedStyle, value);
+    localStorage.setItem(`mha-accent-auto-${normalizedStyle}`, accent);
+    if (getStoredThemeStyle(this.host) === normalizedStyle && getStoredAccentMode(this.host, normalizedStyle) === "auto") {
+      localStorage.setItem("mha-accent", accent);
+    }
     return this.sync();
   }
 
