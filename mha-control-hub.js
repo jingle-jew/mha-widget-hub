@@ -36,6 +36,8 @@ import {createScreensaver,normalizeClockVariant,updateScreensaverClock} from "./
 import { createIcon } from "./src/ui/icon.js";
 import { createIconSymbol } from "./src/ui/icon-symbol.js";
 import { createCloseButton } from "./src/system/system-buttons.js";
+import { loadEntityVisibilityConfig } from "./src/admin/entity-visibility-store.js";
+import { normalizeEntityVisibilityConfig } from "./src/admin/entity-permissions.js";
 
 const MHA_FRONTEND_ROOT_URL = new URL(".", import.meta.url);
 const MHA_FRONTEND_VERSION = new URL(import.meta.url).searchParams.get("v");
@@ -199,6 +201,8 @@ constructor(){
   this._secondaryUiFrame=0;
   this._pendingDeferredUi=null;
   this._hass=null;
+  this._entityVisibilityConfig=normalizeEntityVisibilityConfig(null);
+  this._entityVisibilityUserId="";
   this._hassUpdateFrame=0;
   this._hasConnectedOnce=false;
   this._connectionActive=false;
@@ -284,6 +288,7 @@ _upgradePredefinedProperty(name){
 }
 set hass(h){
   this._hass=h;
+  this._loadEntityVisibilityConfig(h);
   this.dataset.dataState=h?"ready":"loading";
   if(this._widgetConfigSession&&h&&!this._widgetConfigHassReady){
     this._widgetConfigHassReady=true;
@@ -293,6 +298,20 @@ set hass(h){
   this._scheduleHassUpdate();
 }
 get hass(){return this._hass}
+async _loadEntityVisibilityConfig(hass){
+  const userId=String(hass?.user?.id||"");
+  if(!userId||userId===this._entityVisibilityUserId)return;
+  this._entityVisibilityUserId=userId;
+  try{
+    const config=await loadEntityVisibilityConfig(hass);
+    if(this._entityVisibilityUserId!==userId)return;
+    this._entityVisibilityConfig=config;
+    if(this._widgetConfigSession)this._syncWidgetConfigDom();
+    if(this.isConnected)this._refreshActiveGridOnly();
+  }catch(error){
+    console.warn("[MHA] Entity visibility configuration could not be loaded.",error);
+  }
+}
 _hasMountedApp(){
   return Boolean(
     this.shadowRoot?.querySelector?.(".mha-background")
@@ -717,7 +736,10 @@ _beginWidgetPlacement(item){
   if(supportsWidgetConfiguration(widget)){
     this._widgetManagerOpen=false;
     this._widgetManagerCategory="";
-    this._widgetConfigSession=createWidgetConfigSession(widget,this._hass,{mode:"create"});
+    this._widgetConfigSession=createWidgetConfigSession(widget,this._hass,{
+      mode:"create",
+      visibilityConfig:this._entityVisibilityConfig,
+    });
     this._widgetConfigHassReady=Boolean(this._hass);
     this._syncWidgetManagerDom();
     this._syncWidgetConfigDom();
@@ -738,6 +760,7 @@ _createWidgetConfigPanel(){
   return createWidgetConfigPopup({
     session:this._widgetConfigSession,
     hass:this._hass,
+    visibilityConfig:this._entityVisibilityConfig,
     onCancel:()=>this._closeWidgetConfig(),
     onSave:()=>this._saveWidgetConfig(),
     onChange:change=>{
@@ -757,7 +780,11 @@ _closeWidgetConfig(){
 }
 _saveWidgetConfig(){
   const session=this._widgetConfigSession;
-  const configured=buildConfiguredWidget(session,this._hass);
+  const configured=buildConfiguredWidget(
+    session,
+    this._hass,
+    this._entityVisibilityConfig,
+  );
   if(!session||!configured)return;
   this._widgetConfigSession=null;
   this._widgetConfigHassReady=false;
@@ -781,7 +808,10 @@ _openWidgetConfig(id){
   const widget=this._widgets.find(item=>item.id===id);
   if(!supportsWidgetConfiguration(widget))return;
   this._activeMoveWidgetId="";
-  this._widgetConfigSession=createWidgetConfigSession(widget,this._hass,{mode:"edit"});
+  this._widgetConfigSession=createWidgetConfigSession(widget,this._hass,{
+    mode:"edit",
+    visibilityConfig:this._entityVisibilityConfig,
+  });
   this._widgetConfigHassReady=Boolean(this._hass);
   this._syncEditModeDom();
   this._syncWidgetConfigDom();
@@ -1334,7 +1364,7 @@ _refreshActiveGridOnly(){
   const {units}=this._getGridBounds();
   const positions=this._getActiveWidgetPositions({create:true});
   this._widgets.forEach(w=>{
-    const el=createWidgetShell(w,{activeGridUnits:units,isEditing:this._isEditing,isMoveTarget:this._isEditing&&this._activeMoveWidgetId===w.id,position:positions?.[w.id],hass:this._hass,onToggleMove:id=>this._toggleWidgetMoveMode(id),onMove:(id,direction)=>this._moveWidgetByDirection(id,direction),onRemove:id=>this._removeWidget(id),onCycleVariant:id=>this.cycleVariant(id),onConfigure:id=>this._openWidgetConfig(id)});
+    const el=createWidgetShell(w,{activeGridUnits:units,isEditing:this._isEditing,isMoveTarget:this._isEditing&&this._activeMoveWidgetId===w.id,position:positions?.[w.id],hass:this._hass,entityVisibilityConfig:this._entityVisibilityConfig,onToggleMove:id=>this._toggleWidgetMoveMode(id),onMove:(id,direction)=>this._moveWidgetByDirection(id,direction),onRemove:id=>this._removeWidget(id),onCycleVariant:id=>this.cycleVariant(id),onConfigure:id=>this._openWidgetConfig(id)});
     this._wireDrag(el,w);
     grid.append(el);
   });
@@ -2070,6 +2100,7 @@ _placePendingWidgetAtSlot(x,y){
       isMoveTarget:false,
       position:nextPositions[widget.id],
       hass:this._hass,
+      entityVisibilityConfig:this._entityVisibilityConfig,
       onToggleMove:id=>this._toggleWidgetMoveMode(id),
       onMove:(id,direction)=>this._moveWidgetByDirection(id,direction),
       onRemove:id=>this._removeWidget(id),
@@ -2255,6 +2286,7 @@ _replaceWidgetDom(id){
     isMoveTarget:this._isEditing&&this._activeMoveWidgetId===id,
     position:positions?.[id],
     hass:this._hass,
+    entityVisibilityConfig:this._entityVisibilityConfig,
     onToggleMove:widgetId=>this._toggleWidgetMoveMode(widgetId),
     onMove:(widgetId,direction)=>this._moveWidgetByDirection(widgetId,direction),
     onRemove:widgetId=>this._removeWidget(widgetId),
@@ -2681,6 +2713,7 @@ _createWidgetElement(widget,{units,position}){
     isMoveTarget:this._isEditing&&this._activeMoveWidgetId===widget.id,
     position,
     hass:this._hass,
+    entityVisibilityConfig:this._entityVisibilityConfig,
     onToggleMove:id=>this._toggleWidgetMoveMode(id),
     onMove:(id,direction)=>this._moveWidgetByDirection(id,direction),
     onRemove:id=>this._removeWidget(id),

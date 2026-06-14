@@ -1,5 +1,6 @@
 import { getEntityDomain, isEntityAvailable } from "../ha/entity.js";
 import { supportsLightBrightness } from "../ha/capabilities.js";
+import { filterEntitiesForCurrentUser } from "../admin/entity-permissions.js";
 
 export function humanizeEntityId(entityId = "") {
   const objectId = String(entityId).split(".").slice(1).join(".") || String(entityId);
@@ -20,8 +21,8 @@ export function getLightCapabilities(entityState) {
   return { supportsBrightness: supportsLightBrightness(attributes) };
 }
 
-export function getLightOptions(hass) {
-  return getEntityOptionsByDomain(hass, "light")
+export function getLightOptions(hass, visibilityConfig) {
+  return getEntityOptionsByDomain(hass, "light", visibilityConfig)
     .map(({ entityState, ...option }) => ({
       ...option,
       ...getLightCapabilities(entityState),
@@ -29,8 +30,8 @@ export function getLightOptions(hass) {
     .filter(option => option.supportsBrightness);
 }
 
-export function getEntityOptionsByDomain(hass, domain) {
-  return Object.entries(hass?.states || {})
+export function getEntityOptionsByDomain(hass, domain, visibilityConfig) {
+  const options = Object.entries(hass?.states || {})
     .filter(([entityId, entityState]) => (
       getEntityDomain(entityId) === domain
       && isEntityAvailable(entityState)
@@ -41,4 +42,5 @@ export function getEntityOptionsByDomain(hass, domain) {
       entityState,
     }))
     .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" }));
+  return filterEntitiesForCurrentUser(hass, options, visibilityConfig);
 }

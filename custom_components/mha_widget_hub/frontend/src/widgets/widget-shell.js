@@ -23,6 +23,7 @@ export function createWidgetShell(
     onCycleVariant,
     onConfigure,
     hass,
+    entityVisibilityConfig,
   } = {},
 ) {
   const widgetKind = resolveWidgetKind(widget);
@@ -36,6 +37,7 @@ export function createWidgetShell(
     widgetW: effectiveWidgetW,
     widgetH: size.h,
     hass,
+    entityVisibilityConfig,
   };
 
   const shell = document.createElement("article");

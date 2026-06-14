@@ -26,7 +26,7 @@ function inferSliderAction(widget = {}) {
   return widget.variant === "volume-slider" ? "volume" : "brightness";
 }
 
-export function createSliderConfigDraft(widget = {}, hass) {
+export function createSliderConfigDraft(widget = {}, hass, visibilityConfig) {
   const configuredLabel = String(widget.label || "").trim();
   const draft = {
     entityId: widget.entityId || widget.entity_id || "",
@@ -35,12 +35,12 @@ export function createSliderConfigDraft(widget = {}, hass) {
     sliderAction: inferSliderAction(widget),
   };
 
-  return reconcileSliderConfigDraft(draft, hass);
+  return reconcileSliderConfigDraft(draft, hass, visibilityConfig);
 }
 
-export function reconcileSliderConfigDraft(draft, hass) {
+export function reconcileSliderConfigDraft(draft, hass, visibilityConfig) {
   const action = getSliderActionDefinition(draft.sliderAction);
-  const options = getEntityOptionsByDomain(hass, action.domain);
+  const options = getEntityOptionsByDomain(hass, action.domain, visibilityConfig);
   const currentIsValid = options.some(option => option.value === draft.entityId);
 
   if (!currentIsValid) {
@@ -55,10 +55,10 @@ export function reconcileSliderConfigDraft(draft, hass) {
   return { draft, action, options, selected };
 }
 
-export function updateSliderAction(draft, sliderAction, hass) {
+export function updateSliderAction(draft, sliderAction, hass, visibilityConfig) {
   draft.sliderAction = getSliderActionDefinition(sliderAction).value;
   draft.entityId = "";
-  return reconcileSliderConfigDraft(draft, hass);
+  return reconcileSliderConfigDraft(draft, hass, visibilityConfig);
 }
 
 export function updateSliderEntity(draft, entityId, options = []) {
@@ -76,8 +76,8 @@ export function updateSliderLabel(draft, label) {
   return draft;
 }
 
-export function buildSliderWidgetConfig(widget, draft, hass) {
-  const { selected } = reconcileSliderConfigDraft(draft, hass);
+export function buildSliderWidgetConfig(widget, draft, hass, visibilityConfig) {
+  const { selected } = reconcileSliderConfigDraft(draft, hass, visibilityConfig);
   return {
     ...widget,
     kind: "slider",

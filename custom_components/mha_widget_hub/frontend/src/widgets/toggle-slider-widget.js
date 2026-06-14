@@ -10,6 +10,7 @@ import { createSlider } from "../ui/slider.js";
 import { createSlider2 } from "../ui/slider2.js";
 import { createToggleWidgetContent } from "./toggle-widget.js";
 import { isWidgetKind } from "./widget-registry.js";
+import { isEntityAllowedForCurrentUser } from "../admin/entity-permissions.js";
 
 export const TOGGLE_SLIDER_WIDGET_KIND = "toggle-slider";
 const SLIDER_SERVICE_INTERVAL_MS = 80;
@@ -20,6 +21,7 @@ export function isToggleSliderWidget(widget = {}) {
 
 export function createToggleSliderWidgetContent(widget = {}, {
   hass,
+  entityVisibilityConfig,
   widgetW = Number(widget?.w) || 4,
   onToggle,
   onSliderInput,
@@ -30,6 +32,7 @@ export function createToggleSliderWidgetContent(widget = {}, {
     entityState: null,
     sliderBinding: null,
     entityAvailable: false,
+    entityAllowed: true,
   };
   const sliderAction = createLatestValueAction(
     (nextValue) => runSliderAction(context.hass, context.entityState, nextValue),
@@ -103,7 +106,14 @@ export function createToggleSliderWidgetContent(widget = {}, {
 
   root.__mhaUpdateFromHass = (nextHass) => {
     context.hass = nextHass;
-    context.entityState = getEntityState(nextHass, widget);
+    context.entityAllowed = isEntityAllowedForCurrentUser(
+      nextHass,
+      entityId,
+      entityVisibilityConfig,
+    );
+    context.entityState = context.entityAllowed
+      ? getEntityState(nextHass, widget)
+      : null;
     context.sliderBinding = getSliderBinding(context.entityState);
     context.entityAvailable = !entityId || isEntityAvailable(context.entityState);
 
@@ -120,20 +130,35 @@ export function createToggleSliderWidgetContent(widget = {}, {
     const nextValue = context.sliderBinding?.value ?? widget.value ?? 68;
 
     root.dataset.entityAvailable = String(context.entityAvailable);
+    root.dataset.entityAllowed = String(context.entityAllowed);
     root.dataset.toggleSupported = String(Boolean(supportsToggle));
     root.dataset.sliderSupported = String(Boolean(supportsSlider));
     if (!context.entityAvailable) sliderAction.clear();
 
     const toggleRoot = toggleSection.querySelector(".mha-toggle-widget");
     const toggleInput = toggleSection.querySelector(".mha-toggle-input");
+    const toggleLabel = toggleSection.querySelector(".mha-toggle-widget-label");
     const toggleState = toggleSection.querySelector(".mha-toggle-widget-state");
     if (toggleRoot) toggleRoot.dataset.checked = String(checked);
     if (toggleInput) {
       toggleInput.checked = checked;
       toggleInput.disabled = !supportsToggle;
+      toggleInput.setAttribute(
+        "aria-label",
+        context.entityAllowed
+          ? widget.label || "Toggle"
+          : "Entité non autorisée",
+      );
+    }
+    if (toggleLabel) {
+      toggleLabel.textContent = context.entityAllowed
+        ? widget.label || widget.title || "Toggle"
+        : "Entité non autorisée";
     }
     if (toggleState) {
-      toggleState.textContent = context.entityAvailable
+      toggleState.textContent = !context.entityAllowed
+        ? "Non autorisé"
+        : context.entityAvailable
         ? checked
           ? widget.stateOn || "Activé"
           : widget.stateOff || "Désactivé"
@@ -159,6 +184,7 @@ export function createToggleSliderWidgetContent(widget = {}, {
     context.entityState = null;
     context.sliderBinding = null;
     context.entityAvailable = false;
+    context.entityAllowed = true;
     delete root.__mhaUpdateFromHass;
   };
 

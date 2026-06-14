@@ -6,6 +6,7 @@ import { createIcon } from "../ui/icon.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
 import { createSlider } from "../ui/slider.js";
 import { isWidgetKind } from "./widget-registry.js";
+import { isEntityAllowedForCurrentUser } from "../admin/entity-permissions.js";
 
 const SLIDER_SERVICE_INTERVAL_MS = 80;
 
@@ -44,6 +45,7 @@ export function createSliderWidgetContent(
     onInput,
     onChange,
     hass,
+    entityVisibilityConfig,
   } = {},
 ) {
   const orientationHint = getSliderWidgetOrientationHint(size);
@@ -54,6 +56,7 @@ export function createSliderWidgetContent(
     entityState: null,
     sliderBinding: null,
     entityAvailable: false,
+    entityAllowed: true,
   };
   const sliderAction = createLatestValueAction(
     nextValue => runSliderAction(context.hass, context.entityState, nextValue),
@@ -125,7 +128,14 @@ export function createSliderWidgetContent(
 
   frame.__mhaUpdateFromHass = nextHass => {
     context.hass = nextHass;
-    context.entityState = getEntityState(nextHass, widget);
+    context.entityAllowed = isEntityAllowedForCurrentUser(
+      nextHass,
+      entityId,
+      entityVisibilityConfig,
+    );
+    context.entityState = context.entityAllowed
+      ? getEntityState(nextHass, widget)
+      : null;
     context.sliderBinding = getSliderBinding(context.entityState);
     context.entityAvailable = !entityId || isEntityAvailable(context.entityState);
 
@@ -137,7 +147,21 @@ export function createSliderWidgetContent(
     const isDragging = slider.classList.contains("is-slider-dragging");
 
     frame.dataset.entityAvailable = String(context.entityAvailable);
+    frame.dataset.entityAllowed = String(context.entityAllowed);
     frame.dataset.sliderSupported = String(Boolean(supportsSlider));
+    slider.setAttribute(
+      "aria-label",
+      context.entityAllowed ? widget.label || "Slider" : "Entité non autorisée",
+    );
+    slider.querySelector(".mha-slider-input")?.setAttribute(
+      "aria-label",
+      context.entityAllowed ? widget.label || "Slider" : "Entité non autorisée",
+    );
+    label.textContent = context.entityAllowed
+      ? widget.label || ""
+      : "Entité non autorisée";
+    label.hidden = !label.textContent;
+    frame.title = context.entityAllowed ? "" : "Entité non autorisée";
     if (!context.entityAvailable) sliderAction.clear();
 
     slider.__mhaSliderApi?.setDisabled(!supportsSlider);
@@ -152,6 +176,7 @@ export function createSliderWidgetContent(
     context.entityState = null;
     context.sliderBinding = null;
     context.entityAvailable = false;
+    context.entityAllowed = true;
     delete frame.__mhaUpdateFromHass;
   };
 

@@ -37,26 +37,29 @@ const WIDGET_CONTENT_RENDERERS = Object.freeze({
     }),
   },
   slider: {
-    render: ({ widget, size, activeGridUnits, hass }) => createSliderWidgetContent(widget, {
+    render: ({ widget, size, activeGridUnits, hass, entityVisibilityConfig }) => createSliderWidgetContent(widget, {
       size,
       activeGridUnits,
       hass,
+      entityVisibilityConfig,
       value: widget.value ?? 68,
       orientation: "auto",
       className: "mha-widget-demo-slider",
     }),
   },
   toggle: {
-    render: ({ widget, widgetW, widgetH, hass }) => createToggleWidgetContent(widget, {
+    render: ({ widget, widgetW, widgetH, hass, entityVisibilityConfig }) => createToggleWidgetContent(widget, {
       widgetW,
       widgetH,
       bindToHass: true,
       hass,
+      entityVisibilityConfig,
     }),
   },
   "toggle-slider": {
-    render: ({ widget, widgetW, hass }) => createToggleSliderWidgetContent(widget, {
+    render: ({ widget, widgetW, hass, entityVisibilityConfig }) => createToggleSliderWidgetContent(widget, {
       hass,
+      entityVisibilityConfig,
       widgetW,
     }),
   },

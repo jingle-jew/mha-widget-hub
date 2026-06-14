@@ -1,6 +1,6 @@
 import { getLightOptions } from "./light-options.js";
 
-export function createToggleSliderConfigDraft(widget = {}, hass) {
+export function createToggleSliderConfigDraft(widget = {}, hass, visibilityConfig) {
   const lightEntityId = widget.lightEntityId || widget.entityId || widget.entity_id || "";
   const configuredLabel = String(widget.label || "").trim();
   const draft = {
@@ -10,11 +10,11 @@ export function createToggleSliderConfigDraft(widget = {}, hass) {
     sliderMode: "brightness",
   };
 
-  return reconcileToggleSliderConfigDraft(draft, hass);
+  return reconcileToggleSliderConfigDraft(draft, hass, visibilityConfig);
 }
 
-export function reconcileToggleSliderConfigDraft(draft, hass) {
-  const options = getLightOptions(hass);
+export function reconcileToggleSliderConfigDraft(draft, hass, visibilityConfig) {
+  const options = getLightOptions(hass, visibilityConfig);
   const currentIsValid = options.some(option => option.value === draft.lightEntityId);
   if (!currentIsValid) {
     draft.lightEntityId = options[0]?.value || "";
@@ -42,8 +42,8 @@ export function updateToggleSliderLabel(draft, label) {
   return draft;
 }
 
-export function buildToggleSliderWidgetConfig(widget, draft, hass) {
-  const { selected } = reconcileToggleSliderConfigDraft(draft, hass);
+export function buildToggleSliderWidgetConfig(widget, draft, hass, visibilityConfig) {
+  const { selected } = reconcileToggleSliderConfigDraft(draft, hass, visibilityConfig);
   const lightEntityId = draft.lightEntityId || "";
   return {
     ...widget,

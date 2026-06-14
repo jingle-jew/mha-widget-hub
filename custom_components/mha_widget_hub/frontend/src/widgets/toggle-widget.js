@@ -15,6 +15,7 @@ import { runToggleAction } from "../ha/actions.js";
 import { getEntityState, getWidgetEntityId, isEntityAvailable } from "../ha/entity.js";
 import { isToggleEntityOn, supportsToggleEntity } from "../ha/toggle.js";
 import { isWidgetKind } from "./widget-registry.js";
+import { isEntityAllowedForCurrentUser } from "../admin/entity-permissions.js";
 
 export const TOGGLE_WIDGET_KIND = "toggle";
 
@@ -44,6 +45,7 @@ export function createToggleWidgetContent(widget = {}, {
   disabled = false,
   bindToHass = false,
   hass,
+  entityVisibilityConfig,
   onToggle,
 } = {}) {
   const data = getToggleWidgetData(widget);
@@ -52,6 +54,7 @@ export function createToggleWidgetContent(widget = {}, {
     hass,
     entityState: null,
     entityAvailable: false,
+    entityAllowed: true,
   };
 
   const root = document.createElement("div");
@@ -105,7 +108,14 @@ export function createToggleWidgetContent(widget = {}, {
   if (bindToHass) {
     root.__mhaUpdateFromHass = nextHass => {
       context.hass = nextHass;
-      context.entityState = getEntityState(nextHass, widget);
+      context.entityAllowed = isEntityAllowedForCurrentUser(
+        nextHass,
+        entityId,
+        entityVisibilityConfig,
+      );
+      context.entityState = context.entityAllowed
+        ? getEntityState(nextHass, widget)
+        : null;
       context.entityAvailable = isEntityAvailable(context.entityState);
 
       const supportsToggle = context.entityAvailable
@@ -116,13 +126,21 @@ export function createToggleWidgetContent(widget = {}, {
       const input = toggle.querySelector(".mha-toggle-input");
 
       root.dataset.entityAvailable = String(context.entityAvailable);
+      root.dataset.entityAllowed = String(context.entityAllowed);
       root.dataset.toggleSupported = String(Boolean(supportsToggle));
       root.dataset.checked = String(checked);
       if (input) {
         input.checked = checked;
         input.disabled = !supportsToggle;
+        input.setAttribute(
+          "aria-label",
+          context.entityAllowed ? data.label : "Entité non autorisée",
+        );
       }
-      state.textContent = context.entityAvailable
+      label.textContent = context.entityAllowed ? data.label : "Entité non autorisée";
+      state.textContent = !context.entityAllowed
+        ? "Non autorisé"
+        : context.entityAvailable
         ? supportsToggle
           ? checked
             ? data.stateOn
@@ -135,6 +153,7 @@ export function createToggleWidgetContent(widget = {}, {
       context.hass = null;
       context.entityState = null;
       context.entityAvailable = false;
+      context.entityAllowed = true;
       delete root.__mhaUpdateFromHass;
     };
 

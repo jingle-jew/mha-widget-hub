@@ -30,7 +30,10 @@ export function supportsWidgetConfiguration(widget = {}) {
   return Boolean(getWidgetDefinition(widget)?.config);
 }
 
-export function createWidgetConfigSession(widget, hass, { mode = "create" } = {}) {
+export function createWidgetConfigSession(widget, hass, {
+  mode = "create",
+  visibilityConfig,
+} = {}) {
   const configType = getWidgetDefinition(widget)?.config;
   if (!configType) return null;
   return {
@@ -38,20 +41,20 @@ export function createWidgetConfigSession(widget, hass, { mode = "create" } = {}
     widget,
     configType,
     draft: configType === "slider"
-      ? createSliderConfigDraft(widget, hass).draft
+      ? createSliderConfigDraft(widget, hass, visibilityConfig).draft
       : configType === "toggle"
-        ? createToggleConfigDraft(widget, hass).draft
-        : createToggleSliderConfigDraft(widget, hass).draft,
+        ? createToggleConfigDraft(widget, hass, visibilityConfig).draft
+        : createToggleSliderConfigDraft(widget, hass, visibilityConfig).draft,
   };
 }
 
-export function buildConfiguredWidget(session, hass) {
+export function buildConfiguredWidget(session, hass, visibilityConfig) {
   if (!session) return null;
   return session.configType === "slider"
-    ? buildSliderWidgetConfig(session.widget, session.draft, hass)
+    ? buildSliderWidgetConfig(session.widget, session.draft, hass, visibilityConfig)
     : session.configType === "toggle"
-      ? buildToggleWidgetConfig(session.widget, session.draft, hass)
-      : buildToggleSliderWidgetConfig(session.widget, session.draft, hass);
+      ? buildToggleWidgetConfig(session.widget, session.draft, hass, visibilityConfig)
+      : buildToggleSliderWidgetConfig(session.widget, session.draft, hass, visibilityConfig);
 }
 
 function createField(labelText, control, { hint = "" } = {}) {
@@ -72,8 +75,12 @@ function createField(labelText, control, { hint = "" } = {}) {
   return field;
 }
 
-function createToggleSliderFields(session, hass, onChange) {
-  const { draft, options, selected } = reconcileToggleSliderConfigDraft(session.draft, hass);
+function createToggleSliderFields(session, hass, visibilityConfig, onChange) {
+  const { draft, options, selected } = reconcileToggleSliderConfigDraft(
+    session.draft,
+    hass,
+    visibilityConfig,
+  );
   const fields = document.createElement("div");
   fields.className = "mha-widget-config-fields";
 
@@ -126,8 +133,8 @@ function createToggleSliderFields(session, hass, onChange) {
   return { fields, canSave: Boolean(selected) };
 }
 
-function createSliderFields(session, hass, onChange) {
-  const reconciled = reconcileSliderConfigDraft(session.draft, hass);
+function createSliderFields(session, hass, visibilityConfig, onChange) {
+  const reconciled = reconcileSliderConfigDraft(session.draft, hass, visibilityConfig);
   const { draft } = reconciled;
   const fields = document.createElement("div");
   fields.className = "mha-widget-config-fields";
@@ -142,7 +149,7 @@ function createSliderFields(session, hass, onChange) {
     actionSelect.append(item);
   });
   actionSelect.addEventListener("change", event => {
-    updateSliderAction(draft, event.currentTarget.value, hass);
+    updateSliderAction(draft, event.currentTarget.value, hass, visibilityConfig);
     onChange?.({ rerender: true });
   });
 
@@ -187,8 +194,8 @@ function createSliderFields(session, hass, onChange) {
   return { fields, canSave: Boolean(reconciled.selected) };
 }
 
-function createToggleFields(session, hass, onChange) {
-  const reconciled = reconcileToggleConfigDraft(session.draft, hass);
+function createToggleFields(session, hass, visibilityConfig, onChange) {
+  const reconciled = reconcileToggleConfigDraft(session.draft, hass, visibilityConfig);
   const { draft } = reconciled;
   const fields = document.createElement("div");
   fields.className = "mha-widget-config-fields";
@@ -203,7 +210,7 @@ function createToggleFields(session, hass, onChange) {
     typeSelect.append(item);
   });
   typeSelect.addEventListener("change", event => {
-    updateToggleDeviceType(draft, event.currentTarget.value, hass);
+    updateToggleDeviceType(draft, event.currentTarget.value, hass, visibilityConfig);
     onChange?.({ rerender: true });
   });
 
@@ -251,6 +258,7 @@ function createToggleFields(session, hass, onChange) {
 export function createWidgetConfigPopup({
   session,
   hass,
+  visibilityConfig,
   onCancel,
   onSave,
   onChange,
@@ -298,10 +306,10 @@ export function createWidgetConfigPopup({
 
   const content = session
     ? isSlider
-      ? createSliderFields(session, hass, onChange)
+      ? createSliderFields(session, hass, visibilityConfig, onChange)
       : isToggle
-        ? createToggleFields(session, hass, onChange)
-        : createToggleSliderFields(session, hass, onChange)
+        ? createToggleFields(session, hass, visibilityConfig, onChange)
+        : createToggleSliderFields(session, hass, visibilityConfig, onChange)
     : { fields: document.createElement("div"), canSave: false };
 
   const actions = document.createElement("div");

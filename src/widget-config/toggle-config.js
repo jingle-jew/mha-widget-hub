@@ -23,7 +23,7 @@ function getToggleDeviceType(domain) {
   return TOGGLE_DEVICE_TYPES.find(option => option.value === domain) || TOGGLE_DEVICE_TYPES[0];
 }
 
-export function createToggleConfigDraft(widget = {}, hass) {
+export function createToggleConfigDraft(widget = {}, hass, visibilityConfig) {
   const entityId = widget.entityId || widget.entity_id || "";
   const configuredLabel = String(widget.label || "").trim();
   const draft = {
@@ -33,12 +33,12 @@ export function createToggleConfigDraft(widget = {}, hass) {
     labelCustomized: Boolean(configuredLabel),
   };
 
-  return reconcileToggleConfigDraft(draft, hass);
+  return reconcileToggleConfigDraft(draft, hass, visibilityConfig);
 }
 
-export function reconcileToggleConfigDraft(draft, hass) {
+export function reconcileToggleConfigDraft(draft, hass, visibilityConfig) {
   const deviceType = getToggleDeviceType(draft.deviceType);
-  const options = getEntityOptionsByDomain(hass, deviceType.value);
+  const options = getEntityOptionsByDomain(hass, deviceType.value, visibilityConfig);
   const currentIsValid = options.some(option => option.value === draft.entityId);
 
   if (!currentIsValid) {
@@ -53,10 +53,10 @@ export function reconcileToggleConfigDraft(draft, hass) {
   return { draft, deviceType, options, selected };
 }
 
-export function updateToggleDeviceType(draft, deviceType, hass) {
+export function updateToggleDeviceType(draft, deviceType, hass, visibilityConfig) {
   draft.deviceType = getToggleDeviceType(deviceType).value;
   draft.entityId = "";
-  return reconcileToggleConfigDraft(draft, hass);
+  return reconcileToggleConfigDraft(draft, hass, visibilityConfig);
 }
 
 export function updateToggleEntity(draft, entityId, options = []) {
@@ -74,8 +74,8 @@ export function updateToggleConfigLabel(draft, label) {
   return draft;
 }
 
-export function buildToggleWidgetConfig(widget, draft, hass) {
-  const { selected } = reconcileToggleConfigDraft(draft, hass);
+export function buildToggleWidgetConfig(widget, draft, hass, visibilityConfig) {
+  const { selected } = reconcileToggleConfigDraft(draft, hass, visibilityConfig);
   return {
     ...widget,
     kind: "toggle",
