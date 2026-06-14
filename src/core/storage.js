@@ -33,6 +33,17 @@ export function readJson(key, fallback) {
   return result.ok && result.exists ? result.value ?? fallback : fallback;
 }
 
+export function readBoolean(key, fallback = false) {
+  const value = localStorage.getItem(key);
+  if (value === null) return fallback;
+  return value === "true";
+}
+
+export function readNumberOption(key, fallback, allowed = []) {
+  const value = Number(localStorage.getItem(key));
+  return allowed.includes(value) ? value : fallback;
+}
+
 export function writeStorageValue(key, value) {
   try {
     localStorage.setItem(key, String(value));

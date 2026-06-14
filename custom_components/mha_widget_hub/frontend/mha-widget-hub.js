@@ -1,10 +1,17 @@
 import {
   createStorageBackup,
+  readBoolean,
   readJson,
   readJsonResult,
+  readNumberOption,
   writeJson,
   writeStorageValue,
 } from "./src/core/storage.js?v=storage-v1";
+import {
+  CURRENT_STORAGE_SCHEMA_VERSION,
+  LEGACY_STORAGE_PREFIX,
+  STORAGE_KEYS,
+} from "./src/core/storage-keys.js";
 import {destroyDomSubtree} from "./src/core/dom-lifecycle.js";
 import {ICONS} from "./src/components/icons.js";
 import {createShell} from "./src/layout/shell.js";
@@ -39,6 +46,16 @@ import {
 } from "./src/widgets/widget-registry.js";
 import {updateClockWidgets} from "./src/widgets/clock-widget.js";
 import {DEFAULT_WIDGETS,getActiveGridRows,getActiveGridUnits,getEffectiveLayout,getInternalGridColumnCountFromLogical,getInternalGridRowCountFromLogical,getLayoutMode,getGridPreset,getWidgetDensity,normalizeWidgetForKind,normalizeWidgetSize,sizeToString} from "./src/layout/layout-engine.js";
+import {
+  doesWidgetGroupExactlyFillRect,
+  getGroupBoundingRect,
+  getWidgetRectFromPosition,
+  getWidgetsInCandidateRect,
+  isGroupInternallyValid,
+  isPositionMapValidForWidgets,
+  rectsOverlap,
+  translateWidgetGroupPositions,
+} from "./src/layout/placement-geometry.js";
 import { RESPONSIVE_BREAKPOINTS } from "./src/layout/responsive.js";
 import {createScreensaver,normalizeClockVariant,updateScreensaverClock} from "./src/screensaver/screensaver.js";
 import { createIcon } from "./src/ui/icon.js";
@@ -163,25 +180,26 @@ function createCriticalBootStyle() {
 
 
 
-function readBool(key, fallback = false) {
-  const value = localStorage.getItem(key);
-  if (value === null) return fallback;
-  return value === "true";
-}
-
-function readNumberOption(key, fallback, allowed = []) {
-  const value = Number(localStorage.getItem(key));
-  return allowed.includes(value) ? value : fallback;
-}
-
-const ORDER="mha-grid-order",SIZES="mha-widget-sizes",REMOVED="mha-hidden-widgets",POSITIONS="mha-widget-positions",CUSTOM_WIDGETS="mha-custom-widgets",PAGES="mha-grid-pages",ACTIVE_PAGE="mha-active-page",DOCK_POSITION="mha-dock-position",STORAGE_SCHEMA_VERSION="mha-storage-schema-version",CURRENT_STORAGE_SCHEMA_VERSION=1,STORAGE_MIGRATION_BACKUP="mha-storage-backup-before-v1",LEGACY_STORAGE_PREFIX=["mha","v2"].join("-");
+const {
+  gridOrder:ORDER,
+  widgetSizes:SIZES,
+  hiddenWidgets:REMOVED,
+  widgetPositions:POSITIONS,
+  customWidgets:CUSTOM_WIDGETS,
+  gridPages:PAGES,
+  activePage:ACTIVE_PAGE,
+  dockPosition:DOCK_POSITION,
+  schemaVersion:STORAGE_SCHEMA_VERSION,
+  schemaMigrationBackup:STORAGE_MIGRATION_BACKUP,
+  screensaverEnabled:SCREENSAVER_ENABLED,
+  screensaverDelay:SCREENSAVER_DELAY,
+  screensaverNowBar:SCREENSAVER_NOWBAR,
+  screensaverClockVariant:SCREENSAVER_CLOCK_VARIANT,
+  legacyScreensaverClockVariant:LEGACY_SCREENSAVER_CLOCK_VARIANT,
+}=STORAGE_KEYS;
 const DOCK_POSITIONS=new Set(["left","right","bottom"]);
 function normalizeDockPosition(value="left"){return DOCK_POSITIONS.has(value)?value:"left";}
 function getStoredDockPosition(){return normalizeDockPosition(localStorage.getItem(DOCK_POSITION)||"left");}
-const SCREENSAVER_ENABLED="mha-screensaver-enabled";
-const SCREENSAVER_DELAY="mha-screensaver-delay";
-const SCREENSAVER_NOWBAR="mha-screensaver-nowbar";
-const SCREENSAVER_CLOCK_VARIANT="mha-screensaver-clock-variant";
 
 /*
  * FIRST LAUNCH DEFAULTS
@@ -280,11 +298,11 @@ _initialize(){
   this.shadowRoot.innerHTML=createCriticalBootStyle();
   this._migrateStorageSchema();
   this._widgetPositions=readJson(POSITIONS,{})||{};
-  this._screensaverNowBar=readBool(SCREENSAVER_NOWBAR,true);
+  this._screensaverNowBar=readBoolean(SCREENSAVER_NOWBAR,true);
   this._screensaverClockVariant=localStorage.getItem(SCREENSAVER_CLOCK_VARIANT)
-    ||localStorage.getItem("mha-screensaver-clock")
+    ||localStorage.getItem(LEGACY_SCREENSAVER_CLOCK_VARIANT)
     ||"digital";
-  this._screensaverEnabled=readBool(SCREENSAVER_ENABLED,true);
+  this._screensaverEnabled=readBoolean(SCREENSAVER_ENABLED,true);
   this._screensaverDelay=readNumberOption(
     SCREENSAVER_DELAY,
     30000,
@@ -1164,7 +1182,7 @@ _applyScreensaverNowBarFromSettings(enabled=true){
 _applyScreensaverClockVariantFromSettings(variant="digital"){
   this._screensaverClockVariant=normalizeClockVariant(variant);
   const saved=writeStorageValue(SCREENSAVER_CLOCK_VARIANT,this._screensaverClockVariant)
-    &&writeStorageValue("mha-screensaver-clock",this._screensaverClockVariant);
+    &&writeStorageValue(LEGACY_SCREENSAVER_CLOCK_VARIANT,this._screensaverClockVariant);
   this._recordPersistenceResult(saved);
   this._syncScreensaverDom();
   this._syncSettingsDom();
@@ -1673,16 +1691,10 @@ _toggleWidgetMoveMode(id){
   this._syncEditModeDom();this._syncWidgetDropSlots();
 }
 _rectsOverlap(a,b){
-  return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;
+  return rectsOverlap(a,b);
 }
 _getWidgetRectFromPosition(widget,position,units){
-  const size=normalizeWidgetForKind(widget);
-  return {
-    x:Number(position?.x)||1,
-    y:Number(position?.y)||1,
-    w:Math.min(units,Number(size.w)||1),
-    h:Number(size.h)||1,
-  };
+  return getWidgetRectFromPosition(widget,position,units);
 }
 _findWidgetAtCandidatePosition(id,candidateRect,positions,units){
   return this._widgets.find(other=>{
@@ -1708,83 +1720,19 @@ _canSwapWidgetPositions(id,occupantId,nextPositions,units){
   });
 }
 _getWidgetsInCandidateRect(id,candidateRect,positions,units){
-  return this._widgets.filter(other=>{
-    if(other.id===id)return false;
-    const otherPosition=positions?.[other.id];
-    if(!otherPosition)return false;
-    const otherRect=this._getWidgetRectFromPosition(other,otherPosition,units);
-    return this._rectsOverlap(candidateRect,otherRect);
-  });
+  return getWidgetsInCandidateRect(this._widgets,id,candidateRect,positions,units);
 }
 _doesWidgetGroupExactlyFillRect(widgets,targetRect,positions,units){
-  if(!widgets?.length)return false;
-
-  const width=Math.max(1,Number(targetRect.w)||1);
-  const height=Math.max(1,Number(targetRect.h)||1);
-  const cells=Array.from({length:height},()=>Array(width).fill(false));
-
-  for(const widget of widgets){
-    const position=positions?.[widget.id];
-    if(!position)return false;
-
-    const rect=this._getWidgetRectFromPosition(widget,position,units);
-
-    if(
-      rect.x<targetRect.x||
-      rect.y<targetRect.y||
-      rect.x+rect.w>targetRect.x+targetRect.w||
-      rect.y+rect.h>targetRect.y+targetRect.h
-    )return false;
-
-    for(let y=rect.y;y<rect.y+rect.h;y+=1){
-      for(let x=rect.x;x<rect.x+rect.w;x+=1){
-        const localX=x-targetRect.x;
-        const localY=y-targetRect.y;
-        if(cells[localY]?.[localX])return false;
-        cells[localY][localX]=true;
-      }
-    }
-  }
-
-  return cells.every(row=>row.every(Boolean));
+  return doesWidgetGroupExactlyFillRect(widgets,targetRect,positions,units);
 }
 _translateWidgetGroupPositions(group,targetRect,destinationRect,positions){
-  const dx=destinationRect.x-targetRect.x;
-  const dy=destinationRect.y-targetRect.y;
-  const next={...positions};
-
-  group.forEach(widget=>{
-    const position=positions?.[widget.id];
-    if(position)next[widget.id]={x:position.x+dx,y:position.y+dy};
-  });
-
-  return next;
+  return translateWidgetGroupPositions(group,targetRect,destinationRect,positions);
 }
 _getGroupBoundingRect(group,positions,units){
-  if(!group?.length)return null;
-
-  const rects=group.map(widget=>this._getWidgetRectFromPosition(widget,positions?.[widget.id],units));
-  const minX=Math.min(...rects.map(rect=>rect.x));
-  const minY=Math.min(...rects.map(rect=>rect.y));
-  const maxX=Math.max(...rects.map(rect=>rect.x+rect.w));
-  const maxY=Math.max(...rects.map(rect=>rect.y+rect.h));
-
-  return {
-    x:minX,
-    y:minY,
-    w:maxX-minX,
-    h:maxY-minY,
-  };
+  return getGroupBoundingRect(group,positions,units);
 }
 _isGroupInternallyValid(group,positions,units){
-  for(let i=0;i<group.length;i+=1){
-    const a=this._getWidgetRectFromPosition(group[i],positions?.[group[i].id],units);
-    for(let j=i+1;j<group.length;j+=1){
-      const b=this._getWidgetRectFromPosition(group[j],positions?.[group[j].id],units);
-      if(this._rectsOverlap(a,b))return false;
-    }
-  }
-  return true;
+  return isGroupInternallyValid(group,positions,units);
 }
 _getAdjacentWidgetGroupInDirection(id,direction,positions,units){
   const widget=this._widgets.find(item=>item.id===id);
@@ -1861,41 +1809,17 @@ _getAdjacentWidgetGroupInDirection(id,direction,positions,units){
   return [...group.values()];
 }
 _isPositionMapValidForWidgets(nextPositions,widgets,units,rowUnits){
-  const maxRows=this._isMobileLauncherLayout()?Number.POSITIVE_INFINITY:rowUnits;
-  for(const widget of widgets){
-    const position=nextPositions?.[widget.id];
-    if(!position)return false;
-    const rect=this._getWidgetRectFromPosition(widget,position,units);
-    if(rect.x<1||rect.y<1||rect.x+rect.w-1>units||rect.y+rect.h-1>maxRows)return false;
-  }
-  for(let i=0;i<widgets.length;i+=1){
-    const a=this._getWidgetRectFromPosition(widgets[i],nextPositions[widgets[i].id],units);
-    for(let j=i+1;j<widgets.length;j+=1){
-      const b=this._getWidgetRectFromPosition(widgets[j],nextPositions[widgets[j].id],units);
-      if(this._rectsOverlap(a,b))return false;
-    }
-  }
-  return true;
+  return isPositionMapValidForWidgets(nextPositions,widgets,units,rowUnits,{
+    allowUnboundedRows:this._isMobileLauncherLayout(),
+  });
 }
 _isPositionMapValid(nextPositions,units,rowUnits){
-  const maxRows=this._isMobileLauncherLayout()?Number.POSITIVE_INFINITY:rowUnits;
-
-  for(const widget of this._widgets){
-    const position=nextPositions?.[widget.id];
-    if(!position)return false;
-    const rect=this._getWidgetRectFromPosition(widget,position,units);
-    if(rect.x<1||rect.y<1||rect.x+rect.w-1>units||rect.y+rect.h-1>maxRows)return false;
-  }
-
-  for(let i=0;i<this._widgets.length;i+=1){
-    const a=this._getWidgetRectFromPosition(this._widgets[i],nextPositions[this._widgets[i].id],units);
-    for(let j=i+1;j<this._widgets.length;j+=1){
-      const b=this._getWidgetRectFromPosition(this._widgets[j],nextPositions[this._widgets[j].id],units);
-      if(this._rectsOverlap(a,b))return false;
-    }
-  }
-
-  return true;
+  return this._isPositionMapValidForWidgets(
+    nextPositions,
+    this._widgets,
+    units,
+    rowUnits,
+  );
 }
 _getBandParticipantsForTranslatedSwap(id,group,direction,positions,units){
   const ids=new Set([id,...group.map(widget=>widget.id)]);
