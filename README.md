@@ -350,6 +350,8 @@ The root frontend source remains the single source of truth.
 
 
 
-License
+## License
 
-A license has not been selected yet.
+This project is licensed under the GNU General Public License v3.0.
+
+See [LICENSE](LICENSE) for details.
