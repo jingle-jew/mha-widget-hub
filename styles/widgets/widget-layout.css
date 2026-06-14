@@ -72,7 +72,7 @@
 }
 
 .mha-widget-text[data-tone="muted"] {
-  color: var(--mha-text-muted);
+  color: var(--mha-text-tertiary);
 }
 
 /* OneUI flat-depth policy ---------------------------------------------------

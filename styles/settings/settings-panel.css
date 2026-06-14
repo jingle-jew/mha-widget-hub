@@ -74,7 +74,7 @@
 }
 
 .mha-settings-eyebrow {
-  color: var(--mha-text-muted);
+  color: var(--mha-text-tertiary);
   font-size: .78rem;
   font-weight: 800;
   letter-spacing: .12em;
@@ -1054,14 +1054,14 @@
 
 .mha-settings-nav-text small,
 .mha-settings-dock-row-text small {
+  color: var(--mha-text-secondary);
   font-size: .76rem;
-  opacity: .68;
   line-height: 1.25;
 }
 
 .mha-settings-nav-chevron {
+  color: var(--mha-text-tertiary);
   font-size: 1.65rem;
-  opacity: .46;
   line-height: 1;
 }
 
@@ -1100,7 +1100,8 @@
 }
 
 .mha-settings-mini-button:disabled {
-  opacity: .28;
+  color: var(--mha-text-disabled);
+  opacity: 1;
   cursor: default;
 }
 
@@ -1154,19 +1155,17 @@
 }
 
 .mha-settings-icon-option span {
+  color: var(--mha-text-secondary);
   font-size: .72rem;
-  opacity: .78;
   white-space: nowrap;
 }
 
 :host([data-theme-style="ios"][data-theme="light"]) .mha-settings-dock-row,
 :host([data-theme-style="ios"][data-theme="light"]) .mha-settings-dock-row-text,
 :host([data-theme-style="ios"][data-theme="light"]) .mha-settings-dock-row-text strong,
-:host([data-theme-style="ios"][data-theme="light"]) .mha-settings-dock-row-text small,
 :host([data-theme-style="ios"][data-theme="light"]) .mha-settings-dock-editor,
-:host([data-theme-style="ios"][data-theme="light"]) .mha-settings-icon-option,
-:host([data-theme-style="ios"][data-theme="light"]) .mha-settings-icon-option span {
-  color: #000;
+:host([data-theme-style="ios"][data-theme="light"]) .mha-settings-icon-option {
+  color: var(--mha-text-primary);
 }
 
 
@@ -1192,9 +1191,16 @@
 .mha-settings-wallpaper-status,
 .mha-settings-wallpaper-message {
   margin: 0;
-  color: var(--mha-text-muted);
   font-size: .84rem;
   line-height: 1.35;
+}
+
+.mha-settings-wallpaper-status {
+  color: var(--mha-text-secondary);
+}
+
+.mha-settings-wallpaper-message {
+  color: var(--mha-text-tertiary);
 }
 
 .mha-settings-wallpaper-actions {
@@ -1208,7 +1214,8 @@
 }
 
 .mha-settings-wallpaper-button:disabled {
-  opacity: .48;
+  color: var(--mha-text-disabled);
+  opacity: 1;
   cursor: not-allowed;
 }
 
@@ -1237,7 +1244,7 @@
   padding: .45rem .7rem;
   border-radius: 999px;
   background: var(--mha-surface-floating);
-  color: var(--mha-text-muted);
+  color: var(--mha-text-disabled);
   font-size: .8rem;
 }
 

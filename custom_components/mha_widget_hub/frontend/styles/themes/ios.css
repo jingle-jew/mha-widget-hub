@@ -20,8 +20,8 @@
 
 :host([data-theme-style="ios"][data-theme="light"]) {
   /* 2. Mode clair */
-  --mha-text: rgba(10,18,34,.92);
-  --mha-muted: rgba(10,18,34,.58);
+  --mha-text: rgba(0,0,0,.92);
+  --mha-muted: rgba(0,0,0,.42);
   --mha-widget-surface: rgba(255,255,255,.26);
   --mha-widget-surface-edit: rgba(255,255,255,.34);
   --mha-widget-border: rgba(255,255,255,.74);
@@ -61,8 +61,8 @@
 
 :host([data-theme-style="ios"][data-theme="dark"]) {
   /* 3. Mode sombre */
-  --mha-text: rgba(255,255,255,.94);
-  --mha-muted: rgba(255,255,255,.64);
+  --mha-text: rgba(255,255,255,.92);
+  --mha-muted: rgba(255,255,255,.48);
   --mha-widget-surface: rgba(255,255,255,.085);
   --mha-widget-surface-edit: rgba(255,255,255,.125);
   --mha-widget-border: rgba(235,243,255,.31);
@@ -245,8 +245,8 @@
 }
 
 :host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="light"]) {
-  --mha-text: rgba(22, 22, 24, .90);
-  --mha-muted: rgba(22, 22, 24, .58);
+  --mha-text: rgba(0,0,0,.92);
+  --mha-muted: rgba(0,0,0,.42);
   --mha-widget-surface: rgba(242, 242, 247, .68);
   --mha-widget-surface-edit: rgba(242, 242, 247, .80);
   --mha-widget-shell-surface: var(--mha-widget-surface);
@@ -275,7 +275,7 @@
 
 :host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="dark"]) {
   --mha-text: rgba(255,255,255,.92);
-  --mha-muted: rgba(255,255,255,.62);
+  --mha-muted: rgba(255,255,255,.48);
   --mha-widget-surface: rgba(44, 44, 46, .62);
   --mha-widget-surface-edit: rgba(58, 58, 60, .74);
   --mha-widget-shell-surface: var(--mha-widget-surface);
@@ -344,8 +344,8 @@
 }
 
 :host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="light"]) {
-  --mha-text: rgba(22,23,31,.92);
-  --mha-muted: rgba(22,23,31,.58);
+  --mha-text: rgba(0,0,0,.92);
+  --mha-muted: rgba(0,0,0,.42);
   --mha-widget-surface: linear-gradient(145deg, rgba(255,255,255,.76), rgba(255,246,238,.58));
   --mha-widget-surface-edit: linear-gradient(145deg, rgba(255,255,255,.88), rgba(255,240,230,.70));
   --mha-widget-shell-surface: var(--mha-widget-surface);
@@ -368,7 +368,7 @@
 
 :host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="dark"]) {
   --mha-text: rgba(255,255,255,.92);
-  --mha-muted: rgba(255,255,255,.58);
+  --mha-muted: rgba(255,255,255,.48);
   --mha-widget-surface: linear-gradient(145deg, rgba(255,240,226,.18), rgba(255,255,255,.105));
   --mha-widget-surface-edit: linear-gradient(145deg, rgba(255,236,219,.26), rgba(255,255,255,.15));
   --mha-widget-shell-surface: var(--mha-widget-surface);

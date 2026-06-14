@@ -176,7 +176,7 @@
 }
 
 .mha-simple-button-state {
-  color: var(--mha-text-muted);
+  color: var(--mha-text-secondary);
   font-size: var(--mha-simple-button-state-size);
   font-weight: var(--mha-simple-button-state-weight);
   letter-spacing: var(--mha-simple-button-state-letter-spacing);

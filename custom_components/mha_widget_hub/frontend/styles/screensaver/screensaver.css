@@ -16,7 +16,7 @@
   box-sizing: border-box;
   opacity: 0;
   pointer-events: none;
-  color: var(--mha-text);
+  color: var(--mha-text-primary);
   transition: opacity 420ms ease;
   overflow: hidden;
 }
@@ -104,7 +104,7 @@
 .mha-screensaver-date {
   margin-block-start: clamp(.6rem, 1.7vw, 1.1rem);
   font-size: clamp(.95rem, 2.4vw, 1.35rem);
-  color: var(--mha-muted);
+  color: var(--mha-text-secondary);
   font-weight: 650;
   text-transform: capitalize;
 }
@@ -219,7 +219,7 @@
 
 .mha-screensaver-nowbar-subtitle {
   margin-block-start: .25rem;
-  color: var(--mha-muted);
+  color: var(--mha-text-secondary);
   font-size: clamp(.78rem, 1.7vw, .92rem);
 }
 

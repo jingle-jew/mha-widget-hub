@@ -110,7 +110,7 @@
 }
 
 .mha-toggle-widget-state {
-  color: var(--mha-text-muted);
+  color: var(--mha-text-secondary);
   font-size: var(--mha-toggle-widget-state-size);
   font-weight: var(--mha-toggle-widget-state-weight);
   letter-spacing: var(--mha-type-control-state-tracking, -.01em);
@@ -123,6 +123,7 @@
 
 .mha-toggle-widget[data-entity-available="false"] .mha-toggle-widget-icon-bubble,
 .mha-toggle-widget[data-toggle-supported="false"] .mha-toggle-widget-icon-bubble {
+  color: var(--mha-text-disabled);
   opacity: .46;
   filter: saturate(.72);
 }

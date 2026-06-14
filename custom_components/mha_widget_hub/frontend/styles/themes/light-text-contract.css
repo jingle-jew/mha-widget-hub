@@ -17,27 +17,70 @@
  */
 
 :host([data-theme="light"]) {
-  --mha-text: rgb(0 0 0);
-  --mha-text-soft: rgb(0 0 0 / .74);
-  --mha-muted: rgb(0 0 0 / .58);
-  --mha-subtle: rgb(0 0 0 / .46);
-
   --mha-text-primary: rgb(0 0 0);
   --mha-text-secondary: rgb(0 0 0 / .74);
-  --mha-text-muted: rgb(0 0 0 / .58);
+  --mha-text-tertiary: rgb(0 0 0 / .58);
+  --mha-text-disabled: rgb(0 0 0 / .38);
   --mha-text-inverse: rgb(255 255 255);
+
+  --mha-text: var(--mha-text-primary);
+  --mha-text-soft: var(--mha-text-secondary);
+  --mha-muted: var(--mha-text-tertiary);
+  --mha-subtle: var(--mha-text-disabled);
+  --mha-text-muted: var(--mha-text-tertiary);
 }
 
 :host([data-theme="dark"]) {
-  --mha-text: rgb(255 255 255);
-  --mha-text-soft: rgb(255 255 255 / .74);
-  --mha-muted: rgb(255 255 255 / .58);
-  --mha-subtle: rgb(255 255 255 / .46);
-
   --mha-text-primary: rgb(255 255 255);
   --mha-text-secondary: rgb(255 255 255 / .74);
-  --mha-text-muted: rgb(255 255 255 / .58);
+  --mha-text-tertiary: rgb(255 255 255 / .58);
+  --mha-text-disabled: rgb(255 255 255 / .38);
   --mha-text-inverse: rgb(0 0 0);
+
+  --mha-text: var(--mha-text-primary);
+  --mha-text-soft: var(--mha-text-secondary);
+  --mha-muted: var(--mha-text-tertiary);
+  --mha-subtle: var(--mha-text-disabled);
+  --mha-text-muted: var(--mha-text-tertiary);
+}
+
+/* iOS label colors: softer separation between content roles. */
+:host([data-theme-style="ios"][data-theme="light"]) {
+  --mha-text-primary: rgba(0,0,0,.92);
+  --mha-text-secondary: rgba(0,0,0,.62);
+  --mha-text-tertiary: rgba(0,0,0,.42);
+  --mha-text-disabled: rgba(0,0,0,.24);
+}
+
+:host([data-theme-style="ios"][data-theme="dark"]) {
+  --mha-text-primary: rgba(255,255,255,.92);
+  --mha-text-secondary: rgba(255,255,255,.68);
+  --mha-text-tertiary: rgba(255,255,255,.48);
+  --mha-text-disabled: rgba(255,255,255,.28);
+}
+
+/* OneUI keeps stronger supporting text than iOS for faster scanning. */
+:host([data-theme-style="oneui"][data-theme="light"]) {
+  --mha-text-primary: rgba(0,0,0,.88);
+  --mha-text-secondary: rgba(0,0,0,.68);
+  --mha-text-tertiary: rgba(0,0,0,.52);
+  --mha-text-disabled: rgba(0,0,0,.32);
+}
+
+:host([data-theme-style="oneui"][data-theme="dark"]) {
+  --mha-text-primary: rgba(255,255,255,.96);
+  --mha-text-secondary: rgba(255,255,255,.78);
+  --mha-text-tertiary: rgba(255,255,255,.58);
+  --mha-text-disabled: rgba(255,255,255,.34);
+}
+
+:host([data-theme-style="ios"]),
+:host([data-theme-style="oneui"]) {
+  --mha-text: var(--mha-text-primary);
+  --mha-text-soft: var(--mha-text-secondary);
+  --mha-muted: var(--mha-text-tertiary);
+  --mha-subtle: var(--mha-text-disabled);
+  --mha-text-muted: var(--mha-text-tertiary);
 }
 
 /* General text consumers should inherit the global contract. */
@@ -66,7 +109,7 @@
 :host([data-theme="dark"]) .mha-settings-eyebrow,
 :host([data-theme="dark"]) .mha-slider-label,
 :host([data-theme="dark"]) .mha-widget-text[data-tone="muted"] {
-  color: var(--mha-text-muted);
+  color: var(--mha-text-tertiary);
 }
 
 /* Form controls follow the same text contract. */
@@ -75,6 +118,11 @@
 :host([data-theme="dark"]) .mha-settings-select,
 :host([data-theme="dark"]) .mha-settings-reset {
   color: var(--mha-text-primary);
+}
+
+:host([data-theme="light"]) .mha-settings-wallpaper-button:disabled,
+:host([data-theme="dark"]) .mha-settings-wallpaper-button:disabled {
+  color: var(--mha-text-disabled);
 }
 
 /* Explicit exceptions where white text is required for contrast. */

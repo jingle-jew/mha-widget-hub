@@ -265,12 +265,12 @@
 
 .mha-status-brand,
 .mha-status-meta {
-  color: var(--mha-muted);
+  color: var(--mha-text-secondary);
 }
 
 .mha-status-brand strong,
 .mha-status-meta strong {
-  color: var(--mha-text);
+  color: var(--mha-text-primary);
 }
 
 /* iOS: Liquid Glass surface, luminous edge, no cast shadow. */

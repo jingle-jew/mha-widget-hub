@@ -48,8 +48,10 @@ For example, prefer thinking “floating surface” or “panel surface” inste
 | Token | Simple description |
 |---|---|
 | `--mha-text-primary` | Main readable text color. |
-| `--mha-text-secondary` | Secondary text color with less emphasis. |
-| `--mha-text-muted` | Muted/helper text color. |
+| `--mha-text-secondary` | Supporting labels and subtitles. |
+| `--mha-text-tertiary` | Metadata, helper text, and low-emphasis details. |
+| `--mha-text-disabled` | Disabled controls and unavailable placeholders. |
+| `--mha-text-muted` | Compatibility alias for `--mha-text-tertiary`. |
 | `--mha-text-inverse` | Text color meant to sit on inverse/contrasting surfaces. |
 
 ---

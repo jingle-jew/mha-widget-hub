@@ -143,7 +143,7 @@
 
 .mha-widget-manager-category small,
 .mha-widget-manager-widget small {
-  color: var(--mha-muted);
+  color: var(--mha-text-secondary);
   font-size: .78rem;
   line-height: 1.25;
 }
@@ -238,7 +238,7 @@
 }
 
 .mha-widget-manager-card-detail {
-  color: var(--mha-muted);
+  color: var(--mha-text-tertiary);
   font-size: .8rem;
   line-height: 1.3;
 }
@@ -293,7 +293,7 @@
 .mha-widget-manager-static-preview-forecast-item {
   font-size: .72rem;
   line-height: 1.15;
-  color: var(--mha-muted);
+  color: var(--mha-text-tertiary);
 }
 
 .mha-widget-manager-preview-icon-bubble {

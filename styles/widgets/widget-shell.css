@@ -297,7 +297,7 @@
   padding: 7px 10px;
   border-radius: var(--mha-control-radius);
   background: var(--mha-widget-control-surface, var(--mha-surface-secondary));
-  color: var(--mha-text-muted);
+  color: var(--mha-text-tertiary);
   font-size: 12px;
   font-weight: var(--mha-typography-weight);
   letter-spacing: .01em;

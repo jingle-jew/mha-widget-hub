@@ -43,7 +43,9 @@
   /* Text roles */
   --mha-text-primary: var(--mha-text);
   --mha-text-secondary: color-mix(in srgb, var(--mha-text) 78%, transparent);
-  --mha-text-muted: var(--mha-muted);
+  --mha-text-tertiary: var(--mha-muted);
+  --mha-text-disabled: color-mix(in srgb, var(--mha-text) 34%, transparent);
+  --mha-text-muted: var(--mha-text-tertiary);
   --mha-text-inverse: var(--mha-bg-primary);
 
   /* Effect roles */
@@ -282,7 +284,7 @@
   --mha-slider-widget-border: var(--mha-widget-shell-border, var(--mha-border-primary));
   --mha-slider-widget-shadow: var(--mha-widget-shell-shadow, var(--mha-shadow-primary));
   --mha-slider-widget-text: var(--mha-text-primary);
-  --mha-slider-widget-muted: var(--mha-text-muted);
+  --mha-slider-widget-muted: var(--mha-text-secondary);
   --mha-slider-widget-highlight: var(--mha-highlight-primary);
   --mha-slider-widget-blur: var(--mha-blur-primary);
 }
@@ -371,7 +373,7 @@
 :host,
 :root {
   --mha-clock-widget-text: var(--mha-text-primary);
-  --mha-clock-widget-muted: var(--mha-text-muted);
+  --mha-clock-widget-muted: var(--mha-text-secondary);
   --mha-clock-widget-face-surface: var(--mha-surface-secondary);
   --mha-clock-widget-face-surface-strong: var(--mha-surface-tertiary);
   --mha-clock-widget-face-border: var(--mha-border-subtle);
@@ -392,7 +394,7 @@
   --mha-preview-border-hover: color-mix(in srgb, var(--mha-accent) 34%, var(--mha-border-primary));
   --mha-preview-accent-soft: var(--mha-accent-soft);
   --mha-preview-text: var(--mha-text-primary);
-  --mha-preview-muted: var(--mha-text-muted);
+  --mha-preview-muted: var(--mha-text-tertiary);
 }
 
 :host([data-theme-style="ios"]),
@@ -490,7 +492,7 @@
 :host,
 :root {
   --mha-weather-widget-text: var(--mha-text-primary);
-  --mha-weather-widget-muted: var(--mha-text-muted);
+  --mha-weather-widget-muted: var(--mha-text-secondary);
   --mha-weather-widget-temp: var(--mha-text-primary);
   --mha-weather-widget-border: var(--mha-widget-shell-border);
   --mha-weather-widget-chip: var(--mha-surface-secondary);

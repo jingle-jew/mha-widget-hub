@@ -40,12 +40,13 @@
 }
 
 .mha-widget-config-control:disabled {
+  color: var(--mha-text-disabled);
   opacity: .58;
   cursor: not-allowed;
 }
 
 .mha-widget-config-note {
-  color: var(--mha-text-secondary, rgba(255,255,255,.72));
+  color: var(--mha-text-tertiary, rgba(255,255,255,.58));
   font-size: .78rem;
   line-height: 1.3;
 }

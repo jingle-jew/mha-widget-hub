@@ -19,8 +19,8 @@
 
 :host([data-theme-style="oneui"][data-theme="light"]) {
   /* 2. Mode clair */
-  --mha-text: rgba(22,23,31,.92);
-  --mha-muted: rgba(22,23,31,.58);
+  --mha-text: rgba(0,0,0,.88);
+  --mha-muted: rgba(0,0,0,.52);
   --mha-widget-surface: linear-gradient(145deg, rgba(255,255,255,.76), rgba(255,246,238,.58));
   --mha-widget-surface-edit: linear-gradient(145deg, rgba(255,255,255,.88), rgba(255,240,230,.70));
   --mha-widget-border: rgba(110,92,78,.12);
@@ -50,7 +50,7 @@
 
 :host([data-theme-style="oneui"][data-theme="dark"]) {
   /* 3. Mode sombre */
-  --mha-text: rgba(255,255,255,.92);
+  --mha-text: rgba(255,255,255,.96);
   --mha-muted: rgba(255,255,255,.58);
   --mha-widget-surface: linear-gradient(145deg, rgba(255,240,226,.18), rgba(255,255,255,.105));
   --mha-widget-surface-edit: linear-gradient(145deg, rgba(255,236,219,.26), rgba(255,255,255,.15));
