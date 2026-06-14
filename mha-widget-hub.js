@@ -66,6 +66,17 @@ import {
   rectsOverlap,
   translateWidgetGroupPositions,
 } from "./src/layout/placement-geometry.js";
+import {
+  doesWidgetLayoutFitGrid,
+  findWidgetAtCandidatePosition,
+  getAdjacentWidgetGroupInDirection,
+  getAvailableDropSlotsForCandidate,
+  getBandParticipantsForTranslatedSwap,
+  getDirectNeighborInDirection,
+  hasNoWidgetOverlaps,
+  packTranslatedSwapBand,
+  packWidgets,
+} from "./src/layout/placement-calculations.js";
 import { RESPONSIVE_BREAKPOINTS } from "./src/layout/responsive.js";
 import {createScreensaver,normalizeClockVariant,updateScreensaverClock} from "./src/screensaver/screensaver.js";
 import { createScreensaverController } from "./src/screensaver/screensaver-controller.js";
@@ -1487,44 +1498,9 @@ _clearCurrentWidgetPositions(){
 }
 _packWidgetsForCurrentGrid(){
   const {units,rowUnits}=this._getGridBounds();
-  const maxRows=this._isMobileLauncherLayout()?Number.POSITIVE_INFINITY:rowUnits;
-  const occupied=[];
-  const positions={};
-  const isFree=(x,y,w,h)=>{
-    if(x<1||x+w-1>units||y<1||y+h-1>maxRows)return false;
-    for(let yy=y;yy<y+h;yy+=1){
-      for(let xx=x;xx<x+w;xx+=1){
-        if(occupied[yy]?.[xx])return false;
-      }
-    }
-    return true;
-  };
-  const occupy=(x,y,w,h)=>{
-    for(let yy=y;yy<y+h;yy+=1){
-      occupied[yy]??=[];
-      for(let xx=x;xx<x+w;xx+=1)occupied[yy][xx]=true;
-    }
-  };
-
-  for(const widget of this._widgets){
-    const size=normalizeWidgetForKind(widget);
-    const w=Math.min(units,size.w);
-    const h=size.h;
-    let placed=null;
-    for(let y=1;!placed&&y<=maxRows-h+1;y+=1){
-      for(let x=1;x<=units-w+1;x+=1){
-        if(isFree(x,y,w,h)){
-          placed={x,y};
-          break;
-        }
-      }
-    }
-    if(!placed)return null;
-    positions[widget.id]=placed;
-    occupy(placed.x,placed.y,w,h);
-  }
-
-  return positions;
+  return packWidgets(this._widgets,units,rowUnits,{
+    allowUnboundedRows:this._isMobileLauncherLayout(),
+  });
 }
 _getActiveWidgetPositions({create=false}={}){
   const stored=this._getStoredWidgetPositions();
@@ -1549,27 +1525,10 @@ _getWidgetRectFromPosition(widget,position,units){
   return getWidgetRectFromPosition(widget,position,units);
 }
 _findWidgetAtCandidatePosition(id,candidateRect,positions,units){
-  return this._widgets.find(other=>{
-    if(other.id===id)return false;
-    const otherPosition=positions?.[other.id];
-    if(!otherPosition)return false;
-    const otherRect=this._getWidgetRectFromPosition(other,otherPosition,units);
-    return this._rectsOverlap(candidateRect,otherRect);
-  })||null;
+  return findWidgetAtCandidatePosition(this._widgets,id,candidateRect,positions,units);
 }
 _canSwapWidgetPositions(id,occupantId,nextPositions,units){
-  return this._widgets.every(widget=>{
-    const position=nextPositions?.[widget.id];
-    if(!position)return true;
-    const rect=this._getWidgetRectFromPosition(widget,position,units);
-    return this._widgets.every(other=>{
-      if(other.id===widget.id)return true;
-      const otherPosition=nextPositions?.[other.id];
-      if(!otherPosition)return true;
-      const otherRect=this._getWidgetRectFromPosition(other,otherPosition,units);
-      return !this._rectsOverlap(rect,otherRect);
-    });
-  });
+  return hasNoWidgetOverlaps(this._widgets,nextPositions,units);
 }
 _getWidgetsInCandidateRect(id,candidateRect,positions,units){
   return getWidgetsInCandidateRect(this._widgets,id,candidateRect,positions,units);
@@ -1587,78 +1546,7 @@ _isGroupInternallyValid(group,positions,units){
   return isGroupInternallyValid(group,positions,units);
 }
 _getAdjacentWidgetGroupInDirection(id,direction,positions,units){
-  const widget=this._widgets.find(item=>item.id===id);
-  const position=positions?.[id];
-  if(!widget||!position)return [];
-
-  const activeRect=this._getWidgetRectFromPosition(widget,position,units);
-
-  const isInForwardHalfPlane=rect=>{
-    if(direction==="right")return rect.x>=activeRect.x+activeRect.w;
-    if(direction==="left")return rect.x+rect.w<=activeRect.x;
-    if(direction==="down")return rect.y>=activeRect.y+activeRect.h;
-    if(direction==="up")return rect.y+rect.h<=activeRect.y;
-    return false;
-  };
-
-  const overlapsBand=rect=>{
-    if(direction==="right"||direction==="left"){
-      return rect.y<activeRect.y+activeRect.h&&rect.y+rect.h>activeRect.y;
-    }
-    if(direction==="down"||direction==="up"){
-      return rect.x<activeRect.x+activeRect.w&&rect.x+rect.w>activeRect.x;
-    }
-    return false;
-  };
-
-  const candidates=this._widgets
-    .filter(other=>other.id!==id&&positions?.[other.id])
-    .map(other=>({
-      widget:other,
-      rect:this._getWidgetRectFromPosition(other,positions[other.id],units),
-    }))
-    .filter(item=>isInForwardHalfPlane(item.rect)&&overlapsBand(item.rect));
-
-  if(!candidates.length)return [];
-
-  const edgeValue=item=>{
-    if(direction==="right")return item.rect.x;
-    if(direction==="left")return -(item.rect.x+item.rect.w);
-    if(direction==="down")return item.rect.y;
-    if(direction==="up")return -(item.rect.y+item.rect.h);
-    return 0;
-  };
-
-  const nearestEdge=Math.min(...candidates.map(edgeValue));
-  const seed=candidates.filter(item=>edgeValue(item)===nearestEdge);
-  const group=new Map(seed.map(item=>[item.widget.id,item.widget]));
-  let bounds=this._getGroupBoundingRect([...group.values()],positions,units);
-
-  let changed=true;
-  while(changed){
-    changed=false;
-    for(const item of candidates){
-      if(group.has(item.widget.id))continue;
-      const expanded={
-        x:Math.min(bounds.x,item.rect.x),
-        y:Math.min(bounds.y,item.rect.y),
-        w:Math.max(bounds.x+bounds.w,item.rect.x+item.rect.w)-Math.min(bounds.x,item.rect.x),
-        h:Math.max(bounds.y+bounds.h,item.rect.y+item.rect.h)-Math.min(bounds.y,item.rect.y),
-      };
-
-      const touchesOrOverlaps=
-        item.rect.x<=bounds.x+bounds.w&&item.rect.x+item.rect.w>=bounds.x&&
-        item.rect.y<=bounds.y+bounds.h&&item.rect.y+item.rect.h>=bounds.y;
-
-      if(touchesOrOverlaps){
-        group.set(item.widget.id,item.widget);
-        bounds=expanded;
-        changed=true;
-      }
-    }
-  }
-
-  return [...group.values()];
+  return getAdjacentWidgetGroupInDirection(this._widgets,id,direction,positions,units);
 }
 _isPositionMapValidForWidgets(nextPositions,widgets,units,rowUnits){
   return isPositionMapValidForWidgets(nextPositions,widgets,units,rowUnits,{
@@ -1674,85 +1562,19 @@ _isPositionMapValid(nextPositions,units,rowUnits){
   );
 }
 _getBandParticipantsForTranslatedSwap(id,group,direction,positions,units){
-  const ids=new Set([id,...group.map(widget=>widget.id)]);
-  const active=this._widgets.find(widget=>widget.id===id);
-  const activePosition=positions?.[id];
-  if(!active||!activePosition)return [];
-
-  const activeRect=this._getWidgetRectFromPosition(active,activePosition,units);
-  const groupRect=this._getGroupBoundingRect(group,positions,units);
-  if(!groupRect)return [];
-
-  const band={
-    x:Math.min(activeRect.x,groupRect.x),
-    y:Math.min(activeRect.y,groupRect.y),
-    w:Math.max(activeRect.x+activeRect.w,groupRect.x+groupRect.w)-Math.min(activeRect.x,groupRect.x),
-    h:Math.max(activeRect.y+activeRect.h,groupRect.y+groupRect.h)-Math.min(activeRect.y,groupRect.y),
-  };
-
-  return this._widgets
-    .filter(widget=>ids.has(widget.id))
-    .map(widget=>({
-      widget,
-      rect:this._getWidgetRectFromPosition(widget,positions[widget.id],units),
-    }))
-    .filter(item=>this._rectsOverlap(item.rect,band));
+  return getBandParticipantsForTranslatedSwap(this._widgets,id,group,positions,units);
 }
 _packTranslatedSwapBand(id,group,direction,positions,units,rowUnits){
-  const participants=this._getBandParticipantsForTranslatedSwap(id,group,direction,positions,units);
-  if(!participants.length)return null;
-
-  const activeItem=participants.find(item=>item.widget.id===id);
-  if(!activeItem)return null;
-
-  const activeRect=activeItem.rect;
-  const groupRect=this._getGroupBoundingRect(group,positions,units);
-  if(!groupRect)return null;
-
-  const groupItems=participants.filter(item=>item.widget.id!==id);
-  if(!groupItems.length)return null;
-
-  const next={...positions};
-
-  if(direction==="right"||direction==="left"){
-    const fromX=Math.min(activeRect.x,groupRect.x);
-    const toX=Math.max(activeRect.x+activeRect.w,groupRect.x+groupRect.w);
-    const leftToRight=direction==="right";
-
-    const ordered=leftToRight
-      ? [activeItem,...groupItems.sort((a,b)=>a.rect.x-b.rect.x||a.rect.y-b.rect.y)]
-      : [...groupItems.sort((a,b)=>a.rect.x-b.rect.x||a.rect.y-b.rect.y),activeItem];
-
-    let cursor=fromX;
-    ordered.forEach(item=>{
-      next[item.widget.id]={x:cursor,y:item.rect.y};
-      cursor+=item.rect.w;
-    });
-
-    if(cursor!==toX)return null;
-    return this._isPositionMapValid(next,units,rowUnits)?next:null;
-  }
-
-  if(direction==="down"||direction==="up"){
-    const fromY=Math.min(activeRect.y,groupRect.y);
-    const toY=Math.max(activeRect.y+activeRect.h,groupRect.y+groupRect.h);
-    const topToBottom=direction==="down";
-
-    const ordered=topToBottom
-      ? [activeItem,...groupItems.sort((a,b)=>a.rect.y-b.rect.y||a.rect.x-b.rect.x)]
-      : [...groupItems.sort((a,b)=>a.rect.y-b.rect.y||a.rect.x-b.rect.x),activeItem];
-
-    let cursor=fromY;
-    ordered.forEach(item=>{
-      next[item.widget.id]={x:item.rect.x,y:cursor};
-      cursor+=item.rect.h;
-    });
-
-    if(cursor!==toY)return null;
-    return this._isPositionMapValid(next,units,rowUnits)?next:null;
-  }
-
-  return null;
+  return packTranslatedSwapBand(
+    this._widgets,
+    id,
+    group,
+    direction,
+    positions,
+    units,
+    rowUnits,
+    {allowUnboundedRows:this._isMobileLauncherLayout()},
+  );
 }
 _tryTranslatedGroupSwap(id,direction,positions,units,rowUnits){
   const widget=this._widgets.find(item=>item.id===id);
@@ -1792,46 +1614,7 @@ _tryTranslatedGroupSwap(id,direction,positions,units,rowUnits){
   return true;
 }
 _getDirectNeighborInDirection(id,direction,positions,units){
-  const widget=this._widgets.find(item=>item.id===id);
-  const position=positions?.[id];
-  if(!widget||!position)return null;
-
-  const activeRect=this._getWidgetRectFromPosition(widget,position,units);
-
-  const candidates=this._widgets
-    .filter(other=>other.id!==id&&positions?.[other.id])
-    .map(other=>({
-      widget:other,
-      rect:this._getWidgetRectFromPosition(other,positions[other.id],units),
-    }))
-    .filter(item=>{
-      if(direction==="right"){
-        return item.rect.x>=activeRect.x+activeRect.w&&item.rect.y<activeRect.y+activeRect.h&&item.rect.y+item.rect.h>activeRect.y;
-      }
-      if(direction==="left"){
-        return item.rect.x+item.rect.w<=activeRect.x&&item.rect.y<activeRect.y+activeRect.h&&item.rect.y+item.rect.h>activeRect.y;
-      }
-      if(direction==="down"){
-        return item.rect.y>=activeRect.y+activeRect.h&&item.rect.x<activeRect.x+activeRect.w&&item.rect.x+item.rect.w>activeRect.x;
-      }
-      if(direction==="up"){
-        return item.rect.y+item.rect.h<=activeRect.y&&item.rect.x<activeRect.x+activeRect.w&&item.rect.x+item.rect.w>activeRect.x;
-      }
-      return false;
-    });
-
-  if(!candidates.length)return null;
-
-  const distance=item=>{
-    if(direction==="right")return item.rect.x-(activeRect.x+activeRect.w);
-    if(direction==="left")return activeRect.x-(item.rect.x+item.rect.w);
-    if(direction==="down")return item.rect.y-(activeRect.y+activeRect.h);
-    if(direction==="up")return activeRect.y-(item.rect.y+item.rect.h);
-    return Number.POSITIVE_INFINITY;
-  };
-
-  candidates.sort((a,b)=>distance(a)-distance(b)||a.rect.y-b.rect.y||a.rect.x-b.rect.x);
-  return candidates[0];
+  return getDirectNeighborInDirection(this._widgets,id,direction,positions,units);
 }
 _tryDirectNeighborSwap(id,direction,positions,units,rowUnits){
   const active=this._widgets.find(widget=>widget.id===id);
@@ -1871,35 +1654,16 @@ _tryDirectNeighborSwap(id,direction,positions,units,rowUnits){
   return true;
 }
 _getAvailableDropSlotsForCandidate(candidateWidget,positions=this._getActiveWidgetPositions({create:true}),currentPosition=null){
-  const widget=candidateWidget;
-  if(!widget)return [];
   const {units,rowUnits}=this._getGridBounds();
-  const size=normalizeWidgetForKind(widget);
-  const w=Math.min(units,Number(size.w)||1);
-  const h=Math.max(1,Number(size.h)||1);
-  const ignoreId=widget.id;
-  const current=currentPosition||positions?.[ignoreId]||null;
-  const maxOccupiedRow=this._widgets.reduce((max,other)=>{
-    if(other.id===ignoreId)return max;
-    const position=positions?.[other.id];
-    if(!position)return max;
-    const rect=this._getWidgetRectFromPosition(other,position,units);
-    return Math.max(max,rect.y+rect.h-1);
-  },0);
-  const maxRow=this._isMobileLauncherLayout()
-    ? Math.max(maxOccupiedRow+h+2,(current?.y||1)+h+2,h+2)
-    : rowUnits;
-  const slots=[];
-  for(let y=1;y<=maxRow-h+1;y+=1){
-    for(let x=1;x<=units-w+1;x+=1){
-      if(current&&current.x>0&&x===current.x&&y===current.y)continue;
-      const candidatePositions={...positions,[ignoreId]:{x,y}};
-      if(this._isPositionMapValidForWidgets(candidatePositions,[...this._widgets.filter(item=>item.id!==ignoreId),widget],units,rowUnits)){
-        slots.push({x,y,w,h});
-      }
-    }
-  }
-  return slots;
+  return getAvailableDropSlotsForCandidate(
+    this._widgets,
+    candidateWidget,
+    positions,
+    currentPosition,
+    units,
+    rowUnits,
+    {allowUnboundedRows:this._isMobileLauncherLayout()},
+  );
 }
 _getAvailableDropSlotsForWidget(id,positions=this._getActiveWidgetPositions({create:true})){
   const widget=this._widgets.find(item=>item.id===id);
@@ -2436,45 +2200,7 @@ _getGridBounds(){
  */
 _doesWidgetLayoutFitGrid(widgets=this._widgets){
   const bounds=this._getGridBounds();
-  const columns=bounds.units;
-  const rows=bounds.rowUnits;
-  const occupied=Array.from({length:rows},()=>Array(columns).fill(false));
-
-  for(const raw of widgets){
-    const widget=normalizeWidgetForKind(raw);
-    const w=Math.max(1,Math.min(columns,Number(widget.w)||1));
-    const h=Math.max(1,Math.min(rows,Number(widget.h)||1));
-    let placed=false;
-
-    for(let y=0;y<=rows-h&&!placed;y+=1){
-      for(let x=0;x<=columns-w&&!placed;x+=1){
-        let fits=true;
-
-        for(let yy=y;yy<y+h&&fits;yy+=1){
-          for(let xx=x;xx<x+w;xx+=1){
-            if(occupied[yy]&&occupied[yy][xx]){
-              fits=false;
-              break;
-            }
-          }
-        }
-
-        if(!fits)continue;
-
-        for(let yy=y;yy<y+h;yy+=1){
-          for(let xx=x;xx<x+w;xx+=1){
-            occupied[yy][xx]=true;
-          }
-        }
-
-        placed=true;
-      }
-    }
-
-    if(!placed)return false;
-  }
-
-  return true;
+  return doesWidgetLayoutFitGrid(widgets,bounds.units,bounds.rowUnits);
 }
 _findFittingResize(current,requested){
   let next=this._clampWidgetSizeToGridBounds(current,requested);
