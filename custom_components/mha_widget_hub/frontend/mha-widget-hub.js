@@ -78,7 +78,7 @@ import {
   packWidgets,
 } from "./src/layout/placement-calculations.js";
 import { createPlacementController } from "./src/layout/placement-controller.js";
-import { RESPONSIVE_BREAKPOINTS } from "./src/layout/responsive.js";
+import { createGridRuntime } from "./src/layout/grid-runtime.js";
 import {createScreensaver,normalizeClockVariant,updateScreensaverClock} from "./src/screensaver/screensaver.js";
 import { createScreensaverController } from "./src/screensaver/screensaver-controller.js";
 import { createIcon } from "./src/ui/icon.js";
@@ -269,11 +269,7 @@ constructor(){
   this._draggedId="";
   this._isResizingWidget=false;
   this._resizeState=null;
-  this._squareUnitFrame=0;
-  this._gridRuntimeFrame=0;
   this._widgetDropSlotsFrame=0;
-  this._layoutResizeObserver=null;
-  this._observedLayoutSize="";
   this._renderId=0;
   this._readyRaf=0;
   this._viewportRaf=0;
@@ -323,6 +319,19 @@ constructor(){
     syncEditMode:()=>this._syncEditModeDom(),
     scheduleLayoutSync:()=>this._scheduleSquareUnitSync(),
     syncDropSlots:()=>this._syncWidgetDropSlots(),
+  });
+  this._gridRuntime=createGridRuntime({
+    host:this,
+    getLayoutMode,
+    getEffectiveLayout,
+    getGridPreset,
+    getDockPosition:()=>this._dockPosition,
+    isMobileLayout:()=>this._isMobileLauncherLayout(),
+    getWidgets:()=>this._widgets,
+    getPositions:()=>this._getActiveWidgetPositions({create:true}),
+    applyPositions:positions=>this._applyWidgetPositionsToDom(positions),
+    syncDropSlots:()=>this._syncWidgetDropSlots(),
+    setResponsiveSignature:signature=>{this._lastResponsiveSignature=signature},
   });
 }
 _initialize(){
@@ -573,13 +582,9 @@ disconnectedCallback(){
   this._widgetRenderFrame=0;
   cancelAnimationFrame(this._secondaryUiFrame);
   this._secondaryUiFrame=0;
-  cancelAnimationFrame(this._squareUnitFrame);
-  this._squareUnitFrame=0;
-  cancelAnimationFrame(this._gridRuntimeFrame);
-  this._gridRuntimeFrame=0;
   cancelAnimationFrame(this._widgetDropSlotsFrame);
   this._widgetDropSlotsFrame=0;
-  this._disconnectLayoutResizeObserver();
+  this._gridRuntime.destroy();
   cancelAnimationFrame(this._themeTransitionFrame);
   this._themeTransitionFrame=0;
   clearTimeout(this._themeTransitionTimer);
@@ -1831,52 +1836,13 @@ cycleVariant(id){
   return false;
 }
 _getResponsiveSignature(){
-  const rect=this.getBoundingClientRect();
-  const w=Math.round(rect.width||window.innerWidth||0);
-  const h=Math.round(rect.height||window.innerHeight||0);
-  const orientation=w>h?"landscape":"portrait";
-  const layoutMode=getLayoutMode(this);
-  const layout=getEffectiveLayout(this);
-  const metrics=this._getWidgetAreaMetrics();
-  const preset=this._getRuntimeGridPreset();
-  return `${w}x${h}|${orientation}|${layoutMode}|${layout}|${this._dockPosition}|${preset.columns}|${preset.rows}|${preset.density}|${metrics?.width||0}x${metrics?.height||0}`;
+  return this._gridRuntime.getResponsiveSignature();
 }
 _syncRuntimeLayoutAttrs(){
-  const layoutMode=getLayoutMode(this);
-  const layout=getEffectiveLayout(this);
-  const preset=this._getRuntimeGridPreset();
-  const units=getInternalGridColumnCountFromLogical(preset.columns);
-  const rows=getInternalGridRowCountFromLogical(preset.rows);
-
-  this.dataset.layoutMode=layoutMode;
-  this.dataset.layout=layout;
-  this.dataset.gridDensity=preset.density;
-  this.dataset.gridUnits=String(units);
-  this.dataset.logicalColumns=String(preset.columns);
-  this.dataset.gridRows=String(rows);
-  this.dataset.logicalRows=String(preset.rows);
-
-  this.style.setProperty("--mha-runtime-grid-units",String(units));
-  this.style.setProperty("--mha-runtime-grid-rows",String(rows));
-  this.style.setProperty("--mha-runtime-grid-columns",String(preset.columns));
-  this.style.setProperty("--mha-runtime-logical-rows",String(preset.rows));
-  this.style.setProperty("--mha-runtime-logical-columns",String(preset.columns));
-  this._lastResponsiveSignature=this._getResponsiveSignature();
+  return this._gridRuntime.syncRuntimeLayoutAttrs();
 }
 _syncGridRuntimeMetrics(){
-  this._syncRuntimeLayoutAttrs();
-  const units=Number(this.dataset.gridUnits)||this._getRuntimeGridUnits();
-  const positions=this._getActiveWidgetPositions({create:true});
-  this._widgets.forEach(widget=>{
-    const el=this.shadowRoot?.querySelector?.(`[data-widget-id="${widget.id}"]`);
-    if(!el)return;
-    const size=normalizeWidgetSize(widget);
-    const effectiveWidgetW=Math.min(size.w,units);
-    el.dataset.widgetW=String(effectiveWidgetW);
-    el.style.setProperty("--mha-widget-w",String(effectiveWidgetW));
-  });
-  this._applyWidgetPositionsToDom(positions);
-  this._syncSquareUnit();
+  return this._gridRuntime.syncGridRuntimeMetrics();
 }
 _handleViewportChange(){
   this._isResponsiveRelayouting=true;
@@ -1905,161 +1871,38 @@ if(!scrollContainer||!isMobileLayout())return;
 if(isLandscape()){this.classList.add("is-mobile-floating-controls-hidden");return}
 let previousScrollTop=scrollContainer.scrollTop;const threshold=10;const onScroll=()=>{if(!isMobileLayout()||isLandscape()){this.classList.toggle("is-mobile-floating-controls-hidden",isMobileLayout()&&isLandscape());previousScrollTop=scrollContainer.scrollTop;return}const currentScrollTop=scrollContainer.scrollTop;if(currentScrollTop<=4){this.classList.remove("is-mobile-floating-controls-hidden");previousScrollTop=currentScrollTop;return}const delta=currentScrollTop-previousScrollTop;if(delta>threshold)this.classList.add("is-mobile-floating-controls-hidden");else if(delta<-threshold)this.classList.remove("is-mobile-floating-controls-hidden");if(Math.abs(delta)>threshold)previousScrollTop=currentScrollTop};scrollContainer.addEventListener("scroll",onScroll,{passive:true});this._gridScrollCleanup=()=>scrollContainer.removeEventListener("scroll",onScroll)}
 _scheduleSquareUnitSync(){
-  cancelAnimationFrame(this._squareUnitFrame);
-  if(getEffectiveLayout(this)==="mobile"){
-    this._squareUnitFrame=requestAnimationFrame(()=>{
-      this._squareUnitFrame=requestAnimationFrame(()=>{
-        this._squareUnitFrame=0;
-        this._syncSquareUnit();
-      });
-    });
-    return;
-  }
-  this._squareUnitFrame=0;
-  this._observeLayoutSize();
-  this._scheduleGridRuntimeSync();
+  return this._gridRuntime.scheduleSquareUnitSync();
 }
 _scheduleGridRuntimeSync(){
-  cancelAnimationFrame(this._gridRuntimeFrame);
-  this._gridRuntimeFrame=requestAnimationFrame(()=>{
-    this._gridRuntimeFrame=requestAnimationFrame(()=>{
-      this._gridRuntimeFrame=0;
-      if(!this.isConnected)return;
-      this._syncGridRuntimeMetrics();
-    });
-  });
+  return this._gridRuntime.scheduleGridRuntimeSync();
 }
 _disconnectLayoutResizeObserver(){
-  this._layoutResizeObserver?.disconnect();
-  this._layoutResizeObserver=null;
-  this._observedLayoutSize="";
+  return this._gridRuntime.disconnectLayoutResizeObserver();
 }
 _observeLayoutSize(){
-  this._disconnectLayoutResizeObserver();
-  if(typeof ResizeObserver!=="function"||getEffectiveLayout(this)==="mobile")return;
-  const area=this.shadowRoot?.querySelector?.(".mha-widget-area");
-  if(!area)return;
-  this._layoutResizeObserver=new ResizeObserver(entries=>{
-    const rect=entries[0]?.contentRect;
-    if(!rect)return;
-    const signature=`${Math.round(rect.width)}x${Math.round(rect.height)}`;
-    if(signature===this._observedLayoutSize)return;
-    this._observedLayoutSize=signature;
-    this._scheduleGridRuntimeSync();
-  });
-  this._layoutResizeObserver.observe(area);
+  return this._gridRuntime.observeLayoutSize();
 }
 _getWidgetAreaMetrics(){
-  const area=this.shadowRoot?.querySelector?.(".mha-widget-area");
-  if(!area)return null;
-
-  const areaStyle=getComputedStyle(area);
-  const width=Math.max(0,area.clientWidth-(Number.parseFloat(areaStyle.paddingLeft)||0)-(Number.parseFloat(areaStyle.paddingRight)||0));
-  const height=Math.max(0,area.clientHeight-(Number.parseFloat(areaStyle.paddingTop)||0)-(Number.parseFloat(areaStyle.paddingBottom)||0));
-
-  return width>0&&height>0?{width,height}:null;
+  return this._gridRuntime.getWidgetAreaMetrics();
 }
 _getDockBottomColumnBonus(layout,base,metrics={}){
-  if(this._dockPosition!=="bottom")return 0;
-  if(layout==="mobile")return 0;
-  const hostWidth=this.getBoundingClientRect?.().width||window.innerWidth||0;
-  if(hostWidth<RESPONSIVE_BREAKPOINTS.tablet)return 0;
-
-  const requestedBonus=layout==="desktop"?2:1;
-  const baseColumns=Math.max(1,Number(base?.columns)||1);
-  const availableWidth=Number(metrics?.width)||hostWidth;
-  const minComfortWidth=Math.max(
-    Number(base?.minCell)||0,
-    (Number(base?.targetCell)||0)*0.9,
-    1,
-  );
-  const maxComfortColumns=Math.max(baseColumns,Math.floor(availableWidth/minComfortWidth));
-  return Math.max(0,Math.min(requestedBonus,maxComfortColumns-baseColumns));
+  return this._gridRuntime.getDockBottomColumnBonus(layout,base,metrics);
 }
 _getRuntimeGridPreset(){
-  const layout=getEffectiveLayout(this);
-  const metrics=this._getWidgetAreaMetrics()||{};
-  const base=getGridPreset(this,layout,metrics);
-  const bonus=this._getDockBottomColumnBonus(layout,base,metrics);
-  if(!bonus)return base;
-  return {
-    ...base,
-    columns:Math.max(1,(Number(base.columns)||1)+bonus),
-    density:`${base.density}-dock-bottom-${bonus}col`,
-  };
+  return this._gridRuntime.getRuntimeGridPreset();
 }
 _getRuntimeGridUnits(){
-  const preset=this._getRuntimeGridPreset();
-  return getInternalGridColumnCountFromLogical(preset.columns);
+  return this._gridRuntime.getGridBounds().units;
 }
 _getRuntimeGridRows(){
-  const preset=this._getRuntimeGridPreset();
-  return getInternalGridRowCountFromLogical(preset.rows);
+  return this._gridRuntime.getGridBounds().rowUnits;
 }
 _isMobileLauncherLayout(){return this._getRuntimeLayout?.()==="mobile"||this._layout==="mobile"||this.dataset.layout==="mobile"}
 _syncSquareUnit(){
-  const grid=this.shadowRoot.querySelector(".mha-grid");
-  const area=this.shadowRoot.querySelector(".mha-widget-area");
-  if(!grid||!area)return;
-
-  const st=getComputedStyle(grid);
-  const metrics=this._getWidgetAreaMetrics();
-  if(!metrics)return;
-
-  const preset=this._getRuntimeGridPreset();
-  const units=getInternalGridColumnCountFromLogical(preset.columns);
-  const rows=getInternalGridRowCountFromLogical(preset.rows);
-
-  const columnGap=Number.parseFloat(st.columnGap||st.gap||"0")||0;
-  const rowGap=Number.parseFloat(st.rowGap||st.gap||"0")||0;
-  const gridPaddingX=(Number.parseFloat(st.paddingLeft)||0)+(Number.parseFloat(st.paddingRight)||0);
-  const gridPaddingY=(Number.parseFloat(st.paddingTop)||0)+(Number.parseFloat(st.paddingBottom)||0);
-
-  /*
-   * Adaptive OS/window-responsive matrix.
-   *
-   * .mha-widget-area is the source of truth. Columns/rows are chosen from the
-   * available area so each grid unit stays within a comfortable pixel range.
-   * The exact cell size is still one shared square value.
-   */
-  const unitX=(metrics.width-gridPaddingX-columnGap*(units-1))/units;
-  const unitY=(metrics.height-gridPaddingY-rowGap*(rows-1))/rows;
-  const hardMin=Number.parseFloat(st.getPropertyValue("--mha-square-unit-hard-min"))||24;
-  const maxUnit=Number.parseFloat(st.getPropertyValue("--mha-square-unit-max"))||preset.maxCell||160;
-  const preferredUnit=this._isMobileLauncherLayout()?unitX:Math.min(unitX,unitY);const unit=Math.max(hardMin,Math.min(maxUnit,preferredUnit));
-
-  if(Number.isFinite(unit)&&unit>0){
-    this.dataset.gridDensity=preset.density;
-    this.dataset.gridUnits=String(units);
-    this.dataset.logicalColumns=String(preset.columns);
-    this.dataset.gridRows=String(rows);
-    this.dataset.logicalRows=String(preset.rows);
-
-    this.style.setProperty("--mha-runtime-grid-units",String(units));
-    this.style.setProperty("--mha-runtime-grid-rows",String(rows));
-    this.style.setProperty("--mha-runtime-grid-columns",String(preset.columns));
-    this.style.setProperty("--mha-runtime-logical-columns",String(preset.columns));
-    this.style.setProperty("--mha-runtime-logical-rows",String(preset.rows));
-    this.style.setProperty("--mha-square-unit",`${unit}px`);
-
-    grid.style.setProperty("--mha-square-unit",`${unit}px`);
-    grid.style.setProperty("--mha-grid-matrix-width",`${unit*units+columnGap*(units-1)+gridPaddingX}px`);
-    grid.style.setProperty("--mha-grid-matrix-height",`${unit*rows+rowGap*(rows-1)+gridPaddingY}px`);
-  }
-
-  this._syncWidgetDropSlots();
+  return this._gridRuntime.syncSquareUnit();
 }
 _getGridBounds(){
-  const layout=getEffectiveLayout(this);
-  const preset=this._getRuntimeGridPreset?.()||getGridPreset(this,layout,this._getWidgetAreaMetrics?.()||{});
-  const logicalColumns=Number(preset?.columns)||Number(this.dataset.logicalColumns)||1;
-  const logicalRows=Number(preset?.rows)||Number(this.dataset.logicalRows)||1;
-  return {
-    columns:Math.max(1,logicalColumns),
-    rows:Math.max(1,logicalRows),
-    units:getInternalGridColumnCountFromLogical(logicalColumns),
-    rowUnits:getInternalGridRowCountFromLogical(logicalRows),
-  };
+  return this._gridRuntime.getGridBounds();
 }
 /* LEGACY AUTO-PACK VALIDATOR SCOPE
  * Kept for resize/fallback checks that still need an auto-fit heuristic.
