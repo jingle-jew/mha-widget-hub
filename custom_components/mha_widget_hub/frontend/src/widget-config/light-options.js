@@ -34,7 +34,10 @@ export function getEntityOptionsByDomain(hass, domain, visibilityConfig) {
   const options = Object.entries(hass?.states || {})
     .filter(([entityId, entityState]) => (
       getEntityDomain(entityId) === domain
-      && isEntityAvailable(entityState)
+      && (
+        isEntityAvailable(entityState)
+        || (domain === "button" && entityState?.state === "unknown")
+      )
     ))
     .map(([entityId, entityState]) => ({
       value: entityId,

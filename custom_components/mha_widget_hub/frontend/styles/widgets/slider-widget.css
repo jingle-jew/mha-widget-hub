@@ -607,6 +607,13 @@
     saturate(var(--mha-ios-slider-track-saturation));
 }
 
+/* The standalone Frosted Light slider is itself a Primary Surface. Keep its
+ * internal fill/track behavior, but align the outer widget shell with cards. */
+:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="light"]) .mha-widget[data-widget-kind="slider"] {
+  background: var(--mha-primary-surface) !important;
+  border-color: var(--mha-primary-border);
+}
+
 :host([data-theme-style="ios"]) .mha-widget[data-widget-kind="slider"] > .mha-slider-widget-frame {
   inset: 0;
   inline-size: 100% !important;

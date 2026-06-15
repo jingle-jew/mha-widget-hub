@@ -42,6 +42,7 @@ const DEFINITIONS = {
     category: "actions",
     renderer: "button",
     preview: "button",
+    config: "button",
     aliases: ["button-widget"],
     variantAliases: ["simple-button"],
     defaultVariant: "simple-button",
@@ -152,6 +153,7 @@ const DEFINITIONS = {
     category: "climate",
     renderer: "weather",
     preview: "weather",
+    config: "weather",
     aliases: ["weather-widget"],
     variantAliases: ["adaptive-weather"],
     defaultVariant: "adaptive-weather",
@@ -223,6 +225,14 @@ export function getWidgetDefinition(widgetOrKind = {}) {
   return WIDGET_REGISTRY[resolveWidgetKind(widgetOrKind)] || null;
 }
 
+export function getWidgetConfigType(widget = {}) {
+  const definition = getWidgetDefinition(widget);
+  if (resolveWidgetKind(widget) === "clock") {
+    return widget.variant === "digital-weather" ? "weather" : "";
+  }
+  return definition?.config || "";
+}
+
 export function isWidgetKind(widget, expectedKind) {
   return resolveWidgetKind(widget) === expectedKind;
 }
@@ -271,6 +281,7 @@ export function normalizeWidgetContract(widget = {}, normalizeBaseSize) {
 
   if (kind === "clock" && definition.variantAliases.includes(widget.variant)) {
     normalized.variant = widget.variant;
+    normalized.entityId = widget.entityId || widget.entity_id || "";
   } else if (kind === "slider") {
     normalized.variant = widget.variant || normalized.variant;
     normalized.entityId = widget.entityId || widget.entity_id || "";
@@ -280,6 +291,8 @@ export function normalizeWidgetContract(widget = {}, normalizeBaseSize) {
         ? "volume"
         : "brightness";
   } else if (kind === "toggle") {
+    normalized.entityId = widget.entityId || widget.entity_id || "";
+  } else if (kind === "button" || kind === "weather") {
     normalized.entityId = widget.entityId || widget.entity_id || "";
   }
 

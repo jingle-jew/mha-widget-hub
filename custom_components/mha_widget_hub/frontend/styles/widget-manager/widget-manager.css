@@ -660,10 +660,10 @@
 }
 
 /* iOS panels consume the same material tokens as widget shells. */
-:host([data-theme-style="ios"][data-ios-glass="liquid"]) .mha-widget-manager-sheet.mha-settings-sheet {
-  background: var(--mha-widget-shell-surface, var(--mha-ios-liquid-surface));
-  border-color: transparent;
-  box-shadow: var(--mha-widget-shell-shadow, var(--mha-ios-liquid-shadow));
+:host([data-theme-style="ios"][data-ios-glass="liquid"][data-theme]) .mha-widget-manager-sheet.mha-settings-sheet {
+  background: var(--mha-primary-surface);
+  border-color: var(--mha-primary-border);
+  box-shadow: var(--mha-shadow-panel);
 }
 
 :host([data-theme-style="ios"][data-ios-glass="liquid"]) .mha-widget-manager-category,
@@ -700,5 +700,5 @@
 
 :host([data-theme-style="ios"][data-ios-glass="liquid"]) .mha-widget-manager-sheet,
 :host([data-theme-style="ios"][data-ios-glass="liquid"]) .mha-widget-manager-preview-area {
-  border-color: transparent;
+  border-color: var(--mha-primary-border);
 }

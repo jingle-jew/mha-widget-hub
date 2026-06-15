@@ -1,46 +1,9 @@
 import { createCurrentWeatherIcon } from "./weather-current-icons.js";
 import { createWeatherIcon } from "./weather-icons.js";
+import { buildWeatherModel } from "../ha/weather.js";
 import { isWidgetKind } from "./widget-registry.js";
 
 const WEATHER_SIZE_VARIANTS = new Set(["4x1", "2x2", "3x2", "4x2"]);
-
-const WEATHER_SUMMARY_LABELS = new Map([
-  ["sunny", "Ensoleillé"],
-  ["clear-night", "Nuit claire"],
-  ["clear", "Ensoleillé"],
-  ["cloudy", "Nuageux"],
-  ["cloud", "Nuageux"],
-  ["partlycloudy", "Part. nuageux"],
-  ["partly-cloudy", "Part. nuageux"],
-  ["partly_cloudy", "Part. nuageux"],
-  ["rainy", "Pluie"],
-  ["rain", "Pluie"],
-  ["pouring", "Forte pluie"],
-  ["lightning", "Orage"],
-  ["lightning-rainy", "Orage"],
-  ["thunderstorm", "Orage"],
-  ["snowy", "Neige"],
-  ["snow", "Neige"],
-  ["snowy-rainy", "Neige/pluie"],
-  ["fog", "Brouillard"],
-  ["foggy", "Brouillard"],
-  ["windy", "Venteux"],
-  ["windy-variant", "Venteux"],
-  ["hail", "Grêle"],
-  ["exceptional", "Météo active"],
-  ["unknown", "Météo"],
-  ["unavailable", "Météo"],
-]);
-
-function normalizeWeatherCondition(condition = "") {
-  return String(condition || "unknown").trim().toLowerCase();
-}
-
-function getWeatherSummary(widget = {}) {
-  const explicit = widget.summary || widget.weatherSummary || widget.conditionText || widget.conditionLabel;
-  if (explicit) return String(explicit);
-  return WEATHER_SUMMARY_LABELS.get(normalizeWeatherCondition(widget.condition)) || "Météo";
-}
 
 export function isWeatherWidget(widget = {}) {
   return isWidgetKind(widget, "weather");
@@ -113,41 +76,54 @@ function createForecastStack(forecast = []) {
   return stack;
 }
 
-function getWeatherData(widget = {}) {
-  return {
-    condition: widget.condition || "partly-cloudy",
-    temperature: widget.temperature || "22°",
-    humidity: widget.humidity || "54%",
-    wind: widget.wind || "12 km/h",
-    summary: getWeatherSummary(widget),
-    forecast: widget.forecast || [
-      { day: "Lun", condition: "sunny", temp: "24°" },
-      { day: "Mar", condition: "partly-cloudy", temp: "22°" },
-      { day: "Mer", condition: "cloud", temp: "21°" },
-      { day: "Jeu", condition: "rain", temp: "19°" },
-    ],
-  };
-}
-
-export function createWeatherWidgetContent(widget = {}, { widgetW = 2, widgetH = 2 } = {}) {
-  const data = getWeatherData(widget);
-  const variant = sizeKey({ widgetW, widgetH });
-  const root = document.createElement("div");
-  root.className = "mha-weather-widget";
-  root.dataset.weatherSize = variant;
+function renderWeather(root, data, variant) {
+  root.replaceChildren();
+  root.dataset.entityAllowed = String(data.entityAllowed);
+  root.dataset.entityAvailable = String(data.entityAvailable);
+  if (!data.entityId || !data.entityAllowed || !data.entityAvailable) {
+    const fallback = {
+      condition: "unknown",
+      temperature: "--",
+      summary: !data.entityId
+        ? "Météo non configurée"
+        : data.entityAllowed ? "Météo indisponible" : "Météo non autorisée",
+      humidity: "",
+      wind: "",
+      forecast: [],
+    };
+    root.append(createCurrentPane(fallback));
+    return;
+  }
 
   if (variant === "4x1" || variant === "2x2") {
     root.append(createCurrentPane(data));
-    return root;
-  }
-
-  if (variant === "3x2") {
+  } else if (variant === "3x2") {
     root.append(createCurrentPane(data), createDetails(data));
-    return root;
+  } else {
+    const left = createCurrentPane(data, { className: "mha-weather-widget-current--split" });
+    left.append(createDetails(data));
+    root.append(left, createForecastStack(data.forecast));
   }
+}
 
-  const left = createCurrentPane(data, { className: "mha-weather-widget-current--split" });
-  left.append(createDetails(data));
-  root.append(left, createForecastStack(data.forecast));
+export function createWeatherWidgetContent(widget = {}, {
+  widgetW = 2,
+  widgetH = 2,
+  hass,
+  entityVisibilityConfig,
+} = {}) {
+  const variant = sizeKey({ widgetW, widgetH });
+  const root = document.createElement("div");
+  root.className = "mha-weather-widget";
+  root.dataset.widgetComponent = "weather";
+  root.dataset.weatherSize = variant;
+
+  root.__mhaUpdateFromHass = nextHass => {
+    renderWeather(root, buildWeatherModel(nextHass, widget, entityVisibilityConfig), variant);
+  };
+  root.__mhaDestroy = () => {
+    delete root.__mhaUpdateFromHass;
+  };
+  root.__mhaUpdateFromHass(hass);
   return root;
 }

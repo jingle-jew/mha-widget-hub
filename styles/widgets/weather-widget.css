@@ -296,12 +296,6 @@
   opacity: .94;
 }
 
-:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="weather"] {
-  --mha-weather-bg-start: #68c8ff;
-  --mha-weather-bg-end: #1f78ff;
-}
-
-
 :host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-widget[data-widget-kind="weather"] {
   /* iOS Frosted fait exception: surface météo expressive, façon OneUI. */
   --mha-weather-bg-start: #8edcff;

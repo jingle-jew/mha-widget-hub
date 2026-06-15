@@ -394,14 +394,15 @@
  * Liquid status bar now follows the same surface/border contract as Liquid
  * widgets, instead of borrowing the old Frosted material.
  */
-:host([data-theme-style="ios"][data-ios-glass="liquid"]) .mha-status-bar {
-  background: var(--mha-widget-surface);
-  border-color: var(--mha-widget-border);
+:host([data-theme-style="ios"][data-ios-glass="liquid"][data-theme]) .mha-status-bar {
+  background: var(--mha-primary-surface);
+  border-color: var(--mha-primary-border);
+  box-shadow: var(--mha-shadow-floating) !important;
   -webkit-backdrop-filter: blur(var(--mha-surface-blur)) saturate(var(--mha-surface-saturation));
   backdrop-filter: blur(var(--mha-surface-blur)) saturate(var(--mha-surface-saturation));
 }
 
-:host([data-theme-style="ios"][data-ios-glass="liquid"]) .mha-status-bar::after {
+:host([data-theme-style="ios"][data-ios-glass="liquid"][data-theme]) .mha-status-bar::after {
   opacity: var(--mha-widget-reflection-opacity, 0);
   background: var(--mha-widget-shell-highlight, var(--mha-widget-reflection, none));
   mix-blend-mode: screen;

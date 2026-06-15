@@ -14,9 +14,21 @@ import {
   supportsToggleEntity,
 } from "../src/ha/toggle.js";
 import {
+  buildButtonServiceCall,
   callHomeAssistantService,
   createLatestValueAction,
 } from "../src/ha/actions.js";
+import { resolveAuthorizedEntity } from "../src/ha/entity-access.js";
+import { buildWeatherModel } from "../src/ha/weather.js";
+import { getClockWeatherText } from "../src/widgets/clock-widget.js";
+import {
+  buildButtonWidgetConfig,
+  createButtonConfigDraft,
+} from "../src/widget-config/button-config.js";
+import {
+  buildWeatherWidgetConfig,
+  createWeatherConfigDraft,
+} from "../src/widget-config/weather-config.js";
 import {
   buildSliderWidgetConfig,
   createSliderConfigDraft,
@@ -110,6 +122,145 @@ test("toggle calls reject unsupported and unavailable entities", () => {
     service: "turn_off",
     data: { entity_id: "light.kitchen" },
   });
+});
+
+test("button widget builds the correct HA call for toggle, press and configured actions", () => {
+  assert.deepEqual(buildButtonServiceCall({}, entity("light.kitchen", "off")), {
+    domain: "light",
+    service: "turn_on",
+    data: { entity_id: "light.kitchen" },
+  });
+  assert.deepEqual(buildButtonServiceCall({}, entity("switch.coffee", "on")), {
+    domain: "switch",
+    service: "turn_off",
+    data: { entity_id: "switch.coffee" },
+  });
+  assert.deepEqual(buildButtonServiceCall({}, entity("input_boolean.guest", "off")), {
+    domain: "input_boolean",
+    service: "turn_on",
+    data: { entity_id: "input_boolean.guest" },
+  });
+  assert.deepEqual(buildButtonServiceCall({}, entity("button.restart", "unknown")), {
+    domain: "button",
+    service: "press",
+    data: { entity_id: "button.restart" },
+  });
+  assert.deepEqual(buildButtonServiceCall({
+    action: {
+      domain: "scene",
+      service: "turn_on",
+      data: { entity_id: "scene.evening" },
+    },
+  }, null), {
+    domain: "scene",
+    service: "turn_on",
+    data: { entity_id: "scene.evening" },
+  });
+});
+
+test("authorized entity access rejects blocked and unsupported entities before reading state", () => {
+  const hass = {
+    user: { id: "user-1" },
+    states: {
+      "light.kitchen": entity("light.kitchen", "on"),
+      "weather.home": entity("weather.home", "sunny"),
+    },
+  };
+  const visibilityConfig = {
+    users: {
+      "user-1": {
+        unrestricted: false,
+        allowedEntities: { light: [] },
+      },
+    },
+  };
+
+  const blocked = resolveAuthorizedEntity(hass, "light.kitchen", {
+    allowedDomains: ["light"],
+    visibilityConfig,
+  });
+  assert.equal(blocked.entityAllowed, false);
+  assert.equal(blocked.entityState, null);
+
+  const unsupported = resolveAuthorizedEntity(hass, "weather.home", {
+    allowedDomains: ["light"],
+    visibilityConfig,
+  });
+  assert.equal(unsupported.domainAllowed, false);
+  assert.equal(unsupported.entityState, null);
+});
+
+test("weather model reads HA attributes and exposes a clean unavailable fallback", () => {
+  const hass = {
+    states: {
+      "weather.home": entity("weather.home", "partlycloudy", {
+        temperature: 21,
+        temperature_unit: "°C",
+        humidity: 54,
+        wind_speed: 12,
+        wind_speed_unit: "km/h",
+        forecast: [{
+          datetime: "2026-06-16T12:00:00Z",
+          condition: "rainy",
+          temperature: 19,
+          templow: 12,
+        }],
+      }),
+    },
+  };
+  const model = buildWeatherModel(hass, { entityId: "weather.home" });
+
+  assert.equal(model.temperature, "21°C");
+  assert.equal(model.summary, "Part. nuageux");
+  assert.equal(model.humidity, "54 %");
+  assert.equal(model.wind, "12 km/h");
+  assert.equal(model.forecast[0].condition, "rainy");
+  assert.equal(model.forecast[0].temp, "19°C / 12°C");
+  assert.equal(getClockWeatherText(model), "21°C · Part. nuageux");
+
+  const unavailable = buildWeatherModel({
+    states: {
+      "weather.home": entity("weather.home", "unavailable"),
+    },
+  }, { entityId: "weather.home" });
+  assert.equal(unavailable.entityAvailable, false);
+  assert.equal(unavailable.temperature, "");
+  assert.equal(unavailable.forecast.length, 0);
+  assert.equal(getClockWeatherText(unavailable), "");
+});
+
+test("button and weather configuration only persist authorized selections", () => {
+  const hass = {
+    user: { id: "user-1" },
+    states: {
+      "button.allowed": entity("button.allowed", "unknown", { friendly_name: "Autorisé" }),
+      "button.blocked": entity("button.blocked", "unknown", { friendly_name: "Bloqué" }),
+      "weather.home": entity("weather.home", "sunny", { friendly_name: "Maison" }),
+    },
+  };
+  const visibilityConfig = {
+    users: {
+      "user-1": {
+        unrestricted: false,
+        allowedEntities: {
+          button: ["button.allowed"],
+          weather: ["weather.home"],
+        },
+      },
+    },
+  };
+  const button = createButtonConfigDraft({
+    buttonType: "button",
+    entityId: "button.blocked",
+  }, hass, visibilityConfig);
+  assert.deepEqual(button.options.map(option => option.value), ["button.allowed"]);
+  assert.equal(buildButtonWidgetConfig({}, button.draft, hass, visibilityConfig).entityId, "button.allowed");
+
+  const weather = createWeatherConfigDraft({}, hass, visibilityConfig);
+  assert.equal(
+    buildWeatherWidgetConfig({ kind: "weather" }, weather.draft, hass, visibilityConfig).entityId,
+    "weather.home",
+  );
 });
 
 test("Home Assistant service wrapper validates its contract", async () => {

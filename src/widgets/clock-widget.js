@@ -5,6 +5,7 @@
  */
 
 import { isWidgetKind } from "./widget-registry.js";
+import { buildWeatherModel } from "../ha/weather.js";
 
 export const CLOCK_WIDGET_VARIANTS = Object.freeze([
   "digital",
@@ -15,6 +16,12 @@ export const CLOCK_WIDGET_VARIANTS = Object.freeze([
 
 export function normalizeClockWidgetVariant(value = "digital") {
   return CLOCK_WIDGET_VARIANTS.includes(value) ? value : "digital";
+}
+
+export function getClockWeatherText(model = {}) {
+  return model.entityAllowed && model.entityAvailable
+    ? [model.temperature, model.summary].filter(Boolean).join(" · ")
+    : "";
 }
 
 function pad(value) {
@@ -47,42 +54,6 @@ function setHandRotations(root, now = new Date()) {
   });
 }
 
-const CLOCK_WEATHER_SUMMARY_LABELS = new Map([
-  ["sunny", "Ensoleillé"],
-  ["clear-night", "Nuit claire"],
-  ["clear", "Ensoleillé"],
-  ["cloudy", "Nuageux"],
-  ["cloud", "Nuageux"],
-  ["partlycloudy", "Part. nuageux"],
-  ["partly-cloudy", "Part. nuageux"],
-  ["partly_cloudy", "Part. nuageux"],
-  ["rainy", "Pluie"],
-  ["rain", "Pluie"],
-  ["pouring", "Forte pluie"],
-  ["lightning", "Orage"],
-  ["lightning-rainy", "Orage"],
-  ["thunderstorm", "Orage"],
-  ["snowy", "Neige"],
-  ["snow", "Neige"],
-  ["snowy-rainy", "Neige/pluie"],
-  ["fog", "Brouillard"],
-  ["foggy", "Brouillard"],
-  ["windy", "Venteux"],
-  ["windy-variant", "Venteux"],
-  ["hail", "Grêle"],
-  ["exceptional", "Météo active"],
-  ["unknown", "Météo"],
-  ["unavailable", "Météo"],
-]);
-
-function getClockWeatherText(widget = {}) {
-  const temperature = widget.temperature || widget.weatherTemperature || "22°";
-  const explicitSummary = widget.summary || widget.weatherSummary || widget.conditionText || widget.conditionLabel;
-  const condition = String(widget.condition || "partly-cloudy").trim().toLowerCase();
-  const summary = explicitSummary || CLOCK_WEATHER_SUMMARY_LABELS.get(condition) || "Météo";
-  return `${temperature} · ${summary}`;
-}
-
 function updateDigital(root, now = new Date()) {
   const time = root?.querySelector?.(".mha-clock-time");
   const date = root?.querySelector?.(".mha-clock-date");
@@ -113,7 +84,8 @@ function updateDigital(root, now = new Date()) {
   }
 
   if (weather) {
-    weather.textContent = weather.dataset.weatherText || "22° · Part. nuageux";
+    weather.textContent = weather.dataset.weatherText || "";
+    weather.hidden = !weather.dataset.weatherText;
   }
 }
 
@@ -207,9 +179,13 @@ function createDigitalClock(now = new Date()) {
   return clock;
 }
 
-function createDigitalWeatherClock(widget = {}, now = new Date()) {
+function createDigitalWeatherClock(widget = {}, now = new Date(), {
+  hass,
+  entityVisibilityConfig,
+} = {}) {
   const clock = document.createElement("div");
   clock.className = "mha-clock-widget mha-clock-widget--digital mha-clock-widget--digital-weather";
+  clock.dataset.widgetComponent = "clock-weather";
   clock.dataset.clockVariant = "digital-weather";
 
   const time = document.createElement("div");
@@ -220,9 +196,20 @@ function createDigitalWeatherClock(widget = {}, now = new Date()) {
 
   const weather = document.createElement("div");
   weather.className = "mha-clock-date mha-clock-weather";
-  weather.dataset.weatherText = getClockWeatherText(widget);
+  weather.dataset.weatherText = "";
 
   clock.append(time, date, weather);
+  clock.__mhaUpdateFromHass = nextHass => {
+    const model = buildWeatherModel(nextHass, widget, entityVisibilityConfig);
+    weather.dataset.weatherText = getClockWeatherText(model);
+    clock.dataset.weatherAllowed = String(model.entityAllowed);
+    clock.dataset.weatherAvailable = String(model.entityAvailable);
+    updateClockWidget(clock, "digital-weather");
+  };
+  clock.__mhaDestroy = () => {
+    delete clock.__mhaUpdateFromHass;
+  };
+  clock.__mhaUpdateFromHass(hass);
   updateClockWidget(clock, "digital-weather", now);
   return clock;
 }
@@ -245,14 +232,21 @@ function createIosAnalogClock(now = new Date()) {
   return clock;
 }
 
-export function createClockWidgetContent({ variant = "digital", className = "", screensaver = false, widget = {} } = {}) {
+export function createClockWidgetContent({
+  variant = "digital",
+  className = "",
+  screensaver = false,
+  widget = {},
+  hass,
+  entityVisibilityConfig,
+} = {}) {
   const normalized = normalizeClockWidgetVariant(variant);
   const clock = normalized === "analog"
     ? createAnalogClock()
     : normalized === "ios-analog"
       ? createIosAnalogClock()
       : normalized === "digital-weather"
-        ? createDigitalWeatherClock(widget)
+        ? createDigitalWeatherClock(widget, new Date(), { hass, entityVisibilityConfig })
         : createDigitalClock();
 
   clock.className = [clock.className, className, screensaver ? "mha-clock-widget--screensaver" : ""]

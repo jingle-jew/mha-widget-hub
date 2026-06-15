@@ -958,7 +958,7 @@
  * Liquid Glass is clearer and less blurred; Frosted stays classic grey but
  * backs off the heavy opacity in settings/widget-manager sheets.
  */
-:host([data-theme-style="ios"][data-ios-glass="liquid"]) .mha-settings-sheet {
+:host([data-theme-style="ios"][data-ios-glass="liquid"][data-theme]) .mha-settings-sheet {
   -webkit-backdrop-filter: blur(calc(var(--mha-blur-primary) * .42)) saturate(215%);
   backdrop-filter: blur(calc(var(--mha-blur-primary) * .42)) saturate(215%);
 }
@@ -1005,15 +1005,15 @@
 }
 
 /* Liquid Glass keeps structure through blur and spacing, without panel frames. */
-:host([data-theme-style="ios"][data-ios-glass="liquid"]) .mha-settings-sheet {
-  background: var(--mha-widget-shell-surface, var(--mha-ios-liquid-surface));
-  border-color: transparent;
-  box-shadow: var(--mha-widget-shell-shadow, var(--mha-ios-liquid-shadow));
+:host([data-theme-style="ios"][data-ios-glass="liquid"][data-theme]) .mha-settings-sheet {
+  background: var(--mha-primary-surface);
+  border-color: var(--mha-primary-border);
+  box-shadow: var(--mha-shadow-panel);
   -webkit-backdrop-filter: blur(var(--mha-ios-liquid-blur)) saturate(190%);
   backdrop-filter: blur(var(--mha-ios-liquid-blur)) saturate(190%);
 }
 
-:host([data-theme-style="ios"][data-ios-glass="liquid"]) .mha-settings-sheet::before {
+:host([data-theme-style="ios"][data-ios-glass="liquid"][data-theme]) .mha-settings-sheet::before {
   background: none;
   opacity: 0;
 }

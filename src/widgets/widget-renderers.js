@@ -10,12 +10,14 @@ import { createToggleWidgetContent } from "./toggle-widget.js";
 import { createWeatherWidgetContent } from "./weather-widget.js";
 import { getWidgetDefinition } from "./widget-registry.js";
 
-function createClockContent(widget) {
+function createClockContent(widget, { hass, entityVisibilityConfig } = {}) {
   const frame = document.createElement("div");
   frame.className = "mha-clock-widget-frame";
   frame.append(createClockWidgetContent({
     variant: widget.variant || "digital",
     widget,
+    hass,
+    entityVisibilityConfig,
   }));
   return frame;
 }
@@ -25,15 +27,20 @@ const WIDGET_CONTENT_RENDERERS = Object.freeze({
     render: () => null,
   },
   clock: {
-    render: ({ widget }) => createClockContent(widget),
+    render: ({ widget, hass, entityVisibilityConfig }) => createClockContent(widget, {
+      hass,
+      entityVisibilityConfig,
+    }),
   },
   button: {
     decorateShell: ({ shell, widget }) => {
       shell.dataset.active = String(isSimpleButtonWidgetActive(widget));
     },
-    render: ({ widget, widgetW, widgetH }) => createSimpleButtonWidgetContent(widget, {
+    render: ({ widget, widgetW, widgetH, hass, entityVisibilityConfig }) => createSimpleButtonWidgetContent(widget, {
       widgetW,
       widgetH,
+      hass,
+      entityVisibilityConfig,
     }),
   },
   slider: {
@@ -69,9 +76,11 @@ const WIDGET_CONTENT_RENDERERS = Object.freeze({
     }),
   },
   weather: {
-    render: ({ widget, widgetW, widgetH }) => createWeatherWidgetContent(widget, {
+    render: ({ widget, widgetW, widgetH, hass, entityVisibilityConfig }) => createWeatherWidgetContent(widget, {
       widgetW,
       widgetH,
+      hass,
+      entityVisibilityConfig,
     }),
   },
 });

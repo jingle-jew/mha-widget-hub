@@ -329,6 +329,23 @@
   --mha-widget-shell-highlight: transparent;
 }
 
+:host([data-theme-style="ios"][data-ios-glass="liquid"]),
+:root[data-theme-style="ios"][data-ios-glass="liquid"] {
+  /* Weather supplies the same optical highlight over its own blue gradient.
+   * Primary surfaces reuse only the neutral glass material. */
+  --mha-primary-surface: var(--mha-ios-liquid-primary-surface);
+  --mha-primary-border: var(--mha-ios-liquid-primary-border);
+  --mha-shadow-primary: var(--mha-ios-liquid-shadow);
+  --mha-shadow-floating: var(--mha-ios-liquid-shadow);
+  --mha-shadow-panel: var(--mha-ios-liquid-shadow);
+  --mha-shell-surface: var(--mha-primary-surface);
+  --mha-shell-status-surface: var(--mha-primary-surface);
+  --mha-shell-dock-surface: var(--mha-primary-surface);
+  --mha-shell-panel-surface: var(--mha-primary-surface);
+  --mha-shell-border: var(--mha-primary-border);
+  --mha-shell-shadow: var(--mha-ios-liquid-shadow);
+}
+
 :host([data-theme-style="oneui"]),
 :root[data-theme-style="oneui"] {
   --mha-widget-shell-surface: var(--mha-surface-primary);
@@ -399,6 +416,12 @@
     linear-gradient(145deg, rgba(255,255,255,.98), rgba(244,246,250,.86));
   --mha-ios-slider-fill-shadow:
     inset 0 1px 0 rgba(255,255,255,.58);
+}
+
+:host([data-theme-style="ios"][data-ios-glass="liquid"]),
+:root[data-theme-style="ios"][data-ios-glass="liquid"] {
+  --mha-ios-slider-track-border: var(--mha-primary-border);
+  --mha-ios-slider-track-surface: var(--mha-primary-surface);
 }
 
 :host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="light"]),

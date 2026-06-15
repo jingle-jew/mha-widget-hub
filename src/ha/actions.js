@@ -78,6 +78,41 @@ export function runToggleAction(hass, entityState, nextOn) {
   return callHomeAssistantService(hass, buildToggleServiceCall(entityState, nextOn));
 }
 
+export function buildButtonServiceCall(widget, entityState) {
+  const domain = entityState?.entity_id?.split(".")[0] || "";
+  if (["light", "switch", "input_boolean"].includes(domain)) {
+    return buildToggleServiceCall(entityState);
+  }
+  if (domain === "button" && entityState?.entity_id) {
+    return {
+      domain: "button",
+      service: "press",
+      data: { entity_id: entityState.entity_id },
+    };
+  }
+
+  const action = widget?.action && typeof widget.action === "object"
+    ? widget.action
+    : widget;
+  const actionDomain = String(action.actionDomain || action.domain || "").trim();
+  const actionService = String(action.actionService || action.service || "").trim();
+  if (!actionDomain || !actionService) return null;
+
+  return {
+    domain: actionDomain,
+    service: actionService,
+    data: action.actionData && typeof action.actionData === "object"
+      ? action.actionData
+      : action.data && typeof action.data === "object"
+        ? action.data
+        : {},
+  };
+}
+
+export function runButtonAction(hass, widget, entityState) {
+  return callHomeAssistantService(hass, buildButtonServiceCall(widget, entityState));
+}
+
 export function runSliderAction(hass, entityState, value) {
   return callHomeAssistantService(hass, buildSliderServiceCall(entityState, value));
 }

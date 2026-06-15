@@ -9,6 +9,10 @@
  */
 
 import { createIconSymbol } from "../ui/icon-symbol.js";
+import { runButtonAction } from "../ha/actions.js";
+import { resolveAuthorizedEntity } from "../ha/entity-access.js";
+import { getEntityDisplayName } from "../widget-config/light-options.js";
+import { isToggleEntityOn } from "../ha/toggle.js";
 import { isWidgetKind } from "./widget-registry.js";
 
 export const SIMPLE_BUTTON_WIDGET_KIND = "button";
@@ -43,10 +47,19 @@ function getButtonData(widget = {}) {
   };
 }
 
+function getActionEntityIds(widget = {}) {
+  const raw = widget.action?.data?.entity_id ?? widget.actionData?.entity_id;
+  return (Array.isArray(raw) ? raw : [raw])
+    .filter(value => typeof value === "string" && value.trim())
+    .map(value => value.trim());
+}
+
 export function createSimpleButtonWidgetContent(widget = {}, {
   className = "",
   widgetW = Number(widget?.w) || 2,
   widgetH = Number(widget?.h) || 1,
+  hass,
+  entityVisibilityConfig,
 } = {}) {
   const data = getButtonData(widget);
   const isSquare = Number(widgetW) === 2 && Number(widgetH) === 2;
@@ -85,6 +98,8 @@ export function createSimpleButtonWidgetContent(widget = {}, {
   state.className = "mha-simple-button-state";
   state.textContent = data.state;
 
+  const context = { hass, access: null, actionable: false };
+
   function setPressed(nextActive) {
     const active = Boolean(nextActive);
     root.dataset.active = String(active);
@@ -102,9 +117,29 @@ export function createSimpleButtonWidgetContent(widget = {}, {
     }
   }
 
-  root.addEventListener("click", (event) => {
+  async function activate(event) {
     event.preventDefault();
-    setPressed(root.dataset.active !== "true");
+    if (!context.actionable) return;
+    const access = resolveAuthorizedEntity(context.hass, widget, {
+      allowedDomains: ["light", "switch", "input_boolean", "button"],
+      visibilityConfig: entityVisibilityConfig,
+    });
+    const hasConfiguredAction = Boolean(
+      widget.actionDomain
+      || widget.service
+      || widget.action?.domain
+      || widget.action?.service,
+    );
+    const actionAccess = getActionEntityIds(widget).map(entityId => (
+      resolveAuthorizedEntity(context.hass, entityId, {
+        visibilityConfig: entityVisibilityConfig,
+      })
+    ));
+    if (access.entityId && (!access.entityAllowed || !access.entityAvailable)) return;
+    if (actionAccess.some(candidate => !candidate.entityAllowed || !candidate.entityAvailable)) return;
+    if (!access.entityId && !hasConfiguredAction) return;
+
+    await runButtonAction(context.hass, widget, access.entityState);
     root.dispatchEvent(new CustomEvent("mha-button-click", {
       bubbles: true,
       detail: {
@@ -112,7 +147,9 @@ export function createSimpleButtonWidgetContent(widget = {}, {
         active: root.dataset.active === "true",
       },
     }));
-  });
+  }
+
+  root.addEventListener("click", activate);
 
   root.addEventListener("keydown", (event) => {
     if (event.key !== "Enter" && event.key !== " ") return;
@@ -122,6 +159,76 @@ export function createSimpleButtonWidgetContent(widget = {}, {
 
   textStack.append(label, state);
   root.append(iconBubble, textStack);
+
+  root.__mhaUpdateFromHass = nextHass => {
+    context.hass = nextHass;
+    const access = resolveAuthorizedEntity(nextHass, widget, {
+      allowedDomains: ["light", "switch", "input_boolean", "button"],
+      visibilityConfig: entityVisibilityConfig,
+    });
+    const toggleDomain = ["light", "switch", "input_boolean"].includes(access.domain);
+    const momentary = access.domain === "button";
+    const configuredAction = !access.entityId && Boolean(
+      widget.actionDomain
+      || widget.service
+      || widget.action?.domain
+      || widget.action?.service,
+    );
+    const actionTargets = getActionEntityIds(widget).map(entityId => (
+      resolveAuthorizedEntity(nextHass, entityId, {
+        visibilityConfig: entityVisibilityConfig,
+      })
+    ));
+    const actionTargetsAllowed = actionTargets.every(candidate => (
+      candidate.entityAllowed && candidate.entityAvailable
+    ));
+    context.access = access;
+    context.actionable = (configuredAction && actionTargetsAllowed) || (
+      access.entityAllowed
+      && access.entityAvailable
+      && (toggleDomain || momentary)
+    );
+
+    const active = toggleDomain && access.entityAvailable
+      ? isToggleEntityOn(access.entityState)
+      : false;
+    setPressed(active);
+    root.dataset.entityAllowed = String(
+      access.entityAllowed || (configuredAction && actionTargetsAllowed),
+    );
+    root.dataset.entityAvailable = String(
+      access.entityAvailable || (configuredAction && actionTargetsAllowed),
+    );
+    root.dataset.actionable = String(context.actionable);
+    root.setAttribute("aria-disabled", String(!context.actionable));
+    root.tabIndex = context.actionable ? 0 : -1;
+    root.setAttribute("aria-pressed", toggleDomain ? String(active) : "false");
+
+    if (access.entityAllowed && access.entityState && !widget.label) {
+      label.textContent = getEntityDisplayName(access.entityState, access.entityId);
+    } else {
+      label.textContent = data.label;
+    }
+
+    state.textContent = !access.entityId
+      ? configuredAction ? (widget.state || "Action") : "Non configuré"
+      : !access.domainAllowed
+        ? "Non pris en charge"
+        : !access.entityAllowed
+          ? "Non autorisé"
+          : !access.entityAvailable
+            ? "Indisponible"
+            : toggleDomain
+              ? active ? data.stateOn : data.stateOff
+              : "Appuyer";
+  };
+  root.__mhaDestroy = () => {
+    context.hass = null;
+    context.access = null;
+    context.actionable = false;
+    delete root.__mhaUpdateFromHass;
+  };
+  root.__mhaUpdateFromHass(hass);
 
   return root;
 }

@@ -696,6 +696,22 @@
   background-image: none;
 }
 
+/* Frosted Light uses a gradient Primary Surface. The generic iOS image reset
+ * above strips that gradient, so restore the semantic shell only in light mode.
+ * Frosted Dark and theme-specific widget exceptions keep their current path. */
+:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="light"]) .mha-widget {
+  background: var(--mha-primary-surface);
+  border-color: var(--mha-primary-border);
+}
+
+/* Liquid primary widgets reuse the weather card's glass optics without its
+ * blue sky gradient. Weather restores its expressive color in its own CSS. */
+:host([data-theme-style="ios"][data-ios-glass="liquid"][data-theme]) .mha-widget {
+  background: var(--mha-primary-surface);
+  border-color: var(--mha-primary-border);
+  box-shadow: var(--mha-shadow-primary);
+}
+
 /* OneUI removes the shell border entirely instead of tinting a 1px frame. */
 :host([data-theme-style="oneui"]) .mha-widget {
   border: 0;

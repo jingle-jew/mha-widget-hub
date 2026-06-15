@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { normalizeWidgetSize } from "../src/layout/layout-engine.js";
 import {
+  getWidgetConfigType,
   normalizeWidgetContract,
   resolveWidgetKind,
 } from "../src/widgets/widget-registry.js";
@@ -15,6 +16,33 @@ test("legacy widget identities resolve to a canonical kind", () => {
   assert.equal(resolveWidgetKind({ component: "toggle-slider-widget" }), "toggle-slider");
   assert.equal(resolveWidgetKind({ variant: "light-slider-vertical" }), "slider");
   assert.equal(resolveWidgetKind({ id: "slot-f" }), "slider");
+});
+
+test("weather-capable widgets expose configuration without affecting other clocks", () => {
+  assert.equal(getWidgetConfigType({ kind: "weather" }), "weather");
+  assert.equal(getWidgetConfigType({ kind: "button" }), "button");
+  assert.equal(getWidgetConfigType({ kind: "clock", variant: "digital-weather" }), "weather");
+  assert.equal(getWidgetConfigType({ kind: "clock", variant: "digital" }), "");
+});
+
+test("normalization preserves button and weather entity bindings", () => {
+  const button = normalizeWidgetContract({
+    kind: "button",
+    entity_id: "switch.coffee",
+  }, normalizeWidgetSize);
+  const weather = normalizeWidgetContract({
+    kind: "weather",
+    entity_id: "weather.home",
+  }, normalizeWidgetSize);
+  const clock = normalizeWidgetContract({
+    kind: "clock",
+    variant: "digital-weather",
+    entity_id: "weather.home",
+  }, normalizeWidgetSize);
+
+  assert.equal(button.entityId, "switch.coffee");
+  assert.equal(weather.entityId, "weather.home");
+  assert.equal(clock.entityId, "weather.home");
 });
 
 test("normalization migrates toggle-slider entity aliases", () => {

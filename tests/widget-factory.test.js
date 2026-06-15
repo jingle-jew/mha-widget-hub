@@ -27,6 +27,7 @@ test("catalog items become complete normalized widget contracts", () => {
     title: "Lampe",
     w: 4,
     h: 1,
+    entityId: "",
   });
 });
 

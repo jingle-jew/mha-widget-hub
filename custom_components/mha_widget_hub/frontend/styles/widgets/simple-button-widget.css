@@ -383,6 +383,15 @@
   outline-offset: 3px;
 }
 
+.mha-widget[data-widget-kind="button"] > .mha-simple-button-widget[aria-disabled="true"] {
+  cursor: default;
+  opacity: .62;
+}
+
+.mha-widget[data-widget-kind="button"] > .mha-simple-button-widget[aria-disabled="true"]:active {
+  transform: none;
+}
+
 /* ==========================================================================
    4. Etats actif / inactif
    ========================================================================== */
