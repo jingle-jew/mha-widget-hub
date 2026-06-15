@@ -7,6 +7,28 @@ For example, prefer thinking “floating surface” or “panel surface” inste
 
 ---
 
+## Canonical layer tokens
+
+These are the preferred high-level names for iOS and OneUI going forward. They are mapped to the existing semantic roles in phase 1, so older component tokens remain valid while components are migrated gradually.
+
+| Token | Simple description | Typical consumers |
+|---|---|---|
+| `--mha-primary-surface` | Main glass/card layer. | widgets, settings sheet, widget manager, dock, status bar |
+| `--mha-on-primary-surface` | Nested surface placed on a primary surface. | settings tiles, manager tiles, internal cards |
+| `--mha-secondary-surface` | Secondary/control layer. | inputs, selects, chips, inner controls |
+| `--mha-on-secondary-surface` | Deeper nested surface placed on secondary surfaces. | previews, sub-controls, stronger inner tiles |
+| `--mha-primary-border` | Border for primary surfaces. | widget/panel/dock/status outlines |
+| `--mha-secondary-border` | Border for nested surfaces. | settings tiles, manager tiles, controls |
+| `--mha-primary-text` | Text on primary surfaces. | titles, values, main labels |
+| `--mha-secondary-text` | Supporting text. | descriptions, secondary labels |
+| `--mha-muted-text` | Low-emphasis text. | hints, metadata, disabled-ish helper text |
+| `--mha-accent-surface` | Accent-colored surface. | active states, selected controls |
+| `--mha-on-accent-surface` | Content on accent surfaces. | icons/text on accent backgrounds |
+
+Phase 1 rule: do not delete legacy tokens. Use these tokens for new/migrated components, while legacy component aliases continue to work.
+
+---
+
 ## Background tokens
 
 | Token | Simple description |
