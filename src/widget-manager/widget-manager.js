@@ -24,8 +24,6 @@ export const WIDGET_MANAGER_CATEGORIES = Object.freeze([
   ]},
   { id:"lights", label:"Lumières", description:"Contrôles rapides et intensité.", icon:"💡", widgets:[
     {kind:"toggle-slider",variant:"toggle-slider",label:"Lumière combinée",size:{w:4,h:2},description:"État et intensité dans une seule tuile."},
-    {kind:"toggle-buttons",variant:"toggle-buttons",label:"Lumière + boutons",size:{w:4,h:2},description:"Toggle visuel et 4 boutons rapides."},
-    {kind:"empty",variant:"light-toggle",label:"Tuile lumière",size:{w:2,h:2},description:"Contrôle simple."},
     {kind:"slider",variant:"light-slider-wide",label:"Intensité horizontale",size:{w:4,h:1},description:"Slider large."},
     {kind:"slider",variant:"light-slider-vertical",label:"Intensité verticale",size:{w:1,h:4},description:"Slider vertical."},
   ]},
@@ -34,23 +32,9 @@ export const WIDGET_MANAGER_CATEGORIES = Object.freeze([
     {kind:"weather",variant:"adaptive-weather",label:"Météo compacte",size:{w:2,h:2},description:"Icône et température."},
     {kind:"weather",variant:"adaptive-weather",label:"Météo détails",size:{w:3,h:2},description:"Humidité et vent."},
     {kind:"weather",variant:"adaptive-weather",label:"Météo prévisions",size:{w:4,h:2},description:"Prévisions verticales."},
-    {kind:"empty",variant:"climate-compact",label:"Climat compact",size:{w:2,h:2},description:"Température rapide."},
-    {kind:"empty",variant:"climate-wide",label:"Climat large",size:{w:4,h:2},description:"Température + mode."},
-    {kind:"slider",variant:"temperature-slider",label:"Température slider",size:{w:4,h:1},description:"Contrôle linéaire."},
   ]},
   { id:"media", label:"Média", description:"Lecture et volume.", icon:"♪", widgets:[
-    {kind:"empty",variant:"media-compact",label:"Média compact",size:{w:2,h:2},description:"Lecture rapide."},
-    {kind:"empty",variant:"media-wide",label:"Média large",size:{w:4,h:2},description:"Now playing."},
     {kind:"slider",variant:"volume-slider",label:"Volume",size:{w:4,h:1},description:"Slider volume."},
-  ]},
-  { id:"security", label:"Sécurité", description:"Alarmes, serrures et état.", icon:"⌂", widgets:[
-    {kind:"empty",variant:"security-state",label:"État sécurité",size:{w:2,h:2},description:"Statut rapide."},
-    {kind:"empty",variant:"security-wide",label:"Sécurité large",size:{w:4,h:2},description:"Contrôles principaux."},
-  ]},
-  { id:"system", label:"Système", description:"Maintenance, réseau et énergie.", icon:"⚙", widgets:[
-    {kind:"empty",variant:"system-compact",label:"Système compact",size:{w:2,h:2},description:"État système."},
-    {kind:"empty",variant:"system-wide",label:"Système large",size:{w:4,h:2},description:"Infos détaillées."},
-    {kind:"empty",variant:"system-panel",label:"Panneau système",size:{w:4,h:3},description:"Grand panneau."},
   ]},
 ]);
 
@@ -171,8 +155,8 @@ function createSliderStaticPreview(item) {
   preview.dataset.orientation = vertical ? "vertical" : "horizontal";
 
   preview.append(createPreviewHeader(
-    item.variant === "temperature-slider" ? "Température" : "Intensité",
-    item.variant === "temperature-slider" ? "21°" : "68%",
+    item.variant === "volume-slider" ? "Volume" : "Intensité",
+    "68%",
   ));
 
   const body = el("div", "mha-widget-manager-static-preview-slider");
@@ -201,24 +185,6 @@ function createToggleSliderStaticPreview(item) {
   slider.querySelector(".mha-widget-manager-static-preview-header")?.remove();
 
   preview.append(toggle, slider);
-  return preview;
-}
-
-function createToggleButtonsStaticPreview(item) {
-  const preview = el("div", "mha-widget-manager-static-preview");
-  preview.dataset.kind = "toggle-buttons";
-  preview.dataset.size = previewSizeKey(item);
-
-  const toggle = createToggleStaticPreview(item).firstElementChild;
-  const actions = el("div", "mha-widget-manager-static-preview-toggle-buttons");
-  actions.append(
-    createIconBubble("⏻"),
-    el("span", "mha-widget-manager-static-preview-toggle-button", "1"),
-    el("span", "mha-widget-manager-static-preview-toggle-button", "2"),
-    el("span", "mha-widget-manager-static-preview-toggle-button", "3"),
-  );
-
-  preview.append(toggle, actions);
   return preview;
 }
 
@@ -285,23 +251,6 @@ function createWeatherStaticPreview(item) {
   return preview;
 }
 
-function createMediaStaticPreview(item) {
-  const preview = el("div", "mha-widget-manager-static-preview");
-  preview.dataset.kind = "media";
-  preview.dataset.size = previewSizeKey(item);
-  preview.append(
-    createPreviewHeader("Now Playing", item.size?.w >= 4 ? "Lo-fi Evening" : "Lecture"),
-  );
-
-  const controls = el("div", "mha-widget-manager-static-preview-media");
-  controls.append(
-    el("span", "mha-widget-manager-static-preview-media-line"),
-    el("span", "mha-widget-manager-static-preview-media-controls", "◀  ⏵  ▶"),
-  );
-  preview.append(controls);
-  return preview;
-}
-
 function createStatusStaticPreview(item, {
   kind = "system",
   title = "Widget",
@@ -338,36 +287,10 @@ function createWidgetPreview(item) {
   let preview;
   if (previewKind === "button") preview = createButtonStaticPreview(item);
   else if (previewKind === "toggle-slider") preview = createToggleSliderStaticPreview(item);
-  else if (previewKind === "toggle-buttons") preview = createToggleButtonsStaticPreview(item);
   else if (previewKind === "toggle") preview = createToggleStaticPreview(item);
   else if (previewKind === "slider") preview = createSliderStaticPreview(item);
   else if (previewKind === "clock") preview = createClockStaticPreview(item);
   else if (previewKind === "weather") preview = createWeatherStaticPreview(item);
-  else if (item.variant?.startsWith("media-")) preview = createMediaStaticPreview(item);
-  else if (item.variant?.startsWith("security-")) preview = createStatusStaticPreview(item, {
-    kind: "security",
-    title: "Sécurité",
-    detail: "Protégé",
-    accent: "●",
-  });
-  else if (item.variant?.startsWith("climate-")) preview = createStatusStaticPreview(item, {
-    kind: "climate",
-    title: "Climat",
-    detail: "21° · Auto",
-    accent: "◌",
-  });
-  else if (item.variant?.startsWith("system-")) preview = createStatusStaticPreview(item, {
-    kind: "system",
-    title: "Système",
-    detail: "Stable",
-    accent: "◆",
-  });
-  else if (item.variant === "light-toggle") preview = createStatusStaticPreview(item, {
-    kind: "lights",
-    title: "Lumière",
-    detail: "75%",
-    accent: "✦",
-  });
   else preview = createStatusStaticPreview(item, {
     kind: "generic",
     title: item.label,

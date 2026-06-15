@@ -55,7 +55,7 @@
 .mha-widget-demo-pill,
 .mha-widget-demo-toggle,
 .mha-widget-demo-button,
-.mha-widget-demo-slider {
+.mha-widget-runtime-slider {
   inline-size: 100%;
 }
 
@@ -153,7 +153,7 @@
 /* Widget content is inert while edit chrome remains interactive. */
 :host(.is-editing) .mha-widget > *:not(.mha-widget-tools):not(.mha-widget-move-overlay):not(.mha-size-badge),
 :host(.is-editing) .mha-widget :is(
-  .mha-widget-demo-slider,
+  .mha-widget-runtime-slider,
   .mha-widget-demo-button,
   .mha-widget-demo-toggle,
   .mha-widget-demo-pill,

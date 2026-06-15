@@ -51,7 +51,7 @@ const WIDGET_CONTENT_RENDERERS = Object.freeze({
       entityVisibilityConfig,
       value: widget.value ?? 68,
       orientation: "auto",
-      className: "mha-widget-demo-slider",
+      className: "mha-widget-runtime-slider",
     }),
   },
   toggle: {
