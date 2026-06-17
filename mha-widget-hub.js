@@ -448,6 +448,7 @@ _finishBoot({fallback=false,reason=""}={}){
     const pending=this._pendingDeferredUi;
     this._pendingDeferredUi=null;
     if(pending)this._appendDeferredUi(pending);
+    this._scheduleIconSymbolRefresh();
   };
   if(fallback||window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches||!grid){
     requestAnimationFrame(finishReveal);
@@ -1414,6 +1415,8 @@ _syncDocksDom(){
   syncDocks(this.shadowRoot,this._getDockProps());
 }
 _refreshActiveGridOnly(){
+  cancelAnimationFrame(this._widgetRenderFrame);
+  this._widgetRenderFrame=0;
   const grid=this.shadowRoot?.querySelector?.(".mha-grid");
   if(!grid){this.render();return;}
   grid.querySelectorAll(".mha-widget,.mha-widget-drop-slot").forEach(node=>{
@@ -1449,7 +1452,19 @@ _saveWidgets(){
 
   return this._syncActivePageWidgets();
 }
-_removeWidget(id){if(!this._widgets.some(w=>w.id===id))return;if(this._activeMoveWidgetId===id)this._activeMoveWidgetId="";this._widgets=this._widgets.filter(w=>w.id!==id);Object.values(this._widgetPositions).forEach(layout=>{if(layout&&typeof layout==="object")delete layout[id]});const positionsSaved=writeJson(POSITIONS,this._widgetPositions);const widgetsSaved=this._saveWidgets();this._recordPersistenceResult(positionsSaved&&widgetsSaved);const element=this.shadowRoot.querySelector(`[data-widget-id="${id}"]`);if(element){destroyDomSubtree(element);element.remove()}this._clearDropState();this._scheduleSquareUnitSync()}
+_removeWidget(id){
+  if(!this._widgets.some(w=>w.id===id))return;
+  if(this._activeMoveWidgetId===id)this._activeMoveWidgetId="";
+  this._widgets=this._widgets.filter(w=>w.id!==id);
+  Object.values(this._widgetPositions).forEach(layout=>{
+    if(layout&&typeof layout==="object")delete layout[id];
+  });
+  const positionsSaved=writeJson(POSITIONS,this._widgetPositions);
+  const widgetsSaved=this._saveWidgets();
+  this._recordPersistenceResult(positionsSaved&&widgetsSaved);
+  this._clearDropState();
+  this._refreshActiveGridOnly();
+}
 
 _isResizeHandleEvent(event){
   return Boolean(event?.target?.closest?.(
@@ -2271,6 +2286,7 @@ render(){
       if(this._renderId!==renderId)return;
       this._stylesReadyRenderId=renderId;
       this._observeLayoutSize();
+      this._scheduleIconSymbolRefresh();
       if(this._bootComplete){
         this._appendDeferredUi({layout,renderId});
       }else{

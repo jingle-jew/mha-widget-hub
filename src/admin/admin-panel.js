@@ -59,6 +59,10 @@ class MhaAdminPanel extends HTMLElement {
     this.attachShadow({ mode: "open" });
     this._hass = null;
     this._loadedUserId = "";
+    this._failedUserId = "";
+    this._loadingUserId = "";
+    this._loadPromise = null;
+    this._loadRequestId = 0;
     this._users = [];
     this._config = normalizeEntityVisibilityConfig(null);
     this._selectedUserId = "";
@@ -73,13 +77,7 @@ class MhaAdminPanel extends HTMLElement {
   set hass(value) {
     this._hass = value;
     this._themeController.sync();
-    const userId = String(value?.user?.id || "");
-    if (value && userId && this._loadedUserId !== userId) {
-      this._loadedUserId = userId;
-      this._load();
-    } else {
-      this.render();
-    }
+    this._ensureAdminDataLoaded();
   }
 
   get hass() {
@@ -87,18 +85,62 @@ class MhaAdminPanel extends HTMLElement {
   }
 
   connectedCallback() {
+    this._upgradePredefinedProperty("hass");
     this._themeController.sync();
+    this._ensureAdminDataLoaded();
     this.render();
   }
 
-  async _load() {
+  _upgradePredefinedProperty(name) {
+    if (!Object.prototype.hasOwnProperty.call(this, name)) return;
+    const value = this[name];
+    delete this[name];
+    this[name] = value;
+  }
+
+  _ensureAdminDataLoaded() {
+    const userId = String(this._hass?.user?.id || "");
+    if (!this._hass || !userId) {
+      this.render();
+      return false;
+    }
+    if (this._loadedUserId === userId) {
+      this.render();
+      return true;
+    }
+    if (this._failedUserId === userId) {
+      this.render();
+      return true;
+    }
+    if (this._loadPromise && this._loadingUserId === userId) {
+      this.render();
+      return true;
+    }
+    this._load(userId);
+    return true;
+  }
+
+  async _load(userId = String(this._hass?.user?.id || "")) {
+    if (!this._hass || !userId) {
+      this._loading = true;
+      this.render();
+      return;
+    }
+
+    const hass = this._hass;
+    const requestId = ++this._loadRequestId;
+    this._loadingUserId = userId;
     this._loading = true;
     this._error = "";
     this.render();
-    const [usersResult, configResult] = await Promise.allSettled([
-      loadHomeAssistantUsers(this._hass),
-      loadEntityVisibilityConfig(this._hass),
+    const loadPromise = Promise.allSettled([
+      loadHomeAssistantUsers(hass),
+      loadEntityVisibilityConfig(hass),
     ]);
+    this._loadPromise = loadPromise;
+    const [usersResult, configResult] = await loadPromise;
+
+    if (requestId !== this._loadRequestId) return;
 
     try {
       if (usersResult.status === "rejected") {
@@ -119,6 +161,8 @@ class MhaAdminPanel extends HTMLElement {
       const users = usersResult.value;
       this._users = users;
       this._config = normalizeEntityVisibilityConfig(configResult.value);
+      this._loadedUserId = userId;
+      this._failedUserId = "";
       this._selectedUserId = this._selectedUserId || users[0]?.id || "";
     } catch (error) {
       const source = error?.mhaLoadSource || "chargement";
@@ -130,7 +174,12 @@ class MhaAdminPanel extends HTMLElement {
       this._error = source === "users/list"
         ? "Impossible de charger les utilisateurs Home Assistant."
         : "Impossible de charger la configuration MHA.";
+      this._failedUserId = userId;
     } finally {
+      if (this._loadPromise === loadPromise) {
+        this._loadPromise = null;
+        this._loadingUserId = "";
+      }
       this._loading = false;
       this.render();
     }
