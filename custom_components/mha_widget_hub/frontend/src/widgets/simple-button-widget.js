@@ -232,3 +232,16 @@ export function createSimpleButtonWidgetContent(widget = {}, {
 
   return root;
 }
+
+
+export const SIMPLE_BUTTON_WIDGET_CONTENT_RENDERER = Object.freeze({
+  decorateShell: ({ shell, widget }) => {
+    shell.dataset.active = String(isSimpleButtonWidgetActive(widget));
+  },
+  render: ({ widget, widgetW, widgetH, hass, entityVisibilityConfig }) => createSimpleButtonWidgetContent(widget, {
+    widgetW,
+    widgetH,
+    hass,
+    entityVisibilityConfig,
+  }),
+});

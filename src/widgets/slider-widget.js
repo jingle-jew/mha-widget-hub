@@ -188,3 +188,16 @@ export function createSliderWidgetContent(
 export function isSliderWidget(widget) {
   return isWidgetKind(widget, "slider");
 }
+
+
+export const SLIDER_WIDGET_CONTENT_RENDERER = Object.freeze({
+  render: ({ widget, size, activeGridUnits, hass, entityVisibilityConfig }) => createSliderWidgetContent(widget, {
+    size,
+    activeGridUnits,
+    hass,
+    entityVisibilityConfig,
+    value: widget.value ?? 68,
+    orientation: "auto",
+    className: "mha-widget-runtime-slider",
+  }),
+});

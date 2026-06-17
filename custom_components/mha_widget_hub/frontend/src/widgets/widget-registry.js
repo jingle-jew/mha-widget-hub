@@ -289,6 +289,7 @@ export function getWidgetManagerCategories() {
       category.widgets.push({
         kind,
         variant: entry.variant,
+        label: entry.label,
         title: entry.label,
         description: entry.description,
         icon: entry.icon || WIDGET_MANAGER_METADATA.categories[entry.category]?.icon || "◷",

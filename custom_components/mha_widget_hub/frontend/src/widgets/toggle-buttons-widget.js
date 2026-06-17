@@ -94,3 +94,10 @@ export function createToggleButtonsWidgetContent(widget = {}, {
   root.append(toggleSection, actionsSection);
   return root;
 }
+
+
+export const TOGGLE_BUTTONS_WIDGET_CONTENT_RENDERER = Object.freeze({
+  render: ({ widget, widgetW }) => createToggleButtonsWidgetContent(widget, {
+    widgetW,
+  }),
+});

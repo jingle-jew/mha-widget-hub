@@ -37,7 +37,7 @@ export function createWidgetFromCatalogItem(
     component: definition?.component || "empty-widget",
     category,
     variant,
-    title: item.label || "Widget",
+    title: item.title || item.label || "Widget",
     w: size.w,
     h: size.h,
   }, normalizeWidgetSize);

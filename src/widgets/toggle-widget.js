@@ -162,3 +162,14 @@ export function createToggleWidgetContent(widget = {}, {
 
   return root;
 }
+
+
+export const TOGGLE_WIDGET_CONTENT_RENDERER = Object.freeze({
+  render: ({ widget, widgetW, widgetH, hass, entityVisibilityConfig }) => createToggleWidgetContent(widget, {
+    widgetW,
+    widgetH,
+    bindToHass: true,
+    hass,
+    entityVisibilityConfig,
+  }),
+});

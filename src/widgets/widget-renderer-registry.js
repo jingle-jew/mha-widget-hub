@@ -1,87 +1,30 @@
-import { createClockWidgetContent } from "./clock-widget.js";
-import {
-  createSimpleButtonWidgetContent,
-  isSimpleButtonWidgetActive,
-} from "./simple-button-widget.js";
-import { createSliderWidgetContent } from "./slider-widget.js";
-import { createToggleButtonsWidgetContent } from "./toggle-buttons-widget.js";
-import { createToggleSliderWidgetContent } from "./toggle-slider-widget.js";
-import { createToggleWidgetContent } from "./toggle-widget.js";
-import { createWeatherWidgetContent } from "./weather-widget.js";
+import { CLOCK_WIDGET_CONTENT_RENDERER } from "./clock-widget.js";
+import { SIMPLE_BUTTON_WIDGET_CONTENT_RENDERER } from "./simple-button-widget.js";
+import { SLIDER_WIDGET_CONTENT_RENDERER } from "./slider-widget.js";
+import { TOGGLE_BUTTONS_WIDGET_CONTENT_RENDERER } from "./toggle-buttons-widget.js";
+import { TOGGLE_SLIDER_WIDGET_CONTENT_RENDERER } from "./toggle-slider-widget.js";
+import { TOGGLE_WIDGET_CONTENT_RENDERER } from "./toggle-widget.js";
+import { WEATHER_WIDGET_CONTENT_RENDERER } from "./weather-widget.js";
 
-function createClockContent(widget, { hass, entityVisibilityConfig } = {}) {
-  const frame = document.createElement("div");
-  frame.className = "mha-clock-widget-frame";
-  frame.append(createClockWidgetContent({
-    variant: widget.variant || "digital",
-    widget,
-    hass,
-    entityVisibilityConfig,
-  }));
-  return frame;
-}
-
-const WIDGET_CONTENT_RENDERERS = Object.freeze({
-  empty: {
-    render: () => null,
-  },
-  clock: {
-    render: ({ widget, hass, entityVisibilityConfig }) => createClockContent(widget, {
-      hass,
-      entityVisibilityConfig,
-    }),
-  },
-  button: {
-    decorateShell: ({ shell, widget }) => {
-      shell.dataset.active = String(isSimpleButtonWidgetActive(widget));
-    },
-    render: ({ widget, widgetW, widgetH, hass, entityVisibilityConfig }) => createSimpleButtonWidgetContent(widget, {
-      widgetW,
-      widgetH,
-      hass,
-      entityVisibilityConfig,
-    }),
-  },
-  slider: {
-    render: ({ widget, size, activeGridUnits, hass, entityVisibilityConfig }) => createSliderWidgetContent(widget, {
-      size,
-      activeGridUnits,
-      hass,
-      entityVisibilityConfig,
-      value: widget.value ?? 68,
-      orientation: "auto",
-      className: "mha-widget-runtime-slider",
-    }),
-  },
-  toggle: {
-    render: ({ widget, widgetW, widgetH, hass, entityVisibilityConfig }) => createToggleWidgetContent(widget, {
-      widgetW,
-      widgetH,
-      bindToHass: true,
-      hass,
-      entityVisibilityConfig,
-    }),
-  },
-  "toggle-slider": {
-    render: ({ widget, widgetW, hass, entityVisibilityConfig }) => createToggleSliderWidgetContent(widget, {
-      hass,
-      entityVisibilityConfig,
-      widgetW,
-    }),
-  },
-  "toggle-buttons": {
-    render: ({ widget, widgetW }) => createToggleButtonsWidgetContent(widget, {
-      widgetW,
-    }),
-  },
-  weather: {
-    render: ({ widget, widgetW, widgetH, hass, entityVisibilityConfig }) => createWeatherWidgetContent(widget, {
-      widgetW,
-      widgetH,
-      hass,
-      entityVisibilityConfig,
-    }),
-  },
+const EMPTY_WIDGET_CONTENT_RENDERER = Object.freeze({
+  render: () => null,
 });
 
-export { WIDGET_CONTENT_RENDERERS };
+const WIDGET_RENDERER_MANIFEST = Object.freeze({
+  empty: EMPTY_WIDGET_CONTENT_RENDERER,
+  clock: CLOCK_WIDGET_CONTENT_RENDERER,
+  button: SIMPLE_BUTTON_WIDGET_CONTENT_RENDERER,
+  slider: SLIDER_WIDGET_CONTENT_RENDERER,
+  toggle: TOGGLE_WIDGET_CONTENT_RENDERER,
+  "toggle-slider": TOGGLE_SLIDER_WIDGET_CONTENT_RENDERER,
+  "toggle-buttons": TOGGLE_BUTTONS_WIDGET_CONTENT_RENDERER,
+  weather: WEATHER_WIDGET_CONTENT_RENDERER,
+});
+
+export const WIDGET_CONTENT_RENDERERS = Object.freeze({
+  ...WIDGET_RENDERER_MANIFEST,
+});
+
+export function getWidgetContentRenderers() {
+  return WIDGET_CONTENT_RENDERERS;
+}

@@ -127,3 +127,13 @@ export function createWeatherWidgetContent(widget = {}, {
   root.__mhaUpdateFromHass(hass);
   return root;
 }
+
+
+export const WEATHER_WIDGET_CONTENT_RENDERER = Object.freeze({
+  render: ({ widget, widgetW, widgetH, hass, entityVisibilityConfig }) => createWeatherWidgetContent(widget, {
+    widgetW,
+    widgetH,
+    hass,
+    entityVisibilityConfig,
+  }),
+});

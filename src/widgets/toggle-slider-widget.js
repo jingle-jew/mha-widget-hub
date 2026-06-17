@@ -191,3 +191,12 @@ export function createToggleSliderWidgetContent(widget = {}, {
   root.__mhaUpdateFromHass(hass);
   return root;
 }
+
+
+export const TOGGLE_SLIDER_WIDGET_CONTENT_RENDERER = Object.freeze({
+  render: ({ widget, widgetW, hass, entityVisibilityConfig }) => createToggleSliderWidgetContent(widget, {
+    hass,
+    entityVisibilityConfig,
+    widgetW,
+  }),
+});

@@ -261,3 +261,23 @@ export function createClockWidgetContent({
 export function isClockWidget(widget) {
   return isWidgetKind(widget, "clock");
 }
+
+
+function createClockWidgetFrame(widget, { hass, entityVisibilityConfig } = {}) {
+  const frame = document.createElement("div");
+  frame.className = "mha-clock-widget-frame";
+  frame.append(createClockWidgetContent({
+    variant: widget.variant || "digital",
+    widget,
+    hass,
+    entityVisibilityConfig,
+  }));
+  return frame;
+}
+
+export const CLOCK_WIDGET_CONTENT_RENDERER = Object.freeze({
+  render: ({ widget, hass, entityVisibilityConfig }) => createClockWidgetFrame(widget, {
+    hass,
+    entityVisibilityConfig,
+  }),
+});
