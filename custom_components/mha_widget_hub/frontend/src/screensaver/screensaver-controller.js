@@ -38,7 +38,7 @@ export class ScreensaverController {
     };
   }
 
-  load() {
+  load({ enabledFallback = true } = {}) {
     this.state = {
       ...this.state,
       nowBar: readBoolean(
@@ -51,7 +51,7 @@ export class ScreensaverController {
         || "digital",
       enabled: readBoolean(
         STORAGE_KEYS.screensaverEnabled,
-        true,
+        Boolean(enabledFallback),
         this.storage,
       ),
       delay: readNumberOption(

@@ -224,7 +224,7 @@ function getStoredDockPosition(){return normalizeDockPosition(localStorage.getIt
  * Visual style: OneUI
  * Accent: first OneUI blue / sky
  * Icon shape: auto
- * Screensaver: enabled
+ * Screensaver: enabled on tablet/desktop, disabled on mobile
  * Screensaver delay: 30 seconds
  * Screensaver Now Bar: enabled
  * Screensaver clock: digital
@@ -346,7 +346,9 @@ _initialize(){
   this.shadowRoot.innerHTML=createCriticalBootStyle();
   this._migrateStorageSchema();
   this._widgetPositions=readJson(POSITIONS,{})||{};
-  this._screensaverController.load();
+  this._screensaverController.load({
+    enabledFallback: !this._isMobileDefaultLayout(),
+  });
   this._dockPosition=getStoredDockPosition();
   this._migrateLegacyCustomWallpaper();
   this._customWallpapers=this._readCustomWallpapers();
@@ -1937,6 +1939,10 @@ _getWidgetAreaMetrics(){
 }
 _getDockBottomColumnBonus(layout,base,metrics={}){
   return this._gridRuntime.getDockBottomColumnBonus(layout,base,metrics);
+}
+
+_isMobileDefaultLayout(){
+  return getEffectiveLayout(this)==="mobile";
 }
 _getRuntimeGridPreset(){
   return this._gridRuntime.getRuntimeGridPreset();
