@@ -7,18 +7,19 @@
 
 :host {
   --mha-icon-symbol-size: var(--mha-icon-glyph-size, 58%);
+  --mha-icon-symbol-min-size: 1rem;
   --mha-icon-symbol-color: var(--mha-icon-color, var(--mha-text-primary, #fff));
   --mha-icon-symbol-opacity: .86;
   --mha-icon-symbol-stroke-width: 0;
 }
 
 .mha-icon-symbol {
-  inline-size: max(1px, var(--mha-icon-symbol-size));
-  block-size: max(1px, var(--mha-icon-symbol-size));
-  width: max(1px, var(--mha-icon-symbol-size));
-  height: max(1px, var(--mha-icon-symbol-size));
-  min-inline-size: 1px;
-  min-block-size: 1px;
+  inline-size: max(var(--mha-icon-symbol-min-size), var(--mha-icon-symbol-size));
+  block-size: max(var(--mha-icon-symbol-min-size), var(--mha-icon-symbol-size));
+  width: max(var(--mha-icon-symbol-min-size), var(--mha-icon-symbol-size));
+  height: max(var(--mha-icon-symbol-min-size), var(--mha-icon-symbol-size));
+  min-inline-size: var(--mha-icon-symbol-min-size);
+  min-block-size: var(--mha-icon-symbol-min-size);
   display: inline-grid;
   place-items: center;
   color: var(--mha-icon-symbol-color, var(--mha-icon-color, var(--mha-text-primary, #fff)));
@@ -32,8 +33,8 @@
   block-size: 100%;
   width: 100%;
   height: 100%;
-  min-inline-size: 1px;
-  min-block-size: 1px;
+  min-inline-size: var(--mha-icon-symbol-min-size);
+  min-block-size: var(--mha-icon-symbol-min-size);
   display: block;
   fill: var(--mha-icon-symbol-color, var(--mha-icon-color, var(--mha-text-primary, #fff)));
   stroke: none;
@@ -77,8 +78,8 @@
   block-size: 100%;
   width: 100%;
   height: 100%;
-  min-inline-size: 1px;
-  min-block-size: 1px;
+  min-inline-size: var(--mha-icon-symbol-min-size);
+  min-block-size: var(--mha-icon-symbol-min-size);
   margin: auto;
   transform-origin: center;
 }

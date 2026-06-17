@@ -781,8 +781,8 @@
 /* Force dock glyph size at the symbol level so first paint does not rely on inherited fallback timing. */
 .mha-dock .mha-icon > .mha-icon-symbol {
   --mha-icon-symbol-size: 82%;
-  inline-size: var(--mha-icon-symbol-size);
-  block-size: var(--mha-icon-symbol-size);
-  width: var(--mha-icon-symbol-size);
-  height: var(--mha-icon-symbol-size);
+  inline-size: max(var(--mha-icon-symbol-min-size, 1rem), var(--mha-icon-symbol-size));
+  block-size: max(var(--mha-icon-symbol-min-size, 1rem), var(--mha-icon-symbol-size));
+  width: max(var(--mha-icon-symbol-min-size, 1rem), var(--mha-icon-symbol-size));
+  height: max(var(--mha-icon-symbol-min-size, 1rem), var(--mha-icon-symbol-size));
 }
