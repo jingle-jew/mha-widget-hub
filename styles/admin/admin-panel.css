@@ -1,8 +1,11 @@
 :host {
   display: block;
   inline-size: 100%;
+  max-inline-size: 100%;
   block-size: 100dvh;
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  box-sizing: border-box;
   color: var(--mha-text, rgba(255, 255, 255, .92));
   background:
     radial-gradient(circle at 18% 10%, var(--mha-bg-radial-1, rgba(113, 128, 255, .3)), transparent 30rem),
@@ -16,13 +19,16 @@ button, input, select { font: inherit; }
 
 .mha-admin-root {
   inline-size: min(1180px, 100%);
+  max-inline-size: 100%;
   min-block-size: 100%;
   margin: 0 auto;
   padding: max(24px, env(safe-area-inset-top)) clamp(16px, 4vw, 48px) 48px;
+  overflow-x: clip;
 }
 
 .mha-admin-header {
   display: flex;
+  min-inline-size: 0;
   align-items: end;
   justify-content: space-between;
   gap: 24px;
@@ -32,6 +38,10 @@ button, input, select { font: inherit; }
 .mha-admin-eyebrow,
 .mha-admin-header p {
   color: var(--mha-muted, rgba(255, 255, 255, .62));
+}
+
+.mha-admin-header > div {
+  min-inline-size: 0;
 }
 
 .mha-admin-eyebrow {
@@ -44,6 +54,7 @@ button, input, select { font: inherit; }
 h1, h2, p { margin: 0; }
 h1 { margin-block: 6px; font-size: clamp(2rem, 5vw, 3.5rem); }
 h2 { font-size: 1.35rem; }
+h1, h2, p, label, button, select, input, span { overflow-wrap: anywhere; }
 
 .mha-admin-save,
 .mha-admin-domains button {
@@ -53,6 +64,7 @@ h2 { font-size: 1.35rem; }
 }
 
 .mha-admin-save {
+  max-inline-size: 100%;
   min-block-size: 44px;
   padding-inline: 20px;
   border-radius: 999px;
@@ -65,6 +77,7 @@ h2 { font-size: 1.35rem; }
 
 .mha-admin-warning,
 .mha-admin-error {
+  max-inline-size: 100%;
   margin-block: 12px 18px;
   padding: 14px 16px;
   border: 1px solid rgba(255, 255, 255, .14);
@@ -78,10 +91,14 @@ h2 { font-size: 1.35rem; }
 .mha-admin-layout {
   display: grid;
   grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+  min-inline-size: 0;
+  max-inline-size: 100%;
   gap: 18px;
 }
 
 .mha-admin-card {
+  min-inline-size: 0;
+  max-inline-size: 100%;
   border: 1px solid var(--mha-widget-border, rgba(255, 255, 255, .16));
   border-radius: var(--mha-widget-radius, 28px);
   background: var(--mha-widget-surface, rgba(255, 255, 255, .1));
@@ -90,7 +107,10 @@ h2 { font-size: 1.35rem; }
 }
 
 .mha-admin-sidebar,
-.mha-admin-content { padding: 20px; }
+.mha-admin-content {
+  min-inline-size: 0;
+  padding: 20px;
+}
 
 .mha-admin-sidebar > label {
   display: grid;
@@ -102,6 +122,8 @@ h2 { font-size: 1.35rem; }
 
 .mha-admin-control {
   inline-size: 100%;
+  min-inline-size: 0;
+  max-inline-size: 100%;
   min-block-size: 44px;
   padding: 0 14px;
   border: 1px solid rgba(255, 255, 255, .16);
@@ -110,8 +132,14 @@ h2 { font-size: 1.35rem; }
   background: rgba(0, 0, 0, .18);
 }
 
-.mha-admin-domains { display: grid; gap: 6px; }
+.mha-admin-domains {
+  display: grid;
+  min-inline-size: 0;
+  gap: 6px;
+}
 .mha-admin-domains button {
+  min-inline-size: 0;
+  max-inline-size: 100%;
   padding: 11px 13px;
   border-radius: 13px;
   text-align: start;
@@ -124,7 +152,8 @@ h2 { font-size: 1.35rem; }
 
 .mha-admin-content-header {
   display: grid;
-  grid-template-columns: 1fr minmax(180px, 280px);
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 280px);
+  min-inline-size: 0;
   align-items: center;
   gap: 18px;
   margin-block-end: 16px;
@@ -132,14 +161,19 @@ h2 { font-size: 1.35rem; }
 
 .mha-admin-entity-list {
   display: grid;
+  min-inline-size: 0;
+  max-inline-size: 100%;
   gap: 7px;
   max-block-size: min(64vh, 720px);
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
   padding-inline-end: 4px;
 }
 
 .mha-admin-entity-row {
   display: flex;
+  min-inline-size: 0;
+  max-inline-size: 100%;
   align-items: center;
   gap: 12px;
   min-block-size: 46px;
@@ -149,6 +183,10 @@ h2 { font-size: 1.35rem; }
 }
 
 .mha-admin-entity-row input { inline-size: 18px; block-size: 18px; }
+.mha-admin-entity-row span {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
 .mha-admin-empty { padding: 24px; color: var(--mha-muted, rgba(255, 255, 255, .62)); text-align: center; }
 
 :host([data-theme="light"]) {
@@ -166,8 +204,24 @@ h2 { font-size: 1.35rem; }
 :host([data-theme-style="material"]) .mha-admin-card { backdrop-filter: none; }
 
 @media (max-width: 760px) {
-  .mha-admin-header { align-items: stretch; flex-direction: column; }
-  .mha-admin-layout { grid-template-columns: 1fr; }
+  .mha-admin-root { padding-inline: 12px; }
+  .mha-admin-header {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .mha-admin-save { inline-size: 100%; }
+  .mha-admin-warning,
+  .mha-admin-error,
+  .mha-admin-sidebar,
+  .mha-admin-content {
+    padding-inline: 14px;
+  }
+  .mha-admin-layout { grid-template-columns: minmax(0, 1fr); }
   .mha-admin-content-header { grid-template-columns: 1fr; }
   .mha-admin-entity-list { max-block-size: none; }
+  .mha-admin-entity-row {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
 }
