@@ -33,6 +33,23 @@ function getSliderMeasureTarget(wrapper) {
 
 function measureSliderBox(wrapper) {
   const measureTarget = getSliderMeasureTarget(wrapper);
+  const previewShell = wrapper.closest?.(".mha-widget-manager-live-widget-shell");
+
+  /*
+   * Live previews render the real widget at its virtual dashboard size and then
+   * scale the whole sandbox down with CSS transform. getBoundingClientRect()
+   * includes that transform, which made SliderWidget measure the already-scaled
+   * box and then render its rotor at a second scaled-down width. In preview, use
+   * layout dimensions instead so the slider fills the real virtual widget before
+   * the manager applies the single outer scale.
+   */
+  if (previewShell) {
+    return {
+      width: Math.max(0, measureTarget.offsetWidth || measureTarget.clientWidth || 0),
+      height: Math.max(0, measureTarget.offsetHeight || measureTarget.clientHeight || 0),
+    };
+  }
+
   const rect = measureTarget.getBoundingClientRect();
 
   return {

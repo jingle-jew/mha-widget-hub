@@ -141,11 +141,22 @@ function bindPreviewScale(frame, layout) {
     const safeBlockInset = isVeryWide ? 0 : 8;
     const safeInline = Math.max(1, availableInline - safeInlineInset);
     const safeBlock = Math.max(1, availableBlock - safeBlockInset);
-    const scale = Math.min(
-      safeInline / layout.virtualInlineSize,
-      safeBlock / layout.virtualBlockSize,
-      1,
-    );
+    const inlineScale = safeInline / layout.virtualInlineSize;
+    const blockScale = safeBlock / layout.virtualBlockSize;
+    const kind = frame.dataset.kind || "";
+    const widthBiasedSlider = ["slider", "toggle-slider"].includes(kind) && layout.w > layout.h;
+
+    // Horizontal slider-based widgets should visually use the full available
+    // preview width. The normal min(inline, block) fit can make the whole
+    // widget scale down because of the uniform manager card height, which makes
+    // the slider rail look like it only spans ~3/4 of its own widget. Prefer
+    // fitting by width for these widgets, while still preventing severe vertical
+    // overflow in very constrained cards.
+    const widthFitScale = Math.min(inlineScale, 1);
+    const blockGuardScale = Math.min(blockScale * 1.08, 1);
+    const scale = widthBiasedSlider
+      ? Math.min(widthFitScale, Math.max(blockScale, blockGuardScale))
+      : Math.min(inlineScale, blockScale, 1);
 
     // Very wide widgets such as 4×1 weather are width-constrained in the
     // mobile widget manager. Do not apply the normal visual floor there, since

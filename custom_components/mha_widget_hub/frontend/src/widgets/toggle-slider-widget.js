@@ -12,6 +12,7 @@ import { createToggleWidgetContent } from "./toggle-widget.js";
 import { clampWidth, css, freezeSize, isLocalWidgetKind, variant } from "./widget-definition-utils.js";
 import { isEntityAllowedForCurrentUser } from "../admin/entity-permissions.js";
 import { buildToggleSliderWidgetConfig, createToggleSliderConfigDraft } from "../widget-config/toggle-slider-config.js";
+import { WIDGET_PREVIEW_DATA } from "./widget-preview-data.js";
 
 export const TOGGLE_SLIDER_WIDGET_KIND = "toggle-slider";
 const SLIDER_SERVICE_INTERVAL_MS = 80;
@@ -241,10 +242,38 @@ export const TOGGLE_SLIDER_WIDGET_DEFINITION = Object.freeze({
   ],
 });
 
+function createToggleSliderPreviewWidget(item = {}) {
+  const previewData = WIDGET_PREVIEW_DATA.light;
+  const sliderData = WIDGET_PREVIEW_DATA.slider;
+  const entityId = item.lightEntityId || item.entityId || item.entity_id || previewData.entityId;
+
+  return {
+    ...item,
+    kind: "toggle-slider",
+    type: "toggle-slider",
+    component: TOGGLE_SLIDER_WIDGET_DEFINITION.component,
+    variant: item.variant || TOGGLE_SLIDER_WIDGET_DEFINITION.defaultVariant,
+    lightEntityId: entityId,
+    entityId,
+    entity_id: entityId,
+    label: item.label || item.title || previewData.name,
+    title: item.title || item.label || previewData.name,
+    checked: item.checked ?? previewData.state === "on",
+    state: item.state || previewData.state,
+    value: item.value ?? sliderData.value,
+    min: item.min ?? sliderData.min,
+    max: item.max ?? sliderData.max,
+    sliderMode: item.sliderMode || "brightness",
+  };
+}
+
 export const WIDGET_MODULE = Object.freeze({
   kind: "toggle-slider",
   definition: TOGGLE_SLIDER_WIDGET_DEFINITION,
   renderer: TOGGLE_SLIDER_WIDGET_CONTENT_RENDERER,
   config: TOGGLE_SLIDER_WIDGET_CONFIG_MANIFEST,
-  preview: Object.freeze({ mode: "static" }),
+  preview: Object.freeze({
+    mode: "live",
+    createWidget: createToggleSliderPreviewWidget,
+  }),
 });

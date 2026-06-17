@@ -17,6 +17,7 @@ import { isToggleEntityOn, supportsToggleEntity } from "../ha/toggle.js";
 import { clampWidth, css, freezeSize, isLocalWidgetKind, variant } from "./widget-definition-utils.js";
 import { isEntityAllowedForCurrentUser } from "../admin/entity-permissions.js";
 import { buildToggleWidgetConfig, createToggleConfigDraft } from "../widget-config/toggle-config.js";
+import { WIDGET_PREVIEW_DATA } from "./widget-preview-data.js";
 
 export const TOGGLE_WIDGET_KIND = "toggle";
 
@@ -166,9 +167,17 @@ export function createToggleWidgetContent(widget = {}, {
 
 
 export const TOGGLE_WIDGET_CONTENT_RENDERER = Object.freeze({
-  render: ({ widget, widgetW, widgetH, hass, entityVisibilityConfig }) => createToggleWidgetContent(widget, {
+  render: ({
+    widget,
     widgetW,
     widgetH,
+    hass,
+    entityVisibilityConfig,
+    interactive = true,
+  }) => createToggleWidgetContent(widget, {
+    widgetW,
+    widgetH,
+    disabled: !interactive,
     bindToHass: true,
     hass,
     entityVisibilityConfig,
@@ -207,10 +216,32 @@ export const TOGGLE_WIDGET_DEFINITION = Object.freeze({
   ],
 });
 
+function createTogglePreviewWidget(item = {}) {
+  const previewData = WIDGET_PREVIEW_DATA.toggle;
+  return {
+    ...item,
+    kind: "toggle",
+    type: "toggle",
+    component: TOGGLE_WIDGET_DEFINITION.component,
+    variant: item.variant || TOGGLE_WIDGET_DEFINITION.defaultVariant,
+    entityId: item.entityId || item.entity_id || previewData.entityId,
+    entity_id: item.entity_id || item.entityId || previewData.entityId,
+    label: item.label || item.title || previewData.name,
+    title: item.title || item.label || previewData.name,
+    icon: item.icon || "home",
+    iconCategory: item.iconCategory || "home",
+    checked: item.checked ?? true,
+    state: item.state || previewData.state,
+  };
+}
+
 export const WIDGET_MODULE = Object.freeze({
   kind: "toggle",
   definition: TOGGLE_WIDGET_DEFINITION,
   renderer: TOGGLE_WIDGET_CONTENT_RENDERER,
   config: TOGGLE_WIDGET_CONFIG_MANIFEST,
-  preview: Object.freeze({ mode: "static" }),
+  preview: Object.freeze({
+    mode: "live",
+    createWidget: createTogglePreviewWidget,
+  }),
 });

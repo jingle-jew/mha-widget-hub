@@ -8,6 +8,7 @@ import { createSlider } from "../ui/slider.js";
 import { css, freezeSize, isLocalWidgetKind, variant } from "./widget-definition-utils.js";
 import { isEntityAllowedForCurrentUser } from "../admin/entity-permissions.js";
 import { buildSliderWidgetConfig, createSliderConfigDraft } from "../widget-config/slider-config.js";
+import { WIDGET_PREVIEW_DATA } from "./widget-preview-data.js";
 
 const SLIDER_SERVICE_INTERVAL_MS = 80;
 
@@ -252,10 +253,36 @@ export const SLIDER_WIDGET_DEFINITION = Object.freeze({
   },
 });
 
+function createSliderPreviewWidget(item = {}) {
+  const isVolume = item.variant === "volume-slider" || item.sliderAction === "volume";
+  const previewData = isVolume ? WIDGET_PREVIEW_DATA.media : WIDGET_PREVIEW_DATA.light;
+  const sliderData = WIDGET_PREVIEW_DATA.slider;
+  const entityId = item.entityId || item.entity_id || previewData.entityId;
+
+  return {
+    ...item,
+    kind: "slider",
+    type: "slider",
+    component: SLIDER_WIDGET_DEFINITION.component,
+    variant: item.variant || (isVolume ? "volume-slider" : "light-slider-wide"),
+    entityId,
+    entity_id: entityId,
+    label: item.label || item.title || (isVolume ? "Volume" : previewData.name),
+    title: item.title || item.label || (isVolume ? "Volume" : previewData.name),
+    sliderAction: isVolume ? "volume" : "brightness",
+    value: item.value ?? sliderData.value,
+    min: item.min ?? sliderData.min,
+    max: item.max ?? sliderData.max,
+  };
+}
+
 export const WIDGET_MODULE = Object.freeze({
   kind: "slider",
   definition: SLIDER_WIDGET_DEFINITION,
   renderer: SLIDER_WIDGET_CONTENT_RENDERER,
   config: SLIDER_WIDGET_CONFIG_MANIFEST,
-  preview: Object.freeze({ mode: "static" }),
+  preview: Object.freeze({
+    mode: "live",
+    createWidget: createSliderPreviewWidget,
+  }),
 });

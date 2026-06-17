@@ -159,6 +159,9 @@ test("registered widgets expose preview renderer manifests", async () => {
     ["clock", "live"],
     ["weather", "live"],
     ["button", "live"],
+    ["toggle", "live"],
+    ["slider", "live"],
+    ["toggle-slider", "live"],
   ]);
 
   for (const [kind, definition] of Object.entries(WIDGET_REGISTRY)) {

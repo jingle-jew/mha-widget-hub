@@ -272,28 +272,16 @@
 /* Live previews render the real widget at a virtual grid size and then scale the
  * whole widget down to fit the manager frame. The manager controls only the
  * outer frame/scale; widget internals keep their production layout unchanged.
+ *
+ * Keep every manager preview viewport the same visual size. Widget proportions
+ * are represented inside the sandbox by the scaled real widget, not by resizing
+ * the manager card itself. This prevents very tall widgets such as 1×4 sliders
+ * from making neighbouring cards look lost, while 4×1/4×2 widgets still render
+ * at their real virtual sizes before scaling.
  */
-.mha-widget-manager-preview-area[data-size="4x1"],
-.mha-widget-manager-preview-area[data-size="3x1"] {
-  block-size: auto;
-  aspect-ratio: 4 / 1;
-}
-
-.mha-widget-manager-preview-area[data-size="2x1"] {
-  block-size: auto;
-  aspect-ratio: 2 / 1;
-}
-
-.mha-widget-manager-preview-area[data-size="2x2"],
-.mha-widget-manager-preview-area[data-size="3x2"],
-.mha-widget-manager-preview-area[data-size="4x2"] {
-  block-size: auto;
-  aspect-ratio: 2 / 1;
-}
-
-.mha-widget-manager-preview-area[data-size="1x4"] {
-  block-size: auto;
-  aspect-ratio: 1 / 2;
+.mha-widget-manager-preview-area[data-size] {
+  block-size: var(--mha-widget-manager-preview-block-size);
+  aspect-ratio: auto;
 }
 
 .mha-widget-manager-card-meta,
