@@ -5,6 +5,8 @@ const variant = (name, label, w, h) => Object.freeze({
   size: freezeSize(w, h),
 });
 
+const css = (...paths) => Object.freeze(paths);
+
 const clampWidth = (size, min, max) => ({
   w: Math.max(min, Math.min(max, size.w)),
   h: size.h,
@@ -41,6 +43,7 @@ const DEFINITIONS = {
       ]),
     }),
     renderer: "empty",
+    css: css(),
     preview: "status",
     aliases: ["empty-widget"],
     variantAliases: [],
@@ -58,6 +61,7 @@ const DEFINITIONS = {
       ]),
     }),
     renderer: "clock",
+    css: css("styles/widgets/clock-widget.css"),
     preview: "clock",
     aliases: ["clock-widget"],
     variantAliases: ["digital", "digital-weather", "analog", "ios-analog"],
@@ -81,6 +85,7 @@ const DEFINITIONS = {
       ]),
     }),
     renderer: "button",
+    css: css("styles/widgets/simple-button-widget.css"),
     preview: "button",
     config: "button",
     aliases: ["button-widget"],
@@ -109,6 +114,7 @@ const DEFINITIONS = {
       ]),
     }),
     renderer: "slider",
+    css: css("styles/widgets/slider-widget.css"),
     preview: "slider",
     config: "slider",
     aliases: ["slider-widget"],
@@ -146,6 +152,7 @@ const DEFINITIONS = {
       ]),
     }),
     renderer: "toggle",
+    css: css("styles/widgets/toggle-widget.css"),
     preview: "toggle",
     config: "toggle",
     aliases: ["toggle-widget"],
@@ -167,6 +174,7 @@ const DEFINITIONS = {
       ]),
     }),
     renderer: "toggle-slider",
+    css: css("styles/widgets/toggle-slider-widget.css"),
     preview: "toggle-slider",
     config: "toggle-slider",
     aliases: [
@@ -196,6 +204,7 @@ const DEFINITIONS = {
       ]),
     }),
     renderer: "toggle-buttons",
+    css: css("styles/widgets/toggle-buttons-widget.css"),
     preview: "toggle-buttons",
     aliases: ["toggle-buttons-widget", "combined-toggle-buttons"],
     variantAliases: [
@@ -224,6 +233,7 @@ const DEFINITIONS = {
       ]),
     }),
     renderer: "weather",
+    css: css("styles/widgets/weather-widget.css"),
     preview: "weather",
     config: "weather",
     aliases: ["weather-widget"],
@@ -322,6 +332,7 @@ export const WIDGET_REGISTRY = Object.freeze(
         aliases: Object.freeze([...definition.aliases]),
         variantAliases: Object.freeze([...definition.variantAliases]),
         manager: definition.manager,
+        css: Object.freeze([...(definition.css || [])]),
         variants: Object.freeze([...(definition.variants || [])]),
         variantGroups: definition.variantGroups
           ? Object.freeze({
