@@ -280,6 +280,24 @@
         states,
         language: "fr",
         user: { id: "dev-user", name: "Dev local" },
+        callWS(payload = {}) {
+          console.info("[MHA dev] callWS", payload);
+          if (payload.type === "mha_widget_hub/entity_visibility/get") {
+            return Promise.resolve({
+              version: 1,
+              users: {
+                "dev-user": {
+                  unrestricted: true,
+                  allowedEntities: {},
+                },
+              },
+            });
+          }
+          if (payload.type === "mha_widget_hub/users/list") {
+            return Promise.resolve({ users: [{ id: "dev-user", name: "Dev local" }] });
+          }
+          return Promise.resolve({});
+        },
         callService(domain, service, data = {}) {
           console.info("[MHA dev] callService", domain, service, data);
           const entityId = data.entity_id;
@@ -310,7 +328,16 @@
     }
 
     if (!new URLSearchParams(location.search).has("no-hass")) {
-      hub.hass = createMockHass();
+      const attachMockHass = () => {
+        hub.hass = createMockHass();
+        hub.requestRender?.();
+      };
+
+      if (customElements.get("mha-widget-hub")) {
+        attachMockHass();
+      } else {
+        customElements.whenDefined("mha-widget-hub").then(attachMockHass);
+      }
     }
 
     window.__MHA_ICON_SHAPE_DEBUG__ = () => {

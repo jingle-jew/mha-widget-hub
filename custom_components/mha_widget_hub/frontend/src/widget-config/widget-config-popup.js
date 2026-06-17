@@ -1,10 +1,14 @@
 import { createCloseButton } from "../system/system-buttons.js";
 import {
+  buildToggleSliderWidgetConfig,
+  createToggleSliderConfigDraft,
   reconcileToggleSliderConfigDraft,
   updateToggleSliderLabel,
   updateToggleSliderLight,
 } from "./toggle-slider-config.js";
 import {
+  buildSliderWidgetConfig,
+  createSliderConfigDraft,
   reconcileSliderConfigDraft,
   SLIDER_ACTIONS,
   updateSliderAction,
@@ -12,6 +16,8 @@ import {
   updateSliderLabel,
 } from "./slider-config.js";
 import {
+  buildToggleWidgetConfig,
+  createToggleConfigDraft,
   reconcileToggleConfigDraft,
   TOGGLE_DEVICE_TYPES,
   updateToggleConfigLabel,
