@@ -257,4 +257,5 @@ export const WIDGET_MODULE = Object.freeze({
   definition: SLIDER_WIDGET_DEFINITION,
   renderer: SLIDER_WIDGET_CONTENT_RENDERER,
   config: SLIDER_WIDGET_CONFIG_MANIFEST,
+  preview: Object.freeze({ mode: "static" }),
 });

@@ -288,4 +288,5 @@ export const WIDGET_MODULE = Object.freeze({
   definition: SIMPLE_BUTTON_WIDGET_DEFINITION,
   renderer: SIMPLE_BUTTON_WIDGET_CONTENT_RENDERER,
   config: SIMPLE_BUTTON_WIDGET_CONFIG_MANIFEST,
+  preview: Object.freeze({ mode: "static" }),
 });

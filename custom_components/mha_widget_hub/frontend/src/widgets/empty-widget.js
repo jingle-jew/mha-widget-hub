@@ -8,4 +8,5 @@ export const EMPTY_WIDGET_CONTENT_RENDERER = Object.freeze({
 export const WIDGET_MODULE = Object.freeze({
   kind: "empty",
   renderer: EMPTY_WIDGET_CONTENT_RENDERER,
+  preview: Object.freeze({ mode: "static" }),
 });

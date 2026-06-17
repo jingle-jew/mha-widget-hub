@@ -185,4 +185,5 @@ export const WIDGET_MODULE = Object.freeze({
   definition: WEATHER_WIDGET_DEFINITION,
   renderer: WEATHER_WIDGET_CONTENT_RENDERER,
   config: WEATHER_WIDGET_CONFIG_MANIFEST,
+  preview: Object.freeze({ mode: "static" }),
 });

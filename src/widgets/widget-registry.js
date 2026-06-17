@@ -1,5 +1,16 @@
 import { WIDGET_MODULES } from "./widget-module-registry.js";
 
+const STATIC_PREVIEW_RENDERER = Object.freeze({ mode: "static" });
+
+function normalizePreviewRenderer(module = {}) {
+  const previewRenderer = module.preview || STATIC_PREVIEW_RENDERER;
+  return Object.freeze({
+    mode: previewRenderer.mode || "static",
+    createWidget: previewRenderer.createWidget,
+    render: previewRenderer.render,
+  });
+}
+
 const WIDGET_MANAGER_METADATA = Object.freeze({
   categories: Object.freeze({
     utilities: Object.freeze({ label: "Utilitaires", description: "Horloges et infos rapides.", icon: "◷", order: 10 }),
@@ -90,24 +101,30 @@ export function getWidgetManagerCategories() {
 
 export const WIDGET_REGISTRY = Object.freeze(
   Object.fromEntries(
-    Object.entries(DEFINITIONS).map(([kind, definition]) => [
-      kind,
-      Object.freeze({
-        kind,
-        ...definition,
-        aliases: Object.freeze([...definition.aliases]),
-        variantAliases: Object.freeze([...definition.variantAliases]),
-        manager: definition.manager,
-        css: Object.freeze([...(definition.css || [])]),
-        variants: Object.freeze([...(definition.variants || [])]),
-        variantGroups: definition.variantGroups
-          ? Object.freeze({
-            horizontal: Object.freeze([...definition.variantGroups.horizontal]),
-            vertical: Object.freeze([...definition.variantGroups.vertical]),
-          })
-          : undefined,
+    WIDGET_MODULES
+      .filter((module) => module?.kind && module?.definition)
+      .map((module) => {
+        const definition = module.definition;
+        return [
+          module.kind,
+          Object.freeze({
+            kind: module.kind,
+            ...definition,
+            aliases: Object.freeze([...definition.aliases]),
+            variantAliases: Object.freeze([...definition.variantAliases]),
+            manager: definition.manager,
+            css: Object.freeze([...(definition.css || [])]),
+            previewRenderer: normalizePreviewRenderer(module),
+            variants: Object.freeze([...(definition.variants || [])]),
+            variantGroups: definition.variantGroups
+              ? Object.freeze({
+                horizontal: Object.freeze([...definition.variantGroups.horizontal]),
+                vertical: Object.freeze([...definition.variantGroups.vertical]),
+              })
+              : undefined,
+          }),
+        ];
       }),
-    ]),
   ),
 );
 
@@ -131,6 +148,10 @@ export function resolveWidgetKind(widget = {}, { fallback = "empty" } = {}) {
 
 export function getWidgetDefinition(widgetOrKind = {}) {
   return WIDGET_REGISTRY[resolveWidgetKind(widgetOrKind)] || null;
+}
+
+export function getWidgetPreviewRenderer(widgetOrKind = {}) {
+  return getWidgetDefinition(widgetOrKind)?.previewRenderer || STATIC_PREVIEW_RENDERER;
 }
 
 export function getWidgetConfigType(widget = {}) {

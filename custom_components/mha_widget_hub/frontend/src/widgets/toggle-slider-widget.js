@@ -246,4 +246,5 @@ export const WIDGET_MODULE = Object.freeze({
   definition: TOGGLE_SLIDER_WIDGET_DEFINITION,
   renderer: TOGGLE_SLIDER_WIDGET_CONTENT_RENDERER,
   config: TOGGLE_SLIDER_WIDGET_CONFIG_MANIFEST,
+  preview: Object.freeze({ mode: "static" }),
 });

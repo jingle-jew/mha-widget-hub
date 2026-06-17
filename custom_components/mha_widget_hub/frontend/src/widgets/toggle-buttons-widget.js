@@ -133,4 +133,5 @@ export const WIDGET_MODULE = Object.freeze({
   kind: "toggle-buttons",
   definition: TOGGLE_BUTTONS_WIDGET_DEFINITION,
   renderer: TOGGLE_BUTTONS_WIDGET_CONTENT_RENDERER,
+  preview: Object.freeze({ mode: "static" }),
 });

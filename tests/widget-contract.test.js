@@ -151,3 +151,14 @@ test("variant cycling starts after the current size", () => {
   assert.deepEqual(entries[0].size, { w: 4, h: 1 });
   assert.deepEqual(entries.at(-1).size, { w: 3, h: 1 });
 });
+
+test("registered widgets expose static preview renderer manifests", async () => {
+  const { WIDGET_REGISTRY, getWidgetPreviewRenderer } = await import("../src/widgets/widget-registry.js");
+
+  for (const [kind, definition] of Object.entries(WIDGET_REGISTRY)) {
+    assert.equal(definition.previewRenderer.mode, "static", `${kind} should default to static preview mode`);
+    assert.equal(getWidgetPreviewRenderer(kind).mode, "static");
+  }
+
+  assert.equal(getWidgetPreviewRenderer("unknown-widget").mode, "static");
+});
