@@ -152,12 +152,13 @@ test("variant cycling starts after the current size", () => {
   assert.deepEqual(entries.at(-1).size, { w: 3, h: 1 });
 });
 
-test("registered widgets expose static preview renderer manifests", async () => {
+test("registered widgets expose preview renderer manifests", async () => {
   const { WIDGET_REGISTRY, getWidgetPreviewRenderer } = await import("../src/widgets/widget-registry.js");
 
   for (const [kind, definition] of Object.entries(WIDGET_REGISTRY)) {
-    assert.equal(definition.previewRenderer.mode, "static", `${kind} should default to static preview mode`);
-    assert.equal(getWidgetPreviewRenderer(kind).mode, "static");
+    const expectedMode = kind === "clock" ? "live" : "static";
+    assert.equal(definition.previewRenderer.mode, expectedMode, `${kind} should expose its preview mode`);
+    assert.equal(getWidgetPreviewRenderer(kind).mode, expectedMode);
   }
 
   assert.equal(getWidgetPreviewRenderer("unknown-widget").mode, "static");

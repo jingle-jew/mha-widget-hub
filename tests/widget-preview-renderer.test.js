@@ -19,16 +19,26 @@ function installDom() {
       node.dataset = {};
       node.style = { setProperty(name, value) { this[name] = value; } };
       node.className = "";
+      node.hidden = false;
+      node.querySelector = () => null;
+      node.querySelectorAll = () => [];
+      node.setAttribute = (name, value) => { node[name] = value; };
       node.append = (...children) => node.childNodes.push(...children);
       return node;
     },
   };
 }
 
-test("preview renderer falls back to static mode by default", () => {
-  assert.equal(getWidgetPreviewRenderer({ kind: "clock" }).mode, "static");
-  assert.equal(hasLiveWidgetPreview({ kind: "clock" }), false);
-  assert.equal(createLiveWidgetPreview({ kind: "clock", size: { w: 2, h: 2 } }), null);
+test("clock exposes a live preview renderer", () => {
+  installDom();
+  assert.equal(getWidgetPreviewRenderer({ kind: "clock" }).mode, "live");
+  assert.equal(hasLiveWidgetPreview({ kind: "clock" }), true);
+
+  const preview = createLiveWidgetPreview({ kind: "clock", variant: "digital", size: { w: 2, h: 2 } });
+  assert.equal(preview?.className, "mha-widget-manager-live-preview");
+  assert.equal(preview?.dataset.kind, "clock");
+  assert.equal(preview?.dataset.size, "2x2");
+  assert.equal(preview?.childNodes.length, 1);
 });
 
 test("preview layout exposes size, aspect ratio, and orientation", () => {
@@ -48,4 +58,5 @@ test("live preview renderer returns null when no live manifest is enabled", () =
   installDom();
   const preview = createLiveWidgetPreview({ kind: "weather", variant: "adaptive-weather", size: { w: 4, h: 2 } });
   assert.equal(preview, null);
+  assert.equal(hasLiveWidgetPreview({ kind: "weather" }), false);
 });

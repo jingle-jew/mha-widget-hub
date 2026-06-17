@@ -313,5 +313,5 @@ export const WIDGET_MODULE = Object.freeze({
   kind: "clock",
   definition: CLOCK_WIDGET_DEFINITION,
   renderer: CLOCK_WIDGET_CONTENT_RENDERER,
-  preview: Object.freeze({ mode: "static" }),
+  preview: Object.freeze({ mode: "live" }),
 });
