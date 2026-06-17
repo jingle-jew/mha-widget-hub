@@ -16,23 +16,6 @@ function resolveMediaEntity(widget = {}, hass) {
   return entityId ? hass?.states?.[entityId] : null;
 }
 
-function resolveMediaArtworkUrl(attributes = {}, widget = {}) {
-  const rawUrl = attributes.entity_picture
-    || attributes.media_image_url
-    || attributes.media_image_remotely_accessible_url
-    || widget.artworkUrl
-    || widget.artwork_url
-    || widget.image
-    || "";
-
-  if (!rawUrl || typeof rawUrl !== "string") return "";
-  if (/^(https?:|data:|blob:)/i.test(rawUrl)) return rawUrl;
-  if (rawUrl.startsWith("/")) {
-    return `${window.location.origin}${rawUrl}`;
-  }
-  return rawUrl;
-}
-
 function getMediaData(widget = {}, hass) {
   const previewData = WIDGET_PREVIEW_DATA.media;
   const entity = resolveMediaEntity(widget, hass);
@@ -50,7 +33,6 @@ function getMediaData(widget = {}, hass) {
     state,
     playing: state === "playing",
     volumePercent: Math.round(Number(volume) * 100),
-    artworkUrl: resolveMediaArtworkUrl(attributes, widget),
   };
 }
 
@@ -61,15 +43,6 @@ function createText(className, text = "") {
   return node;
 }
 
-function applyArtworkImage(artwork, data = {}) {
-  artwork.dataset.hasArtwork = String(Boolean(data.artworkUrl));
-  if (data.artworkUrl) {
-    artwork.style.backgroundImage = `url("${data.artworkUrl}")`;
-  } else {
-    artwork.style.removeProperty("background-image");
-  }
-}
-
 function createArtwork(data) {
   const artwork = document.createElement("div");
   artwork.className = "mha-media-widget-artwork";
@@ -78,7 +51,6 @@ function createArtwork(data) {
     createText("mha-media-widget-artwork-glyph", "♪"),
   );
   artwork.dataset.playing = String(data.playing);
-  applyArtworkImage(artwork, data);
   return artwork;
 }
 
@@ -191,11 +163,7 @@ export function createMediaWidgetContent(widget = {}, {
     root.dataset.playing = String(nextData.playing);
     root.querySelector(".mha-media-widget-title").textContent = nextData.title;
     root.querySelector(".mha-media-widget-artist").textContent = nextData.artist;
-    const nextArtwork = root.querySelector(".mha-media-widget-artwork");
-    if (nextArtwork) {
-      nextArtwork.dataset.playing = String(nextData.playing);
-      applyArtworkImage(nextArtwork, nextData);
-    }
+    root.querySelector(".mha-media-widget-artwork")?.setAttribute("data-playing", String(nextData.playing));
     root.querySelector(".mha-media-widget-volume")?.replaceChildren(`${nextData.volumePercent}%`);
   };
 
