@@ -1,5 +1,5 @@
 import { normalizeAccent, supportsAutoAccent } from "./accent-palettes.js";
-import { getThemeStyleIds } from "./theme-registry.js";
+import { getDefaultIconShape, getThemeStyleIds } from "./theme-registry.js";
 
 export const THEME_STYLES = Object.freeze(new Set(getThemeStyleIds()));
 
@@ -99,12 +99,6 @@ export function getStoredAccent(host, themeStyle = "oneui") {
     : getStoredManualAccent(host, normalizedStyle);
 }
 
-function getDefaultIconShapeForThemeStyle(themeStyle = "oneui") {
-  if (themeStyle === "ios") return "rounded-square";
-  if (themeStyle === "material") return "circle";
-  return "squircle";
-}
-
 export function normalizeIconShapeSetting(iconShapeSetting = "auto") {
   return ["auto", "rounded-square", "squircle", "circle"].includes(iconShapeSetting)
     ? iconShapeSetting
@@ -114,7 +108,7 @@ export function normalizeIconShapeSetting(iconShapeSetting = "auto") {
 export function resolveIconShape(themeStyle = "oneui", iconShapeSetting = "auto") {
   const normalized = normalizeIconShapeSetting(iconShapeSetting);
   return normalized === "auto"
-    ? getDefaultIconShapeForThemeStyle(themeStyle)
+    ? getDefaultIconShape(themeStyle)
     : normalized;
 }
 

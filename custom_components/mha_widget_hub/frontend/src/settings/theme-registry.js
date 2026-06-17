@@ -49,3 +49,7 @@ export function getDefaultThemeStyle() {
 export function getThemeDefinition(themeStyle = getDefaultThemeStyle()) {
   return THEME_REGISTRY[themeStyle] || THEME_REGISTRY[getDefaultThemeStyle()];
 }
+
+export function getDefaultIconShape(themeStyle = getDefaultThemeStyle()) {
+  return getThemeDefinition(themeStyle).defaultIconShape;
+}
