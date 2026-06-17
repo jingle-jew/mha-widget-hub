@@ -30,6 +30,11 @@ import {
   updateWeatherEntity,
 } from "./weather-config.js";
 import {
+  reconcileMediaConfigDraft,
+  updateMediaEntity,
+  updateMediaLabel,
+} from "./media-config.js";
+import {
   getWidgetConfigDefinition,
   getWidgetConfigType,
 } from "./widget-config-registry.js";
@@ -289,6 +294,53 @@ function createWeatherFields(session, hass, visibilityConfig, onChange) {
   return { fields, canSave: Boolean(selected) };
 }
 
+function createMediaFields(session, hass, visibilityConfig, onChange) {
+  const reconciled = reconcileMediaConfigDraft(session.draft, hass, visibilityConfig);
+  const { draft } = reconciled;
+  const fields = document.createElement("div");
+  fields.className = "mha-widget-config-fields";
+
+  const nameInput = document.createElement("input");
+  nameInput.className = "mha-widget-config-control";
+  nameInput.type = "text";
+  nameInput.value = draft.label;
+  nameInput.placeholder = reconciled.selected?.label || "Salon";
+  nameInput.autocomplete = "off";
+  nameInput.addEventListener("input", event => {
+    updateMediaLabel(draft, event.currentTarget.value);
+    onChange?.();
+  });
+
+  const mediaSelect = document.createElement("select");
+  mediaSelect.className = "mha-widget-config-control";
+  mediaSelect.disabled = !reconciled.options.length;
+  if (!reconciled.options.length) {
+    const empty = document.createElement("option");
+    empty.value = "";
+    empty.textContent = "Aucun lecteur média autorisé et disponible.";
+    mediaSelect.append(empty);
+  } else {
+    reconciled.options.forEach(option => {
+      const item = document.createElement("option");
+      item.value = option.value;
+      item.textContent = option.label;
+      item.selected = option.value === draft.mediaEntityId;
+      mediaSelect.append(item);
+    });
+  }
+  mediaSelect.addEventListener("change", event => {
+    updateMediaEntity(draft, event.currentTarget.value, reconciled.options);
+    onChange?.({ rerender: true });
+  });
+
+  fields.append(
+    createField("Nom affiché", nameInput),
+    createField("Lecteur média", mediaSelect),
+  );
+
+  return { fields, canSave: Boolean(reconciled.selected) };
+}
+
 function createButtonFields(session, hass, visibilityConfig, onChange) {
   const reconciled = reconcileButtonConfigDraft(session.draft, hass, visibilityConfig);
   const { draft } = reconciled;
@@ -438,6 +490,7 @@ export function createWidgetConfigPopup({
   const isToggle = session?.configType === "toggle";
   const isButton = session?.configType === "button";
   const isWeather = session?.configType === "weather";
+  const isMedia = session?.configType === "media";
   title.textContent = isSlider
     ? "Configurer le slider"
     : isToggle
@@ -446,7 +499,9 @@ export function createWidgetConfigPopup({
         ? "Configurer le bouton"
         : isWeather
           ? "Configurer la météo"
-          : "Configurer la lumière";
+          : isMedia
+            ? "Configurer le média"
+            : "Configurer la lumière";
   header.append(title, createCloseButton({
     label: "Fermer",
     className: "mha-widget-config-close mha-page-creator-close",
@@ -463,7 +518,9 @@ export function createWidgetConfigPopup({
         ? "Choisis une entité autorisée ou un service Home Assistant."
         : isWeather
           ? "Choisis l’entité weather autorisée à afficher."
-          : "Choisis la lumière et le contrôle à afficher.";
+          : isMedia
+            ? "Choisis le lecteur média et le nom à afficher."
+            : "Choisis la lumière et le contrôle à afficher.";
 
   const content = session
     ? isSlider
@@ -474,7 +531,9 @@ export function createWidgetConfigPopup({
           ? createButtonFields(session, hass, visibilityConfig, onChange)
           : isWeather
             ? createWeatherFields(session, hass, visibilityConfig, onChange)
-            : createToggleSliderFields(session, hass, visibilityConfig, onChange)
+            : isMedia
+              ? createMediaFields(session, hass, visibilityConfig, onChange)
+              : createToggleSliderFields(session, hass, visibilityConfig, onChange)
     : { fields: document.createElement("div"), canSave: false };
 
   const actions = document.createElement("div");

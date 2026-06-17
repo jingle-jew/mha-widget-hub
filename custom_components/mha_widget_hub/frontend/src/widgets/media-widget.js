@@ -1,5 +1,9 @@
 import { css, freezeSize, isLocalWidgetKind, variant } from "./widget-definition-utils.js";
 import { WIDGET_PREVIEW_DATA } from "./widget-preview-data.js";
+import {
+  buildMediaWidgetConfig,
+  createMediaConfigDraft,
+} from "../widget-config/media-config.js";
 
 export const MEDIA_WIDGET_KIND = "media";
 
@@ -182,6 +186,12 @@ export const MEDIA_WIDGET_CONTENT_RENDERER = Object.freeze({
   }),
 });
 
+export const MEDIA_WIDGET_CONFIG_MANIFEST = Object.freeze({
+  type: "media",
+  createDraft: createMediaConfigDraft,
+  build: buildMediaWidgetConfig,
+});
+
 export const MEDIA_WIDGET_DEFINITION = Object.freeze({
   component: "media-widget",
   category: "media",
@@ -193,6 +203,7 @@ export const MEDIA_WIDGET_DEFINITION = Object.freeze({
     ]),
   }),
   renderer: "media",
+  config: "media",
   css: css("styles/widgets/media-widget.css"),
   preview: "media",
   aliases: ["media-widget"],
@@ -233,6 +244,7 @@ export const WIDGET_MODULE = Object.freeze({
   kind: "media",
   definition: MEDIA_WIDGET_DEFINITION,
   renderer: MEDIA_WIDGET_CONTENT_RENDERER,
+  config: MEDIA_WIDGET_CONFIG_MANIFEST,
   preview: Object.freeze({
     mode: "live",
     createWidget: createMediaPreviewWidget,
