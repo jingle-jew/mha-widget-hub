@@ -1,14 +1,10 @@
 import { createCloseButton } from "../system/system-buttons.js";
 import {
-  buildToggleSliderWidgetConfig,
-  createToggleSliderConfigDraft,
   reconcileToggleSliderConfigDraft,
   updateToggleSliderLabel,
   updateToggleSliderLight,
 } from "./toggle-slider-config.js";
 import {
-  buildSliderWidgetConfig,
-  createSliderConfigDraft,
   reconcileSliderConfigDraft,
   SLIDER_ACTIONS,
   updateSliderAction,
@@ -16,8 +12,6 @@ import {
   updateSliderLabel,
 } from "./slider-config.js";
 import {
-  buildToggleWidgetConfig,
-  createToggleConfigDraft,
   reconcileToggleConfigDraft,
   TOGGLE_DEVICE_TYPES,
   updateToggleConfigLabel,
@@ -25,21 +19,20 @@ import {
   updateToggleEntity,
 } from "./toggle-config.js";
 import {
-  buildButtonWidgetConfig,
   BUTTON_TYPES,
-  createButtonConfigDraft,
   reconcileButtonConfigDraft,
   updateButtonEntity,
   updateButtonLabel,
   updateButtonType,
 } from "./button-config.js";
 import {
-  buildWeatherWidgetConfig,
-  createWeatherConfigDraft,
   reconcileWeatherConfigDraft,
   updateWeatherEntity,
 } from "./weather-config.js";
-import { getWidgetConfigType } from "../widgets/widget-registry.js";
+import {
+  getWidgetConfigDefinition,
+  getWidgetConfigType,
+} from "./widget-config-registry.js";
 
 export function supportsWidgetConfiguration(widget = {}) {
   return Boolean(getWidgetConfigType(widget));
@@ -50,34 +43,20 @@ export function createWidgetConfigSession(widget, hass, {
   visibilityConfig,
 } = {}) {
   const configType = getWidgetConfigType(widget);
-  if (!configType) return null;
+  const configDefinition = getWidgetConfigDefinition(configType);
+  if (!configDefinition) return null;
   return {
     mode,
     widget,
     configType,
-    draft: configType === "slider"
-      ? createSliderConfigDraft(widget, hass, visibilityConfig).draft
-      : configType === "toggle"
-        ? createToggleConfigDraft(widget, hass, visibilityConfig).draft
-        : configType === "button"
-          ? createButtonConfigDraft(widget, hass, visibilityConfig).draft
-          : configType === "weather"
-            ? createWeatherConfigDraft(widget, hass, visibilityConfig).draft
-            : createToggleSliderConfigDraft(widget, hass, visibilityConfig).draft,
+    draft: configDefinition.createDraft(widget, hass, visibilityConfig).draft,
   };
 }
 
 export function buildConfiguredWidget(session, hass, visibilityConfig) {
   if (!session) return null;
-  return session.configType === "slider"
-    ? buildSliderWidgetConfig(session.widget, session.draft, hass, visibilityConfig)
-    : session.configType === "toggle"
-      ? buildToggleWidgetConfig(session.widget, session.draft, hass, visibilityConfig)
-      : session.configType === "button"
-        ? buildButtonWidgetConfig(session.widget, session.draft, hass, visibilityConfig)
-        : session.configType === "weather"
-          ? buildWeatherWidgetConfig(session.widget, session.draft, hass, visibilityConfig)
-          : buildToggleSliderWidgetConfig(session.widget, session.draft, hass, visibilityConfig);
+  const configDefinition = getWidgetConfigDefinition(session.configType);
+  return configDefinition?.build(session.widget, session.draft, hass, visibilityConfig) || null;
 }
 
 function createField(labelText, control, { hint = "" } = {}) {

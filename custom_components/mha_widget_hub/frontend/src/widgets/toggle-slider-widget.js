@@ -11,6 +11,7 @@ import { createSlider2 } from "../ui/slider2.js";
 import { createToggleWidgetContent } from "./toggle-widget.js";
 import { isWidgetKind } from "./widget-registry.js";
 import { isEntityAllowedForCurrentUser } from "../admin/entity-permissions.js";
+import { buildToggleSliderWidgetConfig, createToggleSliderConfigDraft } from "../widget-config/toggle-slider-config.js";
 
 export const TOGGLE_SLIDER_WIDGET_KIND = "toggle-slider";
 const SLIDER_SERVICE_INTERVAL_MS = 80;
@@ -199,4 +200,12 @@ export const TOGGLE_SLIDER_WIDGET_CONTENT_RENDERER = Object.freeze({
     entityVisibilityConfig,
     widgetW,
   }),
+});
+
+export const TOGGLE_SLIDER_WIDGET_CONFIG_MANIFEST = Object.freeze({
+  type: "toggle-slider",
+  title: "Configurer la lumière",
+  hint: "Choisis la lumière et le contrôle à afficher.",
+  createDraft: createToggleSliderConfigDraft,
+  build: buildToggleSliderWidgetConfig,
 });

@@ -14,6 +14,7 @@ import { resolveAuthorizedEntity } from "../ha/entity-access.js";
 import { getEntityDisplayName } from "../widget-config/light-options.js";
 import { isToggleEntityOn } from "../ha/toggle.js";
 import { isWidgetKind } from "./widget-registry.js";
+import { buildButtonWidgetConfig, createButtonConfigDraft } from "../widget-config/button-config.js";
 
 export const SIMPLE_BUTTON_WIDGET_KIND = "button";
 
@@ -244,4 +245,12 @@ export const SIMPLE_BUTTON_WIDGET_CONTENT_RENDERER = Object.freeze({
     hass,
     entityVisibilityConfig,
   }),
+});
+
+export const SIMPLE_BUTTON_WIDGET_CONFIG_MANIFEST = Object.freeze({
+  type: "button",
+  title: "Configurer le bouton",
+  hint: "Choisis le type d’action, l’entité et le nom à afficher.",
+  createDraft: createButtonConfigDraft,
+  build: buildButtonWidgetConfig,
 });

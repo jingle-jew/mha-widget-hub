@@ -16,6 +16,7 @@ import { getEntityState, getWidgetEntityId, isEntityAvailable } from "../ha/enti
 import { isToggleEntityOn, supportsToggleEntity } from "../ha/toggle.js";
 import { isWidgetKind } from "./widget-registry.js";
 import { isEntityAllowedForCurrentUser } from "../admin/entity-permissions.js";
+import { buildToggleWidgetConfig, createToggleConfigDraft } from "../widget-config/toggle-config.js";
 
 export const TOGGLE_WIDGET_KIND = "toggle";
 
@@ -172,4 +173,12 @@ export const TOGGLE_WIDGET_CONTENT_RENDERER = Object.freeze({
     hass,
     entityVisibilityConfig,
   }),
+});
+
+export const TOGGLE_WIDGET_CONFIG_MANIFEST = Object.freeze({
+  type: "toggle",
+  title: "Configurer le toggle",
+  hint: "Choisis le type d’appareil, l’entité et le nom à afficher.",
+  createDraft: createToggleConfigDraft,
+  build: buildToggleWidgetConfig,
 });

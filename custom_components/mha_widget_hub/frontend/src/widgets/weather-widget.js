@@ -2,6 +2,7 @@ import { createCurrentWeatherIcon } from "./weather-current-icons.js";
 import { createWeatherIcon } from "./weather-icons.js";
 import { buildWeatherModel } from "../ha/weather.js";
 import { isWidgetKind } from "./widget-registry.js";
+import { buildWeatherWidgetConfig, createWeatherConfigDraft } from "../widget-config/weather-config.js";
 
 const WEATHER_SIZE_VARIANTS = new Set(["4x1", "2x2", "3x2", "4x2"]);
 
@@ -136,4 +137,12 @@ export const WEATHER_WIDGET_CONTENT_RENDERER = Object.freeze({
     hass,
     entityVisibilityConfig,
   }),
+});
+
+export const WEATHER_WIDGET_CONFIG_MANIFEST = Object.freeze({
+  type: "weather",
+  title: "Configurer la météo",
+  hint: "Choisis l’entité météo à afficher.",
+  createDraft: createWeatherConfigDraft,
+  build: buildWeatherWidgetConfig,
 });

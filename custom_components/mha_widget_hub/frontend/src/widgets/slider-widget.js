@@ -7,6 +7,7 @@ import { createIconSymbol } from "../ui/icon-symbol.js";
 import { createSlider } from "../ui/slider.js";
 import { isWidgetKind } from "./widget-registry.js";
 import { isEntityAllowedForCurrentUser } from "../admin/entity-permissions.js";
+import { buildSliderWidgetConfig, createSliderConfigDraft } from "../widget-config/slider-config.js";
 
 const SLIDER_SERVICE_INTERVAL_MS = 80;
 
@@ -200,4 +201,12 @@ export const SLIDER_WIDGET_CONTENT_RENDERER = Object.freeze({
     orientation: "auto",
     className: "mha-widget-runtime-slider",
   }),
+});
+
+export const SLIDER_WIDGET_CONFIG_MANIFEST = Object.freeze({
+  type: "slider",
+  title: "Configurer le slider",
+  hint: "Choisis l’action, l’appareil et le nom à afficher.",
+  createDraft: createSliderConfigDraft,
+  build: buildSliderWidgetConfig,
 });
