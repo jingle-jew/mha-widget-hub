@@ -1,6 +1,7 @@
 import { getWidgetManagerCategories } from "../widgets/widget-registry.js";
 import { createBackButton, createCloseButton } from "../system/system-buttons.js";
 import { WIDGET_PREVIEW_IMAGES } from "../widgets/widget-preview-images.js";
+import { createLiveWidgetPreview } from "../widgets/widget-preview-renderer.js";
 import { getWidgetDefinition, resolveWidgetKind } from "../widgets/widget-registry.js";
 export { WIDGET_VARIANTS, getWidgetVariants, getNextWidgetVariantEntries } from "../widgets/widget-variants.js";
 
@@ -260,21 +261,26 @@ function createWidgetPreview(item) {
   const media = el("div", "mha-widget-manager-preview-media-frame");
   area.append(media);
 
-  let preview;
-  if (previewKind === "button") preview = createButtonStaticPreview(item);
-  else if (previewKind === "toggle-slider") preview = createToggleSliderStaticPreview(item);
-  else if (previewKind === "toggle") preview = createToggleStaticPreview(item);
-  else if (previewKind === "slider") preview = createSliderStaticPreview(item);
-  else if (previewKind === "clock") preview = createClockStaticPreview(item);
-  else if (previewKind === "weather") preview = createWeatherStaticPreview(item);
-  else preview = createStatusStaticPreview(item, {
-  kind: "generic",
-  title: item.title || item.label,
-  detail: "Aperçu",
-  accent: "•",
-});
+  const livePreview = createLiveWidgetPreview(item);
+  let preview = livePreview;
+  if (!preview) {
+    if (previewKind === "button") preview = createButtonStaticPreview(item);
+    else if (previewKind === "toggle-slider") preview = createToggleSliderStaticPreview(item);
+    else if (previewKind === "toggle") preview = createToggleStaticPreview(item);
+    else if (previewKind === "slider") preview = createSliderStaticPreview(item);
+    else if (previewKind === "clock") preview = createClockStaticPreview(item);
+    else if (previewKind === "weather") preview = createWeatherStaticPreview(item);
+    else preview = createStatusStaticPreview(item, {
+      kind: "generic",
+      title: item.title || item.label,
+      detail: "Aperçu",
+      accent: "•",
+    });
+    preview.classList.add("mha-widget-manager-preview-fallback");
+  } else {
+    media.dataset.previewMode = "live";
+  }
 
-  preview.classList.add("mha-widget-manager-preview-fallback");
   media.append(preview);
 
   const previewImage = resolvePreviewImage(item, readActivePreviewTheme(area));
