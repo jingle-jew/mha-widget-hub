@@ -34,3 +34,12 @@ test("preview hass mock accepts overrides", async () => {
   const hass = createPreviewHassMock({ callWS: async () => ["ok"] });
   assert.deepEqual(await hass.callWS(), ["ok"]);
 });
+
+test("preview data is centralized on the sandbox hass mock", () => {
+  const hass = createPreviewHassMock();
+
+  assert.equal(hass.previewData.weather.temperature, 22);
+  assert.equal(hass.previewData.media.title, "Now Playing");
+  assert.equal(hass.previewData.slider.value, 68);
+  assert.equal(hass.states[hass.previewData.light.entityId].attributes.brightness, 174);
+});
