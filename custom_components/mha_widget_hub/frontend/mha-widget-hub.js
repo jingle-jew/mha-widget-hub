@@ -1332,7 +1332,20 @@ _closePageCreator(){
 }
 _setPageCreatorIcon(icon="grid"){
   this._newPageIcon=String(icon||"grid");
-  this._syncPageCreatorDom();
+  this._updatePageCreatorIconDom();
+}
+_getPageCreatorPanels(){
+  return Array.from(this.shadowRoot?.querySelectorAll?.('section.mha-page-creator:not(.mha-widget-config-popup)')||[]);
+}
+_updatePageCreatorIconDom(){
+  this._getPageCreatorPanels().forEach(panel=>{
+    panel.querySelectorAll?.(".mha-page-creator-icon")?.forEach(button=>{
+      const optionName=button.dataset?.icon||"";
+      const selected=optionName===this._newPageIcon;
+      button.dataset.selected=String(selected);
+      button.setAttribute("aria-pressed",String(selected));
+    });
+  });
 }
 _createPageFromCreator(){
   if(!this._isEditing||this._isMobileLandscapeLayout())return;
@@ -1377,6 +1390,7 @@ _createPageCreatorPanel(){
     const button=document.createElement("button");
     button.className="mha-page-creator-icon";
     button.type="button";
+    button.dataset.icon=option.name;
     button.dataset.selected=String(option.name===this._newPageIcon);
     button.setAttribute("aria-pressed",String(option.name===this._newPageIcon));
     button.setAttribute("aria-label",option.label);
@@ -1412,8 +1426,7 @@ _createPageCreatorPanel(){
   return panel;
 }
 _syncPageCreatorDom(){
-  const existing=this.shadowRoot?.querySelector?.(".mha-page-creator");
-  if(existing)existing.remove();
+  this._getPageCreatorPanels().forEach(panel=>panel.remove());
   this.shadowRoot?.append?.(this._createPageCreatorPanel());
 }
 
