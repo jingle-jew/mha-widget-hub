@@ -254,6 +254,60 @@ Object.entries(DEFINITIONS).forEach(([kind, definition]) => {
   definition.variantAliases.forEach(alias => variantToKind.set(alias, kind));
 });
 
+export function getWidgetManagerCategories() {
+  const categories = Object.entries(WIDGET_MANAGER_METADATA.categories)
+  .sort(([, a], [, b]) => (a.order || 0) - (b.order || 0))
+  .map(([id, metadata]) => ({
+    id,
+    label: metadata.label,
+    description: metadata.description,
+    icon: metadata.icon,
+    items: [],
+  }));
+  
+  const categoryById = new Map(categories.map(category => [category.id, category]));
+  
+  Object.entries(DEFINITIONS).forEach(([kind, definition]) => {
+    definition.manager?.entries?.forEach(entry => {
+      const category = categoryById.get(entry.category);
+      if (!category) return;
+      
+      category.items.push({
+        kind,
+        variant: entry.variant,
+        title: entry.label,
+        description: entry.description,
+        icon: entry.icon || WIDGET_MANAGER_METADATA.categories[entry.category]?.icon || "◷",
+        size: entry.size,
+      });
+    });
+  });
+  
+  categories.forEach(category => {
+    category.items.sort((a, b) => {
+      const entryA = DEFINITIONS[a.kind]?.manager?.entries?.find(entry =>
+        entry.category === category.id &&
+        entry.variant === a.variant &&
+        entry.label === a.title &&
+        entry.size?.w === a.size?.w &&
+        entry.size?.h === a.size?.h
+      );
+      
+      const entryB = DEFINITIONS[b.kind]?.manager?.entries?.find(entry =>
+        entry.category === category.id &&
+        entry.variant === b.variant &&
+        entry.label === b.title &&
+        entry.size?.w === b.size?.w &&
+        entry.size?.h === b.size?.h
+      );
+      
+      return (entryA?.order || 0) - (entryB?.order || 0);
+    });
+  });
+  
+  return categories.filter(category => category.items.length > 0);
+}
+
 export const WIDGET_REGISTRY = Object.freeze(
   Object.fromEntries(
     Object.entries(DEFINITIONS).map(([kind, definition]) => [
