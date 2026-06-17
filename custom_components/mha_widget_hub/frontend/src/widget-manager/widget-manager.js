@@ -1,3 +1,4 @@
+import { getWidgetManagerCategories } from "../widgets/widget-registry.js";
 import { createBackButton, createCloseButton } from "../system/system-buttons.js";
 import { WIDGET_PREVIEW_IMAGES } from "../widgets/widget-preview-images.js";
 import { getWidgetDefinition, resolveWidgetKind } from "../widgets/widget-registry.js";
@@ -9,34 +10,9 @@ function resolveFrontendAssetUrl(path = "") {
   return new URL(path, FRONTEND_ROOT_URL).href;
 }
 
-export const WIDGET_MANAGER_CATEGORIES = Object.freeze([
-  { id:"utilities", label:"Utilitaires", description:"Horloges et infos rapides.", icon:"◷", widgets:[
-    {kind:"clock",variant:"digital",label:"Horloge numérique",size:{w:2,h:2},description:"Heure et date."},
-    {kind:"clock",variant:"digital-weather",label:"Numérique météo",size:{w:2,h:2},description:"Heure, date et météo actuelle."},
-    {kind:"clock",variant:"analog",label:"Horloge analogique",size:{w:2,h:2},description:"Cadran simple."},
-    {kind:"clock",variant:"ios-analog",label:"Analogique iOS",size:{w:2,h:2},description:"Cadran classique iOS."},
-  ]},
-  { id:"actions", label:"Actions", description:"Boutons et raccourcis.", icon:"●", widgets:[
-    {kind:"button",variant:"simple-button",label:"Bouton simple",size:{w:2,h:1},description:"Icône, libellé et état."},
-    {kind:"button",variant:"simple-button",label:"Bouton carré",size:{w:2,h:2},description:"Tuile d’action inspirée Home."},
-    {kind:"toggle",variant:"toggle-widget",label:"Toggle",size:{w:3,h:1},description:"Icône, état et interrupteur."},
-    {kind:"toggle",variant:"toggle-widget",label:"Toggle large",size:{w:4,h:1},description:"Interrupteur avec plus d’espace."},
-  ]},
-  { id:"lights", label:"Lumières", description:"Contrôles rapides et intensité.", icon:"💡", widgets:[
-    {kind:"toggle-slider",variant:"toggle-slider",label:"Lumière combinée",size:{w:4,h:2},description:"État et intensité dans une seule tuile."},
-    {kind:"slider",variant:"light-slider-wide",label:"Intensité horizontale",size:{w:4,h:1},description:"Slider large."},
-    {kind:"slider",variant:"light-slider-vertical",label:"Intensité verticale",size:{w:1,h:4},description:"Slider vertical."},
-  ]},
-  { id:"climate", label:"Climat", description:"Température et confort.", icon:"🌡", widgets:[
-    {kind:"weather",variant:"adaptive-weather",label:"Météo horizontale",size:{w:4,h:1},description:"Icône et température."},
-    {kind:"weather",variant:"adaptive-weather",label:"Météo compacte",size:{w:2,h:2},description:"Icône et température."},
-    {kind:"weather",variant:"adaptive-weather",label:"Météo détails",size:{w:3,h:2},description:"Humidité et vent."},
-    {kind:"weather",variant:"adaptive-weather",label:"Météo prévisions",size:{w:4,h:2},description:"Prévisions verticales."},
-  ]},
-  { id:"media", label:"Média", description:"Lecture et volume.", icon:"♪", widgets:[
-    {kind:"slider",variant:"volume-slider",label:"Volume",size:{w:4,h:1},description:"Slider volume."},
-  ]},
-]);
+export const WIDGET_MANAGER_CATEGORIES = Object.freeze(
+  getWidgetManagerCategories(),
+);
 
 const sizeLabel = (size = {}) => `${size.w || 2}×${size.h || 2}`;
 
@@ -292,11 +268,11 @@ function createWidgetPreview(item) {
   else if (previewKind === "clock") preview = createClockStaticPreview(item);
   else if (previewKind === "weather") preview = createWeatherStaticPreview(item);
   else preview = createStatusStaticPreview(item, {
-    kind: "generic",
-    title: item.label,
-    detail: "Aperçu",
-    accent: "•",
-  });
+  kind: "generic",
+  title: item.title || item.label,
+  detail: "Aperçu",
+  accent: "•",
+});
 
   preview.classList.add("mha-widget-manager-preview-fallback");
   media.append(preview);
@@ -356,7 +332,7 @@ function createWidgetButton(category, item, onSelectWidget) {
   content.className = "mha-widget-manager-widget-content mha-widget-manager-card-meta";
   const label = document.createElement("strong");
   label.className = "mha-widget-manager-card-title";
-  label.textContent = item.label;
+  label.textContent = item.title || item.label;
   const meta = document.createElement("small");
   meta.className = "mha-widget-manager-card-detail";
   meta.textContent = [sizeLabel(item.size), item.description || ""].filter(Boolean).join(" · ");

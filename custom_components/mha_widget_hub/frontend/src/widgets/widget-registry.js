@@ -262,17 +262,21 @@ export function getWidgetManagerCategories() {
     label: metadata.label,
     description: metadata.description,
     icon: metadata.icon,
-    items: [],
+    widgets: [],
   }));
   
   const categoryById = new Map(categories.map(category => [category.id, category]));
   
   Object.entries(DEFINITIONS).forEach(([kind, definition]) => {
+    if (["empty", "toggle-buttons"].includes(kind)) return;
+    
     definition.manager?.entries?.forEach(entry => {
+      if (entry.variant === "temperature-slider") return;
+      
       const category = categoryById.get(entry.category);
       if (!category) return;
       
-      category.items.push({
+      category.widgets.push({
         kind,
         variant: entry.variant,
         title: entry.label,
@@ -284,7 +288,7 @@ export function getWidgetManagerCategories() {
   });
   
   categories.forEach(category => {
-    category.items.sort((a, b) => {
+    category.widgets.sort((a, b) => {
       const entryA = DEFINITIONS[a.kind]?.manager?.entries?.find(entry =>
         entry.category === category.id &&
         entry.variant === a.variant &&
@@ -305,7 +309,7 @@ export function getWidgetManagerCategories() {
     });
   });
   
-  return categories.filter(category => category.items.length > 0);
+  return categories.filter(category => category.widgets.length > 0);
 }
 
 export const WIDGET_REGISTRY = Object.freeze(
