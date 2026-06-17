@@ -1,7 +1,7 @@
 import { createIconSymbol } from "../ui/icon-symbol.js";
 import { createButton } from "../ui/button.js";
 import { createToggleWidgetContent } from "./toggle-widget.js";
-import { isWidgetKind } from "./widget-registry.js";
+import { clampWidth, css, freezeSize, isLocalWidgetKind, variant } from "./widget-definition-utils.js";
 
 export const TOGGLE_BUTTONS_WIDGET_KIND = "toggle-buttons";
 
@@ -13,7 +13,7 @@ const BUTTON_SLOTS = Object.freeze([
 ]);
 
 export function isToggleButtonsWidget(widget = {}) {
-  return isWidgetKind(widget, TOGGLE_BUTTONS_WIDGET_KIND);
+  return isLocalWidgetKind(widget, TOGGLE_BUTTONS_WIDGET_KIND, ["toggle-buttons-widget", "combined-toggle-buttons", "toggle-button-row", "toggle-quick-buttons"]);
 }
 
 function getMockChecked(widget = {}) {
@@ -100,4 +100,37 @@ export const TOGGLE_BUTTONS_WIDGET_CONTENT_RENDERER = Object.freeze({
   render: ({ widget, widgetW }) => createToggleButtonsWidgetContent(widget, {
     widgetW,
   }),
+});
+
+export const TOGGLE_BUTTONS_WIDGET_DEFINITION = Object.freeze({
+  component: "toggle-buttons-widget",
+  category: "lights",
+  manager: Object.freeze({
+    entries: Object.freeze([
+      Object.freeze({ category: "lights", variant: "toggle-buttons", label: "Lumière + boutons", size: freezeSize(4, 2), description: "Toggle visuel et 4 boutons rapides.", order: 20 }),
+    ]),
+  }),
+  renderer: "toggle-buttons",
+  css: css("styles/widgets/toggle-buttons-widget.css"),
+  preview: "toggle-buttons",
+  aliases: ["toggle-buttons-widget", "combined-toggle-buttons"],
+  variantAliases: [
+    "toggle-buttons",
+    "combined-toggle-buttons",
+    "toggle-button-row",
+    "toggle-quick-buttons",
+  ],
+  defaultVariant: "toggle-buttons",
+  defaultSize: freezeSize(4, 2),
+  normalizeSize: (size) => ({ ...clampWidth(size, 3, 4), h: 2 }),
+  variants: [
+    variant("toggle-buttons", "Toggle + boutons 3×2", 3, 2),
+    variant("toggle-buttons", "Toggle + boutons 4×2", 4, 2),
+  ],
+});
+
+export const WIDGET_MODULE = Object.freeze({
+  kind: "toggle-buttons",
+  definition: TOGGLE_BUTTONS_WIDGET_DEFINITION,
+  renderer: TOGGLE_BUTTONS_WIDGET_CONTENT_RENDERER,
 });

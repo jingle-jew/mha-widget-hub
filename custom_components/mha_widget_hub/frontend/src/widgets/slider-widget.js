@@ -5,7 +5,7 @@ import { getSliderBinding } from "../ha/slider.js";
 import { createIcon } from "../ui/icon.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
 import { createSlider } from "../ui/slider.js";
-import { isWidgetKind } from "./widget-registry.js";
+import { css, freezeSize, isLocalWidgetKind, variant } from "./widget-definition-utils.js";
 import { isEntityAllowedForCurrentUser } from "../admin/entity-permissions.js";
 import { buildSliderWidgetConfig, createSliderConfigDraft } from "../widget-config/slider-config.js";
 
@@ -187,7 +187,7 @@ export function createSliderWidgetContent(
 }
 
 export function isSliderWidget(widget) {
-  return isWidgetKind(widget, "slider");
+  return isLocalWidgetKind(widget, "slider", ["slider-widget"], []);
 }
 
 
@@ -209,4 +209,52 @@ export const SLIDER_WIDGET_CONFIG_MANIFEST = Object.freeze({
   hint: "Choisis l’action, l’appareil et le nom à afficher.",
   createDraft: createSliderConfigDraft,
   build: buildSliderWidgetConfig,
+});
+
+export const SLIDER_WIDGET_DEFINITION = Object.freeze({
+  component: "slider-widget",
+  category: "lights",
+  manager: Object.freeze({
+    entries: Object.freeze([
+      Object.freeze({ category: "lights", variant: "light-slider-wide", label: "Intensité horizontale", size: freezeSize(4, 1), description: "Slider large.", order: 40 }),
+      Object.freeze({ category: "lights", variant: "light-slider-vertical", label: "Intensité verticale", size: freezeSize(1, 4), description: "Slider vertical.", order: 50 }),
+      Object.freeze({ category: "climate", variant: "temperature-slider", label: "Température slider", size: freezeSize(4, 1), description: "Contrôle linéaire.", order: 70 }),
+      Object.freeze({ category: "media", variant: "volume-slider", label: "Volume", size: freezeSize(4, 1), description: "Slider volume.", order: 30 }),
+    ]),
+  }),
+  renderer: "slider",
+  css: css("styles/widgets/slider-widget.css"),
+  preview: "slider",
+  config: "slider",
+  aliases: ["slider-widget"],
+  variantAliases: [
+    "light-slider-horizontal",
+    "light-slider-wide",
+    "light-slider-vertical",
+    "temperature-slider",
+    "volume-slider",
+  ],
+  defaultSize: freezeSize(2, 1),
+  normalizeSize: (size) => size.h > size.w
+    ? { w: 1, h: Math.max(2, Math.min(4, size.h)) }
+    : { w: Math.max(2, Math.min(4, size.w)), h: 1 },
+  variantGroups: {
+    horizontal: [
+      variant("light-slider-horizontal", "Horizontal 2×1", 2, 1),
+      variant("light-slider-horizontal", "Horizontal 3×1", 3, 1),
+      variant("light-slider-horizontal", "Horizontal 4×1", 4, 1),
+    ],
+    vertical: [
+      variant("light-slider-vertical", "Vertical 1×2", 1, 2),
+      variant("light-slider-vertical", "Vertical 1×3", 1, 3),
+      variant("light-slider-vertical", "Vertical 1×4", 1, 4),
+    ],
+  },
+});
+
+export const WIDGET_MODULE = Object.freeze({
+  kind: "slider",
+  definition: SLIDER_WIDGET_DEFINITION,
+  renderer: SLIDER_WIDGET_CONTENT_RENDERER,
+  config: SLIDER_WIDGET_CONFIG_MANIFEST,
 });

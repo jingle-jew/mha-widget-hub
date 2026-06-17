@@ -4,7 +4,7 @@
  * Shared 2x2 clock variants for dashboard widgets and screensaver clocks.
  */
 
-import { isWidgetKind } from "./widget-registry.js";
+import { css, freezeSize, isLocalWidgetKind, variant } from "./widget-definition-utils.js";
 import { buildWeatherModel } from "../ha/weather.js";
 
 export const CLOCK_WIDGET_VARIANTS = Object.freeze([
@@ -259,7 +259,7 @@ export function createClockWidgetContent({
 }
 
 export function isClockWidget(widget) {
-  return isWidgetKind(widget, "clock");
+  return isLocalWidgetKind(widget, "clock", ["clock-widget"]);
 }
 
 
@@ -280,4 +280,37 @@ export const CLOCK_WIDGET_CONTENT_RENDERER = Object.freeze({
     hass,
     entityVisibilityConfig,
   }),
+});
+
+export const CLOCK_WIDGET_DEFINITION = Object.freeze({
+  component: "clock-widget",
+  category: "utilities",
+  manager: Object.freeze({
+    entries: Object.freeze([
+      Object.freeze({ category: "utilities", variant: "digital", label: "Horloge numérique", size: freezeSize(2, 2), description: "Heure et date.", order: 10 }),
+      Object.freeze({ category: "utilities", variant: "digital-weather", label: "Numérique météo", size: freezeSize(2, 2), description: "Heure, date et météo actuelle.", order: 20 }),
+      Object.freeze({ category: "utilities", variant: "analog", label: "Horloge analogique", size: freezeSize(2, 2), description: "Cadran simple.", order: 30 }),
+      Object.freeze({ category: "utilities", variant: "ios-analog", label: "Analogique iOS", size: freezeSize(2, 2), description: "Cadran classique iOS.", order: 40 }),
+    ]),
+  }),
+  renderer: "clock",
+  css: css("styles/widgets/clock-widget.css"),
+  preview: "clock",
+  aliases: ["clock-widget"],
+  variantAliases: ["digital", "digital-weather", "analog", "ios-analog"],
+  defaultVariant: "digital",
+  defaultSize: freezeSize(2, 2),
+  normalizeSize: () => ({ w: 2, h: 2 }),
+  variants: [
+    variant("digital", "Numérique", 2, 2),
+    variant("digital-weather", "Numérique météo", 2, 2),
+    variant("analog", "Analogique", 2, 2),
+    variant("ios-analog", "Analogique iOS", 2, 2),
+  ],
+});
+
+export const WIDGET_MODULE = Object.freeze({
+  kind: "clock",
+  definition: CLOCK_WIDGET_DEFINITION,
+  renderer: CLOCK_WIDGET_CONTENT_RENDERER,
 });

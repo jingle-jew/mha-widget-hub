@@ -9,7 +9,7 @@ import { isToggleEntityOn, supportsToggleEntity } from "../ha/toggle.js";
 import { createSlider } from "../ui/slider.js";
 import { createSlider2 } from "../ui/slider2.js";
 import { createToggleWidgetContent } from "./toggle-widget.js";
-import { isWidgetKind } from "./widget-registry.js";
+import { clampWidth, css, freezeSize, isLocalWidgetKind, variant } from "./widget-definition-utils.js";
 import { isEntityAllowedForCurrentUser } from "../admin/entity-permissions.js";
 import { buildToggleSliderWidgetConfig, createToggleSliderConfigDraft } from "../widget-config/toggle-slider-config.js";
 
@@ -17,7 +17,7 @@ export const TOGGLE_SLIDER_WIDGET_KIND = "toggle-slider";
 const SLIDER_SERVICE_INTERVAL_MS = 80;
 
 export function isToggleSliderWidget(widget = {}) {
-  return isWidgetKind(widget, TOGGLE_SLIDER_WIDGET_KIND);
+  return isLocalWidgetKind(widget, TOGGLE_SLIDER_WIDGET_KIND, ["toggle-slider-widget", "combined-slider-toggle", "combined-toggle-slider"]);
 }
 
 export function createToggleSliderWidgetContent(widget = {}, {
@@ -208,4 +208,42 @@ export const TOGGLE_SLIDER_WIDGET_CONFIG_MANIFEST = Object.freeze({
   hint: "Choisis la lumière et le contrôle à afficher.",
   createDraft: createToggleSliderConfigDraft,
   build: buildToggleSliderWidgetConfig,
+});
+
+export const TOGGLE_SLIDER_WIDGET_DEFINITION = Object.freeze({
+  component: "toggle-slider-widget",
+  category: "lights",
+  manager: Object.freeze({
+    entries: Object.freeze([
+      Object.freeze({ category: "lights", variant: "toggle-slider", label: "Lumière combinée", size: freezeSize(4, 2), description: "État et intensité dans une seule tuile.", order: 10 }),
+    ]),
+  }),
+  renderer: "toggle-slider",
+  css: css("styles/widgets/toggle-slider-widget.css"),
+  preview: "toggle-slider",
+  config: "toggle-slider",
+  aliases: [
+    "toggle-slider-widget",
+    "combined-slider-toggle",
+    "combined-toggle-slider",
+  ],
+  variantAliases: [
+    "toggle-slider",
+    "combined-slider-toggle",
+    "combined-toggle-slider",
+  ],
+  defaultVariant: "toggle-slider",
+  defaultSize: freezeSize(4, 2),
+  normalizeSize: (size) => ({ ...clampWidth(size, 3, 4), h: 2 }),
+  variants: [
+    variant("toggle-slider", "Combiné 3×2", 3, 2),
+    variant("toggle-slider", "Combiné 4×2", 4, 2),
+  ],
+});
+
+export const WIDGET_MODULE = Object.freeze({
+  kind: "toggle-slider",
+  definition: TOGGLE_SLIDER_WIDGET_DEFINITION,
+  renderer: TOGGLE_SLIDER_WIDGET_CONTENT_RENDERER,
+  config: TOGGLE_SLIDER_WIDGET_CONFIG_MANIFEST,
 });

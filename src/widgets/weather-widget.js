@@ -1,13 +1,13 @@
 import { createCurrentWeatherIcon } from "./weather-current-icons.js";
 import { createWeatherIcon } from "./weather-icons.js";
 import { buildWeatherModel } from "../ha/weather.js";
-import { isWidgetKind } from "./widget-registry.js";
+import { css, freezeSize, isLocalWidgetKind, variant } from "./widget-definition-utils.js";
 import { buildWeatherWidgetConfig, createWeatherConfigDraft } from "../widget-config/weather-config.js";
 
 const WEATHER_SIZE_VARIANTS = new Set(["4x1", "2x2", "3x2", "4x2"]);
 
 export function isWeatherWidget(widget = {}) {
-  return isWidgetKind(widget, "weather");
+  return isLocalWidgetKind(widget, "weather", ["weather-widget"]);
 }
 
 function sizeKey({ widgetW = 2, widgetH = 2 } = {}) {
@@ -145,4 +145,44 @@ export const WEATHER_WIDGET_CONFIG_MANIFEST = Object.freeze({
   hint: "Choisis l’entité météo à afficher.",
   createDraft: createWeatherConfigDraft,
   build: buildWeatherWidgetConfig,
+});
+
+export const WEATHER_WIDGET_DEFINITION = Object.freeze({
+  component: "weather-widget",
+  category: "climate",
+  manager: Object.freeze({
+    entries: Object.freeze([
+      Object.freeze({ category: "climate", variant: "adaptive-weather", label: "Météo horizontale", size: freezeSize(4, 1), description: "Icône et température.", order: 10 }),
+      Object.freeze({ category: "climate", variant: "adaptive-weather", label: "Météo compacte", size: freezeSize(2, 2), description: "Icône et température.", order: 20 }),
+      Object.freeze({ category: "climate", variant: "adaptive-weather", label: "Météo détails", size: freezeSize(3, 2), description: "Humidité et vent.", order: 30 }),
+      Object.freeze({ category: "climate", variant: "adaptive-weather", label: "Météo prévisions", size: freezeSize(4, 2), description: "Prévisions verticales.", order: 40 }),
+    ]),
+  }),
+  renderer: "weather",
+  css: css("styles/widgets/weather-widget.css"),
+  preview: "weather",
+  config: "weather",
+  aliases: ["weather-widget"],
+  variantAliases: ["adaptive-weather"],
+  defaultVariant: "adaptive-weather",
+  defaultSize: freezeSize(2, 2),
+  normalizeSize: (size) => {
+    if (size.h <= 1) return { w: 4, h: 1 };
+    if (size.w >= 4) return { w: 4, h: 2 };
+    if (size.w >= 3) return { w: 3, h: 2 };
+    return { w: 2, h: 2 };
+  },
+  variants: [
+    variant("adaptive-weather", "Horizontal 4×1", 4, 1),
+    variant("adaptive-weather", "Compact 2×2", 2, 2),
+    variant("adaptive-weather", "Détails 3×2", 3, 2),
+    variant("adaptive-weather", "Prévisions 4×2", 4, 2),
+  ],
+});
+
+export const WIDGET_MODULE = Object.freeze({
+  kind: "weather",
+  definition: WEATHER_WIDGET_DEFINITION,
+  renderer: WEATHER_WIDGET_CONTENT_RENDERER,
+  config: WEATHER_WIDGET_CONFIG_MANIFEST,
 });

@@ -13,13 +13,13 @@ import { runButtonAction } from "../ha/actions.js";
 import { resolveAuthorizedEntity } from "../ha/entity-access.js";
 import { getEntityDisplayName } from "../widget-config/light-options.js";
 import { isToggleEntityOn } from "../ha/toggle.js";
-import { isWidgetKind } from "./widget-registry.js";
+import { clampWidth, css, freezeSize, isLocalWidgetKind, variant } from "./widget-definition-utils.js";
 import { buildButtonWidgetConfig, createButtonConfigDraft } from "../widget-config/button-config.js";
 
 export const SIMPLE_BUTTON_WIDGET_KIND = "button";
 
 export function isSimpleButtonWidget(widget = {}) {
-  return isWidgetKind(widget, SIMPLE_BUTTON_WIDGET_KIND);
+  return isLocalWidgetKind(widget, SIMPLE_BUTTON_WIDGET_KIND, ["button-widget"]);
 }
 
 export function isSimpleButtonWidgetActive(widget = {}) {
@@ -253,4 +253,39 @@ export const SIMPLE_BUTTON_WIDGET_CONFIG_MANIFEST = Object.freeze({
   hint: "Choisis le type d’action, l’entité et le nom à afficher.",
   createDraft: createButtonConfigDraft,
   build: buildButtonWidgetConfig,
+});
+
+export const SIMPLE_BUTTON_WIDGET_DEFINITION = Object.freeze({
+  component: "button-widget",
+  category: "actions",
+  manager: Object.freeze({
+    entries: Object.freeze([
+      Object.freeze({ category: "actions", variant: "simple-button", label: "Bouton simple", size: freezeSize(2, 1), description: "Icône, libellé et état.", order: 10 }),
+      Object.freeze({ category: "actions", variant: "simple-button", label: "Bouton carré", size: freezeSize(2, 2), description: "Tuile d’action inspirée Home.", order: 20 }),
+    ]),
+  }),
+  renderer: "button",
+  css: css("styles/widgets/simple-button-widget.css"),
+  preview: "button",
+  config: "button",
+  aliases: ["button-widget"],
+  variantAliases: ["simple-button"],
+  defaultVariant: "simple-button",
+  defaultSize: freezeSize(2, 1),
+  normalizeSize: (size) => size.h >= 2
+    ? { w: 2, h: 2 }
+    : { ...clampWidth(size, 2, 4), h: 1 },
+  variants: [
+    variant("simple-button", "Pilule 2×1", 2, 1),
+    variant("simple-button", "Pilule 3×1", 3, 1),
+    variant("simple-button", "Pilule 4×1", 4, 1),
+    variant("simple-button", "Carré 2×2", 2, 2),
+  ],
+});
+
+export const WIDGET_MODULE = Object.freeze({
+  kind: "button",
+  definition: SIMPLE_BUTTON_WIDGET_DEFINITION,
+  renderer: SIMPLE_BUTTON_WIDGET_CONTENT_RENDERER,
+  config: SIMPLE_BUTTON_WIDGET_CONFIG_MANIFEST,
 });

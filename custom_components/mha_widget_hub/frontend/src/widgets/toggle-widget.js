@@ -14,14 +14,14 @@ import { createToggle } from "../ui/toggle.js";
 import { runToggleAction } from "../ha/actions.js";
 import { getEntityState, getWidgetEntityId, isEntityAvailable } from "../ha/entity.js";
 import { isToggleEntityOn, supportsToggleEntity } from "../ha/toggle.js";
-import { isWidgetKind } from "./widget-registry.js";
+import { clampWidth, css, freezeSize, isLocalWidgetKind, variant } from "./widget-definition-utils.js";
 import { isEntityAllowedForCurrentUser } from "../admin/entity-permissions.js";
 import { buildToggleWidgetConfig, createToggleConfigDraft } from "../widget-config/toggle-config.js";
 
 export const TOGGLE_WIDGET_KIND = "toggle";
 
 export function isToggleWidget(widget = {}) {
-  return isWidgetKind(widget, TOGGLE_WIDGET_KIND);
+  return isLocalWidgetKind(widget, TOGGLE_WIDGET_KIND, ["toggle-widget", "simple-toggle"]);
 }
 
 function getToggleWidgetData(widget = {}) {
@@ -181,4 +181,35 @@ export const TOGGLE_WIDGET_CONFIG_MANIFEST = Object.freeze({
   hint: "Choisis le type d’appareil, l’entité et le nom à afficher.",
   createDraft: createToggleConfigDraft,
   build: buildToggleWidgetConfig,
+});
+
+export const TOGGLE_WIDGET_DEFINITION = Object.freeze({
+  component: "toggle-widget",
+  category: "actions",
+  manager: Object.freeze({
+    entries: Object.freeze([
+      Object.freeze({ category: "actions", variant: "toggle-widget", label: "Toggle", size: freezeSize(3, 1), description: "Icône, état et interrupteur.", order: 30 }),
+      Object.freeze({ category: "actions", variant: "toggle-widget", label: "Toggle large", size: freezeSize(4, 1), description: "Interrupteur avec plus d’espace.", order: 40 }),
+    ]),
+  }),
+  renderer: "toggle",
+  css: css("styles/widgets/toggle-widget.css"),
+  preview: "toggle",
+  config: "toggle",
+  aliases: ["toggle-widget"],
+  variantAliases: ["toggle-widget", "simple-toggle"],
+  defaultVariant: "toggle-widget",
+  defaultSize: freezeSize(3, 1),
+  normalizeSize: (size) => ({ ...clampWidth(size, 3, 4), h: 1 }),
+  variants: [
+    variant("toggle-widget", "Toggle 3×1", 3, 1),
+    variant("toggle-widget", "Toggle 4×1", 4, 1),
+  ],
+});
+
+export const WIDGET_MODULE = Object.freeze({
+  kind: "toggle",
+  definition: TOGGLE_WIDGET_DEFINITION,
+  renderer: TOGGLE_WIDGET_CONTENT_RENDERER,
+  config: TOGGLE_WIDGET_CONFIG_MANIFEST,
 });
