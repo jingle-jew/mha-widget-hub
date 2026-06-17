@@ -1,6 +1,7 @@
 import { normalizeAccent, supportsAutoAccent } from "./accent-palettes.js";
+import { getThemeStyleIds } from "./theme-registry.js";
 
-export const THEME_STYLES = new Set(["ios", "oneui", "material"]);
+export const THEME_STYLES = Object.freeze(new Set(getThemeStyleIds()));
 
 function getSystemThemePreference() {
   return window.matchMedia?.("(prefers-color-scheme: light)")?.matches
