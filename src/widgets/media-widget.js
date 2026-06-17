@@ -16,12 +16,28 @@ function resolveMediaEntity(widget = {}, hass) {
   return entityId ? hass?.states?.[entityId] : null;
 }
 
+function resolveMediaArtworkUrl(artworkUrl = "") {
+  if (!artworkUrl || typeof artworkUrl !== "string") return "";
+  if (/^(https?:)?\/\//i.test(artworkUrl) || artworkUrl.startsWith("data:")) return artworkUrl;
+  if (artworkUrl.startsWith("/")) return `${window.location.origin}${artworkUrl}`;
+  return artworkUrl;
+}
+
 function getMediaData(widget = {}, hass) {
   const previewData = WIDGET_PREVIEW_DATA.media;
   const entity = resolveMediaEntity(widget, hass);
   const attributes = entity?.attributes || {};
   const state = entity?.state || widget.state || previewData.state;
   const volume = attributes.volume_level ?? widget.volume ?? previewData.volume;
+  const artworkUrl = resolveMediaArtworkUrl(
+    attributes.entity_picture
+      || attributes.entity_picture_local
+      || attributes.media_image_url
+      || widget.artworkUrl
+      || widget.entityPicture
+      || widget.mediaImageUrl
+      || "",
+  );
 
   return {
     entityId: entity?.entity_id || widget.entityId || widget.entity_id || previewData.entityId,
@@ -33,6 +49,7 @@ function getMediaData(widget = {}, hass) {
     state,
     playing: state === "playing",
     volumePercent: Math.round(Number(volume) * 100),
+    artworkUrl,
   };
 }
 
@@ -43,14 +60,36 @@ function createText(className, text = "") {
   return node;
 }
 
+function setArtworkImage(artwork, artworkUrl = "") {
+  const image = artwork.querySelector(".mha-media-widget-artwork-image");
+  const hasArtwork = Boolean(artworkUrl);
+  artwork.dataset.hasArtwork = String(hasArtwork);
+  if (!image) return;
+  if (hasArtwork) {
+    image.src = artworkUrl;
+    image.alt = "";
+  } else {
+    image.removeAttribute("src");
+  }
+}
+
 function createArtwork(data) {
   const artwork = document.createElement("div");
   artwork.className = "mha-media-widget-artwork";
   artwork.setAttribute("aria-hidden", "true");
+
+  const image = document.createElement("img");
+  image.className = "mha-media-widget-artwork-image";
+  image.loading = "lazy";
+  image.decoding = "async";
+  image.draggable = false;
+
   artwork.append(
+    image,
     createText("mha-media-widget-artwork-glyph", "♪"),
   );
   artwork.dataset.playing = String(data.playing);
+  setArtworkImage(artwork, data.artworkUrl);
   return artwork;
 }
 
@@ -163,7 +202,9 @@ export function createMediaWidgetContent(widget = {}, {
     root.dataset.playing = String(nextData.playing);
     root.querySelector(".mha-media-widget-title").textContent = nextData.title;
     root.querySelector(".mha-media-widget-artist").textContent = nextData.artist;
-    root.querySelector(".mha-media-widget-artwork")?.setAttribute("data-playing", String(nextData.playing));
+    const artworkNode = root.querySelector(".mha-media-widget-artwork");
+    artworkNode?.setAttribute("data-playing", String(nextData.playing));
+    if (artworkNode) setArtworkImage(artworkNode, nextData.artworkUrl);
     root.querySelector(".mha-media-widget-volume")?.replaceChildren(`${nextData.volumePercent}%`);
   };
 
