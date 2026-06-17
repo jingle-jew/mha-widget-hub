@@ -1,4 +1,5 @@
 import { getWidgetDefinition } from "./widget-registry.js";
+import { createWidgetRenderContext } from "./widget-preview-context.js";
 import { WIDGET_CONTENT_RENDERERS } from "./widget-renderer-registry.js";
 
 function getRenderer(widget) {
@@ -11,9 +12,11 @@ export function hasWidgetContentRenderer(rendererName) {
 }
 
 export function decorateWidgetShell(shell, widget, context = {}) {
-  getRenderer(widget).decorateShell?.({ shell, widget, ...context });
+  const renderContext = createWidgetRenderContext(context);
+  getRenderer(widget).decorateShell?.({ shell, widget, ...renderContext });
 }
 
 export function createRegisteredWidgetContent(widget, context = {}) {
-  return getRenderer(widget).render({ widget, ...context });
+  const renderContext = createWidgetRenderContext(context);
+  return getRenderer(widget).render({ widget, ...renderContext });
 }
