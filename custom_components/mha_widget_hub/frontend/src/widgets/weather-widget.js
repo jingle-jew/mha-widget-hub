@@ -2,6 +2,7 @@ import { createCurrentWeatherIcon } from "./weather-current-icons.js";
 import { createWeatherIcon } from "./weather-icons.js";
 import { buildWeatherModel } from "../ha/weather.js";
 import { css, freezeSize, isLocalWidgetKind, variant } from "./widget-definition-utils.js";
+import { WIDGET_PREVIEW_DATA } from "./widget-preview-data.js";
 import { buildWeatherWidgetConfig, createWeatherConfigDraft } from "../widget-config/weather-config.js";
 
 const WEATHER_SIZE_VARIANTS = new Set(["4x1", "2x2", "3x2", "4x2"]);
@@ -180,10 +181,26 @@ export const WEATHER_WIDGET_DEFINITION = Object.freeze({
   ],
 });
 
+function createWeatherPreviewWidget(item = {}) {
+  const previewData = WIDGET_PREVIEW_DATA.weather;
+  return {
+    ...item,
+    kind: "weather",
+    type: "weather",
+    component: WEATHER_WIDGET_DEFINITION.component,
+    variant: item.variant || WEATHER_WIDGET_DEFINITION.defaultVariant,
+    entityId: item.entityId || item.entity_id || previewData.entityId,
+    entity_id: item.entity_id || item.entityId || previewData.entityId,
+  };
+}
+
 export const WIDGET_MODULE = Object.freeze({
   kind: "weather",
   definition: WEATHER_WIDGET_DEFINITION,
   renderer: WEATHER_WIDGET_CONTENT_RENDERER,
   config: WEATHER_WIDGET_CONFIG_MANIFEST,
-  preview: Object.freeze({ mode: "static" }),
+  preview: Object.freeze({
+    mode: "live",
+    createWidget: createWeatherPreviewWidget,
+  }),
 });

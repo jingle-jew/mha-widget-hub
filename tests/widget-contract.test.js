@@ -155,8 +155,13 @@ test("variant cycling starts after the current size", () => {
 test("registered widgets expose preview renderer manifests", async () => {
   const { WIDGET_REGISTRY, getWidgetPreviewRenderer } = await import("../src/widgets/widget-registry.js");
 
+  const expectedModes = new Map([
+    ["clock", "live"],
+    ["weather", "live"],
+  ]);
+
   for (const [kind, definition] of Object.entries(WIDGET_REGISTRY)) {
-    const expectedMode = kind === "clock" ? "live" : "static";
+    const expectedMode = expectedModes.get(kind) || "static";
     assert.equal(definition.previewRenderer.mode, expectedMode, `${kind} should expose its preview mode`);
     assert.equal(getWidgetPreviewRenderer(kind).mode, expectedMode);
   }

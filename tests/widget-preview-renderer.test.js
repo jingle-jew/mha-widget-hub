@@ -24,6 +24,7 @@ function installDom() {
       node.querySelectorAll = () => [];
       node.setAttribute = (name, value) => { node[name] = value; };
       node.append = (...children) => node.childNodes.push(...children);
+      node.replaceChildren = (...children) => { node.childNodes = [...children]; };
       return node;
     },
   };
@@ -54,9 +55,13 @@ test("preview layout exposes size, aspect ratio, and orientation", () => {
   assert.equal(getWidgetPreviewLayout({ w: 2, h: 2 }).orientation, "square");
 });
 
-test("live preview renderer returns null when no live manifest is enabled", () => {
+test("weather exposes a live preview renderer", () => {
   installDom();
   const preview = createLiveWidgetPreview({ kind: "weather", variant: "adaptive-weather", size: { w: 4, h: 2 } });
-  assert.equal(preview, null);
-  assert.equal(hasLiveWidgetPreview({ kind: "weather" }), false);
+  assert.equal(getWidgetPreviewRenderer({ kind: "weather" }).mode, "live");
+  assert.equal(hasLiveWidgetPreview({ kind: "weather" }), true);
+  assert.equal(preview?.className, "mha-widget-manager-live-preview");
+  assert.equal(preview?.dataset.kind, "weather");
+  assert.equal(preview?.dataset.size, "4x2");
+  assert.equal(preview?.childNodes.length, 1);
 });

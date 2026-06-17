@@ -5,6 +5,7 @@
  */
 
 import { css, freezeSize, isLocalWidgetKind, variant } from "./widget-definition-utils.js";
+import { WIDGET_PREVIEW_DATA } from "./widget-preview-data.js";
 import { buildWeatherModel } from "../ha/weather.js";
 
 export const CLOCK_WIDGET_VARIANTS = Object.freeze([
@@ -309,9 +310,36 @@ export const CLOCK_WIDGET_DEFINITION = Object.freeze({
   ],
 });
 
+
+function createClockPreviewWidget(item = {}) {
+  if (normalizeClockWidgetVariant(item.variant) !== "digital-weather") {
+    return {
+      ...item,
+      kind: "clock",
+      type: "clock",
+      component: CLOCK_WIDGET_DEFINITION.component,
+      variant: normalizeClockWidgetVariant(item.variant),
+    };
+  }
+
+  const previewData = WIDGET_PREVIEW_DATA.weather;
+  return {
+    ...item,
+    kind: "clock",
+    type: "clock",
+    component: CLOCK_WIDGET_DEFINITION.component,
+    variant: "digital-weather",
+    entityId: item.entityId || item.entity_id || previewData.entityId,
+    entity_id: item.entity_id || item.entityId || previewData.entityId,
+  };
+}
+
 export const WIDGET_MODULE = Object.freeze({
   kind: "clock",
   definition: CLOCK_WIDGET_DEFINITION,
   renderer: CLOCK_WIDGET_CONTENT_RENDERER,
-  preview: Object.freeze({ mode: "live" }),
+  preview: Object.freeze({
+    mode: "live",
+    createWidget: createClockPreviewWidget,
+  }),
 });

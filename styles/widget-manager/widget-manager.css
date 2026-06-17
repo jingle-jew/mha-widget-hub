@@ -160,6 +160,9 @@
 
 .mha-widget-manager-widget {
   --mha-widget-manager-preview-block-size: 9.5rem;
+  --mha-widget-manager-preview-inline-size: 100%;
+  --mha-widget-manager-live-preview-inline-size: 100%;
+  --mha-widget-manager-live-preview-block-size: 100%;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   align-items: stretch;
@@ -170,7 +173,8 @@
 
 .mha-widget-manager-preview-area {
   inline-size: 100%;
-  min-block-size: var(--mha-widget-manager-preview-block-size);
+  block-size: var(--mha-widget-manager-preview-block-size);
+  min-block-size: 0;
   display: grid;
   place-items: center;
   padding: .65rem;
@@ -218,62 +222,78 @@
   overflow: hidden;
 }
 
-.mha-widget-manager-live-preview,
+ .mha-widget-manager-live-preview,
 .mha-widget-manager-live-preview * {
   pointer-events: none !important;
 }
 
 .mha-widget-manager-live-preview {
   grid-area: 1 / 1;
+  position: relative;
   inline-size: 100%;
   block-size: 100%;
-  max-inline-size: 100%;
-  max-block-size: 100%;
   min-inline-size: 0;
   min-block-size: 0;
-  display: grid;
-  place-items: stretch;
-  aspect-ratio: var(--mha-widget-preview-aspect, var(--mha-widget-preview-w, 2) / var(--mha-widget-preview-h, 2));
   overflow: hidden;
-  transform-origin: center;
   contain: layout paint style;
 }
 
-.mha-widget-manager-live-preview > * {
+.mha-widget-manager-live-preview-stage {
+  position: absolute;
+  inset-inline-start: 50%;
+  inset-block-start: 50%;
+  inline-size: var(--mha-widget-preview-virtual-inline-size, 224px);
+  block-size: var(--mha-widget-preview-virtual-block-size, 224px);
+  min-inline-size: var(--mha-widget-preview-virtual-inline-size, 224px);
+  min-block-size: var(--mha-widget-preview-virtual-block-size, 224px);
+  display: block;
+  transform: translate(-50%, -50%) scale(var(--mha-widget-preview-scale, .5));
+  transform-origin: center;
+  will-change: transform;
+}
+
+.mha-widget-manager-live-widget-shell {
   inline-size: 100%;
   block-size: 100%;
+  max-inline-size: none;
+  max-block-size: none;
   min-inline-size: 0;
   min-block-size: 0;
+  grid-column: auto !important;
+  grid-row: auto !important;
 }
 
-.mha-widget-manager-live-preview[data-orientation="vertical"] {
-  inline-size: min(100%, calc(100% * var(--mha-widget-preview-w, 1) / var(--mha-widget-preview-h, 4)));
+.mha-widget-manager-live-widget-shell .mha-widget-tools,
+.mha-widget-manager-live-widget-shell .mha-widget-move-overlay,
+.mha-widget-manager-live-widget-shell .mha-size-badge {
+  display: none !important;
 }
 
-.mha-widget-manager-live-preview[data-orientation="horizontal"] {
-  block-size: min(100%, calc(100% * var(--mha-widget-preview-h, 1) / var(--mha-widget-preview-w, 4)));
-}
-
+/* Live previews render the real widget at a virtual grid size and then scale the
+ * whole widget down to fit the manager frame. The manager controls only the
+ * outer frame/scale; widget internals keep their production layout unchanged.
+ */
 .mha-widget-manager-preview-area[data-size="4x1"],
 .mha-widget-manager-preview-area[data-size="3x1"] {
-  --mha-widget-manager-preview-block-size: 7.25rem;
+  block-size: auto;
+  aspect-ratio: 4 / 1;
 }
 
 .mha-widget-manager-preview-area[data-size="2x1"] {
-  --mha-widget-manager-preview-block-size: 6.75rem;
+  block-size: auto;
+  aspect-ratio: 2 / 1;
 }
 
-.mha-widget-manager-preview-area[data-size="2x2"] {
-  --mha-widget-manager-preview-block-size: 10rem;
-}
-
+.mha-widget-manager-preview-area[data-size="2x2"],
 .mha-widget-manager-preview-area[data-size="3x2"],
 .mha-widget-manager-preview-area[data-size="4x2"] {
-  --mha-widget-manager-preview-block-size: 10.5rem;
+  block-size: auto;
+  aspect-ratio: 2 / 1;
 }
 
 .mha-widget-manager-preview-area[data-size="1x4"] {
-  --mha-widget-manager-preview-block-size: 12rem;
+  block-size: auto;
+  aspect-ratio: 1 / 2;
 }
 
 .mha-widget-manager-card-meta,
