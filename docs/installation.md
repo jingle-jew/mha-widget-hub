@@ -1,70 +1,64 @@
-# Home Assistant installation
+# Installation
 
-MHA Widget Hub is packaged as a HACS custom integration. The integration serves
-its bundled frontend and registers the `mha-widget-hub` panel automatically
-after the integration has been configured once.
+## Prerequisites
 
-## Install with HACS
+Before installing MHA Widget Hub, ensure you have:
 
-1. Add `https://github.com/jingle-jew/mha-widget-hub` as a custom HACS
-   repository of type **Integration**.
-2. Install **MHA Widget Hub** and restart Home Assistant.
-3. Open **Settings > Devices & services > Add integration**.
-4. Search for **MHA Widget Hub** and submit the empty setup form.
+- A working Home Assistant installation
+- HACS installed
+- Administrator access to Home Assistant
 
-The integration then registers:
+---
 
-- sidebar title: `MHA`;
-- sidebar icon: `mdi:view-dashboard`;
-- panel URL: `/mha-widget-hub`;
-- frontend loader URL: `/mha_widget_hub_static/mha-widget-hub-loader.js`.
+## Install through HACS
 
-No `panel_custom:` entry is required. HACS installs files but cannot create a
-Home Assistant config entry by itself, so step 4 is required once. After that,
-the panel is registered automatically on every Home Assistant startup.
+1. Open HACS.
+2. Navigate to Frontend.
+3. Add the MHA Widget Hub repository as a custom repository.
+4. Install MHA Widget Hub.
+5. Restart Home Assistant if required.
 
-## Manual installation
+---
 
-Copy `custom_components/mha_widget_hub` into the Home Assistant
-`config/custom_components` directory, restart Home Assistant, then add the
-integration from **Settings > Devices & services**.
+## Add the Panel
 
-As an optional YAML fallback, the integration can also be loaded with:
+After installation:
 
-```yaml
-mha_widget_hub:
-```
+1. Open Home Assistant.
+2. Locate MHA Widget Hub in the sidebar.
+3. Open the panel.
+4. Complete the initial setup if prompted.
 
-This fallback still registers the panel from the integration itself. It does
-not use `panel_custom:`.
+---
 
-## Frontend development
+## First Launch
 
-The frontend source of truth stays at the repository root:
+On first launch you can:
 
-- `mha-widget-hub-loader.js`;
-- `mha-widget-hub.js`;
-- `src/`;
-- `styles/`;
-- `assets/`.
+- Create pages
+- Add widgets
+- Select a visual theme
+- Configure the dock
+- Customize wallpapers
 
-After changing those files, synchronize the HACS bundle with:
+Settings are stored locally and can be customized independently on different devices.
 
-```bash
-npm run sync:frontend
-```
+---
 
-The generated runtime copy lives in
-`custom_components/mha_widget_hub/frontend/` and must be committed with the
-source change. Never edit files in that generated directory directly: make the
-change in the root source, then run the synchronization command.
+## Troubleshooting
 
-To verify the bundle without modifying files:
+### Blank screen
 
-```bash
-npm run check:sync
-```
+- Refresh the browser.
+- Clear browser cache.
+- Verify that the frontend files were updated correctly.
 
-This runs `sync-integration-frontend.mjs --check`. CI executes the same check
-and fails when a file is missing, extra or different. The existing `dev.html`
-workflow remains unchanged.
+### Missing widgets
+
+- Confirm that the widget is enabled.
+- Verify that the associated Home Assistant entity exists.
+
+### Theme issues
+
+- Reload the page after changing themes.
+- Verify that all theme assets were installed correctly.
