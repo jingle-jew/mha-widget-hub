@@ -71,13 +71,15 @@ class MhaAdminPanel extends HTMLElement {
     this._loading = true;
     this._saving = false;
     this._error = "";
+    this._hassRenderSignature = "";
     this._themeController = createThemeController(this);
   }
 
   set hass(value) {
     this._hass = value;
     this._themeController.sync();
-    this._ensureAdminDataLoaded();
+    if (this._ensureAdminDataLoaded()) return;
+    this._renderIfHassDataChanged();
   }
 
   get hass() {
@@ -98,22 +100,40 @@ class MhaAdminPanel extends HTMLElement {
     this[name] = value;
   }
 
+  _getHassRenderSignature(hass = this._hass) {
+    const userId = String(hass?.user?.id || "");
+    const states = hass?.states || {};
+    const entities = Object.keys(states)
+      .filter(entityId => entityId.startsWith(`${this._selectedDomain}.`))
+      .sort()
+      .map(entityId => {
+        const name = String(states[entityId]?.attributes?.friendly_name || "");
+        return `${entityId}:${name}`;
+      })
+      .join("|");
+    return `${userId}|${this._selectedDomain}|${entities}`;
+  }
+
+  _renderIfHassDataChanged() {
+    const signature = this._getHassRenderSignature();
+    if (signature === this._hassRenderSignature) return false;
+    this._hassRenderSignature = signature;
+    this.render();
+    return true;
+  }
+
   _ensureAdminDataLoaded() {
     const userId = String(this._hass?.user?.id || "");
     if (!this._hass || !userId) {
-      this.render();
       return false;
     }
     if (this._loadedUserId === userId) {
-      this.render();
-      return true;
+      return false;
     }
     if (this._failedUserId === userId) {
-      this.render();
-      return true;
+      return false;
     }
     if (this._loadPromise && this._loadingUserId === userId) {
-      this.render();
       return true;
     }
     this._load(userId);
@@ -164,6 +184,7 @@ class MhaAdminPanel extends HTMLElement {
       this._loadedUserId = userId;
       this._failedUserId = "";
       this._selectedUserId = this._selectedUserId || users[0]?.id || "";
+      this._hassRenderSignature = this._getHassRenderSignature(hass);
     } catch (error) {
       const source = error?.mhaLoadSource || "chargement";
       const cause = error?.cause || error;
@@ -233,7 +254,42 @@ class MhaAdminPanel extends HTMLElement {
     }
   }
 
+  _captureRenderState() {
+    const active = this.shadowRoot.activeElement;
+    const search = this.shadowRoot.querySelector(".mha-admin-search");
+    return {
+      hostScrollTop: this.scrollTop || 0,
+      entityListScrollTop: this.shadowRoot.querySelector(".mha-admin-entity-list")?.scrollTop || 0,
+      searchFocused: Boolean(active && search && active === search),
+      searchSelectionStart: search?.selectionStart ?? null,
+      searchSelectionEnd: search?.selectionEnd ?? null,
+    };
+  }
+
+  _restoreRenderState(state) {
+    if (!state) return;
+    const restore = () => {
+      this.scrollTop = state.hostScrollTop;
+      const list = this.shadowRoot.querySelector(".mha-admin-entity-list");
+      if (list) list.scrollTop = state.entityListScrollTop;
+      if (state.searchFocused) {
+        const search = this.shadowRoot.querySelector(".mha-admin-search");
+        search?.focus?.({ preventScroll: true });
+        if (
+          search
+          && state.searchSelectionStart !== null
+          && state.searchSelectionEnd !== null
+        ) {
+          search.setSelectionRange(state.searchSelectionStart, state.searchSelectionEnd);
+        }
+      }
+    };
+    restore();
+    requestAnimationFrame(restore);
+  }
+
   render() {
+    const renderState = this._captureRenderState();
     const theme = this._themeController.sync();
     const links = STYLES.map(path => `<link rel="stylesheet" href="${assetUrl(path)}">`).join("");
     this.shadowRoot.innerHTML = `${links}<main class="mha-admin-root"></main>`;
@@ -275,6 +331,8 @@ class MhaAdminPanel extends HTMLElement {
       loading.className = "mha-admin-empty";
       loading.textContent = "Chargement de Home Assistant…";
       root.append(loading);
+      this._hassRenderSignature = this._getHassRenderSignature();
+      this._restoreRenderState(renderState);
       return;
     }
 
@@ -381,6 +439,8 @@ class MhaAdminPanel extends HTMLElement {
     this.dataset.theme = theme.theme;
     this.dataset.themeStyle = theme.themeStyle;
     this.dataset.iosGlass = theme.iosGlass;
+    this._hassRenderSignature = this._getHassRenderSignature();
+    this._restoreRenderState(renderState);
   }
 }
 
