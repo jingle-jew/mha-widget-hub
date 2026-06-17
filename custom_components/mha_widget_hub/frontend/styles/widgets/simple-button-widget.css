@@ -136,7 +136,7 @@
 .mha-simple-button-icon-bubble .mha-icon-symbol,
 .mha-simple-button-glyph {
   --mha-icon-symbol-size: var(--mha-simple-button-glyph-size);
-  --mha-icon-symbol-color: currentColor;
+  --mha-icon-symbol-color: var(--mha-simple-button-icon-color, var(--mha-icon-color, var(--mha-text-primary, #fff)));
   --mha-icon-symbol-opacity: .92;
 }
 
@@ -339,7 +339,7 @@
 :host([data-theme-style="ios"]) .mha-widget[data-widget-kind="button"][data-widget-size="2x2"] .mha-simple-button-glyph,
 :host([data-theme-style="ios"]) .mha-simple-button-widget[data-button-layout="square"] .mha-simple-button-glyph {
   --mha-icon-symbol-size: var(--mha-simple-button-square-glyph-size);
-  --mha-icon-symbol-color: currentColor;
+  --mha-icon-symbol-color: var(--mha-simple-button-icon-color, var(--mha-icon-color, var(--mha-text-primary, #fff)));
   --mha-icon-symbol-opacity: .94;
 }
 
@@ -528,7 +528,7 @@
 .mha-simple-button-widget[data-button-layout="square"] .mha-simple-button-icon-bubble .mha-icon-symbol,
 .mha-simple-button-widget[data-button-layout="square"] .mha-simple-button-glyph {
   --mha-icon-symbol-size: var(--mha-simple-button-glyph-size) !important;
-  --mha-icon-symbol-color: currentColor;
+  --mha-icon-symbol-color: var(--mha-simple-button-icon-color, var(--mha-icon-color, var(--mha-text-primary, #fff)));
   --mha-icon-symbol-opacity: .92;
 }
 
@@ -669,8 +669,8 @@
 
 :host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"] .mha-simple-button-icon-bubble .mha-icon-symbol,
 :host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"] .mha-simple-button-glyph {
-  color: currentColor !important;
-  --mha-icon-symbol-color: currentColor !important;
+  color: var(--mha-simple-button-icon-color, var(--mha-icon-color, var(--mha-text-primary, #fff))) !important;
+  --mha-icon-symbol-color: var(--mha-simple-button-icon-color, var(--mha-icon-color, var(--mha-text-primary, #fff))) !important;
 }
 
 :host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"][data-active="true"] {
@@ -703,8 +703,8 @@
 
 :host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"][data-active="true"] .mha-simple-button-icon-bubble .mha-icon-symbol,
 :host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"][data-active="true"] .mha-simple-button-glyph {
-  color: currentColor !important;
-  --mha-icon-symbol-color: currentColor !important;
+  color: var(--mha-simple-button-icon-color, var(--mha-icon-color, var(--mha-text-primary, #fff))) !important;
+  --mha-icon-symbol-color: var(--mha-simple-button-icon-color, var(--mha-icon-color, var(--mha-text-primary, #fff))) !important;
 }
 
 /* ==========================================================================

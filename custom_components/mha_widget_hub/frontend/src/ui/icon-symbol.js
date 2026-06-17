@@ -34,9 +34,13 @@ export function createIconSymbol({
   svg.setAttribute("viewBox", symbolDefinition?.viewBox || "0 0 24 24");
   svg.setAttribute("focusable", "false");
   svg.setAttribute("aria-hidden", "true");
+  svg.setAttribute("fill", "var(--mha-icon-symbol-color)");
+  svg.setAttribute("stroke", "none");
 
   const path = document.createElementNS(SVG_NS, "path");
   path.setAttribute("d", symbolDefinition?.path || "");
+  path.setAttribute("fill", "var(--mha-icon-symbol-color)");
+  path.setAttribute("stroke", "none");
   svg.append(path);
 
   symbol.append(svg);

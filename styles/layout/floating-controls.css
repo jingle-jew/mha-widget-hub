@@ -268,7 +268,7 @@
   .mha-mobile-dock-launcher > .mha-icon {
     --mha-icon-size: var(--mha-floating-button-size);
     --mha-icon-glyph-size: var(--mha-mobile-floating-button-icon-size);
-    --mha-icon-color: currentColor !important;
+    --mha-icon-color: var(--mha-system-button-color, var(--mha-text-primary, #fff)) !important;
     border: 0 !important;
     background: transparent !important;
     box-shadow: none !important;
@@ -276,8 +276,8 @@
   }
 
   .mha-mobile-dock-launcher > .mha-icon .mha-icon-symbol {
-    --mha-icon-symbol-color: currentColor !important;
-    color: currentColor !important;
+    --mha-icon-symbol-color: var(--mha-system-button-color, var(--mha-icon-color, var(--mha-text-primary, #fff))) !important;
+    color: var(--mha-system-button-color, var(--mha-icon-color, var(--mha-text-primary, #fff))) !important;
     opacity: 1;
   }
 }

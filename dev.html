@@ -194,8 +194,123 @@
     setIconShape(readDevPreference("mha-dev-icon-shape", `${legacyDevPrefix}-icon-shape`, "squircle"));
     setLayoutMode(readDevPreference("mha-dev-layout-mode", `${legacyDevPrefix}-layout-mode`, "auto"));
 
+    function createMockEntity(entityId, state, attributes = {}) {
+      return {
+        entity_id: entityId,
+        state,
+        attributes,
+        last_changed: new Date().toISOString(),
+        last_updated: new Date().toISOString(),
+      };
+    }
+
+    function createMockHass() {
+      const states = {
+        "light.salon": createMockEntity("light.salon", "on", {
+          friendly_name: "Salon",
+          brightness: 186,
+          color_temp_kelvin: 3000,
+          supported_color_modes: ["brightness", "color_temp"],
+        }),
+        "light.cuisine": createMockEntity("light.cuisine", "off", {
+          friendly_name: "Cuisine",
+          brightness: 128,
+          supported_color_modes: ["brightness"],
+        }),
+        "light.bureau": createMockEntity("light.bureau", "on", {
+          friendly_name: "Bureau",
+          brightness: 220,
+          supported_color_modes: ["brightness", "hs"],
+        }),
+        "switch.prise_cafe": createMockEntity("switch.prise_cafe", "off", {
+          friendly_name: "Prise café",
+        }),
+        "switch.ventilateur": createMockEntity("switch.ventilateur", "on", {
+          friendly_name: "Ventilateur",
+        }),
+        "input_boolean.mode_soir": createMockEntity("input_boolean.mode_soir", "off", {
+          friendly_name: "Mode soir",
+        }),
+        "button.scene_cinema": createMockEntity("button.scene_cinema", "unknown", {
+          friendly_name: "Scène cinéma",
+        }),
+        "sensor.temperature_salon": createMockEntity("sensor.temperature_salon", "21.8", {
+          friendly_name: "Température salon",
+          unit_of_measurement: "°C",
+          device_class: "temperature",
+        }),
+        "sensor.humidite_salon": createMockEntity("sensor.humidite_salon", "43", {
+          friendly_name: "Humidité salon",
+          unit_of_measurement: "%",
+          device_class: "humidity",
+        }),
+        "binary_sensor.porte_entree": createMockEntity("binary_sensor.porte_entree", "off", {
+          friendly_name: "Porte d’entrée",
+          device_class: "door",
+        }),
+        "media_player.salon": createMockEntity("media_player.salon", "playing", {
+          friendly_name: "Haut-parleur salon",
+          volume_level: 0.36,
+          media_title: "MHA Dev Mix",
+          media_artist: "HOMEii",
+        }),
+        "climate.thermostat": createMockEntity("climate.thermostat", "heat", {
+          friendly_name: "Thermostat",
+          current_temperature: 21.5,
+          temperature: 22,
+          unit_of_measurement: "°C",
+        }),
+        "weather.maison": createMockEntity("weather.maison", "partlycloudy", {
+          friendly_name: "Maison",
+          temperature: 22,
+          temperature_unit: "°C",
+          humidity: 48,
+          wind_speed: 9,
+          wind_speed_unit: "km/h",
+          forecast: [
+            { condition: "partlycloudy", temperature: 23, templow: 14 },
+            { condition: "sunny", temperature: 25, templow: 15 },
+            { condition: "rainy", temperature: 19, templow: 12 },
+            { condition: "cloudy", temperature: 20, templow: 13 },
+          ],
+        }),
+      };
+
+      return {
+        states,
+        language: "fr",
+        user: { id: "dev-user", name: "Dev local" },
+        callService(domain, service, data = {}) {
+          console.info("[MHA dev] callService", domain, service, data);
+          const entityId = data.entity_id;
+          const entity = states[entityId];
+          if (!entity) return Promise.resolve();
+
+          if (["light", "switch", "input_boolean"].includes(domain)) {
+            if (service === "toggle") entity.state = entity.state === "on" ? "off" : "on";
+            if (service === "turn_on") entity.state = "on";
+            if (service === "turn_off") entity.state = "off";
+            if (domain === "light" && Number.isFinite(Number(data.brightness))) {
+              entity.attributes.brightness = Number(data.brightness);
+            }
+            if (domain === "light" && Number.isFinite(Number(data.brightness_pct))) {
+              entity.attributes.brightness = Math.round(Number(data.brightness_pct) * 2.55);
+            }
+          }
+
+          if (domain === "media_player" && Number.isFinite(Number(data.volume_level))) {
+            entity.attributes.volume_level = Number(data.volume_level);
+          }
+
+          entity.last_updated = new Date().toISOString();
+          hub.hass = { ...hub.hass, states: { ...states } };
+          return Promise.resolve();
+        },
+      };
+    }
+
     if (!new URLSearchParams(location.search).has("no-hass")) {
-      hub.hass = { states: {}, language: "fr" };
+      hub.hass = createMockHass();
     }
 
     window.__MHA_ICON_SHAPE_DEBUG__ = () => {

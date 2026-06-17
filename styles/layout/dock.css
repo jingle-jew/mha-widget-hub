@@ -9,7 +9,7 @@
   --mha-dock-empty-padding-inline: clamp(0.85rem, 1.8vw, 1.45rem);
 
   --mha-icon-size: clamp(2.55rem, 5.8vw, 4.15rem);
-  --mha-icon-glyph-size: 54%;
+  --mha-icon-glyph-size: 82%;
 
   position: absolute;
   z-index: 8;
@@ -229,7 +229,7 @@
       / 4
     );
     --mha-icon-size: min(var(--mha-dock-slot-width), clamp(3rem, 14vw, 4.15rem));
-    --mha-icon-glyph-size: 56%;
+    --mha-icon-glyph-size: 82%;
 
     left: var(--mha-dock-horizontal-gutter);
     right: var(--mha-dock-horizontal-gutter);
@@ -776,4 +776,13 @@
     transform: none;
     opacity: 1;
   }
+}
+
+/* Force dock glyph size at the symbol level so first paint does not rely on inherited fallback timing. */
+.mha-dock .mha-icon > .mha-icon-symbol {
+  --mha-icon-symbol-size: 82%;
+  inline-size: var(--mha-icon-symbol-size);
+  block-size: var(--mha-icon-symbol-size);
+  width: var(--mha-icon-symbol-size);
+  height: var(--mha-icon-symbol-size);
 }

@@ -75,7 +75,7 @@
 .mha-toggle-widget-icon-bubble .mha-icon-symbol,
 .mha-toggle-widget-glyph {
   --mha-icon-symbol-size: var(--mha-toggle-widget-glyph-size);
-  --mha-icon-symbol-color: currentColor;
+  --mha-icon-symbol-color: var(--mha-toggle-widget-icon-color, var(--mha-icon-color, var(--mha-text-primary, #fff)));
   --mha-icon-symbol-opacity: .92;
 }
 
@@ -203,7 +203,7 @@
 .mha-widget[data-widget-kind="toggle"] .mha-toggle-widget-icon-bubble .mha-icon-symbol,
 .mha-widget[data-widget-kind="toggle"] .mha-toggle-widget-glyph {
   --mha-icon-symbol-size: var(--mha-toggle-widget-glyph-size) !important;
-  --mha-icon-symbol-color: currentColor;
+  --mha-icon-symbol-color: var(--mha-toggle-widget-icon-color, var(--mha-icon-color, var(--mha-text-primary, #fff)));
   --mha-icon-symbol-opacity: .92;
 }
 

@@ -19,7 +19,7 @@
     --mha-mobile-dock-padding: clamp(.8rem, 2.5vw, 1.1rem);
 
     --mha-icon-size: clamp(3.1rem, 14vw, 4.15rem);
-    --mha-icon-glyph-size: 56%;
+    --mha-icon-glyph-size: 82%;
 
     display: block;
     position: fixed;
@@ -185,7 +185,7 @@
 
   .mha-mobile-dock-launcher > .mha-icon {
     --mha-icon-size: var(--mha-mobile-dock-launcher-size);
-    --mha-icon-glyph-size: 54%;
+    --mha-icon-glyph-size: 82%;
     inline-size: var(--mha-icon-size);
     block-size: var(--mha-icon-size);
   }
@@ -359,4 +359,13 @@
   :host([data-theme-style="material"]) .mha-mobile-dock-scrim {
     background: var(--mha-bg-overlay);
   }
+}
+
+/* Force mobile dock glyph size at the symbol level so first paint does not rely on inherited fallback timing. */
+.mha-mobile-dock .mha-icon > .mha-icon-symbol {
+  --mha-icon-symbol-size: 82%;
+  inline-size: var(--mha-icon-symbol-size);
+  block-size: var(--mha-icon-symbol-size);
+  width: var(--mha-icon-symbol-size);
+  height: var(--mha-icon-symbol-size);
 }

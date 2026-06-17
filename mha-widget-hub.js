@@ -277,6 +277,7 @@ constructor(){
   this._systemThemeListener=null;
   this._themeTransitionTimer=0;
   this._themeTransitionFrame=0;
+  this._iconSymbolRefreshFrame=0;
   this._gridScrollCleanup=null;
   this._settingsOpen=false;
   this._settingsPage="main";
@@ -589,6 +590,8 @@ disconnectedCallback(){
   this._themeTransitionFrame=0;
   clearTimeout(this._themeTransitionTimer);
   this._themeTransitionTimer=0;
+  cancelAnimationFrame(this._iconSymbolRefreshFrame);
+  this._iconSymbolRefreshFrame=0;
   this._clearGridScrollListener();
   ["pointerdown","touchstart","keydown","wheel","scroll"].forEach(type=>window.removeEventListener(type,this._activityListener));
   this._screensaverController.destroy();
@@ -761,6 +764,7 @@ _saveCustomWallpaper(mode,payload){
   this._customWallpapers=this._wallpaperController.save(mode,payload);
   this._syncAutoAccentFromWallpaper();
   this._syncSettingsDom();
+  this._scheduleIconSymbolRefresh();
 }
 _resetCustomWallpaper(mode){
   this._customWallpapers=this._wallpaperController.reset(mode);
@@ -793,6 +797,7 @@ async _syncAutoAccentFromWallpaper(){
   if(requestId===this._autoAccentRequestId){
     this._themeController.sync();
     this._syncSettingsDom();
+    this._scheduleAppearanceDomRefresh();
   }
 }
 _isMobileLandscapeLayout(){
@@ -1038,11 +1043,44 @@ _deleteDockPage(id=""){
  *
  * Keep this block together when cleaning/refactoring the theme system.
  */
+
+_scheduleIconSymbolRefresh(){
+  cancelAnimationFrame(this._iconSymbolRefreshFrame);
+  this._iconSymbolRefreshFrame=requestAnimationFrame(()=>{
+    if(!this.isConnected||!this.shadowRoot)return;
+    const symbols=[...this.shadowRoot.querySelectorAll(".mha-icon-symbol")];
+    for(const symbol of symbols){
+      // Force the browser to repaint SVG glyphs after theme token changes.
+      symbol.style.transform="translateZ(0)";
+      symbol.getBoundingClientRect();
+      symbol.style.transform="";
+    }
+    this._iconSymbolRefreshFrame=0;
+  });
+}
+
+_refreshAppearanceDom(){
+  if(!this.isConnected||!this.shadowRoot)return;
+
+  this._syncDocksDom();
+  this._refreshActiveGridOnly();
+  this._scheduleIconSymbolRefresh();
+}
+
+_scheduleAppearanceDomRefresh(){
+  cancelAnimationFrame(this._appearanceRefreshFrame);
+  this._appearanceRefreshFrame=requestAnimationFrame(()=>{
+    this._appearanceRefreshFrame=0;
+    this._refreshAppearanceDom();
+  });
+}
+
 _applyThemeFromSettings(value="auto"){
   const themeState=this._themeController.setTheme(value);
   this._applyCustomWallpaperState(themeState.theme);
   this._syncSettingsDom();
   this._syncScreensaverSettingsDom();
+  this._scheduleAppearanceDomRefresh();
 }
 
 _transitionSystemThemeChange(){
@@ -1062,6 +1100,7 @@ _transitionSystemThemeChange(){
 
   const themeState=this._themeController.sync();
   this._applyCustomWallpaperState(themeState.theme);
+  this._scheduleAppearanceDomRefresh();
 
   const finish=()=>{
     cover.dataset.state="revealing";
@@ -1087,27 +1126,32 @@ _applyThemeStyleFromSettings(value="oneui"){
   this._themeController.setThemeStyle(value);
   this._syncAutoAccentFromWallpaper();
   this._syncSettingsDom();
+  this._scheduleAppearanceDomRefresh();
 }
 
 _applyIosGlassFromSettings(value="liquid"){
   this._themeController.setIosGlass(value);
   this._syncSettingsDom();
+  this._scheduleAppearanceDomRefresh();
 }
 
 _applyAccentFromSettings(value=""){
   this._themeController.setAccent(value);
   this._syncSettingsDom();
+  this._scheduleAppearanceDomRefresh();
 }
 
 _applyAccentModeFromSettings(value="manual"){
   this._themeController.setAccentMode(value);
   if(value==="auto")this._syncAutoAccentFromWallpaper();
   this._syncSettingsDom();
+  this._scheduleAppearanceDomRefresh();
 }
 
 _applyIconShapeFromSettings(value="auto"){
   this._themeController.setIconShape(value);
   this._syncSettingsDom();
+  this._scheduleAppearanceDomRefresh();
 }
 
 _isScreensaverBlocked(){
@@ -2105,6 +2149,7 @@ _startProgressiveWidgetRender({grid,units,positions,renderId}){
     this._scheduleSquareUnitSync();
     this._scheduleHassUpdate();
     this._syncWidgetDropSlots();
+    this._scheduleIconSymbolRefresh();
   };
   this._widgetRenderFrame=requestAnimationFrame(renderBatch);
 }
@@ -2155,6 +2200,7 @@ _appendDeferredUi({layout,renderId}){
     this.shadowRoot.append(createSettingsPanel(this._getSettingsPanelProps("screensaver")));
     this._syncEditModeDom();
     this._syncScreensaverVisibilityState();
+    this._scheduleIconSymbolRefresh();
   });
 }
 render(){
