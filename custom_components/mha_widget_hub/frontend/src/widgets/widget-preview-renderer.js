@@ -141,22 +141,22 @@ function bindPreviewScale(frame, layout) {
     const safeBlockInset = isVeryWide ? 0 : 8;
     const safeInline = Math.max(1, availableInline - safeInlineInset);
     const safeBlock = Math.max(1, availableBlock - safeBlockInset);
-    const inlineScale = safeInline / layout.virtualInlineSize;
-    const blockScale = safeBlock / layout.virtualBlockSize;
     const kind = frame.dataset.kind || "";
-    const widthBiasedSlider = ["slider", "toggle-slider"].includes(kind) && layout.w > layout.h;
 
-    // Horizontal slider-based widgets should visually use the full available
-    // preview width. The normal min(inline, block) fit can make the whole
-    // widget scale down because of the uniform manager card height, which makes
-    // the slider rail look like it only spans ~3/4 of its own widget. Prefer
-    // fitting by width for these widgets, while still preventing severe vertical
-    // overflow in very constrained cards.
-    const widthFitScale = Math.min(inlineScale, 1);
-    const blockGuardScale = Math.min(blockScale * 1.08, 1);
-    const scale = widthBiasedSlider
-      ? Math.min(widthFitScale, Math.max(blockScale, blockGuardScale))
-      : Math.min(inlineScale, blockScale, 1);
+    // Keep preview proportions coherent across the manager. If each widget uses
+    // its own virtual dimensions to compute scale, smaller horizontal widgets
+    // such as 3×1 toggles scale up more than 4×1 widgets and appear taller.
+    // Horizontal/square previews therefore share a 4×2 reference scale: 4×1 is
+    // exactly half the height of 4×2, while 3×1 keeps the same 1-row height.
+    // Vertical previews keep a 2×4 reference so tall widgets do not force the
+    // manager card to grow while still preserving their logical proportions.
+    const referenceW = layout.h > layout.w ? Math.max(layout.w, 2) : Math.max(layout.w, 4);
+    const referenceH = layout.h > layout.w ? Math.max(layout.h, 4) : Math.max(layout.h, 2);
+    const referenceInlineSize = referenceW * PREVIEW_VIRTUAL_UNIT;
+    const referenceBlockSize = referenceH * PREVIEW_VIRTUAL_UNIT;
+    const inlineScale = safeInline / referenceInlineSize;
+    const blockScale = safeBlock / referenceBlockSize;
+    const scale = Math.min(inlineScale, blockScale, 1);
 
     // Very wide widgets such as 4×1 weather are width-constrained in the
     // mobile widget manager. Do not apply the normal visual floor there, since
