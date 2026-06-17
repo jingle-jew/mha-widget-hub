@@ -4,6 +4,7 @@ import { createIcon } from "../ui/icon.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
 import { createBackButton, createCloseButton, createMoveUpButton, createMoveDownButton, createRemoveButton } from "../system/system-buttons.js";
 import { validateWallpaperFile } from "./wallpaper-storage.js";
+import { getThemeStyleOptions } from "./theme-registry.js";
 /*
  * MHA Settings panel.
  *
@@ -18,11 +19,7 @@ const THEME_OPTIONS = [
   { value: "light", label: "Clair" },
 ];
 
-const STYLE_OPTIONS = [
-  { value: "ios", label: "iOS" },
-  { value: "oneui", label: "OneUI" },
-  { value: "material", label: "Material You" },
-];
+const STYLE_OPTIONS = getThemeStyleOptions();
 
 const IOS_GLASS_OPTIONS = [
   { value: "liquid", label: "Liquid Glass" },
