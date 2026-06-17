@@ -4,6 +4,12 @@ import {
   buildMediaWidgetConfig,
   createMediaConfigDraft,
 } from "../widget-config/media-config.js";
+import {
+  buildMediaDisplayModel,
+  buildMediaPlayerServiceCall,
+  getMediaArtworkUrl,
+} from "../ha/media.js";
+import { runMediaPlayerAction } from "../ha/actions.js";
 
 export const MEDIA_WIDGET_KIND = "media";
 
@@ -16,40 +22,34 @@ function resolveMediaEntity(widget = {}, hass) {
   return entityId ? hass?.states?.[entityId] : null;
 }
 
-function resolveMediaArtworkUrl(artworkUrl = "") {
-  if (!artworkUrl || typeof artworkUrl !== "string") return "";
-  if (/^(https?:)?\/\//i.test(artworkUrl) || artworkUrl.startsWith("data:")) return artworkUrl;
-  if (artworkUrl.startsWith("/")) return `${window.location.origin}${artworkUrl}`;
-  return artworkUrl;
-}
-
 function getMediaData(widget = {}, hass) {
   const previewData = WIDGET_PREVIEW_DATA.media;
   const entity = resolveMediaEntity(widget, hass);
   const attributes = entity?.attributes || {};
-  const state = entity?.state || widget.state || previewData.state;
+  const model = buildMediaDisplayModel(entity, widget, previewData);
+  const state = model.state;
   const volume = attributes.volume_level ?? widget.volume ?? previewData.volume;
-  const artworkUrl = resolveMediaArtworkUrl(
-    attributes.entity_picture
-      || attributes.entity_picture_local
-      || attributes.media_image_url
-      || widget.artworkUrl
-      || widget.entityPicture
-      || widget.mediaImageUrl
-      || "",
-  );
+  const volumeNumber = Number(volume);
+  const volumePercent = Number.isFinite(volumeNumber)
+    ? Math.max(0, Math.min(100, Math.round(volumeNumber * 100)))
+    : 0;
 
   return {
-    entityId: entity?.entity_id || widget.entityId || widget.entity_id || previewData.entityId,
-    name: widget.label || widget.title || attributes.friendly_name || previewData.name,
-    title: attributes.media_title || widget.mediaTitle || widget.title || previewData.title,
-    artist: attributes.media_artist || widget.mediaArtist || widget.artist || previewData.artist,
-    album: attributes.media_album_name || widget.album || "Preview Album",
+    entity,
+    entityId: model.entityId,
+    name: model.name,
+    title: model.title,
+    subtitle: model.subtitle,
+    artist: model.artist,
+    album: model.album || "Preview Album",
     app: attributes.app_name || widget.app || "MHA Media",
     state,
     playing: state === "playing",
-    volumePercent: Math.round(Number(volume) * 100),
-    artworkUrl,
+    volumePercent,
+    artworkUrl: getMediaArtworkUrl(entity, widget),
+    canPrevious: Boolean(buildMediaPlayerServiceCall(entity, "previous")),
+    canPlayPause: Boolean(buildMediaPlayerServiceCall(entity, "playPause")),
+    canNext: Boolean(buildMediaPlayerServiceCall(entity, "next")),
   };
 }
 
@@ -71,6 +71,33 @@ function setArtworkImage(artwork, artworkUrl = "") {
   } else {
     image.removeAttribute("src");
   }
+}
+
+function setBackgroundImage(root, artworkUrl = "") {
+  const image = root.querySelector(".mha-media-widget-background-image");
+  const hasArtwork = Boolean(artworkUrl);
+  root.dataset.hasArtwork = String(hasArtwork);
+  if (!image) return;
+  if (hasArtwork) {
+    image.src = artworkUrl;
+    image.alt = "";
+  } else {
+    image.removeAttribute("src");
+  }
+}
+
+function createArtworkBackground(data) {
+  const background = document.createElement("div");
+  background.className = "mha-media-widget-background";
+  background.setAttribute("aria-hidden", "true");
+
+  const image = document.createElement("img");
+  image.className = "mha-media-widget-background-image";
+  image.loading = "lazy";
+  image.decoding = "async";
+  image.draggable = false;
+  background.append(image);
+  return background;
 }
 
 function createArtwork(data) {
@@ -98,28 +125,50 @@ function createTitleStack(data) {
   stack.className = "mha-media-widget-text";
   stack.append(
     createText("mha-media-widget-title", data.title),
-    createText("mha-media-widget-artist", data.artist),
+    createText("mha-media-widget-artist", data.subtitle),
   );
   return stack;
 }
 
-function createControlButton(label, symbol, { primary = false } = {}) {
+function createControlButton(label, symbol, { primary = false, action = "", disabled = false, onAction } = {}) {
   const button = document.createElement("button");
   button.className = "mha-media-widget-control";
   button.type = "button";
   button.setAttribute("aria-label", label);
+  button.dataset.action = action;
   if (primary) button.dataset.primary = "true";
+  button.disabled = Boolean(disabled);
+  button.setAttribute("aria-disabled", String(Boolean(disabled)));
+  button.addEventListener("click", event => {
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation?.();
+    if (!button.disabled) onAction?.(action);
+  });
   button.textContent = symbol;
   return button;
 }
 
-function createControls(data, { compact = false } = {}) {
+function createControls(data, { compact = false, onAction } = {}) {
   const controls = document.createElement("div");
   controls.className = "mha-media-widget-controls";
   controls.append(
-    createControlButton("Précédent", "‹"),
-    createControlButton(data.playing ? "Pause" : "Lecture", data.playing ? "Ⅱ" : "▶", { primary: true }),
-    createControlButton("Suivant", "›"),
+    createControlButton("Précédent", "‹", {
+      action: "previous",
+      disabled: !data.canPrevious,
+      onAction,
+    }),
+    createControlButton(data.playing ? "Pause" : "Lecture", data.playing ? "Ⅱ" : "▶", {
+      primary: true,
+      action: "playPause",
+      disabled: !data.canPlayPause,
+      onAction,
+    }),
+    createControlButton("Suivant", "›", {
+      action: "next",
+      disabled: !data.canNext,
+      onAction,
+    }),
   );
   if (!compact) {
     controls.append(createText("mha-media-widget-volume", `${data.volumePercent}%`));
@@ -161,18 +210,29 @@ export function createMediaWidgetContent(widget = {}, {
   interactive = true,
 } = {}) {
   const data = getMediaData(widget, hass);
+  const context = { hass, entity: data.entity };
   const variantKey = mediaVariantKey({ widgetW, widgetH });
   const root = document.createElement("div");
   root.className = "mha-media-widget";
   root.dataset.widgetComponent = "media";
   root.dataset.mediaSize = variantKey;
   root.dataset.state = data.state;
+  root.dataset.mediaState = data.state;
   root.dataset.playing = String(data.playing);
+  root.dataset.hasArtwork = String(Boolean(data.artworkUrl));
 
+  const onAction = action => {
+    if (!interactive || !context.entity) return;
+    runMediaPlayerAction(context.hass, context.entity, action);
+  };
+
+  const background = createArtworkBackground(data);
   const artwork = createArtwork(data);
   const text = createTitleStack(data);
-  const controls = createControls(data, { compact: variantKey === "2x2" });
+  const controls = createControls(data, { compact: variantKey === "2x2", onAction });
   const progress = createProgress();
+  root.append(background);
+  setBackgroundImage(root, data.artworkUrl);
 
   if (variantKey === "2x2") {
     root.append(artwork, text, controls);
@@ -198,18 +258,36 @@ export function createMediaWidgetContent(widget = {}, {
 
   root.__mhaUpdateFromHass = nextHass => {
     const nextData = getMediaData(widget, nextHass);
+    context.hass = nextHass;
+    context.entity = nextData.entity;
     root.dataset.state = nextData.state;
+    root.dataset.mediaState = nextData.state;
     root.dataset.playing = String(nextData.playing);
+    root.dataset.hasArtwork = String(Boolean(nextData.artworkUrl));
     root.querySelector(".mha-media-widget-title").textContent = nextData.title;
-    root.querySelector(".mha-media-widget-artist").textContent = nextData.artist;
+    root.querySelector(".mha-media-widget-artist").textContent = nextData.subtitle;
     const artworkNode = root.querySelector(".mha-media-widget-artwork");
     artworkNode?.setAttribute("data-playing", String(nextData.playing));
     if (artworkNode) setArtworkImage(artworkNode, nextData.artworkUrl);
+    setBackgroundImage(root, nextData.artworkUrl);
     root.querySelector(".mha-media-widget-volume")?.replaceChildren(`${nextData.volumePercent}%`);
+    const primary = root.querySelector('[data-action="playPause"]');
+    if (primary) {
+      primary.textContent = nextData.playing ? "Ⅱ" : "▶";
+      primary.setAttribute("aria-label", nextData.playing ? "Pause" : "Lecture");
+    }
+    root.querySelector('[data-action="previous"]')?.toggleAttribute("disabled", !nextData.canPrevious);
+    root.querySelector('[data-action="previous"]')?.setAttribute("aria-disabled", String(!nextData.canPrevious));
+    root.querySelector('[data-action="playPause"]')?.toggleAttribute("disabled", !nextData.canPlayPause);
+    root.querySelector('[data-action="playPause"]')?.setAttribute("aria-disabled", String(!nextData.canPlayPause));
+    root.querySelector('[data-action="next"]')?.toggleAttribute("disabled", !nextData.canNext);
+    root.querySelector('[data-action="next"]')?.setAttribute("aria-disabled", String(!nextData.canNext));
   };
 
   root.__mhaDestroy = () => {
     delete root.__mhaUpdateFromHass;
+    context.hass = null;
+    context.entity = null;
   };
 
   return root;

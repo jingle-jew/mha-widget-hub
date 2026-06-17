@@ -1,5 +1,6 @@
 import { buildSliderServiceCall } from "./slider.js";
 import { buildToggleServiceCall } from "./toggle.js";
+import { buildMediaPlayerServiceCall } from "./media.js";
 
 export function createLatestValueAction(runAction, { intervalMs = 80 } = {}) {
   let inFlight = false;
@@ -115,4 +116,8 @@ export function runButtonAction(hass, widget, entityState) {
 
 export function runSliderAction(hass, entityState, value) {
   return callHomeAssistantService(hass, buildSliderServiceCall(entityState, value));
+}
+
+export function runMediaPlayerAction(hass, entityState, action) {
+  return callHomeAssistantService(hass, buildMediaPlayerServiceCall(entityState, action));
 }

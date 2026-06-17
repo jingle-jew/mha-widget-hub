@@ -18,6 +18,12 @@ import {
   callHomeAssistantService,
   createLatestValueAction,
 } from "../src/ha/actions.js";
+import {
+  buildMediaDisplayModel,
+  buildMediaPlayerServiceCall,
+  getMediaArtworkUrl,
+  resolveHomeAssistantMediaUrl,
+} from "../src/ha/media.js";
 import { resolveAuthorizedEntity } from "../src/ha/entity-access.js";
 import { buildWeatherModel } from "../src/ha/weather.js";
 import { getClockWeatherText } from "../src/widgets/clock-widget.js";
@@ -96,6 +102,87 @@ test("fan, media player and cover sliders use domain-specific payloads", () => {
       service: "set_cover_position",
       data: { entity_id: "cover.patio", position: 20 },
     },
+  );
+});
+
+test("media player model prefers live metadata and readable fallback states", () => {
+  const playing = entity("media_player.salon", "playing", {
+    friendly_name: "Salon",
+    media_title: "Ocean Drive",
+    media_artist: "Duke Dumont",
+  });
+  assert.deepEqual(
+    buildMediaDisplayModel(playing, {}, {}).title,
+    "Ocean Drive",
+  );
+  assert.equal(buildMediaDisplayModel(playing, {}, {}).subtitle, "Duke Dumont");
+
+  const paused = entity("media_player.salon", "paused", {
+    friendly_name: "Salon",
+    media_title: "Ocean Drive",
+    media_artist: "Duke Dumont",
+  });
+  assert.equal(buildMediaDisplayModel(paused, {}, {}).title, "Ocean Drive");
+  assert.equal(buildMediaDisplayModel(paused, {}, {}).subtitle, "en pause");
+
+  const idle = entity("media_player.salon", "idle", {
+    friendly_name: "Salon",
+    media_title: "Stale title",
+  });
+  assert.equal(buildMediaDisplayModel(idle, {}, {}).title, "Salon");
+  assert.equal(buildMediaDisplayModel(idle, {}, {}).subtitle, "inactif");
+});
+
+test("media player artwork resolves HA relative URLs in priority order", () => {
+  const player = entity("media_player.salon", "playing", {
+    entity_picture: "",
+    media_image_url: "https://ha.example/api/media_player_proxy/media_player.salon",
+    entity_picture_local: "/local/fallback.jpg",
+  });
+
+  assert.equal(
+    getMediaArtworkUrl(player, {}),
+    "https://ha.example/api/media_player_proxy/media_player.salon",
+  );
+  assert.equal(
+    resolveHomeAssistantMediaUrl("/api/media_player_proxy/media_player.salon", "https://ha.example"),
+    "https://ha.example/api/media_player_proxy/media_player.salon",
+  );
+});
+
+test("media player buttons map to supported Home Assistant services", () => {
+  const supported = entity("media_player.salon", "playing", {
+    supported_features: 1 | 16 | 32 | 16384,
+  });
+
+  assert.deepEqual(buildMediaPlayerServiceCall(supported, "previous"), {
+    domain: "media_player",
+    service: "media_previous_track",
+    data: { entity_id: "media_player.salon" },
+  });
+  assert.deepEqual(buildMediaPlayerServiceCall(supported, "playPause"), {
+    domain: "media_player",
+    service: "media_pause",
+    data: { entity_id: "media_player.salon" },
+  });
+  assert.deepEqual(buildMediaPlayerServiceCall({
+    ...supported,
+    state: "paused",
+  }, "playPause"), {
+    domain: "media_player",
+    service: "media_play",
+    data: { entity_id: "media_player.salon" },
+  });
+  assert.deepEqual(buildMediaPlayerServiceCall(supported, "next"), {
+    domain: "media_player",
+    service: "media_next_track",
+    data: { entity_id: "media_player.salon" },
+  });
+  assert.equal(
+    buildMediaPlayerServiceCall(entity("media_player.salon", "playing", {
+      supported_features: 16 | 32,
+    }), "playPause"),
+    null,
   );
 });
 
