@@ -31,6 +31,34 @@ function appendPreviewContent(frame, content) {
   return false;
 }
 
+export function getWidgetPreviewLayout(size = {}) {
+  const w = Math.max(1, Number(size.w) || 2);
+  const h = Math.max(1, Number(size.h) || 2);
+  const aspectRatio = `${w} / ${h}`;
+  const orientation = h > w ? "vertical" : w > h ? "horizontal" : "square";
+
+  return Object.freeze({
+    w,
+    h,
+    aspectRatio,
+    orientation,
+    sizeKey: `${w}x${h}`,
+  });
+}
+
+function applyPreviewLayout(frame, size = {}) {
+  const layout = getWidgetPreviewLayout(size);
+  frame.dataset.size = layout.sizeKey;
+  frame.dataset.orientation = layout.orientation;
+  frame.style.setProperty("--mha-widget-preview-w", String(layout.w));
+  frame.style.setProperty("--mha-widget-preview-h", String(layout.h));
+  frame.style.setProperty("--mha-widget-preview-aspect", layout.aspectRatio);
+  frame.style.setProperty("--mha-widget-w", String(layout.w));
+  frame.style.setProperty("--mha-widget-configured-w", String(layout.w));
+  frame.style.setProperty("--mha-widget-h", String(layout.h));
+  return layout;
+}
+
 export function createLiveWidgetPreview(item = {}, context = {}) {
   const previewRenderer = getWidgetPreviewRenderer(item);
   if (previewRenderer.mode !== "live") return null;
@@ -43,9 +71,7 @@ export function createLiveWidgetPreview(item = {}, context = {}) {
   frame.className = "mha-widget-manager-live-preview";
   frame.dataset.kind = resolveWidgetKind(previewWidget);
   frame.dataset.variant = previewWidget.variant || "";
-  frame.dataset.size = `${previewContext.size.w}x${previewContext.size.h}`;
-  frame.style.setProperty("--mha-widget-preview-w", String(previewContext.size.w));
-  frame.style.setProperty("--mha-widget-preview-h", String(previewContext.size.h));
+  applyPreviewLayout(frame, previewContext.size);
 
   const rendered = previewRenderer.render
     ? previewRenderer.render({ widget: previewWidget, ...previewContext })

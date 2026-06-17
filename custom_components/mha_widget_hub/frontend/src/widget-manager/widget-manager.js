@@ -283,7 +283,7 @@ function createWidgetPreview(item) {
 
   media.append(preview);
 
-  const previewImage = resolvePreviewImage(item, readActivePreviewTheme(area));
+  const previewImage = livePreview ? "" : resolvePreviewImage(item, readActivePreviewTheme(area));
   if (previewImage) {
     const image = document.createElement("img");
     image.className = "mha-widget-manager-preview-image";
