@@ -162,6 +162,7 @@ test("registered widgets expose preview renderer manifests", async () => {
     ["toggle", "live"],
     ["slider", "live"],
     ["toggle-slider", "live"],
+    ["media", "live"],
   ]);
 
   for (const [kind, definition] of Object.entries(WIDGET_REGISTRY)) {

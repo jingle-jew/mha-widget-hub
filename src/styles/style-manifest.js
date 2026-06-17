@@ -44,6 +44,7 @@ const WIDGET_CSS_ORDER = Object.freeze([
   "toggle-slider",
   "toggle-buttons",
   "weather",
+  "media",
 ]);
 
 function uniqueEntries(entries = []) {
