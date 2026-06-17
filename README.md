@@ -43,6 +43,44 @@ widgets, multi-page layouts and administrative entity filtering.**
 - local persistence and migration support;
 - automated syntax, unit and source/bundle synchronization checks.
 
+
+## Extension Architecture
+
+MHA is now registry-driven for widgets and themes. Widgets are declared as
+modules, then assembled by registries into the widget catalogue, renderers,
+configuration flows and CSS manifest. Themes are declared in a theme registry
+and loaded through the generated style manifest.
+
+```text
+src/widgets/my-widget.js
+  exports WIDGET_MODULE
+      ↓
+src/widgets/widget-module-registry.js
+      ↓
+src/widgets/widget-registry.js
+src/widgets/widget-renderer-registry.js
+src/widget-config/widget-config-registry.js
+src/styles/style-manifest.js
+```
+
+### Adding a widget
+
+A widget is added by creating one widget module and registering it once in
+`src/widgets/widget-module-registry.js`. The widget module may contain its
+definition, manager metadata, renderer manifest, config manifest, variants,
+aliases and CSS declaration.
+
+See [Adding widgets](docs/adding-widgets.md).
+
+### Adding a theme
+
+A theme is added by creating one CSS file and registering it once in
+`src/settings/theme-registry.js`. The settings panel, valid theme IDs, default
+icon shape and CSS manifest are generated from that registry.
+
+See [Adding themes](docs/adding-themes.md) and
+[Theme tokens](docs/theme-tokens.md).
+
 ## Home Assistant Support
 
 The frontend receives the Home Assistant `hass` object through the registered
@@ -309,7 +347,7 @@ The root frontend source remains the single source of truth.
 
 ### Current Limitations
 
-* not every widget category is fully connected to Home Assistant yet;
+* not every planned widget category is fully connected to Home Assistant yet;
 * media, climate, security and system widgets are still evolving;
 * some catalog entries remain visual placeholders;
 * entity visibility rules currently affect MHA only;
@@ -324,7 +362,7 @@ The root frontend source remains the single source of truth.
 ### Near Term
 
 * complete Home Assistant bindings for additional widget categories;
-* continue migration toward registry-driven widget definitions;
+* expand the widget module contract and developer documentation;
 * extend configuration flows to all supported widgets;
 * improve preview generation and variant management;
 * reduce CSS override complexity and consolidate design tokens.
