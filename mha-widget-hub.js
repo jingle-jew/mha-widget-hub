@@ -86,46 +86,12 @@ import { createIconSymbol } from "./src/ui/icon-symbol.js";
 import { createCloseButton } from "./src/system/system-buttons.js";
 import { loadEntityVisibilityConfig } from "./src/admin/entity-visibility-store.js";
 import { normalizeEntityVisibilityConfig } from "./src/admin/entity-permissions.js";
+import { getStyleManifest } from "./src/styles/style-manifest.js";
 
 const MHA_FRONTEND_ROOT_URL = new URL(".", import.meta.url);
 const MHA_FRONTEND_VERSION = new URL(import.meta.url).searchParams.get("v");
 
-const MHA_STYLE_MANIFEST = [
-  ["styles/core/tokens.css", "tokens"],
-  ["styles/components/icon.css", "component"],
-  ["styles/components/icon-symbol.css", "component"],
-  ["styles/components/slider.css", "component"],
-  ["styles/components/toggle.css", "component"],
-  ["styles/components/pill.css", "component"],
-  ["styles/components/button.css", "component"],
-  ["styles/system/system-buttons.css", "component"],
-  ["styles/themes/ios.css", "theme"],
-  ["styles/themes/oneui.css", "theme"],
-  ["styles/themes/material.css", "theme"],
-  ["styles/themes/accent-palettes.css", "theme"],
-  ["styles/themes/semantic-tokens.css", "theme"],
-  ["styles/core/background.css", "structure"],
-  ["styles/layout/shell.css", "structure"],
-  ["styles/layout/widget-grid.css", "structure"],
-  ["styles/layout/status-bar.css", "structure"],
-  ["styles/layout/dock.css", "structure"],
-  ["styles/layout/mobile-dock.css", "structure"],
-  ["styles/layout/floating-controls.css", "structure"],
-  ["styles/settings/settings-panel.css", "component"],
-  ["styles/widget-manager/widget-manager.css", "component"],
-  ["styles/widget-manager/widget-config-popup.css", "component"],
-  ["styles/themes/light-text-contract.css", "theme"],
-  ["styles/widgets/widget-layout.css", "structure"],
-  ["styles/widgets/widget-shell.css", "structure"],
-  ["styles/widgets/slider-widget.css", "component"],
-  ["styles/widgets/clock-widget.css", "component"],
-  ["styles/widgets/simple-button-widget.css", "component"],
-  ["styles/widgets/toggle-widget.css", "component"],
-  ["styles/widgets/toggle-slider-widget.css", "component"],
-  ["styles/widgets/toggle-buttons-widget.css", "component"],
-  ["styles/widgets/weather-widget.css", "component"],
-  ["styles/screensaver/screensaver.css", "component"],
-];
+const MHA_STYLE_MANIFEST = getStyleManifest();
 
 const PAGE_ICON_OPTIONS = Object.freeze([
   { name: "home", label: "Accueil", category: "home" },
