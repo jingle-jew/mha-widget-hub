@@ -158,6 +158,7 @@ test("registered widgets expose preview renderer manifests", async () => {
   const expectedModes = new Map([
     ["clock", "live"],
     ["weather", "live"],
+    ["button", "live"],
   ]);
 
   for (const [kind, definition] of Object.entries(WIDGET_REGISTRY)) {

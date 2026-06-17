@@ -15,6 +15,7 @@ import { getEntityDisplayName } from "../widget-config/light-options.js";
 import { isToggleEntityOn } from "../ha/toggle.js";
 import { clampWidth, css, freezeSize, isLocalWidgetKind, variant } from "./widget-definition-utils.js";
 import { buildButtonWidgetConfig, createButtonConfigDraft } from "../widget-config/button-config.js";
+import { WIDGET_PREVIEW_DATA } from "./widget-preview-data.js";
 
 export const SIMPLE_BUTTON_WIDGET_KIND = "button";
 
@@ -61,6 +62,7 @@ export function createSimpleButtonWidgetContent(widget = {}, {
   widgetH = Number(widget?.h) || 1,
   hass,
   entityVisibilityConfig,
+  interactive = true,
 } = {}) {
   const data = getButtonData(widget);
   const isSquare = Number(widgetW) === 2 && Number(widgetH) === 2;
@@ -150,13 +152,15 @@ export function createSimpleButtonWidgetContent(widget = {}, {
     }));
   }
 
-  root.addEventListener("click", activate);
+  if (interactive) {
+    root.addEventListener("click", activate);
 
-  root.addEventListener("keydown", (event) => {
-    if (event.key !== "Enter" && event.key !== " ") return;
-    event.preventDefault();
-    root.click();
-  });
+    root.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      root.click();
+    });
+  }
 
   textStack.append(label, state);
   root.append(iconBubble, textStack);
@@ -239,11 +243,12 @@ export const SIMPLE_BUTTON_WIDGET_CONTENT_RENDERER = Object.freeze({
   decorateShell: ({ shell, widget }) => {
     shell.dataset.active = String(isSimpleButtonWidgetActive(widget));
   },
-  render: ({ widget, widgetW, widgetH, hass, entityVisibilityConfig }) => createSimpleButtonWidgetContent(widget, {
+  render: ({ widget, widgetW, widgetH, hass, entityVisibilityConfig, interactive }) => createSimpleButtonWidgetContent(widget, {
     widgetW,
     widgetH,
     hass,
     entityVisibilityConfig,
+    interactive,
   }),
 });
 
@@ -283,10 +288,32 @@ export const SIMPLE_BUTTON_WIDGET_DEFINITION = Object.freeze({
   ],
 });
 
+
+function createSimpleButtonPreviewWidget(item = {}) {
+  const previewData = WIDGET_PREVIEW_DATA.toggle;
+  return {
+    ...item,
+    kind: "button",
+    type: "button",
+    component: SIMPLE_BUTTON_WIDGET_DEFINITION.component,
+    variant: item.variant || SIMPLE_BUTTON_WIDGET_DEFINITION.defaultVariant,
+    entityId: item.entityId || item.entity_id || previewData.entityId,
+    entity_id: item.entity_id || item.entityId || previewData.entityId,
+    label: item.label || item.title || previewData.name,
+    title: item.title || item.label || previewData.name,
+    icon: item.icon || "home",
+    iconCategory: item.iconCategory || "home",
+    active: item.active ?? true,
+  };
+}
+
 export const WIDGET_MODULE = Object.freeze({
   kind: "button",
   definition: SIMPLE_BUTTON_WIDGET_DEFINITION,
   renderer: SIMPLE_BUTTON_WIDGET_CONTENT_RENDERER,
   config: SIMPLE_BUTTON_WIDGET_CONFIG_MANIFEST,
-  preview: Object.freeze({ mode: "static" }),
+  preview: Object.freeze({
+    mode: "live",
+    createWidget: createSimpleButtonPreviewWidget,
+  }),
 });
