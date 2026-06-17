@@ -1,141 +1,144 @@
-# Theme tokens
+# Theme Tokens
 
-MHA themes should use a shared token contract. Components consume these tokens so themes can change the visual language without rewriting widget CSS.
+## Purpose
 
-## Surface tokens
+Theme tokens provide a stable visual contract between widgets and themes.
 
-### `--mha-primary-surface`
+Widgets consume tokens.
 
-Main container surface.
+Themes provide values.
 
-Used for:
+---
 
-- widgets;
-- dock;
-- status bar;
-- major panels.
+## Core Surface Tokens
 
-### `--mha-on-primary-surface`
+### Primary Surface
 
-Surface layered on top of the primary surface.
+Main widget surface.
 
-Used for:
+Examples:
 
-- internal tiles;
-- cards inside widgets;
-- secondary blocks inside panels.
-
-### `--mha-secondary-surface`
-
-Form and control surface.
-
-Used for:
-
-- inputs;
-- selects;
-- inactive controls;
-- configuration fields.
-
-### `--mha-on-secondary-surface`
-
-Surface or border layered on top of secondary surfaces.
-
-Used for:
-
-- form borders;
-- subtle separators;
-- secondary control states.
-
-### `--mha-accent-surface`
-
-Accent surface.
-
-Used for:
-
-- active toggles;
-- selected segments;
-- highlighted controls;
-- accent UI elements.
-
-### `--mha-overlay-surface`
-
-Overlay surface.
-
-Used for:
-
-- popups;
-- modals;
-- scrim-backed panels;
-- floating sheets.
-
-## Text tokens
-
-### `--mha-primary-text`
-
-Primary text color.
-
-Used for:
-
-- widget titles;
-- main values;
-- high-emphasis labels.
-
-### `--mha-secondary-text`
-
-Secondary text color.
-
-Used for:
-
-- descriptions;
-- metadata;
-- muted labels;
-- helper text.
-
-## Practical mapping
-
-```text
-Primary Surface
-  widgets
-  dock
-  status bar
-  panels
-
-On Primary Surface
-  internal widget tiles
-  nested cards
-
-Secondary Surface
-  inputs
-  selects
-  controls
-
-Accent Surface
-  active toggles
-  selected chips
-  highlighted controls
-
-Overlay Surface
-  popups
-  modals
-  sheets
-```
-
-## Guidelines
-
-Use tokens by role, not by color.
-
-Good:
+- widgets
+- dock
+- status bar
+- panels
 
 ```css
-background: var(--mha-primary-surface);
-color: var(--mha-primary-text);
+--mha-primary-surface
 ```
 
-Avoid:
+---
+
+### On Primary Surface
+
+Elements displayed inside primary surfaces.
+
+Examples:
+
+- cards
+- tiles
+- grouped controls
 
 ```css
-background: rgba(255, 255, 255, 0.12);
-color: white;
+--mha-on-primary-surface
 ```
 
-A theme should decide colors. A component should decide structure.
+---
+
+### Secondary Surface
+
+Inputs and supporting controls.
+
+Examples:
+
+- select boxes
+- text inputs
+- secondary controls
+
+```css
+--mha-secondary-surface
+```
+
+---
+
+### Accent Surface
+
+Interactive emphasis.
+
+Examples:
+
+- toggles
+- selected segments
+- active states
+
+```css
+--mha-accent-surface
+```
+
+---
+
+### Overlay Surface
+
+Temporary UI.
+
+Examples:
+
+- dialogs
+- popups
+- overlays
+
+```css
+--mha-overlay-surface
+```
+
+---
+
+## Text Tokens
+
+```css
+--mha-primary-text
+--mha-secondary-text
+```
+
+Use these instead of hardcoded text colors.
+
+---
+
+## Border Tokens
+
+Themes may provide border tokens to ensure consistent separation across widgets, panels and dialogs.
+
+---
+
+## Blur And Material Tokens
+
+Themes may define:
+
+- blur intensity;
+- material opacity;
+- tint levels;
+- shadow depth.
+
+Widgets should not assume specific blur values.
+
+---
+
+## Rules
+
+### Widgets Should
+
+- consume tokens;
+- inherit theme styling;
+- remain theme agnostic.
+
+### Widgets Should Not
+
+- hardcode theme colors;
+- hardcode blur values;
+- override theme identity.
+
+---
+
+## Long-Term Goal
+
+A new theme should be able to restyle the entire launcher without modifying widget code.
