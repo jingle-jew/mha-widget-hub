@@ -211,6 +211,7 @@ function createSelect({ label, value, options, onChange }) {
   const select = document.createElement("select");
   select.className = "mha-settings-select";
   select.dataset.settingsControl = label;
+  select.dataset.settingsValueControl = "true";
   select.append(...options.map((item) => option(item.value, item.label, value)));
   select.addEventListener("change", () => onChange?.(select.value));
 
@@ -232,9 +233,14 @@ function createSwitch({ label, checked = false, onChange }) {
     className: "mha-settings-toggle",
     onChange: (event) => onChange?.(Boolean(event.currentTarget?.checked)),
   });
+  const toggleInput = toggle.querySelector(".mha-toggle-input");
+  if (toggleInput) {
+    toggleInput.dataset.settingsControl = label;
+    toggleInput.dataset.settingsValueControl = "true";
+  }
 
   text.addEventListener("click", () => {
-    toggle.querySelector(".mha-toggle-input")?.click();
+    toggleInput?.click();
   });
 
   field.append(text, toggle);
@@ -254,6 +260,7 @@ function createCheckbox({ label, checked = false, onChange }) {
   input.type = "checkbox";
   input.checked = Boolean(checked);
   input.dataset.settingsControl = label;
+  input.dataset.settingsValueControl = "true";
   input.addEventListener("change", () => onChange?.(Boolean(input.checked)));
 
   field.append(text, input);
@@ -474,6 +481,91 @@ function createNowBarControls({ enabled = true, items = {}, onEnabledChange, onI
   ];
 }
 
+function createScreensaverControls({
+  enabled = false,
+  delay = 30000,
+  clockVariant = "digital",
+  onEnabledChange,
+  onDelayChange,
+  onClockVariantChange,
+} = {}) {
+  return [
+    createSwitch({
+      label: "Activer",
+      checked: enabled,
+      onChange: onEnabledChange,
+    }),
+    createSelect({
+      label: "Délai",
+      value: String(delay),
+      options: SCREENSAVER_DELAY_OPTIONS,
+      onChange: onDelayChange,
+    }),
+    createSelect({
+      label: "Horloge",
+      value: clockVariant,
+      options: CLOCK_VARIANTS,
+      onChange: onClockVariantChange,
+    }),
+  ];
+}
+
+function getValueControlSignature(root) {
+  return [...root.querySelectorAll("[data-settings-value-control]")]
+    .map(control => `${control.tagName}:${control.type || ""}:${control.dataset.settingsControl || ""}`)
+    .join("|");
+}
+
+function updateMatchedValueControls(existing, next) {
+  const existingControls = [...existing.querySelectorAll("[data-settings-value-control]")];
+  const nextControls = [...next.querySelectorAll("[data-settings-value-control]")];
+
+  existingControls.forEach((control, index) => {
+    const source = nextControls[index];
+    if (!source) return;
+
+    if (control instanceof HTMLInputElement && source instanceof HTMLInputElement) {
+      control.checked = source.checked;
+      control.disabled = source.disabled;
+      control.value = source.value;
+      return;
+    }
+
+    if (control instanceof HTMLSelectElement && source instanceof HTMLSelectElement) {
+      control.value = source.value;
+      control.disabled = source.disabled;
+    }
+  });
+}
+
+function updateAccentPressedState(existing, next) {
+  const nextButtons = [...next.querySelectorAll(".mha-settings-accent-swatch")];
+  nextButtons.forEach(source => {
+    const accent = source.dataset.accent;
+    const target = existing.querySelector(`.mha-settings-accent-swatch[data-accent="${accent}"]`);
+    if (target) target.setAttribute("aria-pressed", source.getAttribute("aria-pressed") || "false");
+  });
+}
+
+export function updateSettingsPanel(existing, next) {
+  if (!existing || !next) return false;
+  if (existing.dataset.settingsScope !== next.dataset.settingsScope) return false;
+  if (existing.dataset.settingsPage !== next.dataset.settingsPage) return false;
+
+  const page = existing.dataset.settingsPage || "";
+  if (!["main", "screensaver-nowbar", "screensaver"].includes(page)) return false;
+  if (getValueControlSignature(existing) !== getValueControlSignature(next)) return false;
+
+  existing.dataset.open = next.dataset.open;
+  existing.dataset.iconShape = next.dataset.iconShape;
+  existing.hidden = next.hidden;
+  existing.setAttribute("aria-hidden", next.getAttribute("aria-hidden") || "false");
+
+  updateMatchedValueControls(existing, next);
+  updateAccentPressedState(existing, next);
+  return true;
+}
+
 export function createSettingsPanel({
   open = false,
   scope = "all",
@@ -573,8 +665,8 @@ export function createSettingsPanel({
         ? "Icône du dock"
         : settingsPage === "wallpaper"
           ? "Fond d’écran"
-          : settingsPage === "nowbar"
-            ? "Now Bar"
+          : settingsPage === "screensaver-nowbar" || settingsPage === "nowbar"
+            ? "Screensaver et Now Bar"
           : "Paramètres";
 
   title.append(eyebrow, h2);
@@ -588,7 +680,7 @@ export function createSettingsPanel({
   const headerActions = document.createElement("div");
   headerActions.className = "mha-settings-header-actions";
 
-  if (!isScreensaverScope && (settingsPage === "dock" || settingsPage === "wallpaper" || settingsPage === "nowbar")) {
+  if (!isScreensaverScope && (settingsPage === "dock" || settingsPage === "wallpaper" || settingsPage === "screensaver-nowbar" || settingsPage === "nowbar")) {
     headerActions.append(createBackButton({
       label: "Retour aux paramètres",
       className: "mha-settings-back",
@@ -672,7 +764,15 @@ export function createSettingsPanel({
     return root;
   }
 
-  if (!isScreensaverScope && settingsPage === "nowbar") {
+  if (!isScreensaverScope && (settingsPage === "screensaver-nowbar" || settingsPage === "nowbar")) {
+    sections.push(createSection("Économiseur d’écran", createScreensaverControls({
+      enabled: screensaverEnabled,
+      delay: screensaverDelay,
+      clockVariant: screensaverClockVariant,
+      onEnabledChange: onScreensaverEnabledChange,
+      onDelayChange: onScreensaverDelayChange,
+      onClockVariantChange: onScreensaverClockVariantChange,
+    })));
     sections.push(createSection("Now Bar", createNowBarControls({
       enabled: screensaverNowBar,
       items: screensaverNowBarItems,
@@ -738,8 +838,8 @@ export function createSettingsPanel({
       }),
       createSettingsNavTile({
         icon: "star",
-        label: "Now Bar",
-        description: "Activer la barre et choisir les contenus affichés.",
+        label: "Screensaver et Now Bar",
+        description: "Configurer l’économiseur et les contenus affichés.",
         onClick: onOpenNowBarSettings,
       }),
     ]));
@@ -768,25 +868,16 @@ export function createSettingsPanel({
     })));
   }
 
-  sections.push(createSection("Économiseur d’écran", [
-      createSwitch({
-        label: "Activer",
-        checked: screensaverEnabled,
-        onChange: onScreensaverEnabledChange,
-      }),
-      createSelect({
-        label: "Délai",
-        value: String(screensaverDelay),
-        options: SCREENSAVER_DELAY_OPTIONS,
-        onChange: onScreensaverDelayChange,
-      }),
-      createSelect({
-        label: "Horloge",
-        value: screensaverClockVariant,
-        options: CLOCK_VARIANTS,
-        onChange: onScreensaverClockVariantChange,
-      }),
-    ]));
+  if (isScreensaverScope) {
+    sections.push(createSection("Économiseur d’écran", createScreensaverControls({
+      enabled: screensaverEnabled,
+      delay: screensaverDelay,
+      clockVariant: screensaverClockVariant,
+      onEnabledChange: onScreensaverEnabledChange,
+      onDelayChange: onScreensaverDelayChange,
+      onClockVariantChange: onScreensaverClockVariantChange,
+    })));
+  }
 
   body.append(...sections);
 

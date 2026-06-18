@@ -34,7 +34,7 @@ import {
   syncDockActiveState,
   syncDocks,
 } from "./src/layout/dock-controller.js";
-import {createSettingsPanel} from "./src/settings/settings-panel.js";
+import {createSettingsPanel,updateSettingsPanel} from "./src/settings/settings-panel.js";
 import {createWidgetManager, WIDGET_MANAGER_CATEGORIES} from "./src/widget-manager/widget-manager.js";
 import {
   buildConfiguredWidget,
@@ -661,6 +661,7 @@ _replacePanelPreservingUiState(existing,next){
     &&existing?.dataset.settingsPage===next?.dataset.settingsPage;
   const scrollTop=sameView?(existing?.querySelector(".mha-settings-body")?.scrollTop||0):0;
   const focusIdentity=sameView?this._getPanelFocusIdentity(existing):null;
+  if(sameView&&updateSettingsPanel(existing,next))return;
   if(existing)existing.replaceWith(next);
   else this.shadowRoot.append(next);
   const body=next.querySelector(".mha-settings-body");
@@ -995,7 +996,7 @@ _openWallpaperSettings(){
 }
 _openNowBarSettings(){
   this._settingsOpen=true;
-  this._settingsPage="nowbar";
+  this._settingsPage="screensaver-nowbar";
   this._dockSettingsPageId="";
   this._syncSettingsModalState();
   this._syncSettingsDom();
