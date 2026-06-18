@@ -30,9 +30,12 @@ function getMediaData(widget = {}, hass) {
   const state = model.state;
   const volume = attributes.volume_level ?? widget.volume ?? previewData.volume;
   const volumeNumber = Number(volume);
-  const volumePercent = Number.isFinite(volumeNumber)
+  const hasVolume = Number.isFinite(volumeNumber);
+  const volumePercent = hasVolume
     ? Math.max(0, Math.min(100, Math.round(volumeNumber * 100)))
     : 0;
+  const muted = attributes.is_volume_muted === true;
+  const volumeLabel = muted ? "Mute" : hasVolume ? `${volumePercent}%` : "Vol";
 
   return {
     entity,
@@ -45,11 +48,16 @@ function getMediaData(widget = {}, hass) {
     app: attributes.app_name || widget.app || "MHA Media",
     state,
     playing: state === "playing",
+    muted,
+    volumeLabel,
     volumePercent,
     artworkUrl: getMediaArtworkUrl(entity, widget),
     canPrevious: Boolean(buildMediaPlayerServiceCall(entity, "previous")),
     canPlayPause: Boolean(buildMediaPlayerServiceCall(entity, "playPause")),
     canNext: Boolean(buildMediaPlayerServiceCall(entity, "next")),
+    canVolumeDown: Boolean(buildMediaPlayerServiceCall(entity, "volumeDown")),
+    canVolumeUp: Boolean(buildMediaPlayerServiceCall(entity, "volumeUp")),
+    canMute: Boolean(buildMediaPlayerServiceCall(entity, "mute")),
   };
 }
 
@@ -130,7 +138,13 @@ function createTitleStack(data) {
   return stack;
 }
 
-function createControlButton(label, symbol, { primary = false, action = "", disabled = false, onAction } = {}) {
+function createControlButton(label, symbol, {
+  primary = false,
+  action = "",
+  disabled = false,
+  interactive = true,
+  onAction,
+} = {}) {
   const button = document.createElement("button");
   button.className = "mha-media-widget-control";
   button.type = "button";
@@ -139,6 +153,10 @@ function createControlButton(label, symbol, { primary = false, action = "", disa
   if (primary) button.dataset.primary = "true";
   button.disabled = Boolean(disabled);
   button.setAttribute("aria-disabled", String(Boolean(disabled)));
+  if (!interactive) {
+    button.tabIndex = -1;
+    button.setAttribute("aria-disabled", "true");
+  }
   button.addEventListener("click", event => {
     event.preventDefault();
     event.stopPropagation();
@@ -149,30 +167,94 @@ function createControlButton(label, symbol, { primary = false, action = "", disa
   return button;
 }
 
-function createControls(data, { compact = false, onAction } = {}) {
-  const controls = document.createElement("div");
-  controls.className = "mha-media-widget-controls";
-  controls.append(
+function createPlaybackButtons(data, { interactive = true, onAction } = {}) {
+  return [
     createControlButton("Précédent", "‹", {
       action: "previous",
       disabled: !data.canPrevious,
+      interactive,
       onAction,
     }),
     createControlButton(data.playing ? "Pause" : "Lecture", data.playing ? "Ⅱ" : "▶", {
       primary: true,
       action: "playPause",
       disabled: !data.canPlayPause,
+      interactive,
       onAction,
     }),
     createControlButton("Suivant", "›", {
       action: "next",
       disabled: !data.canNext,
+      interactive,
       onAction,
     }),
-  );
-  if (!compact) {
-    controls.append(createText("mha-media-widget-volume", `${data.volumePercent}%`));
-  }
+  ];
+}
+
+function createVolumeButtons(data, { interactive = true, onAction } = {}) {
+  return [
+    createControlButton("Baisser le volume", "−", {
+      action: "volumeDown",
+      disabled: !data.canVolumeDown,
+      interactive,
+      onAction,
+    }),
+    createControlButton(data.muted ? "Activer le son" : "Couper le son", data.muted ? "Mute" : "Vol", {
+      primary: true,
+      action: "mute",
+      disabled: !data.canMute,
+      interactive,
+      onAction,
+    }),
+    createControlButton("Monter le volume", "+", {
+      action: "volumeUp",
+      disabled: !data.canVolumeUp,
+      interactive,
+      onAction,
+    }),
+  ];
+}
+
+function renderControls(controls, data, { mode = "playback", interactive = true, onAction } = {}) {
+  const group = controls.querySelector(".mha-media-widget-controls-group");
+  const toggle = controls.querySelector(".mha-media-widget-control-toggle");
+  if (!group || !toggle) return;
+
+  controls.dataset.mode = mode;
+  group.replaceChildren(...(
+    mode === "volume"
+      ? createVolumeButtons(data, { interactive, onAction })
+      : createPlaybackButtons(data, { interactive, onAction })
+  ));
+
+  const toggleAsPlayback = mode === "volume";
+  toggle.textContent = toggleAsPlayback ? (data.playing ? "Ⅱ" : "▶") : data.volumeLabel;
+  toggle.dataset.action = toggleAsPlayback ? "playPause" : "toggleVolume";
+  toggle.toggleAttribute("data-primary", toggleAsPlayback);
+  toggle.setAttribute("aria-label", toggleAsPlayback
+    ? data.playing ? "Pause" : "Lecture"
+    : `Volume ${data.volumeLabel}`);
+  toggle.disabled = toggleAsPlayback ? !data.canPlayPause : false;
+  toggle.setAttribute("aria-disabled", String(!interactive || toggle.disabled));
+  if (!interactive) toggle.tabIndex = -1;
+}
+
+function createControls(data, { mode = "playback", interactive = true, onAction } = {}) {
+  const controls = document.createElement("div");
+  controls.className = "mha-media-widget-controls-shell";
+
+  const group = document.createElement("div");
+  group.className = "mha-media-widget-controls mha-media-widget-controls-group";
+
+  const toggle = createControlButton("Volume", data.volumeLabel, {
+    action: "toggleVolume",
+    interactive,
+    onAction,
+  });
+  toggle.classList.add("mha-media-widget-control-toggle");
+
+  controls.append(group, toggle);
+  renderControls(controls, data, { mode, interactive, onAction });
   return controls;
 }
 
@@ -210,7 +292,12 @@ export function createMediaWidgetContent(widget = {}, {
   interactive = true,
 } = {}) {
   const data = getMediaData(widget, hass);
-  const context = { hass, entity: data.entity };
+  const context = {
+    hass,
+    entity: data.entity,
+    data,
+    controlsMode: "playback",
+  };
   const variantKey = mediaVariantKey({ widgetW, widgetH });
   const root = document.createElement("div");
   root.className = "mha-media-widget";
@@ -222,14 +309,28 @@ export function createMediaWidgetContent(widget = {}, {
   root.dataset.hasArtwork = String(Boolean(data.artworkUrl));
 
   const onAction = action => {
-    if (!interactive || !context.entity) return;
+    if (!interactive) return;
+    if (action === "toggleVolume") {
+      context.controlsMode = context.controlsMode === "volume" ? "playback" : "volume";
+      renderControls(controls, context.data, {
+        mode: context.controlsMode,
+        interactive,
+        onAction,
+      });
+      return;
+    }
+    if (!context.entity) return;
     runMediaPlayerAction(context.hass, context.entity, action);
   };
 
   const background = createArtworkBackground(data);
   const artwork = createArtwork(data);
   const text = createTitleStack(data);
-  const controls = createControls(data, { compact: variantKey === "2x2", onAction });
+  const controls = createControls(data, {
+    mode: context.controlsMode,
+    interactive,
+    onAction,
+  });
   const progress = createProgress();
   root.append(background);
   setBackgroundImage(root, data.artworkUrl);
@@ -260,6 +361,7 @@ export function createMediaWidgetContent(widget = {}, {
     const nextData = getMediaData(widget, nextHass);
     context.hass = nextHass;
     context.entity = nextData.entity;
+    context.data = nextData;
     root.dataset.state = nextData.state;
     root.dataset.mediaState = nextData.state;
     root.dataset.playing = String(nextData.playing);
@@ -270,18 +372,11 @@ export function createMediaWidgetContent(widget = {}, {
     artworkNode?.setAttribute("data-playing", String(nextData.playing));
     if (artworkNode) setArtworkImage(artworkNode, nextData.artworkUrl);
     setBackgroundImage(root, nextData.artworkUrl);
-    root.querySelector(".mha-media-widget-volume")?.replaceChildren(`${nextData.volumePercent}%`);
-    const primary = root.querySelector('[data-action="playPause"]');
-    if (primary) {
-      primary.textContent = nextData.playing ? "Ⅱ" : "▶";
-      primary.setAttribute("aria-label", nextData.playing ? "Pause" : "Lecture");
-    }
-    root.querySelector('[data-action="previous"]')?.toggleAttribute("disabled", !nextData.canPrevious);
-    root.querySelector('[data-action="previous"]')?.setAttribute("aria-disabled", String(!nextData.canPrevious));
-    root.querySelector('[data-action="playPause"]')?.toggleAttribute("disabled", !nextData.canPlayPause);
-    root.querySelector('[data-action="playPause"]')?.setAttribute("aria-disabled", String(!nextData.canPlayPause));
-    root.querySelector('[data-action="next"]')?.toggleAttribute("disabled", !nextData.canNext);
-    root.querySelector('[data-action="next"]')?.setAttribute("aria-disabled", String(!nextData.canNext));
+    renderControls(controls, nextData, {
+      mode: context.controlsMode,
+      interactive,
+      onAction,
+    });
   };
 
   root.__mhaDestroy = () => {

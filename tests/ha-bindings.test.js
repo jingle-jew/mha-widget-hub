@@ -156,7 +156,9 @@ test("media player artwork resolves HA relative URLs in priority order", () => {
 
 test("media player buttons map to supported Home Assistant services", () => {
   const supported = entity("media_player.salon", "playing", {
-    supported_features: 1 | 16 | 32 | 16384,
+    supported_features: 1 | 4 | 8 | 16 | 32 | 16384,
+    volume_level: 0.43,
+    is_volume_muted: false,
   });
 
   assert.deepEqual(buildMediaPlayerServiceCall(supported, "previous"), {
@@ -181,6 +183,44 @@ test("media player buttons map to supported Home Assistant services", () => {
     domain: "media_player",
     service: "media_next_track",
     data: { entity_id: "media_player.salon" },
+  });
+  assert.deepEqual(buildMediaPlayerServiceCall(supported, "volumeDown"), {
+    domain: "media_player",
+    service: "volume_set",
+    data: { entity_id: "media_player.salon", volume_level: 0.38 },
+  });
+  assert.deepEqual(buildMediaPlayerServiceCall(supported, "volumeUp"), {
+    domain: "media_player",
+    service: "volume_set",
+    data: { entity_id: "media_player.salon", volume_level: 0.48 },
+  });
+  assert.deepEqual(buildMediaPlayerServiceCall(supported, "mute"), {
+    domain: "media_player",
+    service: "volume_mute",
+    data: { entity_id: "media_player.salon", is_volume_muted: true },
+  });
+  assert.deepEqual(buildMediaPlayerServiceCall({
+    ...supported,
+    attributes: {
+      ...supported.attributes,
+      volume_level: 0.98,
+      is_volume_muted: true,
+    },
+  }, "volumeUp"), {
+    domain: "media_player",
+    service: "volume_set",
+    data: { entity_id: "media_player.salon", volume_level: 1 },
+  });
+  assert.deepEqual(buildMediaPlayerServiceCall({
+    ...supported,
+    attributes: {
+      ...supported.attributes,
+      is_volume_muted: true,
+    },
+  }, "mute"), {
+    domain: "media_player",
+    service: "volume_mute",
+    data: { entity_id: "media_player.salon", is_volume_muted: false },
   });
   assert.equal(
     buildMediaPlayerServiceCall(entity("media_player.salon", "playing", {

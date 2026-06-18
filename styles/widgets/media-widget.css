@@ -218,6 +218,15 @@
   gap: clamp(.38rem, min(3cqi, 3cqb), .78rem);
 }
 
+.mha-media-widget-controls-shell {
+  min-inline-size: 0;
+  display: grid;
+  grid-template-columns: max-content max-content;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(.45rem, min(3.2cqi, 3.2cqb), .85rem);
+}
+
 .mha-media-widget-control {
   inline-size: clamp(2.35rem, min(13cqi, 13cqb), 3.55rem);
   block-size: clamp(2.35rem, min(13cqi, 13cqb), 3.55rem);
@@ -233,7 +242,39 @@
   cursor: pointer;
 }
 
-.mha-media-widget-control[data-primary="true"] {
+.mha-media-widget-control-toggle {
+  min-inline-size: clamp(2.65rem, min(14cqi, 14cqb), 4rem);
+  padding-inline: .42rem;
+  font-size: clamp(.82rem, min(4.6cqi, 4.8cqb), 1rem);
+}
+
+.mha-media-widget[data-media-size="2x2"] .mha-media-widget-controls-shell {
+  position: static;
+  grid-template-columns: max-content;
+  gap: clamp(.25rem, min(2cqi, 2cqb), .45rem);
+}
+
+.mha-media-widget[data-media-size="2x2"] .mha-media-widget-controls {
+  gap: clamp(.22rem, min(1.8cqi, 1.8cqb), .42rem);
+}
+
+.mha-media-widget[data-media-size="2x2"] .mha-media-widget-control {
+  inline-size: clamp(2rem, min(11cqi, 11cqb), 2.75rem);
+  block-size: clamp(2rem, min(11cqi, 11cqb), 2.75rem);
+  font-size: clamp(1rem, min(5.6cqi, 5.8cqb), 1.32rem);
+}
+
+.mha-media-widget[data-media-size="2x2"] .mha-media-widget-control-toggle {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+  z-index: 2;
+  min-inline-size: clamp(2.3rem, min(12cqi, 12cqb), 3.1rem);
+  font-size: clamp(.74rem, min(4.2cqi, 4.2cqb), .9rem);
+}
+
+.mha-media-widget-control[data-primary="true"],
+.mha-media-widget-control[data-primary] {
   background: var(--mha-accent);
   color: var(--mha-accent-contrast, #fff);
 }

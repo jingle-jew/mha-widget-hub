@@ -2,10 +2,14 @@ import { getEntityDomain, normalizeEntityStateValue } from "./entity.js";
 
 export const MEDIA_PLAYER_FEATURES = Object.freeze({
   pause: 1,
+  volumeSet: 4,
+  volumeMute: 8,
   previousTrack: 16,
   nextTrack: 32,
   play: 16384,
 });
+
+const MEDIA_VOLUME_STEP = 0.05;
 
 const MEDIA_STATE_LABELS = Object.freeze({
   playing: "en lecture",
@@ -106,9 +110,14 @@ export function supportsMediaPlayerFeature(entityState, feature) {
   return (Number(supportedFeatures) & feature) === feature;
 }
 
+function clampMediaVolume(value) {
+  return Math.max(0, Math.min(1, value));
+}
+
 export function buildMediaPlayerServiceCall(entityState, action = "") {
   const entityId = entityState?.entity_id || "";
   if (!entityId || getEntityDomain(entityId) !== "media_player") return null;
+  const attributes = entityState.attributes || {};
 
   if (action === "previous") {
     if (!supportsMediaPlayerFeature(entityState, MEDIA_PLAYER_FEATURES.previousTrack)) return null;
@@ -125,6 +134,34 @@ export function buildMediaPlayerServiceCall(entityState, action = "") {
       domain: "media_player",
       service: "media_next_track",
       data: { entity_id: entityId },
+    };
+  }
+
+  if (action === "volumeDown" || action === "volumeUp") {
+    if (!supportsMediaPlayerFeature(entityState, MEDIA_PLAYER_FEATURES.volumeSet)) return null;
+    const currentVolume = Number(attributes.volume_level);
+    if (!Number.isFinite(currentVolume)) return null;
+    const direction = action === "volumeUp" ? 1 : -1;
+    const volumeLevel = clampMediaVolume(currentVolume + (MEDIA_VOLUME_STEP * direction));
+    return {
+      domain: "media_player",
+      service: "volume_set",
+      data: {
+        entity_id: entityId,
+        volume_level: Number(volumeLevel.toFixed(3)),
+      },
+    };
+  }
+
+  if (action === "mute") {
+    if (!supportsMediaPlayerFeature(entityState, MEDIA_PLAYER_FEATURES.volumeMute)) return null;
+    return {
+      domain: "media_player",
+      service: "volume_mute",
+      data: {
+        entity_id: entityId,
+        is_volume_muted: attributes.is_volume_muted !== true,
+      },
     };
   }
 
