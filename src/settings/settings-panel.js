@@ -20,6 +20,13 @@ const THEME_OPTIONS = [
   { value: "light", label: "Light", labelKey: "settings.themeOptions.light" },
 ];
 
+const LANGUAGE_OPTIONS = [
+  { value: "auto", label: "Auto", labelKey: "settings.languageOptions.auto" },
+  { value: "en", label: "English", labelKey: "settings.languageOptions.en" },
+  { value: "fr", label: "Français", labelKey: "settings.languageOptions.fr" },
+  { value: "es", label: "Español", labelKey: "settings.languageOptions.es" },
+];
+
 const STYLE_OPTIONS = getThemeStyleOptions();
 
 const IOS_GLASS_OPTIONS = [
@@ -703,6 +710,7 @@ export function createSettingsPanel({
   open = false,
   scope = "all",
   theme = "auto",
+  language = "auto",
   themeStyle = "oneui",
   iosGlass = "liquid",
   accent = "",
@@ -724,6 +732,7 @@ export function createSettingsPanel({
   dockPosition = "left",
   customWallpapers = {},
   onClose,
+  onLanguageChange,
   onThemeChange,
   onThemeStyleChange,
   onIosGlassChange,
@@ -969,6 +978,12 @@ export function createSettingsPanel({
 
     sections.push(createSection(t("settings.appearance", "Appearance"), appearanceControls));
     sections.push(createSection(t("settings.customization", "Customization"), [
+      createSelect({
+        label: t("settings.language", "Language"),
+        value: language,
+        options: LANGUAGE_OPTIONS,
+        onChange: onLanguageChange,
+      }),
       createSettingsNavTile({
         icon: "dashboard",
         label: t("settings.wallpaper", "Wallpaper"),

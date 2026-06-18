@@ -88,7 +88,7 @@ import { createCloseButton } from "./src/system/system-buttons.js";
 import { loadEntityVisibilityConfig } from "./src/admin/entity-visibility-store.js";
 import { normalizeEntityVisibilityConfig } from "./src/admin/entity-permissions.js";
 import { getStyleManifest } from "./src/styles/style-manifest.js";
-import { configureI18n, t } from "./src/i18n/index.js";
+import { configureI18n, normalizeLanguage, t } from "./src/i18n/index.js";
 
 const MHA_FRONTEND_ROOT_URL = new URL(".", import.meta.url);
 const MHA_FRONTEND_VERSION = new URL(import.meta.url).searchParams.get("v");
@@ -188,11 +188,15 @@ const {
   activePage:ACTIVE_PAGE,
   dockPosition:DOCK_POSITION,
   hideHaSidebar:HIDE_HA_SIDEBAR,
+  language:LANGUAGE,
 }=STORAGE_KEYS;
 const DOCK_POSITIONS=new Set(["left","right","bottom"]);
+const LANGUAGE_OPTIONS=new Set(["auto","en","fr","es"]);
 function normalizeDockPosition(value="left"){return DOCK_POSITIONS.has(value)?value:"left";}
 function getStoredDockPosition(){return normalizeDockPosition(localStorage.getItem(DOCK_POSITION)||"left");}
 function getStoredHideHaSidebar(){return readBoolean(HIDE_HA_SIDEBAR,false);}
+function normalizeLanguageSetting(value="auto"){return LANGUAGE_OPTIONS.has(value)?value:"auto";}
+function getStoredLanguageSetting(){return normalizeLanguageSetting(localStorage.getItem(LANGUAGE)||"auto");}
 
 /*
  * FIRST LAUNCH DEFAULTS
@@ -274,6 +278,7 @@ constructor(){
   this._newPageIcon="grid";
   this._dockPosition="left";
   this._hideHaSidebar=false;
+  this._language="auto";
   this._customWallpapers={light:null,dark:null};
   this._autoAccentRequestId=0;
   this._pages=[];
@@ -332,6 +337,8 @@ _initialize(){
   });
   this._dockPosition=getStoredDockPosition();
   this._hideHaSidebar=getStoredHideHaSidebar();
+  this._language=getStoredLanguageSetting();
+  this._configureI18n();
   this._applyHaSidebarMode(this._hideHaSidebar);
   this._migrateLegacyCustomWallpaper();
   this._customWallpapers=this._readCustomWallpapers();
@@ -350,7 +357,7 @@ _upgradePredefinedProperty(name){
 }
 set hass(h){
   this._hass=h;
-  configureI18n({ hass:h });
+  this._configureI18n();
   this._loadEntityVisibilityConfig(h);
   this.dataset.dataState=h?"ready":"loading";
   if(this._widgetConfigSession&&h&&!this._widgetConfigHassReady){
@@ -361,6 +368,15 @@ set hass(h){
   this._scheduleHassUpdate();
 }
 get hass(){return this._hass}
+_configureI18n(){
+  const language=this._language&&this._language!=="auto"
+    ? normalizeLanguage(this._language)
+    : "";
+  configureI18n({
+    config: language ? { language } : undefined,
+    hass:this._hass,
+  });
+}
 async _loadEntityVisibilityConfig(hass){
   const userId=String(hass?.user?.id||"");
   if(!userId||userId===this._entityVisibilityUserId)return;
@@ -701,6 +717,7 @@ _getSettingsPanelProps(scope="all"){
     open:scope==="screensaver"?this._screensaverSettingsOpen:this._settingsOpen,
     scope,
     theme:themeState.themeSetting,
+    language:this._language,
     themeStyle,
     iosGlass:themeState.iosGlass,
     accent:themeState.accent,
@@ -722,6 +739,7 @@ _getSettingsPanelProps(scope="all"){
     dockPosition:this._dockPosition,
     customWallpapers:this._customWallpapers,
     onClose:()=>scope==="screensaver"?this._closeScreensaverSettings():this._closeSettings(),
+    onLanguageChange:v=>this._applyLanguageFromSettings(v),
     onThemeChange:v=>this._applyThemeFromSettings(v),
     onThemeStyleChange:v=>this._applyThemeStyleFromSettings(v),
     onIosGlassChange:v=>this._applyIosGlassFromSettings(v),
@@ -1121,6 +1139,21 @@ _scheduleIconSymbolRefresh(){
     }
     this._iconSymbolRefreshFrame=0;
   });
+}
+
+_applyLanguageFromSettings(value="auto"){
+  const language=normalizeLanguageSetting(value);
+  this._language=language;
+  if(language==="auto")localStorage.removeItem(LANGUAGE);
+  else writeStorageValue(LANGUAGE,language);
+  this._configureI18n();
+  this._syncSettingsDom();
+  this._syncScreensaverSettingsDom();
+  this._syncDocksDom();
+  this._syncWidgetManagerDom();
+  if(this._widgetConfigSession)this._syncWidgetConfigDom();
+  this._syncScreensaverDom({force:true});
+  this._refreshActiveGridOnly();
 }
 
 _refreshAppearanceDom(){

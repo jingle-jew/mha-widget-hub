@@ -29,6 +29,7 @@ export const fr = Object.freeze({
     title: "Paramètres",
     appearance: "Apparence",
     customization: "Personnalisation",
+    language: "Langue",
     navigation: "Navigation",
     layout: "Disposition",
     theme: "Thème",
@@ -128,6 +129,12 @@ export const fr = Object.freeze({
       auto: "Auto",
       dark: "Sombre",
       light: "Clair",
+    }),
+    languageOptions: Object.freeze({
+      auto: "Auto",
+      en: "English",
+      fr: "Français",
+      es: "Español",
     }),
     dockPositions: Object.freeze({
       left: "Gauche",
