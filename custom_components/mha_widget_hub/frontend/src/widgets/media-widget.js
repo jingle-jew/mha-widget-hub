@@ -245,7 +245,7 @@ export function createMediaWidgetContent(widget = {}, {
     const header = document.createElement("div");
     header.className = "mha-media-widget-header";
     header.append(artwork, text);
-    root.append(header, progress, createMetaRows(data), controls);
+    root.append(header, createMetaRows(data), progress, controls);
   }
 
   if (!interactive) {

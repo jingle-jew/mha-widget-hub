@@ -118,7 +118,16 @@ h1, h2, p, label, button, select, input, span { overflow-wrap: anywhere; }
   font-weight: 750;
 }
 
-.mha-admin-mode { margin-block: 18px; }
+.mha-admin-mode {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-block: 18px;
+}
+
+.mha-admin-mode input[type="checkbox"] {
+  margin: 0;
+}
 
 .mha-admin-control {
   inline-size: 100%;
