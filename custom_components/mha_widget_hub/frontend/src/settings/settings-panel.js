@@ -59,11 +59,8 @@ const COMPACT_ACCENT_FAMILIES = [
   "orange",
   "yellow",
   "green",
-  "cyan",
   "blue",
   "violet",
-  "pink",
-  "neutral",
 ];
 
 const ACCENT_FAMILY_ALIASES = Object.freeze({
@@ -367,7 +364,10 @@ function createAccentPicker({
   expandButton.setAttribute("aria-label", expanded ? "Réduire la palette d’accent" : "Afficher toute la palette d’accent");
   expandButton.setAttribute("aria-expanded", String(Boolean(expanded)));
   expandButton.textContent = expanded ? "⌃" : "⌄";
-  expandButton.addEventListener("click", () => onExpandedChange?.(!expanded));
+  expandButton.addEventListener("click", (event) => {
+    const isExpanded = event.currentTarget?.getAttribute("aria-expanded") === "true";
+    onExpandedChange?.(!isExpanded);
+  });
 
   header.append(text, expandButton);
 
