@@ -141,12 +141,13 @@ function createTitleStack(data) {
 function createControlButton(label, symbol, {
   primary = false,
   action = "",
+  className = "",
   disabled = false,
   interactive = true,
   onAction,
 } = {}) {
   const button = document.createElement("button");
-  button.className = "mha-media-widget-control";
+  button.className = ["mha-media-widget-control", className].filter(Boolean).join(" ");
   button.type = "button";
   button.setAttribute("aria-label", label);
   button.dataset.action = action;
@@ -178,6 +179,7 @@ function createPlaybackButtons(data, { interactive = true, onAction } = {}) {
     createControlButton(data.playing ? "Pause" : "Lecture", data.playing ? "Ⅱ" : "▶", {
       primary: true,
       action: "playPause",
+      className: "mha-media-widget-play-toggle",
       disabled: !data.canPlayPause,
       interactive,
       onAction,
@@ -231,6 +233,7 @@ function renderControls(controls, data, { mode = "playback", interactive = true,
   toggle.textContent = toggleAsPlayback ? (data.playing ? "Ⅱ" : "▶") : data.volumeLabel;
   toggle.dataset.action = toggleAsPlayback ? "playPause" : "toggleVolume";
   toggle.toggleAttribute("data-primary", toggleAsPlayback);
+  toggle.classList.toggle("mha-media-widget-play-toggle", toggleAsPlayback);
   toggle.setAttribute("aria-label", toggleAsPlayback
     ? data.playing ? "Pause" : "Lecture"
     : `Volume ${data.volumeLabel}`);

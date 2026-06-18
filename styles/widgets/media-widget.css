@@ -242,6 +242,12 @@
   cursor: pointer;
 }
 
+.mha-media-widget-play-toggle {
+  inline-size: clamp(2.8rem, min(15.5cqi, 15.5cqb), 4.1rem);
+  block-size: clamp(2.8rem, min(15.5cqi, 15.5cqb), 4.1rem);
+  font-size: clamp(1.24rem, min(7.1cqi, 7.2cqb), 1.78rem);
+}
+
 .mha-media-widget-control-toggle {
   min-inline-size: clamp(2.65rem, min(14cqi, 14cqb), 4rem);
   padding-inline: .42rem;
@@ -262,6 +268,12 @@
   inline-size: clamp(2rem, min(11cqi, 11cqb), 2.75rem);
   block-size: clamp(2rem, min(11cqi, 11cqb), 2.75rem);
   font-size: clamp(1rem, min(5.6cqi, 5.8cqb), 1.32rem);
+}
+
+.mha-media-widget[data-media-size="2x2"] .mha-media-widget-play-toggle {
+  inline-size: clamp(2.35rem, min(12.8cqi, 12.8cqb), 3.1rem);
+  block-size: clamp(2.35rem, min(12.8cqi, 12.8cqb), 3.1rem);
+  font-size: clamp(1.08rem, min(6.2cqi, 6.2cqb), 1.48rem);
 }
 
 .mha-media-widget[data-media-size="2x2"] .mha-media-widget-control-toggle {
