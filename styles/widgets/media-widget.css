@@ -9,6 +9,13 @@
 
   --mha-media-padding: var(--mha-widget-inner-padding, clamp(.75rem, 7cqb, 1.15rem));
   --mha-media-gap: clamp(.55rem, min(5cqi, 5cqb), 1rem);
+  --mha-media-control-size: clamp(2.75rem, min(14.5cqi, 14.5cqb), 3.7rem);
+  --mha-media-control-icon-size: clamp(1.18rem, min(6.4cqi, 6.9cqb), 1.62rem);
+  --mha-media-control-gap: clamp(.42rem, min(3.1cqi, 3.1cqb), .82rem);
+  --mha-media-primary-control-size: clamp(3.2rem, min(17cqi, 17cqb), 4.35rem);
+  --mha-media-primary-icon-size: clamp(1.34rem, min(7.4cqi, 7.5cqb), 1.92rem);
+  --mha-media-toggle-control-size: clamp(2.9rem, min(15.2cqi, 15.2cqb), 4.1rem);
+  --mha-media-toggle-font-size: clamp(.9rem, min(4.9cqi, 5.1cqb), 1.04rem);
   --mha-media-artwork-radius: clamp(1rem, 10cqb, 1.55rem);
   --mha-media-artwork-bg: linear-gradient(
     135deg,
@@ -215,7 +222,7 @@
   grid-auto-columns: max-content;
   align-items: center;
   justify-content: center;
-  gap: clamp(.38rem, min(3cqi, 3cqb), .78rem);
+  gap: var(--mha-media-control-gap);
 }
 
 .mha-media-widget-controls-shell {
@@ -224,12 +231,14 @@
   grid-template-columns: max-content max-content;
   align-items: center;
   justify-content: center;
-  gap: clamp(.45rem, min(3.2cqi, 3.2cqb), .85rem);
+  gap: clamp(.52rem, min(3.5cqi, 3.5cqb), .92rem);
 }
 
 .mha-media-widget-control {
-  inline-size: clamp(2.35rem, min(13cqi, 13cqb), 3.55rem);
-  block-size: clamp(2.35rem, min(13cqi, 13cqb), 3.55rem);
+  inline-size: var(--mha-media-control-size);
+  block-size: var(--mha-media-control-size);
+  min-inline-size: 44px;
+  min-block-size: 44px;
   border: 0;
   border-radius: 999px;
   display: grid;
@@ -237,43 +246,51 @@
   background: color-mix(in srgb, var(--mha-text-primary) 10%, transparent);
   color: var(--mha-text-primary);
   font: inherit;
-  font-size: clamp(1.12rem, min(6.2cqi, 6.8cqb), 1.55rem);
+  font-size: var(--mha-media-control-icon-size);
   font-weight: 780;
   cursor: pointer;
 }
 
 .mha-media-widget-play-toggle {
-  inline-size: clamp(2.8rem, min(15.5cqi, 15.5cqb), 4.1rem);
-  block-size: clamp(2.8rem, min(15.5cqi, 15.5cqb), 4.1rem);
-  font-size: clamp(1.24rem, min(7.1cqi, 7.2cqb), 1.78rem);
+  inline-size: var(--mha-media-primary-control-size);
+  block-size: var(--mha-media-primary-control-size);
+  min-inline-size: 50px;
+  min-block-size: 50px;
+  font-size: var(--mha-media-primary-icon-size);
 }
 
 .mha-media-widget-control-toggle {
-  min-inline-size: clamp(2.65rem, min(14cqi, 14cqb), 4rem);
+  inline-size: auto;
+  min-inline-size: var(--mha-media-toggle-control-size);
+  min-block-size: 44px;
   padding-inline: .42rem;
-  font-size: clamp(.82rem, min(4.6cqi, 4.8cqb), 1rem);
+  font-size: var(--mha-media-toggle-font-size);
 }
 
 .mha-media-widget[data-media-size="2x2"] .mha-media-widget-controls-shell {
   position: static;
   grid-template-columns: max-content;
-  gap: clamp(.25rem, min(2cqi, 2cqb), .45rem);
-}
-
-.mha-media-widget[data-media-size="2x2"] .mha-media-widget-controls {
   gap: clamp(.22rem, min(1.8cqi, 1.8cqb), .42rem);
 }
 
+.mha-media-widget[data-media-size="2x2"] .mha-media-widget-controls {
+  gap: clamp(.18rem, min(1.4cqi, 1.4cqb), .34rem);
+}
+
 .mha-media-widget[data-media-size="2x2"] .mha-media-widget-control {
-  inline-size: clamp(2rem, min(11cqi, 11cqb), 2.75rem);
-  block-size: clamp(2rem, min(11cqi, 11cqb), 2.75rem);
-  font-size: clamp(1rem, min(5.6cqi, 5.8cqb), 1.32rem);
+  inline-size: clamp(2.5rem, min(12.6cqi, 12.6cqb), 3rem);
+  block-size: clamp(2.5rem, min(12.6cqi, 12.6cqb), 3rem);
+  min-inline-size: 40px;
+  min-block-size: 40px;
+  font-size: clamp(1.04rem, min(5.8cqi, 6cqb), 1.38rem);
 }
 
 .mha-media-widget[data-media-size="2x2"] .mha-media-widget-play-toggle {
-  inline-size: clamp(2.35rem, min(12.8cqi, 12.8cqb), 3.1rem);
-  block-size: clamp(2.35rem, min(12.8cqi, 12.8cqb), 3.1rem);
-  font-size: clamp(1.08rem, min(6.2cqi, 6.2cqb), 1.48rem);
+  inline-size: clamp(2.9rem, min(14.5cqi, 14.5cqb), 3.35rem);
+  block-size: clamp(2.9rem, min(14.5cqi, 14.5cqb), 3.35rem);
+  min-inline-size: 46px;
+  min-block-size: 46px;
+  font-size: clamp(1.12rem, min(6.3cqi, 6.3cqb), 1.52rem);
 }
 
 .mha-media-widget[data-media-size="2x2"] .mha-media-widget-control-toggle {
@@ -281,8 +298,10 @@
   inset-block-start: 0;
   inset-inline-end: 0;
   z-index: 2;
-  min-inline-size: clamp(2.3rem, min(12cqi, 12cqb), 3.1rem);
-  font-size: clamp(.74rem, min(4.2cqi, 4.2cqb), .9rem);
+  min-inline-size: clamp(2.65rem, min(12.9cqi, 12.9cqb), 3.2rem);
+  min-block-size: 42px;
+  padding-inline: .32rem;
+  font-size: clamp(.76rem, min(4.25cqi, 4.25cqb), .92rem);
 }
 
 .mha-media-widget-control[data-primary="true"],

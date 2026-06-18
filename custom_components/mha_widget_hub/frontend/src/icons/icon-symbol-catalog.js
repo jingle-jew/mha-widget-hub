@@ -253,8 +253,39 @@ export const ICON_SYMBOL_CATALOG = Object.freeze([
 
   Object.freeze({ name: "gear", category: "system", viewBox: "0 0 24 24", path: "M19.4 13.5c.08-.48.1-.98.1-1.5s-.02-1.02-.1-1.5l2-1.55-2-3.46-2.36.95a7.2 7.2 0 0 0-2.6-1.5L14.1 2h-4l-.34 2.94a7.2 7.2 0 0 0-2.6 1.5L4.8 5.49l-2 3.46 2 1.55c-.08.48-.1.98-.1 1.5s.02 1.02.1 1.5l-2 1.55 2 3.46 2.36-.95a7.2 7.2 0 0 0 2.6 1.5l.34 2.94h4l.34-2.94a7.2 7.2 0 0 0 2.6-1.5l2.36.95 2-3.46-2-1.55ZM12 15.6a3.6 3.6 0 1 1 0-7.2 3.6 3.6 0 0 1 0 7.2Z" }),
   Object.freeze({ name: "apps", category: "system", viewBox: "0 0 24 24", path: "M4 4h6v6H4V4Zm2 2v2h2V6H6Zm8-2h6v6h-6V4Zm2 2v2h2V6h-2ZM4 14h6v6H4v-6Zm2 2v2h2v-2H6Zm8-2h6v6h-6v-6Zm2 2v2h2v-2h-2Z" }),
-]);
+  Object.freeze({ name: "speaker-on", category: "media_player", viewBox: "0 0 24 24", path: "M3 9v6h4l5 4V5L7 9H3Zm12.5-.5a5 5 0 0 1 0 7l-1.4-1.4a3 3 0 0 0 0-4.2l1.4-1.4Zm2.8-2.8a9 9 0 0 1 0 12.6l-1.4-1.4a7 7 0 0 0 0-9.8l1.4-1.4Z" }),
+  Object.freeze({ name: "speaker-off", category: "media_player", viewBox: "0 0 24 24", path: "M3 9v6h4l5 4V5L7 9H3Zm10.6.4L15 8l2 2 2-2 1.4 1.4-2 2 2 2L19 14.8l-2-2-2 2-1.4-1.4 2-2-2-2Z" }),
+  Object.freeze({ name: "mute", category: "media_player", viewBox: "0 0 24 24", path: "M3 9v6h4l5 4V5L7 9H3Zm10.6.4L15 8l2 2 2-2 1.4 1.4-2 2 2 2L19 14.8l-2-2-2 2-1.4-1.4 2-2-2-2Z" }),
+  Object.freeze({ name: "volume-low", category: "media_player", viewBox: "0 0 24 24", path: "M3 9v6h4l5 4V5L7 9H3Zm12.5 2.5a3 3 0 0 0-1.4-2.6v5.2a3 3 0 0 0 1.4-2.6Z" }),
+  Object.freeze({ name: "volume-medium", category: "media_player", viewBox: "0 0 24 24", path: "M3 9v6h4l5 4V5L7 9H3Zm12.5-.5a5 5 0 0 1 0 7l-1.4-1.4a3 3 0 0 0 0-4.2l1.4-1.4Z" }),
+  Object.freeze({ name: "volume-high", category: "media_player", viewBox: "0 0 24 24", path: "M3 9v6h4l5 4V5L7 9H3Zm12.5-.5a5 5 0 0 1 0 7l-1.4-1.4a3 3 0 0 0 0-4.2l1.4-1.4Zm2.8-2.8a9 9 0 0 1 0 12.6l-1.4-1.4a7 7 0 0 0 0-9.8l1.4-1.4Z" }),
+  Object.freeze({ name: "play-pause", category: "media_player", viewBox: "0 0 24 24", path: "M6 5v14l8-7-8-7Zm10 1h2v12h-2V6Zm-3 0h2v12h-2V6Z" }),
+  Object.freeze({ name: "loop", category: "media_player", viewBox: "0 0 24 24", path: "M7 7h9V4l5 4-5 4V9H8a2 2 0 0 0-2 2v1H4v-1a4 4 0 0 1 4-4Zm10 5h2v1a4 4 0 0 1-4 4H8v3l-5-4 5-4v3h7a2 2 0 0 0 2-2v-1Z" }),
+  Object.freeze({ name: "shuffle", category: "media_player", viewBox: "0 0 24 24", path: "M17 3h4v4h-2V6.4l-4.2 4.2-1.4-1.4L17.6 5H17V3ZM3 7h5.6l9.8 9.8H21v2h-4.6L6.6 9H3V7Zm10.4 6.6 1.4 1.4L12.2 18H17v-2h4v4h-4v-2h-4.8l1.2-1.2ZM3 17v-2h5.6l2 2H3Z" }),
+  Object.freeze({ name: "lightbulb-on", category: "lighting", viewBox: "0 0 24 24", path: "M9 21h6v-2H9v2Zm3-19a7 7 0 0 0-4 12.7c.6.43 1 1.12 1 1.86V17h6v-.44c0-.74.4-1.43 1-1.86A7 7 0 0 0 12 2Zm0 2a5 5 0 0 1 2.92 9.06c-1 .72-1.65 1.8-1.9 2.94h-2.04c-.25-1.14-.9-2.22-1.9-2.94A5 5 0 0 1 12 4Zm-2 8h4v2h-4v-2Z" }),
+  Object.freeze({ name: "lightbulb-off", category: "lighting", viewBox: "0 0 24 24", path: "M9 21h6v-2H9v2Zm3-19a7 7 0 0 0-4 12.7c.6.43 1 1.12 1 1.86V17h6v-.44c0-.74.4-1.43 1-1.86A7 7 0 0 0 12 2Zm0 2a5 5 0 0 1 2.92 9.06c-1 .72-1.65 1.8-1.9 2.94h-2.04c-.25-1.14-.9-2.22-1.9-2.94A5 5 0 0 1 12 4Zm-4.7.72 14 14-1.42 1.42-14-14L7.3 4.72Z" }),
+  Object.freeze({ name: "gear-shield", category: "system", viewBox: "0 0 24 24", path: "M10.9 2h2.2l.32 2.45c.63.17 1.24.43 1.8.76l2.2-1.1 1.55 1.55-1.1 2.2c.33.56.59 1.17.76 1.8l2.45.32v2.2l-2.45.32c-.17.63-.43 1.24-.76 1.8l1.1 2.2-1.55 1.55-2.2-1.1c-.56.33-1.17.59-1.8.76L13.1 22h-2.2l-.32-2.45a7.82 7.82 0 0 1-1.8-.76l-2.2 1.1-1.55-1.55 1.1-2.2a7.82 7.82 0 0 1-.76-1.8L3 12.1v-2.2l2.45-.32c.17-.63.43-1.24.76-1.8l-1.1-2.2 1.55-1.55 2.2 1.1c.56-.33 1.17-.59 1.8-.76L10.9 2Zm1.1 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10Zm0 1.5 4 1.8v2.9c0 2.05-1.2 3.75-4 5.1-2.8-1.35-4-3.05-4-5.1v-2.9l4-1.8Z" }),
+  Object.freeze({ name: "gear-wifi", category: "system", viewBox: "0 0 24 24", path: "M10.9 2h2.2l.32 2.45c.63.17 1.24.43 1.8.76l2.2-1.1 1.55 1.55-1.1 2.2c.33.56.59 1.17.76 1.8l2.45.32v2.2l-2.45.32c-.17.63-.43 1.24-.76 1.8l1.1 2.2-1.55 1.55-2.2-1.1c-.56.33-1.17.59-1.8.76L13.1 22h-2.2l-.32-2.45a7.82 7.82 0 0 1-1.8-.76l-2.2 1.1-1.55-1.55 1.1-2.2a7.82 7.82 0 0 1-.76-1.8L3 12.1v-2.2l2.45-.32c.17-.63.43-1.24.76-1.8l-1.1-2.2 1.55-1.55 2.2 1.1c.56-.33 1.17-.59 1.8-.76L10.9 2Zm1.1 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10Zm0 3c1.5 0 2.91.58 3.98 1.64l-1.41 1.41a3.62 3.62 0 0 0-5.14 0l-1.41-1.41A5.59 5.59 0 0 1 12 10Zm0 3a2.6 2.6 0 0 1 1.84.76L12 15.6l-1.84-1.84A2.6 2.6 0 0 1 12 13Z" }),
+  Object.freeze({ name: "sensor", category: "system", viewBox: "0 0 24 24", path: "M11 2h2v3h-2V2ZM4.93 4.93l1.41-1.41 2.12 2.12-1.41 1.41-2.12-2.12ZM2 11h3v2H2v-2Zm16.95-5.36 2.12-2.12 1.41 1.41-2.12 2.12-1.41-1.41ZM19 11h3v2h-3v-2ZM12 7a5 5 0 0 0-5 5c0 2.05 1.23 3.82 3 4.6V22h4v-5.4c1.77-.78 3-2.55 3-4.6a5 5 0 0 0-5-5Zm0 2a3 3 0 0 1 1 5.83V20h-2v-5.17A3 3 0 0 1 12 9Z" }),
+  Object.freeze({ name: "user", category: "system", viewBox: "0 0 24 24", path: "M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5Z" }),
+  Object.freeze({ name: "users", category: "system", viewBox: "0 0 24 24", path: "M9 11a3 3 0 1 0-3-3 3 3 0 0 0 3 3Zm6 1a3 3 0 1 0-2.12-.88A3 3 0 0 0 15 12ZM9 13c-3.33 0-6 1.79-6 4v1h8.5a5.9 5.9 0 0 1 2.08-4.5A10.1 10.1 0 0 0 9 13Zm6 1c-2.67 0-5 1.34-5 3v1h10v-1c0-1.66-2.33-3-5-3Z" }),
+  Object.freeze({ name: "permission", category: "system", viewBox: "0 0 24 24", path: "M12 2 4 5.5v6.2c0 5.3 3.4 9.05 8 10.8 4.6-1.75 8-5.5 8-10.8V5.5L12 2Zm-1.2 12.8-3.1-3.1 1.4-1.4 1.7 1.68 4.1-4.08 1.4 1.41-5.5 5.49Z" }),
+  Object.freeze({ name: "admin", category: "system", viewBox: "0 0 24 24", path: "M12 1.8 4 5.3v6.4c0 5.36 3.4 9.12 8 10.9 4.6-1.78 8-5.54 8-10.9V5.3L12 1.8Zm0 5.7a2.7 2.7 0 1 1-2.7 2.7A2.7 2.7 0 0 1 12 7.5Zm0 9.5c-1.86 0-3.5-.74-4.57-1.88.24-1.59 3.05-2.47 4.57-2.47 1.52 0 4.33.88 4.57 2.47A6.3 6.3 0 0 1 12 17Z" }),
+  Object.freeze({ name: "reset", category: "utility", viewBox: "0 0 24 24", path: "M12 5V1L7 6l5 5V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7Z" }),
+  Object.freeze({ name: "save", category: "utility", viewBox: "0 0 24 24", path: "M17 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7l-4-4Zm-5 16a3 3 0 1 1 0-6 3 3 0 0 1 0 6Zm3-10H5V5h10v4Z" }),
+  Object.freeze({ name: "refresh", category: "utility", viewBox: "0 0 24 24", path: "M17.65 6.35A7.95 7.95 0 0 0 12 4V1L7 6l5 5V7a5 5 0 1 1-5 5H5a7 7 0 1 0 12.65-5.65Z" }),
+]); 
 
+const ICON_SYMBOL_ALIASES = Object.freeze({
+  house: "home",
+  "volume-off": "speaker-off",
+  "volume-muted": "mute",
+  "skip-next": "next",
+  "skip-previous": "previous",
+  "speaker-medium": "volume-medium",
+  "speaker-high": "volume-high",
+  "speaker-low": "volume-low",
+});
 
 export const ICON_SYMBOLS_BY_NAME = Object.freeze(
   ICON_SYMBOL_CATALOG.reduce((symbols, icon) => {
@@ -264,7 +295,8 @@ export const ICON_SYMBOLS_BY_NAME = Object.freeze(
 );
 
 export function getIconSymbol(name) {
-  return ICON_SYMBOLS_BY_NAME[name] || null;
+  const normalizedName = ICON_SYMBOLS_BY_NAME[name] ? name : ICON_SYMBOL_ALIASES[name];
+  return ICON_SYMBOLS_BY_NAME[normalizedName] || null;
 }
 
 export function getIconSymbolsByCategory(category) {
