@@ -26,18 +26,19 @@
 
 .mha-widget[data-widget-kind="media"] > .mha-media-widget {
   position: absolute;
-  inset: var(--mha-media-padding);
+  inset: 0;
   display: grid;
   min-inline-size: 0;
   min-block-size: 0;
   box-sizing: border-box;
+  padding: var(--mha-media-padding);
   overflow: hidden;
   color: var(--mha-text-primary);
 }
 
 .mha-media-widget-background {
   position: absolute;
-  inset: calc(var(--mha-media-padding) * -1);
+  inset: 0;
   z-index: 0;
   overflow: hidden;
   border-radius: inherit;
