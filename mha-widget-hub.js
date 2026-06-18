@@ -79,7 +79,7 @@ import {
 } from "./src/layout/placement-calculations.js";
 import { createPlacementController } from "./src/layout/placement-controller.js";
 import { createGridRuntime } from "./src/layout/grid-runtime.js";
-import {createScreensaver,normalizeClockVariant,updateScreensaverClock} from "./src/screensaver/screensaver.js";
+import {createScreensaver,normalizeClockVariant,updateScreensaverClock,updateScreensaverClockVariant,updateScreensaverNowBar,updateScreensaverState} from "./src/screensaver/screensaver.js";
 import { createScreensaverController } from "./src/screensaver/screensaver-controller.js";
 import { createIcon } from "./src/ui/icon.js";
 import { createIconSymbol } from "./src/ui/icon-symbol.js";
@@ -1243,12 +1243,8 @@ _syncScreensaverVisibilityState(){
   this.classList.toggle("is-screensaver-visible",visible);
   this.dataset.screensaverVisible=String(visible);
 }
-_syncScreensaverDom(){
-  this._syncScreensaverVisibilityState();
-  const existing=this.shadowRoot.querySelector(".mha-screensaver");
-  if(!existing)return;
-  const screensaverState=this._screensaverController.read();
-  const next=createScreensaver({
+_createScreensaverElement(screensaverState=this._screensaverController.read()){
+  return createScreensaver({
     isVisible:this._getScreensaverVisible(),
     showNowBar:screensaverState.nowBar,
     nowBarItems:screensaverState.nowBarItems,
@@ -1257,7 +1253,25 @@ _syncScreensaverDom(){
     onOpenScreensaverSettings:()=>this._openScreensaverSettings(),
     onWake:()=>this._wakeScreensaver(),
   });
-  existing.replaceWith(next);
+}
+_syncScreensaverDom({force=false}={}){
+  this._syncScreensaverVisibilityState();
+  const existing=this.shadowRoot.querySelector(".mha-screensaver");
+  const screensaverState=this._screensaverController.read();
+  if(!existing){
+    this.shadowRoot.append(this._createScreensaverElement(screensaverState));
+    return;
+  }
+  if(force){
+    existing.replaceWith(this._createScreensaverElement(screensaverState));
+    return;
+  }
+  updateScreensaverState(existing,{isVisible:this._getScreensaverVisible()});
+  updateScreensaverClockVariant(existing,screensaverState.clockVariant);
+  updateScreensaverNowBar(existing,{
+    showNowBar:screensaverState.nowBar,
+    nowBarItems:screensaverState.nowBarItems,
+  });
 }
 toggleEditMode(){
   if(!this._isEditing&&this._isMobileLandscapeLayout())return;
@@ -2255,16 +2269,7 @@ _appendDeferredUi({layout,renderId}){
     if(layout!=="mobile"){
       this.shadowRoot.append(createMobileDock(this._getDockProps()));
     }
-    const screensaverState=this._screensaverController.read();
-    this.shadowRoot.append(createScreensaver({
-      isVisible:this._getScreensaverVisible(),
-      showNowBar:screensaverState.nowBar,
-      nowBarItems:screensaverState.nowBarItems,
-      clockVariant:screensaverState.clockVariant,
-      onClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),
-      onOpenScreensaverSettings:()=>this._openScreensaverSettings(),
-      onWake:()=>this._wakeScreensaver(),
-    }));
+    this.shadowRoot.append(this._createScreensaverElement());
     this.shadowRoot.append(this._createSettingsPanel());
     this.shadowRoot.append(this._createWidgetManagerPanel());
     this.shadowRoot.append(this._createPageCreatorPanel());

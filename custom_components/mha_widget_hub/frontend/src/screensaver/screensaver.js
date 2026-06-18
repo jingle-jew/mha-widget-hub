@@ -226,6 +226,7 @@ function createNowBar({ items: enabledItems = {} } = {}) {
 
   const now = document.createElement("section");
   now.className = "mha-screensaver-nowbar";
+  now.dataset.nowbarSignature = visibleItems.map(item => item.key).join("|");
   now.setAttribute("aria-label", "Now bar");
 
   const stack = document.createElement("div");
@@ -574,6 +575,8 @@ export function createScreensaver({
   const root = document.createElement("div");
   root.className = "mha-screensaver";
   root.dataset.visible = String(Boolean(isVisible));
+  root.dataset.clockVariant = normalizeClockVariant(clockVariant);
+  root.dataset.nowbarEnabled = String(Boolean(showNowBar));
   root.setAttribute("aria-hidden", String(!isVisible));
 
   let wakePointerStartX = 0;
@@ -624,6 +627,65 @@ export function createScreensaver({
   }
 
   return root;
+}
+
+export function updateScreensaverState(root, { isVisible = false } = {}) {
+  if (!root) return false;
+  root.dataset.visible = String(Boolean(isVisible));
+  root.setAttribute("aria-hidden", String(!isVisible));
+  return true;
+}
+
+export function updateScreensaverClockVariant(root, variant = "digital") {
+  const normalized = normalizeClockVariant(variant);
+  if (!root) return false;
+  if (root.dataset.clockVariant === normalized) return false;
+
+  const existing = root.querySelector?.(".mha-screensaver-clock-region");
+  const next = createClock(normalized);
+  if (existing) {
+    existing.replaceWith(next);
+  } else {
+    const shade = root.querySelector?.(".mha-screensaver-shade");
+    if (shade?.after) shade.after(next);
+    else root.prepend(next);
+  }
+  root.dataset.clockVariant = normalized;
+  return true;
+}
+
+export function updateScreensaverNowBar(root, { showNowBar = true, nowBarItems = {} } = {}) {
+  if (!root) return false;
+
+  const existing = root.querySelector?.(".mha-screensaver-nowbar");
+  root.dataset.nowbarEnabled = String(Boolean(showNowBar));
+
+  if (!showNowBar) {
+    if (!existing) return false;
+    existing.remove();
+    return true;
+  }
+
+  const next = createNowBar({ items: nowBarItems });
+  if (!next) {
+    if (!existing) return false;
+    existing.remove();
+    return true;
+  }
+
+  if (existing?.dataset.nowbarSignature === next.dataset.nowbarSignature) {
+    return false;
+  }
+
+  if (existing) {
+    existing.replaceWith(next);
+    return true;
+  }
+
+  const spacer = root.querySelector?.(".mha-screensaver-spacer");
+  if (spacer?.after) spacer.after(next);
+  else root.append(next);
+  return true;
 }
 
 export function updateScreensaverClock(root, variant = "digital") {
