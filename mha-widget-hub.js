@@ -74,6 +74,7 @@ import {
 import { extractAccentFromWallpaper, resolveAccentFromColorValue } from "./src/settings/wallpaper-accent.js";
 import { createWallpaperController } from "./src/settings/wallpaper-controller.js";
 import {updateStatusTime} from "./src/layout/status-bar.js";
+import { buildWidgetShellState } from "./src/widgets/widget-shell-props.js?v=phase6";
 import {createWidgetShell} from "./src/widgets/widget-shell.js";
 import { getNextWidgetVariantEntries, getVariantCandidate, sameVariantSize } from "./src/widgets/widget-variants.js";
 import { normalizeStoredWidgetContract } from "./src/widgets/widget-storage.js?v=phase1";
@@ -1583,7 +1584,10 @@ _refreshActiveGridOnly(){
   const {units}=this._getGridBounds();
   const positions=this._getActiveWidgetPositions({create:true});
   this._widgets.forEach(w=>{
-    const el=createWidgetShell(w,{activeGridUnits:units,isEditing:this._isEditing,isMoveTarget:this._isEditing&&this._activeMoveWidgetId===w.id,position:positions?.[w.id],hass:this._hass,entityVisibilityConfig:this._entityVisibilityConfig,onToggleMove:id=>this._toggleWidgetMoveMode(id),onMove:(id,direction)=>this._moveWidgetByDirection(id,direction),onRemove:id=>this._removeWidget(id),onCycleVariant:id=>this.cycleVariant(id),onConfigure:id=>this._openWidgetConfig(id),onConfigureSlot:(widgetId,slotIndex)=>this._openScenesButtonConfig(widgetId,slotIndex)});
+    const el=createWidgetShell(w,this._getWidgetShellProps(w,{
+      units,
+      position:positions?.[w.id],
+    }));
     this._wireDrag(el,w);
     grid.append(el);
   });
@@ -1591,6 +1595,25 @@ _refreshActiveGridOnly(){
   this._syncWidgetDropSlots();
   this._scheduleSquareUnitSync();
   updateClockWidgets(this.shadowRoot);
+}
+_getWidgetShellProps(widget,{units,position,widgetId=widget?.id||""}={}){
+  return {
+    ...buildWidgetShellState({
+      widgetId,
+      activeGridUnits:units,
+      isEditing:this._isEditing,
+      activeMoveWidgetId:this._activeMoveWidgetId,
+      position,
+      hass:this._hass,
+      entityVisibilityConfig:this._entityVisibilityConfig,
+    }),
+    onToggleMove:id=>this._toggleWidgetMoveMode(id),
+    onMove:(id,direction)=>this._moveWidgetByDirection(id,direction),
+    onRemove:id=>this._removeWidget(id),
+    onCycleVariant:id=>this.cycleVariant(id),
+    onConfigure:id=>this._openWidgetConfig(id),
+    onConfigureSlot:(id,slotIndex)=>this._openScenesButtonConfig(id,slotIndex),
+  };
 }
 
 _saveWidgets(){
@@ -1915,20 +1938,10 @@ _placePendingWidgetAtSlot(x,y){
 
   const grid=this.shadowRoot?.querySelector?.(".mha-grid");
   if(grid){
-    const el=createWidgetShell(widget,{
-      activeGridUnits:units,
-      isEditing:this._isEditing,
-      isMoveTarget:false,
+    const el=createWidgetShell(widget,this._getWidgetShellProps(widget,{
+      units,
       position:nextPositions[widget.id],
-      hass:this._hass,
-      entityVisibilityConfig:this._entityVisibilityConfig,
-      onToggleMove:id=>this._toggleWidgetMoveMode(id),
-      onMove:(id,direction)=>this._moveWidgetByDirection(id,direction),
-      onRemove:id=>this._removeWidget(id),
-      onCycleVariant:id=>this.cycleVariant(id),
-      onConfigure:id=>this._openWidgetConfig(id),
-      onConfigureSlot:(widgetId,slotIndex)=>this._openScenesButtonConfig(widgetId,slotIndex),
-    });
+    }));
 
     this._wireDrag(el,widget);
     grid.append(el);
@@ -2002,20 +2015,11 @@ _replaceWidgetDom(id){
 
   const {units}=this._getGridBounds();
   const positions=this._getActiveWidgetPositions({create:true});
-  const next=createWidgetShell(widget,{
-    activeGridUnits:units,
-    isEditing:this._isEditing,
-    isMoveTarget:this._isEditing&&this._activeMoveWidgetId===id,
+  const next=createWidgetShell(widget,this._getWidgetShellProps(widget,{
+    units,
     position:positions?.[id],
-    hass:this._hass,
-    entityVisibilityConfig:this._entityVisibilityConfig,
-    onToggleMove:widgetId=>this._toggleWidgetMoveMode(widgetId),
-    onMove:(widgetId,direction)=>this._moveWidgetByDirection(widgetId,direction),
-    onRemove:widgetId=>this._removeWidget(widgetId),
-    onCycleVariant:widgetId=>this.cycleVariant(widgetId),
-    onConfigure:widgetId=>this._openWidgetConfig(widgetId),
-    onConfigureSlot:(widgetId,slotIndex)=>this._openScenesButtonConfig(widgetId,slotIndex),
-  });
+    widgetId:id,
+  }));
 
   this._wireDrag(next,widget);
   destroyDomSubtree(existing);
@@ -2234,20 +2238,7 @@ _wireDrag(el){
   el.removeAttribute("draggable");
 }
 _createWidgetElement(widget,{units,position}){
-  const el=createWidgetShell(widget,{
-    activeGridUnits:units,
-    isEditing:this._isEditing,
-    isMoveTarget:this._isEditing&&this._activeMoveWidgetId===widget.id,
-    position,
-    hass:this._hass,
-    entityVisibilityConfig:this._entityVisibilityConfig,
-    onToggleMove:id=>this._toggleWidgetMoveMode(id),
-    onMove:(id,direction)=>this._moveWidgetByDirection(id,direction),
-    onRemove:id=>this._removeWidget(id),
-    onCycleVariant:id=>this.cycleVariant(id),
-    onConfigure:id=>this._openWidgetConfig(id),
-    onConfigureSlot:(widgetId,slotIndex)=>this._openScenesButtonConfig(widgetId,slotIndex),
-  });
+  const el=createWidgetShell(widget,this._getWidgetShellProps(widget,{units,position}));
   this._wireDrag(el,widget);
   return el;
 }
