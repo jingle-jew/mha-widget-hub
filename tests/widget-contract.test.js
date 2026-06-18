@@ -21,6 +21,7 @@ test("legacy widget identities resolve to a canonical kind", () => {
 test("weather-capable widgets expose configuration without affecting other clocks", () => {
   assert.equal(getWidgetConfigType({ kind: "weather" }), "weather");
   assert.equal(getWidgetConfigType({ kind: "button" }), "button");
+  assert.equal(getWidgetConfigType({ kind: "scenes" }), "scenes");
   assert.equal(getWidgetConfigType({ kind: "clock", variant: "digital-weather" }), "weather");
   assert.equal(getWidgetConfigType({ kind: "clock", variant: "digital" }), "");
 });
@@ -35,6 +36,13 @@ test("normalization preserves button and weather entity bindings", () => {
     entity_id: "weather.home",
     forecastType: "hourly",
   }, normalizeWidgetSize);
+  const scenes = normalizeWidgetContract({
+    kind: "scenes",
+    buttons: [
+      { type: "mode", entity_id: "scene.movie_time" },
+      { type: "routine", entityId: "script.good_night" },
+    ],
+  }, normalizeWidgetSize);
   const clock = normalizeWidgetContract({
     kind: "clock",
     variant: "digital-weather",
@@ -44,6 +52,8 @@ test("normalization preserves button and weather entity bindings", () => {
   assert.equal(button.entityId, "switch.coffee");
   assert.equal(weather.entityId, "weather.home");
   assert.equal(weather.forecastType, "hourly");
+  assert.equal(scenes.buttons[0].entityId, "scene.movie_time");
+  assert.equal(scenes.buttons[1].entityId, "script.good_night");
   assert.equal(clock.entityId, "weather.home");
 });
 
@@ -165,6 +175,7 @@ test("registered widgets expose preview renderer manifests", async () => {
     ["slider", "live"],
     ["toggle-slider", "live"],
     ["media", "live"],
+    ["scenes", "live"],
   ]);
 
   for (const [kind, definition] of Object.entries(WIDGET_REGISTRY)) {

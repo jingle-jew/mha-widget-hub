@@ -1,6 +1,7 @@
 import { buildSliderServiceCall } from "./slider.js";
 import { buildToggleServiceCall } from "./toggle.js";
 import { buildMediaPlayerServiceCall } from "./media.js";
+import { getEntityDomain } from "./entity.js";
 
 export function createLatestValueAction(runAction, { intervalMs = 80 } = {}) {
   let inFlight = false;
@@ -120,4 +121,43 @@ export function runSliderAction(hass, entityState, value) {
 
 export function runMediaPlayerAction(hass, entityState, action) {
   return callHomeAssistantService(hass, buildMediaPlayerServiceCall(entityState, action));
+}
+
+export function buildSceneRoutineServiceCall(entityId) {
+  const normalizedEntityId = String(entityId || "").trim();
+  const domain = getEntityDomain(normalizedEntityId);
+  if (!normalizedEntityId) return null;
+
+  if (domain === "scene") {
+    return {
+      domain: "scene",
+      service: "turn_on",
+      data: { entity_id: normalizedEntityId },
+    };
+  }
+
+  if (domain === "script") {
+    return {
+      domain: "script",
+      service: "turn_on",
+      data: { entity_id: normalizedEntityId },
+    };
+  }
+
+  if (domain === "automation") {
+    return {
+      domain: "automation",
+      service: "trigger",
+      data: {
+        entity_id: normalizedEntityId,
+        skip_condition: false,
+      },
+    };
+  }
+
+  return null;
+}
+
+export function runSceneRoutineAction(hass, entityId) {
+  return callHomeAssistantService(hass, buildSceneRoutineServiceCall(entityId));
 }

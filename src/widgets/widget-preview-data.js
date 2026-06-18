@@ -28,6 +28,12 @@ export const WIDGET_PREVIEW_DATA = freeze({
     artist: "MHA Preview",
     volume: 0.68,
   }),
+  scenes: freeze({
+    evening: freeze({ entityId: "scene.preview_evening", name: "Soir" }),
+    movie: freeze({ entityId: "scene.preview_movie", name: "Cinéma" }),
+    sleep: freeze({ entityId: "script.preview_sleep", name: "Bonne nuit" }),
+    focus: freeze({ entityId: "automation.preview_focus", name: "Focus" }),
+  }),
   toggle: freeze({
     entityId: "switch.preview",
     name: "Prise",
@@ -84,6 +90,26 @@ export const PREVIEW_HASS_STATES = freeze({
       media_artist: WIDGET_PREVIEW_DATA.media.artist,
       volume_level: WIDGET_PREVIEW_DATA.media.volume,
     }),
+  }),
+  [WIDGET_PREVIEW_DATA.scenes.evening.entityId]: freeze({
+    entity_id: WIDGET_PREVIEW_DATA.scenes.evening.entityId,
+    state: "unknown",
+    attributes: freeze({ friendly_name: WIDGET_PREVIEW_DATA.scenes.evening.name }),
+  }),
+  [WIDGET_PREVIEW_DATA.scenes.movie.entityId]: freeze({
+    entity_id: WIDGET_PREVIEW_DATA.scenes.movie.entityId,
+    state: "unknown",
+    attributes: freeze({ friendly_name: WIDGET_PREVIEW_DATA.scenes.movie.name }),
+  }),
+  [WIDGET_PREVIEW_DATA.scenes.sleep.entityId]: freeze({
+    entity_id: WIDGET_PREVIEW_DATA.scenes.sleep.entityId,
+    state: "off",
+    attributes: freeze({ friendly_name: WIDGET_PREVIEW_DATA.scenes.sleep.name }),
+  }),
+  [WIDGET_PREVIEW_DATA.scenes.focus.entityId]: freeze({
+    entity_id: WIDGET_PREVIEW_DATA.scenes.focus.entityId,
+    state: "on",
+    attributes: freeze({ friendly_name: WIDGET_PREVIEW_DATA.scenes.focus.name }),
   }),
 });
 

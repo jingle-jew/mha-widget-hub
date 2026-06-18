@@ -37,6 +37,13 @@ import {
   updateMediaLabel,
 } from "./media-config.js";
 import {
+  SCENES_BUTTON_TYPES,
+  reconcileScenesConfigDraft,
+  updateScenesButtonEntity,
+  updateScenesButtonLabel,
+  updateScenesButtonType,
+} from "./scenes-config.js";
+import {
   getWidgetConfigDefinition,
   getWidgetConfigType,
 } from "./widget-config-registry.js";
@@ -472,6 +479,82 @@ function createButtonFields(session, hass, visibilityConfig, onChange) {
   };
 }
 
+function createScenesFields(session, hass, visibilityConfig, onChange) {
+  const emptySlotLabel = "Ajouter";
+  const reconciled = reconcileScenesConfigDraft(session.draft, hass, visibilityConfig);
+  const fields = document.createElement("div");
+  fields.className = "mha-widget-config-fields";
+  fields.dataset.configType = "scenes";
+
+  reconciled.buttons.forEach(({ draft, options, selected }, index) => {
+    const group = document.createElement("section");
+    group.className = "mha-widget-config-group";
+
+    const heading = document.createElement("h3");
+    heading.className = "mha-widget-config-group-title";
+    heading.textContent = `Bouton ${index + 1}`;
+    group.append(heading);
+
+    const typeSelect = document.createElement("select");
+    typeSelect.className = "mha-widget-config-control";
+    SCENES_BUTTON_TYPES.forEach(type => {
+      const item = document.createElement("option");
+      item.value = type.value;
+      item.textContent = type.label;
+      item.selected = type.value === draft.type;
+      typeSelect.append(item);
+    });
+    typeSelect.addEventListener("change", event => {
+      updateScenesButtonType(reconciled.draft, index, event.currentTarget.value, hass, visibilityConfig);
+      onChange?.({ rerender: true });
+    });
+
+    const entitySelect = document.createElement("select");
+    entitySelect.className = "mha-widget-config-control";
+    const empty = document.createElement("option");
+    empty.value = "";
+    empty.textContent = draft.type === "mode"
+      ? "Aucun Mode sélectionné"
+      : "Aucune Routine sélectionnée";
+    empty.selected = !draft.entityId;
+    entitySelect.append(empty);
+    options.forEach(option => {
+      const item = document.createElement("option");
+      item.value = option.value;
+      item.textContent = option.label;
+      item.selected = option.value === draft.entityId;
+      entitySelect.append(item);
+    });
+    entitySelect.addEventListener("change", event => {
+      updateScenesButtonEntity(reconciled.draft, index, event.currentTarget.value, options);
+      onChange?.({ rerender: true });
+    });
+
+    const nameInput = document.createElement("input");
+    nameInput.className = "mha-widget-config-control";
+    nameInput.type = "text";
+    nameInput.value = draft.label;
+    nameInput.placeholder = selected?.label?.replace(/\s+\(introuvable\)$/u, "") || emptySlotLabel;
+    nameInput.autocomplete = "off";
+    nameInput.addEventListener("input", event => {
+      updateScenesButtonLabel(reconciled.draft, index, event.currentTarget.value);
+      onChange?.();
+    });
+
+    group.append(
+      createField("Type", typeSelect),
+      createField("Mode ou routine", entitySelect),
+      createField("Nom affiché", nameInput),
+    );
+    fields.append(group);
+  });
+
+  return {
+    fields,
+    canSave: true,
+  };
+}
+
 const WIDGET_CONFIG_FIELD_RENDERERS = Object.freeze({
   slider: createSliderFields,
   toggle: createToggleFields,
@@ -511,6 +594,7 @@ export function createWidgetConfigPopup({
   const isButton = session?.configType === "button";
   const isWeather = session?.configType === "weather";
   const isMedia = session?.configType === "media";
+  const isScenes = session?.configType === "scenes";
   title.textContent = isSlider
     ? "Configurer le slider"
     : isToggle
@@ -521,6 +605,8 @@ export function createWidgetConfigPopup({
           ? "Configurer la météo"
           : isMedia
             ? "Configurer le média"
+            : isScenes
+              ? "Configurer les modes & routines"
             : "Configurer la lumière";
   header.append(title, createCloseButton({
     label: "Fermer",
@@ -540,6 +626,8 @@ export function createWidgetConfigPopup({
           ? "Choisis l’entité weather autorisée à afficher."
           : isMedia
             ? "Choisis le lecteur média et le nom à afficher."
+            : isScenes
+              ? "Configure les 4 raccourcis internes avec des Modes ou des Routines."
             : "Choisis la lumière et le contrôle à afficher.";
 
   const content = session
@@ -553,6 +641,8 @@ export function createWidgetConfigPopup({
             ? createWeatherFields(session, hass, visibilityConfig, onChange)
             : isMedia
               ? createMediaFields(session, hass, visibilityConfig, onChange)
+              : isScenes
+                ? createScenesFields(session, hass, visibilityConfig, onChange)
               : createToggleSliderFields(session, hass, visibilityConfig, onChange)
     : { fields: document.createElement("div"), canSave: false };
 

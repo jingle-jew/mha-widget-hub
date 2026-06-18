@@ -224,6 +224,13 @@ export function normalizeWidgetContract(widget = {}, normalizeBaseSize) {
   } else if (kind === "button" || kind === "weather") {
     normalized.entityId = widget.entityId || widget.entity_id || "";
     if (kind === "weather") normalized.forecastType = widget.forecastType === "hourly" ? "hourly" : "daily";
+  } else if (kind === "scenes") {
+    normalized.buttons = Array.isArray(widget.buttons)
+      ? widget.buttons.map(button => ({
+        ...button,
+        entityId: button?.entityId || button?.entity_id || "",
+      }))
+      : [];
   }
 
   if (kind === "toggle-slider") {

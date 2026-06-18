@@ -20,6 +20,22 @@
   gap: .45rem;
 }
 
+.mha-widget-config-group {
+  display: grid;
+  gap: .85rem;
+  padding: .95rem;
+  border: 1px solid color-mix(in srgb, var(--mha-widget-border, rgba(255,255,255,.2)) 82%, transparent);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--mha-widget-surface, rgba(255,255,255,.12)) 52%, transparent);
+}
+
+.mha-widget-config-group-title {
+  margin: 0;
+  color: var(--mha-text-primary, #fff);
+  font-size: .92rem;
+  font-weight: 780;
+}
+
 .mha-widget-config-label {
   color: var(--mha-text-primary, #fff);
   font-size: .86rem;

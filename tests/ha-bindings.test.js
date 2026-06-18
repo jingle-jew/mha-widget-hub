@@ -15,6 +15,7 @@ import {
 } from "../src/ha/toggle.js";
 import {
   buildButtonServiceCall,
+  buildSceneRoutineServiceCall,
   callHomeAssistantService,
   createLatestValueAction,
 } from "../src/ha/actions.js";
@@ -40,6 +41,10 @@ import {
   createWeatherConfigDraft,
   normalizeWeatherForecastType,
 } from "../src/widget-config/weather-config.js";
+import {
+  buildScenesWidgetConfig,
+  createScenesConfigDraft,
+} from "../src/widget-config/scenes-config.js";
 import {
   buildSliderWidgetConfig,
   createSliderConfigDraft,
@@ -290,6 +295,28 @@ test("button widget builds the correct HA call for toggle, press and configured 
   });
 });
 
+test("modes and routines map to the expected Home Assistant services", () => {
+  assert.deepEqual(buildSceneRoutineServiceCall("scene.movie_time"), {
+    domain: "scene",
+    service: "turn_on",
+    data: { entity_id: "scene.movie_time" },
+  });
+  assert.deepEqual(buildSceneRoutineServiceCall("script.good_night"), {
+    domain: "script",
+    service: "turn_on",
+    data: { entity_id: "script.good_night" },
+  });
+  assert.deepEqual(buildSceneRoutineServiceCall("automation.arrival"), {
+    domain: "automation",
+    service: "trigger",
+    data: {
+      entity_id: "automation.arrival",
+      skip_condition: false,
+    },
+  });
+  assert.equal(buildSceneRoutineServiceCall("light.kitchen"), null);
+});
+
 test("authorized entity access rejects blocked and unsupported entities before reading state", () => {
   const hass = {
     user: { id: "user-1" },
@@ -492,6 +519,33 @@ test("weather configuration defaults and persists forecast type", () => {
     }, hass).forecastType,
     "hourly",
   );
+});
+
+test("modes and routines configuration keeps four buttons and preserves missing scenes", () => {
+  const hass = {
+    states: {
+      "scene.evening": entity("scene.evening", "unknown", { friendly_name: "Soirée" }),
+      "script.good_night": entity("script.good_night", "off", { friendly_name: "Bonne nuit" }),
+      "automation.arrival": entity("automation.arrival", "on", { friendly_name: "Arrivée" }),
+    },
+  };
+
+  const created = createScenesConfigDraft({
+    buttons: [
+      { type: "mode", entityId: "scene.missing_mode", label: "Absente" },
+      { type: "routine", entityId: "script.good_night" },
+    ],
+  }, hass);
+
+  assert.equal(created.draft.buttons.length, 4);
+  assert.equal(created.buttons[0].options[0].value, "scene.missing_mode");
+  assert.equal(created.buttons[1].selected?.value, "script.good_night");
+
+  const built = buildScenesWidgetConfig({ kind: "scenes" }, created.draft, hass);
+  assert.equal(built.buttons.length, 4);
+  assert.equal(built.buttons[0].entityId, "scene.missing_mode");
+  assert.equal(built.buttons[1].entityId, "script.good_night");
+  assert.equal(built.buttons[2].type, "routine");
 });
 
 test("weather model respects widget forecastType preference with robust fallback", () => {
