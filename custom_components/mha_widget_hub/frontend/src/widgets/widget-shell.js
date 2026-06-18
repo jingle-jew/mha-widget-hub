@@ -22,6 +22,7 @@ export function createWidgetShell(
     onRemove,
     onCycleVariant,
     onConfigure,
+    onConfigureSlot,
     hass,
     entityVisibilityConfig,
   } = {},
@@ -36,6 +37,7 @@ export function createWidgetShell(
     activeGridUnits,
     widgetW: effectiveWidgetW,
     widgetH: size.h,
+    isEditing,
     hass,
     entityVisibilityConfig,
   };
@@ -65,10 +67,19 @@ export function createWidgetShell(
   const content = createRegisteredWidgetContent(widget, renderContext);
   if (content) shell.append(content);
 
+  shell.addEventListener("mha-configure-widget-slot", (event) => {
+    const detail = event?.detail || {};
+    if (!Number.isInteger(detail.buttonIndex)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    onConfigureSlot?.(detail.widgetId || widget.id, detail.buttonIndex);
+  });
+
   const tools = document.createElement("div");
   tools.className = "mha-widget-tools";
 
-  const dimensionButton = widgetDefinition?.config
+  const showConfigureTool = !(isEditing && widgetKind === "scenes");
+  const dimensionButton = widgetDefinition?.config && showConfigureTool
     ? tool("Configurer le widget", "edit", () => onConfigure?.(widget.id), {
       className: "mha-tool-button--dimension",
     })
@@ -76,7 +87,7 @@ export function createWidgetShell(
       className: "mha-tool-button--dimension",
     });
 
-  if (!widgetDefinition?.config) {
+  if (!widgetDefinition?.config || !showConfigureTool) {
     dimensionButton.addEventListener("pointerdown", (event) => {
       if (isMoveTarget) return;
       event.preventDefault();
@@ -99,7 +110,10 @@ export function createWidgetShell(
     className: "mha-tool-button--close",
   });
 
-  tools.append(dimensionButton, moveButton, closeButton);
+  if (showConfigureTool || !widgetDefinition?.config) {
+    tools.append(dimensionButton);
+  }
+  tools.append(moveButton, closeButton);
 
   const badge = document.createElement("span");
   badge.className = "mha-size-badge";

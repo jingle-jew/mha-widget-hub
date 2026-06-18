@@ -3,13 +3,34 @@
   container-name: mha-scenes-widget;
   overflow: hidden;
   --mha-scenes-gap: clamp(.42rem, min(4.6cqi, 4.6cqb), .62rem);
-  --mha-scenes-button-radius: calc(var(--mha-control-radius, 1.15rem) - 2px);
+  --mha-scenes-button-radius: var(--mha-control-radius, var(--mha-widget-pill-inner-radius, 1.15rem));
   --mha-scenes-button-surface: color-mix(in srgb, var(--mha-surface-secondary, rgba(255,255,255,.18)) 84%, transparent);
   --mha-scenes-button-border: color-mix(in srgb, var(--mha-text-primary) 10%, transparent);
   --mha-scenes-button-shadow: none;
-  --mha-scenes-icon-size: clamp(2rem, min(28cqi, 28cqb), 2.45rem);
-  --mha-scenes-glyph-size: clamp(1rem, min(16cqi, 16cqb), 1.18rem);
+  --mha-scenes-icon-size: var(--mha-control-icon-bubble-size, clamp(2rem, min(28cqi, 28cqb), 2.45rem));
+  --mha-scenes-glyph-size: var(--mha-control-icon-glyph-size, clamp(1rem, min(16cqi, 16cqb), 1.18rem));
+  --mha-scenes-icon-radius: var(--mha-control-icon-bubble-radius, var(--mha-widget-pill-inner-radius, 999px));
+  --mha-scenes-icon-bg: var(--mha-icon-bg, color-mix(in srgb, var(--mha-accent) 72%, var(--mha-surface-secondary)));
+  --mha-scenes-icon-color: var(--mha-icon-color, var(--mha-accent-contrast, #fff));
+  --mha-scenes-icon-border: var(--mha-icon-border, color-mix(in srgb, var(--mha-text-primary) 12%, transparent));
+  --mha-scenes-icon-shadow: var(--mha-icon-shadow, inset 0 1px 0 color-mix(in srgb, var(--mha-text-primary) 18%, transparent));
   --mha-scenes-label-size: clamp(.72rem, min(9cqi, 9cqb), .84rem);
+  --mha-scenes-button-active-bg: var(
+    --mha-control-active-surface,
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--mha-accent) 34%, var(--mha-widget-shell-surface, var(--mha-surface-primary)) 66%),
+      color-mix(in srgb, var(--mha-accent) 18%, var(--mha-widget-shell-surface, var(--mha-surface-primary)) 82%)
+    )
+  );
+  --mha-scenes-button-active-border: var(
+    --mha-control-active-border,
+    color-mix(in srgb, var(--mha-accent) 42%, var(--mha-border-primary, transparent) 58%)
+  );
+  --mha-scenes-button-active-shadow: var(
+    --mha-control-active-shadow,
+    var(--mha-widget-shell-shadow, var(--mha-shadow-primary))
+  );
 }
 
 .mha-widget[data-widget-kind="scenes"] > .mha-scenes-widget {
@@ -49,6 +70,9 @@
 
 .mha-scenes-widget-button:not(:disabled):active {
   transform: scale(.98);
+  background: var(--mha-scenes-button-active-bg);
+  border-color: var(--mha-scenes-button-active-border);
+  box-shadow: var(--mha-scenes-button-active-shadow);
 }
 
 .mha-scenes-widget-button-icon {
@@ -56,17 +80,21 @@
   block-size: var(--mha-scenes-icon-size);
   display: grid;
   place-items: center;
-  border-radius: 999px;
-  background: var(--mha-icon-bg, color-mix(in srgb, var(--mha-accent) 72%, var(--mha-surface-secondary)));
-  color: var(--mha-icon-color, var(--mha-accent-contrast, #fff));
-  border: 1px solid var(--mha-icon-border, color-mix(in srgb, var(--mha-text-primary) 12%, transparent));
-  box-shadow: var(--mha-icon-shadow, inset 0 1px 0 color-mix(in srgb, var(--mha-text-primary) 18%, transparent));
+  place-content: center;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--mha-scenes-icon-radius);
+  overflow: hidden;
+  background: var(--mha-scenes-icon-bg);
+  color: var(--mha-scenes-icon-color);
+  border: 1px solid var(--mha-scenes-icon-border);
+  box-shadow: var(--mha-scenes-icon-shadow);
 }
 
 .mha-scenes-widget-button-glyph,
 .mha-scenes-widget-button-glyph.mha-icon-symbol {
   --mha-icon-symbol-size: var(--mha-scenes-glyph-size);
-  --mha-icon-symbol-color: currentColor;
+  --mha-icon-symbol-color: var(--mha-scenes-icon-color, currentColor);
+  --mha-icon-symbol-opacity: .92;
 }
 
 .mha-scenes-widget-button-label {
@@ -100,14 +128,35 @@
 :host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="scenes"] {
   --mha-scenes-button-surface: rgba(255,255,255,.84);
   --mha-scenes-button-border: rgba(0,0,0,.05);
+  --mha-scenes-button-active-bg: var(
+    --mha-oneui-control-active-surface,
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--mha-accent) 74%, var(--mha-surface-primary) 26%),
+      color-mix(in srgb, var(--mha-accent) 58%, var(--mha-surface-primary) 42%)
+    )
+  );
+  --mha-scenes-button-active-border: var(
+    --mha-oneui-control-active-border,
+    color-mix(in srgb, var(--mha-accent) 72%, var(--mha-border-primary, transparent) 28%)
+  );
+  --mha-scenes-icon-bg: var(--mha-icon-bg, var(--mha-accent));
+  --mha-scenes-icon-color: var(--mha-icon-color, rgba(0,0,0,.88));
+  --mha-scenes-icon-shadow: none;
 }
 
 :host([data-theme-style="ios"]) .mha-widget[data-widget-kind="scenes"] {
   --mha-scenes-button-surface: var(--mha-widget-control-surface, var(--mha-control-surface));
   --mha-scenes-button-border: var(--mha-widget-shell-border, var(--mha-widget-border));
+  --mha-scenes-icon-bg: var(--mha-icon-bg, color-mix(in srgb, var(--mha-accent) 58%, rgba(255,255,255,.22)));
+  --mha-scenes-icon-color: var(--mha-icon-color, rgba(255,255,255,.96));
 }
 
 :host([data-theme-style="material"]) .mha-widget[data-widget-kind="scenes"] {
   --mha-scenes-button-surface: var(--mha-material-surface-container-high);
   --mha-scenes-button-border: transparent;
+  --mha-scenes-icon-bg: var(--mha-surface-secondary);
+  --mha-scenes-icon-color: var(--mha-accent);
+  --mha-scenes-icon-border: var(--mha-border-subtle);
+  --mha-scenes-icon-shadow: none;
 }

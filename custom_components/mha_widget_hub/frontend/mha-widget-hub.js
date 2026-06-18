@@ -581,11 +581,17 @@ requestRender(){this.render()}
 _syncEditModeDom(){
   if(!this._isEditing||this._isMobileLandscapeLayout()){
     const hadWidgetConfig=Boolean(this._widgetConfigSession);
+    const preserveScenesSlotConfig=Boolean(
+      this._widgetConfigSession
+      &&this._widgetConfigSession.configType==="scenes"
+      &&Number.isInteger(this._widgetConfigSession.buttonIndex)
+      &&!this._isMobileLandscapeLayout()
+    );
     this._activeMoveWidgetId="";
     this._pendingWidgetPlacement=null;
     this._widgetManagerOpen=false;
     this._widgetManagerCategory="";
-    this._widgetConfigSession=null;
+    this._widgetConfigSession=preserveScenesSlotConfig?this._widgetConfigSession:null;
     this._pageCreatorOpen=false;
     const grid=this.shadowRoot?.querySelector?.(".mha-grid");
     if(grid)this._renderWidgetDropSlots(grid);
@@ -829,6 +835,10 @@ _createWidgetFromCatalogItem(item){
 _beginWidgetPlacement(item){
   if(!this._isEditing||this._isMobileLandscapeLayout())return;
   const widget=this._createWidgetFromCatalogItem(item);
+  if(widget?.kind==="scenes"){
+    this._startWidgetPlacement(widget);
+    return;
+  }
   if(supportsWidgetConfiguration(widget)){
     this._widgetManagerOpen=false;
     this._widgetManagerCategory="";
@@ -903,10 +913,36 @@ _openWidgetConfig(id){
   if(!this._isEditing||this._isMobileLandscapeLayout())return;
   const widget=this._widgets.find(item=>item.id===id);
   if(!supportsWidgetConfiguration(widget))return;
+  if(widget?.kind==="scenes"){
+    this._openScenesButtonConfig(id);
+    return;
+  }
   this._activeMoveWidgetId="";
   this._widgetConfigSession=createWidgetConfigSession(widget,this._hass,{
     mode:"edit",
     visibilityConfig:this._entityVisibilityConfig,
+  });
+  this._widgetConfigHassReady=Boolean(this._hass);
+  this._syncEditModeDom();
+  this._syncWidgetConfigDom();
+}
+_getScenesDefaultButtonIndex(widget){
+  const buttons=Array.isArray(widget?.buttons)?widget.buttons:[];
+  const firstEmpty=buttons.findIndex(button=>!String(button?.entityId||button?.entity_id||"").trim());
+  return firstEmpty>=0?firstEmpty:0;
+}
+_openScenesButtonConfig(id,buttonIndex){
+  if(this._isMobileLandscapeLayout())return;
+  const widget=this._widgets.find(item=>item.id===id);
+  if(!widget||widget.kind!=="scenes")return;
+  const resolvedButtonIndex=Number.isInteger(buttonIndex)
+    ? buttonIndex
+    : this._getScenesDefaultButtonIndex(widget);
+  this._activeMoveWidgetId="";
+  this._widgetConfigSession=createWidgetConfigSession(widget,this._hass,{
+    mode:"edit",
+    visibilityConfig:this._entityVisibilityConfig,
+    buttonIndex:resolvedButtonIndex,
   });
   this._widgetConfigHassReady=Boolean(this._hass);
   this._syncEditModeDom();
@@ -1441,7 +1477,7 @@ _refreshActiveGridOnly(){
   const {units}=this._getGridBounds();
   const positions=this._getActiveWidgetPositions({create:true});
   this._widgets.forEach(w=>{
-    const el=createWidgetShell(w,{activeGridUnits:units,isEditing:this._isEditing,isMoveTarget:this._isEditing&&this._activeMoveWidgetId===w.id,position:positions?.[w.id],hass:this._hass,entityVisibilityConfig:this._entityVisibilityConfig,onToggleMove:id=>this._toggleWidgetMoveMode(id),onMove:(id,direction)=>this._moveWidgetByDirection(id,direction),onRemove:id=>this._removeWidget(id),onCycleVariant:id=>this.cycleVariant(id),onConfigure:id=>this._openWidgetConfig(id)});
+    const el=createWidgetShell(w,{activeGridUnits:units,isEditing:this._isEditing,isMoveTarget:this._isEditing&&this._activeMoveWidgetId===w.id,position:positions?.[w.id],hass:this._hass,entityVisibilityConfig:this._entityVisibilityConfig,onToggleMove:id=>this._toggleWidgetMoveMode(id),onMove:(id,direction)=>this._moveWidgetByDirection(id,direction),onRemove:id=>this._removeWidget(id),onCycleVariant:id=>this.cycleVariant(id),onConfigure:id=>this._openWidgetConfig(id),onConfigureSlot:(widgetId,slotIndex)=>this._openScenesButtonConfig(widgetId,slotIndex)});
     this._wireDrag(el,w);
     grid.append(el);
   });
@@ -1783,6 +1819,7 @@ _placePendingWidgetAtSlot(x,y){
       onRemove:id=>this._removeWidget(id),
       onCycleVariant:id=>this.cycleVariant(id),
       onConfigure:id=>this._openWidgetConfig(id),
+      onConfigureSlot:(widgetId,slotIndex)=>this._openScenesButtonConfig(widgetId,slotIndex),
     });
 
     this._wireDrag(el,widget);
@@ -1869,6 +1906,7 @@ _replaceWidgetDom(id){
     onRemove:widgetId=>this._removeWidget(widgetId),
     onCycleVariant:widgetId=>this.cycleVariant(widgetId),
     onConfigure:widgetId=>this._openWidgetConfig(widgetId),
+    onConfigureSlot:(widgetId,slotIndex)=>this._openScenesButtonConfig(widgetId,slotIndex),
   });
 
   this._wireDrag(next,widget);
@@ -2100,6 +2138,7 @@ _createWidgetElement(widget,{units,position}){
     onRemove:id=>this._removeWidget(id),
     onCycleVariant:id=>this.cycleVariant(id),
     onConfigure:id=>this._openWidgetConfig(id),
+    onConfigureSlot:(widgetId,slotIndex)=>this._openScenesButtonConfig(widgetId,slotIndex),
   });
   this._wireDrag(el,widget);
   return el;

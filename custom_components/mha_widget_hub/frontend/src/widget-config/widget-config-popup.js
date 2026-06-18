@@ -55,6 +55,7 @@ export function supportsWidgetConfiguration(widget = {}) {
 export function createWidgetConfigSession(widget, hass, {
   mode = "create",
   visibilityConfig,
+  ...sessionMetadata
 } = {}) {
   const configType = getWidgetConfigType(widget);
   const configDefinition = getWidgetConfigDefinition(configType);
@@ -63,6 +64,7 @@ export function createWidgetConfigSession(widget, hass, {
     mode,
     widget,
     configType,
+    ...sessionMetadata,
     draft: configDefinition.createDraft(widget, hass, visibilityConfig).draft,
   };
 }
@@ -485,8 +487,14 @@ function createScenesFields(session, hass, visibilityConfig, onChange) {
   const fields = document.createElement("div");
   fields.className = "mha-widget-config-fields";
   fields.dataset.configType = "scenes";
+  const focusedButtonIndex = Number.isInteger(session?.buttonIndex)
+    ? Math.max(0, Math.min(session.buttonIndex, reconciled.buttons.length - 1))
+    : null;
+  const buttonEntries = focusedButtonIndex === null
+    ? reconciled.buttons.map((entry, index) => [entry, index])
+    : [[reconciled.buttons[focusedButtonIndex], focusedButtonIndex]];
 
-  reconciled.buttons.forEach(({ draft, options, selected }, index) => {
+  buttonEntries.forEach(([{ draft, options, selected }, index]) => {
     const group = document.createElement("section");
     group.className = "mha-widget-config-group";
 
@@ -595,6 +603,7 @@ export function createWidgetConfigPopup({
   const isWeather = session?.configType === "weather";
   const isMedia = session?.configType === "media";
   const isScenes = session?.configType === "scenes";
+  const isScenesButton = isScenes && Number.isInteger(session?.buttonIndex);
   title.textContent = isSlider
     ? "Configurer le slider"
     : isToggle
@@ -606,7 +615,9 @@ export function createWidgetConfigPopup({
           : isMedia
             ? "Configurer le média"
             : isScenes
-              ? "Configurer les modes & routines"
+              ? isScenesButton
+                ? "Configurer le bouton"
+                : "Configurer les modes & routines"
             : "Configurer la lumière";
   header.append(title, createCloseButton({
     label: "Fermer",
@@ -627,7 +638,9 @@ export function createWidgetConfigPopup({
           : isMedia
             ? "Choisis le lecteur média et le nom à afficher."
             : isScenes
-              ? "Configure les 4 raccourcis internes avec des Modes ou des Routines."
+              ? isScenesButton
+                ? "Configure uniquement ce bouton avec un Mode ou une Routine."
+                : "Configure les 4 raccourcis internes avec des Modes ou des Routines."
             : "Choisis la lumière et le contrôle à afficher.";
 
   const content = session

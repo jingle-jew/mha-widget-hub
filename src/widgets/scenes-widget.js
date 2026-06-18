@@ -95,6 +95,8 @@ export function isScenesWidget(widget = {}) {
 export function createScenesWidgetContent(widget = {}, {
   hass,
   interactive = true,
+  isEditing = false,
+  widgetId = "",
 } = {}) {
   const root = document.createElement("div");
   root.className = "mha-scenes-widget";
@@ -110,11 +112,31 @@ export function createScenesWidgetContent(widget = {}, {
   ));
   root.append(...buttonNodes);
 
-  async function activate(index, event) {
+  function openButtonConfig(index, event) {
     event.preventDefault();
     event.stopPropagation();
     const buttonConfig = buttons[index] || {};
     const model = getButtonModel(buttonConfig, hass);
+    if (model.hasEntity && !isEditing) return;
+    root.dispatchEvent(new CustomEvent("mha-configure-widget-slot", {
+      bubbles: true,
+      composed: true,
+      detail: {
+        widgetId,
+        buttonIndex: index,
+      },
+    }));
+  }
+
+  async function activate(index, event) {
+    const buttonConfig = buttons[index] || {};
+    const model = getButtonModel(buttonConfig, hass);
+    if (!model.hasEntity || isEditing) {
+      openButtonConfig(index, event);
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
     if (!interactive || !model.actionable || model.unavailable) return;
     await runSceneRoutineAction(hass, model.entityId);
   }
@@ -133,7 +155,12 @@ export function createScenesWidgetContent(widget = {}, {
       buttonNode.dataset.hasEntity = String(model.hasEntity);
       buttonNode.dataset.unavailable = String(model.unavailable);
       buttonNode.dataset.actionable = String(model.actionable && interactive);
-      buttonNode.disabled = !interactive || !model.actionable || model.unavailable;
+      buttonNode.dataset.configurable = String(Boolean((!model.hasEntity || isEditing) && widgetId));
+      buttonNode.disabled = !interactive || (
+        model.hasEntity
+        && !isEditing
+        && (!model.actionable || model.unavailable)
+      );
       buttonNode.title = model.label;
       buttonNode.setAttribute("aria-label", model.label);
       const icon = buttonNode.querySelector(".mha-scenes-widget-button-icon");
@@ -155,9 +182,11 @@ export function createScenesWidgetContent(widget = {}, {
 }
 
 export const SCENES_WIDGET_CONTENT_RENDERER = Object.freeze({
-  render: ({ widget, hass, interactive }) => createScenesWidgetContent(widget, {
+  render: ({ widget, hass, interactive, isEditing }) => createScenesWidgetContent(widget, {
     hass,
     interactive,
+    isEditing,
+    widgetId: widget?.id || "",
   }),
 });
 
