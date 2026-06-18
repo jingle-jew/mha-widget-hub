@@ -100,6 +100,18 @@ export function calculateSquareGridMetrics({
   };
 }
 
+function hasStableSquareUnit({
+  square,
+  preset,
+  hardMin = 24,
+  mobile = false,
+}) {
+  if (!square || mobile) return Boolean(square);
+  const comfortMin = Number(preset?.minCell) || 0;
+  if (!comfortMin) return true;
+  return square.unit >= Math.max(hardMin, comfortMin * 0.6);
+}
+
 export class GridRuntime {
   constructor({
     host,
@@ -143,6 +155,7 @@ export class GridRuntime {
     this.ResizeObserverClass = ResizeObserverClass;
     this.squareUnitFrame = 0;
     this.gridRuntimeFrame = 0;
+    this.squareUnitRetryCount = 0;
     this.resizeObserver = null;
     this.observedLayoutSize = "";
   }
@@ -281,6 +294,14 @@ export class GridRuntime {
       mobile: this.isMobileLayout(),
     });
     if (!square) return false;
+    if (!hasStableSquareUnit({
+      square,
+      preset,
+      hardMin,
+      mobile: this.isMobileLayout(),
+    })) {
+      return false;
+    }
 
     this.host.dataset.gridDensity = preset.density;
     this.host.dataset.gridUnits = String(bounds.units);
@@ -335,8 +356,11 @@ export class GridRuntime {
       element.style.setProperty("--mha-widget-w", String(effectiveWidth));
     });
     this.applyPositions(positions);
-    this.syncSquareUnit();
-    return runtime;
+    const squareUnitSynced = this.syncSquareUnit();
+    return {
+      ...runtime,
+      squareUnitSynced,
+    };
   }
 
   scheduleSquareUnitSync() {
@@ -361,7 +385,15 @@ export class GridRuntime {
       this.gridRuntimeFrame = this.requestFrame(() => {
         this.gridRuntimeFrame = 0;
         if (!this.host?.isConnected) return;
-        this.syncGridRuntimeMetrics();
+        const runtime = this.syncGridRuntimeMetrics();
+        if (runtime?.squareUnitSynced === false) {
+          if (this.squareUnitRetryCount < 2) {
+            this.squareUnitRetryCount += 1;
+            this.scheduleGridRuntimeSync();
+            return;
+          }
+        }
+        this.squareUnitRetryCount = 0;
       });
     });
   }
@@ -400,6 +432,7 @@ export class GridRuntime {
     this.cancelFrame(this.gridRuntimeFrame);
     this.squareUnitFrame = 0;
     this.gridRuntimeFrame = 0;
+    this.squareUnitRetryCount = 0;
     this.disconnectLayoutResizeObserver();
   }
 }

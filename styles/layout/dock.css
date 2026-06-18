@@ -9,6 +9,7 @@
   --mha-dock-empty-padding-inline: clamp(0.85rem, 1.8vw, 1.45rem);
 
   --mha-icon-size: clamp(2.55rem, 5.8vw, 4.15rem);
+  --mha-dock-icon-min-size: 2.6rem;
   --mha-icon-glyph-size: 82%;
 
   position: absolute;
@@ -49,8 +50,10 @@
   display: inline-grid;
   place-items: center;
   flex: 0 0 auto;
-  inline-size: var(--mha-icon-size);
-  block-size: var(--mha-icon-size);
+  inline-size: max(var(--mha-dock-icon-min-size), var(--mha-icon-size));
+  block-size: max(var(--mha-dock-icon-min-size), var(--mha-icon-size));
+  min-inline-size: var(--mha-dock-icon-min-size);
+  min-block-size: var(--mha-dock-icon-min-size);
   aspect-ratio: 1;
   margin: 0;
   padding: 0;
@@ -58,6 +61,15 @@
   background: transparent;
   color: inherit;
   cursor: pointer;
+}
+
+.mha-dock-item > .mha-icon {
+  inline-size: max(var(--mha-dock-icon-min-size), var(--mha-icon-size));
+  block-size: max(var(--mha-dock-icon-min-size), var(--mha-icon-size));
+  width: max(var(--mha-dock-icon-min-size), var(--mha-icon-size));
+  height: max(var(--mha-dock-icon-min-size), var(--mha-icon-size));
+  min-inline-size: var(--mha-dock-icon-min-size);
+  min-block-size: var(--mha-dock-icon-min-size);
 }
 
 .mha-dock-item:focus-visible {
@@ -116,6 +128,7 @@
     --mha-dock-empty-height: auto;
     --mha-dock-empty-padding-block: var(--mha-grid-gap);
     --mha-dock-empty-padding-inline: min(var(--mha-grid-gap), 5%);
+    --mha-dock-icon-min-size: clamp(2.65rem, 3vw, 3.2rem);
     --mha-icon-size: clamp(
       calc(var(--mha-square-unit) - var(--mha-grid-gap) - var(--mha-grid-gap)),
       calc(var(--mha-square-unit) - var(--mha-grid-gap)),
@@ -222,6 +235,7 @@
     --mha-dock-horizontal-gutter: var(--mha-mobile-grid-gutter, var(--mha-page-padding, clamp(1rem, 2.6vw, 2rem)));
     --mha-dock-gap: clamp(0.25rem, 1vw, 0.45rem);
     --mha-dock-padding: clamp(0.5rem, 1.5vw, 0.75rem);
+    --mha-dock-icon-min-size: clamp(3rem, 13vw, 3.6rem);
 
     --mha-dock-width: calc(100% - (var(--mha-dock-horizontal-gutter) * 2));
     --mha-dock-slot-width: calc(

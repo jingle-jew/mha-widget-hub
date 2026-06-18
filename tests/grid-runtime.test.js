@@ -184,6 +184,63 @@ test("runtime applies the existing grid dataset and CSS contract", () => {
   assert.equal(dropSlotSyncs, 1);
 });
 
+test("runtime ignores unstable early desktop square units", () => {
+  const hostStyle = createStyle({
+    "--mha-square-unit": "72px",
+  });
+  const gridStyle = createStyle({
+    "--mha-square-unit-hard-min": "24",
+    "--mha-square-unit-max": "160",
+  });
+  Object.assign(gridStyle, {
+    columnGap: "10px",
+    rowGap: "10px",
+    paddingLeft: "0px",
+    paddingRight: "0px",
+    paddingTop: "0px",
+    paddingBottom: "0px",
+  });
+  const areaStyle = {
+    paddingLeft: "0px",
+    paddingRight: "0px",
+    paddingTop: "0px",
+    paddingBottom: "0px",
+  };
+  const area = { clientWidth: 240, clientHeight: 110 };
+  const grid = { style: gridStyle };
+  const root = {
+    querySelector(selector) {
+      if (selector === ".mha-widget-area") return area;
+      if (selector === ".mha-grid") return grid;
+      return null;
+    },
+  };
+  const host = {
+    dataset: {},
+    style: hostStyle,
+    shadowRoot: root,
+    isConnected: true,
+    getBoundingClientRect: () => ({ width: 1200, height: 800 }),
+  };
+  const runtime = createGridRuntime({
+    host,
+    getLayoutMode: () => "desktop",
+    getEffectiveLayout: () => "desktop",
+    getGridPreset: () => ({
+      columns: 3,
+      rows: 2,
+      density: "desktop-test",
+      minCell: 88,
+      maxCell: 160,
+    }),
+    getStyle: element => (element === area ? areaStyle : gridStyle),
+  });
+
+  assert.equal(runtime.syncSquareUnit(), false);
+  assert.equal(hostStyle.values.get("--mha-square-unit"), "72px");
+  assert.equal(gridStyle.values.get("--mha-grid-matrix-width"), undefined);
+});
+
 test("runtime owns and cancels scheduled frames", () => {
   const callbacks = new Map();
   const cancelled = [];
