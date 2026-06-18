@@ -19,6 +19,17 @@ function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
+function parseHexColor(value = "") {
+  const normalized = String(value).trim().replace("#", "");
+  if (!/^[\da-f]{6}$/i.test(normalized)) return null;
+  const int = Number.parseInt(normalized, 16);
+  return {
+    r: (int >> 16) & 255,
+    g: (int >> 8) & 255,
+    b: int & 255,
+  };
+}
+
 function rgbToHsl(r, g, b) {
   const rr = r / 255;
   const gg = g / 255;
@@ -164,6 +175,11 @@ function hslToCss({ h, s, l }) {
   return `hsl(${hue} ${saturation}% ${lightness}%)`;
 }
 
+function getContrastColor({ r, g, b }) {
+  const luminance = ((0.2126 * r) + (0.7152 * g) + (0.0722 * b)) / 255;
+  return luminance > 0.6 ? "rgba(0,0,0,.86)" : "#fff";
+}
+
 function resolveDynamicAccent(profile, themeStyle = "oneui") {
   if (!profile) return null;
 
@@ -209,4 +225,19 @@ export async function extractAccentFromWallpaper(dataUrl = "", themeStyle = "one
   context.drawImage(image, 0, 0, canvas.width, canvas.height);
   const colorProfile = getWallpaperColorProfile(context.getImageData(0, 0, canvas.width, canvas.height));
   return resolveDynamicAccent(colorProfile, themeStyle);
+}
+
+export function resolveAccentFromColorValue(value = "") {
+  const rgb = parseHexColor(value);
+  if (!rgb) {
+    return value
+      ? { color: value, contrast: "#fff", source: "theme" }
+      : null;
+  }
+
+  return {
+    color: `rgb(${rgb.r} ${rgb.g} ${rgb.b})`,
+    contrast: getContrastColor(rgb),
+    source: "theme",
+  };
 }

@@ -5,6 +5,7 @@ import {
 } from "../src/settings/wallpaper-controller.js";
 import {
   getThemeWallpaper,
+  getThemeAccentSource,
 } from "../src/settings/theme-registry.js";
 import {
   LEGACY_WALLPAPER_STORAGE_KEY,
@@ -149,6 +150,11 @@ test("custom wallpaper keeps priority over theme wallpaper", () => {
   assert.equal(activeWallpaper.source, "custom");
   assert.equal(activeWallpaper.kind, "image");
   assert.equal(activeWallpaper.value, wallpaper.dataUrl);
+
+  const activeAccentSource = controller.getActiveAccentSource();
+  assert.equal(activeAccentSource.source, "custom");
+  assert.equal(activeAccentSource.kind, "image");
+  assert.equal(activeAccentSource.value, wallpaper.dataUrl);
 });
 
 test("theme wallpaper contract supports advanced theme backgrounds", () => {
@@ -159,5 +165,27 @@ test("theme wallpaper contract supports advanced theme backgrounds", () => {
   assert.deepEqual(getThemeWallpaper("oneui", "dark"), {
     type: "advanced",
     value: "",
+  });
+  assert.deepEqual(getThemeAccentSource("ios", "light"), {
+    type: "color",
+    value: "#7f94ef",
+  });
+  assert.deepEqual(getThemeAccentSource("oneui", "dark"), {
+    type: "color",
+    value: "#65a8ff",
+  });
+});
+
+test("advanced theme wallpapers expose a dedicated accent source", () => {
+  const host = createHost();
+  const controller = createWallpaperController(host, {
+    storage: createStorage(),
+    getThemeState: () => ({ theme: "dark", themeStyle: "material" }),
+  });
+
+  assert.deepEqual(controller.getActiveAccentSource(), {
+    source: "theme",
+    kind: "color",
+    value: "#d0bcff",
   });
 });

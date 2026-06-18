@@ -5,7 +5,8 @@ import {
   resetWallpaper,
   saveWallpaper,
 } from "./wallpaper-storage.js";
-import { getThemeWallpaper } from "./theme-registry.js";
+import { ACCENT_REFERENCE_COLORS, DEFAULT_ACCENT_BY_STYLE } from "./accent-palettes.js";
+import { getThemeAccentSource, getThemeWallpaper } from "./theme-registry.js";
 
 const WALLPAPER_TONE_DARK = "dark";
 const WALLPAPER_TONE_LIGHT = "light";
@@ -35,6 +36,13 @@ function classifyAverageLuminance(imageData) {
   return averageLuminance >= WALLPAPER_TONE_THRESHOLD
     ? WALLPAPER_TONE_LIGHT
     : WALLPAPER_TONE_DARK;
+}
+
+function getDefaultAccentColor(themeStyle = "oneui") {
+  const accentName = DEFAULT_ACCENT_BY_STYLE[themeStyle] || DEFAULT_ACCENT_BY_STYLE.oneui;
+  return ACCENT_REFERENCE_COLORS[themeStyle]?.[accentName]
+    || ACCENT_REFERENCE_COLORS.oneui?.[DEFAULT_ACCENT_BY_STYLE.oneui]
+    || "#4ba3ff";
 }
 
 export async function detectWallpaperTone(dataUrl, {
@@ -162,6 +170,56 @@ export class WallpaperController {
       kind: "none",
       value: "",
       wallpaper: null,
+    };
+  }
+
+  getActiveAccentSource(themeState = this.getThemeState(), wallpapers = this.read(themeState)) {
+    const resolvedThemeState = this.resolveThemeState(themeState);
+    const customWallpaper = wallpapers[resolvedThemeState.theme];
+    if (customWallpaper?.dataUrl) {
+      return {
+        source: "custom",
+        kind: "image",
+        value: customWallpaper.dataUrl,
+      };
+    }
+
+    const themeAccentSource = getThemeAccentSource(
+      resolvedThemeState.themeStyle,
+      resolvedThemeState.theme,
+    );
+    if (themeAccentSource.type === "image" && themeAccentSource.value) {
+      return {
+        source: "theme",
+        kind: "image",
+        value: themeAccentSource.value,
+      };
+    }
+
+    if ((themeAccentSource.type === "color" || themeAccentSource.type === "token") && themeAccentSource.value) {
+      return {
+        source: "theme",
+        kind: "color",
+        value: themeAccentSource.value,
+      };
+    }
+
+    const themeWallpaper = getThemeWallpaper(
+      resolvedThemeState.themeStyle,
+      resolvedThemeState.theme,
+    );
+    if (themeWallpaper.type === "image" && themeWallpaper.value) {
+      return {
+        source: "theme",
+        kind: "image",
+        value: themeWallpaper.value,
+      };
+    }
+
+    return {
+      source: "fallback",
+      kind: "color",
+      value: getDefaultAccentColor(resolvedThemeState.themeStyle),
     };
   }
 

@@ -45,7 +45,7 @@ import {
 import {
   createThemeController,
 } from "./src/settings/theme-controller.js";
-import { extractAccentFromWallpaper } from "./src/settings/wallpaper-accent.js";
+import { extractAccentFromWallpaper, resolveAccentFromColorValue } from "./src/settings/wallpaper-accent.js";
 import { createWallpaperController } from "./src/settings/wallpaper-controller.js";
 import {updateStatusTime} from "./src/layout/status-bar.js";
 import {createWidgetShell} from "./src/widgets/widget-shell.js";
@@ -748,24 +748,31 @@ _resetCustomWallpaper(mode){
 async _syncAutoAccentFromWallpaper(){
   const requestId=++this._autoAccentRequestId;
   const themeState=this._themeController.read();
-  const activeWallpaper=this._wallpaperController.getActiveWallpaper(themeState,this._customWallpapers);
-  const dataUrl=activeWallpaper?.image||"";
+  const accentSource=this._wallpaperController.getActiveAccentSource(themeState,this._customWallpapers);
 
-  if(!dataUrl){
+  if(!accentSource?.value){
     this.style.removeProperty("--mha-accent-auto");
     this.style.removeProperty("--mha-accent-auto-contrast");
-    return;
-  }
-
-  try{
-    const accent=await extractAccentFromWallpaper(dataUrl,themeState.themeStyle);
-    if(requestId!==this._autoAccentRequestId)return;
-    if(accent?.color){
-      this.style.setProperty("--mha-accent-auto",accent.color);
-      this.style.setProperty("--mha-accent-auto-contrast",accent.contrast||"#fff");
+  } else {
+    try{
+      const accent=accentSource.kind==="image"
+        ? await extractAccentFromWallpaper(accentSource.value,themeState.themeStyle)
+        : resolveAccentFromColorValue(accentSource.value);
+      if(requestId!==this._autoAccentRequestId)return;
+      if(accent?.color){
+        this.style.setProperty("--mha-accent-auto",accent.color);
+        this.style.setProperty("--mha-accent-auto-contrast",accent.contrast||"#fff");
+      }else{
+        this.style.removeProperty("--mha-accent-auto");
+        this.style.removeProperty("--mha-accent-auto-contrast");
+      }
+    }catch(error){
+      console.warn(`[MHA] Auto accent could not be extracted for ${themeState.themeStyle}.`,error);
+      if(requestId===this._autoAccentRequestId){
+        this.style.removeProperty("--mha-accent-auto");
+        this.style.removeProperty("--mha-accent-auto-contrast");
+      }
     }
-  }catch(error){
-    console.warn(`[MHA] Auto accent could not be extracted for ${themeState.themeStyle}.`,error);
   }
 
   if(requestId===this._autoAccentRequestId){
