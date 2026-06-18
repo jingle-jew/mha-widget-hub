@@ -1,11 +1,15 @@
 import { createCurrentWeatherIcon } from "./weather-current-icons.js";
 import { createWeatherIcon } from "./weather-icons.js";
-import { buildWeatherModel } from "../ha/weather.js";
+import {
+  buildWeatherModel,
+  fetchWeatherForecastBundle,
+} from "../ha/weather.js";
 import { css, freezeSize, isLocalWidgetKind, variant } from "./widget-definition-utils.js";
 import { WIDGET_PREVIEW_DATA } from "./widget-preview-data.js";
 import { buildWeatherWidgetConfig, createWeatherConfigDraft } from "../widget-config/weather-config.js";
 
 const WEATHER_SIZE_VARIANTS = new Set(["4x1", "2x2", "3x2", "4x2"]);
+const WEATHER_FORECAST_REFRESH_MS = 10 * 60 * 1000;
 
 export function isWeatherWidget(widget = {}) {
   return isLocalWidgetKind(widget, "weather", ["weather-widget"]);
@@ -62,6 +66,11 @@ function createDetails(data) {
 function createForecastStack(forecast = []) {
   const stack = document.createElement("section");
   stack.className = "mha-weather-widget-forecast";
+  if (!forecast.length) {
+    stack.dataset.empty = "true";
+    stack.append(createText("mha-weather-widget-forecast-empty", "Prévisions indisponibles"));
+    return stack;
+  }
   forecast.slice(0, 4).forEach((item) => {
     const row = document.createElement("div");
     row.className = "mha-weather-widget-forecast-row";
@@ -115,15 +124,48 @@ export function createWeatherWidgetContent(widget = {}, {
   entityVisibilityConfig,
 } = {}) {
   const variant = sizeKey({ widgetW, widgetH });
+  const context = {
+    hass,
+    forecastBundle: null,
+    forecastEntityId: "",
+    forecastCheckedAt: 0,
+    forecastRequestId: 0,
+  };
   const root = document.createElement("div");
   root.className = "mha-weather-widget";
   root.dataset.widgetComponent = "weather";
   root.dataset.weatherSize = variant;
 
+  const hydrateForecasts = nextHass => {
+    if (variant !== "4x2") return;
+    const model = buildWeatherModel(nextHass, widget, entityVisibilityConfig, context.forecastBundle);
+    if (!model.entityId || !model.entityAllowed || !model.entityAvailable) return;
+    const now = Date.now();
+    const sameEntity = context.forecastEntityId === model.entityId;
+    if (
+      sameEntity
+      && context.forecastBundle
+      && now - context.forecastCheckedAt < WEATHER_FORECAST_REFRESH_MS
+    ) {
+      return;
+    }
+    context.forecastEntityId = model.entityId;
+    context.forecastCheckedAt = now;
+    const requestId = ++context.forecastRequestId;
+    fetchWeatherForecastBundle(nextHass, model.entityId).then(bundle => {
+      if (requestId !== context.forecastRequestId) return;
+      context.forecastBundle = bundle;
+      renderWeather(root, buildWeatherModel(context.hass, widget, entityVisibilityConfig, bundle), variant);
+    });
+  };
+
   root.__mhaUpdateFromHass = nextHass => {
-    renderWeather(root, buildWeatherModel(nextHass, widget, entityVisibilityConfig), variant);
+    context.hass = nextHass;
+    renderWeather(root, buildWeatherModel(nextHass, widget, entityVisibilityConfig, context.forecastBundle), variant);
+    hydrateForecasts(nextHass);
   };
   root.__mhaDestroy = () => {
+    context.forecastRequestId += 1;
     delete root.__mhaUpdateFromHass;
   };
   root.__mhaUpdateFromHass(hass);

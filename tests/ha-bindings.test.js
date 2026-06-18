@@ -25,7 +25,11 @@ import {
   resolveHomeAssistantMediaUrl,
 } from "../src/ha/media.js";
 import { resolveAuthorizedEntity } from "../src/ha/entity-access.js";
-import { buildWeatherModel } from "../src/ha/weather.js";
+import {
+  buildWeatherModel,
+  clearWeatherForecastCache,
+  fetchWeatherForecastBundle,
+} from "../src/ha/weather.js";
 import { getClockWeatherText } from "../src/widgets/clock-widget.js";
 import {
   buildButtonWidgetConfig,
@@ -314,6 +318,82 @@ test("weather model reads HA attributes and exposes a clean unavailable fallback
   assert.equal(unavailable.temperature, "");
   assert.equal(unavailable.forecast.length, 0);
   assert.equal(getClockWeatherText(unavailable), "");
+});
+
+test("weather forecasts prefer service data and fall back to hourly or legacy attributes", async () => {
+  clearWeatherForecastCache();
+  const calls = [];
+  const hass = {
+    states: {
+      "weather.home": entity("weather.home", "partlycloudy", {
+        temperature: 21,
+        temperature_unit: "°C",
+        forecast: [{
+          datetime: "2026-06-20T12:00:00Z",
+          condition: "cloudy",
+          temperature: 18,
+          templow: 11,
+        }],
+      }),
+    },
+    async callWS(payload) {
+      calls.push(payload);
+      if (payload.service_data.type === "daily") {
+        return {
+          response: {
+            "weather.home": {
+              forecast: [{
+                datetime: "2026-06-18T12:00:00Z",
+                condition: "rainy",
+                temperature: 19,
+                templow: 12,
+              }],
+            },
+          },
+        };
+      }
+      return {
+        response: {
+          "weather.home": {
+            forecast: [{
+              datetime: "2026-06-17T14:00:00Z",
+              condition: "sunny",
+              temperature: 23,
+            }],
+          },
+        },
+      };
+    },
+  };
+
+  const bundle = await fetchWeatherForecastBundle(hass, "weather.home");
+  const model = buildWeatherModel(hass, { entityId: "weather.home" }, null, bundle);
+
+  assert.equal(calls.length, 2);
+  assert.deepEqual(calls.map(call => call.service_data.type).sort(), ["daily", "hourly"]);
+  assert.equal(calls[0].type, "call_service");
+  assert.equal(calls[0].domain, "weather");
+  assert.equal(calls[0].service, "get_forecasts");
+  assert.deepEqual(calls[0].target, { entity_id: "weather.home" });
+  assert.equal(calls[0].return_response, true);
+  assert.equal(model.forecastType, "daily");
+  assert.equal(model.forecast[0].condition, "rainy");
+  assert.equal(model.forecast[0].temp, "19°C / 12°C");
+
+  const hourlyModel = buildWeatherModel(hass, { entityId: "weather.home" }, null, {
+    daily: [],
+    hourly: bundle.hourly,
+  });
+  assert.equal(hourlyModel.forecastType, "hourly");
+  assert.equal(hourlyModel.forecast[0].condition, "sunny");
+  assert.equal(hourlyModel.forecast[0].temp, "23°C");
+
+  const legacyModel = buildWeatherModel(hass, { entityId: "weather.home" });
+  assert.equal(legacyModel.forecastType, "legacy");
+  assert.equal(legacyModel.forecast[0].condition, "cloudy");
+
+  await fetchWeatherForecastBundle(hass, "weather.home");
+  assert.equal(calls.length, 2);
 });
 
 test("button and weather configuration only persist authorized selections", () => {

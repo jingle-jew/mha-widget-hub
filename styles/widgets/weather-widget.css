@@ -269,6 +269,19 @@
   backdrop-filter: blur(18px) saturate(150%);
 }
 
+.mha-weather-widget-forecast-empty {
+  padding: clamp(.46rem, 1.8cqb, .62rem) clamp(.56rem, 2.4cqi, .78rem);
+  border: 1px solid var(--mha-weather-chip-border);
+  border-radius: 999px;
+  background: var(--mha-weather-chip-bg);
+  color: var(--mha-weather-muted);
+  font-size: var(--mha-type-widget-chip-size, var(--mha-font-size-xs, .76rem));
+  font-weight: var(--mha-typography-weight, 720);
+  line-height: 1;
+  text-align: center;
+  backdrop-filter: blur(18px) saturate(150%);
+}
+
 .mha-weather-widget-forecast-day,
 .mha-weather-widget-forecast-temp {
   min-inline-size: 0;
