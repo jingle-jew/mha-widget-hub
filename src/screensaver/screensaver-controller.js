@@ -4,6 +4,11 @@ import {
   writeStorageValue,
 } from "../core/storage.js";
 import { STORAGE_KEYS } from "../core/storage-keys.js";
+import {
+  createDefaultNowBarConfig,
+  mergeNowBarConfig,
+  normalizeNowBarConfig,
+} from "./nowbar-data.js";
 
 export const DEFAULT_NOW_BAR_ITEMS = Object.freeze({
   media: true,
@@ -50,6 +55,7 @@ export class ScreensaverController {
       active: false,
       nowBar: true,
       nowBarItems: normalizeNowBarItems(),
+      nowBarConfig: createDefaultNowBarConfig(),
       clockVariant: "digital",
       enabled: true,
       delay: 30000,
@@ -66,6 +72,16 @@ export class ScreensaverController {
         storedNowBarItems = null;
       }
     }
+    let storedNowBarConfig = null;
+    const rawNowBarConfig = this.storage.getItem(STORAGE_KEYS.screensaverNowBarConfig);
+    if (rawNowBarConfig !== null) {
+      try {
+        storedNowBarConfig = JSON.parse(rawNowBarConfig);
+      } catch {
+        storedNowBarConfig = null;
+      }
+    }
+    const nowBarItems = normalizeNowBarItems(storedNowBarItems);
 
     this.state = {
       ...this.state,
@@ -74,7 +90,8 @@ export class ScreensaverController {
         true,
         this.storage,
       ),
-      nowBarItems: normalizeNowBarItems(storedNowBarItems),
+      nowBarItems,
+      nowBarConfig: mergeNowBarConfig(storedNowBarConfig || createDefaultNowBarConfig(), nowBarItems),
       clockVariant: this.storage.getItem(STORAGE_KEYS.screensaverClockVariant)
         || this.storage.getItem(STORAGE_KEYS.legacyScreensaverClockVariant)
         || "digital",
@@ -97,6 +114,7 @@ export class ScreensaverController {
     return {
       ...this.state,
       nowBarItems: { ...this.state.nowBarItems },
+      nowBarConfig: normalizeNowBarConfig(this.state.nowBarConfig),
     };
   }
 
@@ -197,7 +215,66 @@ export class ScreensaverController {
       STORAGE_KEYS.screensaverNowBarItems,
       JSON.stringify(this.state.nowBarItems),
       this.storage,
+    ) && this.setNowBarConfig({
+      ...this.state.nowBarConfig,
+      tiles: {
+        ...this.state.nowBarConfig.tiles,
+        [item]: Boolean(enabled),
+      },
+    });
+  }
+
+  setNowBarConfig(config = {}) {
+    this.state.nowBarConfig = normalizeNowBarConfig(config);
+    this.state.nowBarItems = normalizeNowBarItems(this.state.nowBarConfig.tiles);
+    return writeStorageValue(
+      STORAGE_KEYS.screensaverNowBarConfig,
+      JSON.stringify(this.state.nowBarConfig),
+      this.storage,
     );
+  }
+
+  setNowBarTileEnabled(tile, enabled = true) {
+    if (!Object.hasOwn(DEFAULT_NOW_BAR_ITEMS, tile)) return false;
+    return this.setNowBarConfig({
+      ...this.state.nowBarConfig,
+      tiles: {
+        ...this.state.nowBarConfig.tiles,
+        [tile]: Boolean(enabled),
+      },
+    }) && writeStorageValue(
+      STORAGE_KEYS.screensaverNowBarItems,
+      JSON.stringify(this.state.nowBarItems),
+      this.storage,
+    );
+  }
+
+  setNowBarEntitySelection(section, entityId, selected = true) {
+    if (!["calendar", "media", "weather"].includes(section) || !entityId) return false;
+    const current = new Set(this.state.nowBarConfig.entities?.[section] || []);
+    if (selected) current.add(entityId);
+    else current.delete(entityId);
+    return this.setNowBarConfig({
+      ...this.state.nowBarConfig,
+      entities: {
+        ...this.state.nowBarConfig.entities,
+        [section]: [...current],
+      },
+    });
+  }
+
+  setNowBarNowItem(item, selected = true) {
+    if (!item) return false;
+    const current = new Set(this.state.nowBarConfig.now?.items || []);
+    if (selected) current.add(item);
+    else current.delete(item);
+    return this.setNowBarConfig({
+      ...this.state.nowBarConfig,
+      now: {
+        ...this.state.nowBarConfig.now,
+        items: [...current],
+      },
+    });
   }
 
   setClockVariantState(variant = "digital") {

@@ -164,7 +164,7 @@ function createClock(variant = "digital") {
   return region;
 }
 
-const NOWBAR_ITEMS = Object.freeze([
+export const NOWBAR_FALLBACK_ITEMS = Object.freeze([
   {
     key: "now",
     title: "Now bar",
@@ -229,20 +229,42 @@ function createNowBarTile(item, index) {
   return tile;
 }
 
-function createNowBar({ items: enabledItems = {} } = {}) {
-  const visibleItems = NOWBAR_ITEMS.filter(item => enabledItems[item.key] !== false);
+function normalizeNowBarTile(item = {}) {
+  const fallback = NOWBAR_FALLBACK_ITEMS.find(entry => entry.key === item.key) || NOWBAR_FALLBACK_ITEMS[0];
+  return {
+    key: item.key || fallback.key,
+    title: item.title || t(fallback.titleKey, fallback.title),
+    subtitle: item.subtitle || t(fallback.subtitleKey, fallback.subtitle),
+  };
+}
+
+function getNowBarFallbackTiles(enabledItems = {}) {
+  return NOWBAR_FALLBACK_ITEMS
+    .filter(item => enabledItems[item.key] !== false)
+    .map(normalizeNowBarTile);
+}
+
+function getNowBarSignature(items = []) {
+  return items
+    .map(item => `${item.key}:${item.title}:${item.subtitle}`)
+    .join("|");
+}
+
+function createNowBar({ items: enabledItems = {}, tiles = null } = {}) {
+  const visibleItems = (Array.isArray(tiles) ? tiles : getNowBarFallbackTiles(enabledItems))
+    .map(normalizeNowBarTile);
   if (!visibleItems.length) return null;
 
   const now = document.createElement("section");
   now.className = "mha-screensaver-nowbar";
-  now.dataset.nowbarSignature = visibleItems.map(item => item.key).join("|");
+  now.dataset.nowbarSignature = getNowBarSignature(visibleItems);
   now.setAttribute("aria-label", t("settings.nowBar", "Now Bar"));
 
   const stack = document.createElement("div");
   stack.className = "mha-screensaver-nowbar-stack";
   stack.setAttribute("role", "list");
 
-  const tiles = visibleItems.map((item, index) => {
+  const tileNodes = visibleItems.map((item, index) => {
     const tile = createNowBarTile(item, index);
     tile.setAttribute("role", "listitem");
     stack.append(tile);
@@ -262,11 +284,11 @@ function createNowBar({ items: enabledItems = {} } = {}) {
   let suppressClickTimer = 0;
 
   const getRelativePosition = (index) => (
-    (index - activeIndex + tiles.length) % tiles.length
+    (index - activeIndex + tileNodes.length) % tileNodes.length
   );
 
   const getCardHeight = () => (
-    tiles[0]?.getBoundingClientRect?.().height || 88
+    tileNodes[0]?.getBoundingClientRect?.().height || 88
   );
 
   const setTileTransform = (tile, position) => {
@@ -381,7 +403,7 @@ function createNowBar({ items: enabledItems = {} } = {}) {
   };
 
   const renderStack = (progress = 0, direction = 1) => {
-    tiles.forEach((tile, index) => {
+    tileNodes.forEach((tile, index) => {
       const relativePosition = Math.min(
         getRelativePosition(index),
         NOWBAR_STACK_POSITIONS.length - 1,
@@ -421,7 +443,7 @@ function createNowBar({ items: enabledItems = {} } = {}) {
 
       // The visual cycle finishes before the logical index rotates, so tiles
       // never disappear or get replaced mid-motion.
-      activeIndex = (activeIndex + direction + tiles.length) % tiles.length;
+      activeIndex = (activeIndex + direction + tileNodes.length) % tileNodes.length;
       isSnapping = false;
       snapFrame = 0;
       now.classList.remove("is-nowbar-snapping");
@@ -577,6 +599,7 @@ export function createScreensaver({
   isVisible = false,
   showNowBar = true,
   nowBarItems = {},
+  nowBarTiles = null,
   clockVariant = "digital",
   onOpenScreensaverSettings,
   onWake,
@@ -631,7 +654,7 @@ export function createScreensaver({
   root.append(spacer);
 
   if (showNowBar) {
-    const nowBar = createNowBar({ items: nowBarItems });
+    const nowBar = createNowBar({ items: nowBarItems, tiles: nowBarTiles });
     if (nowBar) root.append(nowBar);
   }
 
@@ -663,7 +686,7 @@ export function updateScreensaverClockVariant(root, variant = "digital") {
   return true;
 }
 
-export function updateScreensaverNowBar(root, { showNowBar = true, nowBarItems = {} } = {}) {
+export function updateScreensaverNowBar(root, { showNowBar = true, nowBarItems = {}, nowBarTiles = null } = {}) {
   if (!root) return false;
 
   const existing = root.querySelector?.(".mha-screensaver-nowbar");
@@ -675,7 +698,7 @@ export function updateScreensaverNowBar(root, { showNowBar = true, nowBarItems =
     return true;
   }
 
-  const next = createNowBar({ items: nowBarItems });
+  const next = createNowBar({ items: nowBarItems, tiles: nowBarTiles });
   if (!next) {
     if (!existing) return false;
     existing.remove();

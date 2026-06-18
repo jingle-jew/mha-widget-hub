@@ -123,6 +123,7 @@ test("storage keys keep the existing browser persistence contract", () => {
     screensaverDelay: "mha-screensaver-delay",
     screensaverNowBar: "mha-screensaver-nowbar",
     screensaverNowBarItems: "mha-screensaver-nowbar-items",
+    screensaverNowBarConfig: "mha-screensaver-nowbar-config",
     screensaverClockVariant: "mha-screensaver-clock-variant",
     legacyScreensaverClockVariant: "mha-screensaver-clock",
   });

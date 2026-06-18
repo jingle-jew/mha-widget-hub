@@ -5,6 +5,7 @@ import {
   createScreensaverController,
 } from "../src/screensaver/screensaver-controller.js";
 import { STORAGE_KEYS } from "../src/core/storage-keys.js";
+import { createDefaultNowBarConfig } from "../src/screensaver/nowbar-data.js";
 
 function createStorage(initial = {}) {
   const values = new Map(Object.entries(initial));
@@ -56,6 +57,7 @@ test("screensaver controller loads the existing storage contract", () => {
     active: false,
     nowBar: false,
     nowBarItems: DEFAULT_NOW_BAR_ITEMS,
+    nowBarConfig: createDefaultNowBarConfig(),
     clockVariant: "analog",
     enabled: false,
     delay: 120000,
@@ -189,11 +191,29 @@ test("preview-only state changes do not persist settings", () => {
     active: false,
     nowBar: false,
     nowBarItems: DEFAULT_NOW_BAR_ITEMS,
+    nowBarConfig: createDefaultNowBarConfig(),
     clockVariant: "analog",
     enabled: true,
     delay: 30000,
   });
   assert.equal(storage.values.size, 0);
+});
+
+test("now bar detailed settings persist selected entities and internal items", () => {
+  const storage = createStorage();
+  const controller = createScreensaverController({ storage });
+  controller.load();
+
+  assert.equal(controller.setNowBarTileEnabled("calendar", false), true);
+  assert.equal(controller.setNowBarEntitySelection("media", "media_player.salon", true), true);
+  assert.equal(controller.setNowBarEntitySelection("weather", "weather.home", true), true);
+  assert.equal(controller.setNowBarNowItem("lightsOn", false), true);
+
+  const config = JSON.parse(storage.getItem(STORAGE_KEYS.screensaverNowBarConfig));
+  assert.equal(config.tiles.calendar, false);
+  assert.deepEqual(config.entities.media, ["media_player.salon"]);
+  assert.deepEqual(config.entities.weather, ["weather.home"]);
+  assert.deepEqual(config.now.items, []);
 });
 
 test("now bar item settings fall back for old and partial configs", () => {

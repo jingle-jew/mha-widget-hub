@@ -15,6 +15,7 @@ export const STORAGE_KEYS = Object.freeze({
   screensaverDelay: "mha-screensaver-delay",
   screensaverNowBar: "mha-screensaver-nowbar",
   screensaverNowBarItems: "mha-screensaver-nowbar-items",
+  screensaverNowBarConfig: "mha-screensaver-nowbar-config",
   screensaverClockVariant: "mha-screensaver-clock-variant",
   legacyScreensaverClockVariant: "mha-screensaver-clock",
 });

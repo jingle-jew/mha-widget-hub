@@ -5,6 +5,11 @@ import { createIconSymbol } from "../ui/icon-symbol.js";
 import { createBackButton, createCloseButton, createMoveUpButton, createMoveDownButton, createRemoveButton } from "../system/system-buttons.js";
 import { validateWallpaperFile } from "./wallpaper-storage.js";
 import { getThemeStyleOptions } from "./theme-registry.js";
+import {
+  NOW_BAR_NOW_ITEMS,
+  getNowBarEntityOptions,
+  normalizeNowBarConfig,
+} from "../screensaver/nowbar-data.js";
 import { t } from "../i18n/index.js";
 /*
  * MHA Settings panel.
@@ -60,6 +65,11 @@ const NOW_BAR_ITEM_OPTIONS = [
   { value: "weather", label: "Weather", labelKey: "settings.nowBarItems.weather" },
   { value: "calendar", label: "Calendar", labelKey: "settings.nowBarItems.calendar" },
   { value: "now", label: "Now", labelKey: "settings.nowBarItems.now" },
+];
+
+const NOW_BAR_NOW_ITEM_OPTIONS = [
+  { value: "lightsOn", label: "Lights on", labelKey: "settings.nowBarNowItems.lightsOn" },
+  { value: "rooms", label: "Room states", labelKey: "settings.nowBarNowItems.rooms" },
 ];
 
 const COMPACT_ACCENT_FAMILIES = [
@@ -335,6 +345,29 @@ function createCheckbox({ label, checked = false, onChange }) {
   return field;
 }
 
+function createChecklist({ options = [], selected = [], emptyLabel = "", onChange } = {}) {
+  const list = document.createElement("div");
+  list.className = "mha-settings-checklist";
+  const selectedSet = new Set(selected);
+
+  if (!options.length) {
+    const empty = document.createElement("p");
+    empty.className = "mha-settings-description";
+    empty.textContent = emptyLabel;
+    list.append(empty);
+    return list;
+  }
+
+  options.forEach(option => {
+    list.append(createCheckbox({
+      label: optionLabel(option),
+      checked: selectedSet.has(option.value),
+      onChange: checked => onChange?.(option.value, checked),
+    }));
+  });
+  return list;
+}
+
 
 function getAccentFamily(value = "") {
   return ACCENT_FAMILY_ALIASES[value] || "neutral";
@@ -598,6 +631,101 @@ function createNowBarControls({ enabled = true, items = {}, onEnabledChange, onI
   ];
 }
 
+function mapEntityOptions(options = []) {
+  return options.map(item => ({
+    value: item.entity_id,
+    label: item.name || item.entity_id,
+  }));
+}
+
+function createNowBarSectionControls({
+  section,
+  title,
+  enabled = true,
+  children = [],
+  onTileEnabledChange,
+} = {}) {
+  return createSection(title, [
+    createSwitch({
+      label: t("settings.nowBarTileEnabled", "Show this Now Bar tile"),
+      checked: enabled,
+      onChange: checked => onTileEnabledChange?.(section, checked),
+    }),
+    ...children,
+  ]);
+}
+
+function createNowBarAdvancedSections({
+  hass,
+  visibilityConfig,
+  config = {},
+  onTileEnabledChange,
+  onEntitySelectionChange,
+  onNowItemChange,
+} = {}) {
+  const normalized = normalizeNowBarConfig(config);
+  const entityOptions = getNowBarEntityOptions(hass, visibilityConfig);
+
+  return [
+    createNowBarSectionControls({
+      section: "calendar",
+      title: t("settings.nowBarItems.calendar", "Calendar"),
+      enabled: normalized.tiles.calendar,
+      onTileEnabledChange,
+      children: [
+        createChecklist({
+          options: mapEntityOptions(entityOptions.calendar),
+          selected: normalized.entities.calendar,
+          emptyLabel: t("settings.nowBarData.noCalendarEntities", "No authorized calendar entities available."),
+          onChange: (entityId, checked) => onEntitySelectionChange?.("calendar", entityId, checked),
+        }),
+      ],
+    }),
+    createNowBarSectionControls({
+      section: "media",
+      title: t("settings.nowBarItems.media", "Media"),
+      enabled: normalized.tiles.media,
+      onTileEnabledChange,
+      children: [
+        createChecklist({
+          options: mapEntityOptions(entityOptions.media),
+          selected: normalized.entities.media,
+          emptyLabel: t("settings.nowBarData.noMediaEntities", "No authorized media players available."),
+          onChange: (entityId, checked) => onEntitySelectionChange?.("media", entityId, checked),
+        }),
+      ],
+    }),
+    createNowBarSectionControls({
+      section: "weather",
+      title: t("settings.nowBarItems.weather", "Weather"),
+      enabled: normalized.tiles.weather,
+      onTileEnabledChange,
+      children: [
+        createChecklist({
+          options: mapEntityOptions(entityOptions.weather),
+          selected: normalized.entities.weather,
+          emptyLabel: t("settings.nowBarData.noWeatherEntities", "No authorized weather entities available."),
+          onChange: (entityId, checked) => onEntitySelectionChange?.("weather", entityId, checked),
+        }),
+      ],
+    }),
+    createNowBarSectionControls({
+      section: "now",
+      title: t("settings.nowBarItems.now", "Now"),
+      enabled: normalized.tiles.now,
+      onTileEnabledChange,
+      children: [
+        createChecklist({
+          options: NOW_BAR_NOW_ITEM_OPTIONS.filter(item => NOW_BAR_NOW_ITEMS.includes(item.value)),
+          selected: normalized.now.items,
+          emptyLabel: t("settings.nowBarData.noNowItemsAvailable", "No Now items available."),
+          onChange: (item, checked) => onNowItemChange?.(item, checked),
+        }),
+      ],
+    }),
+  ];
+}
+
 function createScreensaverControls({
   enabled = false,
   delay = 30000,
@@ -724,7 +852,10 @@ export function createSettingsPanel({
   screensaverPreview = false,
   screensaverNowBar = true,
   screensaverNowBarItems = {},
+  screensaverNowBarConfig = {},
   screensaverClockVariant = "digital",
+  hass,
+  entityVisibilityConfig,
   settingsPage = "main",
   dockPages = [],
   activeDockPageId = "",
@@ -746,6 +877,9 @@ export function createSettingsPanel({
   onScreensaverPreviewChange,
   onScreensaverNowBarChange,
   onScreensaverNowBarItemChange,
+  onScreensaverNowBarTileEnabledChange,
+  onScreensaverNowBarEntitySelectionChange,
+  onScreensaverNowBarNowItemChange,
   onScreensaverClockVariantChange,
   onResetGrid,
   onOpenWallpaperSettings,
@@ -925,6 +1059,14 @@ export function createSettingsPanel({
       onEnabledChange: onScreensaverNowBarChange,
       onItemChange: onScreensaverNowBarItemChange,
     })));
+    sections.push(...createNowBarAdvancedSections({
+      hass,
+      visibilityConfig: entityVisibilityConfig,
+      config: screensaverNowBarConfig,
+      onTileEnabledChange: onScreensaverNowBarTileEnabledChange,
+      onEntitySelectionChange: onScreensaverNowBarEntitySelectionChange,
+      onNowItemChange: onScreensaverNowBarNowItemChange,
+    }));
     body.append(...sections);
     sheet.append(header, body);
     root.append(scrim, sheet);
@@ -1026,6 +1168,14 @@ export function createSettingsPanel({
       onEnabledChange: onScreensaverNowBarChange,
       onItemChange: onScreensaverNowBarItemChange,
     })));
+    sections.push(...createNowBarAdvancedSections({
+      hass,
+      visibilityConfig: entityVisibilityConfig,
+      config: screensaverNowBarConfig,
+      onTileEnabledChange: onScreensaverNowBarTileEnabledChange,
+      onEntitySelectionChange: onScreensaverNowBarEntitySelectionChange,
+      onNowItemChange: onScreensaverNowBarNowItemChange,
+    }));
   }
 
   if (isScreensaverScope) {

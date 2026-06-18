@@ -82,6 +82,11 @@ import { createPlacementController } from "./src/layout/placement-controller.js"
 import { createGridRuntime } from "./src/layout/grid-runtime.js";
 import {createScreensaver,normalizeClockVariant,updateScreensaverClock,updateScreensaverClockVariant,updateScreensaverNowBar,updateScreensaverState} from "./src/screensaver/screensaver.js";
 import { createScreensaverController } from "./src/screensaver/screensaver-controller.js";
+import {
+  buildNowBarTiles,
+  fetchNowBarCalendarEvents,
+  normalizeNowBarConfig,
+} from "./src/screensaver/nowbar-data.js";
 import { createIcon } from "./src/ui/icon.js";
 import { createIconSymbol } from "./src/ui/icon-symbol.js";
 import { createCloseButton } from "./src/system/system-buttons.js";
@@ -267,6 +272,10 @@ constructor(){
   this._accentPaletteExpanded=false;
   this._dockSettingsPageId="";
   this._screensaverSettingsOpen=false;
+  this._nowBarCalendarEvents={};
+  this._nowBarCalendarRequestId=0;
+  this._nowBarCalendarSignature="";
+  this._nowBarCalendarFetchedAt=0;
   this._lastResponsiveSignature="";
   this._responsiveRelayoutTimer=null;
   this._widgetManagerOpen=false;
@@ -386,6 +395,8 @@ async _loadEntityVisibilityConfig(hass){
     if(this._entityVisibilityUserId!==userId)return;
     this._entityVisibilityConfig=config;
     if(this._widgetConfigSession)this._syncWidgetConfigDom();
+    this._syncSettingsDom();
+    this._syncScreensaverSettingsDom();
     if(this.isConnected)this._refreshActiveGridOnly();
   }catch(error){
     console.warn("[MHA] Entity visibility configuration could not be loaded.",error);
@@ -458,6 +469,8 @@ updateFromHass(){
   this.shadowRoot?.querySelectorAll?.("[data-widget-component]")?.forEach(component=>{
     component.__mhaUpdateFromHass?.(this._hass);
   });
+  this._requestNowBarCalendarEvents();
+  this._syncScreensaverDom();
 }
 _finishBoot({fallback=false,reason=""}={}){
   if(this._bootComplete)return;
@@ -731,7 +744,10 @@ _getSettingsPanelProps(scope="all"){
     screensaverPreview:screensaverState.preview,
     screensaverNowBar:screensaverState.nowBar,
     screensaverNowBarItems:screensaverState.nowBarItems,
+    screensaverNowBarConfig:screensaverState.nowBarConfig,
     screensaverClockVariant:screensaverState.clockVariant,
+    hass:this._hass,
+    entityVisibilityConfig:this._entityVisibilityConfig,
     settingsPage:this._settingsPage,
     dockPages:this._pages,
     activeDockPageId:this._activePageId,
@@ -753,6 +769,9 @@ _getSettingsPanelProps(scope="all"){
     onScreensaverPreviewChange:v=>this._applyScreensaverPreviewFromSettings(v),
     onScreensaverNowBarChange:v=>this._applyScreensaverNowBarFromSettings(v),
     onScreensaverNowBarItemChange:(item,enabled)=>this._applyScreensaverNowBarItemFromSettings(item,enabled),
+    onScreensaverNowBarTileEnabledChange:(tile,enabled)=>this._applyScreensaverNowBarTileEnabledFromSettings(tile,enabled),
+    onScreensaverNowBarEntitySelectionChange:(section,entityId,selected)=>this._applyScreensaverNowBarEntitySelectionFromSettings(section,entityId,selected),
+    onScreensaverNowBarNowItemChange:(item,selected)=>this._applyScreensaverNowBarNowItemFromSettings(item,selected),
     onScreensaverClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),
     onResetGrid:()=>this.resetGrid(),
     onOpenWallpaperSettings:()=>this._openWallpaperSettings(),
@@ -1302,6 +1321,27 @@ _applyScreensaverNowBarFromSettings(enabled=true){
 }
 _applyScreensaverNowBarItemFromSettings(item="",enabled=true){
   this._recordPersistenceResult(this._screensaverController.setNowBarItem(item,enabled));
+  this._requestNowBarCalendarEvents();
+  this._syncScreensaverDom();
+  this._syncSettingsDom();
+  this._syncScreensaverSettingsDom();
+}
+_applyScreensaverNowBarTileEnabledFromSettings(tile="",enabled=true){
+  this._recordPersistenceResult(this._screensaverController.setNowBarTileEnabled(tile,enabled));
+  this._requestNowBarCalendarEvents();
+  this._syncScreensaverDom();
+  this._syncSettingsDom();
+  this._syncScreensaverSettingsDom();
+}
+_applyScreensaverNowBarEntitySelectionFromSettings(section="",entityId="",selected=true){
+  this._recordPersistenceResult(this._screensaverController.setNowBarEntitySelection(section,entityId,selected));
+  this._requestNowBarCalendarEvents({force:section==="calendar"});
+  this._syncScreensaverDom();
+  this._syncSettingsDom();
+  this._syncScreensaverSettingsDom();
+}
+_applyScreensaverNowBarNowItemFromSettings(item="",selected=true){
+  this._recordPersistenceResult(this._screensaverController.setNowBarNowItem(item,selected));
   this._syncScreensaverDom();
   this._syncSettingsDom();
   this._syncScreensaverSettingsDom();
@@ -1317,11 +1357,46 @@ _syncScreensaverVisibilityState(){
   this.classList.toggle("is-screensaver-visible",visible);
   this.dataset.screensaverVisible=String(visible);
 }
+_getNowBarConfig(){
+  return normalizeNowBarConfig(this._screensaverController.read().nowBarConfig);
+}
+_getNowBarTiles(){
+  return buildNowBarTiles({
+    hass:this._hass,
+    config:this._getNowBarConfig(),
+    calendarEvents:this._nowBarCalendarEvents,
+  });
+}
+_getNowBarCalendarSignature(config=this._getNowBarConfig()){
+  return normalizeNowBarConfig(config).entities.calendar.join("|");
+}
+_requestNowBarCalendarEvents({force=false}={}){
+  const config=this._getNowBarConfig();
+  const signature=this._getNowBarCalendarSignature(config);
+  if(!this._hass||!config.tiles.calendar||!signature){
+    this._nowBarCalendarEvents={};
+    this._nowBarCalendarSignature=signature;
+    this._nowBarCalendarFetchedAt=0;
+    return;
+  }
+  const timestamp=Date.now();
+  const recentlyFetched=timestamp-this._nowBarCalendarFetchedAt<60000;
+  if(!force&&signature===this._nowBarCalendarSignature&&recentlyFetched)return;
+  this._nowBarCalendarSignature=signature;
+  this._nowBarCalendarFetchedAt=timestamp;
+  const requestId=++this._nowBarCalendarRequestId;
+  fetchNowBarCalendarEvents(this._hass,config).then(events=>{
+    if(requestId!==this._nowBarCalendarRequestId)return;
+    this._nowBarCalendarEvents=events;
+    this._syncScreensaverDom();
+  });
+}
 _createScreensaverElement(screensaverState=this._screensaverController.read()){
   return createScreensaver({
     isVisible:this._getScreensaverVisible(),
     showNowBar:screensaverState.nowBar,
     nowBarItems:screensaverState.nowBarItems,
+    nowBarTiles:this._getNowBarTiles(),
     clockVariant:screensaverState.clockVariant,
     onClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),
     onOpenScreensaverSettings:()=>this._openScreensaverSettings(),
@@ -1345,6 +1420,7 @@ _syncScreensaverDom({force=false}={}){
   updateScreensaverNowBar(existing,{
     showNowBar:screensaverState.nowBar,
     nowBarItems:screensaverState.nowBarItems,
+    nowBarTiles:this._getNowBarTiles(),
   });
 }
 toggleEditMode(){
