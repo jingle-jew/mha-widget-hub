@@ -47,6 +47,13 @@ const SCREENSAVER_DELAY_OPTIONS = [
   { value: "300000", label: "5 minutes" },
 ];
 
+const NOW_BAR_ITEM_OPTIONS = [
+  { value: "media", label: "Média" },
+  { value: "weather", label: "Météo" },
+  { value: "calendar", label: "Calendrier" },
+  { value: "now", label: "Now" },
+];
+
 function formatImportDate(value = "") {
   if (!value) return "";
   const date = new Date(value);
@@ -231,6 +238,25 @@ function createSwitch({ label, checked = false, onChange }) {
   });
 
   field.append(text, toggle);
+  return field;
+}
+
+function createCheckbox({ label, checked = false, onChange }) {
+  const field = document.createElement("label");
+  field.className = "mha-settings-checkbox";
+
+  const text = document.createElement("span");
+  text.className = "mha-settings-label";
+  text.textContent = label;
+
+  const input = document.createElement("input");
+  input.className = "mha-settings-checkbox-input";
+  input.type = "checkbox";
+  input.checked = Boolean(checked);
+  input.dataset.settingsControl = label;
+  input.addEventListener("change", () => onChange?.(Boolean(input.checked)));
+
+  field.append(text, input);
   return field;
 }
 
@@ -433,6 +459,21 @@ function createSection(title, children = []) {
   return section;
 }
 
+function createNowBarControls({ enabled = true, items = {}, onEnabledChange, onItemChange } = {}) {
+  return [
+    createSwitch({
+      label: "Activer la Now Bar",
+      checked: enabled,
+      onChange: onEnabledChange,
+    }),
+    ...NOW_BAR_ITEM_OPTIONS.map(item => createCheckbox({
+      label: item.label,
+      checked: items[item.value] !== false,
+      onChange: checked => onItemChange?.(item.value, checked),
+    })),
+  ];
+}
+
 export function createSettingsPanel({
   open = false,
   scope = "all",
@@ -447,6 +488,7 @@ export function createSettingsPanel({
   screensaverDelay = 30000,
   screensaverPreview = false,
   screensaverNowBar = true,
+  screensaverNowBarItems = {},
   screensaverClockVariant = "digital",
   settingsPage = "main",
   dockPages = [],
@@ -465,9 +507,11 @@ export function createSettingsPanel({
   onScreensaverDelayChange,
   onScreensaverPreviewChange,
   onScreensaverNowBarChange,
+  onScreensaverNowBarItemChange,
   onScreensaverClockVariantChange,
   onResetGrid,
   onOpenWallpaperSettings,
+  onOpenNowBarSettings,
   onWallpaperMainBack,
   onOpenDockSettings,
   onDockBack,
@@ -529,6 +573,8 @@ export function createSettingsPanel({
         ? "Icône du dock"
         : settingsPage === "wallpaper"
           ? "Fond d’écran"
+          : settingsPage === "nowbar"
+            ? "Now Bar"
           : "Paramètres";
 
   title.append(eyebrow, h2);
@@ -542,7 +588,7 @@ export function createSettingsPanel({
   const headerActions = document.createElement("div");
   headerActions.className = "mha-settings-header-actions";
 
-  if (!isScreensaverScope && (settingsPage === "dock" || settingsPage === "wallpaper")) {
+  if (!isScreensaverScope && (settingsPage === "dock" || settingsPage === "wallpaper" || settingsPage === "nowbar")) {
     headerActions.append(createBackButton({
       label: "Retour aux paramètres",
       className: "mha-settings-back",
@@ -626,6 +672,20 @@ export function createSettingsPanel({
     return root;
   }
 
+  if (!isScreensaverScope && settingsPage === "nowbar") {
+    sections.push(createSection("Now Bar", createNowBarControls({
+      enabled: screensaverNowBar,
+      items: screensaverNowBarItems,
+      onEnabledChange: onScreensaverNowBarChange,
+      onItemChange: onScreensaverNowBarItemChange,
+    })));
+    body.append(...sections);
+    sheet.append(header, body);
+    root.append(scrim, sheet);
+    root.addEventListener("keydown", (event) => { if (event.key === "Escape") onClose?.(); });
+    return root;
+  }
+
   if (!isScreensaverScope) {
     const appearanceControls = [
       createSelect({
@@ -676,6 +736,12 @@ export function createSettingsPanel({
         description: "Choisir une image distincte pour les thèmes clair et sombre.",
         onClick: onOpenWallpaperSettings,
       }),
+      createSettingsNavTile({
+        icon: "star",
+        label: "Now Bar",
+        description: "Activer la barre et choisir les contenus affichés.",
+        onClick: onOpenNowBarSettings,
+      }),
     ]));
     sections.push(createSection("Navigation", [
       createSettingsNavTile({
@@ -694,6 +760,12 @@ export function createSettingsPanel({
         onChange: onThemeChange,
       }),
     ]));
+    sections.push(createSection("Now Bar", createNowBarControls({
+      enabled: screensaverNowBar,
+      items: screensaverNowBarItems,
+      onEnabledChange: onScreensaverNowBarChange,
+      onItemChange: onScreensaverNowBarItemChange,
+    })));
   }
 
   sections.push(createSection("Économiseur d’écran", [
@@ -707,11 +779,6 @@ export function createSettingsPanel({
         value: String(screensaverDelay),
         options: SCREENSAVER_DELAY_OPTIONS,
         onChange: onScreensaverDelayChange,
-      }),
-      createSwitch({
-        label: "Now bar",
-        checked: screensaverNowBar,
-        onChange: onScreensaverNowBarChange,
       }),
       createSelect({
         label: "Horloge",

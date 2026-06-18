@@ -149,7 +149,8 @@
 }
 
 .mha-settings-field,
-.mha-settings-switch {
+.mha-settings-switch,
+.mha-settings-checkbox {
   display: grid;
   min-inline-size: 0;
   max-inline-size: 100%;
@@ -161,6 +162,18 @@
 
 .mha-settings-switch .mha-toggle {
   justify-self: end;
+}
+
+.mha-settings-checkbox {
+  cursor: pointer;
+}
+
+.mha-settings-checkbox-input {
+  justify-self: end;
+  inline-size: 1.15rem;
+  block-size: 1.15rem;
+  accent-color: var(--mha-accent);
+  cursor: pointer;
 }
 
 .mha-settings-label {

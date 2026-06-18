@@ -695,6 +695,7 @@ _getSettingsPanelProps(scope="all"){
     screensaverDelay:screensaverState.delay,
     screensaverPreview:screensaverState.preview,
     screensaverNowBar:screensaverState.nowBar,
+    screensaverNowBarItems:screensaverState.nowBarItems,
     screensaverClockVariant:screensaverState.clockVariant,
     settingsPage:this._settingsPage,
     dockPages:this._pages,
@@ -713,9 +714,11 @@ _getSettingsPanelProps(scope="all"){
     onScreensaverDelayChange:v=>this._applyScreensaverDelayFromSettings(v),
     onScreensaverPreviewChange:v=>this._applyScreensaverPreviewFromSettings(v),
     onScreensaverNowBarChange:v=>this._applyScreensaverNowBarFromSettings(v),
+    onScreensaverNowBarItemChange:(item,enabled)=>this._applyScreensaverNowBarItemFromSettings(item,enabled),
     onScreensaverClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),
     onResetGrid:()=>this.resetGrid(),
     onOpenWallpaperSettings:()=>this._openWallpaperSettings(),
+    onOpenNowBarSettings:()=>this._openNowBarSettings(),
     onWallpaperMainBack:()=>this._openSettings(),
     onOpenDockSettings:()=>this._openDockSettings(),
     onDockBack:()=>this._openDockSettings(),
@@ -990,6 +993,13 @@ _openWallpaperSettings(){
   this._syncSettingsModalState();
   this._syncSettingsDom();
 }
+_openNowBarSettings(){
+  this._settingsOpen=true;
+  this._settingsPage="nowbar";
+  this._dockSettingsPageId="";
+  this._syncSettingsModalState();
+  this._syncSettingsDom();
+}
 _openDockPageSettings(id=""){
   if(!this._pages.some(page=>page.id===id))return;
   this._settingsOpen=true;
@@ -1216,6 +1226,12 @@ _applyScreensaverNowBarFromSettings(enabled=true){
   this._syncSettingsDom();
   this._syncScreensaverSettingsDom();
 }
+_applyScreensaverNowBarItemFromSettings(item="",enabled=true){
+  this._recordPersistenceResult(this._screensaverController.setNowBarItem(item,enabled));
+  this._syncScreensaverDom();
+  this._syncSettingsDom();
+  this._syncScreensaverSettingsDom();
+}
 _applyScreensaverClockVariantFromSettings(variant="digital"){
   this._recordPersistenceResult(this._screensaverController.setClockVariant(variant));
   this._syncScreensaverDom();
@@ -1235,6 +1251,7 @@ _syncScreensaverDom(){
   const next=createScreensaver({
     isVisible:this._getScreensaverVisible(),
     showNowBar:screensaverState.nowBar,
+    nowBarItems:screensaverState.nowBarItems,
     clockVariant:screensaverState.clockVariant,
     onClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),
     onOpenScreensaverSettings:()=>this._openScreensaverSettings(),
@@ -2242,6 +2259,7 @@ _appendDeferredUi({layout,renderId}){
     this.shadowRoot.append(createScreensaver({
       isVisible:this._getScreensaverVisible(),
       showNowBar:screensaverState.nowBar,
+      nowBarItems:screensaverState.nowBarItems,
       clockVariant:screensaverState.clockVariant,
       onClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),
       onOpenScreensaverSettings:()=>this._openScreensaverSettings(),

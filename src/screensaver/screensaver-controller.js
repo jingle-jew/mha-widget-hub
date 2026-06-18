@@ -5,6 +5,23 @@ import {
 } from "../core/storage.js";
 import { STORAGE_KEYS } from "../core/storage-keys.js";
 
+export const DEFAULT_NOW_BAR_ITEMS = Object.freeze({
+  media: true,
+  weather: true,
+  calendar: true,
+  now: true,
+});
+
+export function normalizeNowBarItems(value = {}) {
+  const source = value && typeof value === "object" ? value : {};
+  return {
+    media: source.media !== false,
+    weather: source.weather !== false,
+    calendar: source.calendar !== false,
+    now: source.now !== false,
+  };
+}
+
 export const SCREENSAVER_DELAYS = Object.freeze([
   15000,
   30000,
@@ -32,6 +49,7 @@ export class ScreensaverController {
       preview: false,
       active: false,
       nowBar: true,
+      nowBarItems: normalizeNowBarItems(),
       clockVariant: "digital",
       enabled: true,
       delay: 30000,
@@ -39,6 +57,16 @@ export class ScreensaverController {
   }
 
   load({ enabledFallback = true } = {}) {
+    let storedNowBarItems = null;
+    const rawNowBarItems = this.storage.getItem(STORAGE_KEYS.screensaverNowBarItems);
+    if (rawNowBarItems !== null) {
+      try {
+        storedNowBarItems = JSON.parse(rawNowBarItems);
+      } catch {
+        storedNowBarItems = null;
+      }
+    }
+
     this.state = {
       ...this.state,
       nowBar: readBoolean(
@@ -46,6 +74,7 @@ export class ScreensaverController {
         true,
         this.storage,
       ),
+      nowBarItems: normalizeNowBarItems(storedNowBarItems),
       clockVariant: this.storage.getItem(STORAGE_KEYS.screensaverClockVariant)
         || this.storage.getItem(STORAGE_KEYS.legacyScreensaverClockVariant)
         || "digital",
@@ -65,7 +94,10 @@ export class ScreensaverController {
   }
 
   read() {
-    return { ...this.state };
+    return {
+      ...this.state,
+      nowBarItems: { ...this.state.nowBarItems },
+    };
   }
 
   isVisible() {
@@ -151,6 +183,19 @@ export class ScreensaverController {
     return writeStorageValue(
       STORAGE_KEYS.screensaverNowBar,
       this.state.nowBar,
+      this.storage,
+    );
+  }
+
+  setNowBarItem(item, enabled = true) {
+    if (!Object.hasOwn(DEFAULT_NOW_BAR_ITEMS, item)) return false;
+    this.state.nowBarItems = normalizeNowBarItems({
+      ...this.state.nowBarItems,
+      [item]: Boolean(enabled),
+    });
+    return writeStorageValue(
+      STORAGE_KEYS.screensaverNowBarItems,
+      JSON.stringify(this.state.nowBarItems),
       this.storage,
     );
   }

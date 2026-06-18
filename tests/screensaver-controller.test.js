@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  DEFAULT_NOW_BAR_ITEMS,
   createScreensaverController,
 } from "../src/screensaver/screensaver-controller.js";
 import { STORAGE_KEYS } from "../src/core/storage-keys.js";
@@ -54,6 +55,7 @@ test("screensaver controller loads the existing storage contract", () => {
     preview: false,
     active: false,
     nowBar: false,
+    nowBarItems: DEFAULT_NOW_BAR_ITEMS,
     clockVariant: "analog",
     enabled: false,
     delay: 120000,
@@ -147,11 +149,19 @@ test("settings persist normalized state and keep the legacy clock key", () => {
   assert.equal(controller.read().delay, 30000);
   assert.equal(controller.setEnabled(false), true);
   assert.equal(controller.setNowBar(false), true);
+  assert.equal(controller.setNowBarItem("media", false), true);
   assert.equal(controller.setClockVariant("invalid"), true);
 
   assert.equal(storage.getItem(STORAGE_KEYS.screensaverDelay), "30000");
   assert.equal(storage.getItem(STORAGE_KEYS.screensaverEnabled), "false");
   assert.equal(storage.getItem(STORAGE_KEYS.screensaverNowBar), "false");
+  assert.deepEqual(
+    JSON.parse(storage.getItem(STORAGE_KEYS.screensaverNowBarItems)),
+    {
+      ...DEFAULT_NOW_BAR_ITEMS,
+      media: false,
+    },
+  );
   assert.equal(
     storage.getItem(STORAGE_KEYS.screensaverClockVariant),
     "digital",
@@ -178,11 +188,27 @@ test("preview-only state changes do not persist settings", () => {
     preview: true,
     active: false,
     nowBar: false,
+    nowBarItems: DEFAULT_NOW_BAR_ITEMS,
     clockVariant: "analog",
     enabled: true,
     delay: 30000,
   });
   assert.equal(storage.values.size, 0);
+});
+
+test("now bar item settings fall back for old and partial configs", () => {
+  const controller = createScreensaverController({
+    storage: createStorage({
+      [STORAGE_KEYS.screensaverNowBarItems]: JSON.stringify({
+        weather: false,
+      }),
+    }),
+  });
+
+  assert.deepEqual(controller.load().nowBarItems, {
+    ...DEFAULT_NOW_BAR_ITEMS,
+    weather: false,
+  });
 });
 
 test("user activity wakes an active screensaver and restarts its timer", () => {

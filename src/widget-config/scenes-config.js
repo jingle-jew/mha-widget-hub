@@ -97,15 +97,15 @@ function reconcileButtonDraft(button, hass, visibilityConfig) {
 }
 
 function normalizeScenesDraft(draft = {}) {
-  return {
-    buttons: ensureButtonCount(draft.buttons),
-  };
+  draft.buttons = ensureButtonCount(draft.buttons);
+  return draft;
 }
 
 export function createScenesConfigDraft(widget = {}, hass, visibilityConfig) {
-  const draft = normalizeScenesDraft({
+  const draft = {
     buttons: Array.isArray(widget.buttons) ? widget.buttons : [],
-  });
+  };
+  normalizeScenesDraft(draft);
   return reconcileScenesConfigDraft(draft, hass, visibilityConfig);
 }
 

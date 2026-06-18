@@ -44,6 +44,7 @@ import {
 import {
   buildScenesWidgetConfig,
   createScenesConfigDraft,
+  updateScenesButtonType,
 } from "../src/widget-config/scenes-config.js";
 import {
   buildSliderWidgetConfig,
@@ -546,6 +547,25 @@ test("modes and routines configuration keeps four buttons and preserves missing 
   assert.equal(built.buttons[0].entityId, "scene.missing_mode");
   assert.equal(built.buttons[1].entityId, "script.good_night");
   assert.equal(built.buttons[2].type, "routine");
+});
+
+test("modes and routines config preserves type changes across reconcile", () => {
+  const hass = {
+    states: {
+      "scene.evening": entity("scene.evening", "unknown", { friendly_name: "Soiree" }),
+      "script.good_night": entity("script.good_night", "off", { friendly_name: "Bonne nuit" }),
+    },
+  };
+
+  const created = createScenesConfigDraft({
+    buttons: [
+      { type: "routine", entityId: "script.good_night" },
+    ],
+  }, hass);
+
+  const updated = updateScenesButtonType(created.draft, 0, "mode", hass);
+  assert.equal(updated.draft.buttons[0].type, "mode");
+  assert.equal(created.draft.buttons[0].type, "mode");
 });
 
 test("weather model respects widget forecastType preference with robust fallback", () => {

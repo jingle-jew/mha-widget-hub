@@ -165,18 +165,22 @@ function createClock(variant = "digital") {
 
 const NOWBAR_ITEMS = Object.freeze([
   {
+    key: "now",
     title: "Now bar",
     subtitle: "Prête pour le média et les états actifs",
   },
   {
+    key: "weather",
     title: "Maison",
     subtitle: "Scènes et raccourcis prêts",
   },
   {
+    key: "calendar",
     title: "Sécurité",
     subtitle: "Aucun événement critique",
   },
   {
+    key: "media",
     title: "Ambiance",
     subtitle: "Éclairage et climat synchronisés",
   },
@@ -216,7 +220,10 @@ function createNowBarTile(item, index) {
   return tile;
 }
 
-function createNowBar() {
+function createNowBar({ items: enabledItems = {} } = {}) {
+  const visibleItems = NOWBAR_ITEMS.filter(item => enabledItems[item.key] !== false);
+  if (!visibleItems.length) return null;
+
   const now = document.createElement("section");
   now.className = "mha-screensaver-nowbar";
   now.setAttribute("aria-label", "Now bar");
@@ -225,7 +232,7 @@ function createNowBar() {
   stack.className = "mha-screensaver-nowbar-stack";
   stack.setAttribute("role", "list");
 
-  const tiles = NOWBAR_ITEMS.map((item, index) => {
+  const tiles = visibleItems.map((item, index) => {
     const tile = createNowBarTile(item, index);
     tile.setAttribute("role", "listitem");
     stack.append(tile);
@@ -365,7 +372,10 @@ function createNowBar() {
 
   const renderStack = (progress = 0, direction = 1) => {
     tiles.forEach((tile, index) => {
-      const relativePosition = getRelativePosition(index);
+      const relativePosition = Math.min(
+        getRelativePosition(index),
+        NOWBAR_STACK_POSITIONS.length - 1,
+      );
       const position = progress > 0
         ? getDraggedPosition(relativePosition, direction, progress)
         : NOWBAR_STACK_POSITIONS[relativePosition];
@@ -556,6 +566,7 @@ function createNowBar() {
 export function createScreensaver({
   isVisible = false,
   showNowBar = true,
+  nowBarItems = {},
   clockVariant = "digital",
   onOpenScreensaverSettings,
   onWake,
@@ -608,7 +619,8 @@ export function createScreensaver({
   root.append(spacer);
 
   if (showNowBar) {
-    root.append(createNowBar());
+    const nowBar = createNowBar({ items: nowBarItems });
+    if (nowBar) root.append(nowBar);
   }
 
   return root;
