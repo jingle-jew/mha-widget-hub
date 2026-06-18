@@ -5,6 +5,7 @@ import {
   resetWallpaper,
   saveWallpaper,
 } from "./wallpaper-storage.js";
+import { getThemeWallpaper } from "./theme-registry.js";
 
 const WALLPAPER_TONE_DARK = "dark";
 const WALLPAPER_TONE_LIGHT = "light";
@@ -73,21 +74,39 @@ export class WallpaperController {
   constructor(host, {
     storage = localStorage,
     getTheme = () => "dark",
+    getThemeState = null,
   } = {}) {
     this.host = host;
     this.storage = storage;
     this.getTheme = getTheme;
+    this.getThemeState = typeof getThemeState === "function"
+      ? getThemeState
+      : () => ({ theme: this.getTheme(), themeStyle: "oneui" });
     this.wallpapers = { light: null, dark: null };
     this.toneRequestId = 0;
+  }
+
+  resolveThemeState(themeState = this.getThemeState()) {
+    if (typeof themeState === "string") {
+      return {
+        theme: themeState === "light" ? "light" : "dark",
+        themeStyle: this.getThemeState()?.themeStyle || "oneui",
+      };
+    }
+
+    return {
+      theme: themeState?.theme === "light" ? "light" : "dark",
+      themeStyle: String(themeState?.themeStyle || this.getThemeState()?.themeStyle || "oneui"),
+    };
   }
 
   migrateLegacy() {
     return migrateLegacyWallpaper(this.storage, this.getTheme());
   }
 
-  read() {
+  read(themeState = this.getThemeState()) {
     const wallpapers = readWallpapers(this.storage);
-    const theme = this.getTheme();
+    const theme = this.resolveThemeState(themeState).theme;
     if (!wallpapers[theme]) {
       wallpapers[theme] = readLegacyWallpaper(this.storage);
     }
@@ -95,19 +114,65 @@ export class WallpaperController {
     return wallpapers;
   }
 
-  apply(theme = this.getTheme()) {
-    const wallpapers = this.read();
-    const wallpaper = wallpapers[theme];
-    const hasWallpaper = Boolean(wallpaper?.dataUrl);
+  getActiveWallpaper(themeState = this.getThemeState(), wallpapers = this.read(themeState)) {
+    const resolvedThemeState = this.resolveThemeState(themeState);
+    const customWallpaper = wallpapers[resolvedThemeState.theme];
+    if (customWallpaper?.dataUrl) {
+      return {
+        source: "custom",
+        image: customWallpaper.dataUrl,
+        wallpaper: customWallpaper,
+      };
+    }
 
-    this.host.dataset.customWallpaper = String(hasWallpaper);
-    if (hasWallpaper) {
+    const themeWallpaper = getThemeWallpaper(
+      resolvedThemeState.themeStyle,
+      resolvedThemeState.theme,
+    );
+    if (themeWallpaper) {
+      return {
+        source: "theme",
+        image: themeWallpaper,
+        wallpaper: null,
+      };
+    }
+
+    return {
+      source: "fallback",
+      image: "",
+      wallpaper: null,
+    };
+  }
+
+  apply(themeState = this.getThemeState()) {
+    const resolvedThemeState = this.resolveThemeState(themeState);
+    const wallpapers = this.read(resolvedThemeState);
+    const activeWallpaper = this.getActiveWallpaper(resolvedThemeState, wallpapers);
+    const hasCustomWallpaper = activeWallpaper.source === "custom";
+    const hasThemeWallpaper = activeWallpaper.source === "theme";
+
+    this.host.dataset.customWallpaper = String(hasCustomWallpaper);
+    this.host.dataset.themeWallpaper = String(hasThemeWallpaper);
+    this.host.dataset.wallpaperSource = activeWallpaper.source;
+    if (activeWallpaper.image) {
       this.host.style.setProperty(
-        "--mha-custom-wallpaper-image",
-        `url("${wallpaper.dataUrl}")`,
+        "--mha-active-wallpaper-image",
+        `url("${activeWallpaper.image}")`,
       );
-      this.syncWallpaperTone(wallpaper.dataUrl);
+      if (hasCustomWallpaper) {
+        this.host.style.setProperty(
+          "--mha-custom-wallpaper-image",
+          `url("${activeWallpaper.image}")`,
+        );
+      } else {
+        this.host.style.removeProperty("--mha-custom-wallpaper-image");
+      }
+      this.syncWallpaperTone(activeWallpaper.image);
     } else {
+      delete this.host.dataset.wallpaperSource;
+      this.host.dataset.themeWallpaper = "false";
+      this.host.dataset.customWallpaper = "false";
+      this.host.style.removeProperty("--mha-active-wallpaper-image");
       this.host.style.removeProperty("--mha-custom-wallpaper-image");
       this.resetWallpaperTone();
     }

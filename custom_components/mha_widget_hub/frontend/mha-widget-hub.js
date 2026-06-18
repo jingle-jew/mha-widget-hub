@@ -156,8 +156,9 @@ function createCriticalBootStyle() {
         radial-gradient(circle at 52% 90%, var(--mha-bg-radial-3, rgba(56,209,255,.22)), transparent 36%),
         linear-gradient(135deg, var(--mha-bg-base-1, #171b30), var(--mha-bg-base-2, #242844));
     }
-    :host([data-boot-state="booting"][data-custom-wallpaper="true"]) .mha-background {
-      background-image: var(--mha-custom-wallpaper-image) !important;
+    :host([data-boot-state="booting"][data-wallpaper-source="custom"]) .mha-background,
+    :host([data-boot-state="booting"][data-wallpaper-source="theme"]) .mha-background {
+      background-image: var(--mha-active-wallpaper-image) !important;
       background-size: cover !important;
       background-position: center !important;
       background-repeat: no-repeat !important;
@@ -207,6 +208,7 @@ constructor(){
   this._themeController=createThemeController(this);
   this._wallpaperController=createWallpaperController(this,{
     getTheme:()=>this._themeController.read().theme,
+    getThemeState:()=>this._themeController.read(),
   });
   this._screensaverController=createScreensaverController({
     normalizeClockVariant,
@@ -726,8 +728,8 @@ _migrateLegacyCustomWallpaper(){
 _readCustomWallpapers(){
   return this._wallpaperController.read();
 }
-_applyCustomWallpaperState(theme=this._themeController.read().theme){
-  this._customWallpapers=this._wallpaperController.apply(theme);
+_applyCustomWallpaperState(themeState=this._themeController.read()){
+  this._customWallpapers=this._wallpaperController.apply(themeState);
 }
 _saveCustomWallpaper(mode,payload){
   this._customWallpapers=this._wallpaperController.save(mode,payload);
@@ -743,8 +745,8 @@ _resetCustomWallpaper(mode){
 async _syncAutoAccentFromWallpaper(){
   const requestId=++this._autoAccentRequestId;
   const themeState=this._themeController.read();
-  const wallpaper=this._customWallpapers?.[themeState.theme];
-  const dataUrl=wallpaper?.dataUrl||"";
+  const activeWallpaper=this._wallpaperController.getActiveWallpaper(themeState,this._customWallpapers);
+  const dataUrl=activeWallpaper?.image||"";
 
   if(!dataUrl){
     this.style.removeProperty("--mha-accent-auto");
@@ -1046,7 +1048,8 @@ _scheduleAppearanceDomRefresh(){
 
 _applyThemeFromSettings(value="auto"){
   const themeState=this._themeController.setTheme(value);
-  this._applyCustomWallpaperState(themeState.theme);
+  this._applyCustomWallpaperState(themeState);
+  this._syncAutoAccentFromWallpaper();
   this._syncSettingsDom();
   this._syncScreensaverSettingsDom();
   this._scheduleAppearanceDomRefresh();
@@ -1068,7 +1071,8 @@ _transitionSystemThemeChange(){
   cancelAnimationFrame(this._themeTransitionFrame);
 
   const themeState=this._themeController.sync();
-  this._applyCustomWallpaperState(themeState.theme);
+  this._applyCustomWallpaperState(themeState);
+  this._syncAutoAccentFromWallpaper();
   this._scheduleAppearanceDomRefresh();
 
   const finish=()=>{
@@ -1092,7 +1096,8 @@ _transitionSystemThemeChange(){
 }
 
 _applyThemeStyleFromSettings(value="oneui"){
-  this._themeController.setThemeStyle(value);
+  const themeState=this._themeController.setThemeStyle(value);
+  this._applyCustomWallpaperState(themeState);
   this._syncAutoAccentFromWallpaper();
   this._syncSettingsDom();
   this._scheduleAppearanceDomRefresh();

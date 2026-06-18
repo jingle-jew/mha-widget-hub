@@ -228,17 +228,27 @@
   }
 }
 
-/* CUSTOM LOCAL WALLPAPER
- * Frontend-only wallpaper override stored in this browser/device.
- * Theme surfaces, overlays and blur remain active above it.
+/* ACTIVE WALLPAPER
+ * Priority is resolved in JS:
+ * 1. user custom wallpaper;
+ * 2. current theme wallpaper;
+ * 3. token/background fallback already defined by CSS.
  */
+:host([data-wallpaper-source="custom"]) .mha-background,
+:host([data-wallpaper-source="theme"]) .mha-background,
 :host([data-custom-wallpaper="true"]) .mha-background {
-  background-image: var(--mha-custom-wallpaper-image) !important;
+  background-image: var(--mha-active-wallpaper-image, var(--mha-custom-wallpaper-image)) !important;
   background-size: cover !important;
   background-position: center !important;
   background-repeat: no-repeat !important;
 }
 
+:host([data-wallpaper-source="custom"]) .mha-background span,
+:host([data-wallpaper-source="custom"]) .mha-background::before,
+:host([data-wallpaper-source="custom"]) .mha-background::after,
+:host([data-wallpaper-source="theme"]) .mha-background span,
+:host([data-wallpaper-source="theme"]) .mha-background::before,
+:host([data-wallpaper-source="theme"]) .mha-background::after,
 :host([data-custom-wallpaper="true"]) .mha-background span,
 :host([data-custom-wallpaper="true"]) .mha-background::before,
 :host([data-custom-wallpaper="true"]) .mha-background::after {

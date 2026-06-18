@@ -4,6 +4,9 @@ import {
   createWallpaperController,
 } from "../src/settings/wallpaper-controller.js";
 import {
+  getThemeWallpaper,
+} from "../src/settings/theme-registry.js";
+import {
   LEGACY_WALLPAPER_STORAGE_KEY,
   WALLPAPER_STORAGE_KEYS,
 } from "../src/settings/wallpaper-storage.js";
@@ -55,6 +58,7 @@ test("wallpaper controller migrates and applies the effective theme", () => {
   const controller = createWallpaperController(host, {
     storage,
     getTheme: () => "dark",
+    getThemeState: () => ({ theme: "dark", themeStyle: "oneui" }),
   });
 
   assert.equal(controller.migrateLegacy(), true);
@@ -63,6 +67,7 @@ test("wallpaper controller migrates and applies the effective theme", () => {
     dark: wallpaper,
   });
   assert.equal(host.dataset.customWallpaper, "true");
+  assert.equal(host.dataset.wallpaperSource, "custom");
   assert.equal(
     host.style.properties.get("--mha-custom-wallpaper-image"),
     `url("${wallpaper.dataUrl}")`,
@@ -75,6 +80,7 @@ test("wallpaper save and reset keep storage, state and host style aligned", () =
   const controller = createWallpaperController(host, {
     storage,
     getTheme: () => "light",
+    getThemeState: () => ({ theme: "light", themeStyle: "ios" }),
   });
 
   assert.deepEqual(controller.save("light", wallpaper), {
@@ -89,9 +95,15 @@ test("wallpaper save and reset keep storage, state and host style aligned", () =
     dark: null,
   });
   assert.equal(host.dataset.customWallpaper, "false");
+  assert.equal(host.dataset.themeWallpaper, "true");
+  assert.equal(host.dataset.wallpaperSource, "theme");
   assert.equal(
     host.style.properties.has("--mha-custom-wallpaper-image"),
     false,
+  );
+  assert.equal(
+    host.style.properties.get("--mha-active-wallpaper-image"),
+    `url("${getThemeWallpaper("ios", "light")}")`,
   );
 });
 
@@ -104,4 +116,39 @@ test("invalid wallpaper payloads preserve the existing error contract", () => {
     () => controller.save("light", { dataUrl: "invalid" }),
     /Invalid wallpaper payload/,
   );
+});
+
+test("theme wallpaper is used when no custom wallpaper exists", () => {
+  const host = createHost();
+  const controller = createWallpaperController(host, {
+    storage: createStorage(),
+    getThemeState: () => ({ theme: "dark", themeStyle: "material" }),
+  });
+
+  assert.deepEqual(controller.apply(), {
+    light: null,
+    dark: null,
+  });
+  assert.equal(host.dataset.customWallpaper, "false");
+  assert.equal(host.dataset.themeWallpaper, "true");
+  assert.equal(host.dataset.wallpaperSource, "theme");
+  assert.equal(
+    host.style.properties.get("--mha-active-wallpaper-image"),
+    `url("${getThemeWallpaper("material", "dark")}")`,
+  );
+});
+
+test("custom wallpaper keeps priority over theme wallpaper", () => {
+  const storage = createStorage({
+    [WALLPAPER_STORAGE_KEYS.dark]: JSON.stringify(wallpaper),
+  });
+  const host = createHost();
+  const controller = createWallpaperController(host, {
+    storage,
+    getThemeState: () => ({ theme: "dark", themeStyle: "material" }),
+  });
+
+  const activeWallpaper = controller.getActiveWallpaper();
+  assert.equal(activeWallpaper.source, "custom");
+  assert.equal(activeWallpaper.image, wallpaper.dataUrl);
 });
