@@ -229,17 +229,21 @@ function renderControls(controls, data, { mode = "playback", interactive = true,
       : createPlaybackButtons(data, { interactive, onAction })
   ));
 
-  const toggleAsPlayback = mode === "volume";
-  toggle.textContent = toggleAsPlayback ? (data.playing ? "Ⅱ" : "▶") : data.volumeLabel;
-  toggle.dataset.action = toggleAsPlayback ? "playPause" : "toggleVolume";
-  toggle.toggleAttribute("data-primary", toggleAsPlayback);
-  toggle.classList.toggle("mha-media-widget-play-toggle", toggleAsPlayback);
-  toggle.setAttribute("aria-label", toggleAsPlayback
-    ? data.playing ? "Pause" : "Lecture"
-    : `Volume ${data.volumeLabel}`);
-  toggle.disabled = toggleAsPlayback ? !data.canPlayPause : false;
-  toggle.setAttribute("aria-disabled", String(!interactive || toggle.disabled));
-  if (!interactive) toggle.tabIndex = -1;
+  const showingPlaybackReturn = mode === "volume";
+  toggle.textContent = showingPlaybackReturn ? "♪" : data.volumeLabel;
+  toggle.dataset.action = "toggleVolume";
+  toggle.dataset.mode = showingPlaybackReturn ? "playback" : "volume";
+  toggle.removeAttribute("data-primary");
+  toggle.classList.remove("mha-media-widget-play-toggle");
+  toggle.setAttribute(
+    "aria-label",
+    showingPlaybackReturn
+      ? "Retour aux contrôles média"
+      : `Afficher les contrôles de volume (${data.volumeLabel})`,
+  );
+  toggle.disabled = false;
+  toggle.setAttribute("aria-disabled", String(!interactive));
+  toggle.tabIndex = interactive ? 0 : -1;
 }
 
 function createControls(data, { mode = "playback", interactive = true, onAction } = {}) {
