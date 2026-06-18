@@ -2,9 +2,10 @@
   container-type: size;
   container-name: mha-toggle-buttons-widget;
   overflow: hidden;
+  --mha-widget-bubble-glyph-size: clamp(1.4rem, min(22cqi, 22cqb), 1.72rem);
 
   --mha-toggle-widget-icon-size: var(--mha-control-icon-bubble-size, 2.75rem);
-  --mha-toggle-widget-glyph-size: var(--mha-control-icon-glyph-size, 78%);
+  --mha-toggle-widget-glyph-size: var(--mha-control-icon-glyph-size, var(--mha-widget-bubble-glyph-size));
   --mha-toggle-widget-icon-radius: var(--mha-control-icon-bubble-radius, 999px);
   --mha-toggle-widget-icon-bg: var(--mha-icon-bg, color-mix(in srgb, var(--mha-accent) 72%, var(--mha-surface-secondary)));
   --mha-toggle-widget-icon-color: var(--mha-icon-color, var(--mha-accent-contrast, #fff));

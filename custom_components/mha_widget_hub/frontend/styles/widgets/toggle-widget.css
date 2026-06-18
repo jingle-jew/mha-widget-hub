@@ -14,13 +14,14 @@
   container-type: size;
   container-name: mha-toggle-widget;
   overflow: hidden;
+  --mha-widget-bubble-glyph-size: clamp(1.4rem, min(22cqi, 22cqb), 1.72rem);
 
   --mha-toggle-widget-padding: var(--mha-widget-inner-padding, clamp(.72rem, 9cqb, .95rem));
   --mha-toggle-widget-gap-x: var(--mha-control-gap, clamp(.62rem, min(5.5cqi, 16cqb), 1rem));
   --mha-toggle-widget-edge-balance: var(--mha-control-edge-balance, clamp(.14rem, 1.5cqi, .34rem));
 
   --mha-toggle-widget-icon-size: var(--mha-control-icon-bubble-size, min(var(--mha-control-icon-size, 999rem), clamp(2.35rem, min(34cqi, 68cqb), 3.25rem)));
-  --mha-toggle-widget-glyph-size: var(--mha-control-icon-glyph-size, 78%);
+  --mha-toggle-widget-glyph-size: var(--mha-control-icon-glyph-size, var(--mha-widget-bubble-glyph-size));
   --mha-toggle-widget-icon-radius: var(--mha-control-icon-bubble-radius, var(--mha-widget-pill-inner-radius, 999px));
   --mha-toggle-widget-icon-bg: var(--mha-icon-bg, color-mix(in srgb, var(--mha-accent) 72%, var(--mha-surface-secondary)));
   --mha-toggle-widget-icon-color: var(--mha-icon-color, var(--mha-accent-contrast, #fff));
@@ -185,7 +186,7 @@
  */
 .mha-widget[data-widget-kind="toggle"] {
   --mha-toggle-widget-icon-size: var(--mha-control-icon-bubble-size, 2.75rem);
-  --mha-toggle-widget-glyph-size: var(--mha-control-icon-glyph-size, 78%);
+  --mha-toggle-widget-glyph-size: var(--mha-control-icon-glyph-size, var(--mha-widget-bubble-glyph-size));
   --mha-toggle-widget-icon-radius: var(--mha-control-icon-bubble-radius, 999px);
 }
 

@@ -16,6 +16,7 @@
   container-type: size;
   container-name: mha-simple-button-widget;
   overflow: hidden;
+  --mha-widget-bubble-glyph-size: clamp(1.4rem, min(22cqi, 22cqb), 1.72rem);
 
   /* Layout tokens */
   --mha-simple-button-padding: var(--mha-widget-inner-padding, clamp(.72rem, 9cqb, .95rem));
@@ -25,7 +26,7 @@
 
   /* Icon tokens */
   --mha-simple-button-icon-size: var(--mha-control-icon-bubble-size, min(var(--mha-control-icon-size, 999rem), clamp(2.35rem, min(34cqi, 68cqb), 3.25rem)));
-  --mha-simple-button-glyph-size: var(--mha-control-icon-glyph-size, 78%);
+  --mha-simple-button-glyph-size: var(--mha-control-icon-glyph-size, var(--mha-widget-bubble-glyph-size));
   --mha-simple-button-icon-radius: var(--mha-control-icon-bubble-radius, var(--mha-widget-pill-inner-radius, 999px));
   --mha-simple-button-icon-bg: var(--mha-icon-bg, color-mix(in srgb, var(--mha-accent) 72%, var(--mha-surface-secondary)));
   --mha-simple-button-icon-color: var(--mha-icon-color, var(--mha-accent-contrast, #fff));

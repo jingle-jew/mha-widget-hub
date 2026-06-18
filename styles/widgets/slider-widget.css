@@ -54,7 +54,8 @@
 
 .mha-slider-widget-icon {
   --mha-icon-size: 2rem;
-  --mha-icon-symbol-size: 56%;
+  --mha-icon-symbol-size: clamp(1.15rem, min(18cqi, 18cqb), 1.38rem);
+  --mha-icon-symbol-min-size: 1.15rem;
   inline-size: 2rem;
   block-size: 2rem;
   min-inline-size: 2rem;
@@ -63,6 +64,8 @@
   border-radius: 50% !important;
   -webkit-mask-image: none !important;
   mask-image: none !important;
+  display: grid;
+  place-items: center;
 }
 
 .mha-slider-widget-label {
