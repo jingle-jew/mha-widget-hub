@@ -51,3 +51,7 @@ body::-webkit-scrollbar {
   inline-size: 0 !important;
   block-size: 0 !important;
 }
+
+html.mha-hide-ha-sidebar ha-menu-button {
+  display: none !important;
+}

@@ -264,13 +264,24 @@ function createSelect({ label, value, options, onChange }) {
   return field;
 }
 
-function createSwitch({ label, checked = false, onChange }) {
+function createSwitch({ label, description = "", checked = false, onChange }) {
   const field = document.createElement("div");
   field.className = "mha-settings-switch";
 
   const text = document.createElement("span");
-  text.className = "mha-settings-label";
-  text.textContent = label;
+  text.className = "mha-settings-text";
+
+  const labelText = document.createElement("span");
+  labelText.className = "mha-settings-label";
+  labelText.textContent = label;
+  text.append(labelText);
+
+  if (description) {
+    const desc = document.createElement("small");
+    desc.className = "mha-settings-description";
+    desc.textContent = description;
+    text.append(desc);
+  }
 
   const toggle = createToggle({
     label,
@@ -694,6 +705,7 @@ export function createSettingsPanel({
   accentPaletteExpanded = false,
   iconShape = "auto",
   effectiveIconShape = "",
+  hideHaSidebar = false,
   screensaverEnabled = false,
   screensaverDelay = 30000,
   screensaverPreview = false,
@@ -714,6 +726,7 @@ export function createSettingsPanel({
   onAccentModeChange,
   onAccentPaletteExpandedChange,
   onIconShapeChange,
+  onHideHaSidebarChange,
   onScreensaverEnabledChange,
   onScreensaverDelayChange,
   onScreensaverPreviewChange,
@@ -965,6 +978,12 @@ export function createSettingsPanel({
       }),
     ]));
     sections.push(createSection("Navigation", [
+      createSwitch({
+        label: "Masquer la sidebar Home Assistant",
+        description: "Cache la barre latérale native de Home Assistant pour une expérience plus immersive.",
+        checked: hideHaSidebar,
+        onChange: onHideHaSidebarChange,
+      }),
       createSettingsNavTile({
         icon: "apps",
         label: "Dock",

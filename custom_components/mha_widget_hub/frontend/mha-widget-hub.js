@@ -1,4 +1,5 @@
 import {
+  readBoolean,
   readJson,
   writeJson,
   writeStorageValue,
@@ -181,10 +182,12 @@ const {
   gridPages:PAGES,
   activePage:ACTIVE_PAGE,
   dockPosition:DOCK_POSITION,
+  hideHaSidebar:HIDE_HA_SIDEBAR,
 }=STORAGE_KEYS;
 const DOCK_POSITIONS=new Set(["left","right","bottom"]);
 function normalizeDockPosition(value="left"){return DOCK_POSITIONS.has(value)?value:"left";}
 function getStoredDockPosition(){return normalizeDockPosition(localStorage.getItem(DOCK_POSITION)||"left");}
+function getStoredHideHaSidebar(){return readBoolean(HIDE_HA_SIDEBAR,false);}
 
 /*
  * FIRST LAUNCH DEFAULTS
@@ -265,6 +268,7 @@ constructor(){
   this._pageCreatorOpen=false;
   this._newPageIcon="grid";
   this._dockPosition="left";
+  this._hideHaSidebar=false;
   this._customWallpapers={light:null,dark:null};
   this._autoAccentRequestId=0;
   this._pages=[];
@@ -322,6 +326,8 @@ _initialize(){
     enabledFallback: !this._isMobileDefaultLayout(),
   });
   this._dockPosition=getStoredDockPosition();
+  this._hideHaSidebar=getStoredHideHaSidebar();
+  this._applyHaSidebarMode(this._hideHaSidebar);
   this._migrateLegacyCustomWallpaper();
   this._customWallpapers=this._readCustomWallpapers();
   this._applyCustomWallpaperState();
@@ -538,6 +544,7 @@ connectedCallback(){
   window.addEventListener("orientationchange",this._resizeListener);
   this._settingsOpenListener=()=>this._openSettings();
   this.shadowRoot.addEventListener("mha-open-settings",this._settingsOpenListener);
+  this._applyHaSidebarMode(this._hideHaSidebar);
 }
 disconnectedCallback(){
   this._connectionActive=false;
@@ -576,6 +583,7 @@ disconnectedCallback(){
   clearTimeout(this._responsiveRelayoutTimer);
   this._responsiveRelayoutTimer=null;
   if(this._settingsOpenListener)this.shadowRoot.removeEventListener("mha-open-settings",this._settingsOpenListener);
+  this._applyHaSidebarMode(false);
   destroyDomSubtree(this.shadowRoot);
 }
 requestRender(){this.render()}
@@ -694,6 +702,7 @@ _getSettingsPanelProps(scope="all"){
     accentPaletteExpanded:this._accentPaletteExpanded,
     iconShape:iconShapeSetting,
     effectiveIconShape,
+    hideHaSidebar:this._hideHaSidebar,
     screensaverEnabled:screensaverState.enabled,
     screensaverDelay:screensaverState.delay,
     screensaverPreview:screensaverState.preview,
@@ -714,6 +723,7 @@ _getSettingsPanelProps(scope="all"){
     onAccentModeChange:v=>this._applyAccentModeFromSettings(v),
     onAccentPaletteExpandedChange:v=>this._setAccentPaletteExpanded(v),
     onIconShapeChange:v=>this._applyIconShapeFromSettings(v),
+    onHideHaSidebarChange:v=>this._applyHideHaSidebarFromSettings(v),
     onScreensaverEnabledChange:v=>this._applyScreensaverEnabledFromSettings(v),
     onScreensaverDelayChange:v=>this._applyScreensaverDelayFromSettings(v),
     onScreensaverPreviewChange:v=>this._applyScreensaverPreviewFromSettings(v),
@@ -982,6 +992,23 @@ _applyDockPositionFromSettings(position="left"){
   this.setAttribute("data-dock-position",next);
   this._syncSettingsDom();
   this._handleViewportChange();
+}
+_applyHaSidebarMode(enabled=false){
+  const shouldHide=Boolean(enabled);
+  document.documentElement.classList.toggle("mha-hide-ha-sidebar",shouldHide);
+  window.dispatchEvent(new CustomEvent("hass-kiosk-mode",{
+    detail:{enable:shouldHide},
+  }));
+  window.dispatchEvent(new CustomEvent("hass-dock-sidebar",{
+    detail:{dock:shouldHide?"always_hidden":"docked"},
+  }));
+}
+_applyHideHaSidebarFromSettings(enabled=false){
+  const shouldHide=Boolean(enabled);
+  this._hideHaSidebar=shouldHide;
+  this._recordPersistenceResult(writeStorageValue(HIDE_HA_SIDEBAR,shouldHide));
+  this._applyHaSidebarMode(shouldHide);
+  this._syncSettingsDom();
 }
 _openDockSettings(){
   this._settingsOpen=true;
@@ -2291,6 +2318,7 @@ _appendDeferredUi({layout,renderId}){
 render(){
   const themeState=this._themeController.sync();
   this._applyCustomWallpaperState();
+  this._applyHaSidebarMode(this._hideHaSidebar);
   const renderId=++this._renderId;
   const layoutMode=getLayoutMode(this);
   const layout=getEffectiveLayout(this);

@@ -7,6 +7,7 @@ export const STORAGE_KEYS = Object.freeze({
   gridPages: "mha-grid-pages",
   activePage: "mha-active-page",
   dockPosition: "mha-dock-position",
+  hideHaSidebar: "mha-hide-ha-sidebar",
   schemaVersion: "mha-storage-schema-version",
   schemaMigrationBackup: "mha-storage-backup-before-v1",
   screensaverEnabled: "mha-screensaver-enabled",
