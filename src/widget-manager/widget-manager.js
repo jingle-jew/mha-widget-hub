@@ -2,6 +2,7 @@ import { getWidgetManagerCategories } from "../widgets/widget-registry.js";
 import { createBackButton, createCloseButton } from "../system/system-buttons.js";
 import { createLiveWidgetPreview } from "../widgets/widget-preview-renderer.js";
 import { resolveWidgetKind } from "../widgets/widget-registry.js";
+import { t } from "../i18n/index.js";
 export { WIDGET_VARIANTS, getWidgetVariants, getNextWidgetVariantEntries } from "../widgets/widget-variants.js";
 
 export const WIDGET_MANAGER_CATEGORIES = Object.freeze(
@@ -27,7 +28,7 @@ function createGenericPreviewFallback(item = {}) {
   preview.dataset.size = previewSizeKey(item);
   preview.append(
     el("span", "mha-widget-manager-preview-generic-title", item.title || item.label || "Widget"),
-    el("span", "mha-widget-manager-preview-generic-detail", item.description || "Aperçu non disponible"),
+    el("span", "mha-widget-manager-preview-generic-detail", item.description || t("widgets.manager.previewUnavailable", "Preview unavailable")),
   );
   return preview;
 }
@@ -65,7 +66,7 @@ function createCategoryButton(category, onSelectCategory) {
   const text = document.createElement("span");
   text.className = "mha-widget-manager-category-text";
   const label = document.createElement("strong");
-  label.textContent = category.label;
+  label.textContent = t(`widgets.categories.${category.id}`, category.label);
   const description = document.createElement("small");
   description.textContent = category.description || "";
   text.append(label, description);
@@ -106,13 +107,13 @@ export function createWidgetManager({open=false,activeCategory="",categories=WID
   const scrim = document.createElement("button");
   scrim.className = "mha-widget-manager-scrim mha-settings-scrim";
   scrim.type = "button";
-  scrim.setAttribute("aria-label", "Fermer le gestionnaire de widgets");
+  scrim.setAttribute("aria-label", t("widgets.manager.close", "Close widget manager"));
   scrim.addEventListener("click", (event) => { event.stopPropagation(); onClose?.(); });
   const sheet = document.createElement("div");
   sheet.className = "mha-widget-manager-sheet mha-settings-sheet";
   sheet.setAttribute("role", "dialog");
   sheet.setAttribute("aria-modal", "true");
-  sheet.setAttribute("aria-label", "Gestionnaire de widgets");
+  sheet.setAttribute("aria-label", t("widgets.manager.ariaLabel", "Widget manager"));
   ["pointerdown","pointerup","click","touchstart","touchmove","touchend","wheel"].forEach((type) => {
     root.addEventListener(type, (event) => event.stopPropagation(), { passive: type !== "wheel" });
   });
@@ -125,20 +126,20 @@ export function createWidgetManager({open=false,activeCategory="",categories=WID
   eyebrow.textContent = selectedCategory ? "Widgets" : "MHA";
   const h2 = document.createElement("h2");
   h2.className = "mha-settings-title";
-  h2.textContent = selectedCategory ? selectedCategory.label : "Widgets";
+  h2.textContent = selectedCategory ? t(`widgets.categories.${selectedCategory.id}`, selectedCategory.label) : t("widgets.manager.title", "Widgets");
   title.append(eyebrow, h2);
   const actions = document.createElement("div");
   actions.className = "mha-widget-manager-actions";
   if (selectedCategory) {
     const back = createBackButton({
-      label: "Retour aux catégories",
+      label: t("widgets.manager.backToCategories", "Back to categories"),
       className: "mha-widget-manager-back",
       onClick: () => onBack?.(),
     });
     actions.append(back);
   }
   const close = createCloseButton({
-    label: "Fermer",
+    label: t("common.close", "Close"),
     className: "mha-settings-close",
     onClick: () => onClose?.(),
   });

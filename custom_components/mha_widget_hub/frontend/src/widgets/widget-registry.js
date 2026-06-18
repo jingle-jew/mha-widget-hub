@@ -13,13 +13,13 @@ function normalizePreviewRenderer(module = {}) {
 
 const WIDGET_MANAGER_METADATA = Object.freeze({
   categories: Object.freeze({
-    utilities: Object.freeze({ label: "Utilitaires", description: "Horloges et infos rapides.", icon: "◷", order: 10 }),
-    actions: Object.freeze({ label: "Actions", description: "Boutons et raccourcis.", icon: "●", order: 20 }),
-    lights: Object.freeze({ label: "Lumières", description: "Contrôles rapides et intensité.", icon: "💡", order: 30 }),
-    climate: Object.freeze({ label: "Climat", description: "Température et confort.", icon: "🌡", order: 40 }),
-    media: Object.freeze({ label: "Média", description: "Lecture et volume.", icon: "♪", order: 50 }),
-    security: Object.freeze({ label: "Sécurité", description: "Alarmes, serrures et état.", icon: "⌂", order: 60 }),
-    system: Object.freeze({ label: "Système", description: "Maintenance, réseau et énergie.", icon: "⚙", order: 70 }),
+    utilities: Object.freeze({ label: "Utilities", description: "Clocks and quick info.", icon: "◷", order: 10 }),
+    actions: Object.freeze({ label: "Actions", description: "Buttons and shortcuts.", icon: "●", order: 20 }),
+    lights: Object.freeze({ label: "Lights", description: "Quick controls and brightness.", icon: "💡", order: 30 }),
+    climate: Object.freeze({ label: "Climate", description: "Temperature and comfort.", icon: "🌡", order: 40 }),
+    media: Object.freeze({ label: "Media", description: "Playback and volume.", icon: "♪", order: 50 }),
+    security: Object.freeze({ label: "Security", description: "Alarms, locks, and state.", icon: "⌂", order: 60 }),
+    system: Object.freeze({ label: "System", description: "Maintenance, network, and energy.", icon: "⚙", order: 70 }),
   }),
 });
 
@@ -166,29 +166,29 @@ export function isWidgetKind(widget, expectedKind) {
   return resolveWidgetKind(widget) === expectedKind;
 }
 
-export function normalizeRegisteredWidgetSize(widget = {}, normalizeBaseSize) {
+export function normalizeRegisteredWidgetSize(widget = {}, normalizeBottomeSize) {
   const definition = getWidgetDefinition(widget);
   const rawSize = {
     ...(definition?.defaultSize || { w: 2, h: 2 }),
     w: widget.w ?? definition?.defaultSize?.w,
     h: widget.h ?? definition?.defaultSize?.h,
   };
-  const size = normalizeBaseSize(rawSize);
+  const size = normalizeBottomeSize(rawSize);
   return definition?.normalizeSize ? definition.normalizeSize(size) : size;
 }
 
-export function getRegisteredWidgetVariants(widget = {}, normalizeBaseSize) {
+export function getRegisteredWidgetVariants(widget = {}, normalizeBottomeSize) {
   const definition = getWidgetDefinition(widget);
   if (!definition) return [];
   if (!definition.variantGroups) return definition.variants;
 
-  const size = normalizeRegisteredWidgetSize(widget, normalizeBaseSize);
+  const size = normalizeRegisteredWidgetSize(widget, normalizeBottomeSize);
   return size.h > size.w
     ? definition.variantGroups.vertical
     : definition.variantGroups.horizontal;
 }
 
-export function normalizeWidgetContract(widget = {}, normalizeBaseSize) {
+export function normalizeWidgetContract(widget = {}, normalizeBottomeSize) {
   const kind = resolveWidgetKind(widget);
   const definition = WIDGET_REGISTRY[kind];
   if (!definition) {
@@ -196,7 +196,7 @@ export function normalizeWidgetContract(widget = {}, normalizeBaseSize) {
     return { ...widget, kind: legacyKind, type: legacyKind };
   }
 
-  const size = normalizeRegisteredWidgetSize(widget, normalizeBaseSize);
+  const size = normalizeRegisteredWidgetSize(widget, normalizeBottomeSize);
   const normalized = {
     ...widget,
     kind,

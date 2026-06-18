@@ -18,18 +18,18 @@ export const WALLPAPER_ALLOWED_EXTENSIONS = new Set([
 ]);
 
 export function validateWallpaperFile(file) {
-  if (!file) return "Aucun fichier sélectionné.";
+  if (!file) return "No file selected.";
 
   const extension = String(file.name || "").split(".").pop()?.toLowerCase() || "";
   if (
     !WALLPAPER_ALLOWED_MIME_TYPES.has(file.type)
     || !WALLPAPER_ALLOWED_EXTENSIONS.has(extension)
   ) {
-    return "Ce format n’est pas accepté. Choisis une image JPG, PNG ou WebP.";
+    return "This format is not accepted. Choose a JPG, PNG, or WebP image.";
   }
 
   if (file.size > WALLPAPER_MAX_BYTES) {
-    return "Cette image est trop lourde. La taille maximale est de 5 Mo.";
+    return "This image is too large. The maximum size is 5 MB.";
   }
 
   return "";
@@ -47,7 +47,7 @@ export function normalizeWallpaperPayload(value) {
 
   return {
     dataUrl,
-    name: String(value?.name || "Image importée"),
+    name: String(value?.name || "Imported image"),
     importedAt: String(value?.importedAt || ""),
     mime,
   };

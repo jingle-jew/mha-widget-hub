@@ -7,7 +7,7 @@ export const USERS_COMMAND = "mha_widget_hub/users/list";
 function serializeWebSocketError(error) {
   return {
     raw: error,
-    message: error?.message || String(error || "Erreur WebSocket inconnue"),
+    message: error?.message || String(error || "Unknown WebSocket error"),
     code: error?.code || "",
     stack: error?.stack || "",
   };
@@ -15,7 +15,7 @@ function serializeWebSocketError(error) {
 
 async function callMhaWebSocket(hass, payload) {
   if (typeof hass?.callWS !== "function") {
-    const error = new Error("Connexion Home Assistant indisponible.");
+    const error = new Error("Home Assistant connection unavailable.");
     console.error("[MHA Admin] WebSocket unavailable.", {
       type: payload?.type,
       payload,

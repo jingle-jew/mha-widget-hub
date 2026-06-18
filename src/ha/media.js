@@ -1,4 +1,5 @@
 import { getEntityDomain, normalizeEntityStateValue } from "./entity.js";
+import { t } from "../i18n/index.js";
 
 export const MEDIA_PLAYER_FEATURES = Object.freeze({
   pause: 1,
@@ -11,14 +12,14 @@ export const MEDIA_PLAYER_FEATURES = Object.freeze({
 
 const MEDIA_VOLUME_STEP = 0.05;
 
-const MEDIA_STATE_LABELS = Object.freeze({
-  playing: "en lecture",
-  paused: "en pause",
-  idle: "inactif",
-  off: "éteint",
-  unavailable: "indisponible",
-  unknown: "inconnu",
-  none: "inconnu",
+const MEDIA_STATE_LABEL_KEYS = Object.freeze({
+  playing: "states.playing",
+  paused: "states.paused",
+  idle: "states.idle",
+  off: "states.off",
+  unavailable: "states.unavailable",
+  unknown: "states.unknown",
+  none: "states.unknown",
 });
 
 function cleanText(value = "") {
@@ -27,7 +28,7 @@ function cleanText(value = "") {
 
 export function getMediaStateLabel(state = "") {
   const normalized = normalizeEntityStateValue(state);
-  return MEDIA_STATE_LABELS[normalized] || normalized;
+  return MEDIA_STATE_LABEL_KEYS[normalized] ? t(MEDIA_STATE_LABEL_KEYS[normalized]) : normalized;
 }
 
 export function resolveHomeAssistantMediaUrl(url = "", origin = globalThis.window?.location?.origin || "") {
@@ -70,7 +71,7 @@ export function buildMediaDisplayModel(entityState, widget = {}, fallback = {}) 
       entityId,
       name: friendlyName,
       title: mediaTitle,
-      subtitle: "en pause",
+      subtitle: t("states.paused", "Paused"),
       artist: mediaArtist,
       album: mediaAlbum,
       state,

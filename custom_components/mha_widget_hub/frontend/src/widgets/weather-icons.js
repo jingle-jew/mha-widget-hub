@@ -30,22 +30,22 @@ const WEATHER_ALIASES = new Map([
 ]);
 
 const WEATHER_LABELS = {
-  sunny: "Ensoleillé",
-  "clear-night": "Ciel dégagé",
-  partlycloudy: "Partiellement nuageux",
-  cloudy: "Nuageux",
-  rainy: "Pluie",
-  pouring: "Forte pluie",
-  lightning: "Orage",
-  "lightning-rainy": "Orage avec pluie",
-  snowy: "Neige",
-  "snowy-rainy": "Neige et pluie",
-  fog: "Brouillard",
-  windy: "Venteux",
-  hail: "Grêle",
-  exceptional: "Conditions exceptionnelles",
-  unknown: "Condition inconnue",
-  unavailable: "Condition indisponible",
+  sunny: "Sunny",
+  "clear-night": "Clear sky",
+  partlycloudy: "Partly cloudy",
+  cloudy: "Cloudy",
+  rainy: "Rain",
+  pouring: "Heavy rain",
+  lightning: "Thunderstorm",
+  "lightning-rainy": "Thunderstorm with rain",
+  snowy: "Snow",
+  "snowy-rainy": "Snow and rain",
+  fog: "Fog",
+  windy: "Windy",
+  hail: "Hail",
+  exceptional: "Exceptional conditions",
+  unknown: "Unknown condition",
+  unavailable: "Condition unavailable",
 };
 
 function normalizeWeatherCondition(condition = "unknown") {

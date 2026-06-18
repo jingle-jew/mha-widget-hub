@@ -5,6 +5,7 @@ import { createIconSymbol } from "../ui/icon-symbol.js";
 import { createBackButton, createCloseButton, createMoveUpButton, createMoveDownButton, createRemoveButton } from "../system/system-buttons.js";
 import { validateWallpaperFile } from "./wallpaper-storage.js";
 import { getThemeStyleOptions } from "./theme-registry.js";
+import { t } from "../i18n/index.js";
 /*
  * MHA Settings panel.
  *
@@ -15,8 +16,8 @@ import { getThemeStyleOptions } from "./theme-registry.js";
 
 const THEME_OPTIONS = [
   { value: "auto", label: "Auto" },
-  { value: "dark", label: "Sombre" },
-  { value: "light", label: "Clair" },
+  { value: "dark", label: "Dark" },
+  { value: "light", label: "Light" },
 ];
 
 const STYLE_OPTIONS = getThemeStyleOptions();
@@ -28,9 +29,9 @@ const IOS_GLASS_OPTIONS = [
 
 
 const DOCK_POSITION_OPTIONS = [
-  { value: "left", label: "Gauche" },
-  { value: "right", label: "Droite" },
-  { value: "bottom", label: "Bas" },
+  { value: "left", label: "Left" },
+  { value: "right", label: "Right" },
+  { value: "bottom", label: "Bottom" },
 ];
 
 const ICON_SHAPE_OPTIONS = [
@@ -41,17 +42,17 @@ const ICON_SHAPE_OPTIONS = [
 ];
 
 const SCREENSAVER_DELAY_OPTIONS = [
-  { value: "15000", label: "15 secondes" },
-  { value: "30000", label: "30 secondes" },
+  { value: "15000", label: "15 seconds" },
+  { value: "30000", label: "30 seconds" },
   { value: "120000", label: "2 minutes" },
   { value: "300000", label: "5 minutes" },
 ];
 
 const NOW_BAR_ITEM_OPTIONS = [
-  { value: "media", label: "Média" },
-  { value: "weather", label: "Météo" },
-  { value: "calendar", label: "Calendrier" },
-  { value: "now", label: "Now" },
+  { value: "media", label: "Media", labelKey: "settings.nowBarItems.media" },
+  { value: "weather", label: "Weather", labelKey: "settings.nowBarItems.weather" },
+  { value: "calendar", label: "Calendar", labelKey: "settings.nowBarItems.calendar" },
+  { value: "now", label: "Now", labelKey: "settings.nowBarItems.now" },
 ];
 
 const COMPACT_ACCENT_FAMILIES = [
@@ -121,8 +122,8 @@ function createWallpaperControls({ mode, wallpaper, onImport, onReset } = {}) {
   const hasWallpaper = Boolean(wallpaper?.dataUrl);
   const importedDate = formatImportDate(wallpaper?.importedAt);
   status.textContent = hasWallpaper
-    ? `${wallpaper.name || "Image importée"}${importedDate ? ` · ${importedDate}` : ""}`
-    : `Aucun fond personnalisé pour le thème ${mode === "dark" ? "sombre" : "clair"}.`;
+    ? `${wallpaper.name || "Imported image"}${importedDate ? ` · ${importedDate}` : ""}`
+    : `No custom wallpaper for the ${mode === "dark" ? "dark" : "light"}.`;
 
   const input = document.createElement("input");
   input.type = "file";
@@ -132,13 +133,13 @@ function createWallpaperControls({ mode, wallpaper, onImport, onReset } = {}) {
   const importButton = document.createElement("button");
   importButton.className = "mha-settings-reset mha-settings-wallpaper-button";
   importButton.type = "button";
-  importButton.textContent = "Importer une image";
+  importButton.textContent = "Import image";
   importButton.addEventListener("click", () => input.click());
 
   const resetButton = document.createElement("button");
   resetButton.className = "mha-settings-reset mha-settings-wallpaper-button";
   resetButton.type = "button";
-  resetButton.textContent = "Réinitialiser";
+  resetButton.textContent = "Reset";
   resetButton.disabled = !hasWallpaper;
   resetButton.addEventListener("click", () => onReset?.(mode));
 
@@ -155,7 +156,7 @@ function createWallpaperControls({ mode, wallpaper, onImport, onReset } = {}) {
     reader.addEventListener("load", () => {
       const dataUrl = String(reader.result || "");
       if (!dataUrl.startsWith("data:image/")) {
-        message.textContent = "L’image n’a pas pu être lue correctement.";
+        message.textContent = "The image could not be read correctly.";
         input.value = "";
         return;
       }
@@ -169,21 +170,21 @@ function createWallpaperControls({ mode, wallpaper, onImport, onReset } = {}) {
             importedAt: new Date().toISOString(),
             mime: file.type,
           });
-          message.textContent = `Fond ${mode === "dark" ? "sombre" : "clair"} enregistré sur cet appareil.`;
+          message.textContent = `Wallpaper ${mode === "dark" ? "dark" : "light"} saved on this device.`;
         } catch (error) {
-          message.textContent = "Impossible de sauvegarder cette image localement. Essaie une image plus légère.";
+          message.textContent = "Unable to save this image locally. Try a smaller image.";
         } finally {
           input.value = "";
         }
       }, { once: true });
       image.addEventListener("error", () => {
-        message.textContent = "Ce fichier ne contient pas une image valide.";
+        message.textContent = "This file does not contain a valid image.";
         input.value = "";
       }, { once: true });
       image.src = dataUrl;
     });
     reader.addEventListener("error", () => {
-      message.textContent = "Impossible de lire cette image.";
+      message.textContent = "Unable to read this image.";
       input.value = "";
     });
     reader.readAsDataURL(file);
@@ -200,14 +201,14 @@ function createWallpaperControls({ mode, wallpaper, onImport, onReset } = {}) {
   preview.setAttribute(
     "aria-label",
     hasWallpaper
-      ? `Aperçu du fond ${mode === "dark" ? "sombre" : "clair"}`
-      : `Aucun aperçu pour le thème ${mode === "dark" ? "sombre" : "clair"}`,
+      ? `Wallpaper preview for ${mode === "dark" ? "dark" : "light"}`
+      : `No preview for the ${mode === "dark" ? "dark" : "light"}`,
   );
   if (hasWallpaper) {
     preview.style.backgroundImage = `url("${wallpaper.dataUrl}")`;
   } else {
     const empty = document.createElement("span");
-    empty.textContent = "Aucune image";
+    empty.textContent = "No image";
     preview.append(empty);
   }
 
@@ -217,24 +218,24 @@ function createWallpaperControls({ mode, wallpaper, onImport, onReset } = {}) {
 
 
 const DOCK_ICON_OPTIONS = [
-  { name: "home", label: "Accueil", category: "home" },
+  { name: "home", label: "Home", category: "home" },
   { name: "dashboard", label: "Dashboard", category: "navigation" },
   { name: "apps", label: "Applications", category: "system" },
-  { name: "grid", label: "Grille", category: "navigation" },
-  { name: "light", label: "Lumières", category: "lighting" },
-  { name: "weather", label: "Météo", category: "weather" },
-  { name: "media-player", label: "Média", category: "media_player" },
-  { name: "calendar", label: "Calendrier", category: "utility" },
-  { name: "star", label: "Favori", category: "utility" },
-  { name: "gear", label: "Réglages", category: "system" },
+  { name: "grid", label: "Grid", category: "navigation" },
+  { name: "light", label: "Lights", category: "lighting" },
+  { name: "weather", label: "Weather", category: "weather" },
+  { name: "media-player", label: "Media", category: "media_player" },
+  { name: "calendar", label: "Calendar", category: "utility" },
+  { name: "star", label: "Favorite", category: "utility" },
+  { name: "gear", label: "Settings", category: "system" },
 ];
 
 const CLOCK_VARIANTS = [
-  { value: "none", label: "Pas d’horloge" },
-  { value: "digital", label: "Numérique" },
-  { value: "digital-weather", label: "Numérique météo" },
-  { value: "analog", label: "Analogique" },
-  { value: "ios-analog", label: "Analogique iOS" },
+  { value: "none", label: "No clock" },
+  { value: "digital", label: "Digital" },
+  { value: "digital-weather", label: "Digital weather" },
+  { value: "analog", label: "Analog" },
+  { value: "ios-analog", label: "Analog iOS" },
 ];
 
 function option(value, label, selectedValue) {
@@ -243,6 +244,10 @@ function option(value, label, selectedValue) {
   opt.textContent = label;
   opt.selected = value === selectedValue;
   return opt;
+}
+
+function optionLabel(item = {}) {
+  return item.labelKey ? t(item.labelKey, item.label) : item.label;
 }
 
 function createSelect({ label, value, options, onChange }) {
@@ -257,7 +262,7 @@ function createSelect({ label, value, options, onChange }) {
   select.className = "mha-settings-select";
   select.dataset.settingsControl = label;
   select.dataset.settingsValueControl = "true";
-  select.append(...options.map((item) => option(item.value, item.label, value)));
+  select.append(...options.map((item) => option(item.value, optionLabel(item), value)));
   select.addEventListener("change", () => onChange?.(select.value));
 
   field.append(text, select);
@@ -372,7 +377,7 @@ function createAccentPicker({
   expandButton.className = "mha-settings-accent-expand";
   expandButton.type = "button";
   expandButton.dataset.accentExpanded = String(Boolean(expanded));
-  expandButton.setAttribute("aria-label", expanded ? "Réduire la palette d’accent" : "Afficher toute la palette d’accent");
+  expandButton.setAttribute("aria-label", expanded ? t("settings.accentCollapse", "Collapse accent palette") : t("settings.accentExpand", "Show full accent palette"));
   expandButton.setAttribute("aria-expanded", String(Boolean(expanded)));
   expandButton.textContent = expanded ? "⌃" : "⌄";
   expandButton.addEventListener("click", (event) => {
@@ -393,7 +398,7 @@ function createAccentPicker({
     button.type = "button";
     button.dataset.accent = "auto";
     button.dataset.compactAccent = "true";
-    button.setAttribute("aria-label", "Automatique selon le fond d’écran");
+    button.setAttribute("aria-label", t("settings.accentAuto", "Automatic from wallpaper"));
     button.setAttribute("aria-pressed", String(isAuto));
     button.title = "Auto";
     button.textContent = "A";
@@ -480,19 +485,19 @@ function createDockPageRow(page, index, pages, { activePageId = "", onSelect, on
   const actions = document.createElement("span");
   actions.className = "mha-settings-dock-row-actions";
   const up = createMoveUpButton({
-    label: `Monter ${page.name || "la page"}`,
+    label: `Move ${page.name || "page"} up`,
     className: "mha-settings-mini-button",
     disabled: index === 0,
     onClick: (event) => { event.stopPropagation(); onMove?.(page.id, -1); },
   });
   const down = createMoveDownButton({
-    label: `Descendre ${page.name || "la page"}`,
+    label: `Move ${page.name || "page"} down`,
     className: "mha-settings-mini-button",
     disabled: index >= pages.length - 1,
     onClick: (event) => { event.stopPropagation(); onMove?.(page.id, 1); },
   });
   const remove = createRemoveButton({
-    label: `Supprimer ${page.name || "la page"}`,
+    label: `Delete ${page.name || "page"}`,
     className: "mha-settings-mini-button mha-settings-mini-button-danger",
     disabled: pages.length <= 1,
     onClick: (event) => { event.stopPropagation(); onDelete?.(page.id); },
@@ -516,7 +521,7 @@ function createDockPageEditor({ page, onBack, onRename, onIconChange } = {}) {
   wrapper.className = "mha-settings-dock-editor";
 
   const back = createBackButton({
-    label: "Retour au dock",
+    label: t("settings.backToDock", "Back to dock"),
     className: "mha-settings-back",
     onClick: () => onBack?.(),
   });
@@ -525,7 +530,7 @@ function createDockPageEditor({ page, onBack, onRename, onIconChange } = {}) {
   nameField.className = "mha-settings-field";
   const nameLabel = document.createElement("span");
   nameLabel.className = "mha-settings-label";
-  nameLabel.textContent = "Nom";
+  nameLabel.textContent = t("settings.name", "Name");
   const input = document.createElement("input");
   input.className = "mha-settings-select mha-settings-text-input";
   input.dataset.settingsControl = "dock-page-name";
@@ -555,7 +560,7 @@ function createDockPageEditor({ page, onBack, onRename, onIconChange } = {}) {
     iconGrid.append(button);
   });
 
-  wrapper.append(back, nameField, createSection("Icône", [iconGrid]));
+  wrapper.append(back, nameField, createSection(t("settings.icon", "Icon"), [iconGrid]));
   return wrapper;
 }
 
@@ -574,12 +579,12 @@ function createSection(title, children = []) {
 function createNowBarControls({ enabled = true, items = {}, onEnabledChange, onItemChange } = {}) {
   return [
     createSwitch({
-      label: "Activer la Now Bar",
+      label: t("settings.nowBarEnabled", "Enable Now Bar"),
       checked: enabled,
       onChange: onEnabledChange,
     }),
     ...NOW_BAR_ITEM_OPTIONS.map(item => createCheckbox({
-      label: item.label,
+      label: optionLabel(item),
       checked: items[item.value] !== false,
       onChange: checked => onItemChange?.(item.value, checked),
     })),
@@ -596,18 +601,18 @@ function createScreensaverControls({
 } = {}) {
   return [
     createSwitch({
-      label: "Activer",
+      label: t("settings.enable", "Enable"),
       checked: enabled,
       onChange: onEnabledChange,
     }),
     createSelect({
-      label: "Délai",
+      label: t("settings.delay", "Delay"),
       value: String(delay),
       options: SCREENSAVER_DELAY_OPTIONS,
       onChange: onDelayChange,
     }),
     createSelect({
-      label: "Horloge",
+        label: t("settings.clock", "Clock"),
       value: clockVariant,
       options: CLOCK_VARIANTS,
       onChange: onClockVariantChange,
@@ -762,7 +767,7 @@ export function createSettingsPanel({
   const scrim = document.createElement("button");
   scrim.className = "mha-settings-scrim";
   scrim.type = "button";
-  scrim.setAttribute("aria-label", "Fermer les paramètres");
+  scrim.setAttribute("aria-label", t("settings.closeSettings", "Close settings"));
   scrim.addEventListener("click", (event) => {
     event.stopPropagation();
     onClose?.();
@@ -772,7 +777,7 @@ export function createSettingsPanel({
   sheet.className = "mha-settings-sheet";
   sheet.setAttribute("role", "dialog");
   sheet.setAttribute("aria-modal", "true");
-  sheet.setAttribute("aria-label", isScreensaverScope ? "Paramètres de l’économiseur d’écran" : "Paramètres MHA");
+  sheet.setAttribute("aria-label", isScreensaverScope ? t("settings.screensaver", "Screensaver") : t("settings.title", "Settings"));
   ["pointerdown", "pointerup", "click", "touchstart", "touchmove", "touchend", "wheel"].forEach((type) => {
     root.addEventListener(type, (event) => event.stopPropagation(), { passive: type !== "wheel" });
   });
@@ -790,21 +795,21 @@ export function createSettingsPanel({
   const h2 = document.createElement("h2");
   h2.className = "mha-settings-title";
   h2.textContent = isScreensaverScope
-    ? "Économiseur d’écran"
+    ? t("settings.screensaver", "Screensaver")
     : settingsPage === "dock"
-      ? "Dock"
+      ? t("settings.dock", "Dock")
       : settingsPage === "dock-detail"
-        ? "Icône du dock"
+        ? "Dock icon"
         : settingsPage === "wallpaper"
-          ? "Fond d’écran"
+          ? t("settings.wallpaper", "Wallpaper")
           : settingsPage === "screensaver-nowbar" || settingsPage === "nowbar"
-            ? "Screensaver et Now Bar"
-          : "Paramètres";
+            ? t("settings.screensaverAndNowBar", "Screensaver and Now Bar")
+          : t("settings.title", "Settings");
 
   title.append(eyebrow, h2);
 
   const close = createCloseButton({
-    label: "Fermer",
+    label: t("common.close", "Close"),
     className: "mha-settings-close",
     onClick: () => onClose?.(),
   });
@@ -814,7 +819,7 @@ export function createSettingsPanel({
 
   if (!isScreensaverScope && (settingsPage === "dock" || settingsPage === "wallpaper" || settingsPage === "screensaver-nowbar" || settingsPage === "nowbar")) {
     headerActions.append(createBackButton({
-      label: "Retour aux paramètres",
+      label: t("settings.backToSettings", "Back to settings"),
       className: "mha-settings-back",
       onClick: () => settingsPage === "wallpaper"
         ? onWallpaperMainBack?.()
@@ -831,15 +836,15 @@ export function createSettingsPanel({
   const sections = [];
 
   if (!isScreensaverScope && settingsPage === "dock") {
-    sections.push(createSection("Position", [
+    sections.push(createSection(t("settings.position", "Position"), [
       createSelect({
-        label: "Position du dock",
+        label: t("settings.dockPosition", "Dock position"),
         value: dockPosition,
         options: DOCK_POSITION_OPTIONS,
         onChange: onDockPositionChange,
       }),
     ]));
-    sections.push(createSection("Icônes du dock", [
+    sections.push(createSection(t("settings.dockIcons", "Dock icons"), [
       createDockSettingsList({
         pages: dockPages,
         activePageId: activeDockPageId,
@@ -873,7 +878,7 @@ export function createSettingsPanel({
   }
 
   if (!isScreensaverScope && settingsPage === "wallpaper") {
-    sections.push(createSection("Thème clair", [
+    sections.push(createSection(t("settings.lightTheme", "Light theme"), [
       createWallpaperControls({
         mode: "light",
         wallpaper: customWallpapers.light,
@@ -881,7 +886,7 @@ export function createSettingsPanel({
         onReset: onWallpaperReset,
       }),
     ]));
-    sections.push(createSection("Thème sombre", [
+    sections.push(createSection(t("settings.darkTheme", "Dark theme"), [
       createWallpaperControls({
         mode: "dark",
         wallpaper: customWallpapers.dark,
@@ -897,7 +902,7 @@ export function createSettingsPanel({
   }
 
   if (!isScreensaverScope && (settingsPage === "screensaver-nowbar" || settingsPage === "nowbar")) {
-    sections.push(createSection("Économiseur d’écran", createScreensaverControls({
+    sections.push(createSection(t("settings.screensaver", "Screensaver"), createScreensaverControls({
       enabled: screensaverEnabled,
       delay: screensaverDelay,
       clockVariant: screensaverClockVariant,
@@ -905,7 +910,7 @@ export function createSettingsPanel({
       onDelayChange: onScreensaverDelayChange,
       onClockVariantChange: onScreensaverClockVariantChange,
     })));
-    sections.push(createSection("Now Bar", createNowBarControls({
+    sections.push(createSection(t("settings.nowBar", "Now Bar"), createNowBarControls({
       enabled: screensaverNowBar,
       items: screensaverNowBarItems,
       onEnabledChange: onScreensaverNowBarChange,
@@ -921,13 +926,13 @@ export function createSettingsPanel({
   if (!isScreensaverScope) {
     const appearanceControls = [
       createSelect({
-        label: "Thème",
+        label: t("settings.theme", "Theme"),
         value: theme,
         options: THEME_OPTIONS,
         onChange: onThemeChange,
       }),
       createSelect({
-        label: "Style visuel",
+        label: t("settings.visualStyle", "Visual style"),
         value: themeStyle,
         options: STYLE_OPTIONS,
         onChange: onThemeStyleChange,
@@ -936,7 +941,7 @@ export function createSettingsPanel({
 
     if (themeStyle === "ios") {
       appearanceControls.push(createSelect({
-        label: "Verre iOS",
+        label: t("settings.iosGlass", "iOS glass"),
         value: iosGlass,
         options: IOS_GLASS_OPTIONS,
         onChange: onIosGlassChange,
@@ -945,7 +950,7 @@ export function createSettingsPanel({
 
     appearanceControls.push(
       createAccentPicker({
-        label: "Accent",
+        label: t("settings.accent", "Accent"),
         themeStyle,
         value: accent,
         accentMode,
@@ -955,52 +960,52 @@ export function createSettingsPanel({
         onExpandedChange: onAccentPaletteExpandedChange,
       }),
       createSelect({
-        label: "Forme des icônes",
+        label: t("settings.iconShape", "Icon shape"),
         value: iconShape,
         options: ICON_SHAPE_OPTIONS,
         onChange: onIconShapeChange,
       }),
     );
 
-    sections.push(createSection("Apparence", appearanceControls));
-    sections.push(createSection("Personnalisation", [
+    sections.push(createSection(t("settings.appearance", "Appearance"), appearanceControls));
+    sections.push(createSection(t("settings.customization", "Customization"), [
       createSettingsNavTile({
         icon: "dashboard",
-        label: "Fond d’écran",
-        description: "Choisir une image distincte pour les thèmes clair et sombre.",
+        label: t("settings.wallpaper", "Wallpaper"),
+        description: t("settings.wallpaperDescription", "Choose a separate image for light and dark themes."),
         onClick: onOpenWallpaperSettings,
       }),
       createSettingsNavTile({
         icon: "star",
-        label: "Screensaver et Now Bar",
-        description: "Configurer l’économiseur et les contenus affichés.",
+        label: t("settings.screensaverAndNowBar", "Screensaver and Now Bar"),
+        description: t("settings.screensaverNowBarDescription", "Configure the screensaver and displayed content."),
         onClick: onOpenNowBarSettings,
       }),
     ]));
-    sections.push(createSection("Navigation", [
+    sections.push(createSection(t("settings.navigation", "Navigation"), [
       createSwitch({
-        label: "Masquer la sidebar Home Assistant",
-        description: "Cache la barre latérale native de Home Assistant pour une expérience plus immersive.",
+        label: t("settings.hideHaSidebar", "Hide Home Assistant sidebar"),
+        description: t("settings.hideHaSidebarDescription", "Hide the native Home Assistant sidebar for a more immersive experience."),
         checked: hideHaSidebar,
         onChange: onHideHaSidebarChange,
       }),
       createSettingsNavTile({
         icon: "apps",
-        label: "Dock",
-        description: "Réorganiser les pages du dock et changer leurs icônes.",
+        label: t("settings.dock", "Dock"),
+        description: t("settings.dockDescription", "Reorder dock pages and change their icons."),
         onClick: onOpenDockSettings,
       }),
     ]));
   } else {
-    sections.push(createSection("Apparence", [
+    sections.push(createSection(t("settings.appearance", "Appearance"), [
       createSelect({
-        label: "Thème",
+        label: t("settings.theme", "Theme"),
         value: theme,
         options: THEME_OPTIONS,
         onChange: onThemeChange,
       }),
     ]));
-    sections.push(createSection("Now Bar", createNowBarControls({
+    sections.push(createSection(t("settings.nowBar", "Now Bar"), createNowBarControls({
       enabled: screensaverNowBar,
       items: screensaverNowBarItems,
       onEnabledChange: onScreensaverNowBarChange,
@@ -1009,7 +1014,7 @@ export function createSettingsPanel({
   }
 
   if (isScreensaverScope) {
-    sections.push(createSection("Économiseur d’écran", createScreensaverControls({
+    sections.push(createSection(t("settings.screensaver", "Screensaver"), createScreensaverControls({
       enabled: screensaverEnabled,
       delay: screensaverDelay,
       clockVariant: screensaverClockVariant,
@@ -1024,11 +1029,11 @@ export function createSettingsPanel({
   const resetButton = document.createElement("button");
   resetButton.className = "mha-settings-reset";
   resetButton.type = "button";
-  resetButton.textContent = "Réinitialiser la grille";
+  resetButton.textContent = t("settings.resetGrid", "Reset grid");
   resetButton.addEventListener("click", () => onResetGrid?.());
 
   if (!isScreensaverScope) {
-    body.append(createSection("Layout", [resetButton]));
+    body.append(createSection(t("settings.layout", "Layout"), [resetButton]));
   }
 
   sheet.append(header, body);

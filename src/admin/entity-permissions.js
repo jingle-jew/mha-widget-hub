@@ -1,15 +1,15 @@
 import { getEntityDomain } from "../ha/entity.js";
 
 export const MHA_ENTITY_DOMAINS = Object.freeze([
-  Object.freeze({ value: "light", label: "Lumières" }),
-  Object.freeze({ value: "switch", label: "Interrupteurs" }),
-  Object.freeze({ value: "input_boolean", label: "Booléens" }),
-  Object.freeze({ value: "button", label: "Boutons" }),
-  Object.freeze({ value: "weather", label: "Météo" }),
-  Object.freeze({ value: "media_player", label: "Lecteurs multimédias" }),
-  Object.freeze({ value: "climate", label: "Climatisation" }),
-  Object.freeze({ value: "sensor", label: "Capteurs" }),
-  Object.freeze({ value: "binary_sensor", label: "Capteurs binaires" }),
+  Object.freeze({ value: "light", label: "Lights" }),
+  Object.freeze({ value: "switch", label: "Switches" }),
+  Object.freeze({ value: "input_boolean", label: "Booleans" }),
+  Object.freeze({ value: "button", label: "Buttons" }),
+  Object.freeze({ value: "weather", label: "Weather" }),
+  Object.freeze({ value: "media_player", label: "Media players" }),
+  Object.freeze({ value: "climate", label: "Climate" }),
+  Object.freeze({ value: "sensor", label: "Sensors" }),
+  Object.freeze({ value: "binary_sensor", label: "Binary sensors" }),
 ]);
 
 const DOMAIN_SET = new Set(MHA_ENTITY_DOMAINS.map(domain => domain.value));

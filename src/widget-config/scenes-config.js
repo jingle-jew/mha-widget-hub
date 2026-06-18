@@ -71,7 +71,7 @@ function createMissingOption(entityId) {
   if (!normalizedEntityId) return null;
   return {
     value: normalizedEntityId,
-    label: `${humanizeEntityId(normalizedEntityId)} (introuvable)`,
+    label: `${humanizeEntityId(normalizedEntityId)} (missing)`,
     entityState: null,
     missing: true,
   };
@@ -87,7 +87,7 @@ function reconcileButtonDraft(button, hass, visibilityConfig) {
     : [createMissingOption(button.entityId), ...options];
   const resolvedSelection = selected || resolvedOptions.find(option => option?.value === button.entityId) || null;
   if (!button.labelCustomized) {
-    button.label = resolvedSelection?.label?.replace(/\s+\(introuvable\)$/u, "") || "";
+    button.label = resolvedSelection?.label?.replace(/\s+\(missing\)$/u, "") || "";
   }
   return {
     draft: button,
@@ -137,7 +137,7 @@ export function updateScenesButtonEntity(draft, index, entityId, options = []) {
   button.type = normalizeButtonType(button.type, button.entityId);
   button.icon = normalizeButtonIcon(button.type, button.icon);
   if (!button.labelCustomized) {
-    button.label = selected?.label?.replace(/\s+\(introuvable\)$/u, "") || "";
+    button.label = selected?.label?.replace(/\s+\(missing\)$/u, "") || "";
   }
   return draft;
 }
@@ -158,7 +158,7 @@ export function buildScenesWidgetConfig(widget, draft, hass, visibilityConfig) {
     kind: "scenes",
     buttons: reconciled.draft.buttons.map((button, index) => {
       const selection = reconciled.buttons[index];
-      const fallbackLabel = selection?.selected?.label?.replace(/\s+\(introuvable\)$/u, "") || "";
+      const fallbackLabel = selection?.selected?.label?.replace(/\s+\(missing\)$/u, "") || "";
       return {
         type: normalizeButtonType(button.type, button.entityId),
         entityId: String(button.entityId || "").trim(),

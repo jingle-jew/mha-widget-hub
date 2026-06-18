@@ -14,19 +14,19 @@ export function createShell(meta = {}) {
 
   const workspace = document.createElement("section");
   workspace.className = "mha-workspace";
-  workspace.setAttribute("aria-label", "Espace principal du tableau de bord");
+  workspace.setAttribute("aria-label", "Main dashboard area");
 
   const widgetArea = document.createElement("section");
   widgetArea.className = "mha-widget-area";
-  widgetArea.setAttribute("aria-label", "Zone des widgets");
+  widgetArea.setAttribute("aria-label", "Widget area");
 
   const grid = document.createElement("section");
   grid.className = "mha-grid";
-  grid.setAttribute("aria-label", "Grille de widgets");
+  grid.setAttribute("aria-label", "Widget grid");
 
   const dockZone = document.createElement("aside");
   dockZone.className = "mha-dock-zone";
-  dockZone.setAttribute("aria-label", "Zone du dock");
+  dockZone.setAttribute("aria-label", "Dock area");
 
   dockZone.append(createDock({
     pages: meta.pages,

@@ -4,13 +4,13 @@ export const WIDGET_PREVIEW_DATA = freeze({
   clock: freeze({
     time: "12:45",
     date: "Mer. 17 juin",
-    weather: "22° · Part. nuageux",
+    weather: "22° · Partly cloudy",
   }),
   weather: freeze({
     entityId: "weather.home",
     name: "Maison",
     state: "partlycloudy",
-    condition: "Partiellement nuageux",
+    condition: "Partly cloudy",
     temperature: 22,
     humidity: 54,
     windSpeed: 12,
@@ -22,15 +22,15 @@ export const WIDGET_PREVIEW_DATA = freeze({
   }),
   media: freeze({
     entityId: "media_player.preview",
-    name: "Salon",
+    name: "Living room",
     state: "playing",
     title: "Now Playing",
     artist: "MHA Preview",
     volume: 0.68,
   }),
   scenes: freeze({
-    evening: freeze({ entityId: "scene.preview_evening", name: "Soir" }),
-    movie: freeze({ entityId: "scene.preview_movie", name: "Cinéma" }),
+    evening: freeze({ entityId: "scene.preview_evening", name: "Evening" }),
+    movie: freeze({ entityId: "scene.preview_movie", name: "Cinema" }),
     sleep: freeze({ entityId: "script.preview_sleep", name: "Bonne nuit" }),
     focus: freeze({ entityId: "automation.preview_focus", name: "Focus" }),
   }),
@@ -41,7 +41,7 @@ export const WIDGET_PREVIEW_DATA = freeze({
   }),
   light: freeze({
     entityId: "light.preview",
-    name: "Salon",
+    name: "Living room",
     state: "on",
     brightness: 174,
     brightnessPercent: 68,

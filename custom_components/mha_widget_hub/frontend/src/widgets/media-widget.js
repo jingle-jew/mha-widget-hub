@@ -170,13 +170,13 @@ function createControlButton(label, symbol, {
 
 function createPlaybackButtons(data, { interactive = true, onAction } = {}) {
   return [
-    createControlButton("Précédent", "‹", {
+    createControlButton("Previous", "‹", {
       action: "previous",
       disabled: !data.canPrevious,
       interactive,
       onAction,
     }),
-    createControlButton(data.playing ? "Pause" : "Lecture", data.playing ? "Ⅱ" : "▶", {
+    createControlButton(data.playing ? "Pause" : "Play", data.playing ? "Ⅱ" : "▶", {
       primary: true,
       action: "playPause",
       className: "mha-media-widget-play-toggle",
@@ -184,7 +184,7 @@ function createPlaybackButtons(data, { interactive = true, onAction } = {}) {
       interactive,
       onAction,
     }),
-    createControlButton("Suivant", "›", {
+    createControlButton("Next", "›", {
       action: "next",
       disabled: !data.canNext,
       interactive,
@@ -195,20 +195,20 @@ function createPlaybackButtons(data, { interactive = true, onAction } = {}) {
 
 function createVolumeButtons(data, { interactive = true, onAction } = {}) {
   return [
-    createControlButton("Baisser le volume", "−", {
+    createControlButton("Volume down", "−", {
       action: "volumeDown",
       disabled: !data.canVolumeDown,
       interactive,
       onAction,
     }),
-    createControlButton(data.muted ? "Activer le son" : "Couper le son", data.muted ? "Mute" : "Vol", {
+    createControlButton(data.muted ? "Unmute" : "Mute", data.muted ? "Mute" : "Vol", {
       primary: true,
       action: "mute",
       disabled: !data.canMute,
       interactive,
       onAction,
     }),
-    createControlButton("Monter le volume", "+", {
+    createControlButton("Volume up", "+", {
       action: "volumeUp",
       disabled: !data.canVolumeUp,
       interactive,
@@ -238,8 +238,8 @@ function renderControls(controls, data, { mode = "playback", interactive = true,
   toggle.setAttribute(
     "aria-label",
     showingPlaybackReturn
-      ? "Retour aux contrôles média"
-      : `Afficher les contrôles de volume (${data.volumeLabel})`,
+      ? "Back to media controls"
+      : `Show volume controls (${data.volumeLabel})`,
   );
   toggle.disabled = false;
   toggle.setAttribute("aria-disabled", String(!interactive));
@@ -418,9 +418,9 @@ export const MEDIA_WIDGET_DEFINITION = Object.freeze({
   category: "media",
   manager: Object.freeze({
     entries: Object.freeze([
-      Object.freeze({ category: "media", variant: "media-compact", label: "Média compact", size: freezeSize(2, 2), description: "Lecture rapide.", order: 10 }),
-      Object.freeze({ category: "media", variant: "media-wide", label: "Média large", size: freezeSize(4, 2), description: "Now playing.", order: 20 }),
-      Object.freeze({ category: "media", variant: "media-panel", label: "Panneau média", size: freezeSize(4, 4), description: "Contrôles et détails.", order: 30 }),
+      Object.freeze({ category: "media", variant: "media-compact", label: "Compact media", size: freezeSize(2, 2), description: "Quick playback.", order: 10 }),
+      Object.freeze({ category: "media", variant: "media-wide", label: "Wide media", size: freezeSize(4, 2), description: "Now playing.", order: 20 }),
+      Object.freeze({ category: "media", variant: "media-panel", label: "Media panel", size: freezeSize(4, 4), description: "Controls and details.", order: 30 }),
     ]),
   }),
   renderer: "media",
@@ -439,7 +439,7 @@ export const MEDIA_WIDGET_DEFINITION = Object.freeze({
   variants: [
     variant("media-compact", "Compact 2×2", 2, 2),
     variant("media-wide", "Large 4×2", 4, 2),
-    variant("media-panel", "Panneau 4×4", 4, 4),
+    variant("media-panel", "Panel 4×4", 4, 4),
   ],
 });
 

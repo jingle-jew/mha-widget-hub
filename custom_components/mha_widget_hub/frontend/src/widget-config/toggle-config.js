@@ -4,18 +4,18 @@ import { getEntityOptionsByDomain } from "./light-options.js";
 export const TOGGLE_DEVICE_TYPES = Object.freeze([
   Object.freeze({
     value: "light",
-    label: "Lumière",
-    emptyLabel: "Aucune lumière disponible",
+    label: "Light",
+    emptyLabel: "No light available",
   }),
   Object.freeze({
     value: "switch",
-    label: "Interrupteur",
-    emptyLabel: "Aucun interrupteur disponible",
+    label: "Switch",
+    emptyLabel: "No switch available",
   }),
   Object.freeze({
     value: "input_boolean",
-    label: "Booléen",
-    emptyLabel: "Aucun booléen disponible",
+    label: "Boolean",
+    emptyLabel: "No boolean available",
   }),
 ]);
 

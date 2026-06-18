@@ -2,11 +2,11 @@ import { getEntityDomain } from "../ha/entity.js";
 import { getEntityOptionsByDomain } from "./light-options.js";
 
 export const BUTTON_TYPES = Object.freeze([
-  Object.freeze({ value: "light", label: "Lumière" }),
-  Object.freeze({ value: "switch", label: "Interrupteur" }),
-  Object.freeze({ value: "input_boolean", label: "Booléen" }),
-  Object.freeze({ value: "button", label: "Bouton HA" }),
-  Object.freeze({ value: "action", label: "Action personnalisée" }),
+  Object.freeze({ value: "light", label: "Light" }),
+  Object.freeze({ value: "switch", label: "Switch" }),
+  Object.freeze({ value: "input_boolean", label: "Boolean" }),
+  Object.freeze({ value: "button", label: "Button HA" }),
+  Object.freeze({ value: "action", label: "Custom action" }),
 ]);
 
 function getButtonType(value) {

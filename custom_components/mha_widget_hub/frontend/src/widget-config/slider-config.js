@@ -5,13 +5,13 @@ export const SLIDER_ACTIONS = Object.freeze([
     value: "volume",
     label: "Volume",
     domain: "media_player",
-    emptyLabel: "Aucun appareil média disponible",
+    emptyLabel: "No media device available",
   }),
   Object.freeze({
     value: "brightness",
-    label: "Intensité lumière",
+    label: "Light intensity",
     domain: "light",
-    emptyLabel: "Aucune lumière disponible",
+    emptyLabel: "No light available",
   }),
 ]);
 

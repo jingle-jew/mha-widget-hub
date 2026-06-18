@@ -44,12 +44,12 @@ test("wallpaper validation accepts supported images and explains failures", () =
     name: "salon.gif",
     type: "image/gif",
     size: 100,
-  }), /JPG, PNG ou WebP/);
+  }), /JPG, PNG, or WebP/);
   assert.match(validateWallpaperFile({
     name: "salon.png",
     type: "image/png",
     size: WALLPAPER_MAX_BYTES + 1,
-  }), /5 Mo/);
+  }), /5 MB/);
 });
 
 test("light and dark wallpapers are stored and reset independently", () => {

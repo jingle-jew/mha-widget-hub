@@ -149,22 +149,22 @@ export function createToggleSliderWidgetContent(widget = {}, {
         "aria-label",
         context.entityAllowed
           ? widget.label || "Toggle"
-          : "Entité non autorisée",
+          : "Unauthorized entity",
       );
     }
     if (toggleLabel) {
       toggleLabel.textContent = context.entityAllowed
         ? widget.label || widget.title || "Toggle"
-        : "Entité non autorisée";
+        : "Unauthorized entity";
     }
     if (toggleState) {
       toggleState.textContent = !context.entityAllowed
-        ? "Non autorisé"
+        ? "Unauthorized"
         : context.entityAvailable
         ? checked
-          ? widget.stateOn || "Activé"
-          : widget.stateOff || "Désactivé"
-        : "Indisponible";
+          ? widget.stateOn || "On"
+          : widget.stateOff || "Off"
+        : "Unavailable";
     }
 
     const isSliderDragging = [slider, slider2]
@@ -205,8 +205,8 @@ export const TOGGLE_SLIDER_WIDGET_CONTENT_RENDERER = Object.freeze({
 
 export const TOGGLE_SLIDER_WIDGET_CONFIG_MANIFEST = Object.freeze({
   type: "toggle-slider",
-  title: "Configurer la lumière",
-  hint: "Choisis la lumière et le contrôle à afficher.",
+  title: "Configure light",
+  hint: "Choose the light and control to display.",
   createDraft: createToggleSliderConfigDraft,
   build: buildToggleSliderWidgetConfig,
 });
@@ -216,7 +216,7 @@ export const TOGGLE_SLIDER_WIDGET_DEFINITION = Object.freeze({
   category: "lights",
   manager: Object.freeze({
     entries: Object.freeze([
-      Object.freeze({ category: "lights", variant: "toggle-slider", label: "Lumière combinée", size: freezeSize(4, 2), description: "État et intensité dans une seule tuile.", order: 10 }),
+      Object.freeze({ category: "lights", variant: "toggle-slider", label: "Combined light", size: freezeSize(4, 2), description: "State and brightness in one tile.", order: 10 }),
     ]),
   }),
   renderer: "toggle-slider",
@@ -237,8 +237,8 @@ export const TOGGLE_SLIDER_WIDGET_DEFINITION = Object.freeze({
   defaultSize: freezeSize(4, 2),
   normalizeSize: (size) => ({ ...clampWidth(size, 3, 4), h: 2 }),
   variants: [
-    variant("toggle-slider", "Combiné 3×2", 3, 2),
-    variant("toggle-slider", "Combiné 4×2", 4, 2),
+    variant("toggle-slider", "Combined 3×2", 3, 2),
+    variant("toggle-slider", "Combined 4×2", 4, 2),
   ],
 });
 

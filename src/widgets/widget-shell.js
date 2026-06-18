@@ -80,7 +80,7 @@ export function createWidgetShell(
 
   const showConfigureTool = !(isEditing && widgetKind === "scenes");
   const dimensionButton = widgetDefinition?.config && showConfigureTool
-    ? tool("Configurer le widget", "edit", () => onConfigure?.(widget.id), {
+    ? tool("Configure widget", "edit", () => onConfigure?.(widget.id), {
       className: "mha-tool-button--dimension",
     })
     : tool("Variante suivante", "resize", () => {}, {
@@ -97,7 +97,7 @@ export function createWidgetShell(
   }
 
   const moveButton = tool(
-    isMoveTarget ? "Terminer le déplacement" : "Déplacer le widget",
+    isMoveTarget ? "Finish moving" : "Move widget",
     "move",
     () => onToggleMove?.(widget.id),
     {
@@ -106,7 +106,7 @@ export function createWidgetShell(
     },
   );
 
-  const closeButton = tool("Supprimer", "close", () => onRemove?.(widget.id), {
+  const closeButton = tool("Delete", "close", () => onRemove?.(widget.id), {
     className: "mha-tool-button--close",
   });
 
@@ -133,10 +133,10 @@ function createMoveOverlay(widgetId, onMove) {
   overlay.className = "mha-widget-move-overlay";
 
   [
-    ["up", "Déplacer vers le haut"],
-    ["right", "Déplacer vers la droite"],
-    ["down", "Déplacer vers le bas"],
-    ["left", "Déplacer vers la gauche"],
+    ["up", "Move up"],
+    ["right", "Move right"],
+    ["down", "Move down"],
+    ["left", "Move left"],
   ].forEach(([direction, label]) => {
     const button = document.createElement("button");
     button.className = "mha-widget-move-arrow";

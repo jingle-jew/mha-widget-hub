@@ -123,7 +123,7 @@ export function migratePageStorage({
       normalizePage(
         {
           id: "home",
-          name: "Accueil",
+          name: "Home",
           icon: "home",
           widgets,
         },

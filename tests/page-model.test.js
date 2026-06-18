@@ -31,7 +31,7 @@ test("page normalization preserves identity and normalizes widgets", () => {
 test("page normalization supplies stable first-page and later-page defaults", () => {
   assert.deepEqual(normalizePage({}, 0), {
     id: "page-1",
-    name: "Accueil",
+    name: "Home",
     icon: "home",
     widgets: [],
   });

@@ -35,13 +35,13 @@ export function isSimpleButtonWidgetActive(widget = {}) {
 function getButtonData(widget = {}) {
   const active = isSimpleButtonWidgetActive(widget);
   const hasExplicitState = widget.state != null && widget.state !== "";
-  const stateOn = widget.stateOn || widget.onLabel || widget.activeState || "Activé";
-  const stateOff = widget.stateOff || widget.offLabel || widget.inactiveState || "Désactivé";
+  const stateOn = widget.stateOn || widget.onLabel || widget.activeState || "On";
+  const stateOff = widget.stateOff || widget.offLabel || widget.inactiveState || "Off";
 
   return {
     icon: widget.icon || "home",
     iconCategory: widget.iconCategory || "home",
-    label: widget.label || "Bouton",
+    label: widget.label || "Button",
     state: hasExplicitState ? String(widget.state) : (active ? stateOn : stateOff),
     stateOn,
     stateOff,
@@ -216,16 +216,16 @@ export function createSimpleButtonWidgetContent(widget = {}, {
     }
 
     state.textContent = !access.entityId
-      ? configuredAction ? (widget.state || "Action") : "Non configuré"
+      ? configuredAction ? (widget.state || "Action") : "Not configured"
       : !access.domainAllowed
-        ? "Non pris en charge"
+        ? "Unsupported"
         : !access.entityAllowed
-          ? "Non autorisé"
+          ? "Unauthorized"
           : !access.entityAvailable
-            ? "Indisponible"
+            ? "Unavailable"
             : toggleDomain
               ? active ? data.stateOn : data.stateOff
-              : "Appuyer";
+              : "Press";
   };
   root.__mhaDestroy = () => {
     context.hass = null;
@@ -254,8 +254,8 @@ export const SIMPLE_BUTTON_WIDGET_CONTENT_RENDERER = Object.freeze({
 
 export const SIMPLE_BUTTON_WIDGET_CONFIG_MANIFEST = Object.freeze({
   type: "button",
-  title: "Configurer le bouton",
-  hint: "Choisis le type d’action, l’entité et le nom à afficher.",
+  title: "Configure button",
+  hint: "Choose the action type, entity, and display name.",
   createDraft: createButtonConfigDraft,
   build: buildButtonWidgetConfig,
 });
@@ -265,8 +265,8 @@ export const SIMPLE_BUTTON_WIDGET_DEFINITION = Object.freeze({
   category: "actions",
   manager: Object.freeze({
     entries: Object.freeze([
-      Object.freeze({ category: "actions", variant: "simple-button", label: "Bouton simple", size: freezeSize(2, 1), description: "Icône, libellé et état.", order: 10 }),
-      Object.freeze({ category: "actions", variant: "simple-button", label: "Bouton carré", size: freezeSize(2, 2), description: "Tuile d’action inspirée Home.", order: 20 }),
+      Object.freeze({ category: "actions", variant: "simple-button", label: "Simple button", size: freezeSize(2, 1), description: "Icon, label, and state.", order: 10 }),
+      Object.freeze({ category: "actions", variant: "simple-button", label: "Square button", size: freezeSize(2, 2), description: "Home-inspired action tile.", order: 20 }),
     ]),
   }),
   renderer: "button",
@@ -281,10 +281,10 @@ export const SIMPLE_BUTTON_WIDGET_DEFINITION = Object.freeze({
     ? { w: 2, h: 2 }
     : { ...clampWidth(size, 2, 4), h: 1 },
   variants: [
-    variant("simple-button", "Pilule 2×1", 2, 1),
-    variant("simple-button", "Pilule 3×1", 3, 1),
-    variant("simple-button", "Pilule 4×1", 4, 1),
-    variant("simple-button", "Carré 2×2", 2, 2),
+    variant("simple-button", "Pill 2×1", 2, 1),
+    variant("simple-button", "Pill 3×1", 3, 1),
+    variant("simple-button", "Pill 4×1", 4, 1),
+    variant("simple-button", "Square 2×2", 2, 2),
   ],
 });
 

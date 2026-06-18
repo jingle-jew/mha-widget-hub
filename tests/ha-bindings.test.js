@@ -134,14 +134,14 @@ test("media player model prefers live metadata and readable fallback states", ()
     media_artist: "Duke Dumont",
   });
   assert.equal(buildMediaDisplayModel(paused, {}, {}).title, "Ocean Drive");
-  assert.equal(buildMediaDisplayModel(paused, {}, {}).subtitle, "en pause");
+  assert.equal(buildMediaDisplayModel(paused, {}, {}).subtitle, "Paused");
 
   const idle = entity("media_player.salon", "idle", {
     friendly_name: "Salon",
     media_title: "Stale title",
   });
   assert.equal(buildMediaDisplayModel(idle, {}, {}).title, "Salon");
-  assert.equal(buildMediaDisplayModel(idle, {}, {}).subtitle, "inactif");
+  assert.equal(buildMediaDisplayModel(idle, {}, {}).subtitle, "Idle");
 });
 
 test("media player artwork resolves HA relative URLs in priority order", () => {
@@ -371,12 +371,12 @@ test("weather model reads HA attributes and exposes a clean unavailable fallback
   const model = buildWeatherModel(hass, { entityId: "weather.home" });
 
   assert.equal(model.temperature, "21°C");
-  assert.equal(model.summary, "Part. nuageux");
+  assert.equal(model.summary, "Partly cloudy");
   assert.equal(model.humidity, "54 %");
   assert.equal(model.wind, "12 km/h");
   assert.equal(model.forecast[0].condition, "rainy");
   assert.equal(model.forecast[0].temp, "19°C / 12°C");
-  assert.equal(getClockWeatherText(model), "21°C · Part. nuageux");
+  assert.equal(getClockWeatherText(model), "21°C · Partly cloudy");
 
   const unavailable = buildWeatherModel({
     states: {

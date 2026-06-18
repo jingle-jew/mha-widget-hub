@@ -269,28 +269,32 @@
 
 .mha-media-widget[data-media-size="2x2"] .mha-media-widget-controls-shell {
   position: static;
-  grid-template-columns: max-content;
-  gap: clamp(.22rem, min(1.8cqi, 1.8cqb), .42rem);
+  inline-size: 100%;
+  grid-template-columns: minmax(0, 1fr);
+  justify-content: stretch;
+  gap: clamp(.2rem, min(1.5cqi, 1.5cqb), .36rem);
 }
 
 .mha-media-widget[data-media-size="2x2"] .mha-media-widget-controls {
-  gap: clamp(.18rem, min(1.4cqi, 1.4cqb), .34rem);
+  inline-size: 100%;
+  justify-content: center;
+  gap: clamp(.14rem, min(1cqi, 1cqb), .28rem);
 }
 
 .mha-media-widget[data-media-size="2x2"] .mha-media-widget-control {
-  inline-size: clamp(2.5rem, min(12.6cqi, 12.6cqb), 3rem);
-  block-size: clamp(2.5rem, min(12.6cqi, 12.6cqb), 3rem);
-  min-inline-size: 40px;
-  min-block-size: 40px;
-  font-size: clamp(1.04rem, min(5.8cqi, 6cqb), 1.38rem);
+  inline-size: clamp(2.25rem, min(11.5cqi, 11.5cqb), 2.95rem);
+  block-size: clamp(2.25rem, min(11.5cqi, 11.5cqb), 2.95rem);
+  min-inline-size: 36px;
+  min-block-size: 36px;
+  font-size: clamp(1rem, min(5.5cqi, 5.7cqb), 1.34rem);
 }
 
 .mha-media-widget[data-media-size="2x2"] .mha-media-widget-play-toggle {
-  inline-size: clamp(2.9rem, min(14.5cqi, 14.5cqb), 3.35rem);
-  block-size: clamp(2.9rem, min(14.5cqi, 14.5cqb), 3.35rem);
-  min-inline-size: 46px;
-  min-block-size: 46px;
-  font-size: clamp(1.12rem, min(6.3cqi, 6.3cqb), 1.52rem);
+  inline-size: clamp(2.62rem, min(13.2cqi, 13.2cqb), 3.25rem);
+  block-size: clamp(2.62rem, min(13.2cqi, 13.2cqb), 3.25rem);
+  min-inline-size: 42px;
+  min-block-size: 42px;
+  font-size: clamp(1.08rem, min(6cqi, 6cqb), 1.48rem);
 }
 
 .mha-media-widget[data-media-size="2x2"] .mha-media-widget-control-toggle {
@@ -302,6 +306,23 @@
   min-block-size: 42px;
   padding-inline: .32rem;
   font-size: clamp(.76rem, min(4.25cqi, 4.25cqb), .92rem);
+}
+
+.mha-media-widget[data-media-size="4x2"] .mha-media-widget-text {
+  padding-inline-end: calc(var(--mha-media-toggle-control-size) + var(--mha-media-control-gap));
+}
+
+.mha-media-widget[data-media-size="4x2"] .mha-media-widget-controls-shell {
+  inline-size: 100%;
+  grid-template-columns: minmax(0, 1fr);
+  justify-content: stretch;
+}
+
+.mha-media-widget[data-media-size="4x2"] .mha-media-widget-control-toggle {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+  z-index: 2;
 }
 
 .mha-media-widget-control[data-primary="true"],

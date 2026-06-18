@@ -29,7 +29,7 @@ function createText(className, text) {
 
 function createWeatherGlyph(condition = "partly-cloudy") {
   return createCurrentWeatherIcon(condition, {
-    label: "Conditions actuelles",
+    label: "Current conditions",
     className: "mha-weather-widget-icon",
   });
 }
@@ -68,7 +68,7 @@ function createForecastStack(forecast = []) {
   stack.className = "mha-weather-widget-forecast";
   if (!forecast.length) {
     stack.dataset.empty = "true";
-    stack.append(createText("mha-weather-widget-forecast-empty", "Prévisions indisponibles"));
+    stack.append(createText("mha-weather-widget-forecast-empty", "Forecasts unavailables"));
     return stack;
   }
   forecast.slice(0, 4).forEach((item) => {
@@ -96,8 +96,8 @@ function renderWeather(root, data, variant) {
       condition: "unknown",
       temperature: "--",
       summary: !data.entityId
-        ? "Météo non configurée"
-        : data.entityAllowed ? "Météo indisponible" : "Météo non autorisée",
+        ? "Weather not configured"
+        : data.entityAllowed ? "Weather unavailable" : "Weather unauthorized",
       humidity: "",
       wind: "",
       forecast: [],
@@ -184,8 +184,8 @@ export const WEATHER_WIDGET_CONTENT_RENDERER = Object.freeze({
 
 export const WEATHER_WIDGET_CONFIG_MANIFEST = Object.freeze({
   type: "weather",
-  title: "Configurer la météo",
-  hint: "Choisis l’entité météo à afficher.",
+  title: "Configure weather",
+  hint: "Choose the weather entity to display.",
   createDraft: createWeatherConfigDraft,
   build: buildWeatherWidgetConfig,
 });
@@ -195,10 +195,10 @@ export const WEATHER_WIDGET_DEFINITION = Object.freeze({
   category: "climate",
   manager: Object.freeze({
     entries: Object.freeze([
-      Object.freeze({ category: "climate", variant: "adaptive-weather", label: "Météo horizontale", size: freezeSize(4, 1), description: "Icône et température.", order: 10 }),
-      Object.freeze({ category: "climate", variant: "adaptive-weather", label: "Météo compacte", size: freezeSize(2, 2), description: "Icône et température.", order: 20 }),
-      Object.freeze({ category: "climate", variant: "adaptive-weather", label: "Météo détails", size: freezeSize(3, 2), description: "Humidité et vent.", order: 30 }),
-      Object.freeze({ category: "climate", variant: "adaptive-weather", label: "Météo prévisions", size: freezeSize(4, 2), description: "Prévisions verticales.", order: 40 }),
+      Object.freeze({ category: "climate", variant: "adaptive-weather", label: "Horizontal weather", size: freezeSize(4, 1), description: "Icon and temperature.", order: 10 }),
+      Object.freeze({ category: "climate", variant: "adaptive-weather", label: "Compact weather", size: freezeSize(2, 2), description: "Icon and temperature.", order: 20 }),
+      Object.freeze({ category: "climate", variant: "adaptive-weather", label: "Weather details", size: freezeSize(3, 2), description: "Humidity and wind.", order: 30 }),
+      Object.freeze({ category: "climate", variant: "adaptive-weather", label: "Weather forecast", size: freezeSize(4, 2), description: "Vertical forecasts.", order: 40 }),
     ]),
   }),
   renderer: "weather",
@@ -218,8 +218,8 @@ export const WEATHER_WIDGET_DEFINITION = Object.freeze({
   variants: [
     variant("adaptive-weather", "Horizontal 4×1", 4, 1),
     variant("adaptive-weather", "Compact 2×2", 2, 2),
-    variant("adaptive-weather", "Détails 3×2", 3, 2),
-    variant("adaptive-weather", "Prévisions 4×2", 4, 2),
+    variant("adaptive-weather", "Details 3×2", 3, 2),
+    variant("adaptive-weather", "Forecasts 4×2", 4, 2),
   ],
 });
 

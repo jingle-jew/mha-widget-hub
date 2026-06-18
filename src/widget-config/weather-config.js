@@ -1,8 +1,8 @@
 import { getEntityOptionsByDomain } from "./light-options.js";
 
 export const WEATHER_FORECAST_OPTIONS = Object.freeze([
-  Object.freeze({ value: "daily", label: "Journalières" }),
-  Object.freeze({ value: "hourly", label: "Horaires" }),
+  Object.freeze({ value: "daily", label: "Daily" }),
+  Object.freeze({ value: "hourly", label: "Hourly" }),
 ]);
 
 export function normalizeWeatherForecastType(value) {

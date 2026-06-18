@@ -47,6 +47,7 @@ import {
   getWidgetConfigDefinition,
   getWidgetConfigType,
 } from "./widget-config-registry.js";
+import { t } from "../i18n/index.js";
 
 export function supportsWidgetConfiguration(widget = {}) {
   return Boolean(getWidgetConfigType(widget));
@@ -93,6 +94,11 @@ function createField(labelText, control, { hint = "" } = {}) {
   return field;
 }
 
+function configOptionLabel(group, option = {}) {
+  if (!option?.value) return option?.label || "";
+  return t(`${group}.${option.value}`, option.label);
+}
+
 function createToggleSliderFields(session, hass, visibilityConfig, onChange) {
   const { draft, options, selected } = reconcileToggleSliderConfigDraft(
     session.draft,
@@ -106,7 +112,7 @@ function createToggleSliderFields(session, hass, visibilityConfig, onChange) {
   nameInput.className = "mha-widget-config-control";
   nameInput.type = "text";
   nameInput.value = draft.label;
-  nameInput.placeholder = selected?.label || "Salon";
+  nameInput.placeholder = selected?.label || "Living room";
   nameInput.autocomplete = "off";
   nameInput.addEventListener("input", event => {
     updateToggleSliderLabel(draft, event.currentTarget.value);
@@ -119,7 +125,7 @@ function createToggleSliderFields(session, hass, visibilityConfig, onChange) {
   if (!options.length) {
     const empty = document.createElement("option");
     empty.value = "";
-    empty.textContent = "Aucune lumière compatible avec la luminosité trouvée.";
+    empty.textContent = t("widgets.config.noBrightnessLight", "No brightness-compatible light found.");
     lightSelect.append(empty);
   } else {
     options.forEach(option => {
@@ -139,14 +145,14 @@ function createToggleSliderFields(session, hass, visibilityConfig, onChange) {
   modeSelect.className = "mha-widget-config-control";
   const brightness = document.createElement("option");
   brightness.value = "brightness";
-  brightness.textContent = "Luminosité";
+  brightness.textContent = t("widgets.config.brightness", "Brightness");
   modeSelect.append(brightness);
   modeSelect.value = "brightness";
 
   fields.append(
-    createField("Nom affiché", nameInput),
-    createField("Lumière", lightSelect),
-    createField("Contrôle du curseur", modeSelect),
+    createField(t("widgets.modesRoutines.displayName", "Display name"), nameInput),
+    createField(t("widgets.config.light", "Light"), lightSelect),
+    createField(t("widgets.config.sliderControl", "Slider control"), modeSelect),
   );
   return { fields, canSave: Boolean(selected) };
 }
@@ -162,7 +168,7 @@ function createSliderFields(session, hass, visibilityConfig, onChange) {
   SLIDER_ACTIONS.forEach(action => {
     const item = document.createElement("option");
     item.value = action.value;
-    item.textContent = action.label;
+    item.textContent = configOptionLabel("widgets.config.sliderActions", action);
     item.selected = action.value === draft.sliderAction;
     actionSelect.append(item);
   });
@@ -197,7 +203,7 @@ function createSliderFields(session, hass, visibilityConfig, onChange) {
   nameInput.className = "mha-widget-config-control";
   nameInput.type = "text";
   nameInput.value = draft.label;
-  nameInput.placeholder = reconciled.selected?.label || "Salon";
+  nameInput.placeholder = reconciled.selected?.label || "Living room";
   nameInput.autocomplete = "off";
   nameInput.addEventListener("input", event => {
     updateSliderLabel(draft, event.currentTarget.value);
@@ -205,9 +211,9 @@ function createSliderFields(session, hass, visibilityConfig, onChange) {
   });
 
   fields.append(
-    createField("Action", actionSelect),
-    createField("Appareil", deviceSelect),
-    createField("Nom affiché", nameInput),
+    createField(t("widgets.config.action", "Action"), actionSelect),
+    createField(t("widgets.config.device", "Device"), deviceSelect),
+    createField(t("widgets.modesRoutines.displayName", "Display name"), nameInput),
   );
   return { fields, canSave: Boolean(reconciled.selected) };
 }
@@ -223,7 +229,7 @@ function createToggleFields(session, hass, visibilityConfig, onChange) {
   TOGGLE_DEVICE_TYPES.forEach(deviceType => {
     const item = document.createElement("option");
     item.value = deviceType.value;
-    item.textContent = deviceType.label;
+    item.textContent = configOptionLabel("widgets.config.deviceTypes", deviceType);
     item.selected = deviceType.value === draft.deviceType;
     typeSelect.append(item);
   });
@@ -258,7 +264,7 @@ function createToggleFields(session, hass, visibilityConfig, onChange) {
   nameInput.className = "mha-widget-config-control";
   nameInput.type = "text";
   nameInput.value = draft.label;
-  nameInput.placeholder = reconciled.selected?.label || "Salon";
+  nameInput.placeholder = reconciled.selected?.label || "Living room";
   nameInput.autocomplete = "off";
   nameInput.addEventListener("input", event => {
     updateToggleConfigLabel(draft, event.currentTarget.value);
@@ -266,9 +272,9 @@ function createToggleFields(session, hass, visibilityConfig, onChange) {
   });
 
   fields.append(
-    createField("Type d’appareil", typeSelect),
-    createField("Appareil", deviceSelect),
-    createField("Nom affiché", nameInput),
+    createField(t("widgets.config.deviceType", "Device type"), typeSelect),
+    createField(t("widgets.config.device", "Device"), deviceSelect),
+    createField(t("widgets.modesRoutines.displayName", "Display name"), nameInput),
   );
   return { fields, canSave: Boolean(reconciled.selected) };
 }
@@ -286,7 +292,7 @@ function createWeatherFields(session, hass, visibilityConfig, onChange) {
   select.disabled = !options.length;
   if (!options.length) {
     const empty = document.createElement("option");
-    empty.textContent = "Aucune entité météo autorisée et disponible.";
+    empty.textContent = t("widgets.config.noWeatherEntity", "No authorized and available weather entity.");
     select.append(empty);
   } else {
     options.forEach(option => {
@@ -307,7 +313,7 @@ function createWeatherFields(session, hass, visibilityConfig, onChange) {
   WEATHER_FORECAST_OPTIONS.forEach(option => {
     const item = document.createElement("option");
     item.value = option.value;
-    item.textContent = option.label;
+    item.textContent = configOptionLabel("widgets.weather.forecastTypes", option);
     item.selected = option.value === draft.forecastType;
     forecastSelect.append(item);
   });
@@ -317,8 +323,8 @@ function createWeatherFields(session, hass, visibilityConfig, onChange) {
   });
 
   fields.append(
-    createField("Entité météo", select),
-    createField("Prévisions", forecastSelect),
+    createField(t("widgets.config.weatherEntity", "Weather entity"), select),
+    createField(t("widgets.weather.forecast", "Forecasts"), forecastSelect),
   );
   return { fields, canSave: Boolean(selected) };
 }
@@ -333,7 +339,7 @@ function createMediaFields(session, hass, visibilityConfig, onChange) {
   nameInput.className = "mha-widget-config-control";
   nameInput.type = "text";
   nameInput.value = draft.label;
-  nameInput.placeholder = reconciled.selected?.label || "Salon";
+  nameInput.placeholder = reconciled.selected?.label || "Living room";
   nameInput.autocomplete = "off";
   nameInput.addEventListener("input", event => {
     updateMediaLabel(draft, event.currentTarget.value);
@@ -346,7 +352,7 @@ function createMediaFields(session, hass, visibilityConfig, onChange) {
   if (!reconciled.options.length) {
     const empty = document.createElement("option");
     empty.value = "";
-    empty.textContent = "Aucun lecteur média autorisé et disponible.";
+    empty.textContent = t("widgets.config.noMediaPlayer", "No authorized and available media player.");
     mediaSelect.append(empty);
   } else {
     reconciled.options.forEach(option => {
@@ -363,8 +369,8 @@ function createMediaFields(session, hass, visibilityConfig, onChange) {
   });
 
   fields.append(
-    createField("Nom affiché", nameInput),
-    createField("Lecteur média", mediaSelect),
+    createField(t("widgets.modesRoutines.displayName", "Display name"), nameInput),
+    createField(t("widgets.config.mediaPlayer", "Media player"), mediaSelect),
   );
 
   return { fields, canSave: Boolean(reconciled.selected) };
@@ -381,7 +387,7 @@ function createButtonFields(session, hass, visibilityConfig, onChange) {
   BUTTON_TYPES.forEach(type => {
     const item = document.createElement("option");
     item.value = type.value;
-    item.textContent = type.label;
+    item.textContent = configOptionLabel("widgets.config.buttonTypes", type);
     item.selected = type.value === draft.buttonType;
     typeSelect.append(item);
   });
@@ -389,7 +395,7 @@ function createButtonFields(session, hass, visibilityConfig, onChange) {
     updateButtonType(draft, event.currentTarget.value, hass, visibilityConfig);
     onChange?.({ rerender: true });
   });
-  fields.append(createField("Type d’action", typeSelect));
+  fields.append(createField(t("widgets.config.actionType", "Action type"), typeSelect));
 
   if (draft.buttonType === "action") {
     const domain = document.createElement("input");
@@ -414,7 +420,7 @@ function createButtonFields(session, hass, visibilityConfig, onChange) {
     data.value = Object.keys(draft.actionData || {}).length
       ? JSON.stringify(draft.actionData, null, 2)
       : "";
-    data.placeholder = '{\n  "entity_id": "scene.soiree"\n}';
+    data.placeholder = '{\n  "entity_id": "scene.movie_night"\n}';
     data.addEventListener("input", event => {
       const value = event.currentTarget.value.trim();
       try {
@@ -430,10 +436,10 @@ function createButtonFields(session, hass, visibilityConfig, onChange) {
       onChange?.();
     });
     fields.append(
-      createField("Domaine HA", domain),
-      createField("Service HA", service),
-      createField("Données JSON", data, {
-        hint: "Les entity_id sont soumis aux permissions MHA Admin.",
+      createField(t("widgets.config.haDomain", "HA domain"), domain),
+      createField(t("widgets.config.haService", "HA service"), service),
+      createField(t("widgets.config.jsonData", "JSON data"), data, {
+        hint: t("widgets.config.jsonDataHint", "entity_id values are subject to MHA Admin permissions."),
       }),
     );
   } else {
@@ -442,7 +448,7 @@ function createButtonFields(session, hass, visibilityConfig, onChange) {
     entitySelect.disabled = !reconciled.options.length;
     if (!reconciled.options.length) {
       const empty = document.createElement("option");
-      empty.textContent = "Aucune entité autorisée et disponible.";
+      empty.textContent = t("widgets.config.noEntity", "No authorized and available entity.");
       entitySelect.append(empty);
     } else {
       reconciled.options.forEach(option => {
@@ -457,7 +463,7 @@ function createButtonFields(session, hass, visibilityConfig, onChange) {
       updateButtonEntity(draft, event.currentTarget.value, reconciled.options);
       onChange?.({ rerender: true });
     });
-    fields.append(createField("Entité", entitySelect));
+    fields.append(createField(t("widgets.config.entity", "Entity"), entitySelect));
   }
 
   const label = document.createElement("input");
@@ -468,7 +474,7 @@ function createButtonFields(session, hass, visibilityConfig, onChange) {
     updateButtonLabel(draft, event.currentTarget.value);
     onChange?.();
   });
-  fields.append(createField("Nom affiché", label));
+  fields.append(createField(t("widgets.modesRoutines.displayName", "Display name"), label));
 
   return {
     fields,
@@ -482,7 +488,7 @@ function createButtonFields(session, hass, visibilityConfig, onChange) {
 }
 
 function createScenesFields(session, hass, visibilityConfig, onChange) {
-  const emptySlotLabel = "Ajouter";
+  const emptySlotLabel = t("widgets.modesRoutines.add", "Add");
   const reconciled = reconcileScenesConfigDraft(session.draft, hass, visibilityConfig);
   const fields = document.createElement("div");
   fields.className = "mha-widget-config-fields";
@@ -500,7 +506,7 @@ function createScenesFields(session, hass, visibilityConfig, onChange) {
 
     const heading = document.createElement("h3");
     heading.className = "mha-widget-config-group-title";
-    heading.textContent = `Bouton ${index + 1}`;
+    heading.textContent = t("widgets.config.buttonIndex", "Button {count}", { count: index + 1 });
     group.append(heading);
 
     const typeSelect = document.createElement("select");
@@ -508,7 +514,9 @@ function createScenesFields(session, hass, visibilityConfig, onChange) {
     SCENES_BUTTON_TYPES.forEach(type => {
       const item = document.createElement("option");
       item.value = type.value;
-      item.textContent = type.label;
+      item.textContent = type.value === "mode"
+        ? t("widgets.modesRoutines.mode", type.label)
+        : t("widgets.modesRoutines.routine", type.label);
       item.selected = type.value === draft.type;
       typeSelect.append(item);
     });
@@ -522,8 +530,8 @@ function createScenesFields(session, hass, visibilityConfig, onChange) {
     const empty = document.createElement("option");
     empty.value = "";
     empty.textContent = draft.type === "mode"
-      ? "Aucun Mode sélectionné"
-      : "Aucune Routine sélectionnée";
+      ? t("widgets.config.noModeSelected", "No Mode selected")
+      : t("widgets.config.noRoutineSelected", "No Routine selected");
     empty.selected = !draft.entityId;
     entitySelect.append(empty);
     options.forEach(option => {
@@ -542,7 +550,7 @@ function createScenesFields(session, hass, visibilityConfig, onChange) {
     nameInput.className = "mha-widget-config-control";
     nameInput.type = "text";
     nameInput.value = draft.label;
-    nameInput.placeholder = selected?.label?.replace(/\s+\(introuvable\)$/u, "") || emptySlotLabel;
+    nameInput.placeholder = selected?.label?.replace(/\s+\(missing\)$/u, "") || emptySlotLabel;
     nameInput.autocomplete = "off";
     nameInput.addEventListener("input", event => {
       updateScenesButtonLabel(reconciled.draft, index, event.currentTarget.value);
@@ -551,8 +559,8 @@ function createScenesFields(session, hass, visibilityConfig, onChange) {
 
     group.append(
       createField("Type", typeSelect),
-      createField("Mode ou routine", entitySelect),
-      createField("Nom affiché", nameInput),
+      createField(t("widgets.modesRoutines.modeOrRoutine", "Mode or routine"), entitySelect),
+      createField(t("widgets.modesRoutines.displayName", "Display name"), nameInput),
     );
     fields.append(group);
   });
@@ -585,14 +593,14 @@ export function createWidgetConfigPopup({
   const scrim = document.createElement("button");
   scrim.className = "mha-widget-config-scrim mha-page-creator-scrim";
   scrim.type = "button";
-  scrim.setAttribute("aria-label", "Fermer la configuration");
+  scrim.setAttribute("aria-label", t("widgets.config.close", "Close configuration"));
   scrim.onclick = () => onCancel?.();
 
   const sheet = document.createElement("div");
   sheet.className = "mha-widget-config-sheet mha-page-creator-sheet";
   sheet.setAttribute("role", "dialog");
   sheet.setAttribute("aria-modal", "true");
-  sheet.setAttribute("aria-label", "Configurer le widget");
+  sheet.setAttribute("aria-label", t("widgets.config.ariaLabel", "Configure widget"));
 
   const header = document.createElement("div");
   header.className = "mha-widget-config-header mha-page-creator-header";
@@ -605,22 +613,22 @@ export function createWidgetConfigPopup({
   const isScenes = session?.configType === "scenes";
   const isScenesButton = isScenes && Number.isInteger(session?.buttonIndex);
   title.textContent = isSlider
-    ? "Configurer le slider"
+    ? t("widgets.config.configureSlider", "Configure slider")
     : isToggle
-      ? "Configurer le toggle"
+      ? t("widgets.config.configureToggle", "Configure toggle")
       : isButton
-        ? "Configurer le bouton"
+        ? t("widgets.config.configureButton", "Configure button")
         : isWeather
-          ? "Configurer la météo"
+          ? t("widgets.config.configureWeather", "Configure weather")
           : isMedia
-            ? "Configurer le média"
+            ? t("widgets.config.configureMedia", "Configure media")
             : isScenes
               ? isScenesButton
-                ? "Configurer le bouton"
-                : "Configurer les modes & routines"
-            : "Configurer la lumière";
+                ? t("widgets.config.configureButton", "Configure button")
+                : t("widgets.config.configureModesRoutines", "Configure Modes & Routines")
+            : t("widgets.config.configureLight", "Configure light");
   header.append(title, createCloseButton({
-    label: "Fermer",
+    label: t("common.close", "Close"),
     className: "mha-widget-config-close mha-page-creator-close",
     onClick: () => onCancel?.(),
   }));
@@ -628,20 +636,20 @@ export function createWidgetConfigPopup({
   const hint = document.createElement("p");
   hint.className = "mha-widget-config-hint mha-page-creator-hint";
   hint.textContent = isSlider
-    ? "Choisis l’action, l’appareil et le nom à afficher."
+    ? t("widgets.config.sliderHint", "Choose the action, device, and display name.")
     : isToggle
-      ? "Choisis le type d’appareil, l’entité et le nom à afficher."
+      ? t("widgets.config.toggleHint", "Choose the device type, entity, and display name.")
       : isButton
-        ? "Choisis une entité autorisée ou un service Home Assistant."
+        ? t("widgets.config.buttonHint", "Choose an authorized entity or a Home Assistant service.")
         : isWeather
-          ? "Choisis l’entité weather autorisée à afficher."
+          ? t("widgets.config.weatherHint", "Choose the authorized weather entity to display.")
           : isMedia
-            ? "Choisis le lecteur média et le nom à afficher."
+            ? t("widgets.config.mediaHint", "Choose the media player and display name.")
             : isScenes
               ? isScenesButton
-                ? "Configure uniquement ce bouton avec un Mode ou une Routine."
-                : "Configure les 4 raccourcis internes avec des Modes ou des Routines."
-            : "Choisis la lumière et le contrôle à afficher.";
+                ? t("widgets.config.scenesButtonHint", "Configure only this button with a Mode or Routine.")
+                : t("widgets.config.scenesHint", "Configure the 4 internal shortcuts with Modes or Routines.")
+            : t("widgets.config.lightHint", "Choose the light and control to display.");
 
   const content = session
     ? isSlider
@@ -664,12 +672,12 @@ export function createWidgetConfigPopup({
   const cancel = document.createElement("button");
   cancel.className = "mha-widget-config-secondary mha-page-creator-secondary";
   cancel.type = "button";
-  cancel.textContent = "Annuler";
+  cancel.textContent = t("common.cancel", "Cancel");
   cancel.onclick = () => onCancel?.();
   const save = document.createElement("button");
   save.className = "mha-widget-config-primary mha-page-creator-primary";
   save.type = "button";
-  save.textContent = session?.mode === "edit" ? "Enregistrer" : "Continuer";
+  save.textContent = session?.mode === "edit" ? t("common.save", "Save") : t("common.continue", "Continue");
   save.disabled = !content.canSave;
   content.fields.addEventListener("input", () => {
     if (content.isValid) save.disabled = !content.isValid();

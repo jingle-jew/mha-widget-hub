@@ -51,7 +51,7 @@ export function createMobileDock({
   const launcher = document.createElement("button");
   launcher.className = "mha-mobile-dock-launcher";
   launcher.type = "button";
-  launcher.setAttribute("aria-label", "Ouvrir le dock mobile");
+  launcher.setAttribute("aria-label", "Open mobile dock");
   launcher.setAttribute("aria-expanded", "false");
 
   launcher.append(
@@ -74,19 +74,19 @@ export function createMobileDock({
   const scrim = document.createElement("button");
   scrim.className = "mha-mobile-dock-scrim";
   scrim.type = "button";
-  scrim.setAttribute("aria-label", "Fermer le dock mobile");
+  scrim.setAttribute("aria-label", "Close mobile dock");
 
   const close = document.createElement("button");
   close.className = "mha-mobile-dock-close";
   close.type = "button";
-  close.setAttribute("aria-label", "Fermer");
+  close.setAttribute("aria-label", "Close");
   close.textContent = "×";
 
   const grid = document.createElement("div");
   grid.className = "mha-mobile-dock-grid";
 
   const pageItems = (Array.isArray(pages) && pages.length ? pages : [
-    { id: "home", name: "Accueil", icon: "home" },
+    { id: "home", name: "Home", icon: "home" },
   ]).map((page, index) => ({
     pageId: page.id,
     symbol: page.icon || (index === 0 ? "home" : "grid"),
@@ -109,7 +109,7 @@ export function createMobileDock({
     grid.append(createMobileDockIconButton({
       symbol: "plus",
       category: "utility",
-      label: "Ajouter une page",
+      label: "Add page",
       action: "add-page",
     }, {
       className: "mha-mobile-dock-add-page",
@@ -122,7 +122,7 @@ export function createMobileDock({
     grid.append(createMobileDockIconButton({
       symbol: "edit",
       category: "utility",
-      label: "Gérer le dock",
+      label: "Manage dock",
       action: "dock-settings",
     }, {
       className: "mha-mobile-dock-edit",
@@ -136,7 +136,7 @@ export function createMobileDock({
   grid.append(createMobileDockIconButton({
     symbol: "gear",
     category: "system",
-    label: "Paramètres",
+    label: "Settings",
     action: "settings",
   }, {
     onClick: () => {

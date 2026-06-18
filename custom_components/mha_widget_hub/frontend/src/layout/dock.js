@@ -49,7 +49,7 @@ export function createDock({
   dock.setAttribute("aria-label", "Dock");
 
   const pageItems = (Array.isArray(pages) && pages.length ? pages : [
-    { id: "home", name: "Accueil", icon: "home" },
+    { id: "home", name: "Home", icon: "home" },
   ]).map((page, index) => ({
     pageId: page.id,
     symbol: page.icon || (index === 0 ? "home" : "grid"),
@@ -69,7 +69,7 @@ export function createDock({
     dock.append(createDockIconButton({
       symbol: "plus",
       category: "utility",
-      label: "Ajouter une page",
+      label: "Add page",
       action: "add-page",
     }, {
       className: "mha-dock-add-page",
@@ -79,7 +79,7 @@ export function createDock({
     dock.append(createDockIconButton({
       symbol: "edit",
       category: "utility",
-      label: "Gérer le dock",
+      label: "Manage dock",
       action: "dock-settings",
     }, {
       className: "mha-dock-edit",
@@ -90,7 +90,7 @@ export function createDock({
   dock.append(createDockIconButton({
     symbol: "gear",
     category: "system",
-    label: "Paramètres",
+    label: "Settings",
     action: "settings",
   }, {
     onClick: () => {

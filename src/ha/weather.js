@@ -1,29 +1,29 @@
 import { resolveAuthorizedEntity } from "./entity-access.js";
 
 const WEATHER_LABELS = new Map([
-  ["sunny", "Ensoleillé"],
-  ["clear-night", "Nuit claire"],
-  ["clear", "Ensoleillé"],
-  ["cloudy", "Nuageux"],
-  ["cloud", "Nuageux"],
-  ["partlycloudy", "Part. nuageux"],
-  ["partly-cloudy", "Part. nuageux"],
-  ["partly_cloudy", "Part. nuageux"],
-  ["rainy", "Pluie"],
-  ["rain", "Pluie"],
-  ["pouring", "Forte pluie"],
-  ["lightning", "Orage"],
-  ["lightning-rainy", "Orage"],
-  ["thunderstorm", "Orage"],
-  ["snowy", "Neige"],
-  ["snow", "Neige"],
-  ["snowy-rainy", "Neige/pluie"],
-  ["fog", "Brouillard"],
-  ["foggy", "Brouillard"],
-  ["windy", "Venteux"],
-  ["windy-variant", "Venteux"],
-  ["hail", "Grêle"],
-  ["exceptional", "Météo active"],
+  ["sunny", "Sunny"],
+  ["clear-night", "Clear night"],
+  ["clear", "Sunny"],
+  ["cloudy", "Cloudy"],
+  ["cloud", "Cloudy"],
+  ["partlycloudy", "Partly cloudy"],
+  ["partly-cloudy", "Partly cloudy"],
+  ["partly_cloudy", "Partly cloudy"],
+  ["rainy", "Rain"],
+  ["rain", "Rain"],
+  ["pouring", "Heavy rain"],
+  ["lightning", "Thunderstorm"],
+  ["lightning-rainy", "Thunderstorm"],
+  ["thunderstorm", "Thunderstorm"],
+  ["snowy", "Snow"],
+  ["snow", "Snow"],
+  ["snowy-rainy", "Snow/rain"],
+  ["fog", "Fog"],
+  ["foggy", "Fog"],
+  ["windy", "Windy"],
+  ["windy-variant", "Windy"],
+  ["hail", "Hail"],
+  ["exceptional", "Weather active"],
 ]);
 
 export function normalizeWeatherCondition(condition = "") {
@@ -31,7 +31,7 @@ export function normalizeWeatherCondition(condition = "") {
 }
 
 export function getWeatherSummary(condition = "") {
-  return WEATHER_LABELS.get(normalizeWeatherCondition(condition)) || "Météo";
+  return WEATHER_LABELS.get(normalizeWeatherCondition(condition)) || "Weather";
 }
 
 function formatMetric(value, unit = "") {
@@ -49,7 +49,7 @@ function formatForecastDay(datetime, index) {
   if (date && !Number.isNaN(date.getTime())) {
     return date.toLocaleDateString([], { weekday: "short" }).replace(".", "");
   }
-  return `J+${index + 1}`;
+  return `D+${index + 1}`;
 }
 
 function formatForecastHour(datetime, index) {

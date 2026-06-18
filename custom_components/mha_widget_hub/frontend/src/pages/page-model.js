@@ -15,7 +15,7 @@ export function normalizePage(
     name: String(
       page.name
       || page.label
-      || (index === 0 ? "Accueil" : `Page ${index + 1}`),
+      || (index === 0 ? "Home" : `Page ${index + 1}`),
     ),
     icon: String(page.icon || (index === 0 ? "home" : "grid")),
     widgets: Array.isArray(page.widgets)
@@ -57,7 +57,7 @@ export function createFallbackPage({ normalizeWidget = identity } = {}) {
   return normalizePage(
     {
       id: "home",
-      name: "Accueil",
+      name: "Home",
       icon: "home",
       widgets: [],
     },

@@ -288,10 +288,10 @@ export const CLOCK_WIDGET_DEFINITION = Object.freeze({
   category: "utilities",
   manager: Object.freeze({
     entries: Object.freeze([
-      Object.freeze({ category: "utilities", variant: "digital", label: "Horloge numérique", size: freezeSize(2, 2), description: "Heure et date.", order: 10 }),
-      Object.freeze({ category: "utilities", variant: "digital-weather", label: "Numérique météo", size: freezeSize(2, 2), description: "Heure, date et météo actuelle.", order: 20 }),
-      Object.freeze({ category: "utilities", variant: "analog", label: "Horloge analogique", size: freezeSize(2, 2), description: "Cadran simple.", order: 30 }),
-      Object.freeze({ category: "utilities", variant: "ios-analog", label: "Analogique iOS", size: freezeSize(2, 2), description: "Cadran classique iOS.", order: 40 }),
+      Object.freeze({ category: "utilities", variant: "digital", label: "Digital clock", size: freezeSize(2, 2), description: "Time and date.", order: 10 }),
+      Object.freeze({ category: "utilities", variant: "digital-weather", label: "Digital weather", size: freezeSize(2, 2), description: "Time, date, and current weather.", order: 20 }),
+      Object.freeze({ category: "utilities", variant: "analog", label: "Analog clock", size: freezeSize(2, 2), description: "Simple dial.", order: 30 }),
+      Object.freeze({ category: "utilities", variant: "ios-analog", label: "Analog iOS", size: freezeSize(2, 2), description: "Classic iOS dial.", order: 40 }),
     ]),
   }),
   renderer: "clock",
@@ -303,10 +303,10 @@ export const CLOCK_WIDGET_DEFINITION = Object.freeze({
   defaultSize: freezeSize(2, 2),
   normalizeSize: () => ({ w: 2, h: 2 }),
   variants: [
-    variant("digital", "Numérique", 2, 2),
-    variant("digital-weather", "Numérique météo", 2, 2),
-    variant("analog", "Analogique", 2, 2),
-    variant("ios-analog", "Analogique iOS", 2, 2),
+    variant("digital", "Digital", 2, 2),
+    variant("digital-weather", "Digital weather", 2, 2),
+    variant("analog", "Analog", 2, 2),
+    variant("ios-analog", "Analog iOS", 2, 2),
   ],
 });
 

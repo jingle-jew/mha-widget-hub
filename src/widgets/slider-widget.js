@@ -106,7 +106,7 @@ export function createSliderWidgetContent(
     ?.setAttribute("aria-label", widget.label || "Slider");
 
   const iconName = widget.sliderAction === "volume" ? "speaker-volume" : "globe";
-  const iconLabel = widget.sliderAction === "volume" ? "Volume" : "Intensité lumière";
+  const iconLabel = widget.sliderAction === "volume" ? "Volume" : "Light intensity";
   const icon = createIcon({
     name: iconName,
     category: widget.sliderAction === "volume" ? "media_player" : "lighting",
@@ -153,17 +153,17 @@ export function createSliderWidgetContent(
     frame.dataset.sliderSupported = String(Boolean(supportsSlider));
     slider.setAttribute(
       "aria-label",
-      context.entityAllowed ? widget.label || "Slider" : "Entité non autorisée",
+      context.entityAllowed ? widget.label || "Slider" : "Unauthorized entity",
     );
     slider.querySelector(".mha-slider-input")?.setAttribute(
       "aria-label",
-      context.entityAllowed ? widget.label || "Slider" : "Entité non autorisée",
+      context.entityAllowed ? widget.label || "Slider" : "Unauthorized entity",
     );
     label.textContent = context.entityAllowed
       ? widget.label || ""
-      : "Entité non autorisée";
+      : "Unauthorized entity";
     label.hidden = !label.textContent;
-    frame.title = context.entityAllowed ? "" : "Entité non autorisée";
+    frame.title = context.entityAllowed ? "" : "Unauthorized entity";
     if (!context.entityAvailable) sliderAction.clear();
 
     slider.__mhaSliderApi?.setDisabled(!supportsSlider);
@@ -206,8 +206,8 @@ export const SLIDER_WIDGET_CONTENT_RENDERER = Object.freeze({
 
 export const SLIDER_WIDGET_CONFIG_MANIFEST = Object.freeze({
   type: "slider",
-  title: "Configurer le slider",
-  hint: "Choisis l’action, l’appareil et le nom à afficher.",
+  title: "Configure slider",
+  hint: "Choose the action, device, and display name.",
   createDraft: createSliderConfigDraft,
   build: buildSliderWidgetConfig,
 });
@@ -217,10 +217,10 @@ export const SLIDER_WIDGET_DEFINITION = Object.freeze({
   category: "lights",
   manager: Object.freeze({
     entries: Object.freeze([
-      Object.freeze({ category: "lights", variant: "light-slider-wide", label: "Intensité horizontale", size: freezeSize(4, 1), description: "Slider large.", order: 40 }),
-      Object.freeze({ category: "lights", variant: "light-slider-vertical", label: "Intensité verticale", size: freezeSize(1, 4), description: "Slider vertical.", order: 50 }),
-      Object.freeze({ category: "climate", variant: "temperature-slider", label: "Température slider", size: freezeSize(4, 1), description: "Contrôle linéaire.", order: 70 }),
-      Object.freeze({ category: "media", variant: "volume-slider", label: "Volume", size: freezeSize(4, 1), description: "Slider volume.", order: 30 }),
+      Object.freeze({ category: "lights", variant: "light-slider-wide", label: "Horizontal brightness", size: freezeSize(4, 1), description: "Slider large.", order: 40 }),
+      Object.freeze({ category: "lights", variant: "light-slider-vertical", label: "Vertical brightness", size: freezeSize(1, 4), description: "Slider vertical.", order: 50 }),
+      Object.freeze({ category: "climate", variant: "temperature-slider", label: "Temperature slider", size: freezeSize(4, 1), description: "Linear control.", order: 70 }),
+      Object.freeze({ category: "media", variant: "volume-slider", label: "Volume", size: freezeSize(4, 1), description: "Volume slider.", order: 30 }),
     ]),
   }),
   renderer: "slider",

@@ -9,6 +9,7 @@ import {
 } from "./entity-visibility-store.js";
 import { getEntitiesForDomain } from "../ha/entity-filters.js";
 import { createThemeController } from "../settings/theme-controller.js";
+import { configureI18n, t } from "../i18n/index.js";
 
 const ROOT_URL = new URL("../../", import.meta.url);
 const FRONTEND_VERSION = new URL(import.meta.url).searchParams.get("v");
@@ -40,7 +41,7 @@ function describeLoadError(label, error) {
   return {
     source: label,
     raw: error,
-    message: error?.message || String(error || "Erreur inconnue"),
+    message: error?.message || String(error || "Unknown error"),
     code: error?.code || "",
     stack: error?.stack || "",
   };
@@ -77,6 +78,7 @@ class MhaAdminPanel extends HTMLElement {
 
   set hass(value) {
     this._hass = value;
+    configureI18n({ hass: value });
     this._themeController.sync();
     if (this._ensureAdminDataLoaded()) return;
     this._renderIfHassDataChanged();
@@ -167,14 +169,14 @@ class MhaAdminPanel extends HTMLElement {
         throw createLoadFailure(
           "users/list",
           usersResult.reason,
-          "Impossible de charger les utilisateurs Home Assistant.",
+          t("admin.loadUsersFailed", "Unable to load Home Assistant users."),
         );
       }
       if (configResult.status === "rejected") {
         throw createLoadFailure(
           "entity_visibility/get",
           configResult.reason,
-          "Impossible de charger la configuration MHA.",
+          t("admin.loadConfigFailed", "Unable to load MHA configuration."),
         );
       }
 
@@ -186,15 +188,15 @@ class MhaAdminPanel extends HTMLElement {
       this._selectedUserId = this._selectedUserId || users[0]?.id || "";
       this._hassRenderSignature = this._getHassRenderSignature(hass);
     } catch (error) {
-      const source = error?.mhaLoadSource || "chargement";
+      const source = error?.mhaLoadSource || "loading";
       const cause = error?.cause || error;
       console.error(
         "[MHA Admin] Loading failed.",
         describeLoadError(source, cause),
       );
       this._error = source === "users/list"
-        ? "Impossible de charger les utilisateurs Home Assistant."
-        : "Impossible de charger la configuration MHA.";
+        ? t("admin.loadUsersFailed", "Unable to load Home Assistant users.")
+        : t("admin.loadConfigFailed", "Unable to load MHA configuration.");
       this._failedUserId = userId;
     } finally {
       if (this._loadPromise === loadPromise) {
@@ -247,7 +249,7 @@ class MhaAdminPanel extends HTMLElement {
       this._config = await saveEntityVisibilityConfig(this._hass, this._config);
     } catch (error) {
       console.error("[MHA Admin] Save failed.", error);
-      this._error = "La sauvegarde a échoué. Vérifie les droits administrateur.";
+      this._error = t("admin.saveFailed", "Save failed. Check administrator permissions.");
     } finally {
       this._saving = false;
       this.render();
@@ -300,23 +302,23 @@ class MhaAdminPanel extends HTMLElement {
     header.className = "mha-admin-header";
     header.innerHTML = `
       <div>
-        <span class="mha-admin-eyebrow">Configuration avancée</span>
-        <h1>MHA Admin</h1>
-        <p>Contrôle les entités proposées dans l’interface MHA pour chaque utilisateur.</p>
+        <span class="mha-admin-eyebrow">${t("admin.eyebrow", "Advanced configuration")}</span>
+        <h1>${t("admin.title", "MHA Admin")}</h1>
+        <p>${t("admin.description", "Control which entities are available in the MHA interface for each user.")}</p>
       </div>
     `;
     const save = document.createElement("button");
     save.className = "mha-admin-save";
     save.type = "button";
     save.disabled = this._loading || this._saving || !this._selectedUserId;
-    save.textContent = this._saving ? "Sauvegarde…" : "Sauvegarder";
+    save.textContent = this._saving ? t("common.saving", "Saving...") : t("common.save", "Save");
     save.onclick = () => this._save();
     header.append(save);
     root.append(header);
 
     const warning = document.createElement("aside");
     warning.className = "mha-admin-warning";
-    warning.textContent = "Visibilité MHA uniquement : ces règles ne remplacent pas les permissions natives de Home Assistant.";
+    warning.textContent = t("admin.warning", "MHA visibility only: these rules do not replace native Home Assistant permissions.");
     root.append(warning);
 
     if (this._error) {
@@ -329,7 +331,7 @@ class MhaAdminPanel extends HTMLElement {
     if (this._loading) {
       const loading = document.createElement("p");
       loading.className = "mha-admin-empty";
-      loading.textContent = "Chargement de Home Assistant…";
+      loading.textContent = t("admin.loading", "Loading Home Assistant...");
       root.append(loading);
       this._hassRenderSignature = this._getHassRenderSignature();
       this._restoreRenderState(renderState);
@@ -341,7 +343,7 @@ class MhaAdminPanel extends HTMLElement {
     const sidebar = document.createElement("section");
     sidebar.className = "mha-admin-card mha-admin-sidebar";
     const userLabel = document.createElement("label");
-    userLabel.textContent = "Utilisateur Home Assistant";
+    userLabel.textContent = t("admin.homeAssistantUser", "Home Assistant user");
     const userSelect = document.createElement("select");
     userSelect.className = "mha-admin-control";
     this._users.forEach(user => userSelect.append(createOption(
@@ -365,7 +367,7 @@ class MhaAdminPanel extends HTMLElement {
     unrestrictedInput.onchange = event => this._updateUserConfig({
       unrestricted: event.currentTarget.checked,
     });
-    unrestricted.append(unrestrictedInput, document.createTextNode(" Aucune restriction MHA"));
+    unrestricted.append(unrestrictedInput, document.createTextNode(` ${t("admin.noRestrictions", "No MHA restrictions")}`));
     sidebar.append(userLabel, unrestricted);
 
     const domainNav = document.createElement("nav");
@@ -374,7 +376,7 @@ class MhaAdminPanel extends HTMLElement {
       const button = document.createElement("button");
       button.type = "button";
       button.dataset.active = String(domain.value === this._selectedDomain);
-      button.textContent = domain.label;
+      button.textContent = t(`admin.domainsList.${domain.value}`, domain.label);
       button.onclick = () => {
         this._selectedDomain = domain.value;
         this._search = "";
@@ -390,11 +392,11 @@ class MhaAdminPanel extends HTMLElement {
     const contentHeader = document.createElement("div");
     contentHeader.className = "mha-admin-content-header";
     const title = document.createElement("h2");
-    title.textContent = domain?.label || "Entités";
+    title.textContent = domain ? t(`admin.domainsList.${domain.value}`, domain.label) : t("admin.entities", "Entities");
     const search = document.createElement("input");
     search.className = "mha-admin-control mha-admin-search";
     search.type = "search";
-    search.placeholder = "Rechercher une entité";
+    search.placeholder = t("admin.searchEntity", "Search entity");
     search.value = this._search;
     search.oninput = event => {
       this._search = event.currentTarget.value;
@@ -429,7 +431,7 @@ class MhaAdminPanel extends HTMLElement {
     if (!entities.length) {
       const empty = document.createElement("p");
       empty.className = "mha-admin-empty";
-      empty.textContent = "Aucune entité correspondante.";
+      empty.textContent = t("admin.noMatchingEntities", "No matching entities.");
       list.append(empty);
     }
     content.append(list);

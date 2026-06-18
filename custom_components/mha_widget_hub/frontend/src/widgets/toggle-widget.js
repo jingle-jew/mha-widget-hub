@@ -34,8 +34,8 @@ function getToggleWidgetData(widget = {}) {
     icon: widget.icon || "home",
     iconCategory: widget.iconCategory || "home",
     label: widget.label || widget.title || "Toggle",
-    stateOn: widget.stateOn || "Activé",
-    stateOff: widget.stateOff || "Désactivé",
+    stateOn: widget.stateOn || "On",
+    stateOff: widget.stateOff || "Off",
     checked,
   };
 }
@@ -136,19 +136,19 @@ export function createToggleWidgetContent(widget = {}, {
         input.disabled = !supportsToggle;
         input.setAttribute(
           "aria-label",
-          context.entityAllowed ? data.label : "Entité non autorisée",
+          context.entityAllowed ? data.label : "Unauthorized entity",
         );
       }
-      label.textContent = context.entityAllowed ? data.label : "Entité non autorisée";
+      label.textContent = context.entityAllowed ? data.label : "Unauthorized entity";
       state.textContent = !context.entityAllowed
-        ? "Non autorisé"
+        ? "Unauthorized"
         : context.entityAvailable
         ? supportsToggle
           ? checked
             ? data.stateOn
             : data.stateOff
-          : "Non pris en charge"
-        : "Indisponible";
+          : "Unsupported"
+        : "Unavailable";
     };
 
     root.__mhaDestroy = () => {
@@ -186,8 +186,8 @@ export const TOGGLE_WIDGET_CONTENT_RENDERER = Object.freeze({
 
 export const TOGGLE_WIDGET_CONFIG_MANIFEST = Object.freeze({
   type: "toggle",
-  title: "Configurer le toggle",
-  hint: "Choisis le type d’appareil, l’entité et le nom à afficher.",
+  title: "Configure toggle",
+  hint: "Choose the device type, entity, and display name.",
   createDraft: createToggleConfigDraft,
   build: buildToggleWidgetConfig,
 });
@@ -197,8 +197,8 @@ export const TOGGLE_WIDGET_DEFINITION = Object.freeze({
   category: "actions",
   manager: Object.freeze({
     entries: Object.freeze([
-      Object.freeze({ category: "actions", variant: "toggle-widget", label: "Toggle", size: freezeSize(3, 1), description: "Icône, état et interrupteur.", order: 30 }),
-      Object.freeze({ category: "actions", variant: "toggle-widget", label: "Toggle large", size: freezeSize(4, 1), description: "Interrupteur avec plus d’espace.", order: 40 }),
+      Object.freeze({ category: "actions", variant: "toggle-widget", label: "Toggle", size: freezeSize(3, 1), description: "Icon, state, and switch.", order: 30 }),
+      Object.freeze({ category: "actions", variant: "toggle-widget", label: "Toggle large", size: freezeSize(4, 1), description: "Switch with more space.", order: 40 }),
     ]),
   }),
   renderer: "toggle",

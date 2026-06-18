@@ -128,7 +128,7 @@ function createClockContent(variant = "digital") {
   if (normalized === "none") {
     const empty = document.createElement("div");
     empty.className = "mha-screensaver-clock mha-screensaver-clock--none";
-    empty.setAttribute("aria-label", "Pas d’horloge");
+    empty.setAttribute("aria-label", "No clock");
     return empty;
   }
 
@@ -147,7 +147,7 @@ function createClock(variant = "digital") {
   region.dataset.clockHidden = String(normalized === "none");
   region.tabIndex = -1;
   region.setAttribute("role", "presentation");
-  region.setAttribute("aria-label", "Horloge de l’économiseur d’écran");
+  region.setAttribute("aria-label", "Screensaver clock");
 
   const stage = document.createElement("div");
   stage.className = "mha-screensaver-clock-stage";
@@ -167,22 +167,22 @@ const NOWBAR_ITEMS = Object.freeze([
   {
     key: "now",
     title: "Now bar",
-    subtitle: "Prête pour le média et les états actifs",
+    subtitle: "Ready for media and active states",
   },
   {
     key: "weather",
     title: "Maison",
-    subtitle: "Scènes et raccourcis prêts",
+    subtitle: "Scenes and shortcuts ready",
   },
   {
     key: "calendar",
-    title: "Sécurité",
-    subtitle: "Aucun événement critique",
+    title: "Security",
+    subtitle: "No critical events",
   },
   {
     key: "media",
     title: "Ambiance",
-    subtitle: "Éclairage et climat synchronisés",
+    subtitle: "Lighting and climate synced",
   },
 ]);
 
@@ -608,7 +608,7 @@ export function createScreensaver({
   edit.className = "mha-edit-button mha-main-edit-button mha-screensaver-edit-button";
   edit.type = "button";
   edit.innerHTML = ICONS.edit;
-  edit.setAttribute("aria-label", "Configurer l’économiseur d’écran");
+  edit.setAttribute("aria-label", "Configure screensaver");
   ["pointerdown", "pointerup", "click", "touchstart", "touchend"].forEach((type) => {
     edit.addEventListener(type, (event) => {
       event.stopPropagation();

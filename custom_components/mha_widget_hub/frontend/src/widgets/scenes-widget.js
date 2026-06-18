@@ -14,7 +14,7 @@ import {
 
 export const SCENES_WIDGET_KIND = "scenes";
 
-const EMPTY_SLOT_LABEL = "Ajouter";
+const EMPTY_SLOT_LABEL = "Add";
 const BUTTON_COUNT = 4;
 
 function normalizeButtonType(value, entityId = "") {
@@ -192,8 +192,8 @@ export const SCENES_WIDGET_CONTENT_RENDERER = Object.freeze({
 
 export const SCENES_WIDGET_CONFIG_MANIFEST = Object.freeze({
   type: "scenes",
-  title: "Configurer les modes & routines",
-  hint: "Configure jusqu’à 4 Modes ou Routines.",
+  title: "Configure Modes & Routines",
+  hint: "Configure up to 4 Modes or Routines.",
   createDraft: createScenesConfigDraft,
   build: buildScenesWidgetConfig,
 });
@@ -208,7 +208,7 @@ export const SCENES_WIDGET_DEFINITION = Object.freeze({
         variant: "modes-routines-2x2",
         label: "Modes & routines",
         size: freezeSize(2, 2),
-        description: "Dossier compact de 4 raccourcis Home Assistant.",
+        description: "Compact folder of 4 Home Assistant shortcuts.",
         order: 30,
       }),
     ]),
@@ -237,10 +237,10 @@ function createScenesPreviewWidget(item = {}) {
     buttons: Array.isArray(item.buttons) && item.buttons.length
       ? item.buttons
       : [
-        { type: "mode", entityId: "scene.preview_evening", label: "Soir", icon: "home" },
-        { type: "routine", entityId: "script.preview_sleep", label: "Nuit", icon: "play" },
+        { type: "mode", entityId: "scene.preview_evening", label: "Evening", icon: "home" },
+        { type: "routine", entityId: "script.preview_sleep", label: "Night", icon: "play" },
         { type: "routine", entityId: "automation.preview_focus", label: "Focus", icon: "refresh" },
-        { type: "mode", entityId: "scene.preview_movie", label: "Cinéma", icon: "room" },
+        { type: "mode", entityId: "scene.preview_movie", label: "Cinema", icon: "room" },
       ],
   };
 }
