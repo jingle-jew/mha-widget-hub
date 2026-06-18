@@ -40,10 +40,7 @@ import {
   renamePage,
   selectPage,
 } from "./src/pages/page-controller.js";
-import {
-  getPageIconLabel,
-  PAGE_ICON_OPTIONS,
-} from "./src/pages/page-icons.js?v=phase1";
+import { buildPageCreatorState } from "./src/pages/page-creator-props.js?v=phase5";
 import {destroyDomSubtree} from "./src/core/dom-lifecycle.js";
 import {ICONS} from "./src/components/icons.js";
 import {createShell} from "./src/layout/shell.js";
@@ -67,6 +64,10 @@ import {
   createWidgetConfigSession,
   supportsWidgetConfiguration,
 } from "./src/widget-config/widget-config-popup.js";
+import {
+  buildWidgetConfigPopupState,
+  getScenesDefaultButtonIndex,
+} from "./src/widget-config/widget-config-props.js?v=phase5";
 import {
   createThemeController,
 } from "./src/settings/theme-controller.js";
@@ -836,10 +837,13 @@ _startWidgetPlacement(widget){
   this._syncWidgetDropSlots();
 }
 _createWidgetConfigPanel(){
-  return createWidgetConfigPopup({
+  const popupState=buildWidgetConfigPopupState({
     session:this._widgetConfigSession,
     hass:this._hass,
     visibilityConfig:this._entityVisibilityConfig,
+  });
+  return createWidgetConfigPopup({
+    ...popupState,
     onCancel:()=>this._closeWidgetConfig(),
     onSave:()=>this._saveWidgetConfig(),
     onChange:change=>{
@@ -900,9 +904,7 @@ _openWidgetConfig(id){
   this._syncWidgetConfigDom();
 }
 _getScenesDefaultButtonIndex(widget){
-  const buttons=Array.isArray(widget?.buttons)?widget.buttons:[];
-  const firstEmpty=buttons.findIndex(button=>!String(button?.entityId||button?.entity_id||"").trim());
-  return firstEmpty>=0?firstEmpty:0;
+  return getScenesDefaultButtonIndex(widget);
 }
 _openScenesButtonConfig(id,buttonIndex){
   if(this._isMobileLandscapeLayout())return;
@@ -1468,10 +1470,14 @@ _createPageFromCreator(){
   this._addGridPage({icon:this._newPageIcon||"grid"});
 }
 _createPageCreatorPanel(){
+  const pageCreatorState=buildPageCreatorState({
+    open:this._pageCreatorOpen,
+    selectedIcon:this._newPageIcon||"grid",
+  });
   const panel=document.createElement("section");
   panel.className="mha-page-creator";
-  panel.dataset.open=String(this._pageCreatorOpen);
-  panel.setAttribute("aria-hidden",String(!this._pageCreatorOpen));
+  panel.dataset.open=String(pageCreatorState.open);
+  panel.setAttribute("aria-hidden",String(!pageCreatorState.open));
 
   const scrim=document.createElement("button");
   scrim.className="mha-page-creator-scrim";
@@ -1502,23 +1508,23 @@ _createPageCreatorPanel(){
 
   const grid=document.createElement("div");
   grid.className="mha-page-creator-icons";
-  PAGE_ICON_OPTIONS.forEach(option=>{
+  pageCreatorState.iconOptions.forEach(option=>{
     const button=document.createElement("button");
     button.className="mha-page-creator-icon";
     button.type="button";
     button.dataset.icon=option.name;
-    button.dataset.selected=String(option.name===this._newPageIcon);
-    button.setAttribute("aria-pressed",String(option.name===this._newPageIcon));
-    button.setAttribute("aria-label",getPageIconLabel(option));
+    button.dataset.selected=String(option.selected);
+    button.setAttribute("aria-pressed",String(option.selected));
+    button.setAttribute("aria-label",option.label);
     button.onclick=()=>this._setPageCreatorIcon(option.name);
     button.append(createIcon({
       name:option.name,
       category:option.category,
-      label:getPageIconLabel(option),
-      children:createIconSymbol({name:option.name,label:getPageIconLabel(option)}),
+      label:option.label,
+      children:createIconSymbol({name:option.name,label:option.label}),
     }));
     const label=document.createElement("span");
-    label.textContent=getPageIconLabel(option);
+    label.textContent=option.label;
     button.append(label);
     grid.append(button);
   });
