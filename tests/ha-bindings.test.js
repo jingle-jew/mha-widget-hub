@@ -38,6 +38,7 @@ import {
 import {
   buildWeatherWidgetConfig,
   createWeatherConfigDraft,
+  normalizeWeatherForecastType,
 } from "../src/widget-config/weather-config.js";
 import {
   buildSliderWidgetConfig,
@@ -468,6 +469,73 @@ test("button and weather configuration only persist authorized selections", () =
     buildWeatherWidgetConfig({ kind: "weather" }, weather.draft, hass, visibilityConfig).entityId,
     "weather.home",
   );
+  assert.equal(
+    buildWeatherWidgetConfig({ kind: "weather" }, weather.draft, hass, visibilityConfig).forecastType,
+    "daily",
+  );
+});
+
+test("weather configuration defaults and persists forecast type", () => {
+  const hass = {
+    states: {
+      "weather.home": entity("weather.home", "sunny", { friendly_name: "Maison" }),
+    },
+  };
+
+  const created = createWeatherConfigDraft({}, hass);
+  assert.equal(created.draft.forecastType, "daily");
+  assert.equal(normalizeWeatherForecastType("weird"), "daily");
+  assert.equal(
+    buildWeatherWidgetConfig({ kind: "weather" }, {
+      ...created.draft,
+      forecastType: "hourly",
+    }, hass).forecastType,
+    "hourly",
+  );
+});
+
+test("weather model respects widget forecastType preference with robust fallback", () => {
+  const hass = {
+    states: {
+      "weather.home": entity("weather.home", "sunny", {
+        temperature: 24,
+        temperature_unit: "°C",
+        forecast: [{
+          datetime: "2026-06-21T12:00:00Z",
+          condition: "cloudy",
+          temperature: 20,
+          templow: 15,
+        }],
+      }),
+    },
+  };
+  const bundle = {
+    daily: [{
+      datetime: "2026-06-19T12:00:00Z",
+      condition: "rainy",
+      temperature: 19,
+      templow: 11,
+    }],
+    hourly: [{
+      datetime: "2026-06-17T18:00:00Z",
+      condition: "sunny",
+      temperature: 23,
+    }],
+  };
+
+  const hourlyPreferred = buildWeatherModel(hass, {
+    entityId: "weather.home",
+    forecastType: "hourly",
+  }, null, bundle);
+  assert.equal(hourlyPreferred.forecastType, "hourly");
+  assert.equal(hourlyPreferred.forecast[0].temp, "23°C");
+
+  const hourlyFallback = buildWeatherModel(hass, {
+    entityId: "weather.home",
+    forecastType: "hourly",
+  }, null, { daily: bundle.daily, hourly: [] });
+  assert.equal(hourlyFallback.forecastType, "daily");
+  assert.equal(hourlyFallback.forecast[0].temp, "19°C / 11°C");
 });
 
 test("Home Assistant service wrapper validates its contract", async () => {

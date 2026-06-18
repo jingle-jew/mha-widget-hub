@@ -27,7 +27,9 @@ import {
 } from "./button-config.js";
 import {
   reconcileWeatherConfigDraft,
+  WEATHER_FORECAST_OPTIONS,
   updateWeatherEntity,
+  updateWeatherForecastType,
 } from "./weather-config.js";
 import {
   reconcileMediaConfigDraft,
@@ -290,7 +292,25 @@ function createWeatherFields(session, hass, visibilityConfig, onChange) {
     updateWeatherEntity(draft, event.currentTarget.value);
     onChange?.({ rerender: true });
   });
-  fields.append(createField("Entité météo", select));
+
+  const forecastSelect = document.createElement("select");
+  forecastSelect.className = "mha-widget-config-control";
+  WEATHER_FORECAST_OPTIONS.forEach(option => {
+    const item = document.createElement("option");
+    item.value = option.value;
+    item.textContent = option.label;
+    item.selected = option.value === draft.forecastType;
+    forecastSelect.append(item);
+  });
+  forecastSelect.addEventListener("change", event => {
+    updateWeatherForecastType(draft, event.currentTarget.value);
+    onChange?.();
+  });
+
+  fields.append(
+    createField("Entité météo", select),
+    createField("Prévisions", forecastSelect),
+  );
   return { fields, canSave: Boolean(selected) };
 }
 

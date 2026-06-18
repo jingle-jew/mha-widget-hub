@@ -95,16 +95,14 @@ test("wallpaper save and reset keep storage, state and host style aligned", () =
     dark: null,
   });
   assert.equal(host.dataset.customWallpaper, "false");
-  assert.equal(host.dataset.themeWallpaper, "true");
+  assert.equal(host.dataset.themeWallpaper, "false");
   assert.equal(host.dataset.wallpaperSource, "theme");
+  assert.equal(host.dataset.wallpaperKind, "advanced");
   assert.equal(
     host.style.properties.has("--mha-custom-wallpaper-image"),
     false,
   );
-  assert.equal(
-    host.style.properties.get("--mha-active-wallpaper-image"),
-    `url("${getThemeWallpaper("ios", "light")}")`,
-  );
+  assert.equal(host.style.properties.has("--mha-active-wallpaper-image"), false);
 });
 
 test("invalid wallpaper payloads preserve the existing error contract", () => {
@@ -118,7 +116,7 @@ test("invalid wallpaper payloads preserve the existing error contract", () => {
   );
 });
 
-test("theme wallpaper is used when no custom wallpaper exists", () => {
+test("theme advanced wallpaper preserves theme-driven background layers", () => {
   const host = createHost();
   const controller = createWallpaperController(host, {
     storage: createStorage(),
@@ -130,12 +128,11 @@ test("theme wallpaper is used when no custom wallpaper exists", () => {
     dark: null,
   });
   assert.equal(host.dataset.customWallpaper, "false");
-  assert.equal(host.dataset.themeWallpaper, "true");
+  assert.equal(host.dataset.themeWallpaper, "false");
   assert.equal(host.dataset.wallpaperSource, "theme");
-  assert.equal(
-    host.style.properties.get("--mha-active-wallpaper-image"),
-    `url("${getThemeWallpaper("material", "dark")}")`,
-  );
+  assert.equal(host.dataset.wallpaperKind, "advanced");
+  assert.equal(host.style.properties.has("--mha-active-wallpaper-image"), false);
+  assert.equal(host.style.properties.has("--mha-active-wallpaper-background"), false);
 });
 
 test("custom wallpaper keeps priority over theme wallpaper", () => {
@@ -150,5 +147,17 @@ test("custom wallpaper keeps priority over theme wallpaper", () => {
 
   const activeWallpaper = controller.getActiveWallpaper();
   assert.equal(activeWallpaper.source, "custom");
-  assert.equal(activeWallpaper.image, wallpaper.dataUrl);
+  assert.equal(activeWallpaper.kind, "image");
+  assert.equal(activeWallpaper.value, wallpaper.dataUrl);
+});
+
+test("theme wallpaper contract supports advanced theme backgrounds", () => {
+  assert.deepEqual(getThemeWallpaper("ios", "light"), {
+    type: "advanced",
+    value: "",
+  });
+  assert.deepEqual(getThemeWallpaper("oneui", "dark"), {
+    type: "advanced",
+    value: "",
+  });
 });

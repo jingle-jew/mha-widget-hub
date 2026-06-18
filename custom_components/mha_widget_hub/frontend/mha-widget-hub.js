@@ -156,12 +156,15 @@ function createCriticalBootStyle() {
         radial-gradient(circle at 52% 90%, var(--mha-bg-radial-3, rgba(56,209,255,.22)), transparent 36%),
         linear-gradient(135deg, var(--mha-bg-base-1, #171b30), var(--mha-bg-base-2, #242844));
     }
-    :host([data-boot-state="booting"][data-wallpaper-source="custom"]) .mha-background,
-    :host([data-boot-state="booting"][data-wallpaper-source="theme"]) .mha-background {
+    :host([data-boot-state="booting"][data-wallpaper-kind="image"][data-wallpaper-source="custom"]) .mha-background,
+    :host([data-boot-state="booting"][data-wallpaper-kind="image"][data-wallpaper-source="theme"]) .mha-background {
       background-image: var(--mha-active-wallpaper-image) !important;
       background-size: cover !important;
       background-position: center !important;
       background-repeat: no-repeat !important;
+    }
+    :host([data-boot-state="booting"][data-wallpaper-kind="css"][data-wallpaper-source="theme"]) .mha-background {
+      background: var(--mha-active-wallpaper-background) !important;
     }
   </style>`;
 }

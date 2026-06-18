@@ -166,11 +166,13 @@ export function buildWeatherModel(hass, widget = {}, visibilityConfig, forecastB
     type: "daily",
     temperatureUnit,
   });
-  const forecast = dailyForecast.length
-    ? dailyForecast
-    : hourlyForecast.length
-      ? hourlyForecast
-      : legacyForecast;
+  const preferredForecastType = widget?.forecastType === "hourly" ? "hourly" : "daily";
+  const forecast = preferredForecastType === "hourly"
+    ? (hourlyForecast.length ? hourlyForecast : dailyForecast.length ? dailyForecast : legacyForecast)
+    : (dailyForecast.length ? dailyForecast : hourlyForecast.length ? hourlyForecast : legacyForecast);
+  const resolvedForecastType = preferredForecastType === "hourly"
+    ? (hourlyForecast.length ? "hourly" : dailyForecast.length ? "daily" : legacyForecast.length ? "legacy" : "none")
+    : (dailyForecast.length ? "daily" : hourlyForecast.length ? "hourly" : legacyForecast.length ? "legacy" : "none");
 
   return {
     ...access,
@@ -180,12 +182,6 @@ export function buildWeatherModel(hass, widget = {}, visibilityConfig, forecastB
     humidity: formatMetric(attributes.humidity, "%"),
     wind: formatMetric(attributes.wind_speed, windUnit),
     forecast,
-    forecastType: dailyForecast.length
-      ? "daily"
-      : hourlyForecast.length
-        ? "hourly"
-        : legacyForecast.length
-          ? "legacy"
-          : "none",
+    forecastType: resolvedForecastType,
   };
 }

@@ -120,7 +120,8 @@ export class WallpaperController {
     if (customWallpaper?.dataUrl) {
       return {
         source: "custom",
-        image: customWallpaper.dataUrl,
+        kind: "image",
+        value: customWallpaper.dataUrl,
         wallpaper: customWallpaper,
       };
     }
@@ -129,17 +130,37 @@ export class WallpaperController {
       resolvedThemeState.themeStyle,
       resolvedThemeState.theme,
     );
-    if (themeWallpaper) {
+    if (themeWallpaper.type === "image" && themeWallpaper.value) {
       return {
         source: "theme",
-        image: themeWallpaper,
+        kind: "image",
+        value: themeWallpaper.value,
+        wallpaper: null,
+      };
+    }
+
+    if ((themeWallpaper.type === "css" || themeWallpaper.type === "token") && themeWallpaper.value) {
+      return {
+        source: "theme",
+        kind: "css",
+        value: themeWallpaper.value,
+        wallpaper: null,
+      };
+    }
+
+    if (themeWallpaper.type === "advanced") {
+      return {
+        source: "theme",
+        kind: "advanced",
+        value: "",
         wallpaper: null,
       };
     }
 
     return {
       source: "fallback",
-      image: "",
+      kind: "none",
+      value: "",
       wallpaper: null,
     };
   }
@@ -149,33 +170,58 @@ export class WallpaperController {
     const wallpapers = this.read(resolvedThemeState);
     const activeWallpaper = this.getActiveWallpaper(resolvedThemeState, wallpapers);
     const hasCustomWallpaper = activeWallpaper.source === "custom";
-    const hasThemeWallpaper = activeWallpaper.source === "theme";
+    const hasThemeWallpaper = activeWallpaper.source === "theme" && activeWallpaper.kind !== "advanced";
 
     this.host.dataset.customWallpaper = String(hasCustomWallpaper);
     this.host.dataset.themeWallpaper = String(hasThemeWallpaper);
     this.host.dataset.wallpaperSource = activeWallpaper.source;
-    if (activeWallpaper.image) {
+    this.host.dataset.wallpaperKind = activeWallpaper.kind;
+
+    if (activeWallpaper.kind === "image" && activeWallpaper.value) {
       this.host.style.setProperty(
         "--mha-active-wallpaper-image",
-        `url("${activeWallpaper.image}")`,
+        `url("${activeWallpaper.value}")`,
       );
+      this.host.style.removeProperty("--mha-active-wallpaper-background");
       if (hasCustomWallpaper) {
         this.host.style.setProperty(
           "--mha-custom-wallpaper-image",
-          `url("${activeWallpaper.image}")`,
+          `url("${activeWallpaper.value}")`,
         );
       } else {
         this.host.style.removeProperty("--mha-custom-wallpaper-image");
       }
-      this.syncWallpaperTone(activeWallpaper.image);
-    } else {
-      delete this.host.dataset.wallpaperSource;
-      this.host.dataset.themeWallpaper = "false";
-      this.host.dataset.customWallpaper = "false";
+      this.syncWallpaperTone(activeWallpaper.value);
+      return wallpapers;
+    }
+
+    if (activeWallpaper.kind === "css" && activeWallpaper.value) {
+      this.host.style.setProperty(
+        "--mha-active-wallpaper-background",
+        activeWallpaper.value,
+      );
       this.host.style.removeProperty("--mha-active-wallpaper-image");
       this.host.style.removeProperty("--mha-custom-wallpaper-image");
       this.resetWallpaperTone();
+      return wallpapers;
     }
+
+    if (activeWallpaper.kind === "advanced") {
+      this.host.style.removeProperty("--mha-active-wallpaper-image");
+      this.host.style.removeProperty("--mha-active-wallpaper-background");
+      this.host.style.removeProperty("--mha-custom-wallpaper-image");
+      this.resetWallpaperTone();
+      return wallpapers;
+    }
+
+    delete this.host.dataset.wallpaperSource;
+    this.host.dataset.themeWallpaper = "false";
+    this.host.dataset.customWallpaper = "false";
+    this.host.dataset.wallpaperKind = "none";
+    this.host.style.removeProperty("--mha-active-wallpaper-image");
+    this.host.style.removeProperty("--mha-active-wallpaper-background");
+    this.host.style.removeProperty("--mha-custom-wallpaper-image");
+    this.resetWallpaperTone();
 
     return wallpapers;
   }

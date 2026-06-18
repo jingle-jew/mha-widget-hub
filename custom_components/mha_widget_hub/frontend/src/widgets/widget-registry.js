@@ -223,6 +223,7 @@ export function normalizeWidgetContract(widget = {}, normalizeBaseSize) {
     normalized.entityId = widget.entityId || widget.entity_id || "";
   } else if (kind === "button" || kind === "weather") {
     normalized.entityId = widget.entityId || widget.entity_id || "";
+    if (kind === "weather") normalized.forecastType = widget.forecastType === "hourly" ? "hourly" : "daily";
   }
 
   if (kind === "toggle-slider") {

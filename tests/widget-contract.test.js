@@ -33,6 +33,7 @@ test("normalization preserves button and weather entity bindings", () => {
   const weather = normalizeWidgetContract({
     kind: "weather",
     entity_id: "weather.home",
+    forecastType: "hourly",
   }, normalizeWidgetSize);
   const clock = normalizeWidgetContract({
     kind: "clock",
@@ -42,6 +43,7 @@ test("normalization preserves button and weather entity bindings", () => {
 
   assert.equal(button.entityId, "switch.coffee");
   assert.equal(weather.entityId, "weather.home");
+  assert.equal(weather.forecastType, "hourly");
   assert.equal(clock.entityId, "weather.home");
 });
 
