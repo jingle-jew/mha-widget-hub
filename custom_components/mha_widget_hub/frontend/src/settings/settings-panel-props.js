@@ -1,0 +1,57 @@
+export function resolveEffectiveIconShape({
+  hostIconShape = "",
+  documentIconShape = "",
+  themeIconShape = "",
+} = {}) {
+  return hostIconShape || documentIconShape || themeIconShape;
+}
+
+export function buildSettingsPanelState({
+  scope = "all",
+  settingsOpen = false,
+  screensaverSettingsOpen = false,
+  language = "auto",
+  hideHaSidebar = false,
+  accentPaletteExpanded = false,
+  settingsPage = "main",
+  dockPages = [],
+  activeDockPageId = "",
+  selectedDockPageId = "",
+  dockPosition = "left",
+  customWallpapers = {},
+  hass = null,
+  entityVisibilityConfig = null,
+  themeState = {},
+  screensaverState = {},
+  effectiveIconShape = "",
+} = {}) {
+  return {
+    open: scope === "screensaver" ? screensaverSettingsOpen : settingsOpen,
+    scope,
+    theme: themeState.themeSetting,
+    language,
+    themeStyle: themeState.themeStyle,
+    iosGlass: themeState.iosGlass,
+    accent: themeState.accent,
+    accentMode: themeState.accentMode,
+    accentPaletteExpanded,
+    iconShape: themeState.iconShapeSetting,
+    effectiveIconShape,
+    hideHaSidebar,
+    screensaverEnabled: screensaverState.enabled,
+    screensaverDelay: screensaverState.delay,
+    screensaverPreview: screensaverState.preview,
+    screensaverNowBar: screensaverState.nowBar,
+    screensaverNowBarItems: screensaverState.nowBarItems,
+    screensaverNowBarConfig: screensaverState.nowBarConfig,
+    screensaverClockVariant: screensaverState.clockVariant,
+    hass,
+    entityVisibilityConfig,
+    settingsPage,
+    dockPages,
+    activeDockPageId,
+    selectedDockPageId,
+    dockPosition,
+    customWallpapers,
+  };
+}

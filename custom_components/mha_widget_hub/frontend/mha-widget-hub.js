@@ -22,15 +22,15 @@ import {
   normalizeLanguageSetting,
 } from "./src/core/mha-persistence.js?v=phase1";
 import {
-  getActivePage,
-  normalizePage,
-} from "./src/pages/page-model.js";
-import {
-  migratePageStorage,
-  readActivePageId,
-  readPages,
-  savePages,
-} from "./src/pages/page-store.js";
+  getHubActivePage,
+  migrateHubPageStorage,
+  normalizeHubPage,
+  readActivePageWidgets,
+  readHubActivePageId,
+  readHubPages,
+  saveHubPages,
+  syncActivePageWidgets,
+} from "./src/core/mha-state.js?v=phase2";
 import {
   addPage,
   changePageIcon,
@@ -48,13 +48,19 @@ import {destroyDomSubtree} from "./src/core/dom-lifecycle.js";
 import {ICONS} from "./src/components/icons.js";
 import {createShell} from "./src/layout/shell.js";
 import {createMobileDock} from "./src/layout/mobile-dock.js";
+import { buildDockStateProps } from "./src/layout/dock-props.js?v=phase3";
 import {
   createDockProps,
   syncDockActiveState,
   syncDocks,
 } from "./src/layout/dock-controller.js";
 import {createSettingsPanel,updateSettingsPanel} from "./src/settings/settings-panel.js";
+import {
+  buildSettingsPanelState,
+  resolveEffectiveIconShape,
+} from "./src/settings/settings-panel-props.js?v=phase3";
 import {createWidgetManager, WIDGET_MANAGER_CATEGORIES} from "./src/widget-manager/widget-manager.js";
+import { buildWidgetManagerState } from "./src/widget-manager/widget-manager-props.js?v=phase4";
 import {
   buildConfiguredWidget,
   createWidgetConfigPopup,
@@ -98,6 +104,10 @@ import { createPlacementController } from "./src/layout/placement-controller.js"
 import { createGridRuntime } from "./src/layout/grid-runtime.js";
 import {createScreensaver,normalizeClockVariant,updateScreensaverClock,updateScreensaverClockVariant,updateScreensaverNowBar,updateScreensaverState} from "./src/screensaver/screensaver.js";
 import { createScreensaverController } from "./src/screensaver/screensaver-controller.js";
+import {
+  buildScreensaverViewState,
+  getNowBarCalendarSignature,
+} from "./src/screensaver/screensaver-props.js?v=phase4";
 import {
   buildNowBarTiles,
   fetchNowBarCalendarEvents,
@@ -628,40 +638,32 @@ _syncSettingsDom(){
 _getSettingsPanelProps(scope="all"){
   const themeState=this._themeController.read();
   const screensaverState=this._screensaverController.read();
-  const themeStyle=themeState.themeStyle;
-  const iconShapeSetting=themeState.iconShapeSetting;
-  const effectiveIconShape=this.dataset.iconShape
-    || document.documentElement.dataset.iconShape
-    || themeState.iconShape;
-
-  return {
-    open:scope==="screensaver"?this._screensaverSettingsOpen:this._settingsOpen,
+  const settingsState=buildSettingsPanelState({
     scope,
-    theme:themeState.themeSetting,
+    settingsOpen:this._settingsOpen,
+    screensaverSettingsOpen:this._screensaverSettingsOpen,
     language:this._language,
-    themeStyle,
-    iosGlass:themeState.iosGlass,
-    accent:themeState.accent,
-    accentMode:themeState.accentMode,
-    accentPaletteExpanded:this._accentPaletteExpanded,
-    iconShape:iconShapeSetting,
-    effectiveIconShape,
     hideHaSidebar:this._hideHaSidebar,
-    screensaverEnabled:screensaverState.enabled,
-    screensaverDelay:screensaverState.delay,
-    screensaverPreview:screensaverState.preview,
-    screensaverNowBar:screensaverState.nowBar,
-    screensaverNowBarItems:screensaverState.nowBarItems,
-    screensaverNowBarConfig:screensaverState.nowBarConfig,
-    screensaverClockVariant:screensaverState.clockVariant,
-    hass:this._hass,
-    entityVisibilityConfig:this._entityVisibilityConfig,
+    accentPaletteExpanded:this._accentPaletteExpanded,
     settingsPage:this._settingsPage,
     dockPages:this._pages,
     activeDockPageId:this._activePageId,
     selectedDockPageId:this._dockSettingsPageId,
     dockPosition:this._dockPosition,
     customWallpapers:this._customWallpapers,
+    hass:this._hass,
+    entityVisibilityConfig:this._entityVisibilityConfig,
+    themeState,
+    screensaverState,
+    effectiveIconShape:resolveEffectiveIconShape({
+      hostIconShape:this.dataset.iconShape,
+      documentIconShape:document.documentElement.dataset.iconShape,
+      themeIconShape:themeState.iconShape,
+    }),
+  });
+
+  return {
+    ...settingsState,
     onClose:()=>scope==="screensaver"?this._closeScreensaverSettings():this._closeSettings(),
     onLanguageChange:v=>this._applyLanguageFromSettings(v),
     onThemeChange:v=>this._applyThemeFromSettings(v),
@@ -759,10 +761,13 @@ _isMobileLandscapeLayout(){
   return this._isMobileLauncherLayout()&&window.matchMedia?.("(orientation: landscape)")?.matches;
 }
 _createWidgetManagerPanel(){
-  return createWidgetManager({
+  const managerState=buildWidgetManagerState({
     open:this._widgetManagerOpen,
     activeCategory:this._widgetManagerCategory,
     categories:WIDGET_MANAGER_CATEGORIES,
+  });
+  return createWidgetManager({
+    ...managerState,
     onClose:()=>this._closeWidgetManager(),
     onBack:()=>this._showWidgetManagerCategories(),
     onSelectCategory:id=>this._selectWidgetManagerCategory(id),
@@ -1276,7 +1281,7 @@ _getNowBarTiles(){
   });
 }
 _getNowBarCalendarSignature(config=this._getNowBarConfig()){
-  return normalizeNowBarConfig(config).entities.calendar.join("|");
+  return getNowBarCalendarSignature(config);
 }
 _requestNowBarCalendarEvents({force=false}={}){
   const config=this._getNowBarConfig();
@@ -1300,12 +1305,13 @@ _requestNowBarCalendarEvents({force=false}={}){
   });
 }
 _createScreensaverElement(screensaverState=this._screensaverController.read()){
-  return createScreensaver({
+  const screensaverViewState=buildScreensaverViewState({
     isVisible:this._getScreensaverVisible(),
-    showNowBar:screensaverState.nowBar,
-    nowBarItems:screensaverState.nowBarItems,
+    screensaverState,
     nowBarTiles:this._getNowBarTiles(),
-    clockVariant:screensaverState.clockVariant,
+  });
+  return createScreensaver({
+    ...screensaverViewState,
     onClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),
     onOpenScreensaverSettings:()=>this._openScreensaverSettings(),
     onWake:()=>this._wakeScreensaver(),
@@ -1349,7 +1355,7 @@ toggleEditMode(){
   if(wasEditing!==this._isEditing)this._scheduleSquareUnitSync();
 }toggleScreensaverPreview(){const state=this._screensaverController.read();this._screensaverController.setPreviewState(!state.preview);this._syncScreensaverDom()}toggleNowBarPreview(){const state=this._screensaverController.read();this._screensaverController.setNowBarState(!state.nowBar);this._syncScreensaverDom()}setScreensaverClockVariant(v="digital"){this._screensaverController.setClockVariantState(v);this._syncScreensaverDom()}resetGrid(){clearGridStorage();this._widgetPositions={};this._activeMoveWidgetId="";this._pages=this._readPages();this._activePageId=this._readActivePageId();this._widgets=this._readWidgets();this.render()}
 _migrateStorageSchema(){
-  const result=migratePageStorage({
+  const result=migrateHubPageStorage({
     defaultWidgets:DEFAULT_WIDGETS,
     normalizeWidget:normalizeStoredWidgetContract,
     normalizeWidgetForGrid:normalizeWidgetForKind,
@@ -1357,45 +1363,48 @@ _migrateStorageSchema(){
   if(result.migrated)this._recordPersistenceResult(result.success);
 }
 _normalizePage(page={},index=0){
-  return normalizePage(page,index,{normalizeWidget:normalizeStoredWidgetContract});
+  return normalizeHubPage(page,index,{normalizeWidget:normalizeStoredWidgetContract});
 }
 _readPages(){
-  const result=readPages({normalizeWidget:normalizeStoredWidgetContract});
+  const result=readHubPages({normalizeWidget:normalizeStoredWidgetContract});
   if(result.persistenceResult!==null)this._recordPersistenceResult(result.persistenceResult);
   return result.pages;
 }
 _readActivePageId(){
-  const result=readActivePageId(this._pages);
+  const result=readHubActivePageId(this._pages);
   if(result.persistenceResult!==null)this._recordPersistenceResult(result.persistenceResult);
   return result.activePageId;
 }
 _getActivePage(){
-  return getActivePage(this._pages,this._activePageId);
+  return getHubActivePage(this._pages,this._activePageId);
 }
 _recordPersistenceResult(success){
   this.dataset.persistenceState=success?"saved":"error";
   return success;
 }
 _savePages(){
-  return this._recordPersistenceResult(savePages(
+  return this._recordPersistenceResult(saveHubPages(
     this._pages,
     this._activePageId,
     {normalizeWidget:normalizeStoredWidgetContract},
   ));
 }
 _readWidgets(){
-  const page=this._getActivePage();
-  if(!page)return [];
-  return (page.widgets||[]).map(widget=>{
-    const normalized=normalizeStoredWidgetContract(widget);
-    return {...normalized,...normalizeWidgetForKind(normalized)};
+  return readActivePageWidgets({
+    pages:this._pages,
+    activePageId:this._activePageId,
+    normalizeWidget:normalizeStoredWidgetContract,
+    normalizeWidgetForGrid:normalizeWidgetForKind,
   });
 }
 _syncActivePageWidgets(){
-  const page=this._getActivePage();
-  if(!page)return false;
-  page.widgets=this._widgets.map(widget=>normalizeStoredWidgetContract(widget));
-  return this._savePages();
+  const success=syncActivePageWidgets({
+    pages:this._pages,
+    activePageId:this._activePageId,
+    widgets:this._widgets,
+    normalizeWidget:normalizeStoredWidgetContract,
+  });
+  return success?this._recordPersistenceResult(success):false;
 }
 _setActivePage(id){
   const result=selectPage(this._pages,this._activePageId,id);
@@ -1542,9 +1551,11 @@ _updateDockActiveState(){
 }
 _getDockProps(){
   return createDockProps({
-    pages:this._pages,
-    activePageId:this._activePageId,
-    isEditing:this._isEditing,
+    ...buildDockStateProps({
+      pages:this._pages,
+      activePageId:this._activePageId,
+      isEditing:this._isEditing,
+    }),
     onPageSelect:id=>this._setActivePage(id),
     onAddPage:()=>this._openPageCreator(),
     onDockSettings:()=>this._openDockSettings(),
