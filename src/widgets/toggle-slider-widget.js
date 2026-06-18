@@ -13,6 +13,7 @@ import { clampWidth, css, freezeSize, isLocalWidgetKind, variant } from "./widge
 import { isEntityAllowedForCurrentUser } from "../admin/entity-permissions.js";
 import { buildToggleSliderWidgetConfig, createToggleSliderConfigDraft } from "../widget-config/toggle-slider-config.js";
 import { WIDGET_PREVIEW_DATA } from "./widget-preview-data.js";
+import { t } from "../i18n/index.js";
 
 export const TOGGLE_SLIDER_WIDGET_KIND = "toggle-slider";
 const SLIDER_SERVICE_INTERVAL_MS = 80;
@@ -149,22 +150,22 @@ export function createToggleSliderWidgetContent(widget = {}, {
         "aria-label",
         context.entityAllowed
           ? widget.label || "Toggle"
-          : "Unauthorized entity",
+          : t("common.unauthorizedEntity", "Unauthorized entity"),
       );
     }
     if (toggleLabel) {
       toggleLabel.textContent = context.entityAllowed
         ? widget.label || widget.title || "Toggle"
-        : "Unauthorized entity";
+        : t("common.unauthorizedEntity", "Unauthorized entity");
     }
     if (toggleState) {
       toggleState.textContent = !context.entityAllowed
-        ? "Unauthorized"
+        ? t("common.unauthorized", "Unauthorized")
         : context.entityAvailable
         ? checked
-          ? widget.stateOn || "On"
-          : widget.stateOff || "Off"
-        : "Unavailable";
+          ? widget.stateOn || t("states.on", "On")
+          : widget.stateOff || t("states.off", "Off")
+        : t("states.unavailable", "Unavailable");
     }
 
     const isSliderDragging = [slider, slider2]

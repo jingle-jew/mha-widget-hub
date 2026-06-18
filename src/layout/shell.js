@@ -1,5 +1,6 @@
 import {createDock} from "./dock.js";
 import {createStatusBar} from "./status-bar.js";
+import { t } from "../i18n/index.js";
 
 export function createShell(meta = {}) {
   const bg = document.createElement("div");
@@ -14,19 +15,19 @@ export function createShell(meta = {}) {
 
   const workspace = document.createElement("section");
   workspace.className = "mha-workspace";
-  workspace.setAttribute("aria-label", "Main dashboard area");
+  workspace.setAttribute("aria-label", t("settings.mainDashboardArea", "Main dashboard area"));
 
   const widgetArea = document.createElement("section");
   widgetArea.className = "mha-widget-area";
-  widgetArea.setAttribute("aria-label", "Widget area");
+  widgetArea.setAttribute("aria-label", t("settings.widgetArea", "Widget area"));
 
   const grid = document.createElement("section");
   grid.className = "mha-grid";
-  grid.setAttribute("aria-label", "Widget grid");
+  grid.setAttribute("aria-label", t("settings.widgetGrid", "Widget grid"));
 
   const dockZone = document.createElement("aside");
   dockZone.className = "mha-dock-zone";
-  dockZone.setAttribute("aria-label", "Dock area");
+  dockZone.setAttribute("aria-label", t("settings.dockArea", "Dock area"));
 
   dockZone.append(createDock({
     pages: meta.pages,

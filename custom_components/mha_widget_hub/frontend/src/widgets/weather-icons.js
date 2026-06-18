@@ -1,3 +1,5 @@
+import { t } from "../i18n/index.js";
+
 const WEATHER_ALIASES = new Map([
   ["clear", "sunny"],
   ["clear-day", "sunny"],
@@ -30,22 +32,22 @@ const WEATHER_ALIASES = new Map([
 ]);
 
 const WEATHER_LABELS = {
-  sunny: "Sunny",
-  "clear-night": "Clear sky",
-  partlycloudy: "Partly cloudy",
-  cloudy: "Cloudy",
-  rainy: "Rain",
-  pouring: "Heavy rain",
-  lightning: "Thunderstorm",
-  "lightning-rainy": "Thunderstorm with rain",
-  snowy: "Snow",
-  "snowy-rainy": "Snow and rain",
-  fog: "Fog",
-  windy: "Windy",
-  hail: "Hail",
-  exceptional: "Exceptional conditions",
-  unknown: "Unknown condition",
-  unavailable: "Condition unavailable",
+  sunny: "widgets.weatherConditions.sunny",
+  "clear-night": "widgets.weatherConditions.clearNight",
+  partlycloudy: "widgets.weatherConditions.partlyCloudy",
+  cloudy: "widgets.weatherConditions.cloudy",
+  rainy: "widgets.weatherConditions.rainy",
+  pouring: "widgets.weatherConditions.pouring",
+  lightning: "widgets.weatherConditions.lightning",
+  "lightning-rainy": "widgets.weatherConditions.lightningRainy",
+  snowy: "widgets.weatherConditions.snowy",
+  "snowy-rainy": "widgets.weatherConditions.snowyRainy",
+  fog: "widgets.weatherConditions.fog",
+  windy: "widgets.weatherConditions.windy",
+  hail: "widgets.weatherConditions.hail",
+  exceptional: "widgets.weatherConditions.exceptional",
+  unknown: "widgets.weatherConditions.unknown",
+  unavailable: "widgets.weatherConditions.unavailable",
 };
 
 function normalizeWeatherCondition(condition = "unknown") {
@@ -116,7 +118,7 @@ function iconSvg(kind) {
 
 export function getWeatherIconLabel(condition) {
   const kind = normalizeWeatherCondition(condition);
-  return WEATHER_LABELS[kind] || WEATHER_LABELS.unknown;
+  return t(WEATHER_LABELS[kind] || WEATHER_LABELS.unknown);
 }
 
 export function createWeatherIcon(condition = "unknown", { className = "", label } = {}) {

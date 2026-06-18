@@ -9,6 +9,7 @@ import {
   decorateWidgetShell,
 } from "./widget-renderers.js";
 import { getWidgetDefinition, resolveWidgetKind } from "./widget-registry.js";
+import { t } from "../i18n/index.js";
 
 export function createWidgetShell(
   widget,
@@ -80,10 +81,10 @@ export function createWidgetShell(
 
   const showConfigureTool = !(isEditing && widgetKind === "scenes");
   const dimensionButton = widgetDefinition?.config && showConfigureTool
-    ? tool("Configure widget", "edit", () => onConfigure?.(widget.id), {
+    ? tool(t("widgets.tools.configureWidget", "Configure widget"), "edit", () => onConfigure?.(widget.id), {
       className: "mha-tool-button--dimension",
     })
-    : tool("Variante suivante", "resize", () => {}, {
+    : tool(t("widgets.tools.nextVariant", "Next variant"), "resize", () => {}, {
       className: "mha-tool-button--dimension",
     });
 
@@ -97,7 +98,7 @@ export function createWidgetShell(
   }
 
   const moveButton = tool(
-    isMoveTarget ? "Finish moving" : "Move widget",
+    isMoveTarget ? t("widgets.tools.finishMoving", "Finish moving") : t("widgets.tools.moveWidget", "Move widget"),
     "move",
     () => onToggleMove?.(widget.id),
     {
@@ -106,7 +107,7 @@ export function createWidgetShell(
     },
   );
 
-  const closeButton = tool("Delete", "close", () => onRemove?.(widget.id), {
+  const closeButton = tool(t("common.delete", "Delete"), "close", () => onRemove?.(widget.id), {
     className: "mha-tool-button--close",
   });
 
@@ -133,10 +134,10 @@ function createMoveOverlay(widgetId, onMove) {
   overlay.className = "mha-widget-move-overlay";
 
   [
-    ["up", "Move up"],
-    ["right", "Move right"],
-    ["down", "Move down"],
-    ["left", "Move left"],
+    ["up", t("widgets.tools.moveUp", "Move up")],
+    ["right", t("widgets.tools.moveRight", "Move right")],
+    ["down", t("widgets.tools.moveDown", "Move down")],
+    ["left", t("widgets.tools.moveLeft", "Move left")],
   ].forEach(([direction, label]) => {
     const button = document.createElement("button");
     button.className = "mha-widget-move-arrow";

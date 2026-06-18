@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="en" data-theme="dark" data-theme-style="oneui" data-icon-shape="squircle">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>MHA Admin Dev</title>
+  <style>
+    html,
+    body {
+      width: 100%;
+      min-height: 100%;
+      margin: 0;
+      background: linear-gradient(135deg, #171b30, #242844);
+      color: white;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+    }
+
+    body {
+      overflow: hidden;
+    }
+
+    .dev-admin-toolbar {
+      position: fixed;
+      z-index: 9999;
+      top: max(14px, env(safe-area-inset-top));
+      right: max(14px, env(safe-area-inset-right));
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+      max-width: min(620px, calc(100vw - 28px));
+      padding: 10px;
+      border: 1px solid rgba(255, 255, 255, .16);
+      border-radius: 18px;
+      background: rgba(10, 10, 18, .72);
+      box-shadow: 0 22px 70px rgba(0, 0, 0, .36);
+      backdrop-filter: blur(24px) saturate(155%);
+    }
+
+    .dev-admin-toolbar button,
+    .dev-admin-toolbar select {
+      appearance: none;
+      min-height: 34px;
+      border: 0;
+      border-radius: 999px;
+      padding: 8px 12px;
+      background: rgba(255, 255, 255, .12);
+      color: inherit;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 750;
+      cursor: pointer;
+    }
+
+    .dev-admin-toolbar button:hover,
+    .dev-admin-toolbar select:hover {
+      background: rgba(255, 255, 255, .2);
+    }
+
+    .dev-admin-stage {
+      width: 100vw;
+      height: 100dvh;
+      overflow: auto;
+    }
+
+    mha-admin-panel {
+      display: block;
+      min-height: 100dvh;
+    }
+
+    @media (max-width: 620px) {
+      body {
+        overflow: auto;
+      }
+
+      .dev-admin-toolbar {
+        position: sticky;
+        top: 0;
+        right: auto;
+        justify-content: stretch;
+        max-width: none;
+        border-radius: 0;
+      }
+
+      .dev-admin-toolbar button,
+      .dev-admin-toolbar select {
+        flex: 1 1 140px;
+      }
+
+      .dev-admin-stage {
+        height: auto;
+        min-height: 100dvh;
+        overflow: visible;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="dev-admin-toolbar" aria-label="MHA Admin dev tools">
+    <button type="button" data-dev-action="reload">Reload mock data</button>
+    <button type="button" data-dev-action="theme">Toggle light/dark</button>
+    <button type="button" data-dev-action="loading">Simulate loading</button>
+    <button type="button" data-dev-action="unavailable">Toggle unavailable</button>
+    <select data-dev-action="user" aria-label="Current Home Assistant user"></select>
+  </div>
+
+  <div class="dev-admin-stage" data-admin-stage></div>
+
+  <script type="module">
+    import "./mha-admin-loader.js?v=admin-dev";
+
+    const USERS_COMMAND = "mha_widget_hub/users/list";
+    const GET_COMMAND = "mha_widget_hub/entity_visibility/get";
+    const SAVE_COMMAND = "mha_widget_hub/entity_visibility/save";
+    const STORAGE_KEY = "mha-dev-admin-visibility-config";
+
+    const stage = document.querySelector("[data-admin-stage]");
+    const userSelect = document.querySelector("[data-dev-action='user']");
+
+    const users = Object.freeze([
+      Object.freeze({ id: "admin", name: "Admin", is_admin: true }),
+      Object.freeze({ id: "parent", name: "Parent", is_admin: false }),
+      Object.freeze({ id: "child", name: "Enfant", is_admin: false }),
+      Object.freeze({ id: "guest", name: "Invité", is_admin: false }),
+    ]);
+
+    let currentUserId = "admin";
+    let unavailableMode = false;
+    let panel = null;
+    let visibilityConfig = readStoredConfig();
+    let states = createMockStates();
+
+    function createMockEntity(entityId, state, attributes = {}) {
+      return {
+        entity_id: entityId,
+        state,
+        attributes,
+        last_changed: new Date().toISOString(),
+        last_updated: new Date().toISOString(),
+      };
+    }
+
+    function createMockStates() {
+      return {
+        "light.living_room": createMockEntity("light.living_room", "on", {
+          friendly_name: "Living room lights",
+          brightness: 188,
+          supported_color_modes: ["brightness", "color_temp"],
+        }),
+        "light.kitchen": createMockEntity("light.kitchen", "off", {
+          friendly_name: "Kitchen counter",
+          brightness: 96,
+          supported_color_modes: ["brightness"],
+        }),
+        "switch.coffee_machine": createMockEntity("switch.coffee_machine", "off", {
+          friendly_name: "Coffee machine",
+        }),
+        "switch.garden_pump": createMockEntity("switch.garden_pump", "on", {
+          friendly_name: "Garden pump",
+        }),
+        "input_boolean.guest_mode": createMockEntity("input_boolean.guest_mode", "off", {
+          friendly_name: "Guest mode",
+        }),
+        "input_boolean.quiet_hours": createMockEntity("input_boolean.quiet_hours", "on", {
+          friendly_name: "Quiet hours",
+        }),
+        "button.doorbell_reset": createMockEntity("button.doorbell_reset", "unknown", {
+          friendly_name: "Doorbell reset",
+        }),
+        "weather.home": createMockEntity("weather.home", "partlycloudy", {
+          friendly_name: "Home weather",
+          temperature: 22,
+          temperature_unit: "°C",
+          humidity: 48,
+          wind_speed: 9,
+          wind_speed_unit: "km/h",
+        }),
+        "media_player.living_room": createMockEntity("media_player.living_room", "playing", {
+          friendly_name: "Living room speaker",
+          volume_level: .36,
+          media_title: "MHA Dev Mix",
+          media_artist: "Widget Hub",
+        }),
+        "climate.downstairs": createMockEntity("climate.downstairs", "heat", {
+          friendly_name: "Downstairs thermostat",
+          current_temperature: 21.5,
+          temperature: 22,
+          unit_of_measurement: "°C",
+        }),
+        "sensor.living_room_temperature": createMockEntity("sensor.living_room_temperature", "21.8", {
+          friendly_name: "Living room temperature",
+          unit_of_measurement: "°C",
+          device_class: "temperature",
+        }),
+        "sensor.energy_today": createMockEntity("sensor.energy_today", "7.4", {
+          friendly_name: "Energy today",
+          unit_of_measurement: "kWh",
+          device_class: "energy",
+        }),
+        "binary_sensor.front_door": createMockEntity("binary_sensor.front_door", "off", {
+          friendly_name: "Front door",
+          device_class: "door",
+        }),
+        "binary_sensor.garage_motion": createMockEntity("binary_sensor.garage_motion", "on", {
+          friendly_name: "Garage motion",
+          device_class: "motion",
+        }),
+        "scene.movie_night": createMockEntity("scene.movie_night", "scening", {
+          friendly_name: "Movie night",
+        }),
+        "script.good_night": createMockEntity("script.good_night", "off", {
+          friendly_name: "Good night",
+        }),
+        "automation.close_blinds": createMockEntity("automation.close_blinds", "on", {
+          friendly_name: "Close blinds at sunset",
+        }),
+      };
+    }
+
+    function createDefaultConfig() {
+      return {
+        version: 1,
+        users: {
+          admin: {
+            unrestricted: true,
+            allowedEntities: {},
+          },
+          parent: {
+            unrestricted: false,
+            allowedEntities: {
+              light: ["light.living_room", "light.kitchen"],
+              switch: ["switch.coffee_machine"],
+              input_boolean: ["input_boolean.guest_mode"],
+              weather: ["weather.home"],
+              media_player: ["media_player.living_room"],
+              climate: ["climate.downstairs"],
+              sensor: ["sensor.living_room_temperature", "sensor.energy_today"],
+              binary_sensor: ["binary_sensor.front_door", "binary_sensor.garage_motion"],
+            },
+          },
+          child: {
+            unrestricted: false,
+            allowedEntities: {
+              light: ["light.living_room"],
+              media_player: ["media_player.living_room"],
+              weather: ["weather.home"],
+            },
+          },
+          guest: {
+            unrestricted: false,
+            allowedEntities: {
+              light: ["light.living_room"],
+              switch: [],
+              weather: ["weather.home"],
+            },
+          },
+        },
+      };
+    }
+
+    function readStoredConfig() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        return stored ? JSON.parse(stored) : createDefaultConfig();
+      } catch (error) {
+        console.warn("[MHA Admin dev] Invalid stored mock config, resetting.", error);
+        return createDefaultConfig();
+      }
+    }
+
+    function writeStoredConfig(config) {
+      visibilityConfig = config && typeof config === "object" ? config : createDefaultConfig();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(visibilityConfig));
+      return visibilityConfig;
+    }
+
+    function clone(value) {
+      return JSON.parse(JSON.stringify(value));
+    }
+
+    function setUnavailableMode(enabled) {
+      unavailableMode = Boolean(enabled);
+      states = createMockStates();
+      if (unavailableMode) {
+        [
+          "light.kitchen",
+          "media_player.living_room",
+          "climate.downstairs",
+          "sensor.energy_today",
+          "binary_sensor.garage_motion",
+        ].forEach(entityId => {
+          if (states[entityId]) states[entityId].state = "unavailable";
+        });
+      }
+    }
+
+    function createMockHass() {
+      const currentUser = users.find(user => user.id === currentUserId) || users[0];
+      const hass = {
+        language: document.documentElement.lang || "en",
+        locale: {
+          language: document.documentElement.lang || "en",
+        },
+        selectedLanguage: document.documentElement.lang || "en",
+        user: clone(currentUser),
+        states: clone(states),
+        config: {
+          language: document.documentElement.lang || "en",
+          location_name: "MHA Dev Home",
+          unit_system: { temperature: "°C" },
+        },
+        themes: {
+          darkMode: document.documentElement.dataset.theme !== "light",
+        },
+        async callWS(payload = {}) {
+          console.info("[MHA Admin dev] callWS", payload);
+          if (payload.type === USERS_COMMAND) {
+            return { users: clone(users) };
+          }
+          if (payload.type === GET_COMMAND) {
+            return clone(visibilityConfig);
+          }
+          if (payload.type === SAVE_COMMAND) {
+            return clone(writeStoredConfig(payload.config));
+          }
+          return {};
+        },
+        async callService(domain, service, data = {}) {
+          console.info("[MHA Admin dev] callService", domain, service, data);
+        },
+        async callApi(method, path, data = {}) {
+          console.info("[MHA Admin dev] callApi", method, path, data);
+          return {};
+        },
+      };
+
+      hass.connection = {
+        sendMessagePromise: payload => hass.callWS(payload),
+      };
+
+      return hass;
+    }
+
+    function mountAdmin({ loading = false } = {}) {
+      stage.replaceChildren();
+      panel = document.createElement("mha-admin-panel");
+      stage.append(panel);
+
+      if (loading) return panel;
+
+      panel.hass = createMockHass();
+      return panel;
+    }
+
+    function reloadMockData() {
+      visibilityConfig = createDefaultConfig();
+      writeStoredConfig(visibilityConfig);
+      setUnavailableMode(false);
+      mountAdmin();
+    }
+
+    function setTheme(theme) {
+      const resolved = theme === "light" ? "light" : "dark";
+      document.documentElement.dataset.theme = resolved;
+      document.documentElement.setAttribute("data-theme", resolved);
+      localStorage.setItem("mha-dev-theme", resolved);
+      localStorage.setItem("mha-theme", resolved);
+      if (panel) panel.hass = createMockHass();
+    }
+
+    function toggleTheme() {
+      setTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
+    }
+
+    function simulateLoading() {
+      mountAdmin({ loading: true });
+      window.setTimeout(() => {
+        if (panel?.isConnected) panel.hass = createMockHass();
+      }, 900);
+    }
+
+    function toggleUnavailable() {
+      setUnavailableMode(!unavailableMode);
+      mountAdmin();
+    }
+
+    users.forEach(user => {
+      const option = document.createElement("option");
+      option.value = user.id;
+      option.textContent = user.name;
+      userSelect.append(option);
+    });
+    userSelect.value = currentUserId;
+    userSelect.addEventListener("change", (event) => {
+      currentUserId = event.currentTarget.value;
+      mountAdmin();
+    });
+
+    document.querySelector("[data-dev-action='reload']").addEventListener("click", reloadMockData);
+    document.querySelector("[data-dev-action='theme']").addEventListener("click", toggleTheme);
+    document.querySelector("[data-dev-action='loading']").addEventListener("click", simulateLoading);
+    document.querySelector("[data-dev-action='unavailable']").addEventListener("click", toggleUnavailable);
+
+    setTheme(localStorage.getItem("mha-dev-theme") || "dark");
+    customElements.whenDefined("mha-admin-panel").then(() => mountAdmin());
+
+    window.__MHA_ADMIN_DEV__ = {
+      get panel() {
+        return panel;
+      },
+      get hass() {
+        return createMockHass();
+      },
+      users,
+      get states() {
+        return clone(states);
+      },
+      get visibilityConfig() {
+        return clone(visibilityConfig);
+      },
+      reloadMockData,
+      simulateLoading,
+      toggleTheme,
+      toggleUnavailable,
+      mountAdmin,
+    };
+  </script>
+</body>
+</html>

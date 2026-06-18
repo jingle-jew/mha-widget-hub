@@ -26,9 +26,15 @@ function createGenericPreviewFallback(item = {}) {
   const preview = el("div", "mha-widget-manager-preview-generic-fallback");
   preview.dataset.kind = resolveWidgetKind(item);
   preview.dataset.size = previewSizeKey(item);
+  const title = item.labelKey
+    ? t(item.labelKey, item.title || item.label || t("common.widget", "Widget"))
+    : item.title || item.label || t("common.widget", "Widget");
+  const description = item.descriptionKey
+    ? t(item.descriptionKey, item.description || t("widgets.manager.previewUnavailable", "Preview unavailable"))
+    : item.description || t("widgets.manager.previewUnavailable", "Preview unavailable");
   preview.append(
-    el("span", "mha-widget-manager-preview-generic-title", item.title || item.label || "Widget"),
-    el("span", "mha-widget-manager-preview-generic-detail", item.description || t("widgets.manager.previewUnavailable", "Preview unavailable")),
+    el("span", "mha-widget-manager-preview-generic-title", title),
+    el("span", "mha-widget-manager-preview-generic-detail", description),
   );
   return preview;
 }
@@ -68,7 +74,7 @@ function createCategoryButton(category, onSelectCategory) {
   const label = document.createElement("strong");
   label.textContent = t(`widgets.categories.${category.id}`, category.label);
   const description = document.createElement("small");
-  description.textContent = category.description || "";
+  description.textContent = t(`widgets.categoryDescriptions.${category.id}`, category.description || "");
   text.append(label, description);
   button.append(icon, text);
   button.addEventListener("click", () => onSelectCategory?.(category.id));
@@ -86,10 +92,15 @@ function createWidgetButton(category, item, onSelectWidget) {
   content.className = "mha-widget-manager-widget-content mha-widget-manager-card-meta";
   const label = document.createElement("strong");
   label.className = "mha-widget-manager-card-title";
-  label.textContent = item.title || item.label;
+  label.textContent = item.labelKey
+    ? t(item.labelKey, item.title || item.label)
+    : item.title || item.label;
   const meta = document.createElement("small");
   meta.className = "mha-widget-manager-card-detail";
-  meta.textContent = [sizeLabel(item.size), item.description || ""].filter(Boolean).join(" · ");
+  const description = item.descriptionKey
+    ? t(item.descriptionKey, item.description || "")
+    : item.description || "";
+  meta.textContent = [sizeLabel(item.size), description].filter(Boolean).join(" · ");
   content.append(label, meta);
   button.append(createWidgetPreview(item), content);
   button.addEventListener("click", () => onSelectWidget?.({ ...item, category: category.id }));
@@ -123,7 +134,7 @@ export function createWidgetManager({open=false,activeCategory="",categories=WID
   title.className = "mha-settings-title-block";
   const eyebrow = document.createElement("span");
   eyebrow.className = "mha-settings-eyebrow";
-  eyebrow.textContent = selectedCategory ? "Widgets" : "MHA";
+  eyebrow.textContent = selectedCategory ? t("widgets.manager.title", "Widgets") : "MHA";
   const h2 = document.createElement("h2");
   h2.className = "mha-settings-title";
   h2.textContent = selectedCategory ? t(`widgets.categories.${selectedCategory.id}`, selectedCategory.label) : t("widgets.manager.title", "Widgets");

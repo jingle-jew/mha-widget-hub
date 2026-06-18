@@ -9,6 +9,7 @@ import { css, freezeSize, isLocalWidgetKind, variant } from "./widget-definition
 import { isEntityAllowedForCurrentUser } from "../admin/entity-permissions.js";
 import { buildSliderWidgetConfig, createSliderConfigDraft } from "../widget-config/slider-config.js";
 import { WIDGET_PREVIEW_DATA } from "./widget-preview-data.js";
+import { t } from "../i18n/index.js";
 
 const SLIDER_SERVICE_INTERVAL_MS = 80;
 
@@ -153,17 +154,17 @@ export function createSliderWidgetContent(
     frame.dataset.sliderSupported = String(Boolean(supportsSlider));
     slider.setAttribute(
       "aria-label",
-      context.entityAllowed ? widget.label || "Slider" : "Unauthorized entity",
+      context.entityAllowed ? widget.label || "Slider" : t("common.unauthorizedEntity", "Unauthorized entity"),
     );
     slider.querySelector(".mha-slider-input")?.setAttribute(
       "aria-label",
-      context.entityAllowed ? widget.label || "Slider" : "Unauthorized entity",
+      context.entityAllowed ? widget.label || "Slider" : t("common.unauthorizedEntity", "Unauthorized entity"),
     );
     label.textContent = context.entityAllowed
       ? widget.label || ""
-      : "Unauthorized entity";
+      : t("common.unauthorizedEntity", "Unauthorized entity");
     label.hidden = !label.textContent;
-    frame.title = context.entityAllowed ? "" : "Unauthorized entity";
+    frame.title = context.entityAllowed ? "" : t("common.unauthorizedEntity", "Unauthorized entity");
     if (!context.entityAvailable) sliderAction.clear();
 
     slider.__mhaSliderApi?.setDisabled(!supportsSlider);

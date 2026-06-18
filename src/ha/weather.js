@@ -1,29 +1,30 @@
 import { resolveAuthorizedEntity } from "./entity-access.js";
+import { t } from "../i18n/index.js";
 
 const WEATHER_LABELS = new Map([
-  ["sunny", "Sunny"],
-  ["clear-night", "Clear night"],
-  ["clear", "Sunny"],
-  ["cloudy", "Cloudy"],
-  ["cloud", "Cloudy"],
-  ["partlycloudy", "Partly cloudy"],
-  ["partly-cloudy", "Partly cloudy"],
-  ["partly_cloudy", "Partly cloudy"],
-  ["rainy", "Rain"],
-  ["rain", "Rain"],
-  ["pouring", "Heavy rain"],
-  ["lightning", "Thunderstorm"],
-  ["lightning-rainy", "Thunderstorm"],
-  ["thunderstorm", "Thunderstorm"],
-  ["snowy", "Snow"],
-  ["snow", "Snow"],
-  ["snowy-rainy", "Snow/rain"],
-  ["fog", "Fog"],
-  ["foggy", "Fog"],
-  ["windy", "Windy"],
-  ["windy-variant", "Windy"],
-  ["hail", "Hail"],
-  ["exceptional", "Weather active"],
+  ["sunny", "widgets.weatherConditions.sunny"],
+  ["clear-night", "widgets.weatherConditions.clearNight"],
+  ["clear", "widgets.weatherConditions.sunny"],
+  ["cloudy", "widgets.weatherConditions.cloudy"],
+  ["cloud", "widgets.weatherConditions.cloudy"],
+  ["partlycloudy", "widgets.weatherConditions.partlyCloudy"],
+  ["partly-cloudy", "widgets.weatherConditions.partlyCloudy"],
+  ["partly_cloudy", "widgets.weatherConditions.partlyCloudy"],
+  ["rainy", "widgets.weatherConditions.rainy"],
+  ["rain", "widgets.weatherConditions.rainy"],
+  ["pouring", "widgets.weatherConditions.pouring"],
+  ["lightning", "widgets.weatherConditions.lightning"],
+  ["lightning-rainy", "widgets.weatherConditions.lightningRainy"],
+  ["thunderstorm", "widgets.weatherConditions.lightning"],
+  ["snowy", "widgets.weatherConditions.snowy"],
+  ["snow", "widgets.weatherConditions.snowy"],
+  ["snowy-rainy", "widgets.weatherConditions.snowyRainy"],
+  ["fog", "widgets.weatherConditions.fog"],
+  ["foggy", "widgets.weatherConditions.fog"],
+  ["windy", "widgets.weatherConditions.windy"],
+  ["windy-variant", "widgets.weatherConditions.windy"],
+  ["hail", "widgets.weatherConditions.hail"],
+  ["exceptional", "widgets.weatherConditions.exceptional"],
 ]);
 
 export function normalizeWeatherCondition(condition = "") {
@@ -31,7 +32,8 @@ export function normalizeWeatherCondition(condition = "") {
 }
 
 export function getWeatherSummary(condition = "") {
-  return WEATHER_LABELS.get(normalizeWeatherCondition(condition)) || "Weather";
+  const key = WEATHER_LABELS.get(normalizeWeatherCondition(condition));
+  return key ? t(key) : t("widgets.weather.title", "Weather");
 }
 
 function formatMetric(value, unit = "") {

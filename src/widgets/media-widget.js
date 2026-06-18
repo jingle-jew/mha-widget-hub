@@ -10,6 +10,7 @@ import {
   getMediaArtworkUrl,
 } from "../ha/media.js";
 import { runMediaPlayerAction } from "../ha/actions.js";
+import { t } from "../i18n/index.js";
 
 export const MEDIA_WIDGET_KIND = "media";
 
@@ -35,7 +36,7 @@ function getMediaData(widget = {}, hass) {
     ? Math.max(0, Math.min(100, Math.round(volumeNumber * 100)))
     : 0;
   const muted = attributes.is_volume_muted === true;
-  const volumeLabel = muted ? "Mute" : hasVolume ? `${volumePercent}%` : "Vol";
+  const volumeLabel = muted ? t("widgets.mediaControls.mute", "Mute") : hasVolume ? `${volumePercent}%` : "Vol";
 
   return {
     entity,
@@ -170,13 +171,13 @@ function createControlButton(label, symbol, {
 
 function createPlaybackButtons(data, { interactive = true, onAction } = {}) {
   return [
-    createControlButton("Previous", "‹", {
+    createControlButton(t("widgets.mediaControls.previous", "Previous"), "‹", {
       action: "previous",
       disabled: !data.canPrevious,
       interactive,
       onAction,
     }),
-    createControlButton(data.playing ? "Pause" : "Play", data.playing ? "Ⅱ" : "▶", {
+    createControlButton(data.playing ? t("widgets.mediaControls.pause", "Pause") : t("widgets.mediaControls.play", "Play"), data.playing ? "Ⅱ" : "▶", {
       primary: true,
       action: "playPause",
       className: "mha-media-widget-play-toggle",
@@ -184,7 +185,7 @@ function createPlaybackButtons(data, { interactive = true, onAction } = {}) {
       interactive,
       onAction,
     }),
-    createControlButton("Next", "›", {
+    createControlButton(t("widgets.mediaControls.next", "Next"), "›", {
       action: "next",
       disabled: !data.canNext,
       interactive,
@@ -195,20 +196,20 @@ function createPlaybackButtons(data, { interactive = true, onAction } = {}) {
 
 function createVolumeButtons(data, { interactive = true, onAction } = {}) {
   return [
-    createControlButton("Volume down", "−", {
+    createControlButton(t("widgets.mediaControls.volumeDown", "Volume down"), "−", {
       action: "volumeDown",
       disabled: !data.canVolumeDown,
       interactive,
       onAction,
     }),
-    createControlButton(data.muted ? "Unmute" : "Mute", data.muted ? "Mute" : "Vol", {
+    createControlButton(data.muted ? t("widgets.mediaControls.unmute", "Unmute") : t("widgets.mediaControls.mute", "Mute"), data.muted ? t("widgets.mediaControls.mute", "Mute") : "Vol", {
       primary: true,
       action: "mute",
       disabled: !data.canMute,
       interactive,
       onAction,
     }),
-    createControlButton("Volume up", "+", {
+    createControlButton(t("widgets.mediaControls.volumeUp", "Volume up"), "+", {
       action: "volumeUp",
       disabled: !data.canVolumeUp,
       interactive,
@@ -238,8 +239,8 @@ function renderControls(controls, data, { mode = "playback", interactive = true,
   toggle.setAttribute(
     "aria-label",
     showingPlaybackReturn
-      ? "Back to media controls"
-      : `Show volume controls (${data.volumeLabel})`,
+      ? t("widgets.mediaControls.backToMediaControls", "Back to media controls")
+      : t("widgets.mediaControls.showVolumeControls", "Show volume controls ({volume})", { volume: data.volumeLabel }),
   );
   toggle.disabled = false;
   toggle.setAttribute("aria-disabled", String(!interactive));
@@ -253,7 +254,7 @@ function createControls(data, { mode = "playback", interactive = true, onAction 
   const group = document.createElement("div");
   group.className = "mha-media-widget-controls mha-media-widget-controls-group";
 
-  const toggle = createControlButton("Volume", data.volumeLabel, {
+  const toggle = createControlButton(t("widgets.mediaControls.volume", "Volume"), data.volumeLabel, {
     action: "toggleVolume",
     interactive,
     onAction,
@@ -279,7 +280,7 @@ function createMetaRows(data) {
   rows.append(
     createText("mha-media-widget-chip", data.app),
     createText("mha-media-widget-chip", data.album),
-    createText("mha-media-widget-chip", `Volume ${data.volumePercent}%`),
+    createText("mha-media-widget-chip", t("widgets.mediaControls.volumePercent", "Volume {percent}%", { percent: data.volumePercent })),
   );
   return rows;
 }

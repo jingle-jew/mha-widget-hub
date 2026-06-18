@@ -15,9 +15,9 @@ import { t } from "../i18n/index.js";
  */
 
 const THEME_OPTIONS = [
-  { value: "auto", label: "Auto" },
-  { value: "dark", label: "Dark" },
-  { value: "light", label: "Light" },
+  { value: "auto", label: "Auto", labelKey: "settings.themeOptions.auto" },
+  { value: "dark", label: "Dark", labelKey: "settings.themeOptions.dark" },
+  { value: "light", label: "Light", labelKey: "settings.themeOptions.light" },
 ];
 
 const STYLE_OPTIONS = getThemeStyleOptions();
@@ -29,23 +29,23 @@ const IOS_GLASS_OPTIONS = [
 
 
 const DOCK_POSITION_OPTIONS = [
-  { value: "left", label: "Left" },
-  { value: "right", label: "Right" },
-  { value: "bottom", label: "Bottom" },
+  { value: "left", label: "Left", labelKey: "settings.dockPositions.left" },
+  { value: "right", label: "Right", labelKey: "settings.dockPositions.right" },
+  { value: "bottom", label: "Bottom", labelKey: "settings.dockPositions.bottom" },
 ];
 
 const ICON_SHAPE_OPTIONS = [
-  { value: "auto", label: "Auto" },
-  { value: "rounded-square", label: "Rounded square" },
-  { value: "squircle", label: "Squircle" },
-  { value: "circle", label: "Circle" },
+  { value: "auto", label: "Auto", labelKey: "settings.iconShapes.auto" },
+  { value: "rounded-square", label: "Rounded square", labelKey: "settings.iconShapes.rounded-square" },
+  { value: "squircle", label: "Squircle", labelKey: "settings.iconShapes.squircle" },
+  { value: "circle", label: "Circle", labelKey: "settings.iconShapes.circle" },
 ];
 
 const SCREENSAVER_DELAY_OPTIONS = [
-  { value: "15000", label: "15 seconds" },
-  { value: "30000", label: "30 seconds" },
-  { value: "120000", label: "2 minutes" },
-  { value: "300000", label: "5 minutes" },
+  { value: "15000", label: "15 seconds", labelKey: "settings.delays.15000" },
+  { value: "30000", label: "30 seconds", labelKey: "settings.delays.30000" },
+  { value: "120000", label: "2 minutes", labelKey: "settings.delays.120000" },
+  { value: "300000", label: "5 minutes", labelKey: "settings.delays.300000" },
 ];
 
 const NOW_BAR_ITEM_OPTIONS = [
@@ -122,8 +122,8 @@ function createWallpaperControls({ mode, wallpaper, onImport, onReset } = {}) {
   const hasWallpaper = Boolean(wallpaper?.dataUrl);
   const importedDate = formatImportDate(wallpaper?.importedAt);
   status.textContent = hasWallpaper
-    ? `${wallpaper.name || "Imported image"}${importedDate ? ` · ${importedDate}` : ""}`
-    : `No custom wallpaper for the ${mode === "dark" ? "dark" : "light"}.`;
+    ? `${wallpaper.name || t("settings.importedImage", "Imported image")}${importedDate ? ` · ${importedDate}` : ""}`
+    : t("settings.noCustomWallpaper", "No custom wallpaper for the {mode}.", { mode: optionLabel(THEME_OPTIONS.find(item => item.value === mode) || { label: mode }) });
 
   const input = document.createElement("input");
   input.type = "file";
@@ -133,13 +133,13 @@ function createWallpaperControls({ mode, wallpaper, onImport, onReset } = {}) {
   const importButton = document.createElement("button");
   importButton.className = "mha-settings-reset mha-settings-wallpaper-button";
   importButton.type = "button";
-  importButton.textContent = "Import image";
+  importButton.textContent = t("settings.importImage", "Import image");
   importButton.addEventListener("click", () => input.click());
 
   const resetButton = document.createElement("button");
   resetButton.className = "mha-settings-reset mha-settings-wallpaper-button";
   resetButton.type = "button";
-  resetButton.textContent = "Reset";
+  resetButton.textContent = t("common.reset", "Reset");
   resetButton.disabled = !hasWallpaper;
   resetButton.addEventListener("click", () => onReset?.(mode));
 
@@ -156,7 +156,7 @@ function createWallpaperControls({ mode, wallpaper, onImport, onReset } = {}) {
     reader.addEventListener("load", () => {
       const dataUrl = String(reader.result || "");
       if (!dataUrl.startsWith("data:image/")) {
-        message.textContent = "The image could not be read correctly.";
+        message.textContent = t("settings.wallpaperReadInvalid", "The image could not be read correctly.");
         input.value = "";
         return;
       }
@@ -170,21 +170,21 @@ function createWallpaperControls({ mode, wallpaper, onImport, onReset } = {}) {
             importedAt: new Date().toISOString(),
             mime: file.type,
           });
-          message.textContent = `Wallpaper ${mode === "dark" ? "dark" : "light"} saved on this device.`;
+          message.textContent = t("settings.wallpaperSaved", "Wallpaper {mode} saved on this device.", { mode: optionLabel(THEME_OPTIONS.find(item => item.value === mode) || { label: mode }) });
         } catch (error) {
-          message.textContent = "Unable to save this image locally. Try a smaller image.";
+          message.textContent = t("settings.wallpaperSaveFailed", "Unable to save this image locally. Try a smaller image.");
         } finally {
           input.value = "";
         }
       }, { once: true });
       image.addEventListener("error", () => {
-        message.textContent = "This file does not contain a valid image.";
+        message.textContent = t("settings.wallpaperInvalidFile", "This file does not contain a valid image.");
         input.value = "";
       }, { once: true });
       image.src = dataUrl;
     });
     reader.addEventListener("error", () => {
-      message.textContent = "Unable to read this image.";
+      message.textContent = t("settings.wallpaperReadFailed", "Unable to read this image.");
       input.value = "";
     });
     reader.readAsDataURL(file);
@@ -201,14 +201,14 @@ function createWallpaperControls({ mode, wallpaper, onImport, onReset } = {}) {
   preview.setAttribute(
     "aria-label",
     hasWallpaper
-      ? `Wallpaper preview for ${mode === "dark" ? "dark" : "light"}`
-      : `No preview for the ${mode === "dark" ? "dark" : "light"}`,
+      ? t("settings.wallpaperPreview", "Wallpaper preview for {mode}", { mode: optionLabel(THEME_OPTIONS.find(item => item.value === mode) || { label: mode }) })
+      : t("settings.wallpaperNoPreview", "No preview for the {mode}", { mode: optionLabel(THEME_OPTIONS.find(item => item.value === mode) || { label: mode }) }),
   );
   if (hasWallpaper) {
     preview.style.backgroundImage = `url("${wallpaper.dataUrl}")`;
   } else {
     const empty = document.createElement("span");
-    empty.textContent = "No image";
+    empty.textContent = t("settings.noImage", "No image");
     preview.append(empty);
   }
 
@@ -218,24 +218,24 @@ function createWallpaperControls({ mode, wallpaper, onImport, onReset } = {}) {
 
 
 const DOCK_ICON_OPTIONS = [
-  { name: "home", label: "Home", category: "home" },
-  { name: "dashboard", label: "Dashboard", category: "navigation" },
-  { name: "apps", label: "Applications", category: "system" },
-  { name: "grid", label: "Grid", category: "navigation" },
-  { name: "light", label: "Lights", category: "lighting" },
-  { name: "weather", label: "Weather", category: "weather" },
-  { name: "media-player", label: "Media", category: "media_player" },
-  { name: "calendar", label: "Calendar", category: "utility" },
-  { name: "star", label: "Favorite", category: "utility" },
-  { name: "gear", label: "Settings", category: "system" },
+  { name: "home", label: "Home", labelKey: "settings.dockIconLabels.home", category: "home" },
+  { name: "dashboard", label: "Dashboard", labelKey: "settings.dockIconLabels.dashboard", category: "navigation" },
+  { name: "apps", label: "Applications", labelKey: "settings.dockIconLabels.apps", category: "system" },
+  { name: "grid", label: "Grid", labelKey: "settings.dockIconLabels.grid", category: "navigation" },
+  { name: "light", label: "Lights", labelKey: "settings.dockIconLabels.light", category: "lighting" },
+  { name: "weather", label: "Weather", labelKey: "settings.dockIconLabels.weather", category: "weather" },
+  { name: "media-player", label: "Media", labelKey: "settings.dockIconLabels.media-player", category: "media_player" },
+  { name: "calendar", label: "Calendar", labelKey: "settings.dockIconLabels.calendar", category: "utility" },
+  { name: "star", label: "Favorite", labelKey: "settings.dockIconLabels.star", category: "utility" },
+  { name: "gear", label: "Settings", labelKey: "settings.dockIconLabels.gear", category: "system" },
 ];
 
 const CLOCK_VARIANTS = [
-  { value: "none", label: "No clock" },
-  { value: "digital", label: "Digital" },
-  { value: "digital-weather", label: "Digital weather" },
-  { value: "analog", label: "Analog" },
-  { value: "ios-analog", label: "Analog iOS" },
+  { value: "none", label: "No clock", labelKey: "settings.clockVariants.none" },
+  { value: "digital", label: "Digital", labelKey: "settings.clockVariants.digital" },
+  { value: "digital-weather", label: "Digital weather", labelKey: "settings.clockVariants.digital-weather" },
+  { value: "analog", label: "Analog", labelKey: "settings.clockVariants.analog" },
+  { value: "ios-analog", label: "Analog iOS", labelKey: "settings.clockVariants.ios-analog" },
 ];
 
 function option(value, label, selectedValue) {
@@ -479,25 +479,25 @@ function createDockPageRow(page, index, pages, { activePageId = "", onSelect, on
   title.textContent = page.name || `Page ${index + 1}`;
   const meta = document.createElement("small");
   const count = Array.isArray(page.widgets) ? page.widgets.length : 0;
-  meta.textContent = `${count} widget${count > 1 ? "s" : ""}`;
+  meta.textContent = t(count > 1 ? "settings.widgetsCountPlural" : "settings.widgetsCount", "{count} widgets", { count });
   text.append(title, meta);
 
   const actions = document.createElement("span");
   actions.className = "mha-settings-dock-row-actions";
   const up = createMoveUpButton({
-    label: `Move ${page.name || "page"} up`,
+    label: t("settings.movePageUp", "Move {name} up", { name: page.name || t("settings.page", "page") }),
     className: "mha-settings-mini-button",
     disabled: index === 0,
     onClick: (event) => { event.stopPropagation(); onMove?.(page.id, -1); },
   });
   const down = createMoveDownButton({
-    label: `Move ${page.name || "page"} down`,
+    label: t("settings.movePageDown", "Move {name} down", { name: page.name || t("settings.page", "page") }),
     className: "mha-settings-mini-button",
     disabled: index >= pages.length - 1,
     onClick: (event) => { event.stopPropagation(); onMove?.(page.id, 1); },
   });
   const remove = createRemoveButton({
-    label: `Delete ${page.name || "page"}`,
+    label: t("settings.deletePage", "Delete {name}", { name: page.name || t("settings.page", "page") }),
     className: "mha-settings-mini-button mha-settings-mini-button-danger",
     disabled: pages.length <= 1,
     onClick: (event) => { event.stopPropagation(); onDelete?.(page.id); },
@@ -546,15 +546,15 @@ function createDockPageEditor({ page, onBack, onRename, onIconChange } = {}) {
     button.className = "mha-settings-icon-option";
     button.type = "button";
     button.dataset.selected = String((page?.icon || "grid") === option.name);
-    button.setAttribute("aria-label", option.label);
+    button.setAttribute("aria-label", optionLabel(option));
     button.append(createIcon({
       name: option.name,
       category: option.category,
-      label: option.label,
-      children: createIconSymbol({ name: option.name, label: option.label }),
+      label: optionLabel(option),
+      children: createIconSymbol({ name: option.name, label: optionLabel(option) }),
     }));
     const label = document.createElement("span");
-    label.textContent = option.label;
+    label.textContent = optionLabel(option);
     button.append(label);
     button.addEventListener("click", () => onIconChange?.(page.id, option.name));
     iconGrid.append(button);
@@ -799,7 +799,7 @@ export function createSettingsPanel({
     : settingsPage === "dock"
       ? t("settings.dock", "Dock")
       : settingsPage === "dock-detail"
-        ? "Dock icon"
+        ? t("settings.dockIcon", "Dock icon")
         : settingsPage === "wallpaper"
           ? t("settings.wallpaper", "Wallpaper")
           : settingsPage === "screensaver-nowbar" || settingsPage === "nowbar"

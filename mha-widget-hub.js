@@ -88,7 +88,7 @@ import { createCloseButton } from "./src/system/system-buttons.js";
 import { loadEntityVisibilityConfig } from "./src/admin/entity-visibility-store.js";
 import { normalizeEntityVisibilityConfig } from "./src/admin/entity-permissions.js";
 import { getStyleManifest } from "./src/styles/style-manifest.js";
-import { configureI18n } from "./src/i18n/index.js";
+import { configureI18n, t } from "./src/i18n/index.js";
 
 const MHA_FRONTEND_ROOT_URL = new URL(".", import.meta.url);
 const MHA_FRONTEND_VERSION = new URL(import.meta.url).searchParams.get("v");
@@ -96,17 +96,21 @@ const MHA_FRONTEND_VERSION = new URL(import.meta.url).searchParams.get("v");
 const MHA_STYLE_MANIFEST = getStyleManifest();
 
 const PAGE_ICON_OPTIONS = Object.freeze([
-  { name: "home", label: "Home", category: "home" },
-  { name: "dashboard", label: "Dashboard", category: "navigation" },
-  { name: "apps", label: "Applications", category: "system" },
-  { name: "grid", label: "Grid", category: "navigation" },
-  { name: "light", label: "Lights", category: "lighting" },
-  { name: "weather", label: "Weather", category: "weather" },
-  { name: "media-player", label: "Media", category: "media_player" },
-  { name: "calendar", label: "Calendar", category: "utility" },
-  { name: "star", label: "Favorite", category: "utility" },
-  { name: "gear", label: "Settings", category: "system" },
+  { name: "home", label: "Home", labelKey: "settings.dockIconLabels.home", category: "home" },
+  { name: "dashboard", label: "Dashboard", labelKey: "settings.dockIconLabels.dashboard", category: "navigation" },
+  { name: "apps", label: "Applications", labelKey: "settings.dockIconLabels.apps", category: "system" },
+  { name: "grid", label: "Grid", labelKey: "settings.dockIconLabels.grid", category: "navigation" },
+  { name: "light", label: "Lights", labelKey: "settings.dockIconLabels.light", category: "lighting" },
+  { name: "weather", label: "Weather", labelKey: "settings.dockIconLabels.weather", category: "weather" },
+  { name: "media-player", label: "Media", labelKey: "settings.dockIconLabels.media-player", category: "media_player" },
+  { name: "calendar", label: "Calendar", labelKey: "settings.dockIconLabels.calendar", category: "utility" },
+  { name: "star", label: "Favorite", labelKey: "settings.dockIconLabels.star", category: "utility" },
+  { name: "gear", label: "Settings", labelKey: "settings.dockIconLabels.gear", category: "system" },
 ]);
+
+function i18nLabel(item = {}) {
+  return item.labelKey ? t(item.labelKey, item.label) : item.label;
+}
 
 function resolveFrontendAssetUrl(path = "") {
   const url = new URL(String(path).replace(/^\/+/, ""), MHA_FRONTEND_ROOT_URL);
@@ -1446,21 +1450,21 @@ _createPageCreatorPanel(){
   const scrim=document.createElement("button");
   scrim.className="mha-page-creator-scrim";
   scrim.type="button";
-  scrim.setAttribute("aria-label","Close icon picker");
+  scrim.setAttribute("aria-label",t("settings.pageCreatorClose","Close icon picker"));
   scrim.onclick=()=>this._closePageCreator();
 
   const sheet=document.createElement("div");
   sheet.className="mha-page-creator-sheet";
   sheet.setAttribute("role","dialog");
   sheet.setAttribute("aria-modal","true");
-  sheet.setAttribute("aria-label","New page");
+  sheet.setAttribute("aria-label",t("settings.pageCreatorTitle","New page"));
 
   const header=document.createElement("div");
   header.className="mha-page-creator-header";
   const title=document.createElement("h2");
-  title.textContent="New page";
+  title.textContent=t("settings.pageCreatorTitle","New page");
   const close=createCloseButton({
-    label:"Close",
+    label:t("common.close","Close"),
     className:"mha-page-creator-close",
     onClick:()=>this._closePageCreator(),
   });
@@ -1468,7 +1472,7 @@ _createPageCreatorPanel(){
 
   const hint=document.createElement("p");
   hint.className="mha-page-creator-hint";
-  hint.textContent="Choose the icon that will appear in the dock.";
+  hint.textContent=t("settings.pageCreatorHint","Choose the icon that will appear in the dock.");
 
   const grid=document.createElement("div");
   grid.className="mha-page-creator-icons";
@@ -1479,16 +1483,16 @@ _createPageCreatorPanel(){
     button.dataset.icon=option.name;
     button.dataset.selected=String(option.name===this._newPageIcon);
     button.setAttribute("aria-pressed",String(option.name===this._newPageIcon));
-    button.setAttribute("aria-label",option.label);
+    button.setAttribute("aria-label",i18nLabel(option));
     button.onclick=()=>this._setPageCreatorIcon(option.name);
     button.append(createIcon({
       name:option.name,
       category:option.category,
-      label:option.label,
-      children:createIconSymbol({name:option.name,label:option.label}),
+      label:i18nLabel(option),
+      children:createIconSymbol({name:option.name,label:i18nLabel(option)}),
     }));
     const label=document.createElement("span");
-    label.textContent=option.label;
+    label.textContent=i18nLabel(option);
     button.append(label);
     grid.append(button);
   });
@@ -1498,12 +1502,12 @@ _createPageCreatorPanel(){
   const cancel=document.createElement("button");
   cancel.className="mha-page-creator-secondary";
   cancel.type="button";
-  cancel.textContent="Cancel";
+  cancel.textContent=t("common.cancel","Cancel");
   cancel.onclick=()=>this._closePageCreator();
   const create=document.createElement("button");
   create.className="mha-page-creator-primary";
   create.type="button";
-  create.textContent="Create page";
+  create.textContent=t("settings.pageCreatorCreate","Create page");
   create.onclick=()=>this._createPageFromCreator();
   actions.append(cancel,create);
 
@@ -1831,7 +1835,9 @@ _renderWidgetDropSlots(grid){
     const button=document.createElement("button");
     button.className="mha-widget-drop-slot";
     button.type="button";
-    button.setAttribute("aria-label",placementWidget?`Add widget here, column ${slot.x}, row ${slot.y}`:`Move widget here, column ${slot.x}, row ${slot.y}`);
+    button.setAttribute("aria-label",placementWidget
+      ?t("settings.addWidgetHere","Add widget here, column {column}, row {row}",{column:slot.x,row:slot.y})
+      :t("settings.moveWidgetHere","Move widget here, column {column}, row {row}",{column:slot.x,row:slot.y}));
     button.dataset.x=String(slot.x);
     button.dataset.y=String(slot.y);
     button.style.gridColumn=`${slot.x} / span ${slot.w}`;
@@ -2287,7 +2293,7 @@ _appendPrimaryControls(){
   addWidget.className="mha-edit-button mha-main-edit-button mha-add-widget-button";
   addWidget.type="button";
   addWidget.innerHTML=`<svg viewBox="0 0 24 24"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5Z"/></svg>`;
-  addWidget.setAttribute("aria-label","Add widget");
+  addWidget.setAttribute("aria-label",t("settings.addWidget","Add widget"));
   addWidget.hidden=!this._isEditing;
   addWidget.onclick=(event)=>{
     event.preventDefault();

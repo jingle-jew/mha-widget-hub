@@ -1,5 +1,6 @@
 import { createIcon } from "../ui/icon.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
+import { t } from "../i18n/index.js";
 
 /*
  * Custom mobile dock.
@@ -51,17 +52,17 @@ export function createMobileDock({
   const launcher = document.createElement("button");
   launcher.className = "mha-mobile-dock-launcher";
   launcher.type = "button";
-  launcher.setAttribute("aria-label", "Open mobile dock");
+  launcher.setAttribute("aria-label", t("settings.openMobileDock", "Open mobile dock"));
   launcher.setAttribute("aria-expanded", "false");
 
   launcher.append(
     createIcon({
       name: "apps",
       category: "system",
-      label: "Dock",
+      label: t("settings.dock", "Dock"),
       children: createIconSymbol({
         name: "apps",
-        label: "Dock",
+        label: t("settings.dock", "Dock"),
       }),
     }),
   );
@@ -69,17 +70,17 @@ export function createMobileDock({
   const panel = document.createElement("div");
   panel.className = "mha-mobile-dock-panel";
   panel.setAttribute("role", "menu");
-  panel.setAttribute("aria-label", "Dock mobile");
+  panel.setAttribute("aria-label", t("settings.mobileDock", "Mobile dock"));
 
   const scrim = document.createElement("button");
   scrim.className = "mha-mobile-dock-scrim";
   scrim.type = "button";
-  scrim.setAttribute("aria-label", "Close mobile dock");
+  scrim.setAttribute("aria-label", t("settings.closeMobileDock", "Close mobile dock"));
 
   const close = document.createElement("button");
   close.className = "mha-mobile-dock-close";
   close.type = "button";
-  close.setAttribute("aria-label", "Close");
+  close.setAttribute("aria-label", t("common.close", "Close"));
   close.textContent = "×";
 
   const grid = document.createElement("div");
@@ -109,7 +110,7 @@ export function createMobileDock({
     grid.append(createMobileDockIconButton({
       symbol: "plus",
       category: "utility",
-      label: "Add page",
+      label: t("settings.addPage", "Add page"),
       action: "add-page",
     }, {
       className: "mha-mobile-dock-add-page",
@@ -122,7 +123,7 @@ export function createMobileDock({
     grid.append(createMobileDockIconButton({
       symbol: "edit",
       category: "utility",
-      label: "Manage dock",
+      label: t("settings.manageDock", "Manage dock"),
       action: "dock-settings",
     }, {
       className: "mha-mobile-dock-edit",
@@ -136,7 +137,7 @@ export function createMobileDock({
   grid.append(createMobileDockIconButton({
     symbol: "gear",
     category: "system",
-    label: "Settings",
+    label: t("settings.title", "Settings"),
     action: "settings",
   }, {
     onClick: () => {

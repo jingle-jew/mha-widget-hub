@@ -1,5 +1,6 @@
 import { createIcon } from "../ui/icon.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
+import { t } from "../i18n/index.js";
 
 /*
  * Dock container populated with normal reusable icon components.
@@ -46,7 +47,7 @@ export function createDock({
 } = {}) {
   const dock = document.createElement("nav");
   dock.className = "mha-dock";
-  dock.setAttribute("aria-label", "Dock");
+  dock.setAttribute("aria-label", t("settings.dock", "Dock"));
 
   const pageItems = (Array.isArray(pages) && pages.length ? pages : [
     { id: "home", name: "Home", icon: "home" },
@@ -69,7 +70,7 @@ export function createDock({
     dock.append(createDockIconButton({
       symbol: "plus",
       category: "utility",
-      label: "Add page",
+      label: t("settings.addPage", "Add page"),
       action: "add-page",
     }, {
       className: "mha-dock-add-page",
@@ -79,7 +80,7 @@ export function createDock({
     dock.append(createDockIconButton({
       symbol: "edit",
       category: "utility",
-      label: "Manage dock",
+      label: t("settings.manageDock", "Manage dock"),
       action: "dock-settings",
     }, {
       className: "mha-dock-edit",
@@ -90,7 +91,7 @@ export function createDock({
   dock.append(createDockIconButton({
     symbol: "gear",
     category: "system",
-    label: "Settings",
+    label: t("settings.title", "Settings"),
     action: "settings",
   }, {
     onClick: () => {

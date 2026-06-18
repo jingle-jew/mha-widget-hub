@@ -34,6 +34,15 @@ const DEFINITIONS = Object.freeze(
 const aliasToKind = new Map();
 const variantToKind = new Map();
 
+function catalogKeyForEntry(entry = {}) {
+  const raw = entry.catalogKey || entry.label || entry.variant || "widget";
+  return String(raw)
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
 Object.entries(DEFINITIONS).forEach(([kind, definition]) => {
   aliasToKind.set(kind, kind);
   definition.aliases.forEach(alias => aliasToKind.set(alias, kind));
@@ -46,7 +55,9 @@ export function getWidgetManagerCategories() {
   .map(([id, metadata]) => ({
     id,
     label: metadata.label,
+    labelKey: `widgets.categories.${id}`,
     description: metadata.description,
+    descriptionKey: `widgets.categoryDescriptions.${id}`,
     icon: metadata.icon,
     widgets: [],
   }));
@@ -66,34 +77,19 @@ export function getWidgetManagerCategories() {
         kind,
         variant: entry.variant,
         label: entry.label,
+        labelKey: entry.labelKey || `widgets.catalog.${catalogKeyForEntry(entry)}.label`,
         title: entry.label,
         description: entry.description,
+        descriptionKey: entry.descriptionKey || `widgets.catalog.${catalogKeyForEntry(entry)}.description`,
         icon: entry.icon || WIDGET_MANAGER_METADATA.categories[entry.category]?.icon || "◷",
         size: entry.size,
+        order: entry.order || 0,
       });
     });
   });
   
   categories.forEach(category => {
-    category.widgets.sort((a, b) => {
-      const entryA = DEFINITIONS[a.kind]?.manager?.entries?.find(entry =>
-        entry.category === category.id &&
-        entry.variant === a.variant &&
-        entry.label === a.title &&
-        entry.size?.w === a.size?.w &&
-        entry.size?.h === a.size?.h
-      );
-      
-      const entryB = DEFINITIONS[b.kind]?.manager?.entries?.find(entry =>
-        entry.category === category.id &&
-        entry.variant === b.variant &&
-        entry.label === b.title &&
-        entry.size?.w === b.size?.w &&
-        entry.size?.h === b.size?.h
-      );
-      
-      return (entryA?.order || 0) - (entryB?.order || 0);
-    });
+    category.widgets.sort((a, b) => (a.order || 0) - (b.order || 0));
   });
   
   return categories.filter(category => category.widgets.length > 0);

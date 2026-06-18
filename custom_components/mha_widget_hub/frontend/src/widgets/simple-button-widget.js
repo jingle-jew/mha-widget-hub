@@ -16,6 +16,7 @@ import { isToggleEntityOn } from "../ha/toggle.js";
 import { clampWidth, css, freezeSize, isLocalWidgetKind, variant } from "./widget-definition-utils.js";
 import { buildButtonWidgetConfig, createButtonConfigDraft } from "../widget-config/button-config.js";
 import { WIDGET_PREVIEW_DATA } from "./widget-preview-data.js";
+import { t } from "../i18n/index.js";
 
 export const SIMPLE_BUTTON_WIDGET_KIND = "button";
 
@@ -35,8 +36,8 @@ export function isSimpleButtonWidgetActive(widget = {}) {
 function getButtonData(widget = {}) {
   const active = isSimpleButtonWidgetActive(widget);
   const hasExplicitState = widget.state != null && widget.state !== "";
-  const stateOn = widget.stateOn || widget.onLabel || widget.activeState || "On";
-  const stateOff = widget.stateOff || widget.offLabel || widget.inactiveState || "Off";
+  const stateOn = widget.stateOn || widget.onLabel || widget.activeState || t("states.on", "On");
+  const stateOff = widget.stateOff || widget.offLabel || widget.inactiveState || t("states.off", "Off");
 
   return {
     icon: widget.icon || "home",
@@ -216,16 +217,16 @@ export function createSimpleButtonWidgetContent(widget = {}, {
     }
 
     state.textContent = !access.entityId
-      ? configuredAction ? (widget.state || "Action") : "Not configured"
+      ? configuredAction ? (widget.state || t("common.action", "Action")) : t("common.notConfigured", "Not configured")
       : !access.domainAllowed
-        ? "Unsupported"
+        ? t("common.unsupported", "Unsupported")
         : !access.entityAllowed
-          ? "Unauthorized"
-          : !access.entityAvailable
-            ? "Unavailable"
+          ? t("common.unauthorized", "Unauthorized")
+        : !access.entityAvailable
+            ? t("states.unavailable", "Unavailable")
             : toggleDomain
               ? active ? data.stateOn : data.stateOff
-              : "Press";
+              : t("common.press", "Press");
   };
   root.__mhaDestroy = () => {
     context.hass = null;

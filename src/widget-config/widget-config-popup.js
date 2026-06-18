@@ -99,6 +99,11 @@ function configOptionLabel(group, option = {}) {
   return t(`${group}.${option.value}`, option.label);
 }
 
+function emptyLabelForConfigOption(group, option = {}) {
+  if (!option?.value) return option?.emptyLabel || "";
+  return t(`${group}.${option.value}`, option.emptyLabel || "");
+}
+
 function createToggleSliderFields(session, hass, visibilityConfig, onChange) {
   const { draft, options, selected } = reconcileToggleSliderConfigDraft(
     session.draft,
@@ -112,7 +117,7 @@ function createToggleSliderFields(session, hass, visibilityConfig, onChange) {
   nameInput.className = "mha-widget-config-control";
   nameInput.type = "text";
   nameInput.value = draft.label;
-  nameInput.placeholder = selected?.label || "Living room";
+  nameInput.placeholder = selected?.label || t("widgets.config.placeholderRoom", "Living room");
   nameInput.autocomplete = "off";
   nameInput.addEventListener("input", event => {
     updateToggleSliderLabel(draft, event.currentTarget.value);
@@ -183,7 +188,7 @@ function createSliderFields(session, hass, visibilityConfig, onChange) {
   if (!reconciled.options.length) {
     const empty = document.createElement("option");
     empty.value = "";
-    empty.textContent = reconciled.action.emptyLabel;
+    empty.textContent = emptyLabelForConfigOption("widgets.config.emptyLabels", reconciled.action);
     deviceSelect.append(empty);
   } else {
     reconciled.options.forEach(option => {
@@ -203,7 +208,7 @@ function createSliderFields(session, hass, visibilityConfig, onChange) {
   nameInput.className = "mha-widget-config-control";
   nameInput.type = "text";
   nameInput.value = draft.label;
-  nameInput.placeholder = reconciled.selected?.label || "Living room";
+  nameInput.placeholder = reconciled.selected?.label || t("widgets.config.placeholderRoom", "Living room");
   nameInput.autocomplete = "off";
   nameInput.addEventListener("input", event => {
     updateSliderLabel(draft, event.currentTarget.value);
@@ -244,7 +249,7 @@ function createToggleFields(session, hass, visibilityConfig, onChange) {
   if (!reconciled.options.length) {
     const empty = document.createElement("option");
     empty.value = "";
-    empty.textContent = reconciled.deviceType.emptyLabel;
+    empty.textContent = emptyLabelForConfigOption("widgets.config.emptyLabels", reconciled.deviceType);
     deviceSelect.append(empty);
   } else {
     reconciled.options.forEach(option => {
@@ -264,7 +269,7 @@ function createToggleFields(session, hass, visibilityConfig, onChange) {
   nameInput.className = "mha-widget-config-control";
   nameInput.type = "text";
   nameInput.value = draft.label;
-  nameInput.placeholder = reconciled.selected?.label || "Living room";
+  nameInput.placeholder = reconciled.selected?.label || t("widgets.config.placeholderRoom", "Living room");
   nameInput.autocomplete = "off";
   nameInput.addEventListener("input", event => {
     updateToggleConfigLabel(draft, event.currentTarget.value);
@@ -339,7 +344,7 @@ function createMediaFields(session, hass, visibilityConfig, onChange) {
   nameInput.className = "mha-widget-config-control";
   nameInput.type = "text";
   nameInput.value = draft.label;
-  nameInput.placeholder = reconciled.selected?.label || "Living room";
+  nameInput.placeholder = reconciled.selected?.label || t("widgets.config.placeholderRoom", "Living room");
   nameInput.autocomplete = "off";
   nameInput.addEventListener("input", event => {
     updateMediaLabel(draft, event.currentTarget.value);
@@ -469,7 +474,7 @@ function createButtonFields(session, hass, visibilityConfig, onChange) {
   const label = document.createElement("input");
   label.className = "mha-widget-config-control";
   label.value = draft.label;
-  label.placeholder = reconciled.selected?.label || "Action";
+  label.placeholder = reconciled.selected?.label || t("common.action", "Action");
   label.addEventListener("input", event => {
     updateButtonLabel(draft, event.currentTarget.value);
     onChange?.();

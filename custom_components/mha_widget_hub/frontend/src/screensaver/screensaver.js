@@ -6,6 +6,7 @@
  */
 
 import { ICONS } from "../components/icons.js";
+import { t } from "../i18n/index.js";
 import { CLOCK_WIDGET_VARIANTS, createClockWidgetContent, normalizeClockWidgetVariant, updateClockWidget } from "../widgets/clock-widget.js";
 
 export const CLOCK_VARIANTS = ["none", ...CLOCK_WIDGET_VARIANTS];
@@ -128,7 +129,7 @@ function createClockContent(variant = "digital") {
   if (normalized === "none") {
     const empty = document.createElement("div");
     empty.className = "mha-screensaver-clock mha-screensaver-clock--none";
-    empty.setAttribute("aria-label", "No clock");
+    empty.setAttribute("aria-label", t("settings.clockVariants.none", "No clock"));
     return empty;
   }
 
@@ -147,7 +148,7 @@ function createClock(variant = "digital") {
   region.dataset.clockHidden = String(normalized === "none");
   region.tabIndex = -1;
   region.setAttribute("role", "presentation");
-  region.setAttribute("aria-label", "Screensaver clock");
+  region.setAttribute("aria-label", t("settings.screensaverClock", "Screensaver clock"));
 
   const stage = document.createElement("div");
   stage.className = "mha-screensaver-clock-stage";
@@ -167,22 +168,30 @@ const NOWBAR_ITEMS = Object.freeze([
   {
     key: "now",
     title: "Now bar",
+    titleKey: "settings.nowBarPreview.now.title",
     subtitle: "Ready for media and active states",
+    subtitleKey: "settings.nowBarPreview.now.subtitle",
   },
   {
     key: "weather",
-    title: "Maison",
-    subtitle: "Scenes and shortcuts ready",
+    title: "Home",
+    titleKey: "settings.nowBarPreview.weather.title",
+    subtitle: "Modes and shortcuts ready",
+    subtitleKey: "settings.nowBarPreview.weather.subtitle",
   },
   {
     key: "calendar",
     title: "Security",
+    titleKey: "settings.nowBarPreview.calendar.title",
     subtitle: "No critical events",
+    subtitleKey: "settings.nowBarPreview.calendar.subtitle",
   },
   {
     key: "media",
     title: "Ambiance",
+    titleKey: "settings.nowBarPreview.media.title",
     subtitle: "Lighting and climate synced",
+    subtitleKey: "settings.nowBarPreview.media.subtitle",
   },
 ]);
 
@@ -210,11 +219,11 @@ function createNowBarTile(item, index) {
 
   const title = document.createElement("div");
   title.className = "mha-screensaver-nowbar-title";
-  title.textContent = item.title;
+  title.textContent = t(item.titleKey, item.title);
 
   const subtitle = document.createElement("div");
   subtitle.className = "mha-screensaver-nowbar-subtitle";
-  subtitle.textContent = item.subtitle;
+  subtitle.textContent = t(item.subtitleKey, item.subtitle);
 
   tile.append(title, subtitle);
   return tile;
@@ -227,7 +236,7 @@ function createNowBar({ items: enabledItems = {} } = {}) {
   const now = document.createElement("section");
   now.className = "mha-screensaver-nowbar";
   now.dataset.nowbarSignature = visibleItems.map(item => item.key).join("|");
-  now.setAttribute("aria-label", "Now bar");
+  now.setAttribute("aria-label", t("settings.nowBar", "Now Bar"));
 
   const stack = document.createElement("div");
   stack.className = "mha-screensaver-nowbar-stack";
@@ -608,7 +617,7 @@ export function createScreensaver({
   edit.className = "mha-edit-button mha-main-edit-button mha-screensaver-edit-button";
   edit.type = "button";
   edit.innerHTML = ICONS.edit;
-  edit.setAttribute("aria-label", "Configure screensaver");
+  edit.setAttribute("aria-label", t("settings.configureScreensaver", "Configure screensaver"));
   ["pointerdown", "pointerup", "click", "touchstart", "touchend"].forEach((type) => {
     edit.addEventListener(type, (event) => {
       event.stopPropagation();

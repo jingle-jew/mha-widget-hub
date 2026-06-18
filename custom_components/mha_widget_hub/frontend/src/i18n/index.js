@@ -5,7 +5,7 @@ import { es } from "./es.js";
 const SUPPORTED_LANGUAGES = Object.freeze(["en", "fr", "es"]);
 const DICTIONARIES = Object.freeze({ en, fr, es });
 
-let currentLanguage = "en";
+let currentLanguage = normalizeLanguage(globalThis.navigator?.language || "en");
 
 function readPath(source, key) {
   return String(key || "")

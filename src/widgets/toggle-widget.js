@@ -18,6 +18,7 @@ import { clampWidth, css, freezeSize, isLocalWidgetKind, variant } from "./widge
 import { isEntityAllowedForCurrentUser } from "../admin/entity-permissions.js";
 import { buildToggleWidgetConfig, createToggleConfigDraft } from "../widget-config/toggle-config.js";
 import { WIDGET_PREVIEW_DATA } from "./widget-preview-data.js";
+import { t } from "../i18n/index.js";
 
 export const TOGGLE_WIDGET_KIND = "toggle";
 
@@ -34,8 +35,8 @@ function getToggleWidgetData(widget = {}) {
     icon: widget.icon || "home",
     iconCategory: widget.iconCategory || "home",
     label: widget.label || widget.title || "Toggle",
-    stateOn: widget.stateOn || "On",
-    stateOff: widget.stateOff || "Off",
+    stateOn: widget.stateOn || t("states.on", "On"),
+    stateOff: widget.stateOff || t("states.off", "Off"),
     checked,
   };
 }
@@ -136,19 +137,19 @@ export function createToggleWidgetContent(widget = {}, {
         input.disabled = !supportsToggle;
         input.setAttribute(
           "aria-label",
-          context.entityAllowed ? data.label : "Unauthorized entity",
+          context.entityAllowed ? data.label : t("common.unauthorizedEntity", "Unauthorized entity"),
         );
       }
-      label.textContent = context.entityAllowed ? data.label : "Unauthorized entity";
+      label.textContent = context.entityAllowed ? data.label : t("common.unauthorizedEntity", "Unauthorized entity");
       state.textContent = !context.entityAllowed
-        ? "Unauthorized"
+        ? t("common.unauthorized", "Unauthorized")
         : context.entityAvailable
         ? supportsToggle
           ? checked
             ? data.stateOn
             : data.stateOff
-          : "Unsupported"
-        : "Unavailable";
+          : t("common.unsupported", "Unsupported")
+        : t("states.unavailable", "Unavailable");
     };
 
     root.__mhaDestroy = () => {

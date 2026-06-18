@@ -8,6 +8,18 @@ import {
   setLanguage,
   t,
 } from "../src/i18n/index.js";
+import { en } from "../src/i18n/en.js";
+import { fr } from "../src/i18n/fr.js";
+import { es } from "../src/i18n/es.js";
+
+function flattenKeys(source, prefix = "") {
+  return Object.entries(source).flatMap(([key, value]) => {
+    const path = prefix ? `${prefix}.${key}` : key;
+    return value && typeof value === "object"
+      ? flattenKeys(value, path)
+      : [path];
+  });
+}
 
 test("i18n normalizes supported regional language tags", () => {
   assert.equal(normalizeLanguage("fr-CA"), "fr");
@@ -47,4 +59,10 @@ test("i18n translates, interpolates, and falls back to English", () => {
   configureI18n({ navigatorLanguage: "en-US" });
   assert.equal(getLanguage(), "en");
   assert.equal(t("common.save", "Save"), "Save");
+});
+
+test("i18n dictionaries keep language keys aligned", () => {
+  const englishKeys = flattenKeys(en).sort();
+  assert.deepEqual(flattenKeys(fr).sort(), englishKeys);
+  assert.deepEqual(flattenKeys(es).sort(), englishKeys);
 });
