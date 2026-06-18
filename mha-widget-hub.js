@@ -1,12 +1,26 @@
 import {
-  readBoolean,
   readJson,
   writeJson,
   writeStorageValue,
 } from "./src/core/storage.js?v=storage-v1";
 import {
-  STORAGE_KEYS,
-} from "./src/core/storage-keys.js";
+  createCriticalBootStyle,
+  createFrontendStyleLinks,
+} from "./src/core/mha-frontend-assets.js?v=phase1";
+import {
+  ACTIVE_PAGE,
+  DOCK_POSITION,
+  HIDE_HA_SIDEBAR,
+  LANGUAGE,
+  PAGES,
+  POSITIONS,
+  clearGridStorage,
+  getStoredDockPosition,
+  getStoredHideHaSidebar,
+  getStoredLanguageSetting,
+  normalizeDockPosition,
+  normalizeLanguageSetting,
+} from "./src/core/mha-persistence.js?v=phase1";
 import {
   getActivePage,
   normalizePage,
@@ -26,6 +40,10 @@ import {
   renamePage,
   selectPage,
 } from "./src/pages/page-controller.js";
+import {
+  getPageIconLabel,
+  PAGE_ICON_OPTIONS,
+} from "./src/pages/page-icons.js?v=phase1";
 import {destroyDomSubtree} from "./src/core/dom-lifecycle.js";
 import {ICONS} from "./src/components/icons.js";
 import {createShell} from "./src/layout/shell.js";
@@ -51,9 +69,7 @@ import { createWallpaperController } from "./src/settings/wallpaper-controller.j
 import {updateStatusTime} from "./src/layout/status-bar.js";
 import {createWidgetShell} from "./src/widgets/widget-shell.js";
 import { getNextWidgetVariantEntries, getVariantCandidate, sameVariantSize } from "./src/widgets/widget-variants.js";
-import {
-  normalizeWidgetContract,
-} from "./src/widgets/widget-registry.js";
+import { normalizeStoredWidgetContract } from "./src/widgets/widget-storage.js?v=phase1";
 import { createWidgetFromCatalogItem } from "./src/widgets/widget-factory.js";
 import {updateClockWidgets} from "./src/widgets/clock-widget.js";
 import {DEFAULT_WIDGETS,getActiveGridRows,getActiveGridUnits,getEffectiveLayout,getInternalGridColumnCountFromLogical,getInternalGridRowCountFromLogical,getLayoutMode,getGridPreset,getWidgetDensity,normalizeWidgetForKind,normalizeWidgetSize,sizeToString} from "./src/layout/layout-engine.js";
@@ -99,109 +115,7 @@ const MHA_FRONTEND_ROOT_URL = new URL(".", import.meta.url);
 const MHA_FRONTEND_VERSION = new URL(import.meta.url).searchParams.get("v");
 
 const MHA_STYLE_MANIFEST = getStyleManifest();
-
-const PAGE_ICON_OPTIONS = Object.freeze([
-  { name: "home", label: "Home", labelKey: "settings.dockIconLabels.home", category: "home" },
-  { name: "dashboard", label: "Dashboard", labelKey: "settings.dockIconLabels.dashboard", category: "navigation" },
-  { name: "apps", label: "Applications", labelKey: "settings.dockIconLabels.apps", category: "system" },
-  { name: "grid", label: "Grid", labelKey: "settings.dockIconLabels.grid", category: "navigation" },
-  { name: "light", label: "Lights", labelKey: "settings.dockIconLabels.light", category: "lighting" },
-  { name: "weather", label: "Weather", labelKey: "settings.dockIconLabels.weather", category: "weather" },
-  { name: "media-player", label: "Media", labelKey: "settings.dockIconLabels.media-player", category: "media_player" },
-  { name: "calendar", label: "Calendar", labelKey: "settings.dockIconLabels.calendar", category: "utility" },
-  { name: "star", label: "Favorite", labelKey: "settings.dockIconLabels.star", category: "utility" },
-  { name: "gear", label: "Settings", labelKey: "settings.dockIconLabels.gear", category: "system" },
-]);
-
-function i18nLabel(item = {}) {
-  return item.labelKey ? t(item.labelKey, item.label) : item.label;
-}
-
-function resolveFrontendAssetUrl(path = "") {
-  const url = new URL(String(path).replace(/^\/+/, ""), MHA_FRONTEND_ROOT_URL);
-  if (MHA_FRONTEND_VERSION) url.searchParams.set("v", MHA_FRONTEND_VERSION);
-  return url.href;
-}
-
-function createFrontendStyleLinks() {
-  return MHA_STYLE_MANIFEST
-    .map(([path, layer]) => (
-      `<link rel="stylesheet" data-mha-style-layer="${layer}" href="${resolveFrontendAssetUrl(path)}">`
-    ))
-    .join("");
-}
-
-function createCriticalBootStyle() {
-  /*
-   * External theme styles can take several seconds through Home Assistant.
-   * Keep a styled wallpaper visible and all application content hidden until
-   * those styles and the first measured layout are ready.
-   */
-  return `<style data-mha-critical-boot>
-    :host {
-      display: block;
-      position: relative;
-      inline-size: 100%;
-      block-size: 100dvh;
-      overflow: hidden;
-      color: rgba(255,255,255,.92);
-      background:
-        radial-gradient(circle at 20% 15%, rgba(113,128,255,.32), transparent 30%),
-        radial-gradient(circle at 78% 28%, rgba(255,112,178,.28), transparent 32%),
-        radial-gradient(circle at 52% 90%, rgba(56,209,255,.22), transparent 36%),
-        linear-gradient(135deg, #171b30 0%, #242844 100%);
-    }
-    :host([data-boot-state="booting"]) > :not(style):not(link):not(.mha-background) {
-      opacity: 0 !important;
-      visibility: hidden !important;
-      pointer-events: none !important;
-    }
-    :host([data-boot-state="booting"]) .mha-background {
-      position: absolute;
-      inset: -20%;
-      z-index: 0;
-      pointer-events: none;
-      background:
-        radial-gradient(circle at 20% 15%, var(--mha-bg-radial-1, rgba(113,128,255,.32)), transparent 30%),
-        radial-gradient(circle at 78% 28%, var(--mha-bg-radial-2, rgba(255,112,178,.28)), transparent 32%),
-        radial-gradient(circle at 52% 90%, var(--mha-bg-radial-3, rgba(56,209,255,.22)), transparent 36%),
-        linear-gradient(135deg, var(--mha-bg-base-1, #171b30), var(--mha-bg-base-2, #242844));
-    }
-    :host([data-boot-state="booting"][data-wallpaper-kind="image"][data-wallpaper-source="custom"]) .mha-background,
-    :host([data-boot-state="booting"][data-wallpaper-kind="image"][data-wallpaper-source="theme"]) .mha-background {
-      background-image: var(--mha-active-wallpaper-image) !important;
-      background-size: cover !important;
-      background-position: center !important;
-      background-repeat: no-repeat !important;
-    }
-    :host([data-boot-state="booting"][data-wallpaper-kind="css"][data-wallpaper-source="theme"]) .mha-background {
-      background: var(--mha-active-wallpaper-background) !important;
-    }
-  </style>`;
-}
 // Keeps existing local widget order/sizes after the public naming cleanup.
-
-
-
-
-const {
-  gridOrder:ORDER,
-  widgetSizes:SIZES,
-  hiddenWidgets:REMOVED,
-  widgetPositions:POSITIONS,
-  gridPages:PAGES,
-  activePage:ACTIVE_PAGE,
-  dockPosition:DOCK_POSITION,
-  hideHaSidebar:HIDE_HA_SIDEBAR,
-  language:LANGUAGE,
-}=STORAGE_KEYS;
-const DOCK_POSITIONS=new Set(["left","right","bottom"]);
-const LANGUAGE_OPTIONS=new Set(["auto","en","fr","es"]);
-function normalizeDockPosition(value="left"){return DOCK_POSITIONS.has(value)?value:"left";}
-function getStoredDockPosition(){return normalizeDockPosition(localStorage.getItem(DOCK_POSITION)||"left");}
-function getStoredHideHaSidebar(){return readBoolean(HIDE_HA_SIDEBAR,false);}
-function normalizeLanguageSetting(value="auto"){return LANGUAGE_OPTIONS.has(value)?value:"auto";}
-function getStoredLanguageSetting(){return normalizeLanguageSetting(localStorage.getItem(LANGUAGE)||"auto");}
 
 /*
  * FIRST LAUNCH DEFAULTS
@@ -216,12 +130,6 @@ function getStoredLanguageSetting(){return normalizeLanguageSetting(localStorage
  * Screensaver Now Bar: enabled
  * Screensaver clock: digital
  */
-
-
-function normalizeStoredWidgetContract(widget = {}) {
-  return normalizeWidgetContract(widget,normalizeWidgetSize);
-}
-
 class MhaControlHub extends HTMLElement{
 constructor(){
   super();
@@ -1439,7 +1347,7 @@ toggleEditMode(){
   this._syncWidgetDropSlots();
 
   if(wasEditing!==this._isEditing)this._scheduleSquareUnitSync();
-}toggleScreensaverPreview(){const state=this._screensaverController.read();this._screensaverController.setPreviewState(!state.preview);this._syncScreensaverDom()}toggleNowBarPreview(){const state=this._screensaverController.read();this._screensaverController.setNowBarState(!state.nowBar);this._syncScreensaverDom()}setScreensaverClockVariant(v="digital"){this._screensaverController.setClockVariantState(v);this._syncScreensaverDom()}resetGrid(){localStorage.removeItem(ORDER);localStorage.removeItem(SIZES);localStorage.removeItem(REMOVED);localStorage.removeItem(POSITIONS);localStorage.removeItem(PAGES);localStorage.removeItem(ACTIVE_PAGE);this._widgetPositions={};this._activeMoveWidgetId="";this._pages=this._readPages();this._activePageId=this._readActivePageId();this._widgets=this._readWidgets();this.render()}
+}toggleScreensaverPreview(){const state=this._screensaverController.read();this._screensaverController.setPreviewState(!state.preview);this._syncScreensaverDom()}toggleNowBarPreview(){const state=this._screensaverController.read();this._screensaverController.setNowBarState(!state.nowBar);this._syncScreensaverDom()}setScreensaverClockVariant(v="digital"){this._screensaverController.setClockVariantState(v);this._syncScreensaverDom()}resetGrid(){clearGridStorage();this._widgetPositions={};this._activeMoveWidgetId="";this._pages=this._readPages();this._activePageId=this._readActivePageId();this._widgets=this._readWidgets();this.render()}
 _migrateStorageSchema(){
   const result=migratePageStorage({
     defaultWidgets:DEFAULT_WIDGETS,
@@ -1592,16 +1500,16 @@ _createPageCreatorPanel(){
     button.dataset.icon=option.name;
     button.dataset.selected=String(option.name===this._newPageIcon);
     button.setAttribute("aria-pressed",String(option.name===this._newPageIcon));
-    button.setAttribute("aria-label",i18nLabel(option));
+    button.setAttribute("aria-label",getPageIconLabel(option));
     button.onclick=()=>this._setPageCreatorIcon(option.name);
     button.append(createIcon({
       name:option.name,
       category:option.category,
-      label:i18nLabel(option),
-      children:createIconSymbol({name:option.name,label:i18nLabel(option)}),
+      label:getPageIconLabel(option),
+      children:createIconSymbol({name:option.name,label:getPageIconLabel(option)}),
     }));
     const label=document.createElement("span");
-    label.textContent=i18nLabel(option);
+    label.textContent=getPageIconLabel(option);
     button.append(label);
     grid.append(button);
   });
@@ -2474,7 +2382,13 @@ render(){
   document.documentElement.dataset.iconShape=iconShape;
 
   destroyDomSubtree(this.shadowRoot);
-  this.shadowRoot.innerHTML=createCriticalBootStyle()+createFrontendStyleLinks();
+  this.shadowRoot.innerHTML=createCriticalBootStyle()+createFrontendStyleLinks(
+    MHA_STYLE_MANIFEST,
+    {
+      frontendRootUrl:MHA_FRONTEND_ROOT_URL,
+      frontendVersion:MHA_FRONTEND_VERSION,
+    },
+  );
   const links=[...this.shadowRoot.querySelectorAll('link[rel="stylesheet"]')];
   const {bg,shell,grid}=createShell({
     layoutMode,
