@@ -13,6 +13,9 @@ import { runMediaPlayerAction } from "../ha/actions.js";
 import { t } from "../i18n/index.js";
 
 export const MEDIA_WIDGET_KIND = "media";
+export const MEDIA_TRANSITION_GRACE_MS = 1200;
+
+const MEDIA_TRANSIENT_STATES = new Set(["idle", "off", "unavailable", "unknown", "none"]);
 
 export function isMediaWidget(widget = {}) {
   return isLocalWidgetKind(widget, MEDIA_WIDGET_KIND, ["media-widget"]);
@@ -23,7 +26,84 @@ function resolveMediaEntity(widget = {}, hass) {
   return entityId ? hass?.states?.[entityId] : null;
 }
 
-function getMediaData(widget = {}, hass) {
+export function createMediaTransitionCache() {
+  return {
+    lastArtwork: "",
+    lastTitle: "",
+    lastArtist: "",
+    lastMediaState: "",
+    lastUpdateTimestamp: 0,
+    graceState: "",
+    graceStartedTimestamp: 0,
+  };
+}
+
+function getMediaTimestamp() {
+  return globalThis.performance?.now?.() ?? Date.now();
+}
+
+function hasLiveMediaMetadata(entity, widget = {}) {
+  const attributes = entity?.attributes || {};
+  return Boolean(
+    attributes.media_title
+      || attributes.media_artist
+      || attributes.media_album_name
+      || widget.mediaTitle
+      || widget.mediaArtist
+      || widget.artist
+      || widget.album,
+  );
+}
+
+function applyMediaTransitionCache(data, cache, now = getMediaTimestamp()) {
+  if (!cache) return data;
+
+  const hasCachedDisplay = Boolean(cache.lastArtwork || cache.lastTitle || cache.lastArtist);
+  const hasTransientState = MEDIA_TRANSIENT_STATES.has(data.state);
+  const missingCachedArtwork = Boolean(cache.lastArtwork && !data.artworkUrl);
+  const missingCachedMetadata = Boolean(cache.lastTitle && !data.hasLiveMetadata);
+  const stateWouldRegress = Boolean(cache.lastMediaState && hasTransientState && data.state !== cache.lastMediaState);
+  const shouldUseGrace = hasCachedDisplay && (missingCachedArtwork || missingCachedMetadata || stateWouldRegress);
+
+  if (shouldUseGrace) {
+    if (cache.graceState !== data.state || !cache.graceStartedTimestamp) {
+      cache.graceState = data.state;
+      cache.graceStartedTimestamp = now;
+    }
+
+    if (now - cache.graceStartedTimestamp <= MEDIA_TRANSITION_GRACE_MS) {
+      const state = stateWouldRegress ? cache.lastMediaState : data.state;
+      return {
+        ...data,
+        title: missingCachedMetadata ? cache.lastTitle : data.title,
+        subtitle: missingCachedMetadata || stateWouldRegress ? cache.lastArtist || data.subtitle : data.subtitle,
+        state,
+        playing: state === "playing",
+        artworkUrl: missingCachedArtwork ? cache.lastArtwork : data.artworkUrl,
+        usingGraceCache: true,
+      };
+    }
+  }
+
+  cache.graceState = "";
+  cache.graceStartedTimestamp = 0;
+
+  if (!hasTransientState && (data.artworkUrl || data.hasLiveMetadata)) {
+    cache.lastArtwork = data.artworkUrl || "";
+    cache.lastTitle = data.title || "";
+    cache.lastArtist = data.artist || data.subtitle || "";
+    cache.lastMediaState = data.state || "";
+    cache.lastUpdateTimestamp = now;
+  }
+
+  return data;
+}
+
+export function resolveMediaTransitionData(data, cache, now) {
+  return applyMediaTransitionCache(data, cache, now);
+}
+
+function getMediaData(widget = {}, hass, cache = null, now = getMediaTimestamp()) {
   const previewData = WIDGET_PREVIEW_DATA.media;
   const entity = resolveMediaEntity(widget, hass);
   const attributes = entity?.attributes || {};
@@ -38,7 +118,7 @@ function getMediaData(widget = {}, hass) {
   const muted = attributes.is_volume_muted === true;
   const volumeLabel = muted ? t("widgets.mediaControls.mute", "Mute") : hasVolume ? `${volumePercent}%` : "Vol";
 
-  return {
+  const data = {
     entity,
     entityId: model.entityId,
     name: model.name,
@@ -53,6 +133,7 @@ function getMediaData(widget = {}, hass) {
     volumeLabel,
     volumePercent,
     artworkUrl: getMediaArtworkUrl(entity, widget),
+    hasLiveMetadata: hasLiveMediaMetadata(entity, widget),
     canPrevious: Boolean(buildMediaPlayerServiceCall(entity, "previous")),
     canPlayPause: Boolean(buildMediaPlayerServiceCall(entity, "playPause")),
     canNext: Boolean(buildMediaPlayerServiceCall(entity, "next")),
@@ -60,6 +141,8 @@ function getMediaData(widget = {}, hass) {
     canVolumeUp: Boolean(buildMediaPlayerServiceCall(entity, "volumeUp")),
     canMute: Boolean(buildMediaPlayerServiceCall(entity, "mute")),
   };
+
+  return applyMediaTransitionCache(data, cache, now);
 }
 
 function createText(className, text = "") {
@@ -299,7 +382,9 @@ export function createMediaWidgetContent(widget = {}, {
   hass,
   interactive = true,
 } = {}) {
-  const data = getMediaData(widget, hass);
+  const transitionCache = createMediaTransitionCache();
+  let graceTimer = null;
+  const data = getMediaData(widget, hass, transitionCache);
   const context = {
     hass,
     entity: data.entity,
@@ -329,6 +414,38 @@ export function createMediaWidgetContent(widget = {}, {
     }
     if (!context.entity) return;
     runMediaPlayerAction(context.hass, context.entity, action);
+  };
+  const applyData = nextData => {
+    context.entity = nextData.entity;
+    context.data = nextData;
+    root.dataset.state = nextData.state;
+    root.dataset.mediaState = nextData.state;
+    root.dataset.playing = String(nextData.playing);
+    root.dataset.hasArtwork = String(Boolean(nextData.artworkUrl));
+    root.querySelector(".mha-media-widget-title").textContent = nextData.title;
+    root.querySelector(".mha-media-widget-artist").textContent = nextData.subtitle;
+    const artworkNode = root.querySelector(".mha-media-widget-artwork");
+    artworkNode?.setAttribute("data-playing", String(nextData.playing));
+    if (artworkNode) setArtworkImage(artworkNode, nextData.artworkUrl);
+    setBackgroundImage(root, nextData.artworkUrl);
+    renderControls(controls, nextData, {
+      mode: context.controlsMode,
+      interactive,
+      onAction,
+    });
+  };
+  const scheduleGraceRefresh = nextData => {
+    if (graceTimer) {
+      clearTimeout(graceTimer);
+      graceTimer = null;
+    }
+    if (!nextData.usingGraceCache) return;
+    const elapsed = getMediaTimestamp() - transitionCache.graceStartedTimestamp;
+    const delay = Math.max(0, MEDIA_TRANSITION_GRACE_MS - elapsed + 1);
+    graceTimer = setTimeout(() => {
+      graceTimer = null;
+      context.hass && applyData(getMediaData(widget, context.hass, transitionCache));
+    }, delay);
   };
 
   const background = createArtworkBackground(data);
@@ -366,28 +483,15 @@ export function createMediaWidgetContent(widget = {}, {
   }
 
   root.__mhaUpdateFromHass = nextHass => {
-    const nextData = getMediaData(widget, nextHass);
+    const nextData = getMediaData(widget, nextHass, transitionCache);
     context.hass = nextHass;
-    context.entity = nextData.entity;
-    context.data = nextData;
-    root.dataset.state = nextData.state;
-    root.dataset.mediaState = nextData.state;
-    root.dataset.playing = String(nextData.playing);
-    root.dataset.hasArtwork = String(Boolean(nextData.artworkUrl));
-    root.querySelector(".mha-media-widget-title").textContent = nextData.title;
-    root.querySelector(".mha-media-widget-artist").textContent = nextData.subtitle;
-    const artworkNode = root.querySelector(".mha-media-widget-artwork");
-    artworkNode?.setAttribute("data-playing", String(nextData.playing));
-    if (artworkNode) setArtworkImage(artworkNode, nextData.artworkUrl);
-    setBackgroundImage(root, nextData.artworkUrl);
-    renderControls(controls, nextData, {
-      mode: context.controlsMode,
-      interactive,
-      onAction,
-    });
+    applyData(nextData);
+    scheduleGraceRefresh(nextData);
   };
 
   root.__mhaDestroy = () => {
+    if (graceTimer) clearTimeout(graceTimer);
+    graceTimer = null;
     delete root.__mhaUpdateFromHass;
     context.hass = null;
     context.entity = null;
