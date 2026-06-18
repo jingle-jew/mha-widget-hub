@@ -5,7 +5,13 @@ import {
   USERS_COMMAND,
   loadEntityVisibilityConfig,
   loadHomeAssistantUsers,
+  saveEntityVisibilityConfig,
 } from "../src/admin/entity-visibility-store.js";
+import {
+  GET_COMMAND as API_GET_COMMAND,
+  SAVE_COMMAND as API_SAVE_COMMAND,
+  USERS_COMMAND as API_USERS_COMMAND,
+} from "../src/admin/admin-ha-api.js";
 
 test("missing first-install configuration normalizes to an empty valid config", async () => {
   const calls = [];
@@ -60,4 +66,20 @@ test("websocket failures retain their original code and message", async () => {
   assert.equal(logs[0][1].message, "Handler exploded");
   assert.equal(logs[0][1].code, "unknown_error");
   assert.match(logs[0][1].stack, /Handler exploded/);
+});
+
+test("compatibility facade preserves admin HA API exports", async () => {
+  assert.equal(GET_COMMAND, API_GET_COMMAND);
+  assert.equal(USERS_COMMAND, API_USERS_COMMAND);
+
+  const calls = [];
+  const result = await saveEntityVisibilityConfig({
+    async callWS(payload) {
+      calls.push(payload);
+      return { version: 1, users: {} };
+    },
+  }, { users: {} });
+
+  assert.equal(calls[0].type, API_SAVE_COMMAND);
+  assert.deepEqual(result, { version: 1, users: {} });
 });

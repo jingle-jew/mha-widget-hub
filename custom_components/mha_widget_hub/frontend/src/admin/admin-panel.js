@@ -6,53 +6,17 @@ import {
   loadEntityVisibilityConfig,
   loadHomeAssistantUsers,
   saveEntityVisibilityConfig,
-} from "./entity-visibility-store.js";
+} from "./admin-ha-api.js";
+import { STYLES } from "./admin-constants.js";
+import {
+  assetUrl,
+  createLoadFailure,
+  createOption,
+  describeLoadError,
+} from "./admin-utils.js";
 import { getEntitiesForDomain } from "../ha/entity-filters.js";
 import { createThemeController } from "../settings/theme-controller.js";
 import { configureI18n, t } from "../i18n/index.js";
-
-const ROOT_URL = new URL("../../", import.meta.url);
-const FRONTEND_VERSION = new URL(import.meta.url).searchParams.get("v");
-const STYLES = [
-  "styles/core/tokens.css",
-  "styles/themes/ios.css",
-  "styles/themes/oneui.css",
-  "styles/themes/material.css",
-  "styles/themes/accent-palettes.css",
-  "styles/themes/semantic-tokens.css",
-  "styles/admin/admin-panel.css",
-];
-
-function assetUrl(path) {
-  const url = new URL(path, ROOT_URL);
-  if (FRONTEND_VERSION) url.searchParams.set("v", FRONTEND_VERSION);
-  return url.href;
-}
-
-function createOption(value, label, selected) {
-  const option = document.createElement("option");
-  option.value = value;
-  option.textContent = label;
-  option.selected = value === selected;
-  return option;
-}
-
-function describeLoadError(label, error) {
-  return {
-    source: label,
-    raw: error,
-    message: error?.message || String(error || "Unknown error"),
-    code: error?.code || "",
-    stack: error?.stack || "",
-  };
-}
-
-function createLoadFailure(source, cause, fallbackMessage) {
-  return {
-    mhaLoadSource: source,
-    cause: cause || new Error(fallbackMessage),
-  };
-}
 
 class MhaAdminPanel extends HTMLElement {
   constructor() {
