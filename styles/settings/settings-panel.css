@@ -427,6 +427,30 @@
   box-sizing: border-box;
 }
 
+.mha-settings-accent-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: .75rem;
+  min-inline-size: 0;
+}
+
+.mha-settings-accent-expand {
+  display: none;
+  inline-size: 2rem;
+  block-size: 2rem;
+  border: 1px solid var(--mha-widget-border);
+  border-radius: 999px;
+  background: var(--mha-control-surface, var(--mha-widget-surface));
+  color: var(--mha-text-primary);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1;
+  place-items: center;
+  cursor: pointer;
+}
+
 .mha-settings-accent-swatches {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -434,6 +458,60 @@
   min-inline-size: 0;
   max-inline-size: 100%;
   box-sizing: border-box;
+}
+
+@media (max-width: 767px) and (orientation: portrait) {
+  .mha-settings-accent-field {
+    gap: .55rem;
+  }
+
+  .mha-settings-accent-expand {
+    display: grid;
+  }
+
+  .mha-settings-accent-swatches {
+    grid-template-columns: repeat(10, 30px);
+    grid-auto-flow: column;
+    grid-auto-columns: 30px;
+    gap: 6px;
+    align-items: center;
+    justify-content: start;
+    justify-items: center;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 2px 2px 5px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mha-settings-accent-swatches::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mha-settings-accent-field[data-accent-expanded="false"] .mha-settings-accent-swatch[data-compact-accent="false"] {
+    display: none;
+  }
+
+  .mha-settings-accent-field[data-accent-expanded="true"] .mha-settings-accent-swatches {
+    grid-template-columns: repeat(auto-fill, minmax(34px, 1fr));
+    grid-auto-flow: row;
+    grid-auto-columns: auto;
+    justify-content: stretch;
+    overflow: visible;
+    padding-block-end: 2px;
+  }
+
+  .mha-settings-accent-swatch {
+    inline-size: 30px;
+    min-inline-size: 30px;
+    min-block-size: 30px;
+  }
+
+  .mha-settings-accent-field[data-accent-expanded="true"] .mha-settings-accent-swatch {
+    inline-size: min(100%, 36px);
+    min-inline-size: 32px;
+    min-block-size: 32px;
+  }
 }
 
 .mha-settings-accent-swatch {

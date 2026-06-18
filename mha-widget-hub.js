@@ -252,6 +252,7 @@ constructor(){
   this._gridScrollCleanup=null;
   this._settingsOpen=false;
   this._settingsPage="main";
+  this._accentPaletteExpanded=false;
   this._dockSettingsPageId="";
   this._screensaverSettingsOpen=false;
   this._lastResponsiveSignature="";
@@ -690,6 +691,7 @@ _getSettingsPanelProps(scope="all"){
     iosGlass:themeState.iosGlass,
     accent:themeState.accent,
     accentMode:themeState.accentMode,
+    accentPaletteExpanded:this._accentPaletteExpanded,
     iconShape:iconShapeSetting,
     effectiveIconShape,
     screensaverEnabled:screensaverState.enabled,
@@ -710,6 +712,7 @@ _getSettingsPanelProps(scope="all"){
     onIosGlassChange:v=>this._applyIosGlassFromSettings(v),
     onAccentChange:v=>this._applyAccentFromSettings(v),
     onAccentModeChange:v=>this._applyAccentModeFromSettings(v),
+    onAccentPaletteExpandedChange:v=>this._setAccentPaletteExpanded(v),
     onIconShapeChange:v=>this._applyIconShapeFromSettings(v),
     onScreensaverEnabledChange:v=>this._applyScreensaverEnabledFromSettings(v),
     onScreensaverDelayChange:v=>this._applyScreensaverDelayFromSettings(v),
@@ -1183,6 +1186,10 @@ _applyIconShapeFromSettings(value="auto"){
   this._themeController.setIconShape(value);
   this._syncSettingsDom();
   this._scheduleAppearanceDomRefresh();
+}
+_setAccentPaletteExpanded(expanded=false){
+  this._accentPaletteExpanded=Boolean(expanded);
+  this._syncSettingsDom();
 }
 
 _isScreensaverBlocked(){

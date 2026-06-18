@@ -54,6 +54,54 @@ const NOW_BAR_ITEM_OPTIONS = [
   { value: "now", label: "Now" },
 ];
 
+const COMPACT_ACCENT_FAMILIES = [
+  "red",
+  "orange",
+  "yellow",
+  "green",
+  "cyan",
+  "blue",
+  "violet",
+  "pink",
+  "neutral",
+];
+
+const ACCENT_FAMILY_ALIASES = Object.freeze({
+  red: "red",
+  coral: "red",
+  orange: "orange",
+  peach: "orange",
+  amber: "yellow",
+  lemon: "yellow",
+  yellow: "yellow",
+  lime: "green",
+  olive: "green",
+  green: "green",
+  emerald: "green",
+  mint: "cyan",
+  seafoam: "cyan",
+  sea: "cyan",
+  teal: "cyan",
+  aqua: "cyan",
+  cyan: "cyan",
+  sky: "blue",
+  blue: "blue",
+  navy: "blue",
+  indigo: "violet",
+  violet: "violet",
+  lavender: "violet",
+  purple: "violet",
+  lilac: "violet",
+  berry: "pink",
+  magenta: "pink",
+  pink: "pink",
+  rose: "pink",
+  brown: "neutral",
+  graphite: "neutral",
+  gray: "neutral",
+  slate: "neutral",
+});
+
 function formatImportDate(value = "") {
   if (!value) return "";
   const date = new Date(value);
@@ -268,27 +316,72 @@ function createCheckbox({ label, checked = false, onChange }) {
 }
 
 
-function createAccentPicker({ label, themeStyle = "oneui", value = "", accentMode = "manual", onChange, onModeChange }) {
+function getAccentFamily(value = "") {
+  return ACCENT_FAMILY_ALIASES[value] || "neutral";
+}
+
+function getCompactAccentValues(options = []) {
+  const byFamily = new Map();
+  options.forEach(item => {
+    const family = getAccentFamily(item.value);
+    if (!byFamily.has(family)) byFamily.set(family, item.value);
+  });
+
+  return new Set(
+    COMPACT_ACCENT_FAMILIES
+      .map(family => byFamily.get(family))
+      .filter(Boolean),
+  );
+}
+
+function createAccentPicker({
+  label,
+  themeStyle = "oneui",
+  value = "",
+  accentMode = "manual",
+  expanded = false,
+  onChange,
+  onModeChange,
+  onExpandedChange,
+}) {
   const options = getAccentOptions(themeStyle);
   const resolved = normalizeAccent(themeStyle, value);
   const isAuto = supportsAutoAccent(themeStyle) && accentMode === "auto";
+  const compactValues = getCompactAccentValues(options);
 
   const field = document.createElement("div");
   field.className = "mha-settings-accent-field";
+  field.dataset.accentExpanded = String(Boolean(expanded));
+
+  const header = document.createElement("div");
+  header.className = "mha-settings-accent-header";
 
   const text = document.createElement("span");
   text.className = "mha-settings-label";
   text.textContent = label;
 
+  const expandButton = document.createElement("button");
+  expandButton.className = "mha-settings-accent-expand";
+  expandButton.type = "button";
+  expandButton.dataset.accentExpanded = String(Boolean(expanded));
+  expandButton.setAttribute("aria-label", expanded ? "Réduire la palette d’accent" : "Afficher toute la palette d’accent");
+  expandButton.setAttribute("aria-expanded", String(Boolean(expanded)));
+  expandButton.textContent = expanded ? "⌃" : "⌄";
+  expandButton.addEventListener("click", () => onExpandedChange?.(!expanded));
+
+  header.append(text, expandButton);
+
   const swatches = document.createElement("div");
   swatches.className = "mha-settings-accent-swatches";
   swatches.dataset.themeStyle = themeStyle;
+  swatches.dataset.accentSignature = options.map(item => item.value).join("|");
 
   if (supportsAutoAccent(themeStyle)) {
     const button = document.createElement("button");
     button.className = "mha-settings-accent-swatch mha-settings-accent-swatch-auto";
     button.type = "button";
     button.dataset.accent = "auto";
+    button.dataset.compactAccent = "true";
     button.setAttribute("aria-label", "Automatique selon le fond d’écran");
     button.setAttribute("aria-pressed", String(isAuto));
     button.title = "Auto";
@@ -302,6 +395,7 @@ function createAccentPicker({ label, themeStyle = "oneui", value = "", accentMod
     button.className = "mha-settings-accent-swatch";
     button.type = "button";
     button.dataset.accent = item.value;
+    button.dataset.compactAccent = String(compactValues.has(item.value));
     button.setAttribute("aria-label", item.label);
     button.setAttribute("aria-pressed", String(!isAuto && item.value === resolved));
     button.title = item.label;
@@ -309,7 +403,7 @@ function createAccentPicker({ label, themeStyle = "oneui", value = "", accentMod
     swatches.append(button);
   }
 
-  field.append(text, swatches);
+  field.append(header, swatches);
   return field;
 }
 
@@ -539,12 +633,34 @@ function updateMatchedValueControls(existing, next) {
 }
 
 function updateAccentPressedState(existing, next) {
+  const existingField = existing.querySelector(".mha-settings-accent-field");
+  const nextField = next.querySelector(".mha-settings-accent-field");
+  if (existingField && nextField) {
+    existingField.dataset.accentExpanded = nextField.dataset.accentExpanded;
+  }
+
+  const existingExpand = existing.querySelector(".mha-settings-accent-expand");
+  const nextExpand = next.querySelector(".mha-settings-accent-expand");
+  if (existingExpand && nextExpand) {
+    existingExpand.dataset.accentExpanded = nextExpand.dataset.accentExpanded;
+    existingExpand.setAttribute("aria-label", nextExpand.getAttribute("aria-label") || "");
+    existingExpand.setAttribute("aria-expanded", nextExpand.getAttribute("aria-expanded") || "false");
+    existingExpand.textContent = nextExpand.textContent;
+  }
+
   const nextButtons = [...next.querySelectorAll(".mha-settings-accent-swatch")];
   nextButtons.forEach(source => {
     const accent = source.dataset.accent;
     const target = existing.querySelector(`.mha-settings-accent-swatch[data-accent="${accent}"]`);
-    if (target) target.setAttribute("aria-pressed", source.getAttribute("aria-pressed") || "false");
+    if (target) {
+      target.dataset.compactAccent = source.dataset.compactAccent;
+      target.setAttribute("aria-pressed", source.getAttribute("aria-pressed") || "false");
+    }
   });
+}
+
+function getAccentSwatchSignature(root) {
+  return root.querySelector(".mha-settings-accent-swatches")?.dataset.accentSignature || "";
 }
 
 export function updateSettingsPanel(existing, next) {
@@ -555,6 +671,7 @@ export function updateSettingsPanel(existing, next) {
   const page = existing.dataset.settingsPage || "";
   if (!["main", "screensaver-nowbar", "screensaver"].includes(page)) return false;
   if (getValueControlSignature(existing) !== getValueControlSignature(next)) return false;
+  if (getAccentSwatchSignature(existing) !== getAccentSwatchSignature(next)) return false;
 
   existing.dataset.open = next.dataset.open;
   existing.dataset.iconShape = next.dataset.iconShape;
@@ -574,6 +691,7 @@ export function createSettingsPanel({
   iosGlass = "liquid",
   accent = "",
   accentMode = "manual",
+  accentPaletteExpanded = false,
   iconShape = "auto",
   effectiveIconShape = "",
   screensaverEnabled = false,
@@ -594,6 +712,7 @@ export function createSettingsPanel({
   onIosGlassChange,
   onAccentChange,
   onAccentModeChange,
+  onAccentPaletteExpandedChange,
   onIconShapeChange,
   onScreensaverEnabledChange,
   onScreensaverDelayChange,
@@ -817,8 +936,10 @@ export function createSettingsPanel({
         themeStyle,
         value: accent,
         accentMode,
+        expanded: accentPaletteExpanded,
         onChange: onAccentChange,
         onModeChange: onAccentModeChange,
+        onExpandedChange: onAccentPaletteExpandedChange,
       }),
       createSelect({
         label: "Forme des icônes",
