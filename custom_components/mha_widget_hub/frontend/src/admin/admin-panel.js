@@ -9,6 +9,13 @@ import {
 } from "./admin-ha-api.js";
 import { STYLES } from "./admin-constants.js";
 import {
+  createInitialAdminState,
+  getDefaultUserConfig,
+  getHassRenderSignature,
+  setEntityAllowed,
+  updateUserConfig,
+} from "./admin-state.js";
+import {
   assetUrl,
   createLoadFailure,
   createOption,
@@ -23,20 +30,21 @@ class MhaAdminPanel extends HTMLElement {
     super();
     this.attachShadow({ mode: "open" });
     this._hass = null;
-    this._loadedUserId = "";
-    this._failedUserId = "";
-    this._loadingUserId = "";
-    this._loadPromise = null;
-    this._loadRequestId = 0;
-    this._users = [];
-    this._config = normalizeEntityVisibilityConfig(null);
-    this._selectedUserId = "";
-    this._selectedDomain = getAllowedDomains()[0].value;
-    this._search = "";
-    this._loading = true;
-    this._saving = false;
-    this._error = "";
-    this._hassRenderSignature = "";
+    const initialState = createInitialAdminState();
+    this._loadedUserId = initialState.loadedUserId;
+    this._failedUserId = initialState.failedUserId;
+    this._loadingUserId = initialState.loadingUserId;
+    this._loadPromise = initialState.loadPromise;
+    this._loadRequestId = initialState.loadRequestId;
+    this._users = initialState.users;
+    this._config = initialState.config;
+    this._selectedUserId = initialState.selectedUserId;
+    this._selectedDomain = initialState.selectedDomain;
+    this._search = initialState.search;
+    this._loading = initialState.loading;
+    this._saving = initialState.saving;
+    this._error = initialState.error;
+    this._hassRenderSignature = initialState.hassRenderSignature;
     this._themeController = createThemeController(this);
   }
 
@@ -67,17 +75,7 @@ class MhaAdminPanel extends HTMLElement {
   }
 
   _getHassRenderSignature(hass = this._hass) {
-    const userId = String(hass?.user?.id || "");
-    const states = hass?.states || {};
-    const entities = Object.keys(states)
-      .filter(entityId => entityId.startsWith(`${this._selectedDomain}.`))
-      .sort()
-      .map(entityId => {
-        const name = String(states[entityId]?.attributes?.friendly_name || "");
-        return `${entityId}:${name}`;
-      })
-      .join("|");
-    return `${userId}|${this._selectedDomain}|${entities}`;
+    return getHassRenderSignature(hass, this._selectedDomain);
   }
 
   _renderIfHassDataChanged() {
@@ -173,36 +171,22 @@ class MhaAdminPanel extends HTMLElement {
   }
 
   _getUserConfig() {
-    return this._config.users[this._selectedUserId] || {
-      unrestricted: true,
-      allowedEntities: {},
-    };
+    return getDefaultUserConfig(this._config, this._selectedUserId);
   }
 
   _updateUserConfig(patch) {
-    const current = this._getUserConfig();
-    this._config = normalizeEntityVisibilityConfig({
-      ...this._config,
-      users: {
-        ...this._config.users,
-        [this._selectedUserId]: { ...current, ...patch },
-      },
-    });
+    this._config = updateUserConfig(this._config, this._selectedUserId, patch);
     this.render();
   }
 
   _setEntityAllowed(entityId, checked) {
-    const current = this._getUserConfig();
-    const selected = new Set(current.allowedEntities?.[this._selectedDomain] || []);
-    if (checked) selected.add(entityId);
-    else selected.delete(entityId);
-    this._updateUserConfig({
-      unrestricted: false,
-      allowedEntities: {
-        ...current.allowedEntities,
-        [this._selectedDomain]: [...selected],
-      },
+    this._config = setEntityAllowed(this._config, {
+      selectedUserId: this._selectedUserId,
+      selectedDomain: this._selectedDomain,
+      entityId,
+      checked,
     });
+    this.render();
   }
 
   async _save() {
