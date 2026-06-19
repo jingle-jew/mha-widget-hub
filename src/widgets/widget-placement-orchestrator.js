@@ -5,7 +5,7 @@ import { buildWidgetConfigPopupState } from "../widget-config/widget-config-prop
 import { createPageCreatorPanel as createPageCreatorDomPanel } from "../pages/page-creator.js";
 import { buildPageCreatorState } from "../pages/page-creator-props.js";
 
-const PANEL_EXIT_ANIMATION_MS = 280;
+const PANEL_EXIT_ANIMATION_MS = 420;
 const PANEL_EXIT_TIMEOUT = "__mhaPanelExitTimeout";
 const PANEL_OPEN_FRAME = "__mhaPanelOpenFrame";
 
@@ -13,6 +13,17 @@ function setPanelOpenState(panel, open) {
   if (!panel) return;
   panel.dataset.open = String(open);
   panel.setAttribute("aria-hidden", String(!open));
+}
+
+function findPanel(root, selector) {
+  if (!root) return null;
+  if (typeof root.querySelector === "function") {
+    return root.querySelector(selector);
+  }
+  if (typeof root.querySelectorAll === "function") {
+    return root.querySelectorAll(selector)?.[0] || null;
+  }
+  return null;
 }
 
 function clearPanelAnimationHandles(panel) {
@@ -27,14 +38,23 @@ function clearPanelAnimationHandles(panel) {
   }
 }
 
-function appendPanelWithEntry(root, panel) {
-  if (!root || !panel) return;
-  setPanelOpenState(panel, false);
-  root.append(panel);
+function schedulePanelOpen(panel) {
+  if (!panel) return;
+  if (typeof requestAnimationFrame !== "function") {
+    setPanelOpenState(panel, true);
+    return;
+  }
   panel[PANEL_OPEN_FRAME] = requestAnimationFrame(() => {
     panel[PANEL_OPEN_FRAME] = null;
     setPanelOpenState(panel, true);
   });
+}
+
+function appendPanelWithEntry(root, panel) {
+  if (!root || !panel) return;
+  setPanelOpenState(panel, false);
+  root.append(panel);
+  schedulePanelOpen(panel);
 }
 
 function closePanelWithExit(panel) {
@@ -49,7 +69,7 @@ function closePanelWithExit(panel) {
 
 function syncAnimatedPanel(root, selector, createPanel, props, shouldOpen) {
   if (!root) return;
-  const existing = root.querySelector(selector);
+  const existing = findPanel(root, selector);
 
   if (!shouldOpen) {
     if (existing) closePanelWithExit(existing);
