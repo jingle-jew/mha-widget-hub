@@ -15,6 +15,13 @@
 }
 
 @media (max-width: 767px) {
+  .mha-page-creator,
+  .mha-widget-config-popup {
+    padding: 0 !important;
+    place-items: end stretch !important;
+    overflow: hidden;
+  }
+
   .mha-settings-sheet,
   .mha-page-creator-sheet,
   .mha-widget-config-sheet {
@@ -23,6 +30,7 @@
     inset-block-end: 0 !important;
     inline-size: 100vw !important;
     max-inline-size: 100vw !important;
+    box-sizing: border-box;
     block-size: auto !important;
     max-block-size: min(80vh, 42rem) !important;
     min-block-size: min(75vh, 42rem);
