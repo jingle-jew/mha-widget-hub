@@ -1,34 +1,27 @@
 import { WIDGET_MODULES } from "./widget-module-registry.js";
 import {
+  buildWidgetCreationDefaults,
+  DEFAULT_CAPABILITIES,
+  DEFAULT_SHELL,
+  DEFAULT_STORAGE,
+  DEFAULT_WIDGET_SIZE,
+  normalizeCapabilities,
+  normalizePreviewRenderer,
+  normalizeRegisteredWidgetSizeWithDefinition,
+  normalizeShellBehavior,
+  normalizeStorage,
+  resolveContractValue,
+  STATIC_PREVIEW_RENDERER,
+} from "./widget-contract-helpers.js";
+import {
   buildWidgetManagerCategories,
   normalizeManagerDefinition,
 } from "./widget-manager-catalog.js";
 
-const STATIC_PREVIEW_RENDERER = Object.freeze({ mode: "static" });
 const DEFAULT_MANAGER = Object.freeze({
   entries: Object.freeze([]),
   hidden: false,
 });
-const DEFAULT_CAPABILITIES = Object.freeze({
-  configurable: false,
-  resizable: true,
-  slotConfigurable: false,
-  weatherEntityConfigurable: false,
-});
-const DEFAULT_SHELL = Object.freeze({
-  configureMode: "variant",
-});
-const DEFAULT_STORAGE = Object.freeze({});
-const DEFAULT_WIDGET_SIZE = Object.freeze({ w: 2, h: 2 });
-
-function normalizePreviewRenderer(module = {}) {
-  const previewRenderer = module.preview || STATIC_PREVIEW_RENDERER;
-  return Object.freeze({
-    mode: previewRenderer.mode || "static",
-    createWidget: previewRenderer.createWidget,
-    render: previewRenderer.render,
-  });
-}
 
 const DEFINITIONS = Object.freeze(
   Object.fromEntries(
@@ -40,33 +33,6 @@ const DEFINITIONS = Object.freeze(
 
 const aliasToKind = new Map();
 const variantToKind = new Map();
-
-function normalizeCapabilities(definition = {}) {
-  return Object.freeze({
-    ...DEFAULT_CAPABILITIES,
-    configurable: Boolean(definition.config),
-    ...definition.capabilities,
-  });
-}
-
-function normalizeShellBehavior(definition = {}) {
-  return Object.freeze({
-    ...DEFAULT_SHELL,
-    configureMode: definition.config ? "config" : "variant",
-    ...definition.shell,
-  });
-}
-
-function normalizeStorage(definition = {}) {
-  return Object.freeze({
-    ...DEFAULT_STORAGE,
-    ...(definition.storage || {}),
-  });
-}
-
-function resolveContractValue(value, widget, definition) {
-  return typeof value === "function" ? value(widget, definition) : value;
-}
 
 function getLegacyNormalizedContractPatch(widget = {}, definition, normalized) {
   const kind = normalized.kind;
@@ -155,12 +121,12 @@ export const WIDGET_REGISTRY = Object.freeze(
             aliases: Object.freeze([...definition.aliases]),
             variantAliases: Object.freeze([...definition.variantAliases]),
             manager: normalizeManagerDefinition(definition, DEFAULT_MANAGER),
-            capabilities: normalizeCapabilities(definition),
-            storage: normalizeStorage(definition),
-            shell: normalizeShellBehavior(definition),
+            capabilities: normalizeCapabilities(definition, DEFAULT_CAPABILITIES),
+            storage: normalizeStorage(definition, DEFAULT_STORAGE),
+            shell: normalizeShellBehavior(definition, DEFAULT_SHELL),
             placementFlow: definition.placementFlow || (definition.config ? "configure-first" : "direct"),
             css: Object.freeze([...(definition.css || [])]),
-            previewRenderer: normalizePreviewRenderer(module),
+            previewRenderer: normalizePreviewRenderer(module, STATIC_PREVIEW_RENDERER),
             variants: Object.freeze([...(definition.variants || [])]),
             variantGroups: definition.variantGroups
               ? Object.freeze({
@@ -249,12 +215,10 @@ export function getWidgetStorageAdapter(widget = {}) {
 export function getWidgetCreationDefaults(widget = {}) {
   const definition = getWidgetDefinition(widget);
   const kind = resolveWidgetKind(widget, { fallback: "empty" });
-  return Object.freeze({
+  return buildWidgetCreationDefaults(widget, {
+    definition,
     kind,
-    component: definition?.component || "empty-widget",
-    category: definition?.category || "custom",
-    defaultVariant: definition?.defaultVariant || kind,
-    defaultSize: definition?.defaultSize || DEFAULT_WIDGET_SIZE,
+    defaultWidgetSize: DEFAULT_WIDGET_SIZE,
   });
 }
 
@@ -279,13 +243,10 @@ export function isWidgetKind(widget, expectedKind) {
 export function normalizeRegisteredWidgetSize(widget = {}, normalizeBottomeSize) {
   const definition = getWidgetDefinition(widget);
   const defaults = getWidgetCreationDefaults(widget);
-  const rawSize = {
-    ...defaults.defaultSize,
-    w: widget.w ?? defaults.defaultSize.w,
-    h: widget.h ?? defaults.defaultSize.h,
-  };
-  const size = normalizeBottomeSize(rawSize);
-  return definition?.normalizeSize ? definition.normalizeSize(size) : size;
+  return normalizeRegisteredWidgetSizeWithDefinition(widget, normalizeBottomeSize, {
+    definition,
+    defaults,
+  });
 }
 
 export function getRegisteredWidgetVariants(widget = {}, normalizeBottomeSize) {
