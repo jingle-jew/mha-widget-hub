@@ -63,8 +63,10 @@ function scheduleSettingsPanelOpen(panel) {
     return;
   }
   panel[SETTINGS_PANEL_OPEN_FRAME] = requestAnimationFrame(() => {
-    panel[SETTINGS_PANEL_OPEN_FRAME] = null;
-    setSettingsPanelOpenState(panel, true);
+    panel[SETTINGS_PANEL_OPEN_FRAME] = requestAnimationFrame(() => {
+      panel[SETTINGS_PANEL_OPEN_FRAME] = null;
+      setSettingsPanelOpenState(panel, true);
+    });
   });
 }
 
