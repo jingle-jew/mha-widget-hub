@@ -32,7 +32,7 @@
   opacity: 0;
 }
 
-.mha-screensaver-edit-button:focus-visible {
+.mha-screensaver[data-visible="true"] .mha-screensaver-edit-button:focus-visible {
   opacity: .18;
   outline: 2px solid var(--mha-accent);
   outline-offset: 4px;
