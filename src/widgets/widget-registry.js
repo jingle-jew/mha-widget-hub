@@ -18,6 +18,11 @@ import {
   buildWidgetManagerCategories,
   normalizeManagerDefinition,
 } from "./widget-manager-catalog.js";
+import {
+  buildWidgetDefinitions,
+  buildWidgetKindIndex,
+  resolveWidgetKindFromIndex,
+} from "./widget-kind-index.js";
 import { getLegacyNormalizedContractPatch } from "./widget-legacy-normalization.js";
 
 const DEFAULT_MANAGER = Object.freeze({
@@ -25,22 +30,8 @@ const DEFAULT_MANAGER = Object.freeze({
   hidden: false,
 });
 
-const DEFINITIONS = Object.freeze(
-  Object.fromEntries(
-    WIDGET_MODULES
-      .filter((module) => module?.kind && module?.definition)
-      .map((module) => [module.kind, module.definition]),
-  ),
-);
-
-const aliasToKind = new Map();
-const variantToKind = new Map();
-
-Object.entries(DEFINITIONS).forEach(([kind, definition]) => {
-  aliasToKind.set(kind, kind);
-  definition.aliases.forEach(alias => aliasToKind.set(alias, kind));
-  definition.variantAliases.forEach(alias => variantToKind.set(alias, kind));
-});
+const DEFINITIONS = buildWidgetDefinitions(WIDGET_MODULES);
+const WIDGET_KIND_INDEX = buildWidgetKindIndex(DEFINITIONS);
 
 export function getWidgetManagerCategories() {
   return buildWidgetManagerCategories(DEFINITIONS, {
@@ -63,21 +54,10 @@ export const WIDGET_REGISTRY = buildWidgetRegistry(WIDGET_MODULES, {
 });
 
 export function resolveWidgetKind(widget = {}, { fallback = "empty" } = {}) {
-  if (typeof widget === "string") {
-    return aliasToKind.get(widget) || widget || fallback;
-  }
-
-  let emptyMatch = "";
-  for (const value of [widget.kind, widget.type, widget.component]) {
-    if (!aliasToKind.has(value)) continue;
-    const kind = aliasToKind.get(value);
-    if (kind !== "empty") return kind;
-    emptyMatch = kind;
-  }
-
-  if (variantToKind.has(widget.variant)) return variantToKind.get(widget.variant);
-  if (["slot-f", "slot-i"].includes(widget.id)) return "slider";
-  return emptyMatch || widget.kind || widget.type || fallback;
+  return resolveWidgetKindFromIndex(widget, {
+    ...WIDGET_KIND_INDEX,
+    fallback,
+  });
 }
 
 export function getWidgetDefinition(widgetOrKind = {}) {
