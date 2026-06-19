@@ -31,10 +31,12 @@
     inline-size: 100vw !important;
     max-inline-size: 100vw !important;
     box-sizing: border-box;
-    block-size: auto !important;
-    max-block-size: min(80vh, 42rem) !important;
-    min-block-size: min(75vh, 42rem);
+    block-size: min(92vh, 48rem) !important;
+    max-block-size: min(92vh, 48rem) !important;
+    min-block-size: min(88vh, 46rem);
     border-radius: clamp(1.35rem, 5vw, 1.9rem) clamp(1.35rem, 5vw, 1.9rem) 0 0 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
     transform: translateY(100%) scale(1) !important;
     transform-origin: bottom center !important;
     transition:
@@ -45,7 +47,23 @@
   .mha-settings-panel[data-open="true"] .mha-settings-sheet,
   .mha-page-creator[data-open="true"] .mha-page-creator-sheet,
   .mha-widget-config-popup[data-open="true"] .mha-widget-config-sheet {
+    opacity: 1 !important;
+    pointer-events: auto !important;
     transform: translateY(0) scale(1) !important;
+  }
+
+  .mha-page-creator-sheet {
+    overflow: hidden !important;
+  }
+
+  .mha-page-creator-icons {
+    min-block-size: 0;
+    overflow: hidden;
+    align-content: stretch;
+  }
+
+  .mha-page-creator-icon {
+    min-block-size: clamp(4.45rem, 13vh, 5.4rem);
   }
 }
 
