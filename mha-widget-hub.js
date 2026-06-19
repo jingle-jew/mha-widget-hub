@@ -63,14 +63,12 @@ import {
 import { extractAccentFromWallpaper, resolveAccentFromColorValue } from "./src/settings/wallpaper-accent.js";
 import { createWallpaperController } from "./src/settings/wallpaper-controller.js";
 import {updateStatusTime} from "./src/layout/status-bar.js";
-import { buildWidgetShellState } from "./src/widgets/widget-shell-props.js?v=phase6";
-import {createWidgetShell} from "./src/widgets/widget-shell.js";
-import { getNextWidgetVariantEntries, getVariantCandidate, sameVariantSize } from "./src/widgets/widget-variants.js";
 import { normalizeStoredWidgetContract } from "./src/widgets/widget-storage.js?v=phase1";
 import { createWidgetFromCatalogItem } from "./src/widgets/widget-factory.js";
 import {updateClockWidgets} from "./src/widgets/clock-widget.js";
 import { getWidgetPlacementFlow } from "./src/widgets/widget-registry.js?v=phase5b1";
 import { syncDropSlotRenderer } from "./src/widgets/drop-slot-renderer.js";
+import { createWidgetSurfaceCoordinator } from "./src/widgets/widget-surface-coordinator.js";
 import {DEFAULT_WIDGETS,getActiveGridRows,getActiveGridUnits,getEffectiveLayout,getInternalGridColumnCountFromLogical,getInternalGridRowCountFromLogical,getLayoutMode,getGridPreset,getWidgetDensity,normalizeWidgetForKind,normalizeWidgetSize,sizeToString} from "./src/layout/layout-engine.js";
 import {
   doesWidgetGroupExactlyFillRect,
@@ -182,6 +180,41 @@ constructor(){
       this._widgetManagerOpen=false;
       this._widgetManagerCategory="";
     },
+  });
+  this._widgetSurfaceCoordinator=createWidgetSurfaceCoordinator({
+    getRoot:()=>this.shadowRoot,
+    renderRoot:()=>this.render(),
+    cancelWidgetRenderFrame:()=>{
+      cancelAnimationFrame(this._widgetRenderFrame);
+      this._widgetRenderFrame=0;
+    },
+    getWidgets:()=>this._widgets,
+    setWidgets:(widgets)=>{this._widgets=widgets;},
+    getPendingWidgetPlacement:()=>this._pendingWidgetPlacement,
+    setPendingWidgetPlacement:(widget)=>{this._pendingWidgetPlacement=widget;},
+    getActiveMoveWidgetId:()=>this._activeMoveWidgetId,
+    setActiveMoveWidgetId:(id)=>{this._activeMoveWidgetId=id;},
+    getIsEditing:()=>this._isEditing,
+    getHass:()=>this._hass,
+    getEntityVisibilityConfig:()=>this._entityVisibilityConfig,
+    getGridBounds:()=>this._getGridBounds(),
+    getActiveWidgetPositions:(options)=>this._getActiveWidgetPositions(options),
+    isPositionMapValidForWidgets:(positions,widgets,units,rowUnits)=>this._isPositionMapValidForWidgets(positions,widgets,units,rowUnits),
+    normalizeWidgetsToGridBounds:(widgets)=>this._normalizeWidgetsToGridBounds(widgets),
+    saveCurrentWidgetPositions:(positions)=>this._saveCurrentWidgetPositions(positions),
+    saveWidgets:()=>this._saveWidgets(),
+    applyWidgetPositionsToDom:(positions)=>this._applyWidgetPositionsToDom(positions),
+    wireDrag:(element,widget)=>this._wireDrag(element,widget),
+    renderWidgetDropSlots:(grid)=>this._renderWidgetDropSlots(grid),
+    syncWidgetDropSlots:()=>this._syncWidgetDropSlots(),
+    syncEditModeDom:()=>this._syncEditModeDom(),
+    scheduleSquareUnitSync:()=>this._scheduleSquareUnitSync(),
+    updateDockActiveState:()=>this._updateDockActiveState(),
+    toggleWidgetMoveMode:(id)=>this._toggleWidgetMoveMode(id),
+    moveWidgetByDirection:(id,direction)=>this._moveWidgetByDirection(id,direction),
+    removeWidget:(id)=>this._removeWidget(id),
+    openWidgetConfig:(id)=>this._openWidgetConfig(id),
+    openScenesButtonConfig:(id,slotIndex)=>this._openScenesButtonConfig(id,slotIndex),
   });
   this._initialized=false;
   this._bootComplete=false;
@@ -1324,47 +1357,10 @@ _syncDocksDom(){
   return this._pageUiCoordinator.syncDocks();
 }
 _refreshActiveGridOnly(){
-  cancelAnimationFrame(this._widgetRenderFrame);
-  this._widgetRenderFrame=0;
-  const grid=this.shadowRoot?.querySelector?.(".mha-grid");
-  if(!grid){this.render();return;}
-  grid.querySelectorAll(".mha-widget,.mha-widget-drop-slot").forEach(node=>{
-    destroyDomSubtree(node);
-    node.remove();
-  });
-  const {units}=this._getGridBounds();
-  const positions=this._getActiveWidgetPositions({create:true});
-  this._widgets.forEach(w=>{
-    const el=createWidgetShell(w,this._getWidgetShellProps(w,{
-      units,
-      position:positions?.[w.id],
-    }));
-    this._wireDrag(el,w);
-    grid.append(el);
-  });
-  this._updateDockActiveState();
-  this._syncWidgetDropSlots();
-  this._scheduleSquareUnitSync();
-  updateClockWidgets(this.shadowRoot);
+  return this._widgetSurfaceCoordinator.refreshActiveGridOnly();
 }
 _getWidgetShellProps(widget,{units,position,widgetId=widget?.id||""}={}){
-  return {
-    ...buildWidgetShellState({
-      widgetId,
-      activeGridUnits:units,
-      isEditing:this._isEditing,
-      activeMoveWidgetId:this._activeMoveWidgetId,
-      position,
-      hass:this._hass,
-      entityVisibilityConfig:this._entityVisibilityConfig,
-    }),
-    onToggleMove:id=>this._toggleWidgetMoveMode(id),
-    onMove:(id,direction)=>this._moveWidgetByDirection(id,direction),
-    onRemove:id=>this._removeWidget(id),
-    onCycleVariant:id=>this.cycleVariant(id),
-    onConfigure:id=>this._openWidgetConfig(id),
-    onConfigureSlot:(id,slotIndex)=>this._openScenesButtonConfig(id,slotIndex),
-  };
+  return this._widgetSurfaceCoordinator.buildWidgetShellProps(widget,{units,position,widgetId});
 }
 
 _saveWidgets(){
@@ -1652,38 +1648,7 @@ _syncWidgetDropSlots(){
 }
 
 _placePendingWidgetAtSlot(x,y){
-  if(!this._isEditing||!this._pendingWidgetPlacement)return;
-  const widget=normalizeStoredWidgetContract({...this._pendingWidgetPlacement});
-  const positions=this._getActiveWidgetPositions({create:true});
-  const {units,rowUnits}=this._getGridBounds();
-  const nextPositions={...positions,[widget.id]:{x:Number(x)||1,y:Number(y)||1}};
-  const nextWidgets=[...this._widgets,widget];
-  if(!this._isPositionMapValidForWidgets(nextPositions,nextWidgets,units,rowUnits))return;
-
-  this._widgets=this._normalizeWidgetsToGridBounds(nextWidgets);
-  this._saveCurrentWidgetPositions(nextPositions);
-  this._saveWidgets();
-
-  this._pendingWidgetPlacement=null;
-  this._activeMoveWidgetId="";
-
-  const grid=this.shadowRoot?.querySelector?.(".mha-grid");
-  if(grid){
-    const el=createWidgetShell(widget,this._getWidgetShellProps(widget,{
-      units,
-      position:nextPositions[widget.id],
-    }));
-
-    this._wireDrag(el,widget);
-    grid.append(el);
-    this._applyWidgetPositionsToDom(nextPositions);
-    this._renderWidgetDropSlots(grid);
-  }
-
-  this._syncEditModeDom();
-  updateClockWidgets(this.shadowRoot);
-  this._syncWidgetDropSlots();
-  this._scheduleSquareUnitSync();
+  return this._widgetSurfaceCoordinator.placePendingWidgetAtSlot(x,y);
 }
 _moveWidgetToDropSlot(id,x,y){
   return this._placementController.moveToDropSlot(id,x,y);
@@ -1691,91 +1656,11 @@ _moveWidgetToDropSlot(id,x,y){
 _moveWidgetByDirection(id,direction){
   return this._placementController.moveByDirection(id,direction);
 }
-_canApplyVariant(id,candidateWidget){
-  if(!id||!candidateWidget)return false;
-
-  const positions=this._getActiveWidgetPositions({create:true});
-  const currentPosition=positions?.[id];
-  if(!positions||!currentPosition)return false;
-
-  const {units,rowUnits}=this._getGridBounds();
-  const nextWidgets=this._widgets.map(widget=>(
-    widget.id===id
-      ? normalizeStoredWidgetContract({...widget,...candidateWidget})
-      : widget
-  ));
-
-  return this._isPositionMapValidForWidgets(positions,nextWidgets,units,rowUnits);
-}
-_applyWidgetVariant(id,candidateWidget){
-  const index=this._widgets.findIndex(widget=>widget.id===id);
-  if(index<0||!candidateWidget)return false;
-
-  const current=this._widgets[index];
-  const currentSize=normalizeWidgetForKind(current);
-  const next=normalizeStoredWidgetContract({
-    ...current,
-    ...candidateWidget,
-  });
-  const nextSize=normalizeWidgetForKind(next);
-
-  if(!sameVariantSize(currentSize,nextSize)&&!this._canApplyVariant(id,next)){
-    return false;
-  }
-
-  const nextWidgets=[...this._widgets];
-  nextWidgets[index]={
-    ...next,
-    ...nextSize,
-  };
-
-  this._widgets=this._normalizeWidgetsToGridBounds(nextWidgets.map(normalizeStoredWidgetContract));
-  this._saveWidgets();
-  this._replaceWidgetDom(id);
-  return true;
-}
 _replaceWidgetDom(id){
-  const widget=this._widgets.find(item=>item.id===id);
-  const existing=this.shadowRoot?.querySelector?.(`[data-widget-id="${id}"]`);
-  const grid=this.shadowRoot?.querySelector?.(".mha-grid");
-
-  if(!widget||!existing||!grid){
-    this.render();
-    return;
-  }
-
-  const {units}=this._getGridBounds();
-  const positions=this._getActiveWidgetPositions({create:true});
-  const next=createWidgetShell(widget,this._getWidgetShellProps(widget,{
-    units,
-    position:positions?.[id],
-    widgetId:id,
-  }));
-
-  this._wireDrag(next,widget);
-  destroyDomSubtree(existing);
-  existing.replaceWith(next);
-  this._applyWidgetPositionsToDom(positions);
-  updateClockWidgets(this.shadowRoot);
-  this._syncEditModeDom();
-  this._syncWidgetDropSlots();
-  this._scheduleSquareUnitSync();
+  return this._widgetSurfaceCoordinator.replaceWidgetDom(id);
 }
 cycleVariant(id){
-  if(!this._isEditing||!id)return false;
-
-  const widget=this._widgets.find(item=>item.id===id);
-  if(!widget)return false;
-
-  const entries=getNextWidgetVariantEntries(widget);
-  if(!entries.length)return false;
-
-  for(const entry of entries){
-    const candidate=getVariantCandidate(widget,entry);
-    if(this._applyWidgetVariant(id,candidate))return true;
-  }
-
-  return false;
+  return this._widgetSurfaceCoordinator.cycleVariant(id);
 }
 _getResponsiveSignature(){
   return this._gridRuntime.getResponsiveSignature();
@@ -1969,9 +1854,7 @@ _wireDrag(el){
   el.removeAttribute("draggable");
 }
 _createWidgetElement(widget,{units,position}){
-  const el=createWidgetShell(widget,this._getWidgetShellProps(widget,{units,position}));
-  this._wireDrag(el,widget);
-  return el;
+  return this._widgetSurfaceCoordinator.createWidgetElement(widget,{units,position});
 }
 _createWidgetPlaceholder(widget,{units,position}){
   const size=normalizeWidgetSize(widget);
