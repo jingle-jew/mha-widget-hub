@@ -1,62 +1,28 @@
 import {
-  readJson,
   writeJson,
   writeStorageValue,
 } from "./src/core/storage.js?v=storage-v1";
+import { createHubStateIngressCoordinator } from "./src/core/hub-state-ingress-coordinator.js";
 import {
   createCriticalBootStyle,
-  createFrontendStyleLinks,
 } from "./src/core/mha-frontend-assets.js?v=phase1";
 import {
   ACTIVE_PAGE,
-  DOCK_POSITION,
   HIDE_HA_SIDEBAR,
-  LANGUAGE,
   PAGES,
   POSITIONS,
   clearGridStorage,
-  getStoredDockPosition,
-  getStoredHideHaSidebar,
-  getStoredLanguageSetting,
-  normalizeDockPosition,
-  normalizeLanguageSetting,
 } from "./src/core/mha-persistence.js?v=phase1";
-import {
-  getHubActivePage,
-  migrateHubPageStorage,
-  normalizeHubPage,
-  readActivePageWidgets,
-  readHubActivePageId,
-  readHubPages,
-  saveHubPages,
-  syncActivePageWidgets,
-} from "./src/core/mha-state.js?v=phase2";
 import {destroyDomSubtree} from "./src/core/dom-lifecycle.js";
+import { createBootLifecycleCoordinator } from "./src/core/boot-lifecycle-coordinator.js";
 import {ICONS} from "./src/components/icons.js";
-import {createShell} from "./src/layout/shell.js";
-import {createMobileDock} from "./src/layout/mobile-dock.js";
-import {
-  syncDockActiveState,
-} from "./src/layout/dock-controller.js";
+import { createRenderPipeline } from "./src/layout/render-pipeline.js";
+import { createResponsiveDockCoordinator } from "./src/layout/responsive-dock-coordinator.js";
 import { createPageUiCoordinator } from "./src/pages/page-ui-coordinator.js?v=phase10";
-import {createSettingsPanel} from "./src/settings/settings-panel.js";
-import { buildSettingsCoordinatorProps, syncSettingsPanels } from "./src/settings/settings-panel-coordinator.js?v=phase8";
-import { WIDGET_MANAGER_CATEGORIES } from "./src/widget-manager/widget-manager.js";
-import {
-  buildConfiguredWidget,
-  createWidgetConfigSession,
-  supportsWidgetConfiguration,
-} from "./src/widget-config/widget-config-popup.js";
-import { getScenesDefaultButtonIndex } from "./src/widget-config/widget-config-props.js?v=phase5";
-import {
-  buildWidgetConfigPanelProps,
-  buildWidgetManagerPanelProps,
-  createPageCreatorPanel,
-  createWidgetConfigPanel,
-  createWidgetManagerPanel,
-  syncWidgetConfigPanel,
-  syncWidgetManagerPanel,
-} from "./src/widgets/widget-placement-orchestrator.js?v=phase1";
+import { createI18nSettingsSync } from "./src/settings/i18n-settings-sync.js";
+import { createSettingsSurfaceCoordinator } from "./src/settings/settings-surface-coordinator.js";
+import { createWidgetFlowCoordinator } from "./src/widgets/widget-flow-coordinator.js";
+import { createWidgetInteractionSurfaceCoordinator } from "./src/widgets/widget-interaction-surface-coordinator.js";
 import {
   createThemeController,
 } from "./src/settings/theme-controller.js";
@@ -64,14 +30,12 @@ import { createAppearanceCoordinator } from "./src/settings/appearance-coordinat
 import { createWallpaperController } from "./src/settings/wallpaper-controller.js";
 import {updateStatusTime} from "./src/layout/status-bar.js";
 import { normalizeStoredWidgetContract } from "./src/widgets/widget-storage.js?v=phase1";
-import { createWidgetFromCatalogItem } from "./src/widgets/widget-factory.js";
 import {updateClockWidgets} from "./src/widgets/clock-widget.js";
-import { getWidgetPlacementFlow } from "./src/widgets/widget-registry.js?v=phase5b1";
-import { syncDropSlotRenderer } from "./src/widgets/drop-slot-renderer.js";
+import { createScreensaverSettingsBridge } from "./src/screensaver/screensaver-settings-bridge.js";
 import { createWidgetLayoutStateCoordinator } from "./src/widgets/widget-layout-state-coordinator.js";
 import { createWidgetResizeCoordinator } from "./src/widgets/widget-resize-coordinator.js";
 import { createWidgetSurfaceCoordinator } from "./src/widgets/widget-surface-coordinator.js";
-import {DEFAULT_WIDGETS,getActiveGridRows,getActiveGridUnits,getEffectiveLayout,getInternalGridColumnCountFromLogical,getInternalGridRowCountFromLogical,getLayoutMode,getGridPreset,getWidgetDensity,normalizeWidgetForKind,normalizeWidgetSize,sizeToString} from "./src/layout/layout-engine.js";
+import {DEFAULT_WIDGETS,getActiveGridRows,getActiveGridUnits,getEffectiveLayout,getLayoutMode,getGridPreset,normalizeWidgetForKind} from "./src/layout/layout-engine.js";
 import { isPositionMapValidForWidgets } from "./src/layout/placement-geometry.js";
 import {
   doesWidgetLayoutFitGrid,
@@ -82,15 +46,99 @@ import { createGridRuntime } from "./src/layout/grid-runtime.js";
 import {normalizeClockVariant,updateScreensaverClock} from "./src/screensaver/screensaver.js";
 import { createScreensaverController } from "./src/screensaver/screensaver-controller.js";
 import { createScreensaverCoordinator } from "./src/screensaver/screensaver-coordinator.js?v=phase9";
-import { loadEntityVisibilityConfig } from "./src/admin/entity-visibility-store.js";
 import { normalizeEntityVisibilityConfig } from "./src/admin/entity-permissions.js";
 import { getStyleManifest } from "./src/styles/style-manifest.js";
-import { configureI18n, normalizeLanguage, t } from "./src/i18n/index.js";
 
 const MHA_FRONTEND_ROOT_URL = new URL(".", import.meta.url);
 const MHA_FRONTEND_VERSION = new URL(import.meta.url).searchParams.get("v");
 
 const MHA_STYLE_MANIFEST = getStyleManifest();
+function getRenderPipelineForHost(host){
+  if(!host._renderPipeline){
+    host._renderPipeline=createRenderPipeline(host,{
+      frontendRootUrl:MHA_FRONTEND_ROOT_URL,
+      frontendVersion:MHA_FRONTEND_VERSION,
+      styleManifest:MHA_STYLE_MANIFEST,
+    });
+  }
+  return host._renderPipeline;
+}
+function getWidgetFlowCoordinatorForHost(host){
+  if(!host._widgetFlowCoordinator){
+    host._widgetFlowCoordinator=createWidgetFlowCoordinator({
+      getRoot:()=>host.shadowRoot,
+      getIsEditing:()=>host._isEditing,
+      isMobileLandscapeLayout:()=>host._isMobileLandscapeLayout(),
+      getWidgetManagerOpen:()=>host._widgetManagerOpen,
+      setWidgetManagerOpen:(open)=>{host._widgetManagerOpen=open;},
+      getWidgetManagerCategory:()=>host._widgetManagerCategory,
+      setWidgetManagerCategory:(category)=>{host._widgetManagerCategory=category;},
+      getWidgetConfigSession:()=>host._widgetConfigSession,
+      setWidgetConfigSession:(session)=>{host._widgetConfigSession=session;},
+      getHass:()=>host._hass,
+      getWidgetConfigHassReady:()=>host._widgetConfigHassReady,
+      setWidgetConfigHassReady:(ready)=>{host._widgetConfigHassReady=ready;},
+      getEntityVisibilityConfig:()=>host._entityVisibilityConfig,
+      getPendingWidgetPlacement:()=>host._pendingWidgetPlacement,
+      setPendingWidgetPlacement:(widget)=>{host._pendingWidgetPlacement=widget;},
+      getActiveMoveWidgetId:()=>host._activeMoveWidgetId,
+      setActiveMoveWidgetId:(id)=>{host._activeMoveWidgetId=id;},
+      getWidgets:()=>host._widgets,
+      setWidgets:(widgets)=>{host._widgets=widgets;},
+      syncEditModeDom:()=>host._syncEditModeDom(),
+      syncWidgetDropSlots:()=>host._syncWidgetDropSlots(),
+      replaceWidgetDom:(id)=>host._replaceWidgetDom(id),
+      saveWidgets:()=>host._saveWidgets(),
+    });
+  }
+  return host._widgetFlowCoordinator;
+}
+function getBootLifecycleCoordinatorForHost(host){
+  if(!host._bootLifecycleCoordinator){
+    host._bootLifecycleCoordinator=createBootLifecycleCoordinator(host);
+  }
+  return host._bootLifecycleCoordinator;
+}
+function getScreensaverSettingsBridgeForHost(host){
+  if(!host._screensaverSettingsBridge){
+    host._screensaverSettingsBridge=createScreensaverSettingsBridge(host);
+  }
+  return host._screensaverSettingsBridge;
+}
+function getI18nSettingsSyncForHost(host){
+  if(!host._i18nSettingsSync){
+    host._i18nSettingsSync=createI18nSettingsSync(host);
+  }
+  return host._i18nSettingsSync;
+}
+function getSettingsSurfaceCoordinatorForHost(host){
+  if(!host._settingsSurfaceCoordinator){
+    host._settingsSurfaceCoordinator=createSettingsSurfaceCoordinator(host);
+  }
+  return host._settingsSurfaceCoordinator;
+}
+function getResponsiveDockCoordinatorForHost(host){
+  if(!host._responsiveDockCoordinator){
+    host._responsiveDockCoordinator=createResponsiveDockCoordinator(host);
+  }
+  return host._responsiveDockCoordinator;
+}
+function getWidgetInteractionSurfaceCoordinatorForHost(host){
+  if(!host._widgetInteractionSurfaceCoordinator){
+    host._widgetInteractionSurfaceCoordinator=createWidgetInteractionSurfaceCoordinator(host);
+  }
+  return host._widgetInteractionSurfaceCoordinator;
+}
+function getHubStateIngressCoordinatorForHost(host){
+  if(!host._hubStateIngressCoordinator){
+    host._hubStateIngressCoordinator=createHubStateIngressCoordinator(host,{
+      defaultWidgets:DEFAULT_WIDGETS,
+      normalizeWidget:normalizeStoredWidgetContract,
+      normalizeWidgetForGrid:normalizeWidgetForKind,
+    });
+  }
+  return host._hubStateIngressCoordinator;
+}
 // Keeps existing local widget order/sizes after the public naming cleanup.
 
 /*
@@ -256,6 +304,14 @@ constructor(){
     openWidgetConfig:(id)=>this._openWidgetConfig(id),
     openScenesButtonConfig:(id,slotIndex)=>this._openScenesButtonConfig(id,slotIndex),
   });
+  this._widgetFlowCoordinator=getWidgetFlowCoordinatorForHost(this);
+  this._bootLifecycleCoordinator=getBootLifecycleCoordinatorForHost(this);
+  this._settingsSurfaceCoordinator=getSettingsSurfaceCoordinatorForHost(this);
+  this._screensaverSettingsBridge=getScreensaverSettingsBridgeForHost(this);
+  this._i18nSettingsSync=getI18nSettingsSyncForHost(this);
+  this._responsiveDockCoordinator=getResponsiveDockCoordinatorForHost(this);
+  this._widgetInteractionSurfaceCoordinator=getWidgetInteractionSurfaceCoordinatorForHost(this);
+  this._hubStateIngressCoordinator=getHubStateIngressCoordinatorForHost(this);
   this._initialized=false;
   this._bootComplete=false;
   this._bootWatchdog=0;
@@ -343,34 +399,13 @@ constructor(){
     syncDropSlots:()=>this._syncWidgetDropSlots(),
     setResponsiveSignature:signature=>{this._lastResponsiveSignature=signature},
   });
+  this._renderPipeline=getRenderPipelineForHost(this);
+}
+_getRenderPipeline(){
+  return getRenderPipelineForHost(this);
 }
 _initialize(){
-  if(this._initialized)return;
-  this._initialized=true;
-  this.attachShadow({mode:"open"});
-  this.dataset.bootState="booting";
-  this.dataset.dataState=this._hass?"ready":"loading";
-  this.dataset.widgetsState="pending";
-  this.dataset.ready="false";
-  this.shadowRoot.innerHTML=createCriticalBootStyle();
-  this._migrateStorageSchema();
-  this._widgetPositions=readJson(POSITIONS,{})||{};
-  this._screensaverController.load({
-    enabledFallback: !this._isMobileDefaultLayout(),
-  });
-  this._dockPosition=getStoredDockPosition();
-  this._hideHaSidebar=getStoredHideHaSidebar();
-  this._language=getStoredLanguageSetting();
-  this._configureI18n();
-  this._applyHaSidebarMode(this._hideHaSidebar);
-  this._migrateLegacyCustomWallpaper();
-  this._customWallpapers=this._readCustomWallpapers();
-  this._applyCustomWallpaperState();
-  this._syncAutoAccentFromWallpaper();
-  this._pages=this._readPages();
-  this._activePageId=this._readActivePageId();
-  this._widgets=this._readWidgets();
-  this._upgradePredefinedProperty("hass");
+  return getHubStateIngressCoordinatorForHost(this).initialize();
 }
 _upgradePredefinedProperty(name){
   if(!Object.prototype.hasOwnProperty.call(this,name))return;
@@ -379,383 +414,69 @@ _upgradePredefinedProperty(name){
   this[name]=value;
 }
 set hass(h){
-  this._hass=h;
-  this._configureI18n();
-  this._loadEntityVisibilityConfig(h);
-  this.dataset.dataState=h?"ready":"loading";
-  if(this._widgetConfigSession&&h&&!this._widgetConfigHassReady){
-    this._widgetConfigHassReady=true;
-    this._syncWidgetConfigDom();
-  }
-  this._ensureMounted({reason:"hass update"});
-  this._scheduleHassUpdate();
+  return getHubStateIngressCoordinatorForHost(this).setHass(h);
 }
 get hass(){return this._hass}
 _configureI18n(){
-  const language=this._language&&this._language!=="auto"
-    ? normalizeLanguage(this._language)
-    : "";
-  configureI18n({
-    config: language ? { language } : undefined,
-    hass:this._hass,
-  });
+  return getI18nSettingsSyncForHost(this).configure();
 }
 async _loadEntityVisibilityConfig(hass){
-  const userId=String(hass?.user?.id||"");
-  if(!userId||userId===this._entityVisibilityUserId)return;
-  this._entityVisibilityUserId=userId;
-  try{
-    const config=await loadEntityVisibilityConfig(hass);
-    if(this._entityVisibilityUserId!==userId)return;
-    this._entityVisibilityConfig=config;
-    if(this._widgetConfigSession)this._syncWidgetConfigDom();
-    this._syncSettingsDom();
-    this._syncScreensaverSettingsDom();
-    if(this.isConnected)this._refreshActiveGridOnly();
-  }catch(error){
-    console.warn("[MHA] Entity visibility configuration could not be loaded.",error);
-  }
+  return getHubStateIngressCoordinatorForHost(this).loadEntityVisibilityConfig(hass);
 }
 _hasMountedApp(){
-  return Boolean(
-    this.shadowRoot?.querySelector?.(".mha-background")
-    &&this.shadowRoot?.querySelector?.(".mha-shell")
-    &&this.shadowRoot?.querySelector?.(".mha-grid"),
-  );
+  return getBootLifecycleCoordinatorForHost(this).hasMountedApp();
 }
 _ensureMounted({force=false,reason="lifecycle recovery"}={}){
-  if(!this.isConnected)return false;
-  const interruptedWidgetRender=(
-    this.dataset.widgetsState==="loading"
-    &&this._widgets.length>0
-    &&!this._widgetRenderFrame
-  );
-  if(!force&&this._hasMountedApp()&&!interruptedWidgetRender)return false;
-  try{
-    this.render();
-    return true;
-  }catch(error){
-    console.error(`[MHA] Render recovery failed after ${reason}.`,error);
-    this._finishBoot({fallback:true,reason:`render recovery failed after ${reason}`});
-    return false;
-  }
+  return getBootLifecycleCoordinatorForHost(this).ensureMounted({force,reason});
 }
 _addConnectionListeners(){
-  if(this._connectionListenersAttached)return;
-  this._connectionListenersAttached=true;
-  this._lifecycleRecoveryListener=event=>{
-    const panelPath=window.location.pathname.replace(/\/+$/,"");
-    const isPanelReturn=(
-      event?.type==="location-changed"
-      &&this._bootComplete
-      &&panelPath.endsWith("/mha-widget-hub")
-    );
-    const isPageRestore=event?.type==="pageshow"&&Boolean(event.persisted);
-    this._ensureMounted({
-      force:isPanelReturn||isPageRestore,
-      reason:event?.type||"lifecycle recovery",
-    });
-  };
-  this._visibilityRecoveryListener=()=>{
-    if(document.visibilityState==="visible")this._ensureMounted({reason:"visibility change"});
-  };
-  window.addEventListener("pageshow",this._lifecycleRecoveryListener);
-  window.addEventListener("location-changed",this._lifecycleRecoveryListener);
-  document.addEventListener("visibilitychange",this._visibilityRecoveryListener);
+  return getBootLifecycleCoordinatorForHost(this).addConnectionListeners();
 }
 _removeConnectionListeners(){
-  if(!this._connectionListenersAttached)return;
-  this._connectionListenersAttached=false;
-  window.removeEventListener("pageshow",this._lifecycleRecoveryListener);
-  window.removeEventListener("location-changed",this._lifecycleRecoveryListener);
-  document.removeEventListener("visibilitychange",this._visibilityRecoveryListener);
-  this._lifecycleRecoveryListener=null;
-  this._visibilityRecoveryListener=null;
+  return getBootLifecycleCoordinatorForHost(this).removeConnectionListeners();
 }
 _scheduleHassUpdate(){
-  if(!this.isConnected||this._hassUpdateFrame)return;
-  this._hassUpdateFrame=requestAnimationFrame(()=>{
-    this._hassUpdateFrame=0;
-    this.updateFromHass();
-  });
+  return getBootLifecycleCoordinatorForHost(this).scheduleHassUpdate();
 }
 updateFromHass(){
-  this.shadowRoot?.querySelectorAll?.("[data-widget-component]")?.forEach(component=>{
-    component.__mhaUpdateFromHass?.(this._hass);
-  });
-  this._screensaverCoordinator.requestNowBarCalendarEvents();
-  this._syncScreensaverDom();
+  return getBootLifecycleCoordinatorForHost(this).updateFromHass();
 }
 _finishBoot({fallback=false,reason=""}={}){
-  if(this._bootComplete)return;
-  this._bootComplete=true;
-  clearTimeout(this._bootWatchdog);
-  this._bootWatchdog=0;
-  cancelAnimationFrame(this._readyRaf);
-  this._readyRaf=0;
-  if(fallback){
-    console.warn(`[MHA] Boot fallback: ${reason||"initialization exceeded the safety deadline"}. Showing the available interface.`);
-    this.dataset.bootFallback="true";
-  }
-  this.dataset.bootState="ready";
-  this.setAttribute("data-boot-state","ready");
-  this.dataset.ready="true";
-  this.setAttribute("data-ready","true");
-  this.classList.add("is-boot-revealing");
-  const grid=this.shadowRoot?.querySelector?.(".mha-grid");
-  const finishReveal=()=>{
-    this.classList.remove("is-boot-revealing");
-    document.getElementById("mha-widget-hub-boot-style")?.remove();
-    const pending=this._pendingDeferredUi;
-    this._pendingDeferredUi=null;
-    if(pending)this._appendDeferredUi(pending);
-    this._scheduleIconSymbolRefresh();
-  };
-  if(fallback||window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches||!grid){
-    requestAnimationFrame(finishReveal);
-    return;
-  }
-  requestAnimationFrame(()=>{
-    const animations=grid.getAnimations?.().filter(animation=>animation.effect?.getTiming?.().iterations!==Infinity)||[];
-    if(!animations.length){
-      finishReveal();
-      return;
-    }
-    Promise.allSettled(animations.map(animation=>animation.finished)).then(finishReveal);
-  });
+  return getBootLifecycleCoordinatorForHost(this).finishBoot({fallback,reason});
 }
 _startBootWatchdog(){
-  clearTimeout(this._bootWatchdog);
-  this._bootWatchdog=setTimeout(()=>{
-    if(this._bootComplete)return;
-    try{
-      this._syncGridRuntimeMetrics();
-    }catch(error){
-      console.warn("[MHA] Boot fallback could not complete the layout sync.",error);
-    }
-    this._finishBoot({fallback:true,reason:"UI initialization did not complete within 1200ms"});
-  },1200);
+  return getBootLifecycleCoordinatorForHost(this).startBootWatchdog();
 }
 _markReadyAfterPaint(renderId=this._renderId){
-  if(this._bootComplete)return;
-  cancelAnimationFrame(this._readyRaf);
-  this._readyRaf=requestAnimationFrame(()=>requestAnimationFrame(()=>{
-    if(this._renderId!==renderId||!this.isConnected)return;
-    try{
-      this._syncGridRuntimeMetrics();
-    }catch(error){
-      console.warn("[MHA] Initial layout sync failed; continuing with the rendered shell.",error);
-      this._finishBoot({fallback:true,reason:"initial layout synchronization failed"});
-      return;
-    }
-    this._readyRaf=requestAnimationFrame(()=>{
-      if(this._renderId!==renderId||!this.isConnected)return;
-      // UI ready is independent from Home Assistant data, which hydrates later.
-      this._finishBoot();
-    });
-  }));
+  return getBootLifecycleCoordinatorForHost(this).markReadyAfterPaint(renderId);
 }
 _tryCompleteBoot(){
-  if(this._bootComplete)return;
-  if(this._stylesReadyRenderId!==this._renderId)return;
-  this._markReadyAfterPaint(this._renderId);
+  return getBootLifecycleCoordinatorForHost(this).tryCompleteBoot();
 }
 connectedCallback(){
-  this._initialize();
-  if(this._connectionActive){
-    this._ensureMounted({reason:"duplicate connection callback"});
-    this._scheduleHassUpdate();
-    return;
-  }
-  this._connectionActive=true;
-  const isReconnect=this._hasConnectedOnce;
-  this._hasConnectedOnce=true;
-  this._startBootWatchdog();
-  this._addConnectionListeners();
-  this._systemThemeListener=()=>{if(this._themeController.read().themeSetting==="auto")this._transitionSystemThemeChange()};
-  window.matchMedia?.("(prefers-color-scheme: light)")?.addEventListener?.("change",this._systemThemeListener);
-  this._ensureMounted({force:isReconnect,reason:isReconnect?"panel reconnect":"initial connection"});
-  this._scheduleHassUpdate();
-  this._clockTimer=setInterval(()=>{
-    updateStatusTime(this.shadowRoot);
-    updateClockWidgets(this.shadowRoot);
-    const screensaverState=this._screensaverController.read();
-    if(this._getScreensaverVisible()){
-      updateScreensaverClock(this.shadowRoot,screensaverState.clockVariant);
-    }
-  },1000);
-  this._activityListener=()=>this._handleUserActivity();
-  ["pointerdown","touchstart","keydown","wheel","scroll"].forEach(type=>window.addEventListener(type,this._activityListener,{passive:true}));
-  this._scheduleScreensaverIdleTimer();
-  this._resizeListener=()=>{this._handleUserActivity();this._handleViewportChange()};
-  window.addEventListener("resize",this._resizeListener);
-  window.visualViewport?.addEventListener("resize",this._resizeListener);
-  window.addEventListener("orientationchange",this._resizeListener);
-  this._settingsOpenListener=()=>this._openSettings();
-  this.shadowRoot.addEventListener("mha-open-settings",this._settingsOpenListener);
-  this._applyHaSidebarMode(this._hideHaSidebar);
+  return getBootLifecycleCoordinatorForHost(this).connectedCallback();
 }
 disconnectedCallback(){
-  this._connectionActive=false;
-  this._removeConnectionListeners();
-  window.matchMedia?.("(prefers-color-scheme: light)")?.removeEventListener?.("change",this._systemThemeListener);
-  clearInterval(this._clockTimer);
-  clearTimeout(this._bootWatchdog);
-  this._bootWatchdog=0;
-  cancelAnimationFrame(this._hassUpdateFrame);
-  this._hassUpdateFrame=0;
-  cancelAnimationFrame(this._readyRaf);
-  this._readyRaf=0;
-  cancelAnimationFrame(this._viewportRaf);
-  this._viewportRaf=0;
-  clearTimeout(this._relayoutTimer);
-  this._relayoutTimer=0;
-  cancelAnimationFrame(this._widgetRenderFrame);
-  this._widgetRenderFrame=0;
-  cancelAnimationFrame(this._secondaryUiFrame);
-  this._secondaryUiFrame=0;
-  cancelAnimationFrame(this._widgetDropSlotsFrame);
-  this._widgetDropSlotsFrame=0;
-  this._gridRuntime.destroy();
-  this._appearanceCoordinator.destroy();
-  cancelAnimationFrame(this._iconSymbolRefreshFrame);
-  this._iconSymbolRefreshFrame=0;
-  this._clearGridScrollListener();
-  ["pointerdown","touchstart","keydown","wheel","scroll"].forEach(type=>window.removeEventListener(type,this._activityListener));
-  this._screensaverController.destroy();
-  window.removeEventListener("resize",this._resizeListener);
-  window.visualViewport?.removeEventListener("resize",this._resizeListener);
-  window.removeEventListener("orientationchange",this._resizeListener);
-  clearTimeout(this._responsiveRelayoutTimer);
-  this._responsiveRelayoutTimer=null;
-  if(this._settingsOpenListener)this.shadowRoot.removeEventListener("mha-open-settings",this._settingsOpenListener);
-  this._applyHaSidebarMode(false);
-  destroyDomSubtree(this.shadowRoot);
+  return getBootLifecycleCoordinatorForHost(this).disconnectedCallback();
 }
 requestRender(){this.render()}
 _syncEditModeDom(){
-  if(!this._isEditing||this._isMobileLandscapeLayout()){
-    const hadWidgetConfig=Boolean(this._widgetConfigSession);
-    const preserveScenesSlotConfig=Boolean(
-      this._widgetConfigSession
-      &&this._widgetConfigSession.configType==="scenes"
-      &&Number.isInteger(this._widgetConfigSession.buttonIndex)
-      &&!this._isMobileLandscapeLayout()
-    );
-    this._activeMoveWidgetId="";
-    this._pendingWidgetPlacement=null;
-    this._widgetManagerOpen=false;
-    this._widgetManagerCategory="";
-    this._widgetConfigSession=preserveScenesSlotConfig?this._widgetConfigSession:null;
-    this._pageCreatorOpen=false;
-    const grid=this.shadowRoot?.querySelector?.(".mha-grid");
-    if(grid)this._renderWidgetDropSlots(grid);
-    this._syncPageCreatorDom?.();
-    if(hadWidgetConfig)this._syncWidgetConfigDom?.();
-  }
-  this.classList.toggle("is-editing",this._isEditing);
-  this.classList.toggle("is-placing-widget",Boolean(this._pendingWidgetPlacement));
-  this.dataset.editing=String(this._isEditing);
-  if(this._isEditing)this.classList.remove("is-mobile-floating-controls-hidden","is-dock-hidden");
-  const edit=this.shadowRoot.querySelector(".mha-primary-edit-button");
-  if(edit)edit.innerHTML=this._isEditing?ICONS.close:ICONS.edit;
-  const add=this.shadowRoot.querySelector(".mha-add-widget-button");
-  if(add)add.hidden=!this._isEditing||this._isMobileLandscapeLayout();
-  this.shadowRoot.querySelectorAll(".mha-widget").forEach(el=>{
-    el.draggable=false;el.removeAttribute("draggable");
-    el.classList.toggle("is-editing",this._isEditing);
-    const active=this._isEditing&&el.dataset.widgetId===this._activeMoveWidgetId;
-    el.classList.toggle("is-move-target",active);
-    el.querySelector('[data-action="move"]')?.setAttribute("aria-pressed",String(active));
-  });
+  return getWidgetInteractionSurfaceCoordinatorForHost(this).syncEditModeDom();
 }
 _openSettings(page="main"){
-  this._settingsOpen=true;
-  this._settingsPage=page||"main";
-  if(this._settingsPage!=="dock-detail")this._dockSettingsPageId="";
-  this._setScreensaverActive(false);
-  this._screensaverController.clearIdleTimer();
-  this._syncSettingsModalState();
-  this._syncSettingsDom();
+  return getI18nSettingsSyncForHost(this).openSettings(page);
 }
 _closeSettings(){
-  this._settingsOpen=false;
-  this._settingsPage="main";
-  this._dockSettingsPageId="";
-  this._syncSettingsModalState();
-  this._syncSettingsDom();
-  this._scheduleScreensaverIdleTimer();
+  return getI18nSettingsSyncForHost(this).closeSettings();
 }
 _syncSettingsModalState(){
-  this.classList.toggle("is-settings-open",this._settingsOpen);
-  this.dataset.settingsOpen=String(this._settingsOpen);
+  return getI18nSettingsSyncForHost(this).syncSettingsModalState();
 }
 _syncSettingsDom(){
-  this._syncSettingsModalState();
-  syncSettingsPanels({
-    root:this.shadowRoot,
-    props:this._getSettingsPanelsProps(),
-  });
+  return getI18nSettingsSyncForHost(this).syncSettingsDom();
 }
 _getSettingsPanelsProps(){
-  const themeState=this._themeController.read();
-  const screensaverState=this._screensaverController.read();
-  return buildSettingsCoordinatorProps({
-    settingsOpen:this._settingsOpen,
-    screensaverSettingsOpen:this._screensaverSettingsOpen,
-    language:this._language,
-    hideHaSidebar:this._hideHaSidebar,
-    accentPaletteExpanded:this._accentPaletteExpanded,
-    settingsPage:this._settingsPage,
-    dockPages:this._pages,
-    activeDockPageId:this._activePageId,
-    selectedDockPageId:this._dockSettingsPageId,
-    dockPosition:this._dockPosition,
-    customWallpapers:this._customWallpapers,
-    hass:this._hass,
-    entityVisibilityConfig:this._entityVisibilityConfig,
-    themeState,
-    screensaverState,
-    hostIconShape:this.dataset.iconShape,
-    documentIconShape:document.documentElement.dataset.iconShape,
-    callbacks:{
-      onClose:()=>this._closeSettings(),
-      onCloseScreensaver:()=>this._closeScreensaverSettings(),
-      onLanguageChange:v=>this._applyLanguageFromSettings(v),
-      onThemeChange:v=>this._applyThemeFromSettings(v),
-      onThemeStyleChange:v=>this._applyThemeStyleFromSettings(v),
-      onIosGlassChange:v=>this._applyIosGlassFromSettings(v),
-      onAccentChange:v=>this._applyAccentFromSettings(v),
-      onAccentModeChange:v=>this._applyAccentModeFromSettings(v),
-      onAccentPaletteExpandedChange:v=>this._setAccentPaletteExpanded(v),
-      onIconShapeChange:v=>this._applyIconShapeFromSettings(v),
-      onHideHaSidebarChange:v=>this._applyHideHaSidebarFromSettings(v),
-      onScreensaverEnabledChange:v=>this._applyScreensaverEnabledFromSettings(v),
-      onScreensaverDelayChange:v=>this._applyScreensaverDelayFromSettings(v),
-      onScreensaverPreviewChange:v=>this._applyScreensaverPreviewFromSettings(v),
-      onScreensaverNowBarChange:v=>this._applyScreensaverNowBarFromSettings(v),
-      onScreensaverNowBarItemChange:(item,enabled)=>this._applyScreensaverNowBarItemFromSettings(item,enabled),
-      onScreensaverNowBarTileEnabledChange:(tile,enabled)=>this._applyScreensaverNowBarTileEnabledFromSettings(tile,enabled),
-      onScreensaverNowBarEntitySelectionChange:(section,entityId,selected)=>this._applyScreensaverNowBarEntitySelectionFromSettings(section,entityId,selected),
-      onScreensaverNowBarNowItemChange:(item,selected)=>this._applyScreensaverNowBarNowItemFromSettings(item,selected),
-      onScreensaverClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),
-      onResetGrid:()=>this.resetGrid(),
-      onOpenWallpaperSettings:()=>this._openWallpaperSettings(),
-      onOpenNowBarSettings:()=>this._openNowBarSettings(),
-      onWallpaperMainBack:()=>this._openSettings(),
-      onOpenDockSettings:()=>this._openDockSettings(),
-      onDockBack:()=>this._openDockSettings(),
-      onDockPageSelect:id=>this._openDockPageSettings(id),
-      onDockMovePage:(id,direction)=>this._moveDockPage(id,direction),
-      onDockDeletePage:id=>this._deleteDockPage(id),
-      onDockMainBack:()=>this._openSettings(),
-      onDockRenamePage:(id,name)=>this._renameDockPage(id,name),
-      onDockIconChange:(id,icon)=>this._changeDockPageIcon(id,icon),
-      onDockPositionChange:v=>this._applyDockPositionFromSettings(v),
-      onWallpaperImport:(mode,payload)=>this._saveCustomWallpaper(mode,payload),
-      onWallpaperReset:mode=>this._resetCustomWallpaper(mode),
-    },
-  });
+  return getSettingsSurfaceCoordinatorForHost(this).getProps();
 }
 
 _migrateLegacyCustomWallpaper(){
@@ -776,192 +497,81 @@ _resetCustomWallpaper(mode){
 async _syncAutoAccentFromWallpaper(){
   return this._appearanceCoordinator.syncAutoAccentFromWallpaper();
 }
+_getEditButtonIcon(editing=this._isEditing){
+  return editing?ICONS.close:ICONS.edit;
+}
+_getWidgetManagerCategories(){
+  return getWidgetFlowCoordinatorForHost(this).getWidgetManagerCategories();
+}
+_updateStatusDom(){
+  updateStatusTime(this.shadowRoot);
+}
+_updateClockWidgets(){
+  updateClockWidgets(this.shadowRoot);
+}
+_updateScreensaverClockVariant(variant){
+  updateScreensaverClock(this.shadowRoot,variant);
+}
+_createCriticalBootStyle(){
+  return createCriticalBootStyle();
+}
+_destroyDomRoot(){
+  destroyDomSubtree(this.shadowRoot);
+}
 _isMobileLandscapeLayout(){
-  return this._isMobileLauncherLayout()&&window.matchMedia?.("(orientation: landscape)")?.matches;
+  return getResponsiveDockCoordinatorForHost(this).isMobileLandscapeLayout();
 }
 _syncWidgetManagerDom(){
-  syncWidgetManagerPanel(this.shadowRoot,buildWidgetManagerPanelProps({
-    open:this._widgetManagerOpen,
-    activeCategory:this._widgetManagerCategory,
-    categories:WIDGET_MANAGER_CATEGORIES,
-    onClose:()=>this._closeWidgetManager(),
-    onBack:()=>this._showWidgetManagerCategories(),
-    onSelectCategory:id=>this._selectWidgetManagerCategory(id),
-    onSelectWidget:item=>this._beginWidgetPlacement(item),
-  }));
+  return getWidgetFlowCoordinatorForHost(this).syncWidgetManagerDom();
 }
 _openWidgetManager(){
-  if(!this._isEditing||this._isMobileLandscapeLayout())return;
-  this._pendingWidgetPlacement=null;
-  this._activeMoveWidgetId="";
-  this._widgetManagerOpen=true;
-  this._widgetManagerCategory="";
-  this._syncEditModeDom();
-  this._syncWidgetDropSlots();
-  this._syncWidgetManagerDom();
+  return getWidgetFlowCoordinatorForHost(this).openWidgetManager();
 }
 _closeWidgetManager(){
-  this._widgetManagerOpen=false;
-  this._widgetManagerCategory="";
-  this._syncWidgetManagerDom();
+  return getWidgetFlowCoordinatorForHost(this).closeWidgetManager();
 }
 _showWidgetManagerCategories(){
-  this._widgetManagerCategory="";
-  this._syncWidgetManagerDom();
+  return getWidgetFlowCoordinatorForHost(this).showWidgetManagerCategories();
 }
 _selectWidgetManagerCategory(id){
-  this._widgetManagerCategory=id;
-  this._syncWidgetManagerDom();
-}
-_createWidgetFromCatalogItem(item){
-  return createWidgetFromCatalogItem(item);
+  return getWidgetFlowCoordinatorForHost(this).selectWidgetManagerCategory(id);
 }
 _beginWidgetPlacement(item){
-  if(!this._isEditing||this._isMobileLandscapeLayout())return;
-  const widget=this._createWidgetFromCatalogItem(item);
-  const placementFlow=getWidgetPlacementFlow(widget);
-  if(placementFlow==="direct"){
-    this._startWidgetPlacement(widget);
-    return;
-  }
-  if(placementFlow==="slot-config-first"){
-    this._widgetManagerOpen=false;
-    this._widgetManagerCategory="";
-    this._widgetConfigSession=createWidgetConfigSession(widget,this._hass,{
-      mode:"create",
-      visibilityConfig:this._entityVisibilityConfig,
-    });
-    this._widgetConfigHassReady=Boolean(this._hass);
-    this._syncWidgetManagerDom();
-    this._syncWidgetConfigDom();
-    return;
-  }
-  if(placementFlow==="configure-first"&&supportsWidgetConfiguration(widget)){
-    this._widgetManagerOpen=false;
-    this._widgetManagerCategory="";
-    this._widgetConfigSession=createWidgetConfigSession(widget,this._hass,{
-      mode:"create",
-      visibilityConfig:this._entityVisibilityConfig,
-    });
-    this._widgetConfigHassReady=Boolean(this._hass);
-    this._syncWidgetManagerDom();
-    this._syncWidgetConfigDom();
-    return;
-  }
-  this._startWidgetPlacement(widget);
+  return getWidgetFlowCoordinatorForHost(this).beginWidgetPlacement(item);
 }
 _startWidgetPlacement(widget){
-  this._pendingWidgetPlacement=widget;
-  this._widgetManagerOpen=false;
-  this._widgetManagerCategory="";
-  this._activeMoveWidgetId="";
-  this._syncWidgetManagerDom();
-  this._syncEditModeDom();
-  this._syncWidgetDropSlots();
+  return getWidgetFlowCoordinatorForHost(this).startWidgetPlacement(widget);
 }
 _syncWidgetConfigDom(){
-  syncWidgetConfigPanel(this.shadowRoot,buildWidgetConfigPanelProps({
-    session:this._widgetConfigSession,
-    hass:this._hass,
-    visibilityConfig:this._entityVisibilityConfig,
-    onCancel:()=>this._closeWidgetConfig(),
-    onSave:()=>this._saveWidgetConfig(),
-    onRerender:()=>this._syncWidgetConfigDom(),
-  }));
+  return getWidgetFlowCoordinatorForHost(this).syncWidgetConfigDom();
 }
 _closeWidgetConfig(){
-  this._widgetConfigSession=null;
-  this._widgetConfigHassReady=false;
-  this._syncWidgetConfigDom();
+  return getWidgetFlowCoordinatorForHost(this).closeWidgetConfig();
 }
 _saveWidgetConfig(){
-  const session=this._widgetConfigSession;
-  const configured=buildConfiguredWidget(
-    session,
-    this._hass,
-    this._entityVisibilityConfig,
-  );
-  if(!session||!configured)return;
-  this._widgetConfigSession=null;
-  this._widgetConfigHassReady=false;
-  this._syncWidgetConfigDom();
-  if(session.mode==="create"){
-    this._startWidgetPlacement(configured);
-    return;
-  }
-  const index=this._widgets.findIndex(widget=>widget.id===configured.id);
-  if(index<0)return;
-  this._widgets=[
-    ...this._widgets.slice(0,index),
-    normalizeStoredWidgetContract(configured),
-    ...this._widgets.slice(index+1),
-  ];
-  this._saveWidgets();
-  this._replaceWidgetDom(configured.id);
+  return getWidgetFlowCoordinatorForHost(this).saveWidgetConfig();
 }
 _openWidgetConfig(id){
-  if(!this._isEditing||this._isMobileLandscapeLayout())return;
-  const widget=this._widgets.find(item=>item.id===id);
-  if(!supportsWidgetConfiguration(widget))return;
-  if(widget?.kind==="scenes"){
-    this._openScenesButtonConfig(id);
-    return;
-  }
-  this._activeMoveWidgetId="";
-  this._widgetConfigSession=createWidgetConfigSession(widget,this._hass,{
-    mode:"edit",
-    visibilityConfig:this._entityVisibilityConfig,
-  });
-  this._widgetConfigHassReady=Boolean(this._hass);
-  this._syncEditModeDom();
-  this._syncWidgetConfigDom();
+  return getWidgetFlowCoordinatorForHost(this).openWidgetConfig(id);
 }
 _getScenesDefaultButtonIndex(widget){
-  return getScenesDefaultButtonIndex(widget);
+  return getWidgetFlowCoordinatorForHost(this).getDefaultScenesButtonIndex(widget);
 }
 _openScenesButtonConfig(id,buttonIndex){
-  if(this._isMobileLandscapeLayout())return;
-  const widget=this._widgets.find(item=>item.id===id);
-  if(!widget||widget.kind!=="scenes")return;
-  const resolvedButtonIndex=Number.isInteger(buttonIndex)
-    ? buttonIndex
-    : this._getScenesDefaultButtonIndex(widget);
-  this._activeMoveWidgetId="";
-  this._widgetConfigSession=createWidgetConfigSession(widget,this._hass,{
-    mode:"edit",
-    visibilityConfig:this._entityVisibilityConfig,
-    buttonIndex:resolvedButtonIndex,
-  });
-  this._widgetConfigHassReady=Boolean(this._hass);
-  this._syncEditModeDom();
-  this._syncWidgetConfigDom();
+  return getWidgetFlowCoordinatorForHost(this).openScenesButtonConfig(id,buttonIndex);
 }
 _openScreensaverSettings(){
-  this._screensaverSettingsOpen=true;
-  this._syncScreensaverSettingsDom();
+  return getScreensaverSettingsBridgeForHost(this).openScreensaverSettings();
 }
 _closeScreensaverSettings(){
-  this._screensaverSettingsOpen=false;
-  this._syncScreensaverSettingsDom();
+  return getScreensaverSettingsBridgeForHost(this).closeScreensaverSettings();
 }
 _syncScreensaverSettingsDom(){
-  this.classList.toggle("is-screensaver-settings-open",this._screensaverSettingsOpen);
-  this.dataset.screensaverSettingsOpen=String(this._screensaverSettingsOpen);
-  syncSettingsPanels({
-    root:this.shadowRoot,
-    props:this._getSettingsPanelsProps(),
-  });
+  return getScreensaverSettingsBridgeForHost(this).syncScreensaverSettingsDom();
 }
 
 _applyDockPositionFromSettings(position="left"){
-  const next=normalizeDockPosition(position);
-  if(next===this._dockPosition)return;
-  this._dockPosition=next;
-  this._recordPersistenceResult(writeStorageValue(DOCK_POSITION,next));
-  this.dataset.dockPosition=next;
-  this.setAttribute("data-dock-position",next);
-  this._syncSettingsDom();
-  this._handleViewportChange();
+  return getResponsiveDockCoordinatorForHost(this).applyDockPositionFromSettings(position);
 }
 _applyHaSidebarMode(enabled=false){
   const shouldHide=Boolean(enabled);
@@ -981,33 +591,17 @@ _applyHideHaSidebarFromSettings(enabled=false){
   this._syncSettingsDom();
 }
 _openDockSettings(){
-  this._settingsOpen=true;
-  this._settingsPage="dock";
-  this._dockSettingsPageId="";
-  this._syncSettingsModalState();
-  this._syncSettingsDom();
+  return getI18nSettingsSyncForHost(this).openSettingsPage("dock");
 }
 _openWallpaperSettings(){
-  this._settingsOpen=true;
-  this._settingsPage="wallpaper";
-  this._dockSettingsPageId="";
-  this._syncSettingsModalState();
-  this._syncSettingsDom();
+  return getI18nSettingsSyncForHost(this).openSettingsPage("wallpaper");
 }
 _openNowBarSettings(){
-  this._settingsOpen=true;
-  this._settingsPage="screensaver-nowbar";
-  this._dockSettingsPageId="";
-  this._syncSettingsModalState();
-  this._syncSettingsDom();
+  return getI18nSettingsSyncForHost(this).openSettingsPage("screensaver-nowbar");
 }
 _openDockPageSettings(id=""){
   if(!this._pages.some(page=>page.id===id))return;
-  this._settingsOpen=true;
-  this._settingsPage="dock-detail";
-  this._dockSettingsPageId=id;
-  this._syncSettingsModalState();
-  this._syncSettingsDom();
+  return getI18nSettingsSyncForHost(this).openSettingsPage("dock-detail",{dockPageId:id});
 }
 _moveDockPage(id="",direction=0){
   return this._pageUiCoordinator.moveDockPage(id,direction);
@@ -1052,18 +646,7 @@ _scheduleIconSymbolRefresh(){
 }
 
 _applyLanguageFromSettings(value="auto"){
-  const language=normalizeLanguageSetting(value);
-  this._language=language;
-  if(language==="auto")localStorage.removeItem(LANGUAGE);
-  else writeStorageValue(LANGUAGE,language);
-  this._configureI18n();
-  this._syncSettingsDom();
-  this._syncScreensaverSettingsDom();
-  this._syncDocksDom();
-  this._syncWidgetManagerDom();
-  if(this._widgetConfigSession)this._syncWidgetConfigDom();
-  this._syncScreensaverDom({force:true});
-  this._refreshActiveGridOnly();
+  return getI18nSettingsSyncForHost(this).applyLanguageFromSettings(value);
 }
 
 _refreshAppearanceDom(){
@@ -1107,87 +690,52 @@ _setAccentPaletteExpanded(expanded=false){
 }
 
 _isScreensaverBlocked(){
-  return this._settingsOpen||this._isEditing;
+  return getScreensaverSettingsBridgeForHost(this).isBlocked();
 }
 _getScreensaverVisible(){
-  return this._screensaverController.isVisible();
+  return getScreensaverSettingsBridgeForHost(this).getVisible();
 }
 _setScreensaverActive(active=false){
-  this._screensaverController.setActive(active);
-  this._syncScreensaverDom();
+  return getScreensaverSettingsBridgeForHost(this).setActive(active);
 }
 _scheduleScreensaverIdleTimer(){
-  this._screensaverController.scheduleIdleTimer();
+  return getScreensaverSettingsBridgeForHost(this).scheduleIdleTimer();
 }
 _handleUserActivity(){
-  const deactivated=this._screensaverController.handleActivity({
-    settingsOpen:this._screensaverSettingsOpen,
-  });
-  if(deactivated)this._syncScreensaverDom();
+  return getScreensaverSettingsBridgeForHost(this).handleUserActivity();
 }
 _applyScreensaverEnabledFromSettings(enabled=false){
-  this._recordPersistenceResult(this._screensaverController.setEnabled(enabled));
-  this._syncScreensaverDom();
-  this._syncSettingsDom();
-  this._syncScreensaverSettingsDom();
+  return getScreensaverSettingsBridgeForHost(this).applyEnabledFromSettings(enabled);
 }
 _applyScreensaverDelayFromSettings(delay=30000){
-  this._recordPersistenceResult(this._screensaverController.setDelay(delay));
-  this._syncSettingsDom();
-  this._syncScreensaverSettingsDom();
+  return getScreensaverSettingsBridgeForHost(this).applyDelayFromSettings(delay);
 }
 _applyScreensaverPreviewFromSettings(enabled=false){
-  this._screensaverController.setPreview(enabled);
-  this._syncScreensaverDom();
-  this._syncSettingsDom();
-  this._syncScreensaverSettingsDom();
+  return getScreensaverSettingsBridgeForHost(this).applyPreviewFromSettings(enabled);
 }
 _applyScreensaverNowBarFromSettings(enabled=true){
-  this._recordPersistenceResult(this._screensaverController.setNowBar(enabled));
-  this._syncScreensaverDom();
-  this._syncSettingsDom();
-  this._syncScreensaverSettingsDom();
+  return getScreensaverSettingsBridgeForHost(this).applyNowBarFromSettings(enabled);
 }
 _applyScreensaverNowBarItemFromSettings(item="",enabled=true){
-  this._recordPersistenceResult(this._screensaverController.setNowBarItem(item,enabled));
-  this._screensaverCoordinator.requestNowBarCalendarEvents();
-  this._syncScreensaverDom();
-  this._syncSettingsDom();
-  this._syncScreensaverSettingsDom();
+  return getScreensaverSettingsBridgeForHost(this).applyNowBarItemFromSettings(item,enabled);
 }
 _applyScreensaverNowBarTileEnabledFromSettings(tile="",enabled=true){
-  this._recordPersistenceResult(this._screensaverController.setNowBarTileEnabled(tile,enabled));
-  this._screensaverCoordinator.requestNowBarCalendarEvents();
-  this._syncScreensaverDom();
-  this._syncSettingsDom();
-  this._syncScreensaverSettingsDom();
+  return getScreensaverSettingsBridgeForHost(this).applyNowBarTileEnabledFromSettings(tile,enabled);
 }
 _applyScreensaverNowBarEntitySelectionFromSettings(section="",entityId="",selected=true){
-  this._recordPersistenceResult(this._screensaverController.setNowBarEntitySelection(section,entityId,selected));
-  this._screensaverCoordinator.requestNowBarCalendarEvents({force:section==="calendar"});
-  this._syncScreensaverDom();
-  this._syncSettingsDom();
-  this._syncScreensaverSettingsDom();
+  return getScreensaverSettingsBridgeForHost(this).applyNowBarEntitySelectionFromSettings(section,entityId,selected);
 }
 _applyScreensaverNowBarNowItemFromSettings(item="",selected=true){
-  this._recordPersistenceResult(this._screensaverController.setNowBarNowItem(item,selected));
-  this._syncScreensaverDom();
-  this._syncSettingsDom();
-  this._syncScreensaverSettingsDom();
+  return getScreensaverSettingsBridgeForHost(this).applyNowBarNowItemFromSettings(item,selected);
 }
 _applyScreensaverClockVariantFromSettings(variant="digital"){
-  this._recordPersistenceResult(this._screensaverController.setClockVariant(variant));
-  this._syncScreensaverDom();
-  this._syncSettingsDom();
-  this._syncScreensaverSettingsDom();
+  return getScreensaverSettingsBridgeForHost(this).applyClockVariantFromSettings(variant);
 }
 _syncScreensaverVisibilityState(){
-  const visible=this._getScreensaverVisible();
-  this.classList.toggle("is-screensaver-visible",visible);
-  this.dataset.screensaverVisible=String(visible);
+  return getScreensaverSettingsBridgeForHost(this).syncVisibilityState();
 }
 _syncScreensaverDom({force=false}={}){
-  this._screensaverCoordinator.syncDom(this.shadowRoot,{force});
+  return getScreensaverSettingsBridgeForHost(this).syncDom({force});
 }
 toggleEditMode(){
   if(!this._isEditing&&this._isMobileLandscapeLayout())return;
@@ -1207,56 +755,31 @@ toggleEditMode(){
   if(wasEditing!==this._isEditing)this._scheduleSquareUnitSync();
 }toggleScreensaverPreview(){const state=this._screensaverController.read();this._screensaverController.setPreviewState(!state.preview);this._syncScreensaverDom()}toggleNowBarPreview(){const state=this._screensaverController.read();this._screensaverController.setNowBarState(!state.nowBar);this._syncScreensaverDom()}setScreensaverClockVariant(v="digital"){this._screensaverController.setClockVariantState(v);this._syncScreensaverDom()}resetGrid(){clearGridStorage();this._widgetPositions={};this._activeMoveWidgetId="";this._pages=this._readPages();this._activePageId=this._readActivePageId();this._widgets=this._readWidgets();this.render()}
 _migrateStorageSchema(){
-  const result=migrateHubPageStorage({
-    defaultWidgets:DEFAULT_WIDGETS,
-    normalizeWidget:normalizeStoredWidgetContract,
-    normalizeWidgetForGrid:normalizeWidgetForKind,
-  });
-  if(result.migrated)this._recordPersistenceResult(result.success);
+  return getHubStateIngressCoordinatorForHost(this).migrateStorageSchema();
 }
 _normalizePage(page={},index=0){
-  return normalizeHubPage(page,index,{normalizeWidget:normalizeStoredWidgetContract});
+  return getHubStateIngressCoordinatorForHost(this).normalizePage(page,index);
 }
 _readPages(){
-  const result=readHubPages({normalizeWidget:normalizeStoredWidgetContract});
-  if(result.persistenceResult!==null)this._recordPersistenceResult(result.persistenceResult);
-  return result.pages;
+  return getHubStateIngressCoordinatorForHost(this).readPages();
 }
 _readActivePageId(){
-  const result=readHubActivePageId(this._pages);
-  if(result.persistenceResult!==null)this._recordPersistenceResult(result.persistenceResult);
-  return result.activePageId;
+  return getHubStateIngressCoordinatorForHost(this).readActivePageId();
 }
 _getActivePage(){
-  return getHubActivePage(this._pages,this._activePageId);
+  return getHubStateIngressCoordinatorForHost(this).getActivePage();
 }
 _recordPersistenceResult(success){
-  this.dataset.persistenceState=success?"saved":"error";
-  return success;
+  return getHubStateIngressCoordinatorForHost(this).recordPersistenceResult(success);
 }
 _savePages(){
-  return this._recordPersistenceResult(saveHubPages(
-    this._pages,
-    this._activePageId,
-    {normalizeWidget:normalizeStoredWidgetContract},
-  ));
+  return getHubStateIngressCoordinatorForHost(this).savePages();
 }
 _readWidgets(){
-  return readActivePageWidgets({
-    pages:this._pages,
-    activePageId:this._activePageId,
-    normalizeWidget:normalizeStoredWidgetContract,
-    normalizeWidgetForGrid:normalizeWidgetForKind,
-  });
+  return getHubStateIngressCoordinatorForHost(this).readWidgets();
 }
 _syncActivePageWidgets(){
-  const success=syncActivePageWidgets({
-    pages:this._pages,
-    activePageId:this._activePageId,
-    widgets:this._widgets,
-    normalizeWidget:normalizeStoredWidgetContract,
-  });
-  return success?this._recordPersistenceResult(success):false;
+  return getHubStateIngressCoordinatorForHost(this).syncActivePageWidgets();
 }
 _setActivePage(id){
   return this._pageUiCoordinator.selectPage(id);
@@ -1282,13 +805,13 @@ _syncPageCreatorDom(){
 }
 
 _updateDockActiveState(){
-  syncDockActiveState(this.shadowRoot,this._activePageId);
+  return getResponsiveDockCoordinatorForHost(this).updateDockActiveState();
 }
 _getDockProps(){
   return this._pageUiCoordinator.buildDockProps();
 }
 _syncDocksDom(){
-  return this._pageUiCoordinator.syncDocks();
+  return getResponsiveDockCoordinatorForHost(this).syncDocksDom();
 }
 _refreshActiveGridOnly(){
   return this._widgetSurfaceCoordinator.refreshActiveGridOnly();
@@ -1314,65 +837,26 @@ _saveWidgets(){
   return this._syncActivePageWidgets();
 }
 _removeWidget(id){
-  if(!this._widgets.some(w=>w.id===id))return;
-  if(this._activeMoveWidgetId===id)this._activeMoveWidgetId="";
-  this._widgets=this._widgets.filter(w=>w.id!==id);
-  Object.values(this._widgetPositions).forEach(layout=>{
-    if(layout&&typeof layout==="object")delete layout[id];
-  });
-  const positionsSaved=writeJson(POSITIONS,this._widgetPositions);
-  const widgetsSaved=this._saveWidgets();
-  this._recordPersistenceResult(positionsSaved&&widgetsSaved);
-  this._clearDropState();
-  this._refreshActiveGridOnly();
+  return getWidgetInteractionSurfaceCoordinatorForHost(this).removeWidget(id);
 }
 
 _isResizeHandleEvent(event){
-  return Boolean(event?.target?.closest?.(
-    ".mha-widget-resize, .mha-widget-resize-handle, .mha-resize-handle, [data-resize-handle='true']"
-  ));
+  return getWidgetInteractionSurfaceCoordinatorForHost(this).isResizeHandleEvent(event);
 }
 
 _markResizeInteraction(event){
-  if(!this._isEditing||!this._isResizeHandleEvent(event))return;
-  this._isResizingWidget=true;
-  const widget=event.target.closest?.(".mha-widget");
-  if(widget)widget.dataset.resizing="true";
-  /*
-   * Stop bubbling toward widget drag/drop, but do NOT preventDefault here.
-   * The resize logic itself still needs the original pointer/touch event.
-   */
-  event.stopPropagation?.();
+  return getWidgetInteractionSurfaceCoordinatorForHost(this).markResizeInteraction(event);
 }
 
 _clearResizeInteraction(){
-  this._isResizingWidget=false;
-  this.shadowRoot?.querySelectorAll?.('.mha-widget[data-resizing="true"]').forEach(el=>{
-    delete el.dataset.resizing;
-  });
+  return getWidgetInteractionSurfaceCoordinatorForHost(this).clearResizeInteraction();
 }
 
 _moveWidget(sourceId,targetId,placement="before"){
-  if(!sourceId||!targetId||sourceId===targetId)return;
-  const si=this._widgets.findIndex(w=>w.id===sourceId),ti=this._widgets.findIndex(w=>w.id===targetId);
-  if(si<0||ti<0)return;
-  const next=[...this._widgets];
-  const [moved]=next.splice(si,1);
-  const ati=next.findIndex(w=>w.id===targetId);
-  next.splice(placement==="after"?ati+1:ati,0,moved);
-  const normalized=this._normalizeWidgetsToGridBounds(next);if(!this._doesWidgetLayoutFitGrid(normalized))return;this._widgets=normalized;
-  this._clearCurrentWidgetPositions();
-  this._saveWidgets();
-  this._moveWidgetDom(sourceId,targetId,placement);
+  return getWidgetInteractionSurfaceCoordinatorForHost(this).moveWidget(sourceId,targetId,placement);
 }
 _moveWidgetDom(sourceId,targetId,placement="before"){
-  const grid=this.shadowRoot.querySelector(".mha-grid");
-  const source=this.shadowRoot.querySelector(`[data-widget-id="${sourceId}"]`);
-  const target=this.shadowRoot.querySelector(`[data-widget-id="${targetId}"]`);
-  if(!grid||!source||!target)return;
-  if(placement==="after")target.after(source);
-  else target.before(source);
-  this._scheduleSquareUnitSync();
+  return getWidgetInteractionSurfaceCoordinatorForHost(this).moveWidgetDom(sourceId,targetId,placement);
 }
 _getWidgetPositionKey(){
   return this._widgetLayoutStateCoordinator.getPositionKey();
@@ -1396,9 +880,7 @@ _getActiveWidgetPositions({create=false}={}){
   return this._widgetLayoutStateCoordinator.getActivePositions({create});
 }
 _toggleWidgetMoveMode(id){
-  if(!this._isEditing||!this._widgets.some(widget=>widget.id===id))return;
-  this._activeMoveWidgetId=this._activeMoveWidgetId===id?"":id;
-  this._syncEditModeDom();this._syncWidgetDropSlots();
+  return getWidgetInteractionSurfaceCoordinatorForHost(this).toggleMoveMode(id);
 }
 _isPositionMapValidForWidgets(nextPositions,widgets,units,rowUnits){
   return isPositionMapValidForWidgets(nextPositions,widgets,units,rowUnits,{
@@ -1442,33 +924,11 @@ _getAvailableDropSlotsForWidget(id,positions=this._getActiveWidgetPositions({cre
   return this._getAvailableDropSlotsForCandidate(widget,positions,current);
 }
 _renderWidgetDropSlots(grid){
-  if(!grid)return;
-  const positions=this._getActiveWidgetPositions({create:true});
-  const placementWidget=this._pendingWidgetPlacement;
-  const activeId=this._activeMoveWidgetId;
-  const slots=placementWidget
-    ? this._getAvailableDropSlotsForCandidate(placementWidget,positions,{x:0,y:0})
-    : activeId
-      ? this._getAvailableDropSlotsForWidget(activeId,positions)
-      : [];
-  syncDropSlotRenderer(grid,{
-    editing:this._isEditing,
-    mode:placementWidget?"add":activeId?"move":"none",
-    slots,
-    onSelectSlot:(slot)=>{
-      if(this._pendingWidgetPlacement)this._placePendingWidgetAtSlot(slot.x,slot.y);
-      else this._moveWidgetToDropSlot(this._activeMoveWidgetId,slot.x,slot.y);
-    },
-  });
+  return getWidgetInteractionSurfaceCoordinatorForHost(this).renderDropSlots(grid);
 }
 
 _syncWidgetDropSlots(){
-  cancelAnimationFrame(this._widgetDropSlotsFrame);
-  this._widgetDropSlotsFrame=requestAnimationFrame(()=> {
-    this._widgetDropSlotsFrame=0;
-    const grid=this.shadowRoot?.querySelector?.(".mha-grid");
-    if(grid)this._renderWidgetDropSlots(grid);
-  });
+  return getWidgetInteractionSurfaceCoordinatorForHost(this).syncDropSlots();
 }
 
 _placePendingWidgetAtSlot(x,y){
@@ -1496,31 +956,16 @@ _syncGridRuntimeMetrics(){
   return this._gridRuntime.syncGridRuntimeMetrics();
 }
 _handleViewportChange(){
-  this._isResponsiveRelayouting=true;
-  this.classList.add("is-responsive-relayouting");
-  clearTimeout(this._relayoutTimer);
-  cancelAnimationFrame(this._viewportRaf);
-  this._viewportRaf=requestAnimationFrame(()=>{
-    this._syncGridRuntimeMetrics();
-    this._observeLayoutSize();
-    this._wireDockAutoHide(this.shadowRoot?.querySelector?.(".mha-grid"));
-    this._syncEditModeDom();
-    this._syncWidgetDropSlots();
-    this._relayoutTimer=setTimeout(()=>{
-      this._isResponsiveRelayouting=false;
-      this.classList.remove("is-responsive-relayouting");
-    },180);
-  });
+  return getResponsiveDockCoordinatorForHost(this).handleViewportChange();
 }
 
-_clearGridScrollListener(){this._gridScrollCleanup?.();this._gridScrollCleanup=null}
+_clearGridScrollListener(){
+  return getResponsiveDockCoordinatorForHost(this).clearGridScrollListener();
+}
 // Mobile floating controls move out of the way on downward portrait scroll.
-_wireDockAutoHide(grid){this._clearGridScrollListener();this.classList.remove("is-dock-hidden","is-mobile-floating-controls-hidden");
-if(!grid)return;
-const scrollContainer=grid.closest(".mha-widget-area");const isMobileLayout=()=>this.dataset.layout==="mobile";const isLandscape=()=>window.matchMedia("(orientation: landscape)").matches;
-if(!scrollContainer||!isMobileLayout())return;
-if(isLandscape()){this.classList.add("is-mobile-floating-controls-hidden");return}
-let previousScrollTop=scrollContainer.scrollTop;const threshold=10;const onScroll=()=>{if(!isMobileLayout()||isLandscape()){this.classList.toggle("is-mobile-floating-controls-hidden",isMobileLayout()&&isLandscape());previousScrollTop=scrollContainer.scrollTop;return}const currentScrollTop=scrollContainer.scrollTop;if(currentScrollTop<=4){this.classList.remove("is-mobile-floating-controls-hidden");previousScrollTop=currentScrollTop;return}const delta=currentScrollTop-previousScrollTop;if(delta>threshold)this.classList.add("is-mobile-floating-controls-hidden");else if(delta<-threshold)this.classList.remove("is-mobile-floating-controls-hidden");if(Math.abs(delta)>threshold)previousScrollTop=currentScrollTop};scrollContainer.addEventListener("scroll",onScroll,{passive:true});this._gridScrollCleanup=()=>scrollContainer.removeEventListener("scroll",onScroll)}
+_wireDockAutoHide(grid){
+  return getResponsiveDockCoordinatorForHost(this).wireDockAutoHide(grid);
+}
 _scheduleSquareUnitSync(){
   return this._gridRuntime.scheduleSquareUnitSync();
 }
@@ -1552,7 +997,9 @@ _getRuntimeGridUnits(){
 _getRuntimeGridRows(){
   return this._gridRuntime.getGridBounds().rowUnits;
 }
-_isMobileLauncherLayout(){return this._getRuntimeLayout?.()==="mobile"||this._layout==="mobile"||this.dataset.layout==="mobile"}
+_isMobileLauncherLayout(){
+  return getResponsiveDockCoordinatorForHost(this).isMobileLauncherLayout();
+}
 _syncSquareUnit(){
   return this._gridRuntime.syncSquareUnit();
 }
@@ -1592,300 +1039,59 @@ _finishResize(){
   return this._widgetResizeCoordinator.finishResize();
 }
 _getDropPlacement(e,t){const r=t.getBoundingClientRect(),u=r.top+r.height*.35,l=r.top+r.height*.65;if(e.clientY<u)return"before";if(e.clientY>l)return"after";return e.clientX<r.left+r.width/2?"before":"after"}
-_clearDropState(){this.shadowRoot.querySelectorAll(".is-drop-before,.is-drop-after").forEach(n=>{n.classList.remove("is-drop-before","is-drop-after");n.removeAttribute("data-drop-placement")})}
+_clearDropState(){
+  return getWidgetInteractionSurfaceCoordinatorForHost(this).clearDropState();
+}
 _wireDrag(el){
-  if(!el)return;
-  el.draggable=false;
-  el.removeAttribute("draggable");
+  return getWidgetInteractionSurfaceCoordinatorForHost(this).wireDrag(el);
 }
 _createWidgetElement(widget,{units,position}){
   return this._widgetSurfaceCoordinator.createWidgetElement(widget,{units,position});
 }
-_createWidgetPlaceholder(widget,{units,position}){
-  const size=normalizeWidgetSize(widget);
-  const effectiveWidgetW=Math.min(size.w,units);
-  const el=document.createElement("article");
-  el.className="mha-widget mha-widget-placeholder";
-  el.dataset.widgetPlaceholderId=widget.id;
-  el.dataset.widgetConfiguredW=String(size.w);
-  el.dataset.widgetW=String(effectiveWidgetW);
-  el.dataset.widgetH=String(size.h);
-  el.dataset.widgetSize=sizeToString(size);
-  el.dataset.widgetDensity=getWidgetDensity(size);
-  el.setAttribute("aria-hidden","true");
-  el.style.setProperty("--mha-widget-w",String(effectiveWidgetW));
-  el.style.setProperty("--mha-widget-configured-w",String(size.w));
-  el.style.setProperty("--mha-widget-h",String(size.h));
-  if(position){
-    el.style.gridColumn=`${position.x} / span ${effectiveWidgetW}`;
-    el.style.gridRow=`${position.y} / span ${size.h}`;
-  }
-  return el;
+_createWidgetPlaceholder(widget,options){
+  return getRenderPipelineForHost(this).createWidgetPlaceholder(widget,options);
 }
-_appendWidgetPlaceholders(grid,{units,positions}){
-  const fragment=document.createDocumentFragment();
-  this._widgets.forEach(widget=>{
-    fragment.append(this._createWidgetPlaceholder(widget,{
-      units,
-      position:positions?.[widget.id],
-    }));
-  });
-  grid.append(fragment);
-  this.dataset.widgetsState=this._widgets.length?"loading":"ready";
+_appendWidgetPlaceholders(grid,options){
+  return getRenderPipelineForHost(this).appendWidgetPlaceholders(grid,options);
 }
-_startProgressiveWidgetRender({grid,units,positions,renderId}){
-  cancelAnimationFrame(this._widgetRenderFrame);
-  const queue=[...this._widgets];
-  const batchSize=getEffectiveLayout(this)==="mobile"?1:2;
-  const renderBatch=()=>{
-    this._widgetRenderFrame=0;
-    if(!this.isConnected||this._renderId!==renderId)return;
-    const fragment=document.createDocumentFragment();
-    const replacements=[];
-    queue.splice(0,batchSize).forEach(widget=>{
-      const placeholder=grid.querySelector(`[data-widget-placeholder-id="${widget.id}"]`);
-      const el=this._createWidgetElement(widget,{
-        units,
-        position:positions?.[widget.id],
-      });
-      if(placeholder)replacements.push([placeholder,el]);
-      else fragment.append(el);
-    });
-    replacements.forEach(([placeholder,el])=>placeholder.replaceWith(el));
-    if(fragment.childNodes.length)grid.append(fragment);
-    if(queue.length){
-      this._widgetRenderFrame=requestAnimationFrame(renderBatch);
-      return;
-    }
-    this.dataset.widgetsState="ready";
-    this._scheduleSquareUnitSync();
-    this._scheduleHassUpdate();
-    this._syncWidgetDropSlots();
-    this._scheduleIconSymbolRefresh();
-  };
-  this._widgetRenderFrame=requestAnimationFrame(renderBatch);
+_startProgressiveWidgetRender(options){
+  return getRenderPipelineForHost(this).startProgressiveWidgetRender(options);
 }
 _appendPrimaryControls(){
-  const edit=document.createElement("button");
-  edit.className="mha-edit-button mha-main-edit-button mha-primary-edit-button";
-  edit.type="button";
-  edit.innerHTML=this._isEditing?ICONS.close:ICONS.edit;
-  edit.onclick=()=>this.toggleEditMode();
-  this.shadowRoot.append(edit);
-
-  const addWidget=document.createElement("button");
-  addWidget.className="mha-edit-button mha-main-edit-button mha-add-widget-button";
-  addWidget.type="button";
-  addWidget.innerHTML=`<svg viewBox="0 0 24 24"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5Z"/></svg>`;
-  addWidget.setAttribute("aria-label",t("settings.addWidget","Add widget"));
-  addWidget.hidden=!this._isEditing;
-  addWidget.onclick=(event)=>{
-    event.preventDefault();
-    event.stopPropagation();
-    this._openWidgetManager();
-  };
-  this.shadowRoot.append(addWidget);
-  this.classList.toggle("is-editing",this._isEditing);
-  this.dataset.editing=String(this._isEditing);
+  return getRenderPipelineForHost(this).appendPrimaryControls();
 }
-_appendDeferredUi({layout,renderId}){
-  cancelAnimationFrame(this._secondaryUiFrame);
-  this._secondaryUiFrame=requestAnimationFrame(()=>{
-    this._secondaryUiFrame=0;
-    if(!this.isConnected||this._renderId!==renderId)return;
-    if(layout!=="mobile"){
-      this.shadowRoot.append(createMobileDock(this._getDockProps()));
-    }
-    const settingsPanels=this._getSettingsPanelsProps();
-    this.shadowRoot.append(this._screensaverCoordinator.createDomElement());
-    this.shadowRoot.append(createSettingsPanel(settingsPanels.all));
-    this.shadowRoot.append(createWidgetManagerPanel(buildWidgetManagerPanelProps({
-      open:this._widgetManagerOpen,
-      activeCategory:this._widgetManagerCategory,
-      categories:WIDGET_MANAGER_CATEGORIES,
-      onClose:()=>this._closeWidgetManager(),
-      onBack:()=>this._showWidgetManagerCategories(),
-      onSelectCategory:id=>this._selectWidgetManagerCategory(id),
-      onSelectWidget:item=>this._beginWidgetPlacement(item),
-    })));
-    this.shadowRoot.append(createPageCreatorPanel(this._pageUiCoordinator.buildPageCreatorProps()));
-    this.shadowRoot.append(createWidgetConfigPanel(buildWidgetConfigPanelProps({
-      session:this._widgetConfigSession,
-      hass:this._hass,
-      visibilityConfig:this._entityVisibilityConfig,
-      onCancel:()=>this._closeWidgetConfig(),
-      onSave:()=>this._saveWidgetConfig(),
-      onRerender:()=>this._syncWidgetConfigDom(),
-    })));
-    this.shadowRoot.append(createSettingsPanel(settingsPanels.screensaver));
-    this._syncEditModeDom();
-    this._syncScreensaverVisibilityState();
-    this._scheduleIconSymbolRefresh();
-  });
+_appendDeferredUi(options){
+  return getRenderPipelineForHost(this).appendDeferredUi(options);
 }
 _buildRenderContext(themeState){
-  const layoutMode=getLayoutMode(this);
-  const layout=getEffectiveLayout(this);
-  const preset=this._getRuntimeGridPreset();
-  const units=getInternalGridColumnCountFromLogical(preset.columns);
-  const rows=getInternalGridRowCountFromLogical(preset.rows);
-  const cols=preset.columns;
-  const logicalRows=preset.rows;
-  const {themeStyle,iconShapeSetting,iconShape,accent}=themeState;
-  return {
-    renderId:this._renderId+1,
-    themeState,
-    layoutMode,
-    layout,
-    preset,
-    units,
-    rows,
-    cols,
-    logicalRows,
-    themeStyle,
-    iconShapeSetting,
-    iconShape,
-    accent,
-  };
+  return getRenderPipelineForHost(this).buildRenderContext(themeState);
 }
-_prepareRenderCycle({renderId,themeState}){
-  this._applyCustomWallpaperState(themeState);
-  this._applyHaSidebarMode(this._hideHaSidebar);
-  this._renderId=renderId;
-  cancelAnimationFrame(this._widgetRenderFrame);
-  cancelAnimationFrame(this._secondaryUiFrame);
-  this._clearGridScrollListener();
-  this._stylesReadyRenderId=0;
-  this.dataset.widgetsState="pending";
+_prepareRenderCycle(options){
+  return getRenderPipelineForHost(this).prepareRenderCycle(options);
 }
-_applyRenderDatasetsAndRuntimeVars({
-  themeStyle,
-  iconShapeSetting,
-  iconShape,
-  layoutMode,
-  layout,
-  preset,
-  units,
-  rows,
-  cols,
-  logicalRows,
-  accent,
-}){
-  this.dataset.themeStyle=themeStyle;
-  this.dataset.iconShapeSetting=iconShapeSetting;
-  this.dataset.iconShape=iconShape;
-  this.dataset.layoutMode=layoutMode;
-  this.dataset.layout=layout;
-  this.dataset.dockPosition=this._dockPosition;
-  this.dataset.gridDensity=preset.density;
-  this.dataset.gridUnits=String(units);
-  this.dataset.logicalColumns=String(cols);
-  this.dataset.gridRows=String(rows);
-  this.dataset.logicalRows=String(logicalRows);
-  this.classList.toggle("is-editing",this._isEditing);
-  this.style.setProperty("--mha-runtime-grid-units",String(units));
-  this.style.setProperty("--mha-runtime-grid-rows",String(rows));
-  this.style.setProperty("--mha-runtime-logical-columns",String(cols));
-  this.style.setProperty("--mha-runtime-logical-rows",String(logicalRows));
-  this.dataset.accent=accent;
-  document.documentElement.dataset.accent=accent;
-  document.documentElement.dataset.iconShapeSetting=iconShapeSetting;
-  document.documentElement.dataset.iconShape=iconShape;
+_applyRenderDatasetsAndRuntimeVars(options){
+  return getRenderPipelineForHost(this).applyRenderDatasetsAndRuntimeVars(options);
 }
-_mountRenderShell({layoutMode,layout,cols,units}){
-  destroyDomSubtree(this.shadowRoot);
-  this.shadowRoot.innerHTML=createCriticalBootStyle()+createFrontendStyleLinks(
-    MHA_STYLE_MANIFEST,
-    {
-      frontendRootUrl:MHA_FRONTEND_ROOT_URL,
-      frontendVersion:MHA_FRONTEND_VERSION,
-    },
-  );
-  const links=[...this.shadowRoot.querySelectorAll('link[rel="stylesheet"]')];
-  const {bg,shell,grid}=createShell({
-    layoutMode,
-    layout,
-    logicalColumns:cols,
-    gridUnits:units,
-    pages:this._pages,
-    activePageId:this._activePageId,
-    isEditing:this._isEditing,
-    onPageSelect:id=>this._setActivePage(id),
-    onAddPage:()=>this._openPageCreator(),
-    onDockSettings:()=>this._openDockSettings(),
-    onSettings:()=>this._openSettings(),
-  });
-  this.shadowRoot.append(bg,shell);
-  return {links,grid};
+_mountRenderShell(options){
+  return getRenderPipelineForHost(this).mountRenderShell(options);
 }
-_mountImmediateUi({layout,grid,units}){
-  const positions=this._getActiveWidgetPositions({create:true});
-  this._appendWidgetPlaceholders(grid,{units,positions});
-  if(layout==="mobile"){
-    this.shadowRoot.append(createMobileDock(this._getDockProps()));
-  }
-  this._appendPrimaryControls();
-  this._wireDockAutoHide(grid);
-  updateStatusTime(this.shadowRoot);
-  return {positions};
+_mountImmediateUi(options){
+  return getRenderPipelineForHost(this).mountImmediateUi(options);
 }
-_schedulePrimaryWidgetRender({grid,units,positions,renderId}){
-  this._widgetRenderFrame=requestAnimationFrame(()=>{
-    this._widgetRenderFrame=0;
-    if(this._renderId!==renderId)return;
-    this._startProgressiveWidgetRender({grid,units,positions,renderId});
-  });
+_schedulePrimaryWidgetRender(options){
+  return getRenderPipelineForHost(this).schedulePrimaryWidgetRender(options);
 }
-_handleStylesReady({layout,renderId}){
-  if(this._renderId!==renderId)return;
-  this._stylesReadyRenderId=renderId;
-  this._observeLayoutSize();
-  this._scheduleIconSymbolRefresh();
-  if(this._bootComplete){
-    this._appendDeferredUi({layout,renderId});
-    return;
-  }
-  this._pendingDeferredUi={layout,renderId};
-  this._tryCompleteBoot();
+_handleStylesReady(options){
+  return getRenderPipelineForHost(this).handleStylesReady(options);
 }
-_handleStylesError({layout,renderId,error}){
-  console.warn("[MHA] Styles did not finish loading; revealing the shell.",error);
-  if(this._bootComplete){
-    this._appendDeferredUi({layout,renderId});
-    return;
-  }
-  this._pendingDeferredUi={layout,renderId};
-  this._finishBoot({fallback:true,reason:"stylesheet initialization failed"});
+_handleStylesError(options){
+  return getRenderPipelineForHost(this).handleStylesError(options);
 }
-_awaitStylesAndFinalizeRender({links,layout,renderId}){
-  return Promise.all(links.map(link=>link.sheet
-    ?Promise.resolve()
-    :new Promise(resolve=>{
-      link.addEventListener("load",resolve,{once:true});
-      link.addEventListener("error",resolve,{once:true});
-    })))
-    .then(()=>this._handleStylesReady({layout,renderId}))
-    .catch(error=>this._handleStylesError({layout,renderId,error}));
+_awaitStylesAndFinalizeRender(options){
+  return getRenderPipelineForHost(this).awaitStylesAndFinalizeRender(options);
 }
 render(){
-  const themeState=this._themeController.sync();
-  const context=this._buildRenderContext(themeState);
-  this._prepareRenderCycle(context);
-  this._applyRenderDatasetsAndRuntimeVars(context);
-  const {links,grid}=this._mountRenderShell(context);
-  const {positions}=this._mountImmediateUi({...context,grid});
-  this._schedulePrimaryWidgetRender({
-    grid,
-    units:context.units,
-    positions,
-    renderId:context.renderId,
-  });
-  this._awaitStylesAndFinalizeRender({
-    links,
-    layout:context.layout,
-    renderId:context.renderId,
-  });
-  this._scheduleScreensaverIdleTimer();
+  return getRenderPipelineForHost(this).render();
 }
 }
 

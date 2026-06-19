@@ -307,3 +307,227 @@ test("render helpers preserve widgetsState transitions from pending to loading t
   globalThis.requestAnimationFrame = previousRequestAnimationFrame;
   globalThis.cancelAnimationFrame = previousCancelAnimationFrame;
 });
+
+test("primary controls use host edit icon and widget-manager bridge callbacks", async () => {
+  const prototype = await loadHubPrototype();
+  const previousDocument = globalThis.document;
+  const calls = [];
+
+  globalThis.document = {
+    ...globalThis.document,
+    createElement(tag) {
+      return {
+        tag,
+        className: "",
+        type: "",
+        innerHTML: "",
+        hidden: false,
+        onclick: null,
+        setAttribute() {},
+      };
+    },
+  };
+
+  const host = {
+    _isEditing: true,
+    dataset: {},
+    classList: {
+      toggle() {},
+    },
+    shadowRoot: {
+      appended: [],
+      append(...nodes) {
+        this.appended.push(...nodes);
+      },
+    },
+    _getEditButtonIcon(editing) {
+      calls.push(["icon", editing]);
+      return "<svg>close</svg>";
+    },
+    toggleEditMode() {
+      calls.push("toggleEditMode");
+    },
+    _openWidgetManager() {
+      calls.push("openWidgetManager");
+    },
+  };
+
+  prototype._appendPrimaryControls.call(host);
+  const [editButton, addButton] = host.shadowRoot.appended;
+  editButton.onclick?.();
+  addButton.onclick?.({
+    preventDefault() {},
+    stopPropagation() {},
+  });
+
+  assert.equal(editButton.innerHTML, "<svg>close</svg>");
+  assert.equal(addButton.hidden, false);
+  assert.deepEqual(calls, [
+    ["icon", true],
+    "toggleEditMode",
+    "openWidgetManager",
+  ]);
+
+  globalThis.document = previousDocument;
+});
+
+test("immediate UI delegates status updates through the host bridge", async () => {
+  const prototype = await loadHubPrototype();
+  const previousDocument = globalThis.document;
+  const calls = [];
+
+  globalThis.document = {
+    ...globalThis.document,
+    createDocumentFragment() {
+      return {
+        isFragment: true,
+        childNodes: [],
+        append(node) {
+          this.childNodes.push(node);
+        },
+      };
+    },
+    createElement(tag) {
+      return {
+        tag,
+        className: "",
+        type: "",
+        innerHTML: "",
+        hidden: false,
+        onclick: null,
+        setAttribute() {},
+      };
+    },
+  };
+
+  const grid = {
+    appended: [],
+    append(node) {
+      if (node?.isFragment) {
+        node.childNodes.forEach((child) => this.append(child));
+        return;
+      }
+      this.appended.push(node);
+    },
+    closest() {
+      return null;
+    },
+  };
+  const host = {
+    _widgets: [],
+    _isEditing: false,
+    dataset: {},
+    classList: {
+      toggle() {},
+    },
+    shadowRoot: {
+      appended: [],
+      append(...nodes) {
+        this.appended.push(...nodes);
+      },
+    },
+    _getActiveWidgetPositions() {
+      return {};
+    },
+    _getEditButtonIcon() {
+      return "<svg>edit</svg>";
+    },
+    toggleEditMode() {},
+    _openWidgetManager() {},
+    _wireDockAutoHide() {
+      calls.push("wireDockAutoHide");
+    },
+    _updateStatusDom() {
+      calls.push("updateStatusDom");
+    },
+  };
+
+  prototype._mountImmediateUi.call(host, {
+    layout: "desktop",
+    grid,
+    units: 4,
+  });
+
+  assert.deepEqual(calls, ["wireDockAutoHide", "updateStatusDom"]);
+  globalThis.document = previousDocument;
+});
+
+test("widget config sync builds the panel props without relying on removed globals", async () => {
+  const prototype = await loadHubPrototype();
+  const calls = [];
+  const host = {
+    shadowRoot: {},
+    _widgetConfigSession: {
+      mode: "create",
+      configType: "button",
+      widget: { id: "widget-1", kind: "button" },
+      draft: {},
+    },
+    _hass: { states: {} },
+    _entityVisibilityConfig: null,
+    _closeWidgetConfig() {
+      calls.push("cancel");
+    },
+    _saveWidgetConfig() {
+      calls.push("save");
+    },
+    _syncWidgetConfigDom() {
+      calls.push("rerender");
+    },
+  };
+
+  const previousDocument = globalThis.document;
+  globalThis.document = {
+    ...globalThis.document,
+    createElement() {
+      return {
+        className: "",
+        textContent: "",
+        disabled: false,
+        type: "",
+        dataset: {},
+        style: { setProperty() {} },
+        append() {},
+        addEventListener() {},
+        setAttribute() {},
+        onclick: null,
+        querySelector() {
+          return {
+            dataset: {},
+            replaceChildren() {},
+          };
+        },
+        addEventListener() {},
+        remove() {},
+      };
+    },
+    createElementNS() {
+      return {
+        className: "",
+        innerHTML: "",
+        textContent: "",
+        dataset: {},
+        style: { setProperty() {} },
+        append() {},
+        appendChild() {},
+        setAttribute() {},
+        querySelector() {
+          return null;
+        },
+      };
+    },
+  };
+
+  const previousAppend = host.shadowRoot.append;
+  host.shadowRoot.append = () => {
+    calls.push("append");
+  };
+  host.shadowRoot.querySelector = () => null;
+
+  prototype._syncWidgetConfigDom.call(host);
+
+  assert.deepEqual(calls, ["append"]);
+
+  host.shadowRoot.append = previousAppend;
+  globalThis.document = previousDocument;
+});
