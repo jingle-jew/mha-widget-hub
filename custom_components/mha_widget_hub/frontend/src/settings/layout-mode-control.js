@@ -1,4 +1,4 @@
-import { t } from "../i18n/index.js";
+import { getLanguage, t } from "../i18n/index.js";
 import {
   getStoredLayoutMode,
   normalizeLayoutMode,
@@ -6,14 +6,43 @@ import {
 } from "../layout/layout-mode.js";
 
 const LAYOUT_MODE_OPTIONS = Object.freeze([
-  { value: "auto", label: "Auto", labelKey: "settings.layoutModes.auto" },
-  { value: "mobile", label: "Mobile", labelKey: "settings.layoutModes.mobile" },
-  { value: "tablet", label: "Tablet", labelKey: "settings.layoutModes.tablet" },
-  { value: "desktop", label: "Desktop", labelKey: "settings.layoutModes.desktop" },
+  { value: "auto", label: "Auto" },
+  { value: "mobile", label: "Mobile" },
+  { value: "tablet", label: "Tablet" },
+  { value: "desktop", label: "Desktop" },
 ]);
 
+const LOCAL_LABELS = Object.freeze({
+  en: Object.freeze({
+    layoutMode: "Layout mode",
+    auto: "Auto",
+    mobile: "Mobile",
+    tablet: "Tablet",
+    desktop: "Desktop",
+  }),
+  fr: Object.freeze({
+    layoutMode: "Mode de disposition",
+    auto: "Auto",
+    mobile: "Mobile",
+    tablet: "Tablette",
+    desktop: "Bureau",
+  }),
+  es: Object.freeze({
+    layoutMode: "Modo de diseño",
+    auto: "Auto",
+    mobile: "Móvil",
+    tablet: "Tableta",
+    desktop: "Escritorio",
+  }),
+});
+
+function getLocalLabels() {
+  return LOCAL_LABELS[getLanguage()] || LOCAL_LABELS.en;
+}
+
 function optionLabel(item = {}) {
-  return item.labelKey ? t(item.labelKey, item.label) : item.label;
+  const labels = getLocalLabels();
+  return t(`settings.layoutModes.${item.value}`, labels[item.value] || item.label);
 }
 
 function createOption(item, value) {
@@ -32,7 +61,7 @@ function createLayoutModeField(panel) {
 
   const text = document.createElement("span");
   text.className = "mha-settings-label";
-  text.textContent = t("settings.layoutMode", "Layout mode");
+  text.textContent = t("settings.layoutMode", getLocalLabels().layoutMode);
 
   const select = document.createElement("select");
   select.className = "mha-settings-select";
