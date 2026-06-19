@@ -68,28 +68,14 @@ import { createWidgetFromCatalogItem } from "./src/widgets/widget-factory.js";
 import {updateClockWidgets} from "./src/widgets/clock-widget.js";
 import { getWidgetPlacementFlow } from "./src/widgets/widget-registry.js?v=phase5b1";
 import { syncDropSlotRenderer } from "./src/widgets/drop-slot-renderer.js";
+import { createWidgetLayoutStateCoordinator } from "./src/widgets/widget-layout-state-coordinator.js";
+import { createWidgetResizeCoordinator } from "./src/widgets/widget-resize-coordinator.js";
 import { createWidgetSurfaceCoordinator } from "./src/widgets/widget-surface-coordinator.js";
 import {DEFAULT_WIDGETS,getActiveGridRows,getActiveGridUnits,getEffectiveLayout,getInternalGridColumnCountFromLogical,getInternalGridRowCountFromLogical,getLayoutMode,getGridPreset,getWidgetDensity,normalizeWidgetForKind,normalizeWidgetSize,sizeToString} from "./src/layout/layout-engine.js";
-import {
-  doesWidgetGroupExactlyFillRect,
-  getGroupBoundingRect,
-  getWidgetRectFromPosition,
-  getWidgetsInCandidateRect,
-  isGroupInternallyValid,
-  isPositionMapValidForWidgets,
-  rectsOverlap,
-  translateWidgetGroupPositions,
-} from "./src/layout/placement-geometry.js";
+import { isPositionMapValidForWidgets } from "./src/layout/placement-geometry.js";
 import {
   doesWidgetLayoutFitGrid,
-  findWidgetAtCandidatePosition,
-  getAdjacentWidgetGroupInDirection,
   getAvailableDropSlotsForCandidate,
-  getBandParticipantsForTranslatedSwap,
-  getDirectNeighborInDirection,
-  hasNoWidgetOverlaps,
-  packTranslatedSwapBand,
-  packWidgets,
 } from "./src/layout/placement-calculations.js";
 import { createPlacementController } from "./src/layout/placement-controller.js";
 import { createGridRuntime } from "./src/layout/grid-runtime.js";
@@ -206,6 +192,34 @@ constructor(){
       this._widgetManagerOpen=false;
       this._widgetManagerCategory="";
     },
+  });
+  this._widgetLayoutStateCoordinator=createWidgetLayoutStateCoordinator({
+    getWidgets:()=>this._widgets,
+    getWidgetPositions:()=>this._widgetPositions,
+    setWidgetPositions:(positions)=>{this._widgetPositions=positions;},
+    getActivePageId:()=>this._activePageId,
+    getGridBounds:()=>this._getGridBounds(),
+    getEffectiveLayout:()=>getEffectiveLayout(this),
+    getRuntimeGridPreset:()=>this._getRuntimeGridPreset(),
+    getWidgetAreaMetrics:()=>this._getWidgetAreaMetrics(),
+    isMobileLayout:()=>this._isMobileLauncherLayout(),
+    recordPersistenceResult:(success)=>this._recordPersistenceResult(success),
+    writeWidgetPositions:(positions)=>writeJson(POSITIONS,positions),
+    getRoot:()=>this.shadowRoot,
+  });
+  this._widgetResizeCoordinator=createWidgetResizeCoordinator({
+    getResizeState:()=>this._resizeState,
+    setResizeState:(state)=>{this._resizeState=state;},
+    getWidgets:()=>this._widgets,
+    setWidgets:(widgets)=>{this._widgets=widgets;},
+    getGridMetrics:()=>this._getGridMetrics(),
+    getActiveGridUnits:()=>getActiveGridUnits(this),
+    doesWidgetLayoutFitGrid:(widgets)=>this._doesWidgetLayoutFitGrid(widgets),
+    normalizeWidgetsToGridBounds:(widgets)=>this._normalizeWidgetsToGridBounds(widgets),
+    clampWidgetSizeToGridBounds:(widget,size)=>this._clampWidgetSizeToGridBounds(widget,size),
+    queryWidgetElement:(widgetId)=>this.shadowRoot?.querySelector?.(`[data-widget-id="${widgetId}"]`),
+    saveWidgets:()=>this._saveWidgets(),
+    scheduleSquareUnitSync:()=>this._scheduleSquareUnitSync(),
   });
   this._widgetSurfaceCoordinator=createWidgetSurfaceCoordinator({
     getRoot:()=>this.shadowRoot,
@@ -1361,142 +1375,35 @@ _moveWidgetDom(sourceId,targetId,placement="before"){
   this._scheduleSquareUnitSync();
 }
 _getWidgetPositionKey(){
-  const bounds=this._getGridBounds();
-  return `${this._activePageId||"home"}:${getEffectiveLayout(this)}:${bounds.units}x${bounds.rowUnits}`;
+  return this._widgetLayoutStateCoordinator.getPositionKey();
 }
 _getStoredWidgetPositions(){
-  const key=this._getWidgetPositionKey();
-  const positions=this._widgetPositions[key];
-  if(!positions||typeof positions!=="object"||Array.isArray(positions))return null;
-  const {units,rowUnits}=this._getGridBounds();
-  const normalized={};
-  for(const widget of this._widgets){
-    const position=positions[widget.id];
-    const x=Number(position?.x);
-    const y=Number(position?.y);
-    if(!Number.isInteger(x)||!Number.isInteger(y)){
-      delete this._widgetPositions[key];
-      this._recordPersistenceResult(writeJson(POSITIONS,this._widgetPositions));
-      return null;
-    }
-    normalized[widget.id]={x,y};
-  }
-  if(!this._isPositionMapValidForWidgets(normalized,this._widgets,units,rowUnits)){
-    delete this._widgetPositions[key];
-    this._recordPersistenceResult(writeJson(POSITIONS,this._widgetPositions));
-    return null;
-  }
-  if(Object.keys(positions).length!==Object.keys(normalized).length){
-    this._widgetPositions[key]=normalized;
-    this._recordPersistenceResult(writeJson(POSITIONS,this._widgetPositions));
-  }
-  return normalized;
+  return this._widgetLayoutStateCoordinator.readStoredPositions();
 }
 _saveCurrentWidgetPositions(positions){
-  this._widgetPositions[this._getWidgetPositionKey()]=positions;
-  return this._recordPersistenceResult(writeJson(POSITIONS,this._widgetPositions));
+  return this._widgetLayoutStateCoordinator.saveCurrentPositions(positions);
 }
 _applyWidgetPositionsToDom(positions){
-  if(!positions)return;
-  const {units}=this._getGridBounds();
-  this._widgets.forEach(widget=>{
-    const position=positions[widget.id];
-    const el=this.shadowRoot.querySelector(`[data-widget-id="${widget.id}"]`);
-    if(!position||!el)return;
-    const size=normalizeWidgetForKind(widget);
-    el.style.gridColumn=`${position.x} / span ${Math.min(units,size.w)}`;
-    el.style.gridRow=`${position.y} / span ${size.h}`;
-  });
+  this._widgetLayoutStateCoordinator.applyPositionsToDom(positions);
 }
 _clearCurrentWidgetPositions(){
-  const key=this._getWidgetPositionKey();
-  if(!this._widgetPositions[key])return;
-  delete this._widgetPositions[key];
-  this._recordPersistenceResult(writeJson(POSITIONS,this._widgetPositions));
-  this.shadowRoot.querySelectorAll(".mha-widget").forEach(el=>{
-    el.style.removeProperty("grid-column");
-    el.style.removeProperty("grid-row");
-  });
+  this._widgetLayoutStateCoordinator.clearCurrentPositions();
 }
 _packWidgetsForCurrentGrid(){
-  const {units,rowUnits}=this._getGridBounds();
-  return packWidgets(this._widgets,units,rowUnits,{
-    allowUnboundedRows:this._isMobileLauncherLayout(),
-  });
+  return this._widgetLayoutStateCoordinator.packWidgetsForCurrentGrid();
 }
 _getActiveWidgetPositions({create=false}={}){
-  const stored=this._getStoredWidgetPositions();
-  if(stored)return stored;
-  if(!create)return null;
-  const packed=this._packWidgetsForCurrentGrid();
-  if(packed){
-    this._saveCurrentWidgetPositions(packed);
-    this._applyWidgetPositionsToDom(packed);
-  }
-  return packed;
+  return this._widgetLayoutStateCoordinator.getActivePositions({create});
 }
 _toggleWidgetMoveMode(id){
   if(!this._isEditing||!this._widgets.some(widget=>widget.id===id))return;
   this._activeMoveWidgetId=this._activeMoveWidgetId===id?"":id;
   this._syncEditModeDom();this._syncWidgetDropSlots();
 }
-_rectsOverlap(a,b){
-  return rectsOverlap(a,b);
-}
-_getWidgetRectFromPosition(widget,position,units){
-  return getWidgetRectFromPosition(widget,position,units);
-}
-_findWidgetAtCandidatePosition(id,candidateRect,positions,units){
-  return findWidgetAtCandidatePosition(this._widgets,id,candidateRect,positions,units);
-}
-_canSwapWidgetPositions(id,occupantId,nextPositions,units){
-  return hasNoWidgetOverlaps(this._widgets,nextPositions,units);
-}
-_getWidgetsInCandidateRect(id,candidateRect,positions,units){
-  return getWidgetsInCandidateRect(this._widgets,id,candidateRect,positions,units);
-}
-_doesWidgetGroupExactlyFillRect(widgets,targetRect,positions,units){
-  return doesWidgetGroupExactlyFillRect(widgets,targetRect,positions,units);
-}
-_translateWidgetGroupPositions(group,targetRect,destinationRect,positions){
-  return translateWidgetGroupPositions(group,targetRect,destinationRect,positions);
-}
-_getGroupBoundingRect(group,positions,units){
-  return getGroupBoundingRect(group,positions,units);
-}
-_isGroupInternallyValid(group,positions,units){
-  return isGroupInternallyValid(group,positions,units);
-}
-_getAdjacentWidgetGroupInDirection(id,direction,positions,units){
-  return getAdjacentWidgetGroupInDirection(this._widgets,id,direction,positions,units);
-}
 _isPositionMapValidForWidgets(nextPositions,widgets,units,rowUnits){
   return isPositionMapValidForWidgets(nextPositions,widgets,units,rowUnits,{
     allowUnboundedRows:this._isMobileLauncherLayout(),
   });
-}
-_isPositionMapValid(nextPositions,units,rowUnits){
-  return this._isPositionMapValidForWidgets(
-    nextPositions,
-    this._widgets,
-    units,
-    rowUnits,
-  );
-}
-_getBandParticipantsForTranslatedSwap(id,group,direction,positions,units){
-  return getBandParticipantsForTranslatedSwap(this._widgets,id,group,positions,units);
-}
-_packTranslatedSwapBand(id,group,direction,positions,units,rowUnits){
-  return packTranslatedSwapBand(
-    this._widgets,
-    id,
-    group,
-    direction,
-    positions,
-    units,
-    rowUnits,
-    {allowUnboundedRows:this._isMobileLauncherLayout()},
-  );
 }
 _tryTranslatedGroupSwap(id,direction,positions,units,rowUnits){
   return this._placementController.tryTranslatedGroupSwap(
@@ -1506,9 +1413,6 @@ _tryTranslatedGroupSwap(id,direction,positions,units,rowUnits){
     units,
     rowUnits,
   );
-}
-_getDirectNeighborInDirection(id,direction,positions,units){
-  return getDirectNeighborInDirection(this._widgets,id,direction,positions,units);
 }
 _tryDirectNeighborSwap(id,direction,positions,units,rowUnits){
   return this._placementController.tryDirectNeighborSwap(
@@ -1665,106 +1569,27 @@ _doesWidgetLayoutFitGrid(widgets=this._widgets){
   return doesWidgetLayoutFitGrid(widgets,bounds.units,bounds.rowUnits);
 }
 _findFittingResize(current,requested){
-  let next=this._clampWidgetSizeToGridBounds(current,requested);
-  const originalWidgets=this._widgets;
-
-  while(next.h>=1){
-    let test=originalWidgets.map(w=>w.id===current.id?{...w,...next}:w);
-    test=this._normalizeWidgetsToGridBounds(test);
-
-    if(this._doesWidgetLayoutFitGrid(test))return next;
-
-    if(next.h>1){
-      next={...next,h:next.h-1};
-      continue;
-    }
-
-    if(next.w>1){
-      next={...next,w:next.w-1,h:Math.max(1,requested.h)};
-      continue;
-    }
-
-    break;
-  }
-
-  return normalizeWidgetForKind(current);
+  return this._widgetResizeCoordinator.findFittingResize(current,requested);
 }
 _getGridMetrics(){const grid=this.shadowRoot.querySelector(".mha-grid");if(!grid)return null;const st=getComputedStyle(grid);const col=parseFloat(st.gridTemplateColumns.split(" ")[0])||72;const gap=parseFloat(st.columnGap||st.gap||"0")||0;const row=parseFloat(st.gridAutoRows)||72;return{columnStep:col+gap,rowStep:row+gap}}
-_getInternalGridBoundsFromPreset(preset){
-  const logicalColumns=Number(preset?.columns)||Number(this.dataset.logicalColumns)||1;
-  const logicalRows=Number(preset?.rows)||Number(this.dataset.logicalRows)||1;
-  return {
-    logicalColumns:Math.max(1,logicalColumns),
-    logicalRows:Math.max(1,logicalRows),
-    units:getInternalGridColumnCountFromLogical(logicalColumns),
-    rowUnits:getInternalGridRowCountFromLogical(logicalRows),
-  };
-}
 _clampWidgetSizeToGridBounds(widget,size){
-  const layout=getEffectiveLayout(this);
-  const preset=this._getRuntimeGridPreset?.()||getGridPreset(this,layout,this._getWidgetAreaMetrics?.()||{});
-  const bounds=this._getInternalGridBoundsFromPreset(preset);
-
-  const x=Number(widget?.x ?? widget?.col ?? widget?.column ?? 1)||1;
-  const y=Number(widget?.y ?? widget?.row ?? 1)||1;
-
-  const maxW=Math.max(1,bounds.units-x+1);
-  const maxH=Math.max(1,bounds.rowUnits-y+1);
-  /*
-   * Resize boundary guard:
-   * User-facing widget names stay iOS/Android-style. A 2x2 widget still spans
-   * 2 internal grid units, which equals 1 logical column by 1 logical row.
-   * Bounds are therefore checked against the internal 2x grid, not the visible
-   * logical cell count.
-   */
-  return {
-    ...size,
-    w:Math.max(1,Math.min(Number(size?.w)||1,maxW)),
-    h:Math.max(1,Math.min(Number(size?.h)||1,maxH)),
-  };
+  return this._widgetLayoutStateCoordinator.clampWidgetSizeToGridBounds(widget,size);
 }
 _clampWidgetPositionToGridBounds(widget,position){
-  const layout=getEffectiveLayout(this);
-  const preset=this._getRuntimeGridPreset?.()||getGridPreset(this,layout,this._getWidgetAreaMetrics?.()||{});
-  const bounds=this._getInternalGridBoundsFromPreset(preset);
-
-  const w=Math.max(1,Number(widget?.w)||1);
-  const h=Math.max(1,Number(widget?.h)||1);
-  const maxX=Math.max(1,bounds.units-w+1);
-  const maxY=Math.max(1,bounds.rowUnits-h+1);
-
-  /*
-   * Drag boundary guard:
-   * Positions are stored on the internal square-unit grid. This keeps the public
-   * vocabulary stable: 2x2 is one logical cell, while x/y still address the
-   * precise internal CSS grid lines.
-   */
-  return {
-    ...position,
-    x:Math.max(1,Math.min(Number(position?.x)||1,maxX)),
-    y:Math.max(1,Math.min(Number(position?.y)||1,maxY)),
-  };
+  return this._widgetLayoutStateCoordinator.clampWidgetPositionToGridBounds(widget,position);
 }
 _normalizeWidgetToGridBounds(widget){
-  const size=this._clampWidgetSizeToGridBounds(widget,widget);
-  const position=this._clampWidgetPositionToGridBounds({...widget,...size},widget);
-  return {...widget,...size,...position};
+  return this._widgetLayoutStateCoordinator.normalizeWidgetToGridBounds(widget);
 }
 _normalizeWidgetsToGridBounds(widgets=this._widgets){
-  return widgets.map(widget=>this._normalizeWidgetToGridBounds(widget));
+  return this._widgetLayoutStateCoordinator.normalizeWidgetsToGridBounds(widgets);
 }
 
 
-_startResize(){return false}
-_updateResize(e){const s=this._resizeState;if(!s||e.pointerId!==s.pointerId)return;e.preventDefault();const current=this._widgets.find(w=>w.id===s.widgetId)||{};let ns=normalizeWidgetForKind({...current,w:s.startW+Math.round((e.clientX-s.startX)/s.metrics.columnStep),h:s.startH+Math.round((e.clientY-s.startY)/s.metrics.rowStep)});ns=this._findFittingResize(current,ns);const nextWidgets=this._widgets.map(w=>w.id===s.widgetId?{...w,...ns}:w);if(!this._doesWidgetLayoutFitGrid(this._normalizeWidgetsToGridBounds(nextWidgets)))return;this._widgets=this._normalizeWidgetsToGridBounds(nextWidgets);const el=this.shadowRoot.querySelector(`[data-widget-id="${s.widgetId}"]`);if(!el)return;const density=getWidgetDensity(ns);el.dataset.widgetConfiguredW=String(ns.w);el.dataset.widgetW=String(Math.min(ns.w,getActiveGridUnits(this)));el.dataset.widgetH=String(ns.h);el.dataset.widgetSize=sizeToString(ns);el.dataset.widgetDensity=density;el.style.setProperty("--mha-widget-w",String(Math.min(ns.w,getActiveGridUnits(this))));el.style.setProperty("--mha-widget-configured-w",String(ns.w));el.style.setProperty("--mha-widget-h",String(ns.h));const badge=el.querySelector(".mha-size-badge");if(badge)badge.textContent=`${sizeToString(ns)} · ${density}`}
+_startResize(){return this._widgetResizeCoordinator.startResize()}
+_updateResize(e){return this._widgetResizeCoordinator.updateResize(e)}
 _finishResize(){
-  const s=this._resizeState;
-  if(!s)return;
-  const el=this.shadowRoot.querySelector(`[data-widget-id="${s.widgetId}"]`);
-  el?.classList.remove("is-resizing");
-  this._resizeState=null;
-  this._saveWidgets();
-  this._scheduleSquareUnitSync();
+  return this._widgetResizeCoordinator.finishResize();
 }
 _getDropPlacement(e,t){const r=t.getBoundingClientRect(),u=r.top+r.height*.35,l=r.top+r.height*.65;if(e.clientY<u)return"before";if(e.clientY>l)return"after";return e.clientX<r.left+r.width/2?"before":"after"}
 _clearDropState(){this.shadowRoot.querySelectorAll(".is-drop-before,.is-drop-after").forEach(n=>{n.classList.remove("is-drop-before","is-drop-after");n.removeAttribute("data-drop-placement")})}
