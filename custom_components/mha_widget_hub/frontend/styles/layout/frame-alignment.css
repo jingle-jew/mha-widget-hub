@@ -9,8 +9,12 @@
 
 @media (min-width: 768px) {
   .mha-status-bar {
-    left: var(--mha-page-padding) !important;
-    right: var(--mha-page-padding) !important;
+    /* .mha-status-bar is absolutely positioned inside .mha-shell,
+     * whose padding already creates the outer frame. Using page padding here
+     * double-insets the bar and keeps its left edge too far from the frame.
+     */
+    left: 0 !important;
+    right: 0 !important;
     width: auto !important;
     inline-size: auto !important;
     max-inline-size: none !important;
@@ -22,6 +26,8 @@
   }
 
   .mha-grid {
+    padding-right: 0 !important;
+    padding-inline-end: 0 !important;
     transform: none !important;
   }
 
