@@ -1,0 +1,12 @@
+@media (max-width: 767px) {
+  .mha-settings-panel .mha-settings-sheet {
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: auto;
+    width: auto;
+    max-width: none;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+}
