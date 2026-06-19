@@ -7,10 +7,15 @@ import {
 import { buildScreensaverViewState } from "./screensaver-props.js";
 
 const NOWBAR_INTERACTION_GUARD = "__mhaNowBarInteractionGuard";
+const NOWBAR_WHEEL_COOLDOWN = 820;
 
 function getHostLayout(nowBar) {
   const host = nowBar?.getRootNode?.()?.host;
   return host?.dataset?.layout || "";
+}
+
+function getNow() {
+  return globalThis.performance?.now?.() || Date.now();
 }
 
 function installNowBarInteractionGuard(root) {
@@ -20,6 +25,7 @@ function installNowBarInteractionGuard(root) {
   nowBar[NOWBAR_INTERACTION_GUARD] = true;
   let suppressClick = false;
   let suppressClickTimer = 0;
+  let suppressWheelUntil = 0;
 
   const suppressNextClick = () => {
     suppressClick = true;
@@ -30,8 +36,19 @@ function installNowBarInteractionGuard(root) {
   };
 
   nowBar.addEventListener("wheel", (event) => {
-    if (Math.abs(event.deltaY) >= 8) suppressNextClick();
-  }, { capture: true, passive: true });
+    if (Math.abs(event.deltaY) < 8) return;
+
+    const currentTime = getNow();
+    if (currentTime < suppressWheelUntil) {
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation?.();
+      return;
+    }
+
+    suppressWheelUntil = currentTime + NOWBAR_WHEEL_COOLDOWN;
+    suppressNextClick();
+  }, { capture: true, passive: false });
 
   nowBar.addEventListener("click", (event) => {
     const isDesktopLayout = getHostLayout(nowBar) === "desktop";
