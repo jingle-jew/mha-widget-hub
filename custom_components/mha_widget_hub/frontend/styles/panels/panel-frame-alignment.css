@@ -1,0 +1,9 @@
+/* Align anchored panels with the shared MHA shell frame. */
+
+@media (min-width: 768px) {
+  [data-surface-role="panel"] > [role="dialog"],
+  [data-surface-role="subpanel"] > [role="dialog"] {
+    inset-block-end: var(--mha-page-padding);
+    inset-inline-end: var(--mha-page-padding);
+  }
+}
