@@ -1,5 +1,7 @@
 # MHA Widget Hub
 
+<img src="assets/brand/mha-widget-hub-logo.svg" width="800">
+
 > The family-first Home Assistant launcher.
 
 MHA Widget Hub is a custom Home Assistant launcher built around a spatial, widget-based interface designed for shared family spaces.
