@@ -1,0 +1,16 @@
+.mha-dock .mha-icon > .mha-icon-symbol,
+.mha-mobile-dock .mha-icon > .mha-icon-symbol {
+  --mha-icon-symbol-size: 82%;
+  inline-size: var(--mha-icon-symbol-size) !important;
+  block-size: var(--mha-icon-symbol-size) !important;
+  width: var(--mha-icon-symbol-size) !important;
+  height: var(--mha-icon-symbol-size) !important;
+}
+
+.mha-dock .mha-icon > .mha-icon-symbol > svg,
+.mha-mobile-dock .mha-icon > .mha-icon-symbol > svg {
+  inline-size: 100% !important;
+  block-size: 100% !important;
+  width: 100% !important;
+  height: 100% !important;
+}
