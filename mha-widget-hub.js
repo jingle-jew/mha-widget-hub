@@ -110,12 +110,13 @@ import {
 } from "./src/layout/placement-calculations.js";
 import { createPlacementController } from "./src/layout/placement-controller.js";
 import { createGridRuntime } from "./src/layout/grid-runtime.js";
-import {createScreensaver,normalizeClockVariant,updateScreensaverClock,updateScreensaverClockVariant,updateScreensaverNowBar,updateScreensaverState} from "./src/screensaver/screensaver.js";
+import {normalizeClockVariant,updateScreensaverClock} from "./src/screensaver/screensaver.js";
 import { createScreensaverController } from "./src/screensaver/screensaver-controller.js";
+import { getNowBarCalendarSignature } from "./src/screensaver/screensaver-props.js?v=phase4";
 import {
-  buildScreensaverViewState,
-  getNowBarCalendarSignature,
-} from "./src/screensaver/screensaver-props.js?v=phase4";
+  createScreensaverElement,
+  syncScreensaverElement,
+} from "./src/screensaver/screensaver-orchestrator.js?v=phase1";
 import {
   buildNowBarTiles,
   fetchNowBarCalendarEvents,
@@ -1291,13 +1292,10 @@ _requestNowBarCalendarEvents({force=false}={}){
   });
 }
 _createScreensaverElement(screensaverState=this._screensaverController.read()){
-  const screensaverViewState=buildScreensaverViewState({
+  return createScreensaverElement({
     isVisible:this._getScreensaverVisible(),
     screensaverState,
     nowBarTiles:this._getNowBarTiles(),
-  });
-  return createScreensaver({
-    ...screensaverViewState,
     onClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),
     onOpenScreensaverSettings:()=>this._openScreensaverSettings(),
     onWake:()=>this._wakeScreensaver(),
@@ -1307,20 +1305,18 @@ _syncScreensaverDom({force=false}={}){
   this._syncScreensaverVisibilityState();
   const existing=this.shadowRoot.querySelector(".mha-screensaver");
   const screensaverState=this._screensaverController.read();
-  if(!existing){
-    this.shadowRoot.append(this._createScreensaverElement(screensaverState));
-    return;
-  }
-  if(force){
-    existing.replaceWith(this._createScreensaverElement(screensaverState));
-    return;
-  }
-  updateScreensaverState(existing,{isVisible:this._getScreensaverVisible()});
-  updateScreensaverClockVariant(existing,screensaverState.clockVariant);
-  updateScreensaverNowBar(existing,{
-    showNowBar:screensaverState.nowBar,
-    nowBarItems:screensaverState.nowBarItems,
-    nowBarTiles:this._getNowBarTiles(),
+  syncScreensaverElement({
+    root:this.shadowRoot,
+    existing,
+    force,
+    props:{
+      isVisible:this._getScreensaverVisible(),
+      screensaverState,
+      nowBarTiles:this._getNowBarTiles(),
+      onClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),
+      onOpenScreensaverSettings:()=>this._openScreensaverSettings(),
+      onWake:()=>this._wakeScreensaver(),
+    },
   });
 }
 toggleEditMode(){
