@@ -15,6 +15,7 @@ const DEFAULT_SHELL = Object.freeze({
   configureMode: "variant",
 });
 const DEFAULT_STORAGE = Object.freeze({});
+const DEFAULT_WIDGET_SIZE = Object.freeze({ w: 2, h: 2 });
 
 function normalizePreviewRenderer(module = {}) {
   const previewRenderer = module.preview || STATIC_PREVIEW_RENDERER;
@@ -182,10 +183,10 @@ export function getWidgetManagerCategories() {
   
   const categoryById = new Map(categories.map(category => [category.id, category]));
   
-  Object.entries(DEFINITIONS).forEach(([kind, definition]) => {
-    if (definition.manager?.hidden) return;
-    
-    definition.manager?.entries?.forEach(entry => {
+  Object.keys(DEFINITIONS).forEach((kind) => {
+    if (getWidgetManagerBehavior(kind).hidden) return;
+
+    getWidgetCatalogEntries(kind).forEach(entry => {
       if (entry.hidden) return;
       
       const category = categoryById.get(entry.category);
@@ -272,6 +273,10 @@ export function getWidgetManagerBehavior(widget = {}) {
   return getWidgetDefinition(widget)?.manager || DEFAULT_MANAGER;
 }
 
+export function getWidgetCatalogEntries(widget = {}) {
+  return getWidgetManagerBehavior(widget).entries || DEFAULT_MANAGER.entries;
+}
+
 export function getWidgetPreviewRenderer(widgetOrKind = {}) {
   return getWidgetDefinition(widgetOrKind)?.previewRenderer || STATIC_PREVIEW_RENDERER;
 }
@@ -322,7 +327,7 @@ export function getWidgetCreationDefaults(widget = {}) {
     component: definition?.component || "empty-widget",
     category: definition?.category || "custom",
     defaultVariant: definition?.defaultVariant || kind,
-    defaultSize: definition?.defaultSize || { w: 2, h: 2 },
+    defaultSize: definition?.defaultSize || DEFAULT_WIDGET_SIZE,
   });
 }
 
@@ -346,10 +351,11 @@ export function isWidgetKind(widget, expectedKind) {
 
 export function normalizeRegisteredWidgetSize(widget = {}, normalizeBottomeSize) {
   const definition = getWidgetDefinition(widget);
+  const defaults = getWidgetCreationDefaults(widget);
   const rawSize = {
-    ...(definition?.defaultSize || { w: 2, h: 2 }),
-    w: widget.w ?? definition?.defaultSize?.w,
-    h: widget.h ?? definition?.defaultSize?.h,
+    ...defaults.defaultSize,
+    w: widget.w ?? defaults.defaultSize.w,
+    h: widget.h ?? defaults.defaultSize.h,
   };
   const size = normalizeBottomeSize(rawSize);
   return definition?.normalizeSize ? definition.normalizeSize(size) : size;
@@ -375,13 +381,14 @@ export function normalizeWidgetContract(widget = {}, normalizeBottomeSize) {
   }
 
   const size = normalizeRegisteredWidgetSize(widget, normalizeBottomeSize);
+  const defaults = getWidgetCreationDefaults(kind);
   const normalized = {
     ...widget,
     kind,
     type: kind,
-    component: definition.component,
-    category: widget.category || definition.category,
-    variant: definition.defaultVariant || widget.variant || "",
+    component: defaults.component,
+    category: widget.category || defaults.category,
+    variant: widget.variant || defaults.defaultVariant || "",
     w: size.w,
     h: size.h,
   };

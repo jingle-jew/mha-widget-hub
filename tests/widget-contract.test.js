@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { normalizeWidgetSize } from "../src/layout/layout-engine.js";
 import {
   getWidgetCapabilities,
+  getWidgetCatalogEntries,
   getWidgetCreationDefaults,
   getWidgetConfigType,
   getWidgetManagerBehavior,
@@ -47,7 +48,7 @@ test("widget manager visibility is declared in widget definitions", async () => 
   assert.equal(WIDGET_REGISTRY.empty.manager.hidden, true);
   assert.equal(WIDGET_REGISTRY["toggle-buttons"].manager.hidden, true);
   assert.equal(
-    WIDGET_REGISTRY.slider.manager.entries.some((entry) => entry.variant === "temperature-slider" && entry.hidden),
+    getWidgetCatalogEntries({ kind: "slider" }).some((entry) => entry.variant === "temperature-slider" && entry.hidden),
     true,
   );
 });
