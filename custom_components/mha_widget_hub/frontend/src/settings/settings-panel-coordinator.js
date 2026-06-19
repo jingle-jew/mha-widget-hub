@@ -5,9 +5,20 @@ import {
 } from "./settings-panel-props.js";
 import { appendLayoutModeControl } from "./layout-mode-control.js";
 import { replaceSettingsPanelPreservingUiState } from "./settings-panel-orchestrator.js";
+import {
+  applyPanelSurfaceContract,
+  PANEL_MOBILE_PRESENTATIONS,
+  PANEL_SURFACE_ROLES,
+} from "../panels/panel-surface-contract.js";
 
 function createPanelWithEnhancements(createPanel, props) {
-  return appendLayoutModeControl(createPanel(props));
+  return applyPanelSurfaceContract(
+    appendLayoutModeControl(createPanel(props)),
+    {
+      surfaceRole: PANEL_SURFACE_ROLES.PANEL,
+      mobilePresentation: PANEL_MOBILE_PRESENTATIONS.SHEET,
+    },
+  );
 }
 
 export function buildSettingsCoordinatorProps({
