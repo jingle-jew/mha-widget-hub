@@ -1,8 +1,8 @@
-import { createCloseButton } from "../system/system-buttons.js";
 import {
   getWidgetConfigDefinition,
   getWidgetConfigType,
 } from "./widget-config-registry.js";
+import { createPanelShell } from "../panels/panel-shell.js";
 import { t } from "../i18n/index.js";
 
 export function supportsWidgetConfiguration(widget = {}) {
@@ -104,23 +104,6 @@ export function createWidgetConfigPopup({
   onSave,
   onChange,
 } = {}) {
-  const panel = document.createElement("section");
-  panel.className = "mha-widget-config-popup mha-page-creator";
-  panel.dataset.open = String(Boolean(session));
-  panel.setAttribute("aria-hidden", String(!session));
-
-  const scrim = document.createElement("button");
-  scrim.className = "mha-widget-config-scrim mha-page-creator-scrim";
-  scrim.type = "button";
-  scrim.setAttribute("aria-label", t("widgets.config.close", "Close configuration"));
-  scrim.onclick = () => onCancel?.();
-
-  const sheet = document.createElement("div");
-  sheet.className = "mha-widget-config-sheet mha-page-creator-sheet";
-  sheet.setAttribute("role", "dialog");
-  sheet.setAttribute("aria-modal", "true");
-  sheet.setAttribute("aria-label", t("widgets.config.ariaLabel", "Configure widget"));
-
   const configDefinition = session
     ? getWidgetConfigDefinition(session.configType)
     : null;
@@ -133,16 +116,6 @@ export function createWidgetConfigPopup({
     onChange,
     renderHelpers,
   );
-
-  const header = document.createElement("div");
-  header.className = "mha-widget-config-header mha-page-creator-header";
-  const title = document.createElement("h2");
-  title.textContent = resolveConfigTitle(configDefinition, session, renderHelpers);
-  header.append(title, createCloseButton({
-    label: t("common.close", "Close"),
-    className: "mha-widget-config-close mha-page-creator-close",
-    onClick: () => onCancel?.(),
-  }));
 
   const hint = document.createElement("p");
   hint.className = "mha-widget-config-hint mha-page-creator-hint";
@@ -169,7 +142,18 @@ export function createWidgetConfigPopup({
   save.onclick = () => onSave?.();
   actions.append(cancel, save);
 
-  sheet.append(header, hint, content.fields, actions);
-  panel.append(scrim, sheet);
-  return panel;
+  return createPanelShell({
+    open: Boolean(session),
+    rootClassName: "mha-widget-config-popup mha-page-creator",
+    scrimClassName: "mha-widget-config-scrim mha-page-creator-scrim",
+    sheetClassName: "mha-widget-config-sheet mha-page-creator-sheet",
+    headerClassName: "mha-widget-config-header mha-page-creator-header",
+    closeClassName: "mha-widget-config-close mha-page-creator-close",
+    title: resolveConfigTitle(configDefinition, session, renderHelpers),
+    ariaLabel: t("widgets.config.ariaLabel", "Configure widget"),
+    closeLabel: t("common.close", "Close"),
+    scrimLabel: t("widgets.config.close", "Close configuration"),
+    onClose: () => onCancel?.(),
+    children: [hint, content.fields, actions],
+  });
 }
