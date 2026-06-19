@@ -5,7 +5,7 @@ import { buildWidgetConfigPopupState } from "../widget-config/widget-config-prop
 import { createPageCreatorPanel as createPageCreatorDomPanel } from "../pages/page-creator.js";
 import { buildPageCreatorState } from "../pages/page-creator-props.js";
 
-const PANEL_EXIT_ANIMATION_MS = 420;
+const PANEL_EXIT_ANIMATION_MS = 1100;
 const PANEL_EXIT_TIMEOUT = "__mhaPanelExitTimeout";
 const PANEL_OPEN_FRAME = "__mhaPanelOpenFrame";
 
