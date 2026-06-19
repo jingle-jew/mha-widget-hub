@@ -130,7 +130,9 @@ export const TOGGLE_BUTTONS_WIDGET_DEFINITION = Object.freeze({
     slotConfigurable: false,
     weatherEntityConfigurable: false,
   }),
-  storage: Object.freeze({}),
+  storage: Object.freeze({
+    normalize: () => ({}),
+  }),
   shell: Object.freeze({
     configureMode: "variant",
   }),

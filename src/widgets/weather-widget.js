@@ -6,7 +6,11 @@ import {
 } from "../ha/weather.js";
 import { css, freezeSize, isLocalWidgetKind, variant } from "./widget-definition-utils.js";
 import { WIDGET_PREVIEW_DATA } from "./widget-preview-data.js";
-import { buildWeatherWidgetConfig, createWeatherConfigDraft } from "../widget-config/weather-config.js";
+import {
+  buildWeatherWidgetConfig,
+  createWeatherConfigDraft,
+  renderWeatherConfigFields,
+} from "../widget-config/weather-config.js";
 
 const WEATHER_SIZE_VARIANTS = new Set(["4x1", "2x2", "3x2", "4x2"]);
 const WEATHER_FORECAST_REFRESH_MS = 10 * 60 * 1000;
@@ -186,8 +190,11 @@ export const WEATHER_WIDGET_CONFIG_MANIFEST = Object.freeze({
   type: "weather",
   title: "Configure weather",
   hint: "Choose the weather entity to display.",
+  titleKey: "widgets.config.configureWeather",
+  hintKey: "widgets.config.weatherHint",
   createDraft: createWeatherConfigDraft,
   build: buildWeatherWidgetConfig,
+  renderFields: renderWeatherConfigFields,
 });
 
 export const WEATHER_WIDGET_DEFINITION = Object.freeze({

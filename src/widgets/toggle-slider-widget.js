@@ -11,7 +11,11 @@ import { createSlider2 } from "../ui/slider2.js";
 import { createToggleWidgetContent } from "./toggle-widget.js";
 import { clampWidth, css, freezeSize, isLocalWidgetKind, variant } from "./widget-definition-utils.js";
 import { isEntityAllowedForCurrentUser } from "../admin/entity-permissions.js";
-import { buildToggleSliderWidgetConfig, createToggleSliderConfigDraft } from "../widget-config/toggle-slider-config.js";
+import {
+  buildToggleSliderWidgetConfig,
+  createToggleSliderConfigDraft,
+  renderToggleSliderConfigFields,
+} from "../widget-config/toggle-slider-config.js";
 import { WIDGET_PREVIEW_DATA } from "./widget-preview-data.js";
 import { t } from "../i18n/index.js";
 
@@ -208,8 +212,11 @@ export const TOGGLE_SLIDER_WIDGET_CONFIG_MANIFEST = Object.freeze({
   type: "toggle-slider",
   title: "Configure light",
   hint: "Choose the light and control to display.",
+  titleKey: "widgets.config.configureLight",
+  hintKey: "widgets.config.lightHint",
   createDraft: createToggleSliderConfigDraft,
   build: buildToggleSliderWidgetConfig,
+  renderFields: renderToggleSliderConfigFields,
 });
 
 export const TOGGLE_SLIDER_WIDGET_DEFINITION = Object.freeze({

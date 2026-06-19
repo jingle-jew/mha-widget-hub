@@ -4,6 +4,9 @@ import { createIconSymbol } from "../ui/icon-symbol.js";
 import {
   buildScenesWidgetConfig,
   createScenesConfigDraft,
+  getScenesConfigHint,
+  getScenesConfigTitle,
+  renderScenesConfigFields,
 } from "../widget-config/scenes-config.js";
 import {
   css,
@@ -194,8 +197,11 @@ export const SCENES_WIDGET_CONFIG_MANIFEST = Object.freeze({
   type: "scenes",
   title: "Configure Modes & Routines",
   hint: "Configure up to 4 Modes or Routines.",
+  getTitle: getScenesConfigTitle,
+  getHint: getScenesConfigHint,
   createDraft: createScenesConfigDraft,
   build: buildScenesWidgetConfig,
+  renderFields: renderScenesConfigFields,
 });
 
 export const SCENES_WIDGET_DEFINITION = Object.freeze({

@@ -73,7 +73,7 @@ test("migrated widgets expose storage adapters from their definitions", () => {
   assert.equal(typeof getWidgetStorageAdapter({ kind: "weather" }).normalize, "function");
   assert.equal(typeof getWidgetStorageAdapter({ kind: "scenes" }).normalize, "function");
   assert.equal(typeof getWidgetStorageAdapter({ kind: "toggle-slider" }).normalize, "function");
-  assert.equal(getWidgetStorageAdapter({ kind: "media" }).normalize, undefined);
+  assert.equal(typeof getWidgetStorageAdapter({ kind: "media" }).normalize, "function");
 });
 
 test("normalization preserves button and weather entity bindings", () => {
@@ -192,6 +192,29 @@ test("normalization preserves standalone toggle entity configuration", () => {
   );
 });
 
+test("normalization preserves media entity aliases", () => {
+  const widget = normalizeWidgetContract({
+    kind: "media",
+    entity_id: "media_player.salon",
+    label: "Salon",
+  }, normalizeWidgetSize);
+
+  assert.deepEqual(
+    {
+      kind: widget.kind,
+      entityId: widget.entityId,
+      mediaEntityId: widget.mediaEntityId,
+      label: widget.label,
+    },
+    {
+      kind: "media",
+      entityId: "media_player.salon",
+      mediaEntityId: "media_player.salon",
+      label: "Salon",
+    },
+  );
+});
+
 test("slider variants follow widget orientation", () => {
   const horizontal = getWidgetVariants({ kind: "slider", w: 4, h: 1 });
   const vertical = getWidgetVariants({ kind: "slider", w: 1, h: 4 });
@@ -235,4 +258,16 @@ test("registered widgets expose preview renderer manifests", async () => {
   }
 
   assert.equal(getWidgetPreviewRenderer("unknown-widget").mode, "static");
+});
+
+test("config manifests expose widget-owned field renderers", async () => {
+  const { WIDGET_CONFIG_REGISTRY } = await import("../src/widget-config/widget-config-registry.js");
+
+  assert.equal(typeof WIDGET_CONFIG_REGISTRY.button.renderFields, "function");
+  assert.equal(typeof WIDGET_CONFIG_REGISTRY.slider.renderFields, "function");
+  assert.equal(typeof WIDGET_CONFIG_REGISTRY.toggle.renderFields, "function");
+  assert.equal(typeof WIDGET_CONFIG_REGISTRY["toggle-slider"].renderFields, "function");
+  assert.equal(typeof WIDGET_CONFIG_REGISTRY.weather.renderFields, "function");
+  assert.equal(typeof WIDGET_CONFIG_REGISTRY.media.renderFields, "function");
+  assert.equal(typeof WIDGET_CONFIG_REGISTRY.scenes.renderFields, "function");
 });

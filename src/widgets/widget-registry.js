@@ -34,7 +34,6 @@ import {
   buildWidgetKindIndex,
   resolveWidgetKindFromIndex,
 } from "./widget-kind-index.js";
-import { getLegacyNormalizedContractPatch } from "./widget-legacy-normalization.js";
 import { getRegisteredWidgetVariantsFromDefinition } from "./widget-variant-accessors.js";
 
 const DEFAULT_MANAGER = Object.freeze({
@@ -199,9 +198,6 @@ export function normalizeWidgetContract(widget = {}, normalizeBottomeSize) {
 
   return {
     ...normalized,
-    ...(
-      normalizedPatch
-      ?? getLegacyNormalizedContractPatch(widget, definition, normalized)
-    ),
+    ...(normalizedPatch || {}),
   };
 }

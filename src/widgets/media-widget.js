@@ -3,6 +3,7 @@ import { WIDGET_PREVIEW_DATA } from "./widget-preview-data.js";
 import {
   buildMediaWidgetConfig,
   createMediaConfigDraft,
+  renderMediaConfigFields,
 } from "../widget-config/media-config.js";
 import {
   buildMediaDisplayModel,
@@ -514,8 +515,13 @@ export const MEDIA_WIDGET_CONTENT_RENDERER = Object.freeze({
 
 export const MEDIA_WIDGET_CONFIG_MANIFEST = Object.freeze({
   type: "media",
+  title: "Configure media",
+  hint: "Choose the media player and display name.",
+  titleKey: "widgets.config.configureMedia",
+  hintKey: "widgets.config.mediaHint",
   createDraft: createMediaConfigDraft,
   build: buildMediaWidgetConfig,
+  renderFields: renderMediaConfigFields,
 });
 
 export const MEDIA_WIDGET_DEFINITION = Object.freeze({
@@ -548,7 +554,15 @@ export const MEDIA_WIDGET_DEFINITION = Object.freeze({
     slotConfigurable: false,
     weatherEntityConfigurable: false,
   }),
-  storage: Object.freeze({}),
+  storage: Object.freeze({
+    normalize: (widget = {}) => {
+      const mediaEntityId = widget.mediaEntityId || widget.entityId || widget.entity_id || "";
+      return {
+        entityId: mediaEntityId,
+        mediaEntityId,
+      };
+    },
+  }),
   shell: Object.freeze({
     configureMode: "config",
   }),

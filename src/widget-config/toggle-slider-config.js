@@ -53,3 +53,62 @@ export function buildToggleSliderWidgetConfig(widget, draft, hass, visibilityCon
     sliderMode: "brightness",
   };
 }
+
+export function renderToggleSliderConfigFields(session, hass, visibilityConfig, onChange, helpers) {
+  const { createField, t } = helpers;
+  const { draft, options, selected } = reconcileToggleSliderConfigDraft(
+    session.draft,
+    hass,
+    visibilityConfig,
+  );
+  const fields = document.createElement("div");
+  fields.className = "mha-widget-config-fields";
+
+  const nameInput = document.createElement("input");
+  nameInput.className = "mha-widget-config-control";
+  nameInput.type = "text";
+  nameInput.value = draft.label;
+  nameInput.placeholder = selected?.label || t("widgets.config.placeholderRoom", "Living room");
+  nameInput.autocomplete = "off";
+  nameInput.addEventListener("input", (event) => {
+    updateToggleSliderLabel(draft, event.currentTarget.value);
+    onChange?.();
+  });
+
+  const lightSelect = document.createElement("select");
+  lightSelect.className = "mha-widget-config-control";
+  lightSelect.disabled = !options.length;
+  if (!options.length) {
+    const empty = document.createElement("option");
+    empty.value = "";
+    empty.textContent = t("widgets.config.noBrightnessLight", "No brightness-compatible light found.");
+    lightSelect.append(empty);
+  } else {
+    options.forEach((option) => {
+      const item = document.createElement("option");
+      item.value = option.value;
+      item.textContent = option.label;
+      item.selected = option.value === draft.lightEntityId;
+      lightSelect.append(item);
+    });
+  }
+  lightSelect.addEventListener("change", (event) => {
+    updateToggleSliderLight(draft, event.currentTarget.value, options);
+    onChange?.({ rerender: true });
+  });
+
+  const modeSelect = document.createElement("select");
+  modeSelect.className = "mha-widget-config-control";
+  const brightness = document.createElement("option");
+  brightness.value = "brightness";
+  brightness.textContent = t("widgets.config.brightness", "Brightness");
+  modeSelect.append(brightness);
+  modeSelect.value = "brightness";
+
+  fields.append(
+    createField(t("widgets.modesRoutines.displayName", "Display name"), nameInput),
+    createField(t("widgets.config.light", "Light"), lightSelect),
+    createField(t("widgets.config.sliderControl", "Slider control"), modeSelect),
+  );
+  return { fields, canSave: Boolean(selected) };
+}

@@ -14,7 +14,11 @@ import { resolveAuthorizedEntity } from "../ha/entity-access.js";
 import { getEntityDisplayName } from "../widget-config/light-options.js";
 import { isToggleEntityOn } from "../ha/toggle.js";
 import { clampWidth, css, freezeSize, isLocalWidgetKind, variant } from "./widget-definition-utils.js";
-import { buildButtonWidgetConfig, createButtonConfigDraft } from "../widget-config/button-config.js";
+import {
+  buildButtonWidgetConfig,
+  createButtonConfigDraft,
+  renderButtonConfigFields,
+} from "../widget-config/button-config.js";
 import { WIDGET_PREVIEW_DATA } from "./widget-preview-data.js";
 import { t } from "../i18n/index.js";
 
@@ -257,8 +261,11 @@ export const SIMPLE_BUTTON_WIDGET_CONFIG_MANIFEST = Object.freeze({
   type: "button",
   title: "Configure button",
   hint: "Choose the action type, entity, and display name.",
+  titleKey: "widgets.config.configureButton",
+  hintKey: "widgets.config.buttonHint",
   createDraft: createButtonConfigDraft,
   build: buildButtonWidgetConfig,
+  renderFields: renderButtonConfigFields,
 });
 
 export const SIMPLE_BUTTON_WIDGET_DEFINITION = Object.freeze({

@@ -16,7 +16,11 @@ import { getEntityState, getWidgetEntityId, isEntityAvailable } from "../ha/enti
 import { isToggleEntityOn, supportsToggleEntity } from "../ha/toggle.js";
 import { clampWidth, css, freezeSize, isLocalWidgetKind, variant } from "./widget-definition-utils.js";
 import { isEntityAllowedForCurrentUser } from "../admin/entity-permissions.js";
-import { buildToggleWidgetConfig, createToggleConfigDraft } from "../widget-config/toggle-config.js";
+import {
+  buildToggleWidgetConfig,
+  createToggleConfigDraft,
+  renderToggleConfigFields,
+} from "../widget-config/toggle-config.js";
 import { WIDGET_PREVIEW_DATA } from "./widget-preview-data.js";
 import { t } from "../i18n/index.js";
 
@@ -189,8 +193,11 @@ export const TOGGLE_WIDGET_CONFIG_MANIFEST = Object.freeze({
   type: "toggle",
   title: "Configure toggle",
   hint: "Choose the device type, entity, and display name.",
+  titleKey: "widgets.config.configureToggle",
+  hintKey: "widgets.config.toggleHint",
   createDraft: createToggleConfigDraft,
   build: buildToggleWidgetConfig,
+  renderFields: renderToggleConfigFields,
 });
 
 export const TOGGLE_WIDGET_DEFINITION = Object.freeze({

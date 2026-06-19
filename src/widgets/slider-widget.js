@@ -7,7 +7,11 @@ import { createIconSymbol } from "../ui/icon-symbol.js";
 import { createSlider } from "../ui/slider.js";
 import { css, freezeSize, isLocalWidgetKind, variant } from "./widget-definition-utils.js";
 import { isEntityAllowedForCurrentUser } from "../admin/entity-permissions.js";
-import { buildSliderWidgetConfig, createSliderConfigDraft } from "../widget-config/slider-config.js";
+import {
+  buildSliderWidgetConfig,
+  createSliderConfigDraft,
+  renderSliderConfigFields,
+} from "../widget-config/slider-config.js";
 import { WIDGET_PREVIEW_DATA } from "./widget-preview-data.js";
 import { t } from "../i18n/index.js";
 
@@ -209,8 +213,11 @@ export const SLIDER_WIDGET_CONFIG_MANIFEST = Object.freeze({
   type: "slider",
   title: "Configure slider",
   hint: "Choose the action, device, and display name.",
+  titleKey: "widgets.config.configureSlider",
+  hintKey: "widgets.config.sliderHint",
   createDraft: createSliderConfigDraft,
   build: buildSliderWidgetConfig,
+  renderFields: renderSliderConfigFields,
 });
 
 export const SLIDER_WIDGET_DEFINITION = Object.freeze({
