@@ -1,13 +1,15 @@
 @media (max-width: 767px) {
   .mha-page-creator .mha-page-creator-sheet {
+    --mha-mobile-sheet-height: min(88vh, 36rem);
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
     top: auto;
     width: auto;
+    height: var(--mha-mobile-sheet-height);
     max-width: none;
-    max-height: min(82vh, 42rem);
+    max-height: var(--mha-mobile-sheet-height);
     overflow: auto;
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
