@@ -1,20 +1,26 @@
-import { getWidgetPreviewRenderer, resolveWidgetKind } from "./widget-registry.js";
+import {
+  getWidgetCreationDefaults,
+  getWidgetPreviewRenderer,
+  resolveWidgetKind,
+} from "./widget-registry.js";
 import { createRegisteredWidgetContent, decorateWidgetShell } from "./widget-renderers.js";
 import { createWidgetPreviewRenderContext } from "./widget-preview-context.js";
 
 function createPreviewWidgetFromItem(item = {}, context = {}) {
   const size = item.size || { w: item.w, h: item.h };
+  const kind = resolveWidgetKind(item);
+  const defaults = getWidgetCreationDefaults(kind);
   return {
     ...item,
-    kind: resolveWidgetKind(item),
-    type: resolveWidgetKind(item),
-    component: item.component || item.kind || item.type || resolveWidgetKind(item),
-    category: item.category || context.category || "",
-    variant: item.variant || "",
+    kind,
+    type: kind,
+    component: item.component || defaults.component,
+    category: item.category || context.category || defaults.category,
+    variant: item.variant || defaults.defaultVariant || "",
     label: item.label || item.title || "",
     title: item.title || item.label || "",
-    w: size?.w || 2,
-    h: size?.h || 2,
+    w: size?.w || defaults.defaultSize.w,
+    h: size?.h || defaults.defaultSize.h,
   };
 }
 

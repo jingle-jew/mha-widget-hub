@@ -48,3 +48,55 @@ export function buildWeatherWidgetConfig(widget, draft, hass, visibilityConfig) 
     forecastType: normalizeWeatherForecastType(draft.forecastType),
   };
 }
+
+export function renderWeatherConfigFields(session, hass, visibilityConfig, onChange, helpers) {
+  const { createField, configOptionLabel, t } = helpers;
+  const { draft, options, selected } = reconcileWeatherConfigDraft(
+    session.draft,
+    hass,
+    visibilityConfig,
+  );
+  const fields = document.createElement("div");
+  fields.className = "mha-widget-config-fields";
+
+  const select = document.createElement("select");
+  select.className = "mha-widget-config-control";
+  select.disabled = !options.length;
+  if (!options.length) {
+    const empty = document.createElement("option");
+    empty.textContent = t("widgets.config.noWeatherEntity", "No authorized and available weather entity.");
+    select.append(empty);
+  } else {
+    options.forEach((option) => {
+      const item = document.createElement("option");
+      item.value = option.value;
+      item.textContent = option.label;
+      item.selected = option.value === draft.entityId;
+      select.append(item);
+    });
+  }
+  select.addEventListener("change", (event) => {
+    updateWeatherEntity(draft, event.currentTarget.value);
+    onChange?.({ rerender: true });
+  });
+
+  const forecastSelect = document.createElement("select");
+  forecastSelect.className = "mha-widget-config-control";
+  WEATHER_FORECAST_OPTIONS.forEach((option) => {
+    const item = document.createElement("option");
+    item.value = option.value;
+    item.textContent = configOptionLabel("widgets.weather.forecastTypes", option);
+    item.selected = option.value === draft.forecastType;
+    forecastSelect.append(item);
+  });
+  forecastSelect.addEventListener("change", (event) => {
+    updateWeatherForecastType(draft, event.currentTarget.value);
+    onChange?.();
+  });
+
+  fields.append(
+    createField(t("widgets.config.weatherEntity", "Weather entity"), select),
+    createField(t("widgets.weather.forecast", "Forecasts"), forecastSelect),
+  );
+  return { fields, canSave: Boolean(selected) };
+}

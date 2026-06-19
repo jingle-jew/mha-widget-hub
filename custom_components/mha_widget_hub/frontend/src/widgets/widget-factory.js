@@ -3,7 +3,7 @@ import {
   normalizeWidgetSize,
 } from "../layout/layout-engine.js";
 import {
-  getWidgetDefinition,
+  getWidgetCreationDefaults,
   normalizeWidgetContract,
   resolveWidgetKind,
 } from "./widget-registry.js";
@@ -18,10 +18,10 @@ export function createWidgetFromCatalogItem(
   const timestamp = now().toString(36);
   const randomToken = random().toString(36).slice(2, 7);
   const kind = resolveWidgetKind(item);
-  const definition = getWidgetDefinition(kind);
-  const variant = item.variant || definition?.defaultVariant || kind;
-  const category = item.category || definition?.category || "custom";
-  const baseSize = item.size || definition?.defaultSize || { w: 2, h: 2 };
+  const defaults = getWidgetCreationDefaults(kind);
+  const variant = item.variant || defaults.defaultVariant || kind;
+  const category = item.category || defaults.category || "custom";
+  const baseSize = item.size || defaults.defaultSize || { w: 2, h: 2 };
   const size = normalizeWidgetForKind({
     kind,
     type: kind,
@@ -34,7 +34,7 @@ export function createWidgetFromCatalogItem(
     id: `widget-${category}-${variant || kind}-${timestamp}-${randomToken}`,
     kind,
     type: kind,
-    component: definition?.component || "empty-widget",
+    component: defaults.component,
     category,
     variant,
     title: item.title || item.label || "Widget",

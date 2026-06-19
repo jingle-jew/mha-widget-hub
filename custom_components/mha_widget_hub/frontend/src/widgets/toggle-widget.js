@@ -16,7 +16,11 @@ import { getEntityState, getWidgetEntityId, isEntityAvailable } from "../ha/enti
 import { isToggleEntityOn, supportsToggleEntity } from "../ha/toggle.js";
 import { clampWidth, css, freezeSize, isLocalWidgetKind, variant } from "./widget-definition-utils.js";
 import { isEntityAllowedForCurrentUser } from "../admin/entity-permissions.js";
-import { buildToggleWidgetConfig, createToggleConfigDraft } from "../widget-config/toggle-config.js";
+import {
+  buildToggleWidgetConfig,
+  createToggleConfigDraft,
+  renderToggleConfigFields,
+} from "../widget-config/toggle-config.js";
 import { WIDGET_PREVIEW_DATA } from "./widget-preview-data.js";
 import { t } from "../i18n/index.js";
 
@@ -189,14 +193,18 @@ export const TOGGLE_WIDGET_CONFIG_MANIFEST = Object.freeze({
   type: "toggle",
   title: "Configure toggle",
   hint: "Choose the device type, entity, and display name.",
+  titleKey: "widgets.config.configureToggle",
+  hintKey: "widgets.config.toggleHint",
   createDraft: createToggleConfigDraft,
   build: buildToggleWidgetConfig,
+  renderFields: renderToggleConfigFields,
 });
 
 export const TOGGLE_WIDGET_DEFINITION = Object.freeze({
   component: "toggle-widget",
   category: "actions",
   manager: Object.freeze({
+    hidden: false,
     entries: Object.freeze([
       Object.freeze({ category: "actions", variant: "toggle-widget", label: "Toggle", size: freezeSize(3, 1), description: "Icon, state, and switch.", order: 30 }),
       Object.freeze({ category: "actions", variant: "toggle-widget", label: "Toggle large", size: freezeSize(4, 1), description: "Switch with more space.", order: 40 }),
@@ -211,6 +219,21 @@ export const TOGGLE_WIDGET_DEFINITION = Object.freeze({
   defaultVariant: "toggle-widget",
   defaultSize: freezeSize(3, 1),
   normalizeSize: (size) => ({ ...clampWidth(size, 3, 4), h: 1 }),
+  capabilities: Object.freeze({
+    configurable: true,
+    resizable: true,
+    slotConfigurable: false,
+    weatherEntityConfigurable: false,
+  }),
+  storage: Object.freeze({
+    normalize: (widget = {}) => ({
+      entityId: widget.entityId || widget.entity_id || "",
+    }),
+  }),
+  shell: Object.freeze({
+    configureMode: "config",
+  }),
+  placementFlow: "configure-first",
   variants: [
     variant("toggle-widget", "Toggle 3×1", 3, 1),
     variant("toggle-widget", "Toggle 4×1", 4, 1),

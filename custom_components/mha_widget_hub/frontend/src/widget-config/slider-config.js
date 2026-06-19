@@ -86,3 +86,65 @@ export function buildSliderWidgetConfig(widget, draft, hass, visibilityConfig) {
     sliderAction: draft.sliderAction,
   };
 }
+
+export function renderSliderConfigFields(session, hass, visibilityConfig, onChange, helpers) {
+  const { createField, configOptionLabel, emptyLabelForConfigOption, t } = helpers;
+  const reconciled = reconcileSliderConfigDraft(session.draft, hass, visibilityConfig);
+  const { draft } = reconciled;
+  const fields = document.createElement("div");
+  fields.className = "mha-widget-config-fields";
+
+  const actionSelect = document.createElement("select");
+  actionSelect.className = "mha-widget-config-control";
+  SLIDER_ACTIONS.forEach((action) => {
+    const item = document.createElement("option");
+    item.value = action.value;
+    item.textContent = configOptionLabel("widgets.config.sliderActions", action);
+    item.selected = action.value === draft.sliderAction;
+    actionSelect.append(item);
+  });
+  actionSelect.addEventListener("change", (event) => {
+    updateSliderAction(draft, event.currentTarget.value, hass, visibilityConfig);
+    onChange?.({ rerender: true });
+  });
+
+  const deviceSelect = document.createElement("select");
+  deviceSelect.className = "mha-widget-config-control";
+  deviceSelect.disabled = !reconciled.options.length;
+  if (!reconciled.options.length) {
+    const empty = document.createElement("option");
+    empty.value = "";
+    empty.textContent = emptyLabelForConfigOption("widgets.config.emptyLabels", reconciled.action);
+    deviceSelect.append(empty);
+  } else {
+    reconciled.options.forEach((option) => {
+      const item = document.createElement("option");
+      item.value = option.value;
+      item.textContent = option.label;
+      item.selected = option.value === draft.entityId;
+      deviceSelect.append(item);
+    });
+  }
+  deviceSelect.addEventListener("change", (event) => {
+    updateSliderEntity(draft, event.currentTarget.value, reconciled.options);
+    onChange?.({ rerender: true });
+  });
+
+  const nameInput = document.createElement("input");
+  nameInput.className = "mha-widget-config-control";
+  nameInput.type = "text";
+  nameInput.value = draft.label;
+  nameInput.placeholder = reconciled.selected?.label || t("widgets.config.placeholderRoom", "Living room");
+  nameInput.autocomplete = "off";
+  nameInput.addEventListener("input", (event) => {
+    updateSliderLabel(draft, event.currentTarget.value);
+    onChange?.();
+  });
+
+  fields.append(
+    createField(t("widgets.config.action", "Action"), actionSelect),
+    createField(t("widgets.config.device", "Device"), deviceSelect),
+    createField(t("widgets.modesRoutines.displayName", "Display name"), nameInput),
+  );
+  return { fields, canSave: Boolean(reconciled.selected) };
+}

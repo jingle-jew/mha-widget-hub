@@ -40,7 +40,11 @@ import {
   renamePage,
   selectPage,
 } from "./src/pages/page-controller.js";
-import { buildPageCreatorState } from "./src/pages/page-creator-props.js?v=phase5";
+import {
+  createPageCreatorPanel,
+  syncPageCreatorPanel,
+  updatePageCreatorIconSelection,
+} from "./src/pages/page-creator.js?v=phase6";
 import {destroyDomSubtree} from "./src/core/dom-lifecycle.js";
 import {ICONS} from "./src/components/icons.js";
 import {createShell} from "./src/layout/shell.js";
@@ -52,22 +56,24 @@ import {
   syncDocks,
 } from "./src/layout/dock-controller.js";
 import {createSettingsPanel,updateSettingsPanel} from "./src/settings/settings-panel.js";
+import { replaceSettingsPanelPreservingUiState } from "./src/settings/settings-panel-orchestrator.js?v=phase7";
 import {
   buildSettingsPanelState,
   resolveEffectiveIconShape,
 } from "./src/settings/settings-panel-props.js?v=phase3";
-import {createWidgetManager, WIDGET_MANAGER_CATEGORIES} from "./src/widget-manager/widget-manager.js";
-import { buildWidgetManagerState } from "./src/widget-manager/widget-manager-props.js?v=phase4";
+import { WIDGET_MANAGER_CATEGORIES } from "./src/widget-manager/widget-manager.js";
 import {
   buildConfiguredWidget,
-  createWidgetConfigPopup,
   createWidgetConfigSession,
   supportsWidgetConfiguration,
 } from "./src/widget-config/widget-config-popup.js";
+import { getScenesDefaultButtonIndex } from "./src/widget-config/widget-config-props.js?v=phase5";
 import {
-  buildWidgetConfigPopupState,
-  getScenesDefaultButtonIndex,
-} from "./src/widget-config/widget-config-props.js?v=phase5";
+  createWidgetConfigPanel,
+  createWidgetManagerPanel,
+  syncWidgetConfigPanel,
+  syncWidgetManagerPanel,
+} from "./src/widgets/widget-placement-orchestrator.js?v=phase1";
 import {
   createThemeController,
 } from "./src/settings/theme-controller.js";
@@ -80,6 +86,7 @@ import { getNextWidgetVariantEntries, getVariantCandidate, sameVariantSize } fro
 import { normalizeStoredWidgetContract } from "./src/widgets/widget-storage.js?v=phase1";
 import { createWidgetFromCatalogItem } from "./src/widgets/widget-factory.js";
 import {updateClockWidgets} from "./src/widgets/clock-widget.js";
+import { getWidgetPlacementFlow } from "./src/widgets/widget-registry.js?v=phase5b1";
 import {DEFAULT_WIDGETS,getActiveGridRows,getActiveGridUnits,getEffectiveLayout,getInternalGridColumnCountFromLogical,getInternalGridRowCountFromLogical,getLayoutMode,getGridPreset,getWidgetDensity,normalizeWidgetForKind,normalizeWidgetSize,sizeToString} from "./src/layout/layout-engine.js";
 import {
   doesWidgetGroupExactlyFillRect,
@@ -104,20 +111,18 @@ import {
 } from "./src/layout/placement-calculations.js";
 import { createPlacementController } from "./src/layout/placement-controller.js";
 import { createGridRuntime } from "./src/layout/grid-runtime.js";
-import {createScreensaver,normalizeClockVariant,updateScreensaverClock,updateScreensaverClockVariant,updateScreensaverNowBar,updateScreensaverState} from "./src/screensaver/screensaver.js";
+import {normalizeClockVariant,updateScreensaverClock} from "./src/screensaver/screensaver.js";
 import { createScreensaverController } from "./src/screensaver/screensaver-controller.js";
+import { getNowBarCalendarSignature } from "./src/screensaver/screensaver-props.js?v=phase4";
 import {
-  buildScreensaverViewState,
-  getNowBarCalendarSignature,
-} from "./src/screensaver/screensaver-props.js?v=phase4";
+  createScreensaverElement,
+  syncScreensaverElement,
+} from "./src/screensaver/screensaver-orchestrator.js?v=phase1";
 import {
   buildNowBarTiles,
   fetchNowBarCalendarEvents,
   normalizeNowBarConfig,
 } from "./src/screensaver/nowbar-data.js";
-import { createIcon } from "./src/ui/icon.js";
-import { createIconSymbol } from "./src/ui/icon-symbol.js";
-import { createCloseButton } from "./src/system/system-buttons.js";
 import { loadEntityVisibilityConfig } from "./src/admin/entity-visibility-store.js";
 import { normalizeEntityVisibilityConfig } from "./src/admin/entity-permissions.js";
 import { getStyleManifest } from "./src/styles/style-manifest.js";
@@ -599,43 +604,15 @@ _syncSettingsModalState(){
   this.classList.toggle("is-settings-open",this._settingsOpen);
   this.dataset.settingsOpen=String(this._settingsOpen);
 }
-_getPanelFocusIdentity(panel){
-  const active=this.shadowRoot?.activeElement;
-  if(!active||!panel?.contains(active))return null;
-  return {
-    tagName:active.tagName,
-    settingsControl:active.dataset?.settingsControl||"",
-    ariaLabel:active.getAttribute?.("aria-label")||"",
-    name:active.getAttribute?.("name")||"",
-    type:active.getAttribute?.("type")||"",
-  };
-}
-_findPanelFocusTarget(panel,identity){
-  if(!panel||!identity)return null;
-  const candidates=[...panel.querySelectorAll(identity.tagName.toLowerCase())];
-  return candidates.find(candidate=>{
-    if(identity.settingsControl)return candidate.dataset?.settingsControl===identity.settingsControl;
-    if(identity.ariaLabel)return candidate.getAttribute("aria-label")===identity.ariaLabel;
-    if(identity.name)return candidate.getAttribute("name")===identity.name&&candidate.getAttribute("type")===identity.type;
-    return false;
-  })||null;
-}
-_replacePanelPreservingUiState(existing,next){
-  const sameView=existing?.dataset.settingsScope===next?.dataset.settingsScope
-    &&existing?.dataset.settingsPage===next?.dataset.settingsPage;
-  const scrollTop=sameView?(existing?.querySelector(".mha-settings-body")?.scrollTop||0):0;
-  const focusIdentity=sameView?this._getPanelFocusIdentity(existing):null;
-  if(sameView&&updateSettingsPanel(existing,next))return;
-  if(existing)existing.replaceWith(next);
-  else this.shadowRoot.append(next);
-  const body=next.querySelector(".mha-settings-body");
-  if(body)body.scrollTop=scrollTop;
-  if(!next.hidden)this._findPanelFocusTarget(next,focusIdentity)?.focus?.({preventScroll:true});
-}
 _syncSettingsDom(){
   const existing=this.shadowRoot.querySelector('.mha-settings-panel[data-settings-scope="all"]');
   this._syncSettingsModalState();
-  this._replacePanelPreservingUiState(existing,this._createSettingsPanel());
+  replaceSettingsPanelPreservingUiState({
+    root:this.shadowRoot,
+    existing,
+    next:this._createSettingsPanel(),
+    updatePanel:updateSettingsPanel,
+  });
 }
 _getSettingsPanelProps(scope="all"){
   const themeState=this._themeController.read();
@@ -763,13 +740,10 @@ _isMobileLandscapeLayout(){
   return this._isMobileLauncherLayout()&&window.matchMedia?.("(orientation: landscape)")?.matches;
 }
 _createWidgetManagerPanel(){
-  const managerState=buildWidgetManagerState({
+  return createWidgetManagerPanel({
     open:this._widgetManagerOpen,
     activeCategory:this._widgetManagerCategory,
     categories:WIDGET_MANAGER_CATEGORIES,
-  });
-  return createWidgetManager({
-    ...managerState,
     onClose:()=>this._closeWidgetManager(),
     onBack:()=>this._showWidgetManagerCategories(),
     onSelectCategory:id=>this._selectWidgetManagerCategory(id),
@@ -777,9 +751,15 @@ _createWidgetManagerPanel(){
   });
 }
 _syncWidgetManagerDom(){
-  const existing=this.shadowRoot.querySelector(".mha-widget-manager-panel");
-  if(existing)existing.remove();
-  this.shadowRoot.append(this._createWidgetManagerPanel());
+  syncWidgetManagerPanel(this.shadowRoot,{
+    open:this._widgetManagerOpen,
+    activeCategory:this._widgetManagerCategory,
+    categories:WIDGET_MANAGER_CATEGORIES,
+    onClose:()=>this._closeWidgetManager(),
+    onBack:()=>this._showWidgetManagerCategories(),
+    onSelectCategory:id=>this._selectWidgetManagerCategory(id),
+    onSelectWidget:item=>this._beginWidgetPlacement(item),
+  });
 }
 _openWidgetManager(){
   if(!this._isEditing||this._isMobileLandscapeLayout())return;
@@ -810,11 +790,24 @@ _createWidgetFromCatalogItem(item){
 _beginWidgetPlacement(item){
   if(!this._isEditing||this._isMobileLandscapeLayout())return;
   const widget=this._createWidgetFromCatalogItem(item);
-  if(widget?.kind==="scenes"){
+  const placementFlow=getWidgetPlacementFlow(widget);
+  if(placementFlow==="direct"){
     this._startWidgetPlacement(widget);
     return;
   }
-  if(supportsWidgetConfiguration(widget)){
+  if(placementFlow==="slot-config-first"){
+    this._widgetManagerOpen=false;
+    this._widgetManagerCategory="";
+    this._widgetConfigSession=createWidgetConfigSession(widget,this._hass,{
+      mode:"create",
+      visibilityConfig:this._entityVisibilityConfig,
+    });
+    this._widgetConfigHassReady=Boolean(this._hass);
+    this._syncWidgetManagerDom();
+    this._syncWidgetConfigDom();
+    return;
+  }
+  if(placementFlow==="configure-first"&&supportsWidgetConfiguration(widget)){
     this._widgetManagerOpen=false;
     this._widgetManagerCategory="";
     this._widgetConfigSession=createWidgetConfigSession(widget,this._hass,{
@@ -838,24 +831,24 @@ _startWidgetPlacement(widget){
   this._syncWidgetDropSlots();
 }
 _createWidgetConfigPanel(){
-  const popupState=buildWidgetConfigPopupState({
+  return createWidgetConfigPanel({
     session:this._widgetConfigSession,
     hass:this._hass,
     visibilityConfig:this._entityVisibilityConfig,
-  });
-  return createWidgetConfigPopup({
-    ...popupState,
     onCancel:()=>this._closeWidgetConfig(),
     onSave:()=>this._saveWidgetConfig(),
-    onChange:change=>{
-      if(change?.rerender)this._syncWidgetConfigDom();
-    },
+    onRerender:()=>this._syncWidgetConfigDom(),
   });
 }
 _syncWidgetConfigDom(){
-  const existing=this.shadowRoot?.querySelector?.(".mha-widget-config-popup");
-  if(existing)existing.remove();
-  this.shadowRoot?.append?.(this._createWidgetConfigPanel());
+  syncWidgetConfigPanel(this.shadowRoot,{
+    session:this._widgetConfigSession,
+    hass:this._hass,
+    visibilityConfig:this._entityVisibilityConfig,
+    onCancel:()=>this._closeWidgetConfig(),
+    onSave:()=>this._saveWidgetConfig(),
+    onRerender:()=>this._syncWidgetConfigDom(),
+  });
 }
 _closeWidgetConfig(){
   this._widgetConfigSession=null;
@@ -939,7 +932,12 @@ _syncScreensaverSettingsDom(){
   const existing=this.shadowRoot.querySelector('.mha-settings-panel[data-settings-scope="screensaver"]');
   this.classList.toggle("is-screensaver-settings-open",this._screensaverSettingsOpen);
   this.dataset.screensaverSettingsOpen=String(this._screensaverSettingsOpen);
-  this._replacePanelPreservingUiState(existing,createSettingsPanel(this._getSettingsPanelProps("screensaver")));
+  replaceSettingsPanelPreservingUiState({
+    root:this.shadowRoot,
+    existing,
+    next:createSettingsPanel(this._getSettingsPanelProps("screensaver")),
+    updatePanel:updateSettingsPanel,
+  });
 }
 
 _applyDockPositionFromSettings(position="left"){
@@ -1308,13 +1306,10 @@ _requestNowBarCalendarEvents({force=false}={}){
   });
 }
 _createScreensaverElement(screensaverState=this._screensaverController.read()){
-  const screensaverViewState=buildScreensaverViewState({
+  return createScreensaverElement({
     isVisible:this._getScreensaverVisible(),
     screensaverState,
     nowBarTiles:this._getNowBarTiles(),
-  });
-  return createScreensaver({
-    ...screensaverViewState,
     onClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),
     onOpenScreensaverSettings:()=>this._openScreensaverSettings(),
     onWake:()=>this._wakeScreensaver(),
@@ -1324,20 +1319,18 @@ _syncScreensaverDom({force=false}={}){
   this._syncScreensaverVisibilityState();
   const existing=this.shadowRoot.querySelector(".mha-screensaver");
   const screensaverState=this._screensaverController.read();
-  if(!existing){
-    this.shadowRoot.append(this._createScreensaverElement(screensaverState));
-    return;
-  }
-  if(force){
-    existing.replaceWith(this._createScreensaverElement(screensaverState));
-    return;
-  }
-  updateScreensaverState(existing,{isVisible:this._getScreensaverVisible()});
-  updateScreensaverClockVariant(existing,screensaverState.clockVariant);
-  updateScreensaverNowBar(existing,{
-    showNowBar:screensaverState.nowBar,
-    nowBarItems:screensaverState.nowBarItems,
-    nowBarTiles:this._getNowBarTiles(),
+  syncScreensaverElement({
+    root:this.shadowRoot,
+    existing,
+    force,
+    props:{
+      isVisible:this._getScreensaverVisible(),
+      screensaverState,
+      nowBarTiles:this._getNowBarTiles(),
+      onClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),
+      onOpenScreensaverSettings:()=>this._openScreensaverSettings(),
+      onWake:()=>this._wakeScreensaver(),
+    },
   });
 }
 toggleEditMode(){
@@ -1451,106 +1444,26 @@ _closePageCreator(){
 }
 _setPageCreatorIcon(icon="grid"){
   this._newPageIcon=String(icon||"grid");
-  this._updatePageCreatorIconDom();
-}
-_getPageCreatorPanels(){
-  return Array.from(this.shadowRoot?.querySelectorAll?.('section.mha-page-creator:not(.mha-widget-config-popup)')||[]);
-}
-_updatePageCreatorIconDom(){
-  this._getPageCreatorPanels().forEach(panel=>{
-    panel.querySelectorAll?.(".mha-page-creator-icon")?.forEach(button=>{
-      const optionName=button.dataset?.icon||"";
-      const selected=optionName===this._newPageIcon;
-      button.dataset.selected=String(selected);
-      button.setAttribute("aria-pressed",String(selected));
-    });
-  });
+  updatePageCreatorIconSelection(this.shadowRoot,this._newPageIcon);
 }
 _createPageFromCreator(){
   if(!this._isEditing||this._isMobileLandscapeLayout())return;
   this._addGridPage({icon:this._newPageIcon||"grid"});
 }
-_createPageCreatorPanel(){
-  const pageCreatorState=buildPageCreatorState({
+_getPageCreatorPanelProps(){
+  return {
     open:this._pageCreatorOpen,
     selectedIcon:this._newPageIcon||"grid",
-  });
-  const panel=document.createElement("section");
-  panel.className="mha-page-creator";
-  panel.dataset.open=String(pageCreatorState.open);
-  panel.setAttribute("aria-hidden",String(!pageCreatorState.open));
-
-  const scrim=document.createElement("button");
-  scrim.className="mha-page-creator-scrim";
-  scrim.type="button";
-  scrim.setAttribute("aria-label",t("settings.pageCreatorClose","Close icon picker"));
-  scrim.onclick=()=>this._closePageCreator();
-
-  const sheet=document.createElement("div");
-  sheet.className="mha-page-creator-sheet";
-  sheet.setAttribute("role","dialog");
-  sheet.setAttribute("aria-modal","true");
-  sheet.setAttribute("aria-label",t("settings.pageCreatorTitle","New page"));
-
-  const header=document.createElement("div");
-  header.className="mha-page-creator-header";
-  const title=document.createElement("h2");
-  title.textContent=t("settings.pageCreatorTitle","New page");
-  const close=createCloseButton({
-    label:t("common.close","Close"),
-    className:"mha-page-creator-close",
-    onClick:()=>this._closePageCreator(),
-  });
-  header.append(title,close);
-
-  const hint=document.createElement("p");
-  hint.className="mha-page-creator-hint";
-  hint.textContent=t("settings.pageCreatorHint","Choose the icon that will appear in the dock.");
-
-  const grid=document.createElement("div");
-  grid.className="mha-page-creator-icons";
-  pageCreatorState.iconOptions.forEach(option=>{
-    const button=document.createElement("button");
-    button.className="mha-page-creator-icon";
-    button.type="button";
-    button.dataset.icon=option.name;
-    button.dataset.selected=String(option.selected);
-    button.setAttribute("aria-pressed",String(option.selected));
-    button.setAttribute("aria-label",option.label);
-    button.onclick=()=>this._setPageCreatorIcon(option.name);
-    button.append(createIcon({
-      name:option.name,
-      category:option.category,
-      label:option.label,
-      children:createIconSymbol({name:option.name,label:option.label}),
-    }));
-    const label=document.createElement("span");
-    label.textContent=option.label;
-    button.append(label);
-    grid.append(button);
-  });
-
-  const actions=document.createElement("div");
-  actions.className="mha-page-creator-actions";
-  const cancel=document.createElement("button");
-  cancel.className="mha-page-creator-secondary";
-  cancel.type="button";
-  cancel.textContent=t("common.cancel","Cancel");
-  cancel.onclick=()=>this._closePageCreator();
-  const create=document.createElement("button");
-  create.className="mha-page-creator-primary";
-  create.type="button";
-  create.textContent=t("settings.pageCreatorCreate","Create page");
-  create.onclick=()=>this._createPageFromCreator();
-  actions.append(cancel,create);
-
-  sheet.append(header,hint,grid,actions);
-  panel.append(scrim,sheet);
-  return panel;
+    onClose:()=>this._closePageCreator(),
+    onSelectIcon:icon=>this._setPageCreatorIcon(icon),
+    onCreate:()=>this._createPageFromCreator(),
+  };
+}
+_createPageCreatorPanel(){
+  return createPageCreatorPanel(this._getPageCreatorPanelProps());
 }
 _syncPageCreatorDom(){
-  this._getPageCreatorPanels().forEach(panel=>panel.remove());
-  this.shadowRoot?.append?.(this._createPageCreatorPanel());
+  syncPageCreatorPanel(this.shadowRoot,this._getPageCreatorPanelProps());
 }
 
 _updateDockActiveState(){

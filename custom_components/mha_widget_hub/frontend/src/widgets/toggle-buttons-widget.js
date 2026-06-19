@@ -106,6 +106,7 @@ export const TOGGLE_BUTTONS_WIDGET_DEFINITION = Object.freeze({
   component: "toggle-buttons-widget",
   category: "lights",
   manager: Object.freeze({
+    hidden: true,
     entries: Object.freeze([
       Object.freeze({ category: "lights", variant: "toggle-buttons", label: "Light + buttons", size: freezeSize(4, 2), description: "Visual toggle and 4 quick buttons.", order: 20 }),
     ]),
@@ -123,6 +124,19 @@ export const TOGGLE_BUTTONS_WIDGET_DEFINITION = Object.freeze({
   defaultVariant: "toggle-buttons",
   defaultSize: freezeSize(4, 2),
   normalizeSize: (size) => ({ ...clampWidth(size, 3, 4), h: 2 }),
+  capabilities: Object.freeze({
+    configurable: false,
+    resizable: true,
+    slotConfigurable: false,
+    weatherEntityConfigurable: false,
+  }),
+  storage: Object.freeze({
+    normalize: () => ({}),
+  }),
+  shell: Object.freeze({
+    configureMode: "variant",
+  }),
+  placementFlow: "direct",
   variants: [
     variant("toggle-buttons", "Toggle + buttons 3×2", 3, 2),
     variant("toggle-buttons", "Toggle + buttons 4×2", 4, 2),
