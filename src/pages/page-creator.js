@@ -2,6 +2,11 @@ import { buildPageCreatorState } from "./page-creator-props.js?v=phase6";
 import { createIcon } from "../ui/icon.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
 import { createPanelShell } from "../panels/panel-shell.js";
+import {
+  applyPanelSurfaceContract,
+  PANEL_MOBILE_PRESENTATIONS,
+  PANEL_SURFACE_ROLES,
+} from "../panels/panel-surface-contract.js";
 import { t } from "../i18n/index.js";
 
 export function createPageCreatorPanel({
@@ -57,7 +62,7 @@ export function createPageCreatorPanel({
   create.onclick = onCreate;
   actions.append(cancel, create);
 
-  return createPanelShell({
+  return applyPanelSurfaceContract(createPanelShell({
     open: pageCreatorState.open,
     rootClassName: "mha-page-creator",
     scrimClassName: "mha-page-creator-scrim",
@@ -70,6 +75,9 @@ export function createPageCreatorPanel({
     scrimLabel: t("settings.pageCreatorClose", "Close icon picker"),
     onClose,
     children: [hint, grid, actions],
+  }), {
+    surfaceRole: PANEL_SURFACE_ROLES.POPUP,
+    mobilePresentation: PANEL_MOBILE_PRESENTATIONS.SHEET,
   });
 }
 
