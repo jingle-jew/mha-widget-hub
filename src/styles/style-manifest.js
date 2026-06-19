@@ -36,6 +36,7 @@ const STATIC_STYLE_MANIFEST_AFTER_THEMES = Object.freeze([
 const STATIC_STYLE_MANIFEST_AFTER_WIDGETS = Object.freeze([
   entry("styles/screensaver/screensaver.css", "component"),
   entry("styles/screensaver/screensaver-clock.css", "component"),
+  entry("styles/screensaver/screensaver-hotcorner.css", "component"),
 ]);
 
 const WIDGET_CSS_ORDER = Object.freeze([
