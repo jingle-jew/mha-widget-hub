@@ -1,12 +1,16 @@
 @media (max-width: 767px) {
   .mha-settings-panel .mha-settings-sheet {
+    position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
     top: auto;
     width: auto;
     max-width: none;
+    max-height: min(82vh, 42rem);
+    overflow: auto;
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
+    transform-origin: bottom center;
   }
 }
