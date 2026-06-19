@@ -61,18 +61,19 @@ import {
   buildSettingsPanelState,
   resolveEffectiveIconShape,
 } from "./src/settings/settings-panel-props.js?v=phase3";
-import {createWidgetManager, WIDGET_MANAGER_CATEGORIES} from "./src/widget-manager/widget-manager.js";
-import { buildWidgetManagerState } from "./src/widget-manager/widget-manager-props.js?v=phase4";
+import { WIDGET_MANAGER_CATEGORIES } from "./src/widget-manager/widget-manager.js";
 import {
   buildConfiguredWidget,
-  createWidgetConfigPopup,
   createWidgetConfigSession,
   supportsWidgetConfiguration,
 } from "./src/widget-config/widget-config-popup.js";
+import { getScenesDefaultButtonIndex } from "./src/widget-config/widget-config-props.js?v=phase5";
 import {
-  buildWidgetConfigPopupState,
-  getScenesDefaultButtonIndex,
-} from "./src/widget-config/widget-config-props.js?v=phase5";
+  createWidgetConfigPanel,
+  createWidgetManagerPanel,
+  syncWidgetConfigPanel,
+  syncWidgetManagerPanel,
+} from "./src/widgets/widget-placement-orchestrator.js?v=phase1";
 import {
   createThemeController,
 } from "./src/settings/theme-controller.js";
@@ -737,13 +738,10 @@ _isMobileLandscapeLayout(){
   return this._isMobileLauncherLayout()&&window.matchMedia?.("(orientation: landscape)")?.matches;
 }
 _createWidgetManagerPanel(){
-  const managerState=buildWidgetManagerState({
+  return createWidgetManagerPanel({
     open:this._widgetManagerOpen,
     activeCategory:this._widgetManagerCategory,
     categories:WIDGET_MANAGER_CATEGORIES,
-  });
-  return createWidgetManager({
-    ...managerState,
     onClose:()=>this._closeWidgetManager(),
     onBack:()=>this._showWidgetManagerCategories(),
     onSelectCategory:id=>this._selectWidgetManagerCategory(id),
@@ -751,9 +749,15 @@ _createWidgetManagerPanel(){
   });
 }
 _syncWidgetManagerDom(){
-  const existing=this.shadowRoot.querySelector(".mha-widget-manager-panel");
-  if(existing)existing.remove();
-  this.shadowRoot.append(this._createWidgetManagerPanel());
+  syncWidgetManagerPanel(this.shadowRoot,{
+    open:this._widgetManagerOpen,
+    activeCategory:this._widgetManagerCategory,
+    categories:WIDGET_MANAGER_CATEGORIES,
+    onClose:()=>this._closeWidgetManager(),
+    onBack:()=>this._showWidgetManagerCategories(),
+    onSelectCategory:id=>this._selectWidgetManagerCategory(id),
+    onSelectWidget:item=>this._beginWidgetPlacement(item),
+  });
 }
 _openWidgetManager(){
   if(!this._isEditing||this._isMobileLandscapeLayout())return;
@@ -812,24 +816,24 @@ _startWidgetPlacement(widget){
   this._syncWidgetDropSlots();
 }
 _createWidgetConfigPanel(){
-  const popupState=buildWidgetConfigPopupState({
+  return createWidgetConfigPanel({
     session:this._widgetConfigSession,
     hass:this._hass,
     visibilityConfig:this._entityVisibilityConfig,
-  });
-  return createWidgetConfigPopup({
-    ...popupState,
     onCancel:()=>this._closeWidgetConfig(),
     onSave:()=>this._saveWidgetConfig(),
-    onChange:change=>{
-      if(change?.rerender)this._syncWidgetConfigDom();
-    },
+    onRerender:()=>this._syncWidgetConfigDom(),
   });
 }
 _syncWidgetConfigDom(){
-  const existing=this.shadowRoot?.querySelector?.(".mha-widget-config-popup");
-  if(existing)existing.remove();
-  this.shadowRoot?.append?.(this._createWidgetConfigPanel());
+  syncWidgetConfigPanel(this.shadowRoot,{
+    session:this._widgetConfigSession,
+    hass:this._hass,
+    visibilityConfig:this._entityVisibilityConfig,
+    onCancel:()=>this._closeWidgetConfig(),
+    onSave:()=>this._saveWidgetConfig(),
+    onRerender:()=>this._syncWidgetConfigDom(),
+  });
 }
 _closeWidgetConfig(){
   this._widgetConfigSession=null;
