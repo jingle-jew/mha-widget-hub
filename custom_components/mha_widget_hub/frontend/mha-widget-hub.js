@@ -1898,11 +1898,7 @@ _appendDeferredUi({layout,renderId}){
     this._scheduleIconSymbolRefresh();
   });
 }
-render(){
-  const themeState=this._themeController.sync();
-  this._applyCustomWallpaperState();
-  this._applyHaSidebarMode(this._hideHaSidebar);
-  const renderId=++this._renderId;
+_buildRenderContext(themeState){
   const layoutMode=getLayoutMode(this);
   const layout=getEffectiveLayout(this);
   const preset=this._getRuntimeGridPreset();
@@ -1911,12 +1907,45 @@ render(){
   const cols=preset.columns;
   const logicalRows=preset.rows;
   const {themeStyle,iconShapeSetting,iconShape,accent}=themeState;
-
+  return {
+    renderId:this._renderId+1,
+    themeState,
+    layoutMode,
+    layout,
+    preset,
+    units,
+    rows,
+    cols,
+    logicalRows,
+    themeStyle,
+    iconShapeSetting,
+    iconShape,
+    accent,
+  };
+}
+_prepareRenderCycle({renderId,themeState}){
+  this._applyCustomWallpaperState(themeState);
+  this._applyHaSidebarMode(this._hideHaSidebar);
+  this._renderId=renderId;
   cancelAnimationFrame(this._widgetRenderFrame);
   cancelAnimationFrame(this._secondaryUiFrame);
   this._clearGridScrollListener();
   this._stylesReadyRenderId=0;
   this.dataset.widgetsState="pending";
+}
+_applyRenderDatasetsAndRuntimeVars({
+  themeStyle,
+  iconShapeSetting,
+  iconShape,
+  layoutMode,
+  layout,
+  preset,
+  units,
+  rows,
+  cols,
+  logicalRows,
+  accent,
+}){
   this.dataset.themeStyle=themeStyle;
   this.dataset.iconShapeSetting=iconShapeSetting;
   this.dataset.iconShape=iconShape;
@@ -1933,12 +1962,12 @@ render(){
   this.style.setProperty("--mha-runtime-grid-rows",String(rows));
   this.style.setProperty("--mha-runtime-logical-columns",String(cols));
   this.style.setProperty("--mha-runtime-logical-rows",String(logicalRows));
-
   this.dataset.accent=accent;
   document.documentElement.dataset.accent=accent;
   document.documentElement.dataset.iconShapeSetting=iconShapeSetting;
   document.documentElement.dataset.iconShape=iconShape;
-
+}
+_mountRenderShell({layoutMode,layout,cols,units}){
   destroyDomSubtree(this.shadowRoot);
   this.shadowRoot.innerHTML=createCriticalBootStyle()+createFrontendStyleLinks(
     MHA_STYLE_MANIFEST,
@@ -1962,7 +1991,9 @@ render(){
     onSettings:()=>this._openSettings(),
   });
   this.shadowRoot.append(bg,shell);
-
+  return {links,grid};
+}
+_mountImmediateUi({layout,grid,units}){
   const positions=this._getActiveWidgetPositions({create:true});
   this._appendWidgetPlaceholders(grid,{units,positions});
   if(layout==="mobile"){
@@ -1971,41 +2002,64 @@ render(){
   this._appendPrimaryControls();
   this._wireDockAutoHide(grid);
   updateStatusTime(this.shadowRoot);
-
+  return {positions};
+}
+_schedulePrimaryWidgetRender({grid,units,positions,renderId}){
   this._widgetRenderFrame=requestAnimationFrame(()=>{
     this._widgetRenderFrame=0;
     if(this._renderId!==renderId)return;
     this._startProgressiveWidgetRender({grid,units,positions,renderId});
   });
-
-  Promise.all(links.map(link=>link.sheet
+}
+_handleStylesReady({layout,renderId}){
+  if(this._renderId!==renderId)return;
+  this._stylesReadyRenderId=renderId;
+  this._observeLayoutSize();
+  this._scheduleIconSymbolRefresh();
+  if(this._bootComplete){
+    this._appendDeferredUi({layout,renderId});
+    return;
+  }
+  this._pendingDeferredUi={layout,renderId};
+  this._tryCompleteBoot();
+}
+_handleStylesError({layout,renderId,error}){
+  console.warn("[MHA] Styles did not finish loading; revealing the shell.",error);
+  if(this._bootComplete){
+    this._appendDeferredUi({layout,renderId});
+    return;
+  }
+  this._pendingDeferredUi={layout,renderId};
+  this._finishBoot({fallback:true,reason:"stylesheet initialization failed"});
+}
+_awaitStylesAndFinalizeRender({links,layout,renderId}){
+  return Promise.all(links.map(link=>link.sheet
     ?Promise.resolve()
     :new Promise(resolve=>{
       link.addEventListener("load",resolve,{once:true});
       link.addEventListener("error",resolve,{once:true});
     })))
-    .then(()=>{
-      if(this._renderId!==renderId)return;
-      this._stylesReadyRenderId=renderId;
-      this._observeLayoutSize();
-      this._scheduleIconSymbolRefresh();
-      if(this._bootComplete){
-        this._appendDeferredUi({layout,renderId});
-      }else{
-        this._pendingDeferredUi={layout,renderId};
-        this._tryCompleteBoot();
-      }
-    })
-    .catch(error=>{
-      console.warn("[MHA] Styles did not finish loading; revealing the shell.",error);
-      if(this._bootComplete){
-        this._appendDeferredUi({layout,renderId});
-      }else{
-        this._pendingDeferredUi={layout,renderId};
-        this._finishBoot({fallback:true,reason:"stylesheet initialization failed"});
-      }
-    });
-
+    .then(()=>this._handleStylesReady({layout,renderId}))
+    .catch(error=>this._handleStylesError({layout,renderId,error}));
+}
+render(){
+  const themeState=this._themeController.sync();
+  const context=this._buildRenderContext(themeState);
+  this._prepareRenderCycle(context);
+  this._applyRenderDatasetsAndRuntimeVars(context);
+  const {links,grid}=this._mountRenderShell(context);
+  const {positions}=this._mountImmediateUi({...context,grid});
+  this._schedulePrimaryWidgetRender({
+    grid,
+    units:context.units,
+    positions,
+    renderId:context.renderId,
+  });
+  this._awaitStylesAndFinalizeRender({
+    links,
+    layout:context.layout,
+    renderId:context.renderId,
+  });
   this._scheduleScreensaverIdleTimer();
 }
 }
