@@ -1,6 +1,6 @@
 /*
  * Responsive matrix mirrored by src/layout/responsive.js:
- * mobile < 768px; tablet 768px..1179px; desktop >= 1180px.
+ * mobile < 768px; tablet 768px..1399px; desktop >= 1400px.
  * Orientation refines these layouts. The 520px dock threshold is local only.
  */
 :host{
