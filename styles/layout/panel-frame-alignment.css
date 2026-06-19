@@ -1,10 +1,10 @@
 /*
  * Panel frame alignment.
  *
- * Settings, Widget Manager, and widget config sheets are fixed overlays, so they
- * do not inherit the shell frame directly. Tablet/desktop follows the main
- * layout frame. Mobile uses a full-width bottom sheet with only the top corners
- * rounded.
+ * Settings, Widget Manager, Page Creator, and widget config sheets are fixed
+ * overlays, so they do not inherit the shell frame directly. Tablet/desktop
+ * follows the main layout frame. Mobile uses a full-width bottom sheet with only
+ * the top corners rounded.
  */
 
 @media (min-width: 768px) {
@@ -16,6 +16,7 @@
 
 @media (max-width: 767px) {
   .mha-settings-sheet,
+  .mha-page-creator-sheet,
   .mha-widget-config-sheet {
     inset-inline: 0 !important;
     inset-block-start: auto !important;
