@@ -1,18 +1,29 @@
 import { WIDGET_MODULES } from "./widget-module-registry.js";
 import {
-  buildWidgetCreationDefaults,
   DEFAULT_CAPABILITIES,
   DEFAULT_SHELL,
   DEFAULT_STORAGE,
   DEFAULT_WIDGET_SIZE,
   normalizeCapabilities,
   normalizePreviewRenderer,
-  normalizeRegisteredWidgetSizeWithDefinition,
   normalizeShellBehavior,
   normalizeStorage,
-  resolveContractValue,
   STATIC_PREVIEW_RENDERER,
 } from "./widget-contract-helpers.js";
+import {
+  getWidgetCapabilitiesFromDefinition,
+  getWidgetCatalogEntriesFromDefinition,
+  getWidgetConfigTypeFromDefinition,
+  getWidgetCreationDefaultsFromDefinition,
+  getWidgetDefinitionFromRegistry,
+  getWidgetManagerBehaviorFromDefinition,
+  getWidgetPlacementFlowFromDefinition,
+  getWidgetPreviewRendererFromDefinition,
+  getWidgetRendererNameFromDefinition,
+  getWidgetShellBehaviorFromDefinition,
+  getWidgetStorageAdapterFromDefinition,
+  normalizeRegisteredWidgetSizeFromDefinition,
+} from "./widget-contract-accessors.js";
 import { buildWidgetRegistry } from "./widget-contract-registry-builder.js";
 import {
   buildWidgetManagerCategories,
@@ -61,81 +72,79 @@ export function resolveWidgetKind(widget = {}, { fallback = "empty" } = {}) {
 }
 
 export function getWidgetDefinition(widgetOrKind = {}) {
-  return WIDGET_REGISTRY[resolveWidgetKind(widgetOrKind)] || null;
+  return getWidgetDefinitionFromRegistry(widgetOrKind, {
+    registry: WIDGET_REGISTRY,
+    resolveWidgetKind,
+  });
 }
 
 export function getWidgetManagerBehavior(widget = {}) {
-  return getWidgetDefinition(widget)?.manager || DEFAULT_MANAGER;
+  return getWidgetManagerBehaviorFromDefinition(widget, {
+    getWidgetDefinition,
+    defaultManager: DEFAULT_MANAGER,
+  });
 }
 
 export function getWidgetCatalogEntries(widget = {}) {
-  return getWidgetManagerBehavior(widget).entries || DEFAULT_MANAGER.entries;
+  return getWidgetCatalogEntriesFromDefinition(widget, {
+    getWidgetManagerBehavior,
+    defaultManager: DEFAULT_MANAGER,
+  });
 }
 
 export function getWidgetPreviewRenderer(widgetOrKind = {}) {
-  return getWidgetDefinition(widgetOrKind)?.previewRenderer || STATIC_PREVIEW_RENDERER;
+  return getWidgetPreviewRendererFromDefinition(widgetOrKind, {
+    getWidgetDefinition,
+    staticPreviewRenderer: STATIC_PREVIEW_RENDERER,
+  });
 }
 
 export function getWidgetRendererName(widget = {}) {
-  return getWidgetDefinition(widget)?.renderer || "empty";
+  return getWidgetRendererNameFromDefinition(widget, {
+    getWidgetDefinition,
+  });
 }
 
 export function getWidgetCapabilities(widget = {}) {
-  const definition = getWidgetDefinition(widget);
-  if (!definition) return DEFAULT_CAPABILITIES;
-
-  return Object.freeze(
-    Object.fromEntries(
-      Object.entries(definition.capabilities || DEFAULT_CAPABILITIES).map(([key, value]) => [
-        key,
-        resolveContractValue(value, widget, definition),
-      ]),
-    ),
-  );
+  return getWidgetCapabilitiesFromDefinition(widget, {
+    getWidgetDefinition,
+    defaultCapabilities: DEFAULT_CAPABILITIES,
+  });
 }
 
 export function getWidgetShellBehavior(widget = {}) {
-  const definition = getWidgetDefinition(widget);
-  if (!definition) return DEFAULT_SHELL;
-
-  return Object.freeze({
-    ...definition.shell,
-    configureMode: resolveContractValue(
-      definition.shell?.configureMode ?? DEFAULT_SHELL.configureMode,
-      widget,
-      definition,
-    ),
+  return getWidgetShellBehaviorFromDefinition(widget, {
+    getWidgetDefinition,
+    defaultShell: DEFAULT_SHELL,
   });
 }
 
 export function getWidgetStorageAdapter(widget = {}) {
-  const definition = getWidgetDefinition(widget);
-  if (!definition) return DEFAULT_STORAGE;
-  return definition.storage || DEFAULT_STORAGE;
+  return getWidgetStorageAdapterFromDefinition(widget, {
+    getWidgetDefinition,
+    defaultStorage: DEFAULT_STORAGE,
+  });
 }
 
 export function getWidgetCreationDefaults(widget = {}) {
-  const definition = getWidgetDefinition(widget);
-  const kind = resolveWidgetKind(widget, { fallback: "empty" });
-  return buildWidgetCreationDefaults(widget, {
-    definition,
-    kind,
+  return getWidgetCreationDefaultsFromDefinition(widget, {
+    getWidgetDefinition,
+    resolveWidgetKind,
     defaultWidgetSize: DEFAULT_WIDGET_SIZE,
   });
 }
 
 export function getWidgetPlacementFlow(widget = {}) {
-  const definition = getWidgetDefinition(widget);
-  if (!definition) return "direct";
-  return resolveContractValue(definition.placementFlow || "direct", widget, definition) || "direct";
+  return getWidgetPlacementFlowFromDefinition(widget, {
+    getWidgetDefinition,
+  });
 }
 
 export function getWidgetConfigType(widget = {}) {
-  const definition = getWidgetDefinition(widget);
-  const capabilities = getWidgetCapabilities(widget);
-  if (capabilities.weatherEntityConfigurable) return "weather";
-  if (!capabilities.configurable) return "";
-  return definition?.config || "";
+  return getWidgetConfigTypeFromDefinition(widget, {
+    getWidgetDefinition,
+    getWidgetCapabilities,
+  });
 }
 
 export function isWidgetKind(widget, expectedKind) {
@@ -143,11 +152,9 @@ export function isWidgetKind(widget, expectedKind) {
 }
 
 export function normalizeRegisteredWidgetSize(widget = {}, normalizeBottomeSize) {
-  const definition = getWidgetDefinition(widget);
-  const defaults = getWidgetCreationDefaults(widget);
-  return normalizeRegisteredWidgetSizeWithDefinition(widget, normalizeBottomeSize, {
-    definition,
-    defaults,
+  return normalizeRegisteredWidgetSizeFromDefinition(widget, normalizeBottomeSize, {
+    getWidgetDefinition,
+    getWidgetCreationDefaults,
   });
 }
 
