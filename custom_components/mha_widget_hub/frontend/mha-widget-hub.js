@@ -60,7 +60,7 @@ import {
 import {
   createThemeController,
 } from "./src/settings/theme-controller.js";
-import { extractAccentFromWallpaper, resolveAccentFromColorValue } from "./src/settings/wallpaper-accent.js";
+import { createAppearanceCoordinator } from "./src/settings/appearance-coordinator.js";
 import { createWallpaperController } from "./src/settings/wallpaper-controller.js";
 import {updateStatusTime} from "./src/layout/status-bar.js";
 import { normalizeStoredWidgetContract } from "./src/widgets/widget-storage.js?v=phase1";
@@ -127,6 +127,32 @@ constructor(){
   this._wallpaperController=createWallpaperController(this,{
     getTheme:()=>this._themeController.read().theme,
     getThemeState:()=>this._themeController.read(),
+  });
+  this._appearanceCoordinator=createAppearanceCoordinator({
+    host:this,
+    getRoot:()=>this.shadowRoot,
+    isConnected:()=>this.isConnected,
+    getCustomWallpapers:()=>this._customWallpapers,
+    setCustomWallpapers:(wallpapers)=>{this._customWallpapers=wallpapers;},
+    readThemeState:()=>this._themeController.read(),
+    syncTheme:()=>this._themeController.sync(),
+    setTheme:(value)=>this._themeController.setTheme(value),
+    setThemeStyle:(value)=>this._themeController.setThemeStyle(value),
+    setIosGlass:(value)=>this._themeController.setIosGlass(value),
+    setAccent:(value)=>this._themeController.setAccent(value),
+    setAccentMode:(value)=>this._themeController.setAccentMode(value),
+    setIconShape:(value)=>this._themeController.setIconShape(value),
+    migrateLegacyWallpaper:()=>this._wallpaperController.migrateLegacy(),
+    readWallpapers:()=>this._wallpaperController.read(),
+    applyWallpaperState:(themeState)=>this._wallpaperController.apply(themeState),
+    saveWallpaper:(mode,payload)=>this._wallpaperController.save(mode,payload),
+    resetWallpaper:(mode)=>this._wallpaperController.reset(mode),
+    getActiveAccentSource:(themeState,wallpapers)=>this._wallpaperController.getActiveAccentSource(themeState,wallpapers),
+    syncSettingsDom:()=>this._syncSettingsDom(),
+    syncScreensaverSettingsDom:()=>this._syncScreensaverSettingsDom(),
+    syncDocksDom:()=>this._syncDocksDom(),
+    refreshActiveGridOnly:()=>this._refreshActiveGridOnly(),
+    scheduleIconSymbolRefresh:()=>this._scheduleIconSymbolRefresh(),
   });
   this._screensaverController=createScreensaverController({
     normalizeClockVariant,
@@ -244,8 +270,6 @@ constructor(){
   this._viewportRaf=0;
   this._relayoutTimer=0;
   this._systemThemeListener=null;
-  this._themeTransitionTimer=0;
-  this._themeTransitionFrame=0;
   this._iconSymbolRefreshFrame=0;
   this._gridScrollCleanup=null;
   this._settingsOpen=false;
@@ -266,7 +290,6 @@ constructor(){
   this._hideHaSidebar=false;
   this._language="auto";
   this._customWallpapers={light:null,dark:null};
-  this._autoAccentRequestId=0;
   this._pages=[];
   this._activePageId="";
   this._widgets=[];
@@ -580,10 +603,7 @@ disconnectedCallback(){
   cancelAnimationFrame(this._widgetDropSlotsFrame);
   this._widgetDropSlotsFrame=0;
   this._gridRuntime.destroy();
-  cancelAnimationFrame(this._themeTransitionFrame);
-  this._themeTransitionFrame=0;
-  clearTimeout(this._themeTransitionTimer);
-  this._themeTransitionTimer=0;
+  this._appearanceCoordinator.destroy();
   cancelAnimationFrame(this._iconSymbolRefreshFrame);
   this._iconSymbolRefreshFrame=0;
   this._clearGridScrollListener();
@@ -725,60 +745,22 @@ _getSettingsPanelsProps(){
 }
 
 _migrateLegacyCustomWallpaper(){
-  this._wallpaperController.migrateLegacy();
+  return this._appearanceCoordinator.migrateLegacyCustomWallpaper();
 }
 _readCustomWallpapers(){
-  return this._wallpaperController.read();
+  return this._appearanceCoordinator.readCustomWallpapers();
 }
 _applyCustomWallpaperState(themeState=this._themeController.read()){
-  this._customWallpapers=this._wallpaperController.apply(themeState);
+  return this._appearanceCoordinator.applyCustomWallpaperState(themeState);
 }
 _saveCustomWallpaper(mode,payload){
-  this._customWallpapers=this._wallpaperController.save(mode,payload);
-  this._syncAutoAccentFromWallpaper();
-  this._syncSettingsDom();
-  this._scheduleIconSymbolRefresh();
+  return this._appearanceCoordinator.saveCustomWallpaper(mode,payload);
 }
 _resetCustomWallpaper(mode){
-  this._customWallpapers=this._wallpaperController.reset(mode);
-  this._syncAutoAccentFromWallpaper();
-  this._syncSettingsDom();
+  return this._appearanceCoordinator.resetCustomWallpaper(mode);
 }
 async _syncAutoAccentFromWallpaper(){
-  const requestId=++this._autoAccentRequestId;
-  const themeState=this._themeController.read();
-  const accentSource=this._wallpaperController.getActiveAccentSource(themeState,this._customWallpapers);
-
-  if(!accentSource?.value){
-    this.style.removeProperty("--mha-accent-auto");
-    this.style.removeProperty("--mha-accent-auto-contrast");
-  } else {
-    try{
-      const accent=accentSource.kind==="image"
-        ? await extractAccentFromWallpaper(accentSource.value,themeState.themeStyle)
-        : resolveAccentFromColorValue(accentSource.value);
-      if(requestId!==this._autoAccentRequestId)return;
-      if(accent?.color){
-        this.style.setProperty("--mha-accent-auto",accent.color);
-        this.style.setProperty("--mha-accent-auto-contrast",accent.contrast||"#fff");
-      }else{
-        this.style.removeProperty("--mha-accent-auto");
-        this.style.removeProperty("--mha-accent-auto-contrast");
-      }
-    }catch(error){
-      console.warn(`[MHA] Auto accent could not be extracted for ${themeState.themeStyle}.`,error);
-      if(requestId===this._autoAccentRequestId){
-        this.style.removeProperty("--mha-accent-auto");
-        this.style.removeProperty("--mha-accent-auto-contrast");
-      }
-    }
-  }
-
-  if(requestId===this._autoAccentRequestId){
-    this._themeController.sync();
-    this._syncSettingsDom();
-    this._scheduleAppearanceDomRefresh();
-  }
+  return this._appearanceCoordinator.syncAutoAccentFromWallpaper();
 }
 _isMobileLandscapeLayout(){
   return this._isMobileLauncherLayout()&&window.matchMedia?.("(orientation: landscape)")?.matches;
@@ -1071,101 +1053,39 @@ _applyLanguageFromSettings(value="auto"){
 }
 
 _refreshAppearanceDom(){
-  if(!this.isConnected||!this.shadowRoot)return;
-
-  this._syncDocksDom();
-  this._refreshActiveGridOnly();
-  this._scheduleIconSymbolRefresh();
+  return this._appearanceCoordinator.refreshAppearanceDom();
 }
 
 _scheduleAppearanceDomRefresh(){
-  cancelAnimationFrame(this._appearanceRefreshFrame);
-  this._appearanceRefreshFrame=requestAnimationFrame(()=>{
-    this._appearanceRefreshFrame=0;
-    this._refreshAppearanceDom();
-  });
+  return this._appearanceCoordinator.scheduleAppearanceDomRefresh();
 }
 
 _applyThemeFromSettings(value="auto"){
-  const themeState=this._themeController.setTheme(value);
-  this._applyCustomWallpaperState(themeState);
-  this._syncAutoAccentFromWallpaper();
-  this._syncSettingsDom();
-  this._syncScreensaverSettingsDom();
-  this._scheduleAppearanceDomRefresh();
+  return this._appearanceCoordinator.applyThemeFromSettings(value);
 }
 
 _transitionSystemThemeChange(){
-  if(!this.isConnected)return;
-
-  const reducedMotion=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
-  const cover=this.shadowRoot.querySelector(".mha-theme-transition-cover")||document.createElement("div");
-  cover.className="mha-theme-transition-cover";
-  cover.dataset.state="covering";
-  cover.setAttribute("aria-hidden","true");
-  if(!cover.parentNode)this.shadowRoot.append(cover);
-  cover.style.background=getComputedStyle(cover).background;
-
-  this.classList.add("is-theme-transitioning");
-  clearTimeout(this._themeTransitionTimer);
-  cancelAnimationFrame(this._themeTransitionFrame);
-
-  const themeState=this._themeController.sync();
-  this._applyCustomWallpaperState(themeState);
-  this._syncAutoAccentFromWallpaper();
-  this._scheduleAppearanceDomRefresh();
-
-  const finish=()=>{
-    cover.dataset.state="revealing";
-    const duration=reducedMotion?0:260;
-    this._themeTransitionTimer=setTimeout(()=>{
-      cover.remove();
-      this.classList.remove("is-theme-transitioning");
-    },duration);
-  };
-
-  if(reducedMotion){
-    finish();
-    return;
-  }
-
-  // Wait for two paints so CSS variables and theme selectors settle under the cover.
-  this._themeTransitionFrame=requestAnimationFrame(()=>{
-    this._themeTransitionFrame=requestAnimationFrame(finish);
-  });
+  return this._appearanceCoordinator.transitionSystemThemeChange();
 }
 
 _applyThemeStyleFromSettings(value="oneui"){
-  const themeState=this._themeController.setThemeStyle(value);
-  this._applyCustomWallpaperState(themeState);
-  this._syncAutoAccentFromWallpaper();
-  this._syncSettingsDom();
-  this._scheduleAppearanceDomRefresh();
+  return this._appearanceCoordinator.applyThemeStyleFromSettings(value);
 }
 
 _applyIosGlassFromSettings(value="liquid"){
-  this._themeController.setIosGlass(value);
-  this._syncSettingsDom();
-  this._scheduleAppearanceDomRefresh();
+  return this._appearanceCoordinator.applyIosGlassFromSettings(value);
 }
 
 _applyAccentFromSettings(value=""){
-  this._themeController.setAccent(value);
-  this._syncSettingsDom();
-  this._scheduleAppearanceDomRefresh();
+  return this._appearanceCoordinator.applyAccentFromSettings(value);
 }
 
 _applyAccentModeFromSettings(value="manual"){
-  this._themeController.setAccentMode(value);
-  if(value==="auto")this._syncAutoAccentFromWallpaper();
-  this._syncSettingsDom();
-  this._scheduleAppearanceDomRefresh();
+  return this._appearanceCoordinator.applyAccentModeFromSettings(value);
 }
 
 _applyIconShapeFromSettings(value="auto"){
-  this._themeController.setIconShape(value);
-  this._syncSettingsDom();
-  this._scheduleAppearanceDomRefresh();
+  return this._appearanceCoordinator.applyIconShapeFromSettings(value);
 }
 _setAccentPaletteExpanded(expanded=false){
   this._accentPaletteExpanded=Boolean(expanded);
