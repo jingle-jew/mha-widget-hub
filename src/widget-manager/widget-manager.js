@@ -167,6 +167,12 @@ export function createWidgetManager({open=false,activeCategory="",categories=WID
     children: [body],
   });
   root.dataset.view = selectedCategory ? "widgets" : "categories";
+  root.dataset.surfaceRole = "panel";
+  root.dataset.mobilePresentation = "sheet";
+  root.querySelector("[role='dialog']")?.dataset && Object.assign(root.querySelector("[role='dialog']").dataset, {
+    surfaceRole: "panel",
+    mobilePresentation: "sheet",
+  });
   root.hidden = !open;
 
   const header = root.querySelector(".mha-widget-manager-header");
