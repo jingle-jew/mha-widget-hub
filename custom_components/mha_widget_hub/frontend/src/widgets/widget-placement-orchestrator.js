@@ -45,8 +45,10 @@ function schedulePanelOpen(panel) {
     return;
   }
   panel[PANEL_OPEN_FRAME] = requestAnimationFrame(() => {
-    panel[PANEL_OPEN_FRAME] = null;
-    setPanelOpenState(panel, true);
+    panel[PANEL_OPEN_FRAME] = requestAnimationFrame(() => {
+      panel[PANEL_OPEN_FRAME] = null;
+      setPanelOpenState(panel, true);
+    });
   });
 }
 
