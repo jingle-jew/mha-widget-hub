@@ -6,7 +6,11 @@ import {
 } from "../ha/weather.js";
 import { css, freezeSize, isLocalWidgetKind, variant } from "./widget-definition-utils.js";
 import { WIDGET_PREVIEW_DATA } from "./widget-preview-data.js";
-import { buildWeatherWidgetConfig, createWeatherConfigDraft } from "../widget-config/weather-config.js";
+import {
+  buildWeatherWidgetConfig,
+  createWeatherConfigDraft,
+  renderWeatherConfigFields,
+} from "../widget-config/weather-config.js";
 
 const WEATHER_SIZE_VARIANTS = new Set(["4x1", "2x2", "3x2", "4x2"]);
 const WEATHER_FORECAST_REFRESH_MS = 10 * 60 * 1000;
@@ -186,14 +190,18 @@ export const WEATHER_WIDGET_CONFIG_MANIFEST = Object.freeze({
   type: "weather",
   title: "Configure weather",
   hint: "Choose the weather entity to display.",
+  titleKey: "widgets.config.configureWeather",
+  hintKey: "widgets.config.weatherHint",
   createDraft: createWeatherConfigDraft,
   build: buildWeatherWidgetConfig,
+  renderFields: renderWeatherConfigFields,
 });
 
 export const WEATHER_WIDGET_DEFINITION = Object.freeze({
   component: "weather-widget",
   category: "climate",
   manager: Object.freeze({
+    hidden: false,
     entries: Object.freeze([
       Object.freeze({ category: "climate", variant: "adaptive-weather", label: "Horizontal weather", size: freezeSize(4, 1), description: "Icon and temperature.", order: 10 }),
       Object.freeze({ category: "climate", variant: "adaptive-weather", label: "Compact weather", size: freezeSize(2, 2), description: "Icon and temperature.", order: 20 }),
@@ -215,6 +223,22 @@ export const WEATHER_WIDGET_DEFINITION = Object.freeze({
     if (size.w >= 3) return { w: 3, h: 2 };
     return { w: 2, h: 2 };
   },
+  capabilities: Object.freeze({
+    configurable: true,
+    resizable: true,
+    slotConfigurable: false,
+    weatherEntityConfigurable: false,
+  }),
+  storage: Object.freeze({
+    normalize: (widget = {}) => ({
+      entityId: widget.entityId || widget.entity_id || "",
+      forecastType: widget.forecastType === "hourly" ? "hourly" : "daily",
+    }),
+  }),
+  shell: Object.freeze({
+    configureMode: "config",
+  }),
+  placementFlow: "configure-first",
   variants: [
     variant("adaptive-weather", "Horizontal 4×1", 4, 1),
     variant("adaptive-weather", "Compact 2×2", 2, 2),

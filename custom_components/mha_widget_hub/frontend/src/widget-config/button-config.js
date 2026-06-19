@@ -95,3 +95,118 @@ export function buildButtonWidgetConfig(widget, draft, hass, visibilityConfig) {
     label: String(draft.label || selected?.label || "").trim(),
   };
 }
+
+export function renderButtonConfigFields(session, hass, visibilityConfig, onChange, helpers) {
+  const { createField, configOptionLabel, t } = helpers;
+  const reconciled = reconcileButtonConfigDraft(session.draft, hass, visibilityConfig);
+  const { draft } = reconciled;
+  const fields = document.createElement("div");
+  fields.className = "mha-widget-config-fields";
+
+  const typeSelect = document.createElement("select");
+  typeSelect.className = "mha-widget-config-control";
+  BUTTON_TYPES.forEach((type) => {
+    const item = document.createElement("option");
+    item.value = type.value;
+    item.textContent = configOptionLabel("widgets.config.buttonTypes", type);
+    item.selected = type.value === draft.buttonType;
+    typeSelect.append(item);
+  });
+  typeSelect.addEventListener("change", (event) => {
+    updateButtonType(draft, event.currentTarget.value, hass, visibilityConfig);
+    onChange?.({ rerender: true });
+  });
+  fields.append(createField(t("widgets.config.actionType", "Action type"), typeSelect));
+
+  if (draft.buttonType === "action") {
+    const domain = document.createElement("input");
+    domain.className = "mha-widget-config-control";
+    domain.value = draft.actionDomain;
+    domain.placeholder = "script";
+    domain.addEventListener("input", (event) => {
+      draft.actionDomain = event.currentTarget.value;
+      onChange?.();
+    });
+
+    const service = document.createElement("input");
+    service.className = "mha-widget-config-control";
+    service.value = draft.actionService;
+    service.placeholder = "turn_on";
+    service.addEventListener("input", (event) => {
+      draft.actionService = event.currentTarget.value;
+      onChange?.();
+    });
+
+    const data = document.createElement("textarea");
+    data.className = "mha-widget-config-control";
+    data.rows = 4;
+    data.value = Object.keys(draft.actionData || {}).length
+      ? JSON.stringify(draft.actionData, null, 2)
+      : "";
+    data.placeholder = '{\n  "entity_id": "scene.movie_night"\n}';
+    data.addEventListener("input", (event) => {
+      const value = event.currentTarget.value.trim();
+      try {
+        draft.actionData = value ? JSON.parse(value) : {};
+        draft.actionDataValid = Boolean(
+          draft.actionData
+          && typeof draft.actionData === "object"
+          && !Array.isArray(draft.actionData),
+        );
+      } catch {
+        draft.actionDataValid = false;
+      }
+      onChange?.();
+    });
+
+    fields.append(
+      createField(t("widgets.config.haDomain", "HA domain"), domain),
+      createField(t("widgets.config.haService", "HA service"), service),
+      createField(t("widgets.config.jsonData", "JSON data"), data, {
+        hint: t("widgets.config.jsonDataHint", "entity_id values are subject to MHA Admin permissions."),
+      }),
+    );
+  } else {
+    const entitySelect = document.createElement("select");
+    entitySelect.className = "mha-widget-config-control";
+    entitySelect.disabled = !reconciled.options.length;
+    if (!reconciled.options.length) {
+      const empty = document.createElement("option");
+      empty.textContent = t("widgets.config.noEntity", "No authorized and available entity.");
+      entitySelect.append(empty);
+    } else {
+      reconciled.options.forEach((option) => {
+        const item = document.createElement("option");
+        item.value = option.value;
+        item.textContent = option.label;
+        item.selected = option.value === draft.entityId;
+        entitySelect.append(item);
+      });
+    }
+    entitySelect.addEventListener("change", (event) => {
+      updateButtonEntity(draft, event.currentTarget.value, reconciled.options);
+      onChange?.({ rerender: true });
+    });
+    fields.append(createField(t("widgets.config.entity", "Entity"), entitySelect));
+  }
+
+  const label = document.createElement("input");
+  label.className = "mha-widget-config-control";
+  label.value = draft.label;
+  label.placeholder = reconciled.selected?.label || t("common.action", "Action");
+  label.addEventListener("input", (event) => {
+    updateButtonLabel(draft, event.currentTarget.value);
+    onChange?.();
+  });
+  fields.append(createField(t("widgets.modesRoutines.displayName", "Display name"), label));
+
+  const isValid = () => (draft.buttonType === "action"
+    ? Boolean(draft.actionDomain.trim() && draft.actionService.trim() && draft.actionDataValid)
+    : Boolean(reconciled.selected));
+
+  return {
+    fields,
+    canSave: isValid(),
+    isValid,
+  };
+}

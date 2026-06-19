@@ -1,161 +1,150 @@
 import { WIDGET_MODULES } from "./widget-module-registry.js";
+import {
+  DEFAULT_CAPABILITIES,
+  DEFAULT_SHELL,
+  DEFAULT_STORAGE,
+  DEFAULT_WIDGET_SIZE,
+  normalizeCapabilities,
+  normalizePreviewRenderer,
+  normalizeShellBehavior,
+  normalizeStorage,
+  STATIC_PREVIEW_RENDERER,
+} from "./widget-contract-helpers.js";
+import {
+  getWidgetCapabilitiesFromDefinition,
+  getWidgetCatalogEntriesFromDefinition,
+  getWidgetConfigTypeFromDefinition,
+  getWidgetCreationDefaultsFromDefinition,
+  getWidgetDefinitionFromRegistry,
+  getWidgetManagerBehaviorFromDefinition,
+  getWidgetPlacementFlowFromDefinition,
+  getWidgetPreviewRendererFromDefinition,
+  getWidgetRendererNameFromDefinition,
+  getWidgetShellBehaviorFromDefinition,
+  getWidgetStorageAdapterFromDefinition,
+  normalizeRegisteredWidgetSizeFromDefinition,
+} from "./widget-contract-accessors.js";
+import { buildWidgetRegistry } from "./widget-contract-registry-builder.js";
+import {
+  buildWidgetManagerCategories,
+  normalizeManagerDefinition,
+} from "./widget-manager-catalog.js";
+import {
+  buildWidgetDefinitions,
+  buildWidgetKindIndex,
+  resolveWidgetKindFromIndex,
+} from "./widget-kind-index.js";
+import { getRegisteredWidgetVariantsFromDefinition } from "./widget-variant-accessors.js";
 
-const STATIC_PREVIEW_RENDERER = Object.freeze({ mode: "static" });
-
-function normalizePreviewRenderer(module = {}) {
-  const previewRenderer = module.preview || STATIC_PREVIEW_RENDERER;
-  return Object.freeze({
-    mode: previewRenderer.mode || "static",
-    createWidget: previewRenderer.createWidget,
-    render: previewRenderer.render,
-  });
-}
-
-const WIDGET_MANAGER_METADATA = Object.freeze({
-  categories: Object.freeze({
-    utilities: Object.freeze({ label: "Utilities", description: "Clocks and quick info.", icon: "◷", order: 10 }),
-    actions: Object.freeze({ label: "Actions", description: "Buttons and shortcuts.", icon: "●", order: 20 }),
-    lights: Object.freeze({ label: "Lights", description: "Quick controls and brightness.", icon: "💡", order: 30 }),
-    climate: Object.freeze({ label: "Climate", description: "Temperature and comfort.", icon: "🌡", order: 40 }),
-    media: Object.freeze({ label: "Media", description: "Playback and volume.", icon: "♪", order: 50 }),
-    security: Object.freeze({ label: "Security", description: "Alarms, locks, and state.", icon: "⌂", order: 60 }),
-    system: Object.freeze({ label: "System", description: "Maintenance, network, and energy.", icon: "⚙", order: 70 }),
-  }),
+const DEFAULT_MANAGER = Object.freeze({
+  entries: Object.freeze([]),
+  hidden: false,
 });
 
-const DEFINITIONS = Object.freeze(
-  Object.fromEntries(
-    WIDGET_MODULES
-      .filter((module) => module?.kind && module?.definition)
-      .map((module) => [module.kind, module.definition]),
-  ),
-);
-
-const aliasToKind = new Map();
-const variantToKind = new Map();
-
-function catalogKeyForEntry(entry = {}) {
-  const raw = entry.catalogKey || entry.label || entry.variant || "widget";
-  return String(raw)
-    .toLowerCase()
-    .replace(/&/g, "and")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
-}
-
-Object.entries(DEFINITIONS).forEach(([kind, definition]) => {
-  aliasToKind.set(kind, kind);
-  definition.aliases.forEach(alias => aliasToKind.set(alias, kind));
-  definition.variantAliases.forEach(alias => variantToKind.set(alias, kind));
-});
+const DEFINITIONS = buildWidgetDefinitions(WIDGET_MODULES);
+const WIDGET_KIND_INDEX = buildWidgetKindIndex(DEFINITIONS);
 
 export function getWidgetManagerCategories() {
-  const categories = Object.entries(WIDGET_MANAGER_METADATA.categories)
-  .sort(([, a], [, b]) => (a.order || 0) - (b.order || 0))
-  .map(([id, metadata]) => ({
-    id,
-    label: metadata.label,
-    labelKey: `widgets.categories.${id}`,
-    description: metadata.description,
-    descriptionKey: `widgets.categoryDescriptions.${id}`,
-    icon: metadata.icon,
-    widgets: [],
-  }));
-  
-  const categoryById = new Map(categories.map(category => [category.id, category]));
-  
-  Object.entries(DEFINITIONS).forEach(([kind, definition]) => {
-    if (["empty", "toggle-buttons"].includes(kind)) return;
-    
-    definition.manager?.entries?.forEach(entry => {
-      if (entry.variant === "temperature-slider") return;
-      
-      const category = categoryById.get(entry.category);
-      if (!category) return;
-      
-      category.widgets.push({
-        kind,
-        variant: entry.variant,
-        label: entry.label,
-        labelKey: entry.labelKey || `widgets.catalog.${catalogKeyForEntry(entry)}.label`,
-        title: entry.label,
-        description: entry.description,
-        descriptionKey: entry.descriptionKey || `widgets.catalog.${catalogKeyForEntry(entry)}.description`,
-        icon: entry.icon || WIDGET_MANAGER_METADATA.categories[entry.category]?.icon || "◷",
-        size: entry.size,
-        order: entry.order || 0,
-      });
-    });
+  return buildWidgetManagerCategories(DEFINITIONS, {
+    getWidgetManagerBehavior,
+    getWidgetCatalogEntries,
   });
-  
-  categories.forEach(category => {
-    category.widgets.sort((a, b) => (a.order || 0) - (b.order || 0));
-  });
-  
-  return categories.filter(category => category.widgets.length > 0);
 }
 
-export const WIDGET_REGISTRY = Object.freeze(
-  Object.fromEntries(
-    WIDGET_MODULES
-      .filter((module) => module?.kind && module?.definition)
-      .map((module) => {
-        const definition = module.definition;
-        return [
-          module.kind,
-          Object.freeze({
-            kind: module.kind,
-            ...definition,
-            aliases: Object.freeze([...definition.aliases]),
-            variantAliases: Object.freeze([...definition.variantAliases]),
-            manager: definition.manager,
-            css: Object.freeze([...(definition.css || [])]),
-            previewRenderer: normalizePreviewRenderer(module),
-            variants: Object.freeze([...(definition.variants || [])]),
-            variantGroups: definition.variantGroups
-              ? Object.freeze({
-                horizontal: Object.freeze([...definition.variantGroups.horizontal]),
-                vertical: Object.freeze([...definition.variantGroups.vertical]),
-              })
-              : undefined,
-          }),
-        ];
-      }),
-  ),
-);
+export const WIDGET_REGISTRY = buildWidgetRegistry(WIDGET_MODULES, {
+  defaultManager: DEFAULT_MANAGER,
+  defaultCapabilities: DEFAULT_CAPABILITIES,
+  defaultStorage: DEFAULT_STORAGE,
+  defaultShell: DEFAULT_SHELL,
+  staticPreviewRenderer: STATIC_PREVIEW_RENDERER,
+  normalizeManagerDefinition,
+  normalizeCapabilities,
+  normalizeStorage,
+  normalizeShellBehavior,
+  normalizePreviewRenderer,
+});
 
 export function resolveWidgetKind(widget = {}, { fallback = "empty" } = {}) {
-  if (typeof widget === "string") {
-    return aliasToKind.get(widget) || widget || fallback;
-  }
-
-  let emptyMatch = "";
-  for (const value of [widget.kind, widget.type, widget.component]) {
-    if (!aliasToKind.has(value)) continue;
-    const kind = aliasToKind.get(value);
-    if (kind !== "empty") return kind;
-    emptyMatch = kind;
-  }
-
-  if (variantToKind.has(widget.variant)) return variantToKind.get(widget.variant);
-  if (["slot-f", "slot-i"].includes(widget.id)) return "slider";
-  return emptyMatch || widget.kind || widget.type || fallback;
+  return resolveWidgetKindFromIndex(widget, {
+    ...WIDGET_KIND_INDEX,
+    fallback,
+  });
 }
 
 export function getWidgetDefinition(widgetOrKind = {}) {
-  return WIDGET_REGISTRY[resolveWidgetKind(widgetOrKind)] || null;
+  return getWidgetDefinitionFromRegistry(widgetOrKind, {
+    registry: WIDGET_REGISTRY,
+    resolveWidgetKind,
+  });
+}
+
+export function getWidgetManagerBehavior(widget = {}) {
+  return getWidgetManagerBehaviorFromDefinition(widget, {
+    getWidgetDefinition,
+    defaultManager: DEFAULT_MANAGER,
+  });
+}
+
+export function getWidgetCatalogEntries(widget = {}) {
+  return getWidgetCatalogEntriesFromDefinition(widget, {
+    getWidgetManagerBehavior,
+    defaultManager: DEFAULT_MANAGER,
+  });
 }
 
 export function getWidgetPreviewRenderer(widgetOrKind = {}) {
-  return getWidgetDefinition(widgetOrKind)?.previewRenderer || STATIC_PREVIEW_RENDERER;
+  return getWidgetPreviewRendererFromDefinition(widgetOrKind, {
+    getWidgetDefinition,
+    staticPreviewRenderer: STATIC_PREVIEW_RENDERER,
+  });
+}
+
+export function getWidgetRendererName(widget = {}) {
+  return getWidgetRendererNameFromDefinition(widget, {
+    getWidgetDefinition,
+  });
+}
+
+export function getWidgetCapabilities(widget = {}) {
+  return getWidgetCapabilitiesFromDefinition(widget, {
+    getWidgetDefinition,
+    defaultCapabilities: DEFAULT_CAPABILITIES,
+  });
+}
+
+export function getWidgetShellBehavior(widget = {}) {
+  return getWidgetShellBehaviorFromDefinition(widget, {
+    getWidgetDefinition,
+    defaultShell: DEFAULT_SHELL,
+  });
+}
+
+export function getWidgetStorageAdapter(widget = {}) {
+  return getWidgetStorageAdapterFromDefinition(widget, {
+    getWidgetDefinition,
+    defaultStorage: DEFAULT_STORAGE,
+  });
+}
+
+export function getWidgetCreationDefaults(widget = {}) {
+  return getWidgetCreationDefaultsFromDefinition(widget, {
+    getWidgetDefinition,
+    resolveWidgetKind,
+    defaultWidgetSize: DEFAULT_WIDGET_SIZE,
+  });
+}
+
+export function getWidgetPlacementFlow(widget = {}) {
+  return getWidgetPlacementFlowFromDefinition(widget, {
+    getWidgetDefinition,
+  });
 }
 
 export function getWidgetConfigType(widget = {}) {
-  const definition = getWidgetDefinition(widget);
-  if (resolveWidgetKind(widget) === "clock") {
-    return widget.variant === "digital-weather" ? "weather" : "";
-  }
-  return definition?.config || "";
+  return getWidgetConfigTypeFromDefinition(widget, {
+    getWidgetDefinition,
+    getWidgetCapabilities,
+  });
 }
 
 export function isWidgetKind(widget, expectedKind) {
@@ -163,25 +152,17 @@ export function isWidgetKind(widget, expectedKind) {
 }
 
 export function normalizeRegisteredWidgetSize(widget = {}, normalizeBottomeSize) {
-  const definition = getWidgetDefinition(widget);
-  const rawSize = {
-    ...(definition?.defaultSize || { w: 2, h: 2 }),
-    w: widget.w ?? definition?.defaultSize?.w,
-    h: widget.h ?? definition?.defaultSize?.h,
-  };
-  const size = normalizeBottomeSize(rawSize);
-  return definition?.normalizeSize ? definition.normalizeSize(size) : size;
+  return normalizeRegisteredWidgetSizeFromDefinition(widget, normalizeBottomeSize, {
+    getWidgetDefinition,
+    getWidgetCreationDefaults,
+  });
 }
 
 export function getRegisteredWidgetVariants(widget = {}, normalizeBottomeSize) {
-  const definition = getWidgetDefinition(widget);
-  if (!definition) return [];
-  if (!definition.variantGroups) return definition.variants;
-
-  const size = normalizeRegisteredWidgetSize(widget, normalizeBottomeSize);
-  return size.h > size.w
-    ? definition.variantGroups.vertical
-    : definition.variantGroups.horizontal;
+  return getRegisteredWidgetVariantsFromDefinition(widget, normalizeBottomeSize, {
+    getWidgetDefinition,
+    normalizeRegisteredWidgetSize,
+  });
 }
 
 export function normalizeWidgetContract(widget = {}, normalizeBottomeSize) {
@@ -193,48 +174,30 @@ export function normalizeWidgetContract(widget = {}, normalizeBottomeSize) {
   }
 
   const size = normalizeRegisteredWidgetSize(widget, normalizeBottomeSize);
+  const defaults = getWidgetCreationDefaults(kind);
   const normalized = {
     ...widget,
     kind,
     type: kind,
-    component: definition.component,
-    category: widget.category || definition.category,
-    variant: definition.defaultVariant || widget.variant || "",
+    component: defaults.component,
+    category: widget.category || defaults.category,
+    variant: widget.variant || defaults.defaultVariant || "",
     w: size.w,
     h: size.h,
   };
 
-  if (kind === "clock" && definition.variantAliases.includes(widget.variant)) {
-    normalized.variant = widget.variant;
-    normalized.entityId = widget.entityId || widget.entity_id || "";
-  } else if (kind === "slider") {
-    normalized.variant = widget.variant || normalized.variant;
-    normalized.entityId = widget.entityId || widget.entity_id || "";
-    normalized.sliderAction = widget.sliderAction === "volume" || widget.sliderAction === "brightness"
-      ? widget.sliderAction
-      : widget.variant === "volume-slider"
-        ? "volume"
-        : "brightness";
-  } else if (kind === "toggle") {
-    normalized.entityId = widget.entityId || widget.entity_id || "";
-  } else if (kind === "button" || kind === "weather") {
-    normalized.entityId = widget.entityId || widget.entity_id || "";
-    if (kind === "weather") normalized.forecastType = widget.forecastType === "hourly" ? "hourly" : "daily";
-  } else if (kind === "scenes") {
-    normalized.buttons = Array.isArray(widget.buttons)
-      ? widget.buttons.map(button => ({
-        ...button,
-        entityId: button?.entityId || button?.entity_id || "",
-      }))
-      : [];
-  }
+  const storageAdapter = getWidgetStorageAdapter(widget);
+  const normalizedPatch = storageAdapter.normalize?.(widget, {
+    definition,
+    kind,
+    normalizeBottomeSize,
+    normalizeRegisteredWidgetSize: (nextWidget = widget) => (
+      normalizeRegisteredWidgetSize(nextWidget, normalizeBottomeSize)
+    ),
+  });
 
-  if (kind === "toggle-slider") {
-    const entityId = widget.lightEntityId || widget.entityId || widget.entity_id || "";
-    normalized.lightEntityId = entityId;
-    normalized.entityId = entityId;
-    normalized.sliderMode = "brightness";
-  }
-
-  return normalized;
+  return {
+    ...normalized,
+    ...(normalizedPatch || {}),
+  };
 }

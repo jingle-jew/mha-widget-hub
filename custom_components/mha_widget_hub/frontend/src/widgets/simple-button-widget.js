@@ -14,7 +14,11 @@ import { resolveAuthorizedEntity } from "../ha/entity-access.js";
 import { getEntityDisplayName } from "../widget-config/light-options.js";
 import { isToggleEntityOn } from "../ha/toggle.js";
 import { clampWidth, css, freezeSize, isLocalWidgetKind, variant } from "./widget-definition-utils.js";
-import { buildButtonWidgetConfig, createButtonConfigDraft } from "../widget-config/button-config.js";
+import {
+  buildButtonWidgetConfig,
+  createButtonConfigDraft,
+  renderButtonConfigFields,
+} from "../widget-config/button-config.js";
 import { WIDGET_PREVIEW_DATA } from "./widget-preview-data.js";
 import { t } from "../i18n/index.js";
 
@@ -257,14 +261,18 @@ export const SIMPLE_BUTTON_WIDGET_CONFIG_MANIFEST = Object.freeze({
   type: "button",
   title: "Configure button",
   hint: "Choose the action type, entity, and display name.",
+  titleKey: "widgets.config.configureButton",
+  hintKey: "widgets.config.buttonHint",
   createDraft: createButtonConfigDraft,
   build: buildButtonWidgetConfig,
+  renderFields: renderButtonConfigFields,
 });
 
 export const SIMPLE_BUTTON_WIDGET_DEFINITION = Object.freeze({
   component: "button-widget",
   category: "actions",
   manager: Object.freeze({
+    hidden: false,
     entries: Object.freeze([
       Object.freeze({ category: "actions", variant: "simple-button", label: "Simple button", size: freezeSize(2, 1), description: "Icon, label, and state.", order: 10 }),
       Object.freeze({ category: "actions", variant: "simple-button", label: "Square button", size: freezeSize(2, 2), description: "Home-inspired action tile.", order: 20 }),
@@ -281,6 +289,21 @@ export const SIMPLE_BUTTON_WIDGET_DEFINITION = Object.freeze({
   normalizeSize: (size) => size.h >= 2
     ? { w: 2, h: 2 }
     : { ...clampWidth(size, 2, 4), h: 1 },
+  capabilities: Object.freeze({
+    configurable: true,
+    resizable: true,
+    slotConfigurable: false,
+    weatherEntityConfigurable: false,
+  }),
+  storage: Object.freeze({
+    normalize: (widget = {}) => ({
+      entityId: widget.entityId || widget.entity_id || "",
+    }),
+  }),
+  shell: Object.freeze({
+    configureMode: "config",
+  }),
+  placementFlow: "configure-first",
   variants: [
     variant("simple-button", "Pill 2×1", 2, 1),
     variant("simple-button", "Pill 3×1", 3, 1),

@@ -1,5 +1,6 @@
-import test from "node:test";
+import test, { beforeEach } from "node:test";
 import assert from "node:assert/strict";
+import { installDeterministicI18n } from "../tools/i18n-deterministic.mjs";
 import {
   getEntityDomain,
   getEntityState,
@@ -65,6 +66,8 @@ const entity = (entityId, state, attributes = {}) => ({
   state,
   attributes,
 });
+
+installDeterministicI18n(beforeEach);
 
 test("entity helpers tolerate missing or unavailable Home Assistant state", () => {
   assert.equal(getEntityDomain("light.kitchen"), "light");

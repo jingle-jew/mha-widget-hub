@@ -1,9 +1,9 @@
-import { getWidgetDefinition } from "./widget-registry.js";
+import { getWidgetRendererName } from "./widget-registry.js";
 import { createWidgetRenderContext } from "./widget-preview-context.js";
 import { WIDGET_CONTENT_RENDERERS } from "./widget-renderer-registry.js";
 
 function getRenderer(widget) {
-  const rendererName = getWidgetDefinition(widget)?.renderer || "empty";
+  const rendererName = getWidgetRendererName(widget);
   return WIDGET_CONTENT_RENDERERS[rendererName] || WIDGET_CONTENT_RENDERERS.empty;
 }
 

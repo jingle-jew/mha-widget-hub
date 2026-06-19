@@ -83,3 +83,65 @@ export function buildToggleWidgetConfig(widget, draft, hass, visibilityConfig) {
     label: String(draft.label || selected?.label || "").trim(),
   };
 }
+
+export function renderToggleConfigFields(session, hass, visibilityConfig, onChange, helpers) {
+  const { createField, configOptionLabel, emptyLabelForConfigOption, t } = helpers;
+  const reconciled = reconcileToggleConfigDraft(session.draft, hass, visibilityConfig);
+  const { draft } = reconciled;
+  const fields = document.createElement("div");
+  fields.className = "mha-widget-config-fields";
+
+  const typeSelect = document.createElement("select");
+  typeSelect.className = "mha-widget-config-control";
+  TOGGLE_DEVICE_TYPES.forEach((deviceType) => {
+    const item = document.createElement("option");
+    item.value = deviceType.value;
+    item.textContent = configOptionLabel("widgets.config.deviceTypes", deviceType);
+    item.selected = deviceType.value === draft.deviceType;
+    typeSelect.append(item);
+  });
+  typeSelect.addEventListener("change", (event) => {
+    updateToggleDeviceType(draft, event.currentTarget.value, hass, visibilityConfig);
+    onChange?.({ rerender: true });
+  });
+
+  const deviceSelect = document.createElement("select");
+  deviceSelect.className = "mha-widget-config-control";
+  deviceSelect.disabled = !reconciled.options.length;
+  if (!reconciled.options.length) {
+    const empty = document.createElement("option");
+    empty.value = "";
+    empty.textContent = emptyLabelForConfigOption("widgets.config.emptyLabels", reconciled.deviceType);
+    deviceSelect.append(empty);
+  } else {
+    reconciled.options.forEach((option) => {
+      const item = document.createElement("option");
+      item.value = option.value;
+      item.textContent = option.label;
+      item.selected = option.value === draft.entityId;
+      deviceSelect.append(item);
+    });
+  }
+  deviceSelect.addEventListener("change", (event) => {
+    updateToggleEntity(draft, event.currentTarget.value, reconciled.options);
+    onChange?.({ rerender: true });
+  });
+
+  const nameInput = document.createElement("input");
+  nameInput.className = "mha-widget-config-control";
+  nameInput.type = "text";
+  nameInput.value = draft.label;
+  nameInput.placeholder = reconciled.selected?.label || t("widgets.config.placeholderRoom", "Living room");
+  nameInput.autocomplete = "off";
+  nameInput.addEventListener("input", (event) => {
+    updateToggleConfigLabel(draft, event.currentTarget.value);
+    onChange?.();
+  });
+
+  fields.append(
+    createField(t("widgets.config.deviceType", "Device type"), typeSelect),
+    createField(t("widgets.config.device", "Device"), deviceSelect),
+    createField(t("widgets.modesRoutines.displayName", "Display name"), nameInput),
+  );
+  return { fields, canSave: Boolean(reconciled.selected) };
+}

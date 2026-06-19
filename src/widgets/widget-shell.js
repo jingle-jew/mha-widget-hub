@@ -8,7 +8,12 @@ import {
   createRegisteredWidgetContent,
   decorateWidgetShell,
 } from "./widget-renderers.js";
-import { getWidgetDefinition, resolveWidgetKind } from "./widget-registry.js";
+import {
+  getWidgetConfigType,
+  getWidgetRendererName,
+  getWidgetShellBehavior,
+  resolveWidgetKind,
+} from "./widget-registry.js";
 import { t } from "../i18n/index.js";
 
 export function createWidgetShell(
@@ -29,7 +34,9 @@ export function createWidgetShell(
   } = {},
 ) {
   const widgetKind = resolveWidgetKind(widget);
-  const widgetDefinition = getWidgetDefinition(widgetKind);
+  const widgetRendererName = getWidgetRendererName(widget);
+  const shellBehavior = getWidgetShellBehavior(widget);
+  const widgetConfigType = getWidgetConfigType(widget);
   const size = normalizeWidgetSize(widget);
   const density = getWidgetDensity(size);
   const effectiveWidgetW = Math.min(size.w, activeGridUnits);
@@ -47,7 +54,7 @@ export function createWidgetShell(
   shell.className = "mha-widget";
   shell.classList.toggle("is-move-target", isMoveTarget);
   shell.dataset.widgetId = widget.id;
-  if (widgetDefinition?.renderer !== "empty") {
+  if (widgetRendererName !== "empty") {
     shell.dataset.widgetKind = widgetKind;
   }
   shell.dataset.widgetConfiguredW = String(size.w);
@@ -79,8 +86,8 @@ export function createWidgetShell(
   const tools = document.createElement("div");
   tools.className = "mha-widget-tools";
 
-  const showConfigureTool = !(isEditing && widgetKind === "scenes");
-  const dimensionButton = widgetDefinition?.config && showConfigureTool
+  const shouldOpenConfig = shellBehavior.configureMode === "config" && Boolean(widgetConfigType);
+  const dimensionButton = shouldOpenConfig
     ? tool(t("widgets.tools.configureWidget", "Configure widget"), "edit", () => onConfigure?.(widget.id), {
       className: "mha-tool-button--dimension",
     })
@@ -88,7 +95,7 @@ export function createWidgetShell(
       className: "mha-tool-button--dimension",
     });
 
-  if (!widgetDefinition?.config || !showConfigureTool) {
+  if (!shouldOpenConfig) {
     dimensionButton.addEventListener("pointerdown", (event) => {
       if (isMoveTarget) return;
       event.preventDefault();
@@ -111,10 +118,7 @@ export function createWidgetShell(
     className: "mha-tool-button--close",
   });
 
-  if (showConfigureTool || !widgetDefinition?.config) {
-    tools.append(dimensionButton);
-  }
-  tools.append(moveButton, closeButton);
+  tools.append(dimensionButton, moveButton, closeButton);
 
   const badge = document.createElement("span");
   badge.className = "mha-size-badge";

@@ -3,6 +3,7 @@ import { WIDGET_PREVIEW_DATA } from "./widget-preview-data.js";
 import {
   buildMediaWidgetConfig,
   createMediaConfigDraft,
+  renderMediaConfigFields,
 } from "../widget-config/media-config.js";
 import {
   buildMediaDisplayModel,
@@ -514,14 +515,20 @@ export const MEDIA_WIDGET_CONTENT_RENDERER = Object.freeze({
 
 export const MEDIA_WIDGET_CONFIG_MANIFEST = Object.freeze({
   type: "media",
+  title: "Configure media",
+  hint: "Choose the media player and display name.",
+  titleKey: "widgets.config.configureMedia",
+  hintKey: "widgets.config.mediaHint",
   createDraft: createMediaConfigDraft,
   build: buildMediaWidgetConfig,
+  renderFields: renderMediaConfigFields,
 });
 
 export const MEDIA_WIDGET_DEFINITION = Object.freeze({
   component: "media-widget",
   category: "media",
   manager: Object.freeze({
+    hidden: false,
     entries: Object.freeze([
       Object.freeze({ category: "media", variant: "media-compact", label: "Compact media", size: freezeSize(2, 2), description: "Quick playback.", order: 10 }),
       Object.freeze({ category: "media", variant: "media-wide", label: "Wide media", size: freezeSize(4, 2), description: "Now playing.", order: 20 }),
@@ -541,6 +548,25 @@ export const MEDIA_WIDGET_DEFINITION = Object.freeze({
     if (size.w >= 4 || size.h >= 3) return { w: 4, h: 2 };
     return { w: 2, h: 2 };
   },
+  capabilities: Object.freeze({
+    configurable: true,
+    resizable: true,
+    slotConfigurable: false,
+    weatherEntityConfigurable: false,
+  }),
+  storage: Object.freeze({
+    normalize: (widget = {}) => {
+      const mediaEntityId = widget.mediaEntityId || widget.entityId || widget.entity_id || "";
+      return {
+        entityId: mediaEntityId,
+        mediaEntityId,
+      };
+    },
+  }),
+  shell: Object.freeze({
+    configureMode: "config",
+  }),
+  placementFlow: "configure-first",
   variants: [
     variant("media-compact", "Compact 2×2", 2, 2),
     variant("media-wide", "Large 4×2", 4, 2),

@@ -11,7 +11,11 @@ import { createSlider2 } from "../ui/slider2.js";
 import { createToggleWidgetContent } from "./toggle-widget.js";
 import { clampWidth, css, freezeSize, isLocalWidgetKind, variant } from "./widget-definition-utils.js";
 import { isEntityAllowedForCurrentUser } from "../admin/entity-permissions.js";
-import { buildToggleSliderWidgetConfig, createToggleSliderConfigDraft } from "../widget-config/toggle-slider-config.js";
+import {
+  buildToggleSliderWidgetConfig,
+  createToggleSliderConfigDraft,
+  renderToggleSliderConfigFields,
+} from "../widget-config/toggle-slider-config.js";
 import { WIDGET_PREVIEW_DATA } from "./widget-preview-data.js";
 import { t } from "../i18n/index.js";
 
@@ -208,14 +212,18 @@ export const TOGGLE_SLIDER_WIDGET_CONFIG_MANIFEST = Object.freeze({
   type: "toggle-slider",
   title: "Configure light",
   hint: "Choose the light and control to display.",
+  titleKey: "widgets.config.configureLight",
+  hintKey: "widgets.config.lightHint",
   createDraft: createToggleSliderConfigDraft,
   build: buildToggleSliderWidgetConfig,
+  renderFields: renderToggleSliderConfigFields,
 });
 
 export const TOGGLE_SLIDER_WIDGET_DEFINITION = Object.freeze({
   component: "toggle-slider-widget",
   category: "lights",
   manager: Object.freeze({
+    hidden: false,
     entries: Object.freeze([
       Object.freeze({ category: "lights", variant: "toggle-slider", label: "Combined light", size: freezeSize(4, 2), description: "State and brightness in one tile.", order: 10 }),
     ]),
@@ -237,6 +245,26 @@ export const TOGGLE_SLIDER_WIDGET_DEFINITION = Object.freeze({
   defaultVariant: "toggle-slider",
   defaultSize: freezeSize(4, 2),
   normalizeSize: (size) => ({ ...clampWidth(size, 3, 4), h: 2 }),
+  capabilities: Object.freeze({
+    configurable: true,
+    resizable: true,
+    slotConfigurable: false,
+    weatherEntityConfigurable: false,
+  }),
+  storage: Object.freeze({
+    normalize: (widget = {}) => {
+      const entityId = widget.lightEntityId || widget.entityId || widget.entity_id || "";
+      return {
+        lightEntityId: entityId,
+        entityId,
+        sliderMode: "brightness",
+      };
+    },
+  }),
+  shell: Object.freeze({
+    configureMode: "config",
+  }),
+  placementFlow: "configure-first",
   variants: [
     variant("toggle-slider", "Combined 3×2", 3, 2),
     variant("toggle-slider", "Combined 4×2", 4, 2),

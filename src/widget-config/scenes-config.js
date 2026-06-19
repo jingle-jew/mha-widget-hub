@@ -168,3 +168,100 @@ export function buildScenesWidgetConfig(widget, draft, hass, visibilityConfig) {
     }),
   };
 }
+
+export function getScenesConfigTitle(session, { t } = {}) {
+  return Number.isInteger(session?.buttonIndex)
+    ? t("widgets.config.configureButton", "Configure button")
+    : t("widgets.config.configureModesRoutines", "Configure Modes & Routines");
+}
+
+export function getScenesConfigHint(session, { t } = {}) {
+  return Number.isInteger(session?.buttonIndex)
+    ? t("widgets.config.scenesButtonHint", "Configure only this button with a Mode or Routine.")
+    : t("widgets.config.scenesHint", "Configure the 4 internal shortcuts with Modes or Routines.");
+}
+
+export function renderScenesConfigFields(session, hass, visibilityConfig, onChange, helpers) {
+  const { createField, t } = helpers;
+  const emptySlotLabel = t("widgets.modesRoutines.add", "Add");
+  const reconciled = reconcileScenesConfigDraft(session.draft, hass, visibilityConfig);
+  const fields = document.createElement("div");
+  fields.className = "mha-widget-config-fields";
+  fields.dataset.configType = "scenes";
+  const focusedButtonIndex = Number.isInteger(session?.buttonIndex)
+    ? Math.max(0, Math.min(session.buttonIndex, reconciled.buttons.length - 1))
+    : null;
+  const buttonEntries = focusedButtonIndex === null
+    ? reconciled.buttons.map((entry, index) => [entry, index])
+    : [[reconciled.buttons[focusedButtonIndex], focusedButtonIndex]];
+
+  buttonEntries.forEach(([{ draft, options, selected }, index]) => {
+    const group = document.createElement("section");
+    group.className = "mha-widget-config-group";
+
+    const heading = document.createElement("h3");
+    heading.className = "mha-widget-config-group-title";
+    heading.textContent = t("widgets.config.buttonIndex", "Button {count}", { count: index + 1 });
+    group.append(heading);
+
+    const typeSelect = document.createElement("select");
+    typeSelect.className = "mha-widget-config-control";
+    SCENES_BUTTON_TYPES.forEach((type) => {
+      const item = document.createElement("option");
+      item.value = type.value;
+      item.textContent = type.value === "mode"
+        ? t("widgets.modesRoutines.mode", type.label)
+        : t("widgets.modesRoutines.routine", type.label);
+      item.selected = type.value === draft.type;
+      typeSelect.append(item);
+    });
+    typeSelect.addEventListener("change", (event) => {
+      updateScenesButtonType(reconciled.draft, index, event.currentTarget.value, hass, visibilityConfig);
+      onChange?.({ rerender: true });
+    });
+
+    const entitySelect = document.createElement("select");
+    entitySelect.className = "mha-widget-config-control";
+    const empty = document.createElement("option");
+    empty.value = "";
+    empty.textContent = draft.type === "mode"
+      ? t("widgets.config.noModeSelected", "No Mode selected")
+      : t("widgets.config.noRoutineSelected", "No Routine selected");
+    empty.selected = !draft.entityId;
+    entitySelect.append(empty);
+    options.forEach((option) => {
+      const item = document.createElement("option");
+      item.value = option.value;
+      item.textContent = option.label;
+      item.selected = option.value === draft.entityId;
+      entitySelect.append(item);
+    });
+    entitySelect.addEventListener("change", (event) => {
+      updateScenesButtonEntity(reconciled.draft, index, event.currentTarget.value, options);
+      onChange?.({ rerender: true });
+    });
+
+    const nameInput = document.createElement("input");
+    nameInput.className = "mha-widget-config-control";
+    nameInput.type = "text";
+    nameInput.value = draft.label;
+    nameInput.placeholder = selected?.label?.replace(/\s+\(missing\)$/u, "") || emptySlotLabel;
+    nameInput.autocomplete = "off";
+    nameInput.addEventListener("input", (event) => {
+      updateScenesButtonLabel(reconciled.draft, index, event.currentTarget.value);
+      onChange?.();
+    });
+
+    group.append(
+      createField("Type", typeSelect),
+      createField(t("widgets.modesRoutines.modeOrRoutine", "Mode or routine"), entitySelect),
+      createField(t("widgets.modesRoutines.displayName", "Display name"), nameInput),
+    );
+    fields.append(group);
+  });
+
+  return {
+    fields,
+    canSave: true,
+  };
+}

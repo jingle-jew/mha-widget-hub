@@ -7,7 +7,11 @@ import { createIconSymbol } from "../ui/icon-symbol.js";
 import { createSlider } from "../ui/slider.js";
 import { css, freezeSize, isLocalWidgetKind, variant } from "./widget-definition-utils.js";
 import { isEntityAllowedForCurrentUser } from "../admin/entity-permissions.js";
-import { buildSliderWidgetConfig, createSliderConfigDraft } from "../widget-config/slider-config.js";
+import {
+  buildSliderWidgetConfig,
+  createSliderConfigDraft,
+  renderSliderConfigFields,
+} from "../widget-config/slider-config.js";
 import { WIDGET_PREVIEW_DATA } from "./widget-preview-data.js";
 import { t } from "../i18n/index.js";
 
@@ -209,18 +213,22 @@ export const SLIDER_WIDGET_CONFIG_MANIFEST = Object.freeze({
   type: "slider",
   title: "Configure slider",
   hint: "Choose the action, device, and display name.",
+  titleKey: "widgets.config.configureSlider",
+  hintKey: "widgets.config.sliderHint",
   createDraft: createSliderConfigDraft,
   build: buildSliderWidgetConfig,
+  renderFields: renderSliderConfigFields,
 });
 
 export const SLIDER_WIDGET_DEFINITION = Object.freeze({
   component: "slider-widget",
   category: "lights",
   manager: Object.freeze({
+    hidden: false,
     entries: Object.freeze([
       Object.freeze({ category: "lights", variant: "light-slider-wide", label: "Horizontal brightness", size: freezeSize(4, 1), description: "Slider large.", order: 40 }),
       Object.freeze({ category: "lights", variant: "light-slider-vertical", label: "Vertical brightness", size: freezeSize(1, 4), description: "Slider vertical.", order: 50 }),
-      Object.freeze({ category: "climate", variant: "temperature-slider", label: "Temperature slider", size: freezeSize(4, 1), description: "Linear control.", order: 70 }),
+      Object.freeze({ category: "climate", variant: "temperature-slider", label: "Temperature slider", size: freezeSize(4, 1), description: "Linear control.", order: 70, hidden: true }),
       Object.freeze({ category: "media", variant: "volume-slider", label: "Volume", size: freezeSize(4, 1), description: "Volume slider.", order: 30 }),
     ]),
   }),
@@ -240,6 +248,27 @@ export const SLIDER_WIDGET_DEFINITION = Object.freeze({
   normalizeSize: (size) => size.h > size.w
     ? { w: 1, h: Math.max(2, Math.min(4, size.h)) }
     : { w: Math.max(2, Math.min(4, size.w)), h: 1 },
+  capabilities: Object.freeze({
+    configurable: true,
+    resizable: true,
+    slotConfigurable: false,
+    weatherEntityConfigurable: false,
+  }),
+  storage: Object.freeze({
+    normalize: (widget = {}, { definition }) => ({
+      variant: widget.variant || definition.defaultVariant,
+      entityId: widget.entityId || widget.entity_id || "",
+      sliderAction: widget.sliderAction === "volume" || widget.sliderAction === "brightness"
+        ? widget.sliderAction
+        : widget.variant === "volume-slider"
+          ? "volume"
+          : "brightness",
+    }),
+  }),
+  shell: Object.freeze({
+    configureMode: "config",
+  }),
+  placementFlow: "configure-first",
   variantGroups: {
     horizontal: [
       variant("light-slider-horizontal", "Horizontal 2×1", 2, 1),
