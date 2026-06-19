@@ -1,5 +1,6 @@
-import test from "node:test";
+import test, { beforeEach } from "node:test";
 import assert from "node:assert/strict";
+import { installDeterministicI18n } from "../tools/i18n-deterministic.mjs";
 import {
   buildNowBarTiles,
   fetchNowBarCalendarEvents,
@@ -9,6 +10,8 @@ import {
 function entity(entityId, state, attributes = {}) {
   return { entity_id: entityId, state, attributes };
 }
+
+installDeterministicI18n(beforeEach);
 
 test("now bar config normalizes legacy-safe defaults without auto-selecting entities", () => {
   assert.deepEqual(normalizeNowBarConfig({}), {
