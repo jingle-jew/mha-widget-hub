@@ -1,5 +1,5 @@
 @media (max-width: 767px) {
-  .mha-page-creator[data-mobile-presentation="sheet"] .mha-page-creator-sheet {
+  .mha-page-creator .mha-page-creator-sheet {
     position: fixed;
     bottom: 0;
     left: 0;
