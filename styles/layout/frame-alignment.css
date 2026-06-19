@@ -9,12 +9,12 @@
 
 @media (min-width: 768px) {
   .mha-status-bar {
-    /* .mha-status-bar is absolutely positioned inside .mha-shell,
-     * whose padding already creates the outer frame. Using page padding here
-     * double-insets the bar and keeps its left edge too far from the frame.
+    /* .mha-status-bar is absolutely positioned inside .mha-shell.
+     * The left edge now lines up with the shell frame, while the right edge
+     * needs the same outside breathing room as the dock/edit controls.
      */
     left: 0 !important;
-    right: 0 !important;
+    right: var(--mha-page-padding) !important;
     width: auto !important;
     inline-size: auto !important;
     max-inline-size: none !important;
