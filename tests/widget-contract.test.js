@@ -3,8 +3,11 @@ import assert from "node:assert/strict";
 import { normalizeWidgetSize } from "../src/layout/layout-engine.js";
 import {
   getWidgetCapabilities,
+  getWidgetCreationDefaults,
   getWidgetConfigType,
+  getWidgetManagerBehavior,
   getWidgetPlacementFlow,
+  getWidgetRendererName,
   getWidgetShellBehavior,
   getWidgetStorageAdapter,
   normalizeWidgetContract,
@@ -47,6 +50,18 @@ test("widget manager visibility is declared in widget definitions", async () => 
     WIDGET_REGISTRY.slider.manager.entries.some((entry) => entry.variant === "temperature-slider" && entry.hidden),
     true,
   );
+});
+
+test("contract helpers expose stable manager, renderer, and creation defaults", () => {
+  assert.equal(getWidgetManagerBehavior({ kind: "toggle-buttons" }).hidden, true);
+  assert.equal(getWidgetRendererName({ kind: "weather" }), "weather");
+  assert.deepEqual(getWidgetCreationDefaults({ kind: "clock" }), {
+    kind: "clock",
+    component: "clock-widget",
+    category: "utilities",
+    defaultVariant: "digital",
+    defaultSize: { w: 2, h: 2 },
+  });
 });
 
 test("migrated widgets expose storage adapters from their definitions", () => {

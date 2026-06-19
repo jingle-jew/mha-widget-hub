@@ -10,7 +10,7 @@ import {
 } from "./widget-renderers.js";
 import {
   getWidgetConfigType,
-  getWidgetDefinition,
+  getWidgetRendererName,
   getWidgetShellBehavior,
   resolveWidgetKind,
 } from "./widget-registry.js";
@@ -34,7 +34,7 @@ export function createWidgetShell(
   } = {},
 ) {
   const widgetKind = resolveWidgetKind(widget);
-  const widgetDefinition = getWidgetDefinition(widgetKind);
+  const widgetRendererName = getWidgetRendererName(widget);
   const shellBehavior = getWidgetShellBehavior(widget);
   const widgetConfigType = getWidgetConfigType(widget);
   const size = normalizeWidgetSize(widget);
@@ -54,7 +54,7 @@ export function createWidgetShell(
   shell.className = "mha-widget";
   shell.classList.toggle("is-move-target", isMoveTarget);
   shell.dataset.widgetId = widget.id;
-  if (widgetDefinition?.renderer !== "empty") {
+  if (widgetRendererName !== "empty") {
     shell.dataset.widgetKind = widgetKind;
   }
   shell.dataset.widgetConfiguredW = String(size.w);

@@ -1,5 +1,5 @@
 import { WIDGET_MODULES } from "../widgets/widget-module-registry.js";
-import { getWidgetDefinition } from "../widgets/widget-registry.js";
+import { getWidgetConfigType as resolveWidgetConfigType } from "../widgets/widget-registry.js";
 
 const CONFIG_MANIFESTS = Object.freeze(
   WIDGET_MODULES
@@ -21,7 +21,7 @@ export function getWidgetConfigDefinition(configType = "") {
 }
 
 export function getWidgetConfigType(widget = {}) {
-  return getWidgetDefinition(widget)?.config || "";
+  return resolveWidgetConfigType(widget);
 }
 
 export function getWidgetConfigDefinitionForWidget(widget = {}) {

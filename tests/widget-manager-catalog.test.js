@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { WIDGET_MANAGER_CATEGORIES } from "../src/widget-manager/widget-manager.js";
-import { getWidgetDefinition } from "../src/widgets/widget-registry.js";
+import { getWidgetRendererName } from "../src/widgets/widget-registry.js";
 import { hasWidgetContentRenderer } from "../src/widgets/widget-renderers.js";
 
 test("widget manager only exposes concrete renderable widgets", () => {
@@ -14,7 +14,7 @@ test("widget manager only exposes concrete renderable widgets", () => {
   assert.ok(items.every(item => item.kind !== "toggle-buttons"));
   assert.ok(items.every(item => item.variant !== "temperature-slider"));
   assert.ok(items.every(item => {
-    const renderer = getWidgetDefinition(item)?.renderer;
+    const renderer = getWidgetRendererName(item);
     return renderer && renderer !== "empty" && hasWidgetContentRenderer(renderer);
   }));
 });

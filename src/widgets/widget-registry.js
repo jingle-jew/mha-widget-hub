@@ -268,8 +268,16 @@ export function getWidgetDefinition(widgetOrKind = {}) {
   return WIDGET_REGISTRY[resolveWidgetKind(widgetOrKind)] || null;
 }
 
+export function getWidgetManagerBehavior(widget = {}) {
+  return getWidgetDefinition(widget)?.manager || DEFAULT_MANAGER;
+}
+
 export function getWidgetPreviewRenderer(widgetOrKind = {}) {
   return getWidgetDefinition(widgetOrKind)?.previewRenderer || STATIC_PREVIEW_RENDERER;
+}
+
+export function getWidgetRendererName(widget = {}) {
+  return getWidgetDefinition(widget)?.renderer || "empty";
 }
 
 export function getWidgetCapabilities(widget = {}) {
@@ -304,6 +312,18 @@ export function getWidgetStorageAdapter(widget = {}) {
   const definition = getWidgetDefinition(widget);
   if (!definition) return DEFAULT_STORAGE;
   return definition.storage || DEFAULT_STORAGE;
+}
+
+export function getWidgetCreationDefaults(widget = {}) {
+  const definition = getWidgetDefinition(widget);
+  const kind = resolveWidgetKind(widget, { fallback: "empty" });
+  return Object.freeze({
+    kind,
+    component: definition?.component || "empty-widget",
+    category: definition?.category || "custom",
+    defaultVariant: definition?.defaultVariant || kind,
+    defaultSize: definition?.defaultSize || { w: 2, h: 2 },
+  });
 }
 
 export function getWidgetPlacementFlow(widget = {}) {
