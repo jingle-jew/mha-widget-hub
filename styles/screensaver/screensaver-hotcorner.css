@@ -2,7 +2,7 @@
  * Invisible screensaver settings hotcorner.
  *
  * The button exists in the screensaver DOM for accessibility and keyboard focus,
- * but the hit area should behave like a quiet corner target during normal use.
+ * but the hit area must only be active while the screensaver itself is visible.
  */
 
 .mha-screensaver-edit-button {
@@ -19,7 +19,13 @@
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
   opacity: 0;
+  pointer-events: none;
+  cursor: default;
+}
+
+.mha-screensaver[data-visible="true"] .mha-screensaver-edit-button {
   pointer-events: auto;
+  cursor: pointer;
 }
 
 .mha-screensaver-edit-button svg {
