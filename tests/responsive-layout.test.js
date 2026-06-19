@@ -18,6 +18,18 @@ test("responsive boundaries use one canonical matrix", () => {
   assert.equal(getLayoutForWidth(RESPONSIVE_BREAKPOINTS.desktop), "desktop");
 });
 
+test("intermediate tablet-sized screens stay out of desktop layout", () => {
+  assert.equal(getLayoutForWidth(1180), "tablet");
+  assert.equal(getLayoutForWidth(1366), "tablet");
+  assert.equal(getLayoutForWidth(1400), "desktop");
+});
+
+test("manual layout modes override width-based layout selection", () => {
+  assert.equal(getLayoutForWidth(390, { layoutMode: "desktop" }), "desktop");
+  assert.equal(getLayoutForWidth(1600, { layoutMode: "tablet" }), "tablet");
+  assert.equal(getLayoutForWidth(1600, { layoutMode: "auto" }), "desktop");
+});
+
 test("widget and logical sizes convert consistently", () => {
   assert.deepEqual(widgetSizeToLogicalSize({ w: 4, h: 2 }), { w: 2, h: 1 });
   assert.deepEqual(logicalSizeToWidgetSize({ w: 2, h: 3 }), { w: 4, h: 6 });
