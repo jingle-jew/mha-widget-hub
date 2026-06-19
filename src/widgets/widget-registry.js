@@ -35,6 +35,7 @@ import {
   resolveWidgetKindFromIndex,
 } from "./widget-kind-index.js";
 import { getLegacyNormalizedContractPatch } from "./widget-legacy-normalization.js";
+import { getRegisteredWidgetVariantsFromDefinition } from "./widget-variant-accessors.js";
 
 const DEFAULT_MANAGER = Object.freeze({
   entries: Object.freeze([]),
@@ -159,14 +160,10 @@ export function normalizeRegisteredWidgetSize(widget = {}, normalizeBottomeSize)
 }
 
 export function getRegisteredWidgetVariants(widget = {}, normalizeBottomeSize) {
-  const definition = getWidgetDefinition(widget);
-  if (!definition) return [];
-  if (!definition.variantGroups) return definition.variants;
-
-  const size = normalizeRegisteredWidgetSize(widget, normalizeBottomeSize);
-  return size.h > size.w
-    ? definition.variantGroups.vertical
-    : definition.variantGroups.horizontal;
+  return getRegisteredWidgetVariantsFromDefinition(widget, normalizeBottomeSize, {
+    getWidgetDefinition,
+    normalizeRegisteredWidgetSize,
+  });
 }
 
 export function normalizeWidgetContract(widget = {}, normalizeBottomeSize) {
