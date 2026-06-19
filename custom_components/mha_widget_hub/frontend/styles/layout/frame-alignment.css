@@ -26,8 +26,6 @@
   }
 
   .mha-grid {
-    padding-right: 0 !important;
-    padding-inline-end: 0 !important;
     transform: none !important;
   }
 
@@ -38,6 +36,8 @@
 
   :host([data-dock-position="right"]) .mha-grid,
   :host(:not([data-dock-position])) .mha-grid {
+    padding-left: 0 !important;
+    padding-inline-start: 0 !important;
     justify-self: start;
   }
 
@@ -46,6 +46,8 @@
   }
 
   :host([data-dock-position="left"]) .mha-grid {
+    padding-right: 0 !important;
+    padding-inline-end: 0 !important;
     justify-self: end;
   }
 
