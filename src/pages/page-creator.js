@@ -66,7 +66,8 @@ export function createPageCreatorPanel({
     closeClassName: "mha-page-creator-close",
     title: t("settings.pageCreatorTitle", "New page"),
     ariaLabel: t("settings.pageCreatorTitle", "New page"),
-    closeLabel: t("settings.pageCreatorClose", "Close icon picker"),
+    closeLabel: t("common.close", "Close"),
+    scrimLabel: t("settings.pageCreatorClose", "Close icon picker"),
     onClose,
     children: [hint, grid, actions],
   });
