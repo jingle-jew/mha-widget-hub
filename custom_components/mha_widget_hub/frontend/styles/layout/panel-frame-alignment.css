@@ -27,6 +27,24 @@
     max-block-size: min(80vh, 42rem) !important;
     min-block-size: min(75vh, 42rem);
     border-radius: clamp(1.35rem, 5vw, 1.9rem) clamp(1.35rem, 5vw, 1.9rem) 0 0 !important;
+    transform: translateY(100%) scale(1) !important;
     transform-origin: bottom center !important;
+    transition:
+      opacity 240ms ease,
+      transform 260ms cubic-bezier(.2,.8,.2,1) !important;
+  }
+
+  .mha-settings-panel[data-open="true"] .mha-settings-sheet,
+  .mha-page-creator[data-open="true"] .mha-page-creator-sheet,
+  .mha-widget-config-popup[data-open="true"] .mha-widget-config-sheet {
+    transform: translateY(0) scale(1) !important;
+  }
+}
+
+@media (max-width: 767px) and (prefers-reduced-motion: reduce) {
+  .mha-settings-sheet,
+  .mha-page-creator-sheet,
+  .mha-widget-config-sheet {
+    transition: none !important;
   }
 }
