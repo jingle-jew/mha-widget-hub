@@ -54,10 +54,8 @@ See:
 
 ### User Documentation
 
-- Installation Guide
-- User Guide
-- Theme Selection
-- Widget Configuration
+- [Installation Guide](docs/installation.md)
+- [User Guide](docs/user-guide.md)
 
 ### Developer Documentation
 
