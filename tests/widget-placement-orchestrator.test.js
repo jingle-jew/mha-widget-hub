@@ -2,8 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  buildPageCreatorPanelProps,
   buildWidgetConfigPanelProps,
   buildWidgetManagerPanelProps,
+  syncPageCreatorPanel,
 } from "../src/widgets/widget-placement-orchestrator.js";
 
 test("widget manager panel props retain state and callback routing", () => {
@@ -45,4 +47,87 @@ test("widget config panel props rerender only when the popup requests it", () =>
 
   props.onChange({ rerender: true });
   assert.equal(rerenders, 1);
+});
+
+test("page creator panel props retain state and callback routing", () => {
+  const onClose = () => {};
+  const onSelectIcon = () => {};
+  const onCreate = () => {};
+
+  const props = buildPageCreatorPanelProps({
+    open: true,
+    selectedIcon: "gear",
+    onClose,
+    onSelectIcon,
+    onCreate,
+  });
+
+  assert.equal(props.open, true);
+  assert.equal(props.selectedIcon, "gear");
+  assert.equal(props.onClose, onClose);
+  assert.equal(props.onSelectIcon, onSelectIcon);
+  assert.equal(props.onCreate, onCreate);
+});
+
+test("page creator sync replaces the existing panel", () => {
+  class FakeNode {
+    constructor(tagName = "") {
+      this.tagName = tagName.toUpperCase();
+      this.childNodes = [];
+      this.dataset = {};
+      this.className = "";
+      this.attributes = {};
+      this.style = { setProperty() {} };
+      this.hidden = false;
+    }
+
+    append(...children) {
+      this.childNodes.push(...children);
+    }
+
+    setAttribute(name, value) {
+      this.attributes[name] = value;
+    }
+
+    addEventListener(type, handler) {
+      this[`on_${type}`] = handler;
+    }
+
+    querySelectorAll() {
+      return [];
+    }
+
+    remove() {
+      this.removed = true;
+    }
+  }
+
+  globalThis.document = {
+    createElement(tag) {
+      return new FakeNode(tag);
+    },
+    createElementNS(_namespace, tag) {
+      return new FakeNode(tag);
+    },
+  };
+
+  const existing = new FakeNode("section");
+  const root = {
+    querySelectorAll() {
+      return [existing];
+    },
+    append(node) {
+      this.appended = node;
+    },
+  };
+
+  syncPageCreatorPanel(root, {
+    open: true,
+    selectedIcon: "grid",
+  });
+
+  assert.equal(existing.removed, true);
+  assert.equal(root.appended?.className, "mha-page-creator");
+
+  delete globalThis.document;
 });

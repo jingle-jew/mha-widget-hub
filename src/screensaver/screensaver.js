@@ -212,6 +212,12 @@ function lerp(from, to, progress) {
   return from + (to - from) * progress;
 }
 
+function translateOptional(key, fallback = "") {
+  return typeof key === "string" && key.trim()
+    ? t(key, fallback)
+    : String(fallback || "");
+}
+
 function createNowBarTile(item, index) {
   const tile = document.createElement("article");
   tile.className = "mha-screensaver-nowbar-tile";
@@ -219,11 +225,11 @@ function createNowBarTile(item, index) {
 
   const title = document.createElement("div");
   title.className = "mha-screensaver-nowbar-title";
-  title.textContent = t(item.titleKey, item.title);
+  title.textContent = translateOptional(item.titleKey, item.title);
 
   const subtitle = document.createElement("div");
   subtitle.className = "mha-screensaver-nowbar-subtitle";
-  subtitle.textContent = t(item.subtitleKey, item.subtitle);
+  subtitle.textContent = translateOptional(item.subtitleKey, item.subtitle);
 
   tile.append(title, subtitle);
   return tile;

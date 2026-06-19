@@ -31,36 +31,16 @@ import {
   saveHubPages,
   syncActivePageWidgets,
 } from "./src/core/mha-state.js?v=phase2";
-import {
-  addPage,
-  changePageIcon,
-  deletePage,
-  movePage,
-  removePageWidgetPositions,
-  renamePage,
-  selectPage,
-} from "./src/pages/page-controller.js";
-import {
-  createPageCreatorPanel,
-  syncPageCreatorPanel,
-  updatePageCreatorIconSelection,
-} from "./src/pages/page-creator.js?v=phase6";
 import {destroyDomSubtree} from "./src/core/dom-lifecycle.js";
 import {ICONS} from "./src/components/icons.js";
 import {createShell} from "./src/layout/shell.js";
 import {createMobileDock} from "./src/layout/mobile-dock.js";
-import { buildDockStateProps } from "./src/layout/dock-props.js?v=phase3";
 import {
-  createDockProps,
   syncDockActiveState,
-  syncDocks,
 } from "./src/layout/dock-controller.js";
-import {createSettingsPanel,updateSettingsPanel} from "./src/settings/settings-panel.js";
-import { replaceSettingsPanelPreservingUiState } from "./src/settings/settings-panel-orchestrator.js?v=phase7";
-import {
-  buildSettingsPanelState,
-  resolveEffectiveIconShape,
-} from "./src/settings/settings-panel-props.js?v=phase3";
+import { createPageUiCoordinator } from "./src/pages/page-ui-coordinator.js?v=phase10";
+import {createSettingsPanel} from "./src/settings/settings-panel.js";
+import { buildSettingsCoordinatorProps, syncSettingsPanels } from "./src/settings/settings-panel-coordinator.js?v=phase8";
 import { WIDGET_MANAGER_CATEGORIES } from "./src/widget-manager/widget-manager.js";
 import {
   buildConfiguredWidget,
@@ -69,6 +49,9 @@ import {
 } from "./src/widget-config/widget-config-popup.js";
 import { getScenesDefaultButtonIndex } from "./src/widget-config/widget-config-props.js?v=phase5";
 import {
+  buildWidgetConfigPanelProps,
+  buildWidgetManagerPanelProps,
+  createPageCreatorPanel,
   createWidgetConfigPanel,
   createWidgetManagerPanel,
   syncWidgetConfigPanel,
@@ -77,52 +60,28 @@ import {
 import {
   createThemeController,
 } from "./src/settings/theme-controller.js";
-import { extractAccentFromWallpaper, resolveAccentFromColorValue } from "./src/settings/wallpaper-accent.js";
+import { createAppearanceCoordinator } from "./src/settings/appearance-coordinator.js";
 import { createWallpaperController } from "./src/settings/wallpaper-controller.js";
 import {updateStatusTime} from "./src/layout/status-bar.js";
-import { buildWidgetShellState } from "./src/widgets/widget-shell-props.js?v=phase6";
-import {createWidgetShell} from "./src/widgets/widget-shell.js";
-import { getNextWidgetVariantEntries, getVariantCandidate, sameVariantSize } from "./src/widgets/widget-variants.js";
 import { normalizeStoredWidgetContract } from "./src/widgets/widget-storage.js?v=phase1";
 import { createWidgetFromCatalogItem } from "./src/widgets/widget-factory.js";
 import {updateClockWidgets} from "./src/widgets/clock-widget.js";
 import { getWidgetPlacementFlow } from "./src/widgets/widget-registry.js?v=phase5b1";
+import { syncDropSlotRenderer } from "./src/widgets/drop-slot-renderer.js";
+import { createWidgetLayoutStateCoordinator } from "./src/widgets/widget-layout-state-coordinator.js";
+import { createWidgetResizeCoordinator } from "./src/widgets/widget-resize-coordinator.js";
+import { createWidgetSurfaceCoordinator } from "./src/widgets/widget-surface-coordinator.js";
 import {DEFAULT_WIDGETS,getActiveGridRows,getActiveGridUnits,getEffectiveLayout,getInternalGridColumnCountFromLogical,getInternalGridRowCountFromLogical,getLayoutMode,getGridPreset,getWidgetDensity,normalizeWidgetForKind,normalizeWidgetSize,sizeToString} from "./src/layout/layout-engine.js";
-import {
-  doesWidgetGroupExactlyFillRect,
-  getGroupBoundingRect,
-  getWidgetRectFromPosition,
-  getWidgetsInCandidateRect,
-  isGroupInternallyValid,
-  isPositionMapValidForWidgets,
-  rectsOverlap,
-  translateWidgetGroupPositions,
-} from "./src/layout/placement-geometry.js";
+import { isPositionMapValidForWidgets } from "./src/layout/placement-geometry.js";
 import {
   doesWidgetLayoutFitGrid,
-  findWidgetAtCandidatePosition,
-  getAdjacentWidgetGroupInDirection,
   getAvailableDropSlotsForCandidate,
-  getBandParticipantsForTranslatedSwap,
-  getDirectNeighborInDirection,
-  hasNoWidgetOverlaps,
-  packTranslatedSwapBand,
-  packWidgets,
 } from "./src/layout/placement-calculations.js";
 import { createPlacementController } from "./src/layout/placement-controller.js";
 import { createGridRuntime } from "./src/layout/grid-runtime.js";
 import {normalizeClockVariant,updateScreensaverClock} from "./src/screensaver/screensaver.js";
 import { createScreensaverController } from "./src/screensaver/screensaver-controller.js";
-import { getNowBarCalendarSignature } from "./src/screensaver/screensaver-props.js?v=phase4";
-import {
-  createScreensaverElement,
-  syncScreensaverElement,
-} from "./src/screensaver/screensaver-orchestrator.js?v=phase1";
-import {
-  buildNowBarTiles,
-  fetchNowBarCalendarEvents,
-  normalizeNowBarConfig,
-} from "./src/screensaver/nowbar-data.js";
+import { createScreensaverCoordinator } from "./src/screensaver/screensaver-coordinator.js?v=phase9";
 import { loadEntityVisibilityConfig } from "./src/admin/entity-visibility-store.js";
 import { normalizeEntityVisibilityConfig } from "./src/admin/entity-permissions.js";
 import { getStyleManifest } from "./src/styles/style-manifest.js";
@@ -155,10 +114,147 @@ constructor(){
     getTheme:()=>this._themeController.read().theme,
     getThemeState:()=>this._themeController.read(),
   });
+  this._appearanceCoordinator=createAppearanceCoordinator({
+    host:this,
+    getRoot:()=>this.shadowRoot,
+    isConnected:()=>this.isConnected,
+    getCustomWallpapers:()=>this._customWallpapers,
+    setCustomWallpapers:(wallpapers)=>{this._customWallpapers=wallpapers;},
+    readThemeState:()=>this._themeController.read(),
+    syncTheme:()=>this._themeController.sync(),
+    setTheme:(value)=>this._themeController.setTheme(value),
+    setThemeStyle:(value)=>this._themeController.setThemeStyle(value),
+    setIosGlass:(value)=>this._themeController.setIosGlass(value),
+    setAccent:(value)=>this._themeController.setAccent(value),
+    setAccentMode:(value)=>this._themeController.setAccentMode(value),
+    setIconShape:(value)=>this._themeController.setIconShape(value),
+    migrateLegacyWallpaper:()=>this._wallpaperController.migrateLegacy(),
+    readWallpapers:()=>this._wallpaperController.read(),
+    applyWallpaperState:(themeState)=>this._wallpaperController.apply(themeState),
+    saveWallpaper:(mode,payload)=>this._wallpaperController.save(mode,payload),
+    resetWallpaper:(mode)=>this._wallpaperController.reset(mode),
+    getActiveAccentSource:(themeState,wallpapers)=>this._wallpaperController.getActiveAccentSource(themeState,wallpapers),
+    syncSettingsDom:()=>this._syncSettingsDom(),
+    syncScreensaverSettingsDom:()=>this._syncScreensaverSettingsDom(),
+    syncDocksDom:()=>this._syncDocksDom(),
+    refreshActiveGridOnly:()=>this._refreshActiveGridOnly(),
+    scheduleIconSymbolRefresh:()=>this._scheduleIconSymbolRefresh(),
+  });
   this._screensaverController=createScreensaverController({
     normalizeClockVariant,
     isBlocked:()=>this._isScreensaverBlocked(),
     onIdle:()=>this._setScreensaverActive(true),
+  });
+  this._screensaverCoordinator=createScreensaverCoordinator({
+    getScreensaverState:()=>this._screensaverController.read(),
+    getIsVisible:()=>this._getScreensaverVisible(),
+    getHass:()=>this._hass,
+    getNowBarConfig:()=>this._screensaverController.read().nowBarConfig,
+    onClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),
+    onOpenScreensaverSettings:()=>this._openScreensaverSettings(),
+    onWake:()=>this._wakeScreensaver(),
+    onSyncVisibilityState:()=>this._syncScreensaverVisibilityState(),
+    onCalendarEventsChange:()=>this._syncScreensaverDom(),
+  });
+  this._pageUiCoordinator=createPageUiCoordinator({
+    getRoot:()=>this.shadowRoot,
+    getPages:()=>this._pages,
+    setPages:(pages)=>{this._pages=pages;},
+    getActivePageId:()=>this._activePageId,
+    setActivePageId:(id)=>{this._activePageId=id;},
+    getWidgets:()=>this._widgets,
+    setWidgets:(widgets)=>{this._widgets=widgets;},
+    getWidgetPositions:()=>this._widgetPositions,
+    setWidgetPositions:(positions)=>{this._widgetPositions=positions;},
+    getPageCreatorOpen:()=>this._pageCreatorOpen,
+    setPageCreatorOpen:(open)=>{this._pageCreatorOpen=open;},
+    getNewPageIcon:()=>this._newPageIcon,
+    setNewPageIcon:(icon)=>{this._newPageIcon=icon;},
+    getDockSettingsPageId:()=>this._dockSettingsPageId,
+    setDockSettingsPageId:(id)=>{this._dockSettingsPageId=id;},
+    setSettingsPage:(page)=>{this._settingsPage=page;},
+    getIsEditing:()=>this._isEditing,
+    isMobileLandscapeLayout:()=>this._isMobileLandscapeLayout(),
+    normalizeWidget:normalizeStoredWidgetContract,
+    savePages:()=>this._savePages(),
+    readWidgets:()=>this._readWidgets(),
+    writeActivePage:(id)=>writeStorageValue(ACTIVE_PAGE,id),
+    writeWidgetPositions:(positions)=>writeJson(POSITIONS,positions),
+    recordPersistenceResult:(success)=>this._recordPersistenceResult(success),
+    refreshActiveGridOnly:()=>this._refreshActiveGridOnly(),
+    syncWidgetDropSlots:()=>this._syncWidgetDropSlots(),
+    syncSettingsDom:()=>this._syncSettingsDom(),
+    openDockSettings:()=>this._openDockSettings(),
+    openSettings:()=>this._openSettings(),
+    clearPlacementState:()=>{
+      this._activeMoveWidgetId="";
+      this._pendingWidgetPlacement=null;
+      this._widgetManagerOpen=false;
+      this._widgetManagerCategory="";
+    },
+  });
+  this._widgetLayoutStateCoordinator=createWidgetLayoutStateCoordinator({
+    getWidgets:()=>this._widgets,
+    getWidgetPositions:()=>this._widgetPositions,
+    setWidgetPositions:(positions)=>{this._widgetPositions=positions;},
+    getActivePageId:()=>this._activePageId,
+    getGridBounds:()=>this._getGridBounds(),
+    getEffectiveLayout:()=>getEffectiveLayout(this),
+    getRuntimeGridPreset:()=>this._getRuntimeGridPreset(),
+    getWidgetAreaMetrics:()=>this._getWidgetAreaMetrics(),
+    isMobileLayout:()=>this._isMobileLauncherLayout(),
+    recordPersistenceResult:(success)=>this._recordPersistenceResult(success),
+    writeWidgetPositions:(positions)=>writeJson(POSITIONS,positions),
+    getRoot:()=>this.shadowRoot,
+  });
+  this._widgetResizeCoordinator=createWidgetResizeCoordinator({
+    getResizeState:()=>this._resizeState,
+    setResizeState:(state)=>{this._resizeState=state;},
+    getWidgets:()=>this._widgets,
+    setWidgets:(widgets)=>{this._widgets=widgets;},
+    getGridMetrics:()=>this._getGridMetrics(),
+    getActiveGridUnits:()=>getActiveGridUnits(this),
+    doesWidgetLayoutFitGrid:(widgets)=>this._doesWidgetLayoutFitGrid(widgets),
+    normalizeWidgetsToGridBounds:(widgets)=>this._normalizeWidgetsToGridBounds(widgets),
+    clampWidgetSizeToGridBounds:(widget,size)=>this._clampWidgetSizeToGridBounds(widget,size),
+    queryWidgetElement:(widgetId)=>this.shadowRoot?.querySelector?.(`[data-widget-id="${widgetId}"]`),
+    saveWidgets:()=>this._saveWidgets(),
+    scheduleSquareUnitSync:()=>this._scheduleSquareUnitSync(),
+  });
+  this._widgetSurfaceCoordinator=createWidgetSurfaceCoordinator({
+    getRoot:()=>this.shadowRoot,
+    renderRoot:()=>this.render(),
+    cancelWidgetRenderFrame:()=>{
+      cancelAnimationFrame(this._widgetRenderFrame);
+      this._widgetRenderFrame=0;
+    },
+    getWidgets:()=>this._widgets,
+    setWidgets:(widgets)=>{this._widgets=widgets;},
+    getPendingWidgetPlacement:()=>this._pendingWidgetPlacement,
+    setPendingWidgetPlacement:(widget)=>{this._pendingWidgetPlacement=widget;},
+    getActiveMoveWidgetId:()=>this._activeMoveWidgetId,
+    setActiveMoveWidgetId:(id)=>{this._activeMoveWidgetId=id;},
+    getIsEditing:()=>this._isEditing,
+    getHass:()=>this._hass,
+    getEntityVisibilityConfig:()=>this._entityVisibilityConfig,
+    getGridBounds:()=>this._getGridBounds(),
+    getActiveWidgetPositions:(options)=>this._getActiveWidgetPositions(options),
+    isPositionMapValidForWidgets:(positions,widgets,units,rowUnits)=>this._isPositionMapValidForWidgets(positions,widgets,units,rowUnits),
+    normalizeWidgetsToGridBounds:(widgets)=>this._normalizeWidgetsToGridBounds(widgets),
+    saveCurrentWidgetPositions:(positions)=>this._saveCurrentWidgetPositions(positions),
+    saveWidgets:()=>this._saveWidgets(),
+    applyWidgetPositionsToDom:(positions)=>this._applyWidgetPositionsToDom(positions),
+    wireDrag:(element,widget)=>this._wireDrag(element,widget),
+    renderWidgetDropSlots:(grid)=>this._renderWidgetDropSlots(grid),
+    syncWidgetDropSlots:()=>this._syncWidgetDropSlots(),
+    syncEditModeDom:()=>this._syncEditModeDom(),
+    scheduleSquareUnitSync:()=>this._scheduleSquareUnitSync(),
+    updateDockActiveState:()=>this._updateDockActiveState(),
+    toggleWidgetMoveMode:(id)=>this._toggleWidgetMoveMode(id),
+    moveWidgetByDirection:(id,direction)=>this._moveWidgetByDirection(id,direction),
+    removeWidget:(id)=>this._removeWidget(id),
+    openWidgetConfig:(id)=>this._openWidgetConfig(id),
+    openScenesButtonConfig:(id,slotIndex)=>this._openScenesButtonConfig(id,slotIndex),
   });
   this._initialized=false;
   this._bootComplete=false;
@@ -188,8 +284,6 @@ constructor(){
   this._viewportRaf=0;
   this._relayoutTimer=0;
   this._systemThemeListener=null;
-  this._themeTransitionTimer=0;
-  this._themeTransitionFrame=0;
   this._iconSymbolRefreshFrame=0;
   this._gridScrollCleanup=null;
   this._settingsOpen=false;
@@ -197,10 +291,6 @@ constructor(){
   this._accentPaletteExpanded=false;
   this._dockSettingsPageId="";
   this._screensaverSettingsOpen=false;
-  this._nowBarCalendarEvents={};
-  this._nowBarCalendarRequestId=0;
-  this._nowBarCalendarSignature="";
-  this._nowBarCalendarFetchedAt=0;
   this._lastResponsiveSignature="";
   this._responsiveRelayoutTimer=null;
   this._widgetManagerOpen=false;
@@ -214,7 +304,6 @@ constructor(){
   this._hideHaSidebar=false;
   this._language="auto";
   this._customWallpapers={light:null,dark:null};
-  this._autoAccentRequestId=0;
   this._pages=[];
   this._activePageId="";
   this._widgets=[];
@@ -394,7 +483,7 @@ updateFromHass(){
   this.shadowRoot?.querySelectorAll?.("[data-widget-component]")?.forEach(component=>{
     component.__mhaUpdateFromHass?.(this._hass);
   });
-  this._requestNowBarCalendarEvents();
+  this._screensaverCoordinator.requestNowBarCalendarEvents();
   this._syncScreensaverDom();
 }
 _finishBoot({fallback=false,reason=""}={}){
@@ -528,10 +617,7 @@ disconnectedCallback(){
   cancelAnimationFrame(this._widgetDropSlotsFrame);
   this._widgetDropSlotsFrame=0;
   this._gridRuntime.destroy();
-  cancelAnimationFrame(this._themeTransitionFrame);
-  this._themeTransitionFrame=0;
-  clearTimeout(this._themeTransitionTimer);
-  this._themeTransitionTimer=0;
+  this._appearanceCoordinator.destroy();
   cancelAnimationFrame(this._iconSymbolRefreshFrame);
   this._iconSymbolRefreshFrame=0;
   this._clearGridScrollListener();
@@ -605,20 +691,16 @@ _syncSettingsModalState(){
   this.dataset.settingsOpen=String(this._settingsOpen);
 }
 _syncSettingsDom(){
-  const existing=this.shadowRoot.querySelector('.mha-settings-panel[data-settings-scope="all"]');
   this._syncSettingsModalState();
-  replaceSettingsPanelPreservingUiState({
+  syncSettingsPanels({
     root:this.shadowRoot,
-    existing,
-    next:this._createSettingsPanel(),
-    updatePanel:updateSettingsPanel,
+    props:this._getSettingsPanelsProps(),
   });
 }
-_getSettingsPanelProps(scope="all"){
+_getSettingsPanelsProps(){
   const themeState=this._themeController.read();
   const screensaverState=this._screensaverController.read();
-  const settingsState=buildSettingsPanelState({
-    scope,
+  return buildSettingsCoordinatorProps({
     settingsOpen:this._settingsOpen,
     screensaverSettingsOpen:this._screensaverSettingsOpen,
     language:this._language,
@@ -634,124 +716,71 @@ _getSettingsPanelProps(scope="all"){
     entityVisibilityConfig:this._entityVisibilityConfig,
     themeState,
     screensaverState,
-    effectiveIconShape:resolveEffectiveIconShape({
-      hostIconShape:this.dataset.iconShape,
-      documentIconShape:document.documentElement.dataset.iconShape,
-      themeIconShape:themeState.iconShape,
-    }),
+    hostIconShape:this.dataset.iconShape,
+    documentIconShape:document.documentElement.dataset.iconShape,
+    callbacks:{
+      onClose:()=>this._closeSettings(),
+      onCloseScreensaver:()=>this._closeScreensaverSettings(),
+      onLanguageChange:v=>this._applyLanguageFromSettings(v),
+      onThemeChange:v=>this._applyThemeFromSettings(v),
+      onThemeStyleChange:v=>this._applyThemeStyleFromSettings(v),
+      onIosGlassChange:v=>this._applyIosGlassFromSettings(v),
+      onAccentChange:v=>this._applyAccentFromSettings(v),
+      onAccentModeChange:v=>this._applyAccentModeFromSettings(v),
+      onAccentPaletteExpandedChange:v=>this._setAccentPaletteExpanded(v),
+      onIconShapeChange:v=>this._applyIconShapeFromSettings(v),
+      onHideHaSidebarChange:v=>this._applyHideHaSidebarFromSettings(v),
+      onScreensaverEnabledChange:v=>this._applyScreensaverEnabledFromSettings(v),
+      onScreensaverDelayChange:v=>this._applyScreensaverDelayFromSettings(v),
+      onScreensaverPreviewChange:v=>this._applyScreensaverPreviewFromSettings(v),
+      onScreensaverNowBarChange:v=>this._applyScreensaverNowBarFromSettings(v),
+      onScreensaverNowBarItemChange:(item,enabled)=>this._applyScreensaverNowBarItemFromSettings(item,enabled),
+      onScreensaverNowBarTileEnabledChange:(tile,enabled)=>this._applyScreensaverNowBarTileEnabledFromSettings(tile,enabled),
+      onScreensaverNowBarEntitySelectionChange:(section,entityId,selected)=>this._applyScreensaverNowBarEntitySelectionFromSettings(section,entityId,selected),
+      onScreensaverNowBarNowItemChange:(item,selected)=>this._applyScreensaverNowBarNowItemFromSettings(item,selected),
+      onScreensaverClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),
+      onResetGrid:()=>this.resetGrid(),
+      onOpenWallpaperSettings:()=>this._openWallpaperSettings(),
+      onOpenNowBarSettings:()=>this._openNowBarSettings(),
+      onWallpaperMainBack:()=>this._openSettings(),
+      onOpenDockSettings:()=>this._openDockSettings(),
+      onDockBack:()=>this._openDockSettings(),
+      onDockPageSelect:id=>this._openDockPageSettings(id),
+      onDockMovePage:(id,direction)=>this._moveDockPage(id,direction),
+      onDockDeletePage:id=>this._deleteDockPage(id),
+      onDockMainBack:()=>this._openSettings(),
+      onDockRenamePage:(id,name)=>this._renameDockPage(id,name),
+      onDockIconChange:(id,icon)=>this._changeDockPageIcon(id,icon),
+      onDockPositionChange:v=>this._applyDockPositionFromSettings(v),
+      onWallpaperImport:(mode,payload)=>this._saveCustomWallpaper(mode,payload),
+      onWallpaperReset:mode=>this._resetCustomWallpaper(mode),
+    },
   });
-
-  return {
-    ...settingsState,
-    onClose:()=>scope==="screensaver"?this._closeScreensaverSettings():this._closeSettings(),
-    onLanguageChange:v=>this._applyLanguageFromSettings(v),
-    onThemeChange:v=>this._applyThemeFromSettings(v),
-    onThemeStyleChange:v=>this._applyThemeStyleFromSettings(v),
-    onIosGlassChange:v=>this._applyIosGlassFromSettings(v),
-    onAccentChange:v=>this._applyAccentFromSettings(v),
-    onAccentModeChange:v=>this._applyAccentModeFromSettings(v),
-    onAccentPaletteExpandedChange:v=>this._setAccentPaletteExpanded(v),
-    onIconShapeChange:v=>this._applyIconShapeFromSettings(v),
-    onHideHaSidebarChange:v=>this._applyHideHaSidebarFromSettings(v),
-    onScreensaverEnabledChange:v=>this._applyScreensaverEnabledFromSettings(v),
-    onScreensaverDelayChange:v=>this._applyScreensaverDelayFromSettings(v),
-    onScreensaverPreviewChange:v=>this._applyScreensaverPreviewFromSettings(v),
-    onScreensaverNowBarChange:v=>this._applyScreensaverNowBarFromSettings(v),
-    onScreensaverNowBarItemChange:(item,enabled)=>this._applyScreensaverNowBarItemFromSettings(item,enabled),
-    onScreensaverNowBarTileEnabledChange:(tile,enabled)=>this._applyScreensaverNowBarTileEnabledFromSettings(tile,enabled),
-    onScreensaverNowBarEntitySelectionChange:(section,entityId,selected)=>this._applyScreensaverNowBarEntitySelectionFromSettings(section,entityId,selected),
-    onScreensaverNowBarNowItemChange:(item,selected)=>this._applyScreensaverNowBarNowItemFromSettings(item,selected),
-    onScreensaverClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),
-    onResetGrid:()=>this.resetGrid(),
-    onOpenWallpaperSettings:()=>this._openWallpaperSettings(),
-    onOpenNowBarSettings:()=>this._openNowBarSettings(),
-    onWallpaperMainBack:()=>this._openSettings(),
-    onOpenDockSettings:()=>this._openDockSettings(),
-    onDockBack:()=>this._openDockSettings(),
-    onDockPageSelect:id=>this._openDockPageSettings(id),
-    onDockMovePage:(id,direction)=>this._moveDockPage(id,direction),
-    onDockDeletePage:id=>this._deleteDockPage(id),
-    onDockMainBack:()=>this._openSettings(),
-    onDockRenamePage:(id,name)=>this._renameDockPage(id,name),
-    onDockIconChange:(id,icon)=>this._changeDockPageIcon(id,icon),
-    onDockPositionChange:v=>this._applyDockPositionFromSettings(v),
-    onWallpaperImport:(mode,payload)=>this._saveCustomWallpaper(mode,payload),
-    onWallpaperReset:mode=>this._resetCustomWallpaper(mode),
-  };
 }
 
 _migrateLegacyCustomWallpaper(){
-  this._wallpaperController.migrateLegacy();
+  return this._appearanceCoordinator.migrateLegacyCustomWallpaper();
 }
 _readCustomWallpapers(){
-  return this._wallpaperController.read();
+  return this._appearanceCoordinator.readCustomWallpapers();
 }
 _applyCustomWallpaperState(themeState=this._themeController.read()){
-  this._customWallpapers=this._wallpaperController.apply(themeState);
+  return this._appearanceCoordinator.applyCustomWallpaperState(themeState);
 }
 _saveCustomWallpaper(mode,payload){
-  this._customWallpapers=this._wallpaperController.save(mode,payload);
-  this._syncAutoAccentFromWallpaper();
-  this._syncSettingsDom();
-  this._scheduleIconSymbolRefresh();
+  return this._appearanceCoordinator.saveCustomWallpaper(mode,payload);
 }
 _resetCustomWallpaper(mode){
-  this._customWallpapers=this._wallpaperController.reset(mode);
-  this._syncAutoAccentFromWallpaper();
-  this._syncSettingsDom();
+  return this._appearanceCoordinator.resetCustomWallpaper(mode);
 }
 async _syncAutoAccentFromWallpaper(){
-  const requestId=++this._autoAccentRequestId;
-  const themeState=this._themeController.read();
-  const accentSource=this._wallpaperController.getActiveAccentSource(themeState,this._customWallpapers);
-
-  if(!accentSource?.value){
-    this.style.removeProperty("--mha-accent-auto");
-    this.style.removeProperty("--mha-accent-auto-contrast");
-  } else {
-    try{
-      const accent=accentSource.kind==="image"
-        ? await extractAccentFromWallpaper(accentSource.value,themeState.themeStyle)
-        : resolveAccentFromColorValue(accentSource.value);
-      if(requestId!==this._autoAccentRequestId)return;
-      if(accent?.color){
-        this.style.setProperty("--mha-accent-auto",accent.color);
-        this.style.setProperty("--mha-accent-auto-contrast",accent.contrast||"#fff");
-      }else{
-        this.style.removeProperty("--mha-accent-auto");
-        this.style.removeProperty("--mha-accent-auto-contrast");
-      }
-    }catch(error){
-      console.warn(`[MHA] Auto accent could not be extracted for ${themeState.themeStyle}.`,error);
-      if(requestId===this._autoAccentRequestId){
-        this.style.removeProperty("--mha-accent-auto");
-        this.style.removeProperty("--mha-accent-auto-contrast");
-      }
-    }
-  }
-
-  if(requestId===this._autoAccentRequestId){
-    this._themeController.sync();
-    this._syncSettingsDom();
-    this._scheduleAppearanceDomRefresh();
-  }
+  return this._appearanceCoordinator.syncAutoAccentFromWallpaper();
 }
 _isMobileLandscapeLayout(){
   return this._isMobileLauncherLayout()&&window.matchMedia?.("(orientation: landscape)")?.matches;
 }
-_createWidgetManagerPanel(){
-  return createWidgetManagerPanel({
-    open:this._widgetManagerOpen,
-    activeCategory:this._widgetManagerCategory,
-    categories:WIDGET_MANAGER_CATEGORIES,
-    onClose:()=>this._closeWidgetManager(),
-    onBack:()=>this._showWidgetManagerCategories(),
-    onSelectCategory:id=>this._selectWidgetManagerCategory(id),
-    onSelectWidget:item=>this._beginWidgetPlacement(item),
-  });
-}
 _syncWidgetManagerDom(){
-  syncWidgetManagerPanel(this.shadowRoot,{
+  syncWidgetManagerPanel(this.shadowRoot,buildWidgetManagerPanelProps({
     open:this._widgetManagerOpen,
     activeCategory:this._widgetManagerCategory,
     categories:WIDGET_MANAGER_CATEGORIES,
@@ -759,7 +788,7 @@ _syncWidgetManagerDom(){
     onBack:()=>this._showWidgetManagerCategories(),
     onSelectCategory:id=>this._selectWidgetManagerCategory(id),
     onSelectWidget:item=>this._beginWidgetPlacement(item),
-  });
+  }));
 }
 _openWidgetManager(){
   if(!this._isEditing||this._isMobileLandscapeLayout())return;
@@ -830,25 +859,15 @@ _startWidgetPlacement(widget){
   this._syncEditModeDom();
   this._syncWidgetDropSlots();
 }
-_createWidgetConfigPanel(){
-  return createWidgetConfigPanel({
-    session:this._widgetConfigSession,
-    hass:this._hass,
-    visibilityConfig:this._entityVisibilityConfig,
-    onCancel:()=>this._closeWidgetConfig(),
-    onSave:()=>this._saveWidgetConfig(),
-    onRerender:()=>this._syncWidgetConfigDom(),
-  });
-}
 _syncWidgetConfigDom(){
-  syncWidgetConfigPanel(this.shadowRoot,{
+  syncWidgetConfigPanel(this.shadowRoot,buildWidgetConfigPanelProps({
     session:this._widgetConfigSession,
     hass:this._hass,
     visibilityConfig:this._entityVisibilityConfig,
     onCancel:()=>this._closeWidgetConfig(),
     onSave:()=>this._saveWidgetConfig(),
     onRerender:()=>this._syncWidgetConfigDom(),
-  });
+  }));
 }
 _closeWidgetConfig(){
   this._widgetConfigSession=null;
@@ -917,9 +936,6 @@ _openScenesButtonConfig(id,buttonIndex){
   this._syncEditModeDom();
   this._syncWidgetConfigDom();
 }
-_createSettingsPanel(){
-  return createSettingsPanel(this._getSettingsPanelProps("all"));
-}
 _openScreensaverSettings(){
   this._screensaverSettingsOpen=true;
   this._syncScreensaverSettingsDom();
@@ -929,14 +945,11 @@ _closeScreensaverSettings(){
   this._syncScreensaverSettingsDom();
 }
 _syncScreensaverSettingsDom(){
-  const existing=this.shadowRoot.querySelector('.mha-settings-panel[data-settings-scope="screensaver"]');
   this.classList.toggle("is-screensaver-settings-open",this._screensaverSettingsOpen);
   this.dataset.screensaverSettingsOpen=String(this._screensaverSettingsOpen);
-  replaceSettingsPanelPreservingUiState({
+  syncSettingsPanels({
     root:this.shadowRoot,
-    existing,
-    next:createSettingsPanel(this._getSettingsPanelProps("screensaver")),
-    updatePanel:updateSettingsPanel,
+    props:this._getSettingsPanelsProps(),
   });
 }
 
@@ -997,52 +1010,16 @@ _openDockPageSettings(id=""){
   this._syncSettingsDom();
 }
 _moveDockPage(id="",direction=0){
-  const result=movePage(this._pages,id,direction);
-  if(!result)return;
-  this._pages=result.pages;
-  this._savePages();
-  this._syncDocksDom();
-  this._syncSettingsDom();
+  return this._pageUiCoordinator.moveDockPage(id,direction);
 }
 _renameDockPage(id="",name=""){
-  const result=renamePage(this._pages,id,name);
-  if(!result)return;
-  this._pages=result.pages;
-  this._savePages();
-  this._syncDocksDom();
-  this._syncSettingsDom();
+  return this._pageUiCoordinator.renameDockPage(id,name);
 }
 _changeDockPageIcon(id="",icon="grid"){
-  const result=changePageIcon(this._pages,id,icon);
-  this._pages=result.pages;
-  this._savePages();
-  this._syncDocksDom();
-  this._syncSettingsDom();
+  return this._pageUiCoordinator.changeDockPageIcon(id,icon);
 }
 _deleteDockPage(id=""){
-  const result=deletePage(this._pages,this._activePageId,id);
-  if(!result)return;
-  this._pages=result.pages;
-  this._activePageId=result.activePageId;
-  if(result.activePageChanged){
-    this._widgets=this._readWidgets();
-  }
-  this._widgetPositions=removePageWidgetPositions(
-    this._widgetPositions,
-    id,
-    result.removedWidgetIds,
-  );
-  const positionsSaved=writeJson(POSITIONS,this._widgetPositions);
-  if(this._dockSettingsPageId===id){
-    this._settingsPage="dock";
-    this._dockSettingsPageId="";
-  }
-  const pagesSaved=this._savePages();
-  this._recordPersistenceResult(positionsSaved&&pagesSaved);
-  this._syncDocksDom();
-  this._syncSettingsDom();
-  this._refreshActiveGridOnly();
-  this._syncWidgetDropSlots();
+  return this._pageUiCoordinator.deleteDockPage(id);
 }
 
 /*
@@ -1090,101 +1067,39 @@ _applyLanguageFromSettings(value="auto"){
 }
 
 _refreshAppearanceDom(){
-  if(!this.isConnected||!this.shadowRoot)return;
-
-  this._syncDocksDom();
-  this._refreshActiveGridOnly();
-  this._scheduleIconSymbolRefresh();
+  return this._appearanceCoordinator.refreshAppearanceDom();
 }
 
 _scheduleAppearanceDomRefresh(){
-  cancelAnimationFrame(this._appearanceRefreshFrame);
-  this._appearanceRefreshFrame=requestAnimationFrame(()=>{
-    this._appearanceRefreshFrame=0;
-    this._refreshAppearanceDom();
-  });
+  return this._appearanceCoordinator.scheduleAppearanceDomRefresh();
 }
 
 _applyThemeFromSettings(value="auto"){
-  const themeState=this._themeController.setTheme(value);
-  this._applyCustomWallpaperState(themeState);
-  this._syncAutoAccentFromWallpaper();
-  this._syncSettingsDom();
-  this._syncScreensaverSettingsDom();
-  this._scheduleAppearanceDomRefresh();
+  return this._appearanceCoordinator.applyThemeFromSettings(value);
 }
 
 _transitionSystemThemeChange(){
-  if(!this.isConnected)return;
-
-  const reducedMotion=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
-  const cover=this.shadowRoot.querySelector(".mha-theme-transition-cover")||document.createElement("div");
-  cover.className="mha-theme-transition-cover";
-  cover.dataset.state="covering";
-  cover.setAttribute("aria-hidden","true");
-  if(!cover.parentNode)this.shadowRoot.append(cover);
-  cover.style.background=getComputedStyle(cover).background;
-
-  this.classList.add("is-theme-transitioning");
-  clearTimeout(this._themeTransitionTimer);
-  cancelAnimationFrame(this._themeTransitionFrame);
-
-  const themeState=this._themeController.sync();
-  this._applyCustomWallpaperState(themeState);
-  this._syncAutoAccentFromWallpaper();
-  this._scheduleAppearanceDomRefresh();
-
-  const finish=()=>{
-    cover.dataset.state="revealing";
-    const duration=reducedMotion?0:260;
-    this._themeTransitionTimer=setTimeout(()=>{
-      cover.remove();
-      this.classList.remove("is-theme-transitioning");
-    },duration);
-  };
-
-  if(reducedMotion){
-    finish();
-    return;
-  }
-
-  // Wait for two paints so CSS variables and theme selectors settle under the cover.
-  this._themeTransitionFrame=requestAnimationFrame(()=>{
-    this._themeTransitionFrame=requestAnimationFrame(finish);
-  });
+  return this._appearanceCoordinator.transitionSystemThemeChange();
 }
 
 _applyThemeStyleFromSettings(value="oneui"){
-  const themeState=this._themeController.setThemeStyle(value);
-  this._applyCustomWallpaperState(themeState);
-  this._syncAutoAccentFromWallpaper();
-  this._syncSettingsDom();
-  this._scheduleAppearanceDomRefresh();
+  return this._appearanceCoordinator.applyThemeStyleFromSettings(value);
 }
 
 _applyIosGlassFromSettings(value="liquid"){
-  this._themeController.setIosGlass(value);
-  this._syncSettingsDom();
-  this._scheduleAppearanceDomRefresh();
+  return this._appearanceCoordinator.applyIosGlassFromSettings(value);
 }
 
 _applyAccentFromSettings(value=""){
-  this._themeController.setAccent(value);
-  this._syncSettingsDom();
-  this._scheduleAppearanceDomRefresh();
+  return this._appearanceCoordinator.applyAccentFromSettings(value);
 }
 
 _applyAccentModeFromSettings(value="manual"){
-  this._themeController.setAccentMode(value);
-  if(value==="auto")this._syncAutoAccentFromWallpaper();
-  this._syncSettingsDom();
-  this._scheduleAppearanceDomRefresh();
+  return this._appearanceCoordinator.applyAccentModeFromSettings(value);
 }
 
 _applyIconShapeFromSettings(value="auto"){
-  this._themeController.setIconShape(value);
-  this._syncSettingsDom();
-  this._scheduleAppearanceDomRefresh();
+  return this._appearanceCoordinator.applyIconShapeFromSettings(value);
 }
 _setAccentPaletteExpanded(expanded=false){
   this._accentPaletteExpanded=Boolean(expanded);
@@ -1235,21 +1150,21 @@ _applyScreensaverNowBarFromSettings(enabled=true){
 }
 _applyScreensaverNowBarItemFromSettings(item="",enabled=true){
   this._recordPersistenceResult(this._screensaverController.setNowBarItem(item,enabled));
-  this._requestNowBarCalendarEvents();
+  this._screensaverCoordinator.requestNowBarCalendarEvents();
   this._syncScreensaverDom();
   this._syncSettingsDom();
   this._syncScreensaverSettingsDom();
 }
 _applyScreensaverNowBarTileEnabledFromSettings(tile="",enabled=true){
   this._recordPersistenceResult(this._screensaverController.setNowBarTileEnabled(tile,enabled));
-  this._requestNowBarCalendarEvents();
+  this._screensaverCoordinator.requestNowBarCalendarEvents();
   this._syncScreensaverDom();
   this._syncSettingsDom();
   this._syncScreensaverSettingsDom();
 }
 _applyScreensaverNowBarEntitySelectionFromSettings(section="",entityId="",selected=true){
   this._recordPersistenceResult(this._screensaverController.setNowBarEntitySelection(section,entityId,selected));
-  this._requestNowBarCalendarEvents({force:section==="calendar"});
+  this._screensaverCoordinator.requestNowBarCalendarEvents({force:section==="calendar"});
   this._syncScreensaverDom();
   this._syncSettingsDom();
   this._syncScreensaverSettingsDom();
@@ -1271,67 +1186,8 @@ _syncScreensaverVisibilityState(){
   this.classList.toggle("is-screensaver-visible",visible);
   this.dataset.screensaverVisible=String(visible);
 }
-_getNowBarConfig(){
-  return normalizeNowBarConfig(this._screensaverController.read().nowBarConfig);
-}
-_getNowBarTiles(){
-  return buildNowBarTiles({
-    hass:this._hass,
-    config:this._getNowBarConfig(),
-    calendarEvents:this._nowBarCalendarEvents,
-  });
-}
-_getNowBarCalendarSignature(config=this._getNowBarConfig()){
-  return getNowBarCalendarSignature(config);
-}
-_requestNowBarCalendarEvents({force=false}={}){
-  const config=this._getNowBarConfig();
-  const signature=this._getNowBarCalendarSignature(config);
-  if(!this._hass||!config.tiles.calendar||!signature){
-    this._nowBarCalendarEvents={};
-    this._nowBarCalendarSignature=signature;
-    this._nowBarCalendarFetchedAt=0;
-    return;
-  }
-  const timestamp=Date.now();
-  const recentlyFetched=timestamp-this._nowBarCalendarFetchedAt<60000;
-  if(!force&&signature===this._nowBarCalendarSignature&&recentlyFetched)return;
-  this._nowBarCalendarSignature=signature;
-  this._nowBarCalendarFetchedAt=timestamp;
-  const requestId=++this._nowBarCalendarRequestId;
-  fetchNowBarCalendarEvents(this._hass,config).then(events=>{
-    if(requestId!==this._nowBarCalendarRequestId)return;
-    this._nowBarCalendarEvents=events;
-    this._syncScreensaverDom();
-  });
-}
-_createScreensaverElement(screensaverState=this._screensaverController.read()){
-  return createScreensaverElement({
-    isVisible:this._getScreensaverVisible(),
-    screensaverState,
-    nowBarTiles:this._getNowBarTiles(),
-    onClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),
-    onOpenScreensaverSettings:()=>this._openScreensaverSettings(),
-    onWake:()=>this._wakeScreensaver(),
-  });
-}
 _syncScreensaverDom({force=false}={}){
-  this._syncScreensaverVisibilityState();
-  const existing=this.shadowRoot.querySelector(".mha-screensaver");
-  const screensaverState=this._screensaverController.read();
-  syncScreensaverElement({
-    root:this.shadowRoot,
-    existing,
-    force,
-    props:{
-      isVisible:this._getScreensaverVisible(),
-      screensaverState,
-      nowBarTiles:this._getNowBarTiles(),
-      onClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),
-      onOpenScreensaverSettings:()=>this._openScreensaverSettings(),
-      onWake:()=>this._wakeScreensaver(),
-    },
-  });
+  this._screensaverCoordinator.syncDom(this.shadowRoot,{force});
 }
 toggleEditMode(){
   if(!this._isEditing&&this._isMobileLandscapeLayout())return;
@@ -1403,130 +1259,42 @@ _syncActivePageWidgets(){
   return success?this._recordPersistenceResult(success):false;
 }
 _setActivePage(id){
-  const result=selectPage(this._pages,this._activePageId,id);
-  if(!result)return;
-  this._activeMoveWidgetId="";
-  this._pendingWidgetPlacement=null;
-  this._widgetManagerOpen=false;
-  this._widgetManagerCategory="";
-  this._activePageId=result.activePageId;
-  this._recordPersistenceResult(writeStorageValue(ACTIVE_PAGE,result.activePageId));
-  this._widgets=this._readWidgets();
-  this._refreshActiveGridOnly();
-  this._syncDocksDom();
+  return this._pageUiCoordinator.selectPage(id);
 }
 
 _addGridPage({icon="grid"}={}){
-  const result=addPage(this._pages,{
-    icon,
-    normalizeWidget:normalizeStoredWidgetContract,
-  });
-  this._pages=result.pages;
-  this._activePageId=result.activePageId;
-  this._widgets=[];
-  this._pageCreatorOpen=false;
-  this._newPageIcon="grid";
-  this._savePages();
-  this._syncDocksDom();
-  this._syncPageCreatorDom();
-  this._refreshActiveGridOnly();
-  this._syncWidgetDropSlots();
+  return this._pageUiCoordinator.addGridPage({icon});
 }
 _openPageCreator(){
-  if(!this._isEditing||this._isMobileLandscapeLayout())return;
-  this._pageCreatorOpen=true;
-  this._newPageIcon=this._newPageIcon||"grid";
-  this._syncPageCreatorDom();
+  return this._pageUiCoordinator.openPageCreator();
 }
 _closePageCreator(){
-  this._pageCreatorOpen=false;
-  this._syncPageCreatorDom();
+  return this._pageUiCoordinator.closePageCreator();
 }
 _setPageCreatorIcon(icon="grid"){
-  this._newPageIcon=String(icon||"grid");
-  updatePageCreatorIconSelection(this.shadowRoot,this._newPageIcon);
+  return this._pageUiCoordinator.setPageCreatorIcon(icon);
 }
 _createPageFromCreator(){
-  if(!this._isEditing||this._isMobileLandscapeLayout())return;
-  this._addGridPage({icon:this._newPageIcon||"grid"});
-}
-_getPageCreatorPanelProps(){
-  return {
-    open:this._pageCreatorOpen,
-    selectedIcon:this._newPageIcon||"grid",
-    onClose:()=>this._closePageCreator(),
-    onSelectIcon:icon=>this._setPageCreatorIcon(icon),
-    onCreate:()=>this._createPageFromCreator(),
-  };
-}
-_createPageCreatorPanel(){
-  return createPageCreatorPanel(this._getPageCreatorPanelProps());
+  return this._pageUiCoordinator.createPageFromCreator();
 }
 _syncPageCreatorDom(){
-  syncPageCreatorPanel(this.shadowRoot,this._getPageCreatorPanelProps());
+  return this._pageUiCoordinator.syncPageCreator();
 }
 
 _updateDockActiveState(){
   syncDockActiveState(this.shadowRoot,this._activePageId);
 }
 _getDockProps(){
-  return createDockProps({
-    ...buildDockStateProps({
-      pages:this._pages,
-      activePageId:this._activePageId,
-      isEditing:this._isEditing,
-    }),
-    onPageSelect:id=>this._setActivePage(id),
-    onAddPage:()=>this._openPageCreator(),
-    onDockSettings:()=>this._openDockSettings(),
-    onSettings:()=>this._openSettings(),
-  });
+  return this._pageUiCoordinator.buildDockProps();
 }
 _syncDocksDom(){
-  syncDocks(this.shadowRoot,this._getDockProps());
+  return this._pageUiCoordinator.syncDocks();
 }
 _refreshActiveGridOnly(){
-  cancelAnimationFrame(this._widgetRenderFrame);
-  this._widgetRenderFrame=0;
-  const grid=this.shadowRoot?.querySelector?.(".mha-grid");
-  if(!grid){this.render();return;}
-  grid.querySelectorAll(".mha-widget,.mha-widget-drop-slot").forEach(node=>{
-    destroyDomSubtree(node);
-    node.remove();
-  });
-  const {units}=this._getGridBounds();
-  const positions=this._getActiveWidgetPositions({create:true});
-  this._widgets.forEach(w=>{
-    const el=createWidgetShell(w,this._getWidgetShellProps(w,{
-      units,
-      position:positions?.[w.id],
-    }));
-    this._wireDrag(el,w);
-    grid.append(el);
-  });
-  this._updateDockActiveState();
-  this._syncWidgetDropSlots();
-  this._scheduleSquareUnitSync();
-  updateClockWidgets(this.shadowRoot);
+  return this._widgetSurfaceCoordinator.refreshActiveGridOnly();
 }
 _getWidgetShellProps(widget,{units,position,widgetId=widget?.id||""}={}){
-  return {
-    ...buildWidgetShellState({
-      widgetId,
-      activeGridUnits:units,
-      isEditing:this._isEditing,
-      activeMoveWidgetId:this._activeMoveWidgetId,
-      position,
-      hass:this._hass,
-      entityVisibilityConfig:this._entityVisibilityConfig,
-    }),
-    onToggleMove:id=>this._toggleWidgetMoveMode(id),
-    onMove:(id,direction)=>this._moveWidgetByDirection(id,direction),
-    onRemove:id=>this._removeWidget(id),
-    onCycleVariant:id=>this.cycleVariant(id),
-    onConfigure:id=>this._openWidgetConfig(id),
-    onConfigureSlot:(id,slotIndex)=>this._openScenesButtonConfig(id,slotIndex),
-  };
+  return this._widgetSurfaceCoordinator.buildWidgetShellProps(widget,{units,position,widgetId});
 }
 
 _saveWidgets(){
@@ -1607,142 +1375,35 @@ _moveWidgetDom(sourceId,targetId,placement="before"){
   this._scheduleSquareUnitSync();
 }
 _getWidgetPositionKey(){
-  const bounds=this._getGridBounds();
-  return `${this._activePageId||"home"}:${getEffectiveLayout(this)}:${bounds.units}x${bounds.rowUnits}`;
+  return this._widgetLayoutStateCoordinator.getPositionKey();
 }
 _getStoredWidgetPositions(){
-  const key=this._getWidgetPositionKey();
-  const positions=this._widgetPositions[key];
-  if(!positions||typeof positions!=="object"||Array.isArray(positions))return null;
-  const {units,rowUnits}=this._getGridBounds();
-  const normalized={};
-  for(const widget of this._widgets){
-    const position=positions[widget.id];
-    const x=Number(position?.x);
-    const y=Number(position?.y);
-    if(!Number.isInteger(x)||!Number.isInteger(y)){
-      delete this._widgetPositions[key];
-      this._recordPersistenceResult(writeJson(POSITIONS,this._widgetPositions));
-      return null;
-    }
-    normalized[widget.id]={x,y};
-  }
-  if(!this._isPositionMapValidForWidgets(normalized,this._widgets,units,rowUnits)){
-    delete this._widgetPositions[key];
-    this._recordPersistenceResult(writeJson(POSITIONS,this._widgetPositions));
-    return null;
-  }
-  if(Object.keys(positions).length!==Object.keys(normalized).length){
-    this._widgetPositions[key]=normalized;
-    this._recordPersistenceResult(writeJson(POSITIONS,this._widgetPositions));
-  }
-  return normalized;
+  return this._widgetLayoutStateCoordinator.readStoredPositions();
 }
 _saveCurrentWidgetPositions(positions){
-  this._widgetPositions[this._getWidgetPositionKey()]=positions;
-  return this._recordPersistenceResult(writeJson(POSITIONS,this._widgetPositions));
+  return this._widgetLayoutStateCoordinator.saveCurrentPositions(positions);
 }
 _applyWidgetPositionsToDom(positions){
-  if(!positions)return;
-  const {units}=this._getGridBounds();
-  this._widgets.forEach(widget=>{
-    const position=positions[widget.id];
-    const el=this.shadowRoot.querySelector(`[data-widget-id="${widget.id}"]`);
-    if(!position||!el)return;
-    const size=normalizeWidgetForKind(widget);
-    el.style.gridColumn=`${position.x} / span ${Math.min(units,size.w)}`;
-    el.style.gridRow=`${position.y} / span ${size.h}`;
-  });
+  this._widgetLayoutStateCoordinator.applyPositionsToDom(positions);
 }
 _clearCurrentWidgetPositions(){
-  const key=this._getWidgetPositionKey();
-  if(!this._widgetPositions[key])return;
-  delete this._widgetPositions[key];
-  this._recordPersistenceResult(writeJson(POSITIONS,this._widgetPositions));
-  this.shadowRoot.querySelectorAll(".mha-widget").forEach(el=>{
-    el.style.removeProperty("grid-column");
-    el.style.removeProperty("grid-row");
-  });
+  this._widgetLayoutStateCoordinator.clearCurrentPositions();
 }
 _packWidgetsForCurrentGrid(){
-  const {units,rowUnits}=this._getGridBounds();
-  return packWidgets(this._widgets,units,rowUnits,{
-    allowUnboundedRows:this._isMobileLauncherLayout(),
-  });
+  return this._widgetLayoutStateCoordinator.packWidgetsForCurrentGrid();
 }
 _getActiveWidgetPositions({create=false}={}){
-  const stored=this._getStoredWidgetPositions();
-  if(stored)return stored;
-  if(!create)return null;
-  const packed=this._packWidgetsForCurrentGrid();
-  if(packed){
-    this._saveCurrentWidgetPositions(packed);
-    this._applyWidgetPositionsToDom(packed);
-  }
-  return packed;
+  return this._widgetLayoutStateCoordinator.getActivePositions({create});
 }
 _toggleWidgetMoveMode(id){
   if(!this._isEditing||!this._widgets.some(widget=>widget.id===id))return;
   this._activeMoveWidgetId=this._activeMoveWidgetId===id?"":id;
   this._syncEditModeDom();this._syncWidgetDropSlots();
 }
-_rectsOverlap(a,b){
-  return rectsOverlap(a,b);
-}
-_getWidgetRectFromPosition(widget,position,units){
-  return getWidgetRectFromPosition(widget,position,units);
-}
-_findWidgetAtCandidatePosition(id,candidateRect,positions,units){
-  return findWidgetAtCandidatePosition(this._widgets,id,candidateRect,positions,units);
-}
-_canSwapWidgetPositions(id,occupantId,nextPositions,units){
-  return hasNoWidgetOverlaps(this._widgets,nextPositions,units);
-}
-_getWidgetsInCandidateRect(id,candidateRect,positions,units){
-  return getWidgetsInCandidateRect(this._widgets,id,candidateRect,positions,units);
-}
-_doesWidgetGroupExactlyFillRect(widgets,targetRect,positions,units){
-  return doesWidgetGroupExactlyFillRect(widgets,targetRect,positions,units);
-}
-_translateWidgetGroupPositions(group,targetRect,destinationRect,positions){
-  return translateWidgetGroupPositions(group,targetRect,destinationRect,positions);
-}
-_getGroupBoundingRect(group,positions,units){
-  return getGroupBoundingRect(group,positions,units);
-}
-_isGroupInternallyValid(group,positions,units){
-  return isGroupInternallyValid(group,positions,units);
-}
-_getAdjacentWidgetGroupInDirection(id,direction,positions,units){
-  return getAdjacentWidgetGroupInDirection(this._widgets,id,direction,positions,units);
-}
 _isPositionMapValidForWidgets(nextPositions,widgets,units,rowUnits){
   return isPositionMapValidForWidgets(nextPositions,widgets,units,rowUnits,{
     allowUnboundedRows:this._isMobileLauncherLayout(),
   });
-}
-_isPositionMapValid(nextPositions,units,rowUnits){
-  return this._isPositionMapValidForWidgets(
-    nextPositions,
-    this._widgets,
-    units,
-    rowUnits,
-  );
-}
-_getBandParticipantsForTranslatedSwap(id,group,direction,positions,units){
-  return getBandParticipantsForTranslatedSwap(this._widgets,id,group,positions,units);
-}
-_packTranslatedSwapBand(id,group,direction,positions,units,rowUnits){
-  return packTranslatedSwapBand(
-    this._widgets,
-    id,
-    group,
-    direction,
-    positions,
-    units,
-    rowUnits,
-    {allowUnboundedRows:this._isMobileLauncherLayout()},
-  );
 }
 _tryTranslatedGroupSwap(id,direction,positions,units,rowUnits){
   return this._placementController.tryTranslatedGroupSwap(
@@ -1752,9 +1413,6 @@ _tryTranslatedGroupSwap(id,direction,positions,units,rowUnits){
     units,
     rowUnits,
   );
-}
-_getDirectNeighborInDirection(id,direction,positions,units){
-  return getDirectNeighborInDirection(this._widgets,id,direction,positions,units);
 }
 _tryDirectNeighborSwap(id,direction,positions,units,rowUnits){
   return this._placementController.tryDirectNeighborSwap(
@@ -1785,10 +1443,6 @@ _getAvailableDropSlotsForWidget(id,positions=this._getActiveWidgetPositions({cre
 }
 _renderWidgetDropSlots(grid){
   if(!grid)return;
-  grid.querySelectorAll(".mha-widget-drop-slot").forEach(slot=>slot.remove());
-  grid.dataset.dropSlotsCount="0";
-  grid.classList.remove("has-drop-slots");
-  if(!this._isEditing)return;
   const positions=this._getActiveWidgetPositions({create:true});
   const placementWidget=this._pendingWidgetPlacement;
   const activeId=this._activeMoveWidgetId;
@@ -1797,31 +1451,15 @@ _renderWidgetDropSlots(grid){
     : activeId
       ? this._getAvailableDropSlotsForWidget(activeId,positions)
       : [];
-  grid.dataset.dropSlotsCount=String(slots.length);
-  grid.dataset.dropSlotMode=placementWidget?"add":activeId?"move":"none";
-  if(!slots.length)return;
-  const fragment=document.createDocumentFragment();
-  slots.forEach(slot=>{
-    const button=document.createElement("button");
-    button.className="mha-widget-drop-slot";
-    button.type="button";
-    button.setAttribute("aria-label",placementWidget
-      ?t("settings.addWidgetHere","Add widget here, column {column}, row {row}",{column:slot.x,row:slot.y})
-      :t("settings.moveWidgetHere","Move widget here, column {column}, row {row}",{column:slot.x,row:slot.y}));
-    button.dataset.x=String(slot.x);
-    button.dataset.y=String(slot.y);
-    button.style.gridColumn=`${slot.x} / span ${slot.w}`;
-    button.style.gridRow=`${slot.y} / span ${slot.h}`;
-    button.addEventListener("click",event=>{
-      event.preventDefault();
-      event.stopPropagation();
+  syncDropSlotRenderer(grid,{
+    editing:this._isEditing,
+    mode:placementWidget?"add":activeId?"move":"none",
+    slots,
+    onSelectSlot:(slot)=>{
       if(this._pendingWidgetPlacement)this._placePendingWidgetAtSlot(slot.x,slot.y);
       else this._moveWidgetToDropSlot(this._activeMoveWidgetId,slot.x,slot.y);
-    });
-    fragment.append(button);
+    },
   });
-  grid.prepend(fragment);
-  grid.classList.add("has-drop-slots");
 }
 
 _syncWidgetDropSlots(){
@@ -1834,38 +1472,7 @@ _syncWidgetDropSlots(){
 }
 
 _placePendingWidgetAtSlot(x,y){
-  if(!this._isEditing||!this._pendingWidgetPlacement)return;
-  const widget=normalizeStoredWidgetContract({...this._pendingWidgetPlacement});
-  const positions=this._getActiveWidgetPositions({create:true});
-  const {units,rowUnits}=this._getGridBounds();
-  const nextPositions={...positions,[widget.id]:{x:Number(x)||1,y:Number(y)||1}};
-  const nextWidgets=[...this._widgets,widget];
-  if(!this._isPositionMapValidForWidgets(nextPositions,nextWidgets,units,rowUnits))return;
-
-  this._widgets=this._normalizeWidgetsToGridBounds(nextWidgets);
-  this._saveCurrentWidgetPositions(nextPositions);
-  this._saveWidgets();
-
-  this._pendingWidgetPlacement=null;
-  this._activeMoveWidgetId="";
-
-  const grid=this.shadowRoot?.querySelector?.(".mha-grid");
-  if(grid){
-    const el=createWidgetShell(widget,this._getWidgetShellProps(widget,{
-      units,
-      position:nextPositions[widget.id],
-    }));
-
-    this._wireDrag(el,widget);
-    grid.append(el);
-    this._applyWidgetPositionsToDom(nextPositions);
-    this._renderWidgetDropSlots(grid);
-  }
-
-  this._syncEditModeDom();
-  updateClockWidgets(this.shadowRoot);
-  this._syncWidgetDropSlots();
-  this._scheduleSquareUnitSync();
+  return this._widgetSurfaceCoordinator.placePendingWidgetAtSlot(x,y);
 }
 _moveWidgetToDropSlot(id,x,y){
   return this._placementController.moveToDropSlot(id,x,y);
@@ -1873,91 +1480,11 @@ _moveWidgetToDropSlot(id,x,y){
 _moveWidgetByDirection(id,direction){
   return this._placementController.moveByDirection(id,direction);
 }
-_canApplyVariant(id,candidateWidget){
-  if(!id||!candidateWidget)return false;
-
-  const positions=this._getActiveWidgetPositions({create:true});
-  const currentPosition=positions?.[id];
-  if(!positions||!currentPosition)return false;
-
-  const {units,rowUnits}=this._getGridBounds();
-  const nextWidgets=this._widgets.map(widget=>(
-    widget.id===id
-      ? normalizeStoredWidgetContract({...widget,...candidateWidget})
-      : widget
-  ));
-
-  return this._isPositionMapValidForWidgets(positions,nextWidgets,units,rowUnits);
-}
-_applyWidgetVariant(id,candidateWidget){
-  const index=this._widgets.findIndex(widget=>widget.id===id);
-  if(index<0||!candidateWidget)return false;
-
-  const current=this._widgets[index];
-  const currentSize=normalizeWidgetForKind(current);
-  const next=normalizeStoredWidgetContract({
-    ...current,
-    ...candidateWidget,
-  });
-  const nextSize=normalizeWidgetForKind(next);
-
-  if(!sameVariantSize(currentSize,nextSize)&&!this._canApplyVariant(id,next)){
-    return false;
-  }
-
-  const nextWidgets=[...this._widgets];
-  nextWidgets[index]={
-    ...next,
-    ...nextSize,
-  };
-
-  this._widgets=this._normalizeWidgetsToGridBounds(nextWidgets.map(normalizeStoredWidgetContract));
-  this._saveWidgets();
-  this._replaceWidgetDom(id);
-  return true;
-}
 _replaceWidgetDom(id){
-  const widget=this._widgets.find(item=>item.id===id);
-  const existing=this.shadowRoot?.querySelector?.(`[data-widget-id="${id}"]`);
-  const grid=this.shadowRoot?.querySelector?.(".mha-grid");
-
-  if(!widget||!existing||!grid){
-    this.render();
-    return;
-  }
-
-  const {units}=this._getGridBounds();
-  const positions=this._getActiveWidgetPositions({create:true});
-  const next=createWidgetShell(widget,this._getWidgetShellProps(widget,{
-    units,
-    position:positions?.[id],
-    widgetId:id,
-  }));
-
-  this._wireDrag(next,widget);
-  destroyDomSubtree(existing);
-  existing.replaceWith(next);
-  this._applyWidgetPositionsToDom(positions);
-  updateClockWidgets(this.shadowRoot);
-  this._syncEditModeDom();
-  this._syncWidgetDropSlots();
-  this._scheduleSquareUnitSync();
+  return this._widgetSurfaceCoordinator.replaceWidgetDom(id);
 }
 cycleVariant(id){
-  if(!this._isEditing||!id)return false;
-
-  const widget=this._widgets.find(item=>item.id===id);
-  if(!widget)return false;
-
-  const entries=getNextWidgetVariantEntries(widget);
-  if(!entries.length)return false;
-
-  for(const entry of entries){
-    const candidate=getVariantCandidate(widget,entry);
-    if(this._applyWidgetVariant(id,candidate))return true;
-  }
-
-  return false;
+  return this._widgetSurfaceCoordinator.cycleVariant(id);
 }
 _getResponsiveSignature(){
   return this._gridRuntime.getResponsiveSignature();
@@ -2042,106 +1569,27 @@ _doesWidgetLayoutFitGrid(widgets=this._widgets){
   return doesWidgetLayoutFitGrid(widgets,bounds.units,bounds.rowUnits);
 }
 _findFittingResize(current,requested){
-  let next=this._clampWidgetSizeToGridBounds(current,requested);
-  const originalWidgets=this._widgets;
-
-  while(next.h>=1){
-    let test=originalWidgets.map(w=>w.id===current.id?{...w,...next}:w);
-    test=this._normalizeWidgetsToGridBounds(test);
-
-    if(this._doesWidgetLayoutFitGrid(test))return next;
-
-    if(next.h>1){
-      next={...next,h:next.h-1};
-      continue;
-    }
-
-    if(next.w>1){
-      next={...next,w:next.w-1,h:Math.max(1,requested.h)};
-      continue;
-    }
-
-    break;
-  }
-
-  return normalizeWidgetForKind(current);
+  return this._widgetResizeCoordinator.findFittingResize(current,requested);
 }
 _getGridMetrics(){const grid=this.shadowRoot.querySelector(".mha-grid");if(!grid)return null;const st=getComputedStyle(grid);const col=parseFloat(st.gridTemplateColumns.split(" ")[0])||72;const gap=parseFloat(st.columnGap||st.gap||"0")||0;const row=parseFloat(st.gridAutoRows)||72;return{columnStep:col+gap,rowStep:row+gap}}
-_getInternalGridBoundsFromPreset(preset){
-  const logicalColumns=Number(preset?.columns)||Number(this.dataset.logicalColumns)||1;
-  const logicalRows=Number(preset?.rows)||Number(this.dataset.logicalRows)||1;
-  return {
-    logicalColumns:Math.max(1,logicalColumns),
-    logicalRows:Math.max(1,logicalRows),
-    units:getInternalGridColumnCountFromLogical(logicalColumns),
-    rowUnits:getInternalGridRowCountFromLogical(logicalRows),
-  };
-}
 _clampWidgetSizeToGridBounds(widget,size){
-  const layout=getEffectiveLayout(this);
-  const preset=this._getRuntimeGridPreset?.()||getGridPreset(this,layout,this._getWidgetAreaMetrics?.()||{});
-  const bounds=this._getInternalGridBoundsFromPreset(preset);
-
-  const x=Number(widget?.x ?? widget?.col ?? widget?.column ?? 1)||1;
-  const y=Number(widget?.y ?? widget?.row ?? 1)||1;
-
-  const maxW=Math.max(1,bounds.units-x+1);
-  const maxH=Math.max(1,bounds.rowUnits-y+1);
-  /*
-   * Resize boundary guard:
-   * User-facing widget names stay iOS/Android-style. A 2x2 widget still spans
-   * 2 internal grid units, which equals 1 logical column by 1 logical row.
-   * Bounds are therefore checked against the internal 2x grid, not the visible
-   * logical cell count.
-   */
-  return {
-    ...size,
-    w:Math.max(1,Math.min(Number(size?.w)||1,maxW)),
-    h:Math.max(1,Math.min(Number(size?.h)||1,maxH)),
-  };
+  return this._widgetLayoutStateCoordinator.clampWidgetSizeToGridBounds(widget,size);
 }
 _clampWidgetPositionToGridBounds(widget,position){
-  const layout=getEffectiveLayout(this);
-  const preset=this._getRuntimeGridPreset?.()||getGridPreset(this,layout,this._getWidgetAreaMetrics?.()||{});
-  const bounds=this._getInternalGridBoundsFromPreset(preset);
-
-  const w=Math.max(1,Number(widget?.w)||1);
-  const h=Math.max(1,Number(widget?.h)||1);
-  const maxX=Math.max(1,bounds.units-w+1);
-  const maxY=Math.max(1,bounds.rowUnits-h+1);
-
-  /*
-   * Drag boundary guard:
-   * Positions are stored on the internal square-unit grid. This keeps the public
-   * vocabulary stable: 2x2 is one logical cell, while x/y still address the
-   * precise internal CSS grid lines.
-   */
-  return {
-    ...position,
-    x:Math.max(1,Math.min(Number(position?.x)||1,maxX)),
-    y:Math.max(1,Math.min(Number(position?.y)||1,maxY)),
-  };
+  return this._widgetLayoutStateCoordinator.clampWidgetPositionToGridBounds(widget,position);
 }
 _normalizeWidgetToGridBounds(widget){
-  const size=this._clampWidgetSizeToGridBounds(widget,widget);
-  const position=this._clampWidgetPositionToGridBounds({...widget,...size},widget);
-  return {...widget,...size,...position};
+  return this._widgetLayoutStateCoordinator.normalizeWidgetToGridBounds(widget);
 }
 _normalizeWidgetsToGridBounds(widgets=this._widgets){
-  return widgets.map(widget=>this._normalizeWidgetToGridBounds(widget));
+  return this._widgetLayoutStateCoordinator.normalizeWidgetsToGridBounds(widgets);
 }
 
 
-_startResize(){return false}
-_updateResize(e){const s=this._resizeState;if(!s||e.pointerId!==s.pointerId)return;e.preventDefault();const current=this._widgets.find(w=>w.id===s.widgetId)||{};let ns=normalizeWidgetForKind({...current,w:s.startW+Math.round((e.clientX-s.startX)/s.metrics.columnStep),h:s.startH+Math.round((e.clientY-s.startY)/s.metrics.rowStep)});ns=this._findFittingResize(current,ns);const nextWidgets=this._widgets.map(w=>w.id===s.widgetId?{...w,...ns}:w);if(!this._doesWidgetLayoutFitGrid(this._normalizeWidgetsToGridBounds(nextWidgets)))return;this._widgets=this._normalizeWidgetsToGridBounds(nextWidgets);const el=this.shadowRoot.querySelector(`[data-widget-id="${s.widgetId}"]`);if(!el)return;const density=getWidgetDensity(ns);el.dataset.widgetConfiguredW=String(ns.w);el.dataset.widgetW=String(Math.min(ns.w,getActiveGridUnits(this)));el.dataset.widgetH=String(ns.h);el.dataset.widgetSize=sizeToString(ns);el.dataset.widgetDensity=density;el.style.setProperty("--mha-widget-w",String(Math.min(ns.w,getActiveGridUnits(this))));el.style.setProperty("--mha-widget-configured-w",String(ns.w));el.style.setProperty("--mha-widget-h",String(ns.h));const badge=el.querySelector(".mha-size-badge");if(badge)badge.textContent=`${sizeToString(ns)} · ${density}`}
+_startResize(){return this._widgetResizeCoordinator.startResize()}
+_updateResize(e){return this._widgetResizeCoordinator.updateResize(e)}
 _finishResize(){
-  const s=this._resizeState;
-  if(!s)return;
-  const el=this.shadowRoot.querySelector(`[data-widget-id="${s.widgetId}"]`);
-  el?.classList.remove("is-resizing");
-  this._resizeState=null;
-  this._saveWidgets();
-  this._scheduleSquareUnitSync();
+  return this._widgetResizeCoordinator.finishResize();
 }
 _getDropPlacement(e,t){const r=t.getBoundingClientRect(),u=r.top+r.height*.35,l=r.top+r.height*.65;if(e.clientY<u)return"before";if(e.clientY>l)return"after";return e.clientX<r.left+r.width/2?"before":"after"}
 _clearDropState(){this.shadowRoot.querySelectorAll(".is-drop-before,.is-drop-after").forEach(n=>{n.classList.remove("is-drop-before","is-drop-after");n.removeAttribute("data-drop-placement")})}
@@ -2151,9 +1599,7 @@ _wireDrag(el){
   el.removeAttribute("draggable");
 }
 _createWidgetElement(widget,{units,position}){
-  const el=createWidgetShell(widget,this._getWidgetShellProps(widget,{units,position}));
-  this._wireDrag(el,widget);
-  return el;
+  return this._widgetSurfaceCoordinator.createWidgetElement(widget,{units,position});
 }
 _createWidgetPlaceholder(widget,{units,position}){
   const size=normalizeWidgetSize(widget);
@@ -2250,22 +1696,34 @@ _appendDeferredUi({layout,renderId}){
     if(layout!=="mobile"){
       this.shadowRoot.append(createMobileDock(this._getDockProps()));
     }
-    this.shadowRoot.append(this._createScreensaverElement());
-    this.shadowRoot.append(this._createSettingsPanel());
-    this.shadowRoot.append(this._createWidgetManagerPanel());
-    this.shadowRoot.append(this._createPageCreatorPanel());
-    this.shadowRoot.append(this._createWidgetConfigPanel());
-    this.shadowRoot.append(createSettingsPanel(this._getSettingsPanelProps("screensaver")));
+    const settingsPanels=this._getSettingsPanelsProps();
+    this.shadowRoot.append(this._screensaverCoordinator.createDomElement());
+    this.shadowRoot.append(createSettingsPanel(settingsPanels.all));
+    this.shadowRoot.append(createWidgetManagerPanel(buildWidgetManagerPanelProps({
+      open:this._widgetManagerOpen,
+      activeCategory:this._widgetManagerCategory,
+      categories:WIDGET_MANAGER_CATEGORIES,
+      onClose:()=>this._closeWidgetManager(),
+      onBack:()=>this._showWidgetManagerCategories(),
+      onSelectCategory:id=>this._selectWidgetManagerCategory(id),
+      onSelectWidget:item=>this._beginWidgetPlacement(item),
+    })));
+    this.shadowRoot.append(createPageCreatorPanel(this._pageUiCoordinator.buildPageCreatorProps()));
+    this.shadowRoot.append(createWidgetConfigPanel(buildWidgetConfigPanelProps({
+      session:this._widgetConfigSession,
+      hass:this._hass,
+      visibilityConfig:this._entityVisibilityConfig,
+      onCancel:()=>this._closeWidgetConfig(),
+      onSave:()=>this._saveWidgetConfig(),
+      onRerender:()=>this._syncWidgetConfigDom(),
+    })));
+    this.shadowRoot.append(createSettingsPanel(settingsPanels.screensaver));
     this._syncEditModeDom();
     this._syncScreensaverVisibilityState();
     this._scheduleIconSymbolRefresh();
   });
 }
-render(){
-  const themeState=this._themeController.sync();
-  this._applyCustomWallpaperState();
-  this._applyHaSidebarMode(this._hideHaSidebar);
-  const renderId=++this._renderId;
+_buildRenderContext(themeState){
   const layoutMode=getLayoutMode(this);
   const layout=getEffectiveLayout(this);
   const preset=this._getRuntimeGridPreset();
@@ -2274,12 +1732,45 @@ render(){
   const cols=preset.columns;
   const logicalRows=preset.rows;
   const {themeStyle,iconShapeSetting,iconShape,accent}=themeState;
-
+  return {
+    renderId:this._renderId+1,
+    themeState,
+    layoutMode,
+    layout,
+    preset,
+    units,
+    rows,
+    cols,
+    logicalRows,
+    themeStyle,
+    iconShapeSetting,
+    iconShape,
+    accent,
+  };
+}
+_prepareRenderCycle({renderId,themeState}){
+  this._applyCustomWallpaperState(themeState);
+  this._applyHaSidebarMode(this._hideHaSidebar);
+  this._renderId=renderId;
   cancelAnimationFrame(this._widgetRenderFrame);
   cancelAnimationFrame(this._secondaryUiFrame);
   this._clearGridScrollListener();
   this._stylesReadyRenderId=0;
   this.dataset.widgetsState="pending";
+}
+_applyRenderDatasetsAndRuntimeVars({
+  themeStyle,
+  iconShapeSetting,
+  iconShape,
+  layoutMode,
+  layout,
+  preset,
+  units,
+  rows,
+  cols,
+  logicalRows,
+  accent,
+}){
   this.dataset.themeStyle=themeStyle;
   this.dataset.iconShapeSetting=iconShapeSetting;
   this.dataset.iconShape=iconShape;
@@ -2296,12 +1787,12 @@ render(){
   this.style.setProperty("--mha-runtime-grid-rows",String(rows));
   this.style.setProperty("--mha-runtime-logical-columns",String(cols));
   this.style.setProperty("--mha-runtime-logical-rows",String(logicalRows));
-
   this.dataset.accent=accent;
   document.documentElement.dataset.accent=accent;
   document.documentElement.dataset.iconShapeSetting=iconShapeSetting;
   document.documentElement.dataset.iconShape=iconShape;
-
+}
+_mountRenderShell({layoutMode,layout,cols,units}){
   destroyDomSubtree(this.shadowRoot);
   this.shadowRoot.innerHTML=createCriticalBootStyle()+createFrontendStyleLinks(
     MHA_STYLE_MANIFEST,
@@ -2325,7 +1816,9 @@ render(){
     onSettings:()=>this._openSettings(),
   });
   this.shadowRoot.append(bg,shell);
-
+  return {links,grid};
+}
+_mountImmediateUi({layout,grid,units}){
   const positions=this._getActiveWidgetPositions({create:true});
   this._appendWidgetPlaceholders(grid,{units,positions});
   if(layout==="mobile"){
@@ -2334,41 +1827,64 @@ render(){
   this._appendPrimaryControls();
   this._wireDockAutoHide(grid);
   updateStatusTime(this.shadowRoot);
-
+  return {positions};
+}
+_schedulePrimaryWidgetRender({grid,units,positions,renderId}){
   this._widgetRenderFrame=requestAnimationFrame(()=>{
     this._widgetRenderFrame=0;
     if(this._renderId!==renderId)return;
     this._startProgressiveWidgetRender({grid,units,positions,renderId});
   });
-
-  Promise.all(links.map(link=>link.sheet
+}
+_handleStylesReady({layout,renderId}){
+  if(this._renderId!==renderId)return;
+  this._stylesReadyRenderId=renderId;
+  this._observeLayoutSize();
+  this._scheduleIconSymbolRefresh();
+  if(this._bootComplete){
+    this._appendDeferredUi({layout,renderId});
+    return;
+  }
+  this._pendingDeferredUi={layout,renderId};
+  this._tryCompleteBoot();
+}
+_handleStylesError({layout,renderId,error}){
+  console.warn("[MHA] Styles did not finish loading; revealing the shell.",error);
+  if(this._bootComplete){
+    this._appendDeferredUi({layout,renderId});
+    return;
+  }
+  this._pendingDeferredUi={layout,renderId};
+  this._finishBoot({fallback:true,reason:"stylesheet initialization failed"});
+}
+_awaitStylesAndFinalizeRender({links,layout,renderId}){
+  return Promise.all(links.map(link=>link.sheet
     ?Promise.resolve()
     :new Promise(resolve=>{
       link.addEventListener("load",resolve,{once:true});
       link.addEventListener("error",resolve,{once:true});
     })))
-    .then(()=>{
-      if(this._renderId!==renderId)return;
-      this._stylesReadyRenderId=renderId;
-      this._observeLayoutSize();
-      this._scheduleIconSymbolRefresh();
-      if(this._bootComplete){
-        this._appendDeferredUi({layout,renderId});
-      }else{
-        this._pendingDeferredUi={layout,renderId};
-        this._tryCompleteBoot();
-      }
-    })
-    .catch(error=>{
-      console.warn("[MHA] Styles did not finish loading; revealing the shell.",error);
-      if(this._bootComplete){
-        this._appendDeferredUi({layout,renderId});
-      }else{
-        this._pendingDeferredUi={layout,renderId};
-        this._finishBoot({fallback:true,reason:"stylesheet initialization failed"});
-      }
-    });
-
+    .then(()=>this._handleStylesReady({layout,renderId}))
+    .catch(error=>this._handleStylesError({layout,renderId,error}));
+}
+render(){
+  const themeState=this._themeController.sync();
+  const context=this._buildRenderContext(themeState);
+  this._prepareRenderCycle(context);
+  this._applyRenderDatasetsAndRuntimeVars(context);
+  const {links,grid}=this._mountRenderShell(context);
+  const {positions}=this._mountImmediateUi({...context,grid});
+  this._schedulePrimaryWidgetRender({
+    grid,
+    units:context.units,
+    positions,
+    renderId:context.renderId,
+  });
+  this._awaitStylesAndFinalizeRender({
+    links,
+    layout:context.layout,
+    renderId:context.renderId,
+  });
   this._scheduleScreensaverIdleTimer();
 }
 }
