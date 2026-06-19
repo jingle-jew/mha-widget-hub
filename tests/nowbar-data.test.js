@@ -4,6 +4,7 @@ import { installDeterministicI18n } from "../tools/i18n-deterministic.mjs";
 import {
   buildNowBarTiles,
   fetchNowBarCalendarEvents,
+  getNowBarEntityOptions,
   normalizeNowBarConfig,
 } from "../src/screensaver/nowbar-data.js";
 
@@ -30,6 +31,50 @@ test("now bar config normalizes legacy-safe defaults without auto-selecting enti
       items: [],
     },
   });
+});
+
+test("now bar media options include only available authorized media players", () => {
+  const hass = {
+    user: { id: "user-1" },
+    states: {
+      "media_player.available": entity("media_player.available", "idle", {
+        friendly_name: "Available speaker",
+      }),
+      "media_player.blocked": entity("media_player.blocked", "playing", {
+        friendly_name: "Blocked speaker",
+      }),
+      "media_player.unavailable": entity("media_player.unavailable", "unavailable", {
+        friendly_name: "Unavailable speaker",
+      }),
+      "media_player.unknown": entity("media_player.unknown", "unknown", {
+        friendly_name: "Unknown speaker",
+      }),
+      "weather.home": entity("weather.home", "sunny", {
+        friendly_name: "Home",
+      }),
+    },
+  };
+  const visibilityConfig = {
+    users: {
+      "user-1": {
+        unrestricted: false,
+        allowedEntities: {
+          media_player: [
+            "media_player.available",
+            "media_player.unavailable",
+            "media_player.unknown",
+          ],
+        },
+      },
+    },
+  };
+
+  const options = getNowBarEntityOptions(hass, visibilityConfig);
+
+  assert.deepEqual(
+    options.media.map(option => option.entity_id),
+    ["media_player.available"],
+  );
 });
 
 test("now bar tiles use selected Home Assistant media, weather and light states", () => {
