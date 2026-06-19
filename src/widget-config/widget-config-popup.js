@@ -3,6 +3,11 @@ import {
   getWidgetConfigType,
 } from "./widget-config-registry.js";
 import { createPanelShell } from "../panels/panel-shell.js";
+import {
+  applyPanelSurfaceContract,
+  PANEL_MOBILE_PRESENTATIONS,
+  PANEL_SURFACE_ROLES,
+} from "../panels/panel-surface-contract.js";
 import { t } from "../i18n/index.js";
 
 export function supportsWidgetConfiguration(widget = {}) {
@@ -142,7 +147,7 @@ export function createWidgetConfigPopup({
   save.onclick = () => onSave?.();
   actions.append(cancel, save);
 
-  return createPanelShell({
+  return applyPanelSurfaceContract(createPanelShell({
     open: Boolean(session),
     rootClassName: "mha-widget-config-popup mha-page-creator",
     scrimClassName: "mha-widget-config-scrim mha-page-creator-scrim",
@@ -155,5 +160,8 @@ export function createWidgetConfigPopup({
     scrimLabel: t("widgets.config.close", "Close configuration"),
     onClose: () => onCancel?.(),
     children: [hint, content.fields, actions],
+  }), {
+    surfaceRole: PANEL_SURFACE_ROLES.POPUP,
+    mobilePresentation: PANEL_MOBILE_PRESENTATIONS.SHEET,
   });
 }
