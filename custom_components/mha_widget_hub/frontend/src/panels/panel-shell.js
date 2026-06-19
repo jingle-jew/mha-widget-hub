@@ -16,6 +16,7 @@ export function createPanelShell({
   title = "",
   ariaLabel = title,
   closeLabel = t("common.close", "Close"),
+  scrimLabel = closeLabel,
   onClose = () => {},
   children = [],
 } = {}) {
@@ -27,7 +28,7 @@ export function createPanelShell({
   const scrim = document.createElement("button");
   scrim.className = scrimClassName;
   scrim.type = "button";
-  scrim.setAttribute("aria-label", closeLabel);
+  scrim.setAttribute("aria-label", scrimLabel);
   scrim.onclick = onClose;
 
   const sheet = document.createElement("div");
