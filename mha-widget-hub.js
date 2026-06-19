@@ -112,16 +112,7 @@ import { createPlacementController } from "./src/layout/placement-controller.js"
 import { createGridRuntime } from "./src/layout/grid-runtime.js";
 import {normalizeClockVariant,updateScreensaverClock} from "./src/screensaver/screensaver.js";
 import { createScreensaverController } from "./src/screensaver/screensaver-controller.js";
-import { getNowBarCalendarSignature } from "./src/screensaver/screensaver-props.js?v=phase4";
-import {
-  createScreensaverElement,
-  syncScreensaverElement,
-} from "./src/screensaver/screensaver-orchestrator.js?v=phase1";
-import {
-  buildNowBarTiles,
-  fetchNowBarCalendarEvents,
-  normalizeNowBarConfig,
-} from "./src/screensaver/nowbar-data.js";
+import { createScreensaverCoordinator } from "./src/screensaver/screensaver-coordinator.js?v=phase9";
 import { loadEntityVisibilityConfig } from "./src/admin/entity-visibility-store.js";
 import { normalizeEntityVisibilityConfig } from "./src/admin/entity-permissions.js";
 import { getStyleManifest } from "./src/styles/style-manifest.js";
@@ -158,6 +149,17 @@ constructor(){
     normalizeClockVariant,
     isBlocked:()=>this._isScreensaverBlocked(),
     onIdle:()=>this._setScreensaverActive(true),
+  });
+  this._screensaverCoordinator=createScreensaverCoordinator({
+    getScreensaverState:()=>this._screensaverController.read(),
+    getIsVisible:()=>this._getScreensaverVisible(),
+    getHass:()=>this._hass,
+    getNowBarConfig:()=>this._screensaverController.read().nowBarConfig,
+    onClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),
+    onOpenScreensaverSettings:()=>this._openScreensaverSettings(),
+    onWake:()=>this._wakeScreensaver(),
+    onSyncVisibilityState:()=>this._syncScreensaverVisibilityState(),
+    onCalendarEventsChange:()=>this._syncScreensaverDom(),
   });
   this._initialized=false;
   this._bootComplete=false;
@@ -196,10 +198,6 @@ constructor(){
   this._accentPaletteExpanded=false;
   this._dockSettingsPageId="";
   this._screensaverSettingsOpen=false;
-  this._nowBarCalendarEvents={};
-  this._nowBarCalendarRequestId=0;
-  this._nowBarCalendarSignature="";
-  this._nowBarCalendarFetchedAt=0;
   this._lastResponsiveSignature="";
   this._responsiveRelayoutTimer=null;
   this._widgetManagerOpen=false;
@@ -393,7 +391,7 @@ updateFromHass(){
   this.shadowRoot?.querySelectorAll?.("[data-widget-component]")?.forEach(component=>{
     component.__mhaUpdateFromHass?.(this._hass);
   });
-  this._requestNowBarCalendarEvents();
+  this._screensaverCoordinator.requestNowBarCalendarEvents();
   this._syncScreensaverDom();
 }
 _finishBoot({fallback=false,reason=""}={}){
@@ -1199,21 +1197,21 @@ _applyScreensaverNowBarFromSettings(enabled=true){
 }
 _applyScreensaverNowBarItemFromSettings(item="",enabled=true){
   this._recordPersistenceResult(this._screensaverController.setNowBarItem(item,enabled));
-  this._requestNowBarCalendarEvents();
+  this._screensaverCoordinator.requestNowBarCalendarEvents();
   this._syncScreensaverDom();
   this._syncSettingsDom();
   this._syncScreensaverSettingsDom();
 }
 _applyScreensaverNowBarTileEnabledFromSettings(tile="",enabled=true){
   this._recordPersistenceResult(this._screensaverController.setNowBarTileEnabled(tile,enabled));
-  this._requestNowBarCalendarEvents();
+  this._screensaverCoordinator.requestNowBarCalendarEvents();
   this._syncScreensaverDom();
   this._syncSettingsDom();
   this._syncScreensaverSettingsDom();
 }
 _applyScreensaverNowBarEntitySelectionFromSettings(section="",entityId="",selected=true){
   this._recordPersistenceResult(this._screensaverController.setNowBarEntitySelection(section,entityId,selected));
-  this._requestNowBarCalendarEvents({force:section==="calendar"});
+  this._screensaverCoordinator.requestNowBarCalendarEvents({force:section==="calendar"});
   this._syncScreensaverDom();
   this._syncSettingsDom();
   this._syncScreensaverSettingsDom();
@@ -1235,67 +1233,8 @@ _syncScreensaverVisibilityState(){
   this.classList.toggle("is-screensaver-visible",visible);
   this.dataset.screensaverVisible=String(visible);
 }
-_getNowBarConfig(){
-  return normalizeNowBarConfig(this._screensaverController.read().nowBarConfig);
-}
-_getNowBarTiles(){
-  return buildNowBarTiles({
-    hass:this._hass,
-    config:this._getNowBarConfig(),
-    calendarEvents:this._nowBarCalendarEvents,
-  });
-}
-_getNowBarCalendarSignature(config=this._getNowBarConfig()){
-  return getNowBarCalendarSignature(config);
-}
-_requestNowBarCalendarEvents({force=false}={}){
-  const config=this._getNowBarConfig();
-  const signature=this._getNowBarCalendarSignature(config);
-  if(!this._hass||!config.tiles.calendar||!signature){
-    this._nowBarCalendarEvents={};
-    this._nowBarCalendarSignature=signature;
-    this._nowBarCalendarFetchedAt=0;
-    return;
-  }
-  const timestamp=Date.now();
-  const recentlyFetched=timestamp-this._nowBarCalendarFetchedAt<60000;
-  if(!force&&signature===this._nowBarCalendarSignature&&recentlyFetched)return;
-  this._nowBarCalendarSignature=signature;
-  this._nowBarCalendarFetchedAt=timestamp;
-  const requestId=++this._nowBarCalendarRequestId;
-  fetchNowBarCalendarEvents(this._hass,config).then(events=>{
-    if(requestId!==this._nowBarCalendarRequestId)return;
-    this._nowBarCalendarEvents=events;
-    this._syncScreensaverDom();
-  });
-}
-_createScreensaverElement(screensaverState=this._screensaverController.read()){
-  return createScreensaverElement({
-    isVisible:this._getScreensaverVisible(),
-    screensaverState,
-    nowBarTiles:this._getNowBarTiles(),
-    onClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),
-    onOpenScreensaverSettings:()=>this._openScreensaverSettings(),
-    onWake:()=>this._wakeScreensaver(),
-  });
-}
 _syncScreensaverDom({force=false}={}){
-  this._syncScreensaverVisibilityState();
-  const existing=this.shadowRoot.querySelector(".mha-screensaver");
-  const screensaverState=this._screensaverController.read();
-  syncScreensaverElement({
-    root:this.shadowRoot,
-    existing,
-    force,
-    props:{
-      isVisible:this._getScreensaverVisible(),
-      screensaverState,
-      nowBarTiles:this._getNowBarTiles(),
-      onClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),
-      onOpenScreensaverSettings:()=>this._openScreensaverSettings(),
-      onWake:()=>this._wakeScreensaver(),
-    },
-  });
+  this._screensaverCoordinator.syncDom(this.shadowRoot,{force});
 }
 toggleEditMode(){
   if(!this._isEditing&&this._isMobileLandscapeLayout())return;
@@ -2209,7 +2148,7 @@ _appendDeferredUi({layout,renderId}){
       this.shadowRoot.append(createMobileDock(this._getDockProps()));
     }
     const settingsPanels=this._getSettingsPanelsProps();
-    this.shadowRoot.append(this._createScreensaverElement());
+    this.shadowRoot.append(this._screensaverCoordinator.createDomElement());
     this.shadowRoot.append(createSettingsPanel(settingsPanels.all));
     this.shadowRoot.append(createWidgetManagerPanel(buildWidgetManagerPanelProps({
       open:this._widgetManagerOpen,
