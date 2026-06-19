@@ -56,6 +56,7 @@ import {
   syncDocks,
 } from "./src/layout/dock-controller.js";
 import {createSettingsPanel,updateSettingsPanel} from "./src/settings/settings-panel.js";
+import { replaceSettingsPanelPreservingUiState } from "./src/settings/settings-panel-orchestrator.js?v=phase7";
 import {
   buildSettingsPanelState,
   resolveEffectiveIconShape,
@@ -600,43 +601,15 @@ _syncSettingsModalState(){
   this.classList.toggle("is-settings-open",this._settingsOpen);
   this.dataset.settingsOpen=String(this._settingsOpen);
 }
-_getPanelFocusIdentity(panel){
-  const active=this.shadowRoot?.activeElement;
-  if(!active||!panel?.contains(active))return null;
-  return {
-    tagName:active.tagName,
-    settingsControl:active.dataset?.settingsControl||"",
-    ariaLabel:active.getAttribute?.("aria-label")||"",
-    name:active.getAttribute?.("name")||"",
-    type:active.getAttribute?.("type")||"",
-  };
-}
-_findPanelFocusTarget(panel,identity){
-  if(!panel||!identity)return null;
-  const candidates=[...panel.querySelectorAll(identity.tagName.toLowerCase())];
-  return candidates.find(candidate=>{
-    if(identity.settingsControl)return candidate.dataset?.settingsControl===identity.settingsControl;
-    if(identity.ariaLabel)return candidate.getAttribute("aria-label")===identity.ariaLabel;
-    if(identity.name)return candidate.getAttribute("name")===identity.name&&candidate.getAttribute("type")===identity.type;
-    return false;
-  })||null;
-}
-_replacePanelPreservingUiState(existing,next){
-  const sameView=existing?.dataset.settingsScope===next?.dataset.settingsScope
-    &&existing?.dataset.settingsPage===next?.dataset.settingsPage;
-  const scrollTop=sameView?(existing?.querySelector(".mha-settings-body")?.scrollTop||0):0;
-  const focusIdentity=sameView?this._getPanelFocusIdentity(existing):null;
-  if(sameView&&updateSettingsPanel(existing,next))return;
-  if(existing)existing.replaceWith(next);
-  else this.shadowRoot.append(next);
-  const body=next.querySelector(".mha-settings-body");
-  if(body)body.scrollTop=scrollTop;
-  if(!next.hidden)this._findPanelFocusTarget(next,focusIdentity)?.focus?.({preventScroll:true});
-}
 _syncSettingsDom(){
   const existing=this.shadowRoot.querySelector('.mha-settings-panel[data-settings-scope="all"]');
   this._syncSettingsModalState();
-  this._replacePanelPreservingUiState(existing,this._createSettingsPanel());
+  replaceSettingsPanelPreservingUiState({
+    root:this.shadowRoot,
+    existing,
+    next:this._createSettingsPanel(),
+    updatePanel:updateSettingsPanel,
+  });
 }
 _getSettingsPanelProps(scope="all"){
   const themeState=this._themeController.read();
@@ -940,7 +913,12 @@ _syncScreensaverSettingsDom(){
   const existing=this.shadowRoot.querySelector('.mha-settings-panel[data-settings-scope="screensaver"]');
   this.classList.toggle("is-screensaver-settings-open",this._screensaverSettingsOpen);
   this.dataset.screensaverSettingsOpen=String(this._screensaverSettingsOpen);
-  this._replacePanelPreservingUiState(existing,createSettingsPanel(this._getSettingsPanelProps("screensaver")));
+  replaceSettingsPanelPreservingUiState({
+    root:this.shadowRoot,
+    existing,
+    next:createSettingsPanel(this._getSettingsPanelProps("screensaver")),
+    updatePanel:updateSettingsPanel,
+  });
 }
 
 _applyDockPositionFromSettings(position="left"){
