@@ -6,6 +6,44 @@ import {
 } from "./screensaver.js";
 import { buildScreensaverViewState } from "./screensaver-props.js";
 
+const NOWBAR_INTERACTION_GUARD = "__mhaNowBarInteractionGuard";
+
+function getHostLayout(nowBar) {
+  const host = nowBar?.getRootNode?.()?.host;
+  return host?.dataset?.layout || "";
+}
+
+function installNowBarInteractionGuard(root) {
+  const nowBar = root?.querySelector?.(".mha-screensaver-nowbar");
+  if (!nowBar || nowBar[NOWBAR_INTERACTION_GUARD]) return;
+
+  nowBar[NOWBAR_INTERACTION_GUARD] = true;
+  let suppressClick = false;
+  let suppressClickTimer = 0;
+
+  const suppressNextClick = () => {
+    suppressClick = true;
+    window.clearTimeout(suppressClickTimer);
+    suppressClickTimer = window.setTimeout(() => {
+      suppressClick = false;
+    }, 360);
+  };
+
+  nowBar.addEventListener("wheel", (event) => {
+    if (Math.abs(event.deltaY) >= 8) suppressNextClick();
+  }, { capture: true, passive: true });
+
+  nowBar.addEventListener("click", (event) => {
+    const isDesktopLayout = getHostLayout(nowBar) === "desktop";
+    if (isDesktopLayout && !suppressClick) return;
+
+    suppressClick = false;
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation?.();
+  }, { capture: true });
+}
+
 export function buildScreensaverProps({
   isVisible = false,
   screensaverState = {},
@@ -27,7 +65,9 @@ export function buildScreensaverProps({
 }
 
 export function createScreensaverElement(props = {}) {
-  return createScreensaver(buildScreensaverProps(props));
+  const element = createScreensaver(buildScreensaverProps(props));
+  installNowBarInteractionGuard(element);
+  return element;
 }
 
 export function syncScreensaverElement({
@@ -55,5 +95,6 @@ export function syncScreensaverElement({
     nowBarItems: props.screensaverState?.nowBarItems,
     nowBarTiles: props.nowBarTiles,
   });
+  installNowBarInteractionGuard(existing);
   return existing;
 }
