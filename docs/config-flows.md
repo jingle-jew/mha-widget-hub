@@ -2,47 +2,25 @@
 
 This document describes the current widget configuration flow system used by MHA Widget Hub.
 
-It is based on the current project structure:
-
-```text
-src/widget-config/widget-config-registry.js
-src/widget-config/widget-config-popup.js
-
-src/widget-config/button-config.js
-src/widget-config/toggle-config.js
-src/widget-config/slider-config.js
-src/widget-config/toggle-slider-config.js
-src/widget-config/weather-config.js
-src/widget-config/media-config.js
-src/widget-config/light-options.js
-
-src/widgets/simple-button-widget.js
-src/widgets/toggle-widget.js
-src/widgets/slider-widget.js
-src/widgets/toggle-slider-widget.js
-src/widgets/weather-widget.js
-src/widgets/media-widget.js
-
-styles/widget-manager/widget-config-popup.css
-```
+The current system is manifest-driven: each configurable widget owns its draft creation, build logic and field rendering through its config manifest.
 
 ---
 
 ## 1. Purpose
 
-Config flows let MHA ask the user for the information a widget needs before placing it on the grid.
+Config flows let MHA ask the user for the information a widget needs before placing it on the grid or before updating an existing widget configuration.
 
-The current flow is designed around this UX principle:
+The user-facing goal is simple:
 
-> Users should choose human concepts like “Lumière”, “Lecteur média”, or “Nom affiché”, not raw Home Assistant internals first.
+> Users choose human concepts like “Light”, “Media player”, “Mode”, “Routine” or “Display name”, while MHA stores the Home Assistant ids and widget metadata internally.
 
-Entity ids are still stored internally, but selection lists display friendly names.
+Entity ids are still stored in widget config, but selection lists display friendly names and respect MHA Admin visibility filtering.
 
 ---
 
 ## 2. Current User Flow
 
-The current creation flow is:
+Typical create flow:
 
 ```text
 User opens widget manager
@@ -53,18 +31,18 @@ MHA checks whether the widget supports configuration
         ↓
 If configurable, a config popup opens before drop
         ↓
-User selects entity/options/name
+User selects entities/options/name
         ↓
-MHA builds the configured widget
+The config manifest builds the configured widget
+        ↓
+Widget placement continues
         ↓
 Widget is placed on the grid
 ```
 
 Important detail:
 
-The popup appears after selecting the widget in the manager and before dropping it onto the grid.
-
-This allows the selected variant, size, and manager entry metadata to be preserved while still requiring widget-specific configuration.
+The popup appears after selecting the widget in the manager and before dropping it onto the grid. This preserves manager-selected metadata such as variant, size, title, category and future catalog fields.
 
 ---
 
@@ -75,6 +53,7 @@ The following widgets currently expose config manifests:
 | Widget kind | Config type | Config file |
 |---|---|---|
 | `button` | `button` | `src/widget-config/button-config.js` |
+| `scenes` | `scenes` | `src/widget-config/scenes-config.js` |
 | `toggle` | `toggle` | `src/widget-config/toggle-config.js` |
 | `slider` | `slider` | `src/widget-config/slider-config.js` |
 | `toggle-slider` | `toggle-slider` | `src/widget-config/toggle-slider-config.js` |
@@ -85,23 +64,49 @@ Widgets without a config manifest are placed directly.
 
 ---
 
-## 4. Config Manifest
+## 4. Config Manifest Contract
 
-Each configurable widget module exports a config manifest.
+Each configurable widget module attaches a config manifest to its `WIDGET_MODULE`.
 
-Example:
+Current manifest shape:
 
 ```js
-export const TOGGLE_WIDGET_CONFIG_MANIFEST = Object.freeze({
-  type: "toggle",
-  title: "Configurer le toggle",
-  hint: "Choisis le type d’appareil, l’entité et le nom à afficher.",
-  createDraft: createToggleConfigDraft,
-  build: buildToggleWidgetConfig,
+export const MY_WIDGET_CONFIG_MANIFEST = Object.freeze({
+  type: "my-widget",
+  title: "Configure my widget",
+  hint: "Choose the options to display.",
+  titleKey: "widgets.config.myWidget.title",
+  hintKey: "widgets.config.myWidget.hint",
+  getTitle,
+  getHint,
+  createDraft,
+  build,
+  renderFields,
 });
 ```
 
-The manifest is then attached to the widget module:
+Not every manifest needs every optional field.
+
+| Field | Required | Purpose |
+|---|---:|---|
+| `type` | yes | Stable config type id |
+| `title` | optional | Fallback popup title |
+| `hint` | optional | Fallback helper text |
+| `titleKey` | optional | i18n key for the title |
+| `hintKey` | optional | i18n key for the hint |
+| `getTitle` | optional | Dynamic title resolver |
+| `getHint` | optional | Dynamic hint resolver |
+| `createDraft` | yes | Creates editable config state |
+| `build` | yes | Converts draft into final widget config |
+| `renderFields` | yes for UI config | Renders the config fields for this manifest |
+
+The popup is now generic. It asks the manifest to render fields instead of knowing every config type itself.
+
+---
+
+## 5. Widget Module Attachment
+
+The manifest is attached to the widget module:
 
 ```js
 export const WIDGET_MODULE = Object.freeze({
@@ -109,28 +114,29 @@ export const WIDGET_MODULE = Object.freeze({
   definition: TOGGLE_WIDGET_DEFINITION,
   renderer: TOGGLE_WIDGET_CONTENT_RENDERER,
   config: TOGGLE_WIDGET_CONFIG_MANIFEST,
-  preview: ...
+  preview: TOGGLE_WIDGET_PREVIEW,
 });
 ```
 
----
+The widget definition still references the config type:
 
-## 5. Manifest Fields
+```js
+export const TOGGLE_WIDGET_DEFINITION = Object.freeze({
+  ...
+  config: "toggle",
+});
+```
 
-| Field | Required | Purpose |
-|---|---:|---|
-| `type` | yes | Stable config type id |
-| `title` | optional today | Human popup title |
-| `hint` | optional today | Human popup helper text |
-| `createDraft` | yes | Creates editable config state |
-| `build` | yes | Converts draft into final widget config |
-
-Current popup code still contains hardcoded title/hint branching for several types, so `title` and `hint` exist but are not yet the only source of truth.
-
-Target direction:
+Both sides matter:
 
 ```text
-The manifest should own title, hint, field rendering, createDraft, build.
+widget definition config id
+        ↓
+widget module config manifest
+        ↓
+widget-config-registry
+        ↓
+widget-config-popup
 ```
 
 ---
@@ -143,17 +149,7 @@ The config registry lives in:
 src/widget-config/widget-config-registry.js
 ```
 
-It collects config manifests directly from `WIDGET_MODULES`:
-
-```js
-const CONFIG_MANIFESTS = Object.freeze(
-  WIDGET_MODULES
-    .map((module) => module?.config)
-    .filter(Boolean),
-);
-```
-
-Then it creates:
+It collects config manifests from `WIDGET_MODULES`, then builds:
 
 ```js
 WIDGET_CONFIG_REGISTRY
@@ -167,56 +163,13 @@ as:
 }
 ```
 
-This is important because config flows are already partially registry-driven.
-
-Adding a config flow currently requires:
-
-1. Add a config manifest to the widget module.
-2. Ensure the popup knows how to render that config type.
-
-The second step is the current remaining centralization point.
+This means a new config flow is discovered through the widget module registry. A normal new config flow should not require adding a new branch in `widget-config-popup.js`.
 
 ---
 
-## 7. Finding A Widget's Config Type
+## 7. Config Session
 
-The registry resolves the config type with:
-
-```js
-getWidgetConfigType(widget)
-```
-
-Current behavior:
-
-```js
-return getWidgetDefinition(widget)?.config || "";
-```
-
-That means the widget definition points to a config type:
-
-```js
-config: "toggle"
-```
-
-And the widget module carries the actual manifest:
-
-```js
-config: TOGGLE_WIDGET_CONFIG_MANIFEST
-```
-
-Both sides currently matter:
-
-```text
-Widget definition config string
-        ↓
-Config registry manifest
-```
-
----
-
-## 8. Config Session
-
-The popup does not edit the widget directly.
+The popup does not mutate the widget directly.
 
 It creates a session:
 
@@ -235,21 +188,23 @@ The session shape is:
   widget,
   configType,
   draft,
+  ...metadata
 }
 ```
 
 Where:
 
 - `mode` is usually `create` or `edit`;
-- `widget` is the original widget/manager item;
+- `widget` is the original widget or manager item;
 - `configType` is the resolved config type;
-- `draft` is editable temporary state.
+- `draft` is editable temporary state;
+- metadata can include contextual fields such as a scenes button index.
 
-This is good architecture because it avoids mutating the real widget while the user is still changing fields.
+This avoids mutating the real widget while the user is changing fields.
 
 ---
 
-## 9. Draft / Build Pattern
+## 8. Draft / Build Pattern
 
 Every config flow follows the same pattern:
 
@@ -265,11 +220,9 @@ configured widget object
 
 ### createDraft
 
-`createDraft` reads the original widget and creates editable state.
+`createDraft` reads the original widget and creates editable state. It usually also calls a reconcile function.
 
-It usually also calls a reconcile function.
-
-Example:
+Example shape:
 
 ```js
 export function createMediaConfigDraft(widget = {}, hass, visibilityConfig) {
@@ -286,7 +239,7 @@ export function createMediaConfigDraft(widget = {}, hass, visibilityConfig) {
 
 `build` merges the original widget with the chosen config values.
 
-Example:
+Recommended pattern:
 
 ```js
 export function buildMediaWidgetConfig(widget, draft, hass, visibilityConfig) {
@@ -304,18 +257,61 @@ export function buildMediaWidgetConfig(widget, draft, hass, visibilityConfig) {
 }
 ```
 
-Important:
+Always spread the original widget first unless there is a very specific reason not to.
 
-`build()` spreads the original widget first.
+This preserves:
 
-That preserves manager-selected properties such as:
-
-- variant;
-- size;
-- category;
+- selected variant;
+- selected size;
+- manager category;
 - title/label metadata;
-- manager entry values;
+- catalog entry values;
 - future widget metadata.
+
+---
+
+## 9. Render Fields Pattern
+
+Field rendering now belongs to the config manifest.
+
+A manifest exposes:
+
+```js
+renderFields(session, hass, visibilityConfig, onChange, helpers)
+```
+
+It returns:
+
+```js
+{
+  fields,
+  canSave,
+  isValid,
+}
+```
+
+| Field | Purpose |
+|---|---|
+| `fields` | DOM node containing the config fields |
+| `canSave` | Initial primary-button enabled state |
+| `isValid` | Optional function called after input changes |
+
+The popup uses `canSave` for the initial button state and `isValid()` after input events.
+
+### Render helpers
+
+The popup passes common helpers so config files can share consistent markup and labels:
+
+```js
+{
+  createField,
+  configOptionLabel,
+  emptyLabelForConfigOption,
+  t,
+}
+```
+
+`createField()` should be preferred for standard label/control/hint layout.
 
 ---
 
@@ -323,19 +319,13 @@ That preserves manager-selected properties such as:
 
 Most config files use a `reconcile...Draft()` function.
 
-Example:
-
-```js
-reconcileToggleConfigDraft(draft, hass, visibilityConfig)
-```
-
 Reconcile functions are responsible for:
 
 - finding valid entity options;
 - replacing invalid selected entities;
 - picking the first valid option when needed;
 - resolving selected option metadata;
-- auto-filling label when the user has not customized it;
+- auto-filling labels when the user has not customized them;
 - returning save validity data.
 
 Typical return shape:
@@ -344,18 +334,18 @@ Typical return shape:
 {
   draft,
   options,
-  selected
+  selected,
 }
 ```
 
-Some flows also return the selected action/type:
+Some flows also return type-specific data:
 
 ```js
 {
   draft,
   action,
   options,
-  selected
+  selected,
 }
 ```
 
@@ -366,7 +356,7 @@ or:
   draft,
   deviceType,
   options,
-  selected
+  selected,
 }
 ```
 
@@ -423,19 +413,19 @@ filterEntitiesForCurrentUser(hass, options, visibilityConfig)
 
 This means config popups respect MHA Admin entity permissions.
 
-The user sees only allowed entities.
-
 ---
 
 ## 12. Entity Availability Rules
 
-`getEntityOptionsByDomain()` filters entities by:
+`getEntityOptionsByDomain()` filters entities by domain and availability.
+
+General rule:
 
 ```js
 getEntityDomain(entityId) === domain
 ```
 
-and availability:
+and:
 
 ```js
 isEntityAvailable(entityState)
@@ -459,11 +449,7 @@ Lights get extra filtering through:
 getLightOptions(hass, visibilityConfig)
 ```
 
-This function currently keeps only lights that support brightness:
-
-```js
-.filter(option => option.supportsBrightness)
-```
+This keeps only lights that support brightness.
 
 The capability comes from:
 
@@ -471,7 +457,7 @@ The capability comes from:
 supportsLightBrightness(attributes)
 ```
 
-This is important for:
+This matters for:
 
 - toggle-slider;
 - brightness slider.
@@ -501,32 +487,14 @@ from:
 src/widget-config/widget-config-popup.js
 ```
 
-It returns a DOM tree:
-
-```html
-<section class="mha-widget-config-popup mha-page-creator">
-  <button class="mha-widget-config-scrim mha-page-creator-scrim">
-  <div class="mha-widget-config-sheet mha-page-creator-sheet">
-    <div class="mha-widget-config-header mha-page-creator-header">
-    <p class="mha-widget-config-hint mha-page-creator-hint">
-    <div class="mha-widget-config-fields">
-    <div class="mha-widget-config-actions mha-page-creator-actions">
-  </div>
-</section>
-```
-
-The popup intentionally reuses Page Creator visual classes:
+It now uses the shared panel shell:
 
 ```text
-mha-page-creator
-mha-page-creator-scrim
-mha-page-creator-sheet
-mha-page-creator-header
-mha-page-creator-hint
-mha-page-creator-actions
+src/panels/panel-shell.js
+src/panels/panel-surface-contract.js
 ```
 
-This keeps the visual language consistent.
+The config popup remains visually aligned with the Page Creator sheet and other panel surfaces through shared panel classes and surface roles.
 
 ---
 
@@ -536,71 +504,15 @@ The popup has two actions:
 
 | Button | Behavior |
 |---|---|
-| `Annuler` | closes without saving |
-| `Continuer` | create mode: builds widget and continues to placement |
-| `Enregistrer` | edit mode: builds widget and saves changes |
+| Cancel | closes without saving |
+| Continue | create mode: builds widget and continues to placement |
+| Save | edit mode: builds widget and saves changes |
 
-Current label logic:
-
-```js
-save.textContent = session?.mode === "edit" ? "Enregistrer" : "Continuer";
-```
-
-The save button is disabled when the current config is invalid.
+The save/continue button is disabled until the current manifest content is valid.
 
 ---
 
-## 16. Current Field Renderers
-
-Field rendering currently lives inside:
-
-```text
-src/widget-config/widget-config-popup.js
-```
-
-Current field renderer functions:
-
-```js
-createToggleSliderFields()
-createSliderFields()
-createToggleFields()
-createWeatherFields()
-createMediaFields()
-createButtonFields()
-```
-
-There is also a partial field renderer map:
-
-```js
-const WIDGET_CONFIG_FIELD_RENDERERS = Object.freeze({
-  slider: createSliderFields,
-  toggle: createToggleFields,
-  "toggle-slider": createToggleSliderFields,
-});
-```
-
-However, the popup currently still uses explicit branching for:
-
-- slider;
-- toggle;
-- button;
-- weather;
-- media;
-- fallback toggle-slider.
-
-This is a known architecture gap.
-
-Target direction:
-
-```text
-config manifest owns or references its field renderer
-```
-
-so `widget-config-popup.js` no longer needs to know every config type.
-
----
-
-## 17. Toggle-Slider Config
+## 16. Toggle-Slider Config
 
 Files:
 
@@ -615,22 +527,29 @@ Config type:
 "toggle-slider"
 ```
 
-Current purpose:
+Purpose:
 
 - choose a compatible light;
 - customize display name;
 - build a combined light widget.
 
-Current draft fields:
+Draft fields:
 
 ```js
 {
   lightEntityId,
   label,
   labelCustomized,
-  sliderMode
+  sliderMode,
 }
 ```
+
+Current UI fields:
+
+| Label | Control |
+|---|---|
+| Display name | text input |
+| Light | select |
 
 Current build output includes:
 
@@ -643,32 +562,15 @@ Current build output includes:
   lightEntityId,
   entityId: lightEntityId,
   label,
-  sliderMode: "brightness"
+  sliderMode: "brightness",
 }
 ```
 
-Current UI fields:
-
-| Label | Control |
-|---|---|
-| `Nom affiché` | text input |
-| `Lumière` | select |
-
-Current empty state:
-
-```text
-Aucune lumière compatible avec la luminosité trouvée.
-```
-
-Important:
-
-Although the original design discussed a brightness/white temperature mode selector, the current implementation documented here only builds `sliderMode: "brightness"`.
-
-White temperature can be added later, but it is not currently a complete flow in this zip.
+White-temperature mode can be added later, but the current complete flow is brightness-based.
 
 ---
 
-## 18. Slider Config
+## 17. Slider Config
 
 Files:
 
@@ -687,57 +589,31 @@ Current slider actions:
 
 | Value | Label | Domain | Empty label |
 |---|---|---|---|
-| `volume` | `Volume` | `media_player` | `Aucun appareil média disponible` |
-| `brightness` | `Intensité lumière` | `light` | `Aucune lumière disponible` |
+| `volume` | Volume | `media_player` | No media player available |
+| `brightness` | Light brightness | `light` | No light available |
 
-Current draft fields:
+Draft fields:
 
 ```js
 {
   entityId,
   label,
   labelCustomized,
-  sliderAction
+  sliderAction,
 }
-```
-
-Current action inference:
-
-```js
-widget.sliderAction === "volume" or "brightness"
-```
-
-otherwise:
-
-```js
-widget.variant === "volume-slider" ? "volume" : "brightness"
 ```
 
 Current UI fields:
 
 | Label | Control |
 |---|---|
-| `Action` | select |
-| `Appareil` | select |
-| `Nom affiché` | text input |
-
-Current build output includes:
-
-```js
-{
-  ...widget,
-  kind: "slider",
-  type: "slider",
-  component: "slider-widget",
-  entityId,
-  label,
-  sliderAction
-}
-```
+| Action | select |
+| Device | select |
+| Display name | text input |
 
 ---
 
-## 19. Toggle Config
+## 18. Toggle Config
 
 Files:
 
@@ -752,50 +628,28 @@ Config type:
 "toggle"
 ```
 
-Current supported device types:
+Supported device types:
 
 | Value | Label | Domain |
 |---|---|---|
-| `light` | `Lumière` | `light` |
-| `switch` | `Interrupteur` | `switch` |
-| `input_boolean` | `Booléen` | `input_boolean` |
+| `light` | Light | `light` |
+| `switch` | Switch | `switch` |
+| `input_boolean` | Boolean | `input_boolean` |
 
-Current draft fields:
+Draft fields:
 
 ```js
 {
   deviceType,
   entityId,
   label,
-  labelCustomized
-}
-```
-
-Current UI fields:
-
-| Label | Control |
-|---|---|
-| `Type d’appareil` | select |
-| `Entité` | select |
-| `Nom affiché` | text input |
-
-Current build output includes:
-
-```js
-{
-  ...widget,
-  kind: "toggle",
-  type: "toggle",
-  component: "toggle-widget",
-  deviceType,
-  entityId,
-  label
+  labelCustomized,
 }
 ```
 
 ---
 
-## 20. Button Config
+## 19. Button Config
 
 Files:
 
@@ -814,13 +668,13 @@ Current button types:
 
 | Value | Label |
 |---|---|
-| `light` | `Lumière` |
-| `switch` | `Interrupteur` |
-| `input_boolean` | `Booléen` |
-| `button` | `Bouton HA` |
-| `action` | `Action personnalisée` |
+| `light` | Light |
+| `switch` | Switch |
+| `input_boolean` | Boolean |
+| `button` | HA button |
+| `action` | Custom action |
 
-Current draft fields:
+Draft fields:
 
 ```js
 {
@@ -831,68 +685,52 @@ Current draft fields:
   actionDomain,
   actionService,
   actionData,
-  actionDataValid
+  actionDataValid,
 }
 ```
 
-Current UI fields for entity button types:
+Custom action mode validates `actionData` as a JSON object. Arrays and invalid JSON are rejected.
 
-| Label | Control |
-|---|---|
-| `Type d’action` | select |
-| `Entité` | select |
-| `Nom affiché` | text input |
+---
 
-Current UI fields for custom action:
+## 20. Scenes Config
 
-| Label | Control |
-|---|---|
-| `Type d’action` | select |
-| `Domaine HA` | text input |
-| `Service HA` | text input |
-| `Données JSON` | textarea |
-| `Nom affiché` | text input |
-
-Current custom action hint:
+Files:
 
 ```text
-Les entity_id sont soumis aux permissions MHA Admin.
+src/widget-config/scenes-config.js
+src/widgets/scenes-widget.js
 ```
 
-Current build output for entity mode:
+Config type:
 
 ```js
-{
-  ...widget,
-  kind: "button",
-  buttonType,
-  entityId,
-  label
+"scenes"
+```
+
+Purpose:
+
+- configure up to four buttons;
+- support Home Assistant `scene`, `script` and `automation` entities;
+- present `scene` as a Mode and `script`/`automation` as Routine-style shortcuts;
+- support per-slot configuration from the widget.
+
+Current widget definition marks:
+
+```js
+capabilities: {
+  configurable: true,
+  slotConfigurable: true,
 }
 ```
 
-Current build output for custom action mode:
+and:
 
 ```js
-{
-  ...widget,
-  kind: "button",
-  buttonType: "action",
-  entityId: "",
-  label,
-  action: {
-    domain,
-    service,
-    data
-  }
-}
+placementFlow: "slot-config-first"
 ```
 
-Important:
-
-`actionData` must be a valid JSON object.
-
-Arrays and invalid JSON are rejected.
+This lets the widget open configuration for a specific button slot without adding special popup branches.
 
 ---
 
@@ -911,43 +749,19 @@ Config type:
 "weather"
 ```
 
-Current purpose:
+Purpose:
 
 - choose an allowed `weather` entity.
 
-Current draft fields:
+Draft fields:
 
 ```js
 {
-  entityId
+  entityId,
 }
 ```
 
-Current UI fields:
-
-| Label | Control |
-|---|---|
-| `Entité météo` | select |
-
-Current empty state:
-
-```text
-Aucune entité météo autorisée et disponible.
-```
-
-Current build output includes:
-
-```js
-{
-  ...widget,
-  kind: "weather",
-  type: "weather",
-  component: "weather-widget",
-  entityId
-}
-```
-
-Unlike several other flows, the weather config currently does not expose a custom display label.
+Weather config currently does not expose a custom display label.
 
 ---
 
@@ -966,45 +780,18 @@ Config type:
 "media"
 ```
 
-Current purpose:
+Purpose:
 
 - choose a `media_player`;
 - customize display name.
 
-Current draft fields:
+Draft fields:
 
 ```js
 {
   mediaEntityId,
   label,
-  labelCustomized
-}
-```
-
-Current UI fields:
-
-| Label | Control |
-|---|---|
-| `Nom affiché` | text input |
-| `Lecteur média` | select |
-
-Current empty state:
-
-```text
-Aucun lecteur média autorisé et disponible.
-```
-
-Current build output includes:
-
-```js
-{
-  ...widget,
-  kind: "media",
-  type: "media",
-  component: "media-widget",
-  entityId: mediaEntityId,
-  mediaEntityId,
-  label
+  labelCustomized,
 }
 ```
 
@@ -1012,7 +799,7 @@ Current build output includes:
 
 ## 23. Label Customization
 
-Most flows use the same pattern:
+Most flows use this pattern:
 
 ```js
 labelCustomized: Boolean(String(widget.label || "").trim())
@@ -1027,109 +814,29 @@ draft.label = selected?.label || "";
 When the user edits the label:
 
 ```js
-labelCustomized = true
+labelCustomized = true;
 ```
 
 This gives a good default while still allowing user override.
-
-Important UX result:
-
-- selecting an entity auto-fills the label;
-- once the user types a custom name, MHA stops overwriting it.
 
 ---
 
 ## 24. Preserving Variant And Size
 
-Config builds always spread the original widget:
+Config builds should always spread the original widget:
 
 ```js
 return {
   ...widget,
-  ...
-}
+  ...configSpecificFields,
+};
 ```
 
-This is important because the selected manager entry may carry:
-
-```js
-variant
-size
-w
-h
-category
-description
-order
-```
-
-The config flow should only add or replace configuration-specific properties.
-
-Do not rebuild the widget from scratch unless necessary.
-
-Recommended:
-
-```js
-{
-  ...widget,
-  kind: "my-widget",
-  entityId,
-  label
-}
-```
-
-Avoid:
-
-```js
-{
-  kind: "my-widget",
-  entityId,
-  label
-}
-```
-
-because that can lose selected variant/size metadata.
+Avoid rebuilding a widget from scratch because that can lose selected manager metadata.
 
 ---
 
-## 25. Save Validity
-
-Field renderers return:
-
-```js
-{
-  fields,
-  canSave,
-  isValid
-}
-```
-
-`canSave` initializes the save button state.
-
-`isValid` updates the state when input changes.
-
-Examples:
-
-### Entity flows
-
-```js
-canSave: Boolean(selected)
-```
-
-### Custom button action
-
-```js
-canSave: Boolean(
-  draft.actionDomain.trim()
-  && draft.actionService.trim()
-  && draft.actionDataValid
-)
-```
-
-The popup disables the primary action until the form is valid.
-
----
-
-## 26. Current Styling
+## 25. Styling
 
 Popup CSS lives in:
 
@@ -1137,51 +844,51 @@ Popup CSS lives in:
 styles/widget-manager/widget-config-popup.css
 ```
 
-The popup also reuses Page Creator class names, so it inherits part of the established modal/sheet visual language.
+Shared panel CSS also applies through:
 
-Theme-specific visual styling should come from tokens.
+```text
+styles/panels/panel-surface-contract.css
+styles/panels/panel-frame-alignment.css
+styles/panels/page-creator-sheet.css
+```
 
-The config popup should not define a totally separate visual system.
+Theme-specific visual styling should come from tokens. The config popup should not define a separate visual system.
 
 ---
 
-## 27. Adding A New Config Flow Today
+## 26. Adding A New Config Flow Today
 
 To add a new config flow today:
 
 ### Step 1 — Create the config file
 
-Example:
-
 ```text
 src/widget-config/my-widget-config.js
 ```
 
-Export:
+Export draft/build/render functions:
 
 ```js
 createMyWidgetConfigDraft()
 reconcileMyWidgetConfigDraft()
 buildMyWidgetConfig()
+renderMyWidgetConfigFields()
 ```
 
 ### Step 2 — Add a config manifest in the widget module
 
-Example:
-
 ```js
 export const MY_WIDGET_CONFIG_MANIFEST = Object.freeze({
   type: "my-widget",
-  title: "Configurer mon widget",
-  hint: "Choisis les options à afficher.",
+  title: "Configure my widget",
+  hint: "Choose the options to display.",
   createDraft: createMyWidgetConfigDraft,
   build: buildMyWidgetConfig,
+  renderFields: renderMyWidgetConfigFields,
 });
 ```
 
 ### Step 3 — Reference the config type in the widget definition
-
-Example:
 
 ```js
 export const MY_WIDGET_DEFINITION = Object.freeze({
@@ -1192,117 +899,43 @@ export const MY_WIDGET_DEFINITION = Object.freeze({
 
 ### Step 4 — Attach the manifest to the widget module
 
-Example:
-
 ```js
 export const WIDGET_MODULE = Object.freeze({
   kind: "my-widget",
   definition: MY_WIDGET_DEFINITION,
   renderer: MY_WIDGET_RENDERER,
   config: MY_WIDGET_CONFIG_MANIFEST,
-  preview: ...
+  preview: MY_WIDGET_PREVIEW,
 });
 ```
 
-### Step 5 — Add field rendering to the popup
-
-Current required central edit:
-
-```text
-src/widget-config/widget-config-popup.js
-```
-
-Add:
-
-```js
-createMyWidgetFields()
-```
-
-and include it in the popup render branching.
-
-This is the part that should eventually move into the config manifest.
+No central `widget-config-popup.js` field branch should be required for a normal config flow.
 
 ---
 
-## 28. Recommended Future Manifest Shape
+## 27. Risks And Current Limitations
 
-To make config flows fully modular, the manifest should eventually become:
+### Reusable field primitives are still limited
 
-```js
-export const MY_WIDGET_CONFIG_MANIFEST = Object.freeze({
-  type: "my-widget",
-  title: "Configurer mon widget",
-  hint: "Choisis les options à afficher.",
-  createDraft,
-  reconcile,
-  build,
-  renderFields,
-});
-```
-
-Then the popup can become generic:
-
-```js
-const content = configDefinition.renderFields({
-  session,
-  hass,
-  visibilityConfig,
-  onChange,
-});
-```
-
-Target flow:
-
-```text
-Widget module owns:
-  definition
-  renderer
-  config manifest
-  preview
-  css
-```
-
-This would remove the need for switch/ternary logic in the popup.
-
----
-
-## 29. Risks And Current Limitations
-
-### Popup still knows too many config types
-
-`widget-config-popup.js` currently imports every config-specific function.
-
-That means adding a new config type still requires editing a central file.
-
-This is the main thing preventing config flows from being fully plugin-like.
-
-### Manifest title/hint not fully authoritative
-
-Several manifests define `title` and `hint`, but popup title/hint text is still hardcoded with branching.
-
-This can drift over time.
+`renderFields` is manifest-driven, but field UI is still hand-built by each config flow. Future work can extract reusable primitives for selects, labels, text inputs, segmented controls, JSON fields and entity selectors.
 
 ### `light-options.js` name is too narrow
 
 The file now handles general entity option helpers, not only light options.
 
-A future rename could be:
+Future rename candidate:
 
 ```text
-entity-options.js
+src/widget-config/entity-options.js
 ```
 
 ### Weather has no custom label
 
-Weather config currently only selects an entity.
+Weather config currently only selects an entity. That may be fine, but it differs from media/toggle/slider/button UX.
 
-That may be fine, but it is different from media/toggle/slider/button UX.
+### Toggle-slider white temperature mode is not complete
 
-### Toggle-slider white temperature mode is not implemented as a complete flow
-
-The current combined light config documents only brightness mode.
-
-If white temperature becomes a real option, the flow should add:
+The current combined light config documents brightness mode. If white temperature becomes a real option, the flow should add:
 
 ```js
 sliderMode: "brightness" | "color_temp"
@@ -1312,7 +945,7 @@ and filter lights by matching capability.
 
 ---
 
-## 30. Best Practices
+## 28. Best Practices
 
 When creating or updating a config flow:
 
@@ -1326,10 +959,11 @@ When creating or updating a config flow:
 8. Disable save when no valid entity/action exists.
 9. Do not call Home Assistant services from config UI.
 10. Keep field UI small and touch-friendly.
+11. Put field rendering in the manifest via `renderFields`.
 
 ---
 
-## 31. Testing Checklist
+## 29. Testing Checklist
 
 For every config flow, test:
 
@@ -1341,8 +975,8 @@ For every config flow, test:
 - entity change after custom label;
 - invalid saved entity no longer available;
 - MHA Admin visibility filtering;
-- create mode button label `Continuer`;
-- edit mode button label `Enregistrer`;
+- create mode button label;
+- edit mode button label;
 - selected widget variant preserved;
 - selected widget size preserved;
 - widget renders after save;
@@ -1356,29 +990,38 @@ For button custom action, also test:
 - empty JSON becomes `{}`;
 - domain + service required.
 
+For scenes, also test:
+
+- empty slot configuration;
+- configured slot activation;
+- scene/script/automation entity options;
+- per-slot edit mode;
+- MHA Admin visibility filtering per slot.
+
 ---
 
-## 32. Architecture Verdict
+## 30. Architecture Verdict
 
-The config-flow system is already moving in the right direction.
+The config-flow system is now strongly manifest-driven.
 
 Strengths:
 
-- config manifests exist;
-- registry collects manifests from widget modules;
+- config manifests are collected from widget modules;
 - draft/build pattern is clean;
+- field rendering is delegated to `renderFields`;
+- title/hint can be static, i18n-driven or dynamic;
 - entity lists are human-friendly;
 - MHA Admin visibility is respected;
 - selected manager metadata is preserved;
-- popup appears at the right moment before drop.
+- popup appears before drop when configuration is required;
+- the shared panel shell keeps popup visuals consistent.
 
 Main remaining work:
 
-- move field renderers into config manifests;
-- make title/hint manifest-driven;
-- rename `light-options.js` to a more general entity helper name;
-- add tests for every config type;
-- document edit-mode integration if/when widget reconfiguration is exposed from placed widgets.
+- extract more reusable config field primitives;
+- rename `light-options.js` to a broader entity helper name;
+- add or maintain tests for every config type;
+- document any future edit-mode flows when placed-widget reconfiguration expands.
 
 Target state:
 
@@ -1388,4 +1031,4 @@ Add widget config file
 Attach manifest to widget module
 ```
 
-No central popup branching should be needed.
+No central popup branching should be needed for ordinary config flows.
