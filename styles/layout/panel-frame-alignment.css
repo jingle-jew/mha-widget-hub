@@ -30,8 +30,8 @@
     transform: translateY(100%) scale(1) !important;
     transform-origin: bottom center !important;
     transition:
-      opacity 240ms ease,
-      transform 260ms cubic-bezier(.2,.8,.2,1) !important;
+      opacity 300ms ease,
+      transform 380ms cubic-bezier(.22, 1, .36, 1) !important;
   }
 
   .mha-settings-panel[data-open="true"] .mha-settings-sheet,
