@@ -70,6 +70,7 @@ import { normalizeStoredWidgetContract } from "./src/widgets/widget-storage.js?v
 import { createWidgetFromCatalogItem } from "./src/widgets/widget-factory.js";
 import {updateClockWidgets} from "./src/widgets/clock-widget.js";
 import { getWidgetPlacementFlow } from "./src/widgets/widget-registry.js?v=phase5b1";
+import { syncDropSlotRenderer } from "./src/widgets/drop-slot-renderer.js";
 import {DEFAULT_WIDGETS,getActiveGridRows,getActiveGridUnits,getEffectiveLayout,getInternalGridColumnCountFromLogical,getInternalGridRowCountFromLogical,getLayoutMode,getGridPreset,getWidgetDensity,normalizeWidgetForKind,normalizeWidgetSize,sizeToString} from "./src/layout/layout-engine.js";
 import {
   doesWidgetGroupExactlyFillRect,
@@ -1622,10 +1623,6 @@ _getAvailableDropSlotsForWidget(id,positions=this._getActiveWidgetPositions({cre
 }
 _renderWidgetDropSlots(grid){
   if(!grid)return;
-  grid.querySelectorAll(".mha-widget-drop-slot").forEach(slot=>slot.remove());
-  grid.dataset.dropSlotsCount="0";
-  grid.classList.remove("has-drop-slots");
-  if(!this._isEditing)return;
   const positions=this._getActiveWidgetPositions({create:true});
   const placementWidget=this._pendingWidgetPlacement;
   const activeId=this._activeMoveWidgetId;
@@ -1634,31 +1631,15 @@ _renderWidgetDropSlots(grid){
     : activeId
       ? this._getAvailableDropSlotsForWidget(activeId,positions)
       : [];
-  grid.dataset.dropSlotsCount=String(slots.length);
-  grid.dataset.dropSlotMode=placementWidget?"add":activeId?"move":"none";
-  if(!slots.length)return;
-  const fragment=document.createDocumentFragment();
-  slots.forEach(slot=>{
-    const button=document.createElement("button");
-    button.className="mha-widget-drop-slot";
-    button.type="button";
-    button.setAttribute("aria-label",placementWidget
-      ?t("settings.addWidgetHere","Add widget here, column {column}, row {row}",{column:slot.x,row:slot.y})
-      :t("settings.moveWidgetHere","Move widget here, column {column}, row {row}",{column:slot.x,row:slot.y}));
-    button.dataset.x=String(slot.x);
-    button.dataset.y=String(slot.y);
-    button.style.gridColumn=`${slot.x} / span ${slot.w}`;
-    button.style.gridRow=`${slot.y} / span ${slot.h}`;
-    button.addEventListener("click",event=>{
-      event.preventDefault();
-      event.stopPropagation();
+  syncDropSlotRenderer(grid,{
+    editing:this._isEditing,
+    mode:placementWidget?"add":activeId?"move":"none",
+    slots,
+    onSelectSlot:(slot)=>{
       if(this._pendingWidgetPlacement)this._placePendingWidgetAtSlot(slot.x,slot.y);
       else this._moveWidgetToDropSlot(this._activeMoveWidgetId,slot.x,slot.y);
-    });
-    fragment.append(button);
+    },
   });
-  grid.prepend(fragment);
-  grid.classList.add("has-drop-slots");
 }
 
 _syncWidgetDropSlots(){
