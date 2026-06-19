@@ -13,6 +13,7 @@ import {
   resolveContractValue,
   STATIC_PREVIEW_RENDERER,
 } from "./widget-contract-helpers.js";
+import { buildWidgetRegistry } from "./widget-contract-registry-builder.js";
 import {
   buildWidgetManagerCategories,
   normalizeManagerDefinition,
@@ -48,38 +49,18 @@ export function getWidgetManagerCategories() {
   });
 }
 
-export const WIDGET_REGISTRY = Object.freeze(
-  Object.fromEntries(
-    WIDGET_MODULES
-      .filter((module) => module?.kind && module?.definition)
-      .map((module) => {
-        const definition = module.definition;
-        return [
-          module.kind,
-          Object.freeze({
-            kind: module.kind,
-            ...definition,
-            aliases: Object.freeze([...definition.aliases]),
-            variantAliases: Object.freeze([...definition.variantAliases]),
-            manager: normalizeManagerDefinition(definition, DEFAULT_MANAGER),
-            capabilities: normalizeCapabilities(definition, DEFAULT_CAPABILITIES),
-            storage: normalizeStorage(definition, DEFAULT_STORAGE),
-            shell: normalizeShellBehavior(definition, DEFAULT_SHELL),
-            placementFlow: definition.placementFlow || (definition.config ? "configure-first" : "direct"),
-            css: Object.freeze([...(definition.css || [])]),
-            previewRenderer: normalizePreviewRenderer(module, STATIC_PREVIEW_RENDERER),
-            variants: Object.freeze([...(definition.variants || [])]),
-            variantGroups: definition.variantGroups
-              ? Object.freeze({
-                horizontal: Object.freeze([...definition.variantGroups.horizontal]),
-                vertical: Object.freeze([...definition.variantGroups.vertical]),
-              })
-              : undefined,
-          }),
-        ];
-      }),
-  ),
-);
+export const WIDGET_REGISTRY = buildWidgetRegistry(WIDGET_MODULES, {
+  defaultManager: DEFAULT_MANAGER,
+  defaultCapabilities: DEFAULT_CAPABILITIES,
+  defaultStorage: DEFAULT_STORAGE,
+  defaultShell: DEFAULT_SHELL,
+  staticPreviewRenderer: STATIC_PREVIEW_RENDERER,
+  normalizeManagerDefinition,
+  normalizeCapabilities,
+  normalizeStorage,
+  normalizeShellBehavior,
+  normalizePreviewRenderer,
+});
 
 export function resolveWidgetKind(widget = {}, { fallback = "empty" } = {}) {
   if (typeof widget === "string") {
