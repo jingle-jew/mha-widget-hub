@@ -1,0 +1,53 @@
+/*
+ * Layout frame alignment.
+ *
+ * Tablet/desktop frame edges share the same outer inset:
+ * - status bar left/right;
+ * - widget grid exterior edge opposite the side dock;
+ * - dock/edit controls already consume the same page padding rhythm.
+ */
+
+@media (min-width: 768px) {
+  .mha-status-bar {
+    left: var(--mha-page-padding) !important;
+    right: var(--mha-page-padding) !important;
+    width: auto !important;
+    inline-size: auto !important;
+    max-inline-size: none !important;
+    transform: none !important;
+  }
+
+  .mha-widget-area {
+    padding-inline: 0 !important;
+  }
+
+  .mha-grid {
+    transform: none !important;
+  }
+
+  :host([data-dock-position="right"]) .mha-widget-area,
+  :host(:not([data-dock-position])) .mha-widget-area {
+    justify-items: start;
+  }
+
+  :host([data-dock-position="right"]) .mha-grid,
+  :host(:not([data-dock-position])) .mha-grid {
+    justify-self: start;
+  }
+
+  :host([data-dock-position="left"]) .mha-widget-area {
+    justify-items: end;
+  }
+
+  :host([data-dock-position="left"]) .mha-grid {
+    justify-self: end;
+  }
+
+  :host([data-dock-position="bottom"]) .mha-widget-area {
+    justify-items: center;
+  }
+
+  :host([data-dock-position="bottom"]) .mha-grid {
+    justify-self: center;
+  }
+}
