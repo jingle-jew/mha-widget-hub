@@ -101,7 +101,7 @@ function resolveContractValue(value, widget, definition) {
   return typeof value === "function" ? value(widget, definition) : value;
 }
 
-function getLegacyNormalizedContract(widget = {}, definition, normalized) {
+function getLegacyNormalizedContractPatch(widget = {}, definition, normalized) {
   const kind = normalized.kind;
 
   if (kind === "clock" && definition.variantAliases.includes(widget.variant)) {
@@ -300,6 +300,12 @@ export function getWidgetShellBehavior(widget = {}) {
   });
 }
 
+export function getWidgetStorageAdapter(widget = {}) {
+  const definition = getWidgetDefinition(widget);
+  if (!definition) return DEFAULT_STORAGE;
+  return definition.storage || DEFAULT_STORAGE;
+}
+
 export function getWidgetPlacementFlow(widget = {}) {
   const definition = getWidgetDefinition(widget);
   if (!definition) return "direct";
@@ -360,7 +366,8 @@ export function normalizeWidgetContract(widget = {}, normalizeBottomeSize) {
     h: size.h,
   };
 
-  const normalizedPatch = definition.storage?.normalize?.(widget, {
+  const storageAdapter = getWidgetStorageAdapter(widget);
+  const normalizedPatch = storageAdapter.normalize?.(widget, {
     definition,
     kind,
     normalizeBottomeSize,
@@ -373,7 +380,7 @@ export function normalizeWidgetContract(widget = {}, normalizeBottomeSize) {
     ...normalized,
     ...(
       normalizedPatch
-      ?? getLegacyNormalizedContract(widget, definition, normalized)
+      ?? getLegacyNormalizedContractPatch(widget, definition, normalized)
     ),
   };
 }

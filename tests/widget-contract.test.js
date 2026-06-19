@@ -6,6 +6,7 @@ import {
   getWidgetConfigType,
   getWidgetPlacementFlow,
   getWidgetShellBehavior,
+  getWidgetStorageAdapter,
   normalizeWidgetContract,
   resolveWidgetKind,
 } from "../src/widgets/widget-registry.js";
@@ -46,6 +47,17 @@ test("widget manager visibility is declared in widget definitions", async () => 
     WIDGET_REGISTRY.slider.manager.entries.some((entry) => entry.variant === "temperature-slider" && entry.hidden),
     true,
   );
+});
+
+test("migrated widgets expose storage adapters from their definitions", () => {
+  assert.equal(typeof getWidgetStorageAdapter({ kind: "clock" }).normalize, "function");
+  assert.equal(typeof getWidgetStorageAdapter({ kind: "slider" }).normalize, "function");
+  assert.equal(typeof getWidgetStorageAdapter({ kind: "toggle" }).normalize, "function");
+  assert.equal(typeof getWidgetStorageAdapter({ kind: "button" }).normalize, "function");
+  assert.equal(typeof getWidgetStorageAdapter({ kind: "weather" }).normalize, "function");
+  assert.equal(typeof getWidgetStorageAdapter({ kind: "scenes" }).normalize, "function");
+  assert.equal(typeof getWidgetStorageAdapter({ kind: "toggle-slider" }).normalize, "function");
+  assert.equal(getWidgetStorageAdapter({ kind: "media" }).normalize, undefined);
 });
 
 test("normalization preserves button and weather entity bindings", () => {
