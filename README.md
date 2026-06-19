@@ -46,7 +46,7 @@ Instead of presenting a traditional dashboard made of cards, MHA provides a laun
 
 See:
 
-- `docs/installation.md`
+- [Installation](docs/installation.md)
 
 ---
 
@@ -61,13 +61,13 @@ See:
 
 ### Developer Documentation
 
-- `docs/architecture.md`
-- `docs/development.md`
-- `docs/widgets.md`
-- `docs/themes.md`
-- `docs/theme-tokens.md`
-- `docs/config-flows.md`
-- `docs/preview-system.md`
+- [Architecture](docs/architecture.md)
+- [Development](docs/development.md)
+- [Widgets](docs/widgets.md)
+- [Themes](docs/themes.md)
+- [Theme tokens](docs/theme-tokens.md)
+- [Config flows](docs/config-flows.md)
+- [Preview system](docs/preview-system.md)
 
 ---
 
