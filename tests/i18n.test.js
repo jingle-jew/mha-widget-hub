@@ -61,6 +61,11 @@ test("i18n translates, interpolates, and falls back to English", () => {
   assert.equal(t("common.save", "Save"), "Save");
 });
 
+test("i18n returns the fallback when the translation key is missing", () => {
+  setLanguage("en");
+  assert.equal(t(undefined, "Fallback"), "Fallback");
+});
+
 test("i18n dictionaries keep language keys aligned", () => {
   const englishKeys = flattenKeys(en).sort();
   assert.deepEqual(flattenKeys(fr).sort(), englishKeys);

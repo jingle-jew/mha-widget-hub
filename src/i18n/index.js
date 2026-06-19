@@ -8,10 +8,16 @@ const DICTIONARIES = Object.freeze({ en, fr, es });
 let currentLanguage = normalizeLanguage(globalThis.navigator?.language || "en");
 
 function readPath(source, key) {
-  return String(key || "")
+  if (typeof key !== "string" || !key.trim()) return undefined;
+
+  const segments = key
     .split(".")
-    .filter(Boolean)
-    .reduce((value, part) => value?.[part], source);
+    .map(part => part.trim())
+    .filter(Boolean);
+
+  if (!segments.length) return undefined;
+
+  return segments.reduce((value, part) => value?.[part], source);
 }
 
 function interpolate(template, params = {}) {
