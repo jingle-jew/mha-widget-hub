@@ -81,7 +81,12 @@ function syncAnimatedPanel(root, selector, createPanel, props, shouldOpen) {
 
   if (existing?.dataset?.open === "true") {
     clearPanelAnimationHandles(existing);
-    existing.replaceWith(nextPanel);
+    if (typeof existing.replaceWith === "function") {
+      existing.replaceWith(nextPanel);
+    } else {
+      existing.remove?.();
+      root.append?.(nextPanel);
+    }
     setPanelOpenState(nextPanel, true);
     return;
   }
