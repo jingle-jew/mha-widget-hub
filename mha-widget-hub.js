@@ -41,8 +41,6 @@ import {
   selectPage,
 } from "./src/pages/page-controller.js";
 import {
-  createPageCreatorPanel,
-  syncPageCreatorPanel,
   updatePageCreatorIconSelection,
 } from "./src/pages/page-creator.js?v=phase6";
 import {destroyDomSubtree} from "./src/core/dom-lifecycle.js";
@@ -55,12 +53,8 @@ import {
   syncDockActiveState,
   syncDocks,
 } from "./src/layout/dock-controller.js";
-import {createSettingsPanel,updateSettingsPanel} from "./src/settings/settings-panel.js";
-import { replaceSettingsPanelPreservingUiState } from "./src/settings/settings-panel-orchestrator.js?v=phase7";
-import {
-  buildSettingsPanelState,
-  resolveEffectiveIconShape,
-} from "./src/settings/settings-panel-props.js?v=phase3";
+import {createSettingsPanel} from "./src/settings/settings-panel.js";
+import { buildSettingsCoordinatorProps, syncSettingsPanels } from "./src/settings/settings-panel-coordinator.js?v=phase8";
 import { WIDGET_MANAGER_CATEGORIES } from "./src/widget-manager/widget-manager.js";
 import {
   buildConfiguredWidget,
@@ -69,8 +63,13 @@ import {
 } from "./src/widget-config/widget-config-popup.js";
 import { getScenesDefaultButtonIndex } from "./src/widget-config/widget-config-props.js?v=phase5";
 import {
+  buildPageCreatorPanelProps,
+  buildWidgetConfigPanelProps,
+  buildWidgetManagerPanelProps,
+  createPageCreatorPanel,
   createWidgetConfigPanel,
   createWidgetManagerPanel,
+  syncPageCreatorPanel,
   syncWidgetConfigPanel,
   syncWidgetManagerPanel,
 } from "./src/widgets/widget-placement-orchestrator.js?v=phase1";
@@ -605,20 +604,16 @@ _syncSettingsModalState(){
   this.dataset.settingsOpen=String(this._settingsOpen);
 }
 _syncSettingsDom(){
-  const existing=this.shadowRoot.querySelector('.mha-settings-panel[data-settings-scope="all"]');
   this._syncSettingsModalState();
-  replaceSettingsPanelPreservingUiState({
+  syncSettingsPanels({
     root:this.shadowRoot,
-    existing,
-    next:this._createSettingsPanel(),
-    updatePanel:updateSettingsPanel,
+    props:this._getSettingsPanelsProps(),
   });
 }
-_getSettingsPanelProps(scope="all"){
+_getSettingsPanelsProps(){
   const themeState=this._themeController.read();
   const screensaverState=this._screensaverController.read();
-  const settingsState=buildSettingsPanelState({
-    scope,
+  return buildSettingsCoordinatorProps({
     settingsOpen:this._settingsOpen,
     screensaverSettingsOpen:this._screensaverSettingsOpen,
     language:this._language,
@@ -634,50 +629,46 @@ _getSettingsPanelProps(scope="all"){
     entityVisibilityConfig:this._entityVisibilityConfig,
     themeState,
     screensaverState,
-    effectiveIconShape:resolveEffectiveIconShape({
-      hostIconShape:this.dataset.iconShape,
-      documentIconShape:document.documentElement.dataset.iconShape,
-      themeIconShape:themeState.iconShape,
-    }),
+    hostIconShape:this.dataset.iconShape,
+    documentIconShape:document.documentElement.dataset.iconShape,
+    callbacks:{
+      onClose:()=>this._closeSettings(),
+      onCloseScreensaver:()=>this._closeScreensaverSettings(),
+      onLanguageChange:v=>this._applyLanguageFromSettings(v),
+      onThemeChange:v=>this._applyThemeFromSettings(v),
+      onThemeStyleChange:v=>this._applyThemeStyleFromSettings(v),
+      onIosGlassChange:v=>this._applyIosGlassFromSettings(v),
+      onAccentChange:v=>this._applyAccentFromSettings(v),
+      onAccentModeChange:v=>this._applyAccentModeFromSettings(v),
+      onAccentPaletteExpandedChange:v=>this._setAccentPaletteExpanded(v),
+      onIconShapeChange:v=>this._applyIconShapeFromSettings(v),
+      onHideHaSidebarChange:v=>this._applyHideHaSidebarFromSettings(v),
+      onScreensaverEnabledChange:v=>this._applyScreensaverEnabledFromSettings(v),
+      onScreensaverDelayChange:v=>this._applyScreensaverDelayFromSettings(v),
+      onScreensaverPreviewChange:v=>this._applyScreensaverPreviewFromSettings(v),
+      onScreensaverNowBarChange:v=>this._applyScreensaverNowBarFromSettings(v),
+      onScreensaverNowBarItemChange:(item,enabled)=>this._applyScreensaverNowBarItemFromSettings(item,enabled),
+      onScreensaverNowBarTileEnabledChange:(tile,enabled)=>this._applyScreensaverNowBarTileEnabledFromSettings(tile,enabled),
+      onScreensaverNowBarEntitySelectionChange:(section,entityId,selected)=>this._applyScreensaverNowBarEntitySelectionFromSettings(section,entityId,selected),
+      onScreensaverNowBarNowItemChange:(item,selected)=>this._applyScreensaverNowBarNowItemFromSettings(item,selected),
+      onScreensaverClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),
+      onResetGrid:()=>this.resetGrid(),
+      onOpenWallpaperSettings:()=>this._openWallpaperSettings(),
+      onOpenNowBarSettings:()=>this._openNowBarSettings(),
+      onWallpaperMainBack:()=>this._openSettings(),
+      onOpenDockSettings:()=>this._openDockSettings(),
+      onDockBack:()=>this._openDockSettings(),
+      onDockPageSelect:id=>this._openDockPageSettings(id),
+      onDockMovePage:(id,direction)=>this._moveDockPage(id,direction),
+      onDockDeletePage:id=>this._deleteDockPage(id),
+      onDockMainBack:()=>this._openSettings(),
+      onDockRenamePage:(id,name)=>this._renameDockPage(id,name),
+      onDockIconChange:(id,icon)=>this._changeDockPageIcon(id,icon),
+      onDockPositionChange:v=>this._applyDockPositionFromSettings(v),
+      onWallpaperImport:(mode,payload)=>this._saveCustomWallpaper(mode,payload),
+      onWallpaperReset:mode=>this._resetCustomWallpaper(mode),
+    },
   });
-
-  return {
-    ...settingsState,
-    onClose:()=>scope==="screensaver"?this._closeScreensaverSettings():this._closeSettings(),
-    onLanguageChange:v=>this._applyLanguageFromSettings(v),
-    onThemeChange:v=>this._applyThemeFromSettings(v),
-    onThemeStyleChange:v=>this._applyThemeStyleFromSettings(v),
-    onIosGlassChange:v=>this._applyIosGlassFromSettings(v),
-    onAccentChange:v=>this._applyAccentFromSettings(v),
-    onAccentModeChange:v=>this._applyAccentModeFromSettings(v),
-    onAccentPaletteExpandedChange:v=>this._setAccentPaletteExpanded(v),
-    onIconShapeChange:v=>this._applyIconShapeFromSettings(v),
-    onHideHaSidebarChange:v=>this._applyHideHaSidebarFromSettings(v),
-    onScreensaverEnabledChange:v=>this._applyScreensaverEnabledFromSettings(v),
-    onScreensaverDelayChange:v=>this._applyScreensaverDelayFromSettings(v),
-    onScreensaverPreviewChange:v=>this._applyScreensaverPreviewFromSettings(v),
-    onScreensaverNowBarChange:v=>this._applyScreensaverNowBarFromSettings(v),
-    onScreensaverNowBarItemChange:(item,enabled)=>this._applyScreensaverNowBarItemFromSettings(item,enabled),
-    onScreensaverNowBarTileEnabledChange:(tile,enabled)=>this._applyScreensaverNowBarTileEnabledFromSettings(tile,enabled),
-    onScreensaverNowBarEntitySelectionChange:(section,entityId,selected)=>this._applyScreensaverNowBarEntitySelectionFromSettings(section,entityId,selected),
-    onScreensaverNowBarNowItemChange:(item,selected)=>this._applyScreensaverNowBarNowItemFromSettings(item,selected),
-    onScreensaverClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),
-    onResetGrid:()=>this.resetGrid(),
-    onOpenWallpaperSettings:()=>this._openWallpaperSettings(),
-    onOpenNowBarSettings:()=>this._openNowBarSettings(),
-    onWallpaperMainBack:()=>this._openSettings(),
-    onOpenDockSettings:()=>this._openDockSettings(),
-    onDockBack:()=>this._openDockSettings(),
-    onDockPageSelect:id=>this._openDockPageSettings(id),
-    onDockMovePage:(id,direction)=>this._moveDockPage(id,direction),
-    onDockDeletePage:id=>this._deleteDockPage(id),
-    onDockMainBack:()=>this._openSettings(),
-    onDockRenamePage:(id,name)=>this._renameDockPage(id,name),
-    onDockIconChange:(id,icon)=>this._changeDockPageIcon(id,icon),
-    onDockPositionChange:v=>this._applyDockPositionFromSettings(v),
-    onWallpaperImport:(mode,payload)=>this._saveCustomWallpaper(mode,payload),
-    onWallpaperReset:mode=>this._resetCustomWallpaper(mode),
-  };
 }
 
 _migrateLegacyCustomWallpaper(){
@@ -739,19 +730,8 @@ async _syncAutoAccentFromWallpaper(){
 _isMobileLandscapeLayout(){
   return this._isMobileLauncherLayout()&&window.matchMedia?.("(orientation: landscape)")?.matches;
 }
-_createWidgetManagerPanel(){
-  return createWidgetManagerPanel({
-    open:this._widgetManagerOpen,
-    activeCategory:this._widgetManagerCategory,
-    categories:WIDGET_MANAGER_CATEGORIES,
-    onClose:()=>this._closeWidgetManager(),
-    onBack:()=>this._showWidgetManagerCategories(),
-    onSelectCategory:id=>this._selectWidgetManagerCategory(id),
-    onSelectWidget:item=>this._beginWidgetPlacement(item),
-  });
-}
 _syncWidgetManagerDom(){
-  syncWidgetManagerPanel(this.shadowRoot,{
+  syncWidgetManagerPanel(this.shadowRoot,buildWidgetManagerPanelProps({
     open:this._widgetManagerOpen,
     activeCategory:this._widgetManagerCategory,
     categories:WIDGET_MANAGER_CATEGORIES,
@@ -759,7 +739,7 @@ _syncWidgetManagerDom(){
     onBack:()=>this._showWidgetManagerCategories(),
     onSelectCategory:id=>this._selectWidgetManagerCategory(id),
     onSelectWidget:item=>this._beginWidgetPlacement(item),
-  });
+  }));
 }
 _openWidgetManager(){
   if(!this._isEditing||this._isMobileLandscapeLayout())return;
@@ -830,25 +810,15 @@ _startWidgetPlacement(widget){
   this._syncEditModeDom();
   this._syncWidgetDropSlots();
 }
-_createWidgetConfigPanel(){
-  return createWidgetConfigPanel({
-    session:this._widgetConfigSession,
-    hass:this._hass,
-    visibilityConfig:this._entityVisibilityConfig,
-    onCancel:()=>this._closeWidgetConfig(),
-    onSave:()=>this._saveWidgetConfig(),
-    onRerender:()=>this._syncWidgetConfigDom(),
-  });
-}
 _syncWidgetConfigDom(){
-  syncWidgetConfigPanel(this.shadowRoot,{
+  syncWidgetConfigPanel(this.shadowRoot,buildWidgetConfigPanelProps({
     session:this._widgetConfigSession,
     hass:this._hass,
     visibilityConfig:this._entityVisibilityConfig,
     onCancel:()=>this._closeWidgetConfig(),
     onSave:()=>this._saveWidgetConfig(),
     onRerender:()=>this._syncWidgetConfigDom(),
-  });
+  }));
 }
 _closeWidgetConfig(){
   this._widgetConfigSession=null;
@@ -917,9 +887,6 @@ _openScenesButtonConfig(id,buttonIndex){
   this._syncEditModeDom();
   this._syncWidgetConfigDom();
 }
-_createSettingsPanel(){
-  return createSettingsPanel(this._getSettingsPanelProps("all"));
-}
 _openScreensaverSettings(){
   this._screensaverSettingsOpen=true;
   this._syncScreensaverSettingsDom();
@@ -929,14 +896,11 @@ _closeScreensaverSettings(){
   this._syncScreensaverSettingsDom();
 }
 _syncScreensaverSettingsDom(){
-  const existing=this.shadowRoot.querySelector('.mha-settings-panel[data-settings-scope="screensaver"]');
   this.classList.toggle("is-screensaver-settings-open",this._screensaverSettingsOpen);
   this.dataset.screensaverSettingsOpen=String(this._screensaverSettingsOpen);
-  replaceSettingsPanelPreservingUiState({
+  syncSettingsPanels({
     root:this.shadowRoot,
-    existing,
-    next:createSettingsPanel(this._getSettingsPanelProps("screensaver")),
-    updatePanel:updateSettingsPanel,
+    props:this._getSettingsPanelsProps(),
   });
 }
 
@@ -1450,20 +1414,14 @@ _createPageFromCreator(){
   if(!this._isEditing||this._isMobileLandscapeLayout())return;
   this._addGridPage({icon:this._newPageIcon||"grid"});
 }
-_getPageCreatorPanelProps(){
-  return {
+_syncPageCreatorDom(){
+  syncPageCreatorPanel(this.shadowRoot,buildPageCreatorPanelProps({
     open:this._pageCreatorOpen,
     selectedIcon:this._newPageIcon||"grid",
     onClose:()=>this._closePageCreator(),
     onSelectIcon:icon=>this._setPageCreatorIcon(icon),
     onCreate:()=>this._createPageFromCreator(),
-  };
-}
-_createPageCreatorPanel(){
-  return createPageCreatorPanel(this._getPageCreatorPanelProps());
-}
-_syncPageCreatorDom(){
-  syncPageCreatorPanel(this.shadowRoot,this._getPageCreatorPanelProps());
+  }));
 }
 
 _updateDockActiveState(){
@@ -2250,12 +2208,34 @@ _appendDeferredUi({layout,renderId}){
     if(layout!=="mobile"){
       this.shadowRoot.append(createMobileDock(this._getDockProps()));
     }
+    const settingsPanels=this._getSettingsPanelsProps();
     this.shadowRoot.append(this._createScreensaverElement());
-    this.shadowRoot.append(this._createSettingsPanel());
-    this.shadowRoot.append(this._createWidgetManagerPanel());
-    this.shadowRoot.append(this._createPageCreatorPanel());
-    this.shadowRoot.append(this._createWidgetConfigPanel());
-    this.shadowRoot.append(createSettingsPanel(this._getSettingsPanelProps("screensaver")));
+    this.shadowRoot.append(createSettingsPanel(settingsPanels.all));
+    this.shadowRoot.append(createWidgetManagerPanel(buildWidgetManagerPanelProps({
+      open:this._widgetManagerOpen,
+      activeCategory:this._widgetManagerCategory,
+      categories:WIDGET_MANAGER_CATEGORIES,
+      onClose:()=>this._closeWidgetManager(),
+      onBack:()=>this._showWidgetManagerCategories(),
+      onSelectCategory:id=>this._selectWidgetManagerCategory(id),
+      onSelectWidget:item=>this._beginWidgetPlacement(item),
+    })));
+    this.shadowRoot.append(createPageCreatorPanel(buildPageCreatorPanelProps({
+      open:this._pageCreatorOpen,
+      selectedIcon:this._newPageIcon||"grid",
+      onClose:()=>this._closePageCreator(),
+      onSelectIcon:icon=>this._setPageCreatorIcon(icon),
+      onCreate:()=>this._createPageFromCreator(),
+    })));
+    this.shadowRoot.append(createWidgetConfigPanel(buildWidgetConfigPanelProps({
+      session:this._widgetConfigSession,
+      hass:this._hass,
+      visibilityConfig:this._entityVisibilityConfig,
+      onCancel:()=>this._closeWidgetConfig(),
+      onSave:()=>this._saveWidgetConfig(),
+      onRerender:()=>this._syncWidgetConfigDom(),
+    })));
+    this.shadowRoot.append(createSettingsPanel(settingsPanels.screensaver));
     this._syncEditModeDom();
     this._syncScreensaverVisibilityState();
     this._scheduleIconSymbolRefresh();
