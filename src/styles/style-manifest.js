@@ -29,6 +29,7 @@ const STATIC_STYLE_MANIFEST_AFTER_THEMES = Object.freeze([
   entry("styles/settings/settings-panel.css", "component"),
   entry("styles/widget-manager/widget-manager.css", "component"),
   entry("styles/widget-manager/widget-config-popup.css", "component"),
+  entry("styles/panels/panel-surface-contract.css", "component"),
   entry("styles/themes/light-text-contract.css", "theme"),
   entry("styles/widgets/widget-layout.css", "structure"),
   entry("styles/widgets/widget-shell.css", "structure"),
