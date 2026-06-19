@@ -2,7 +2,10 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { normalizeWidgetSize } from "../src/layout/layout-engine.js";
 import {
+  getWidgetCapabilities,
   getWidgetConfigType,
+  getWidgetPlacementFlow,
+  getWidgetShellBehavior,
   normalizeWidgetContract,
   resolveWidgetKind,
 } from "../src/widgets/widget-registry.js";
@@ -24,6 +27,25 @@ test("weather-capable widgets expose configuration without affecting other clock
   assert.equal(getWidgetConfigType({ kind: "scenes" }), "scenes");
   assert.equal(getWidgetConfigType({ kind: "clock", variant: "digital-weather" }), "weather");
   assert.equal(getWidgetConfigType({ kind: "clock", variant: "digital" }), "");
+});
+
+test("widget capabilities and flows are read from the widget contract", () => {
+  assert.equal(getWidgetCapabilities({ kind: "clock", variant: "digital" }).configurable, false);
+  assert.equal(getWidgetCapabilities({ kind: "clock", variant: "digital-weather" }).weatherEntityConfigurable, true);
+  assert.equal(getWidgetShellBehavior({ kind: "scenes" }).configureMode, "variant");
+  assert.equal(getWidgetPlacementFlow({ kind: "scenes" }), "slot-config-first");
+  assert.equal(getWidgetPlacementFlow({ kind: "button" }), "configure-first");
+  assert.equal(getWidgetPlacementFlow({ kind: "clock" }), "direct");
+});
+
+test("widget manager visibility is declared in widget definitions", async () => {
+  const { WIDGET_REGISTRY } = await import("../src/widgets/widget-registry.js");
+  assert.equal(WIDGET_REGISTRY.empty.manager.hidden, true);
+  assert.equal(WIDGET_REGISTRY["toggle-buttons"].manager.hidden, true);
+  assert.equal(
+    WIDGET_REGISTRY.slider.manager.entries.some((entry) => entry.variant === "temperature-slider" && entry.hidden),
+    true,
+  );
 });
 
 test("normalization preserves button and weather entity bindings", () => {

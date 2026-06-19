@@ -216,6 +216,7 @@ export const TOGGLE_SLIDER_WIDGET_DEFINITION = Object.freeze({
   component: "toggle-slider-widget",
   category: "lights",
   manager: Object.freeze({
+    hidden: false,
     entries: Object.freeze([
       Object.freeze({ category: "lights", variant: "toggle-slider", label: "Combined light", size: freezeSize(4, 2), description: "State and brightness in one tile.", order: 10 }),
     ]),
@@ -237,6 +238,26 @@ export const TOGGLE_SLIDER_WIDGET_DEFINITION = Object.freeze({
   defaultVariant: "toggle-slider",
   defaultSize: freezeSize(4, 2),
   normalizeSize: (size) => ({ ...clampWidth(size, 3, 4), h: 2 }),
+  capabilities: Object.freeze({
+    configurable: true,
+    resizable: true,
+    slotConfigurable: false,
+    weatherEntityConfigurable: false,
+  }),
+  storage: Object.freeze({
+    normalize: (widget = {}) => {
+      const entityId = widget.lightEntityId || widget.entityId || widget.entity_id || "";
+      return {
+        lightEntityId: entityId,
+        entityId,
+        sliderMode: "brightness",
+      };
+    },
+  }),
+  shell: Object.freeze({
+    configureMode: "config",
+  }),
+  placementFlow: "configure-first",
   variants: [
     variant("toggle-slider", "Combined 3×2", 3, 2),
     variant("toggle-slider", "Combined 4×2", 4, 2),

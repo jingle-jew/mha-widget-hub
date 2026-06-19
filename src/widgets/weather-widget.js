@@ -194,6 +194,7 @@ export const WEATHER_WIDGET_DEFINITION = Object.freeze({
   component: "weather-widget",
   category: "climate",
   manager: Object.freeze({
+    hidden: false,
     entries: Object.freeze([
       Object.freeze({ category: "climate", variant: "adaptive-weather", label: "Horizontal weather", size: freezeSize(4, 1), description: "Icon and temperature.", order: 10 }),
       Object.freeze({ category: "climate", variant: "adaptive-weather", label: "Compact weather", size: freezeSize(2, 2), description: "Icon and temperature.", order: 20 }),
@@ -215,6 +216,22 @@ export const WEATHER_WIDGET_DEFINITION = Object.freeze({
     if (size.w >= 3) return { w: 3, h: 2 };
     return { w: 2, h: 2 };
   },
+  capabilities: Object.freeze({
+    configurable: true,
+    resizable: true,
+    slotConfigurable: false,
+    weatherEntityConfigurable: false,
+  }),
+  storage: Object.freeze({
+    normalize: (widget = {}) => ({
+      entityId: widget.entityId || widget.entity_id || "",
+      forecastType: widget.forecastType === "hourly" ? "hourly" : "daily",
+    }),
+  }),
+  shell: Object.freeze({
+    configureMode: "config",
+  }),
+  placementFlow: "configure-first",
   variants: [
     variant("adaptive-weather", "Horizontal 4×1", 4, 1),
     variant("adaptive-weather", "Compact 2×2", 2, 2),

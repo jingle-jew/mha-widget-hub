@@ -17,6 +17,7 @@ const EMPTY_WIDGET_DEFINITION = Object.freeze({
   component: "empty-widget",
   category: "custom",
   manager: Object.freeze({
+    hidden: true,
     entries: Object.freeze([
       Object.freeze({ category: "lights", variant: "light-toggle", label: "Light tile", size: freezeSize(2, 2), description: "Simple control.", order: 30 }),
       Object.freeze({ category: "climate", variant: "climate-compact", label: "Compact climate", size: freezeSize(2, 2), description: "Quick temperature.", order: 50 }),
@@ -36,6 +37,17 @@ const EMPTY_WIDGET_DEFINITION = Object.freeze({
   aliases: ["empty-widget"],
   variantAliases: [],
   defaultSize: freezeSize(2, 2),
+  capabilities: Object.freeze({
+    configurable: false,
+    resizable: true,
+    slotConfigurable: false,
+    weatherEntityConfigurable: false,
+  }),
+  storage: Object.freeze({}),
+  shell: Object.freeze({
+    configureMode: "variant",
+  }),
+  placementFlow: "direct",
 });
 
 const EMPTY_WIDGET_MODULE = Object.freeze({

@@ -287,6 +287,7 @@ export const CLOCK_WIDGET_DEFINITION = Object.freeze({
   component: "clock-widget",
   category: "utilities",
   manager: Object.freeze({
+    hidden: false,
     entries: Object.freeze([
       Object.freeze({ category: "utilities", variant: "digital", label: "Digital clock", size: freezeSize(2, 2), description: "Time and date.", order: 10 }),
       Object.freeze({ category: "utilities", variant: "digital-weather", label: "Digital weather", size: freezeSize(2, 2), description: "Time, date, and current weather.", order: 20 }),
@@ -302,6 +303,26 @@ export const CLOCK_WIDGET_DEFINITION = Object.freeze({
   defaultVariant: "digital",
   defaultSize: freezeSize(2, 2),
   normalizeSize: () => ({ w: 2, h: 2 }),
+  capabilities: Object.freeze({
+    configurable: false,
+    resizable: true,
+    slotConfigurable: false,
+    weatherEntityConfigurable: (widget = {}) => widget.variant === "digital-weather",
+  }),
+  storage: Object.freeze({
+    normalize: (widget = {}, { definition }) => (
+      definition.variantAliases.includes(widget.variant)
+        ? {
+          variant: widget.variant,
+          entityId: widget.entityId || widget.entity_id || "",
+        }
+        : {}
+    ),
+  }),
+  shell: Object.freeze({
+    configureMode: "variant",
+  }),
+  placementFlow: "direct",
   variants: [
     variant("digital", "Digital", 2, 2),
     variant("digital-weather", "Digital weather", 2, 2),

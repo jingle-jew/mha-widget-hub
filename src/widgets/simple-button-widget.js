@@ -265,6 +265,7 @@ export const SIMPLE_BUTTON_WIDGET_DEFINITION = Object.freeze({
   component: "button-widget",
   category: "actions",
   manager: Object.freeze({
+    hidden: false,
     entries: Object.freeze([
       Object.freeze({ category: "actions", variant: "simple-button", label: "Simple button", size: freezeSize(2, 1), description: "Icon, label, and state.", order: 10 }),
       Object.freeze({ category: "actions", variant: "simple-button", label: "Square button", size: freezeSize(2, 2), description: "Home-inspired action tile.", order: 20 }),
@@ -281,6 +282,21 @@ export const SIMPLE_BUTTON_WIDGET_DEFINITION = Object.freeze({
   normalizeSize: (size) => size.h >= 2
     ? { w: 2, h: 2 }
     : { ...clampWidth(size, 2, 4), h: 1 },
+  capabilities: Object.freeze({
+    configurable: true,
+    resizable: true,
+    slotConfigurable: false,
+    weatherEntityConfigurable: false,
+  }),
+  storage: Object.freeze({
+    normalize: (widget = {}) => ({
+      entityId: widget.entityId || widget.entity_id || "",
+    }),
+  }),
+  shell: Object.freeze({
+    configureMode: "config",
+  }),
+  placementFlow: "configure-first",
   variants: [
     variant("simple-button", "Pill 2×1", 2, 1),
     variant("simple-button", "Pill 3×1", 3, 1),

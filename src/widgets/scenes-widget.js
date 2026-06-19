@@ -202,6 +202,7 @@ export const SCENES_WIDGET_DEFINITION = Object.freeze({
   component: "scenes-widget",
   category: "actions",
   manager: Object.freeze({
+    hidden: false,
     entries: Object.freeze([
       Object.freeze({
         category: "actions",
@@ -222,6 +223,26 @@ export const SCENES_WIDGET_DEFINITION = Object.freeze({
   defaultVariant: "modes-routines-2x2",
   defaultSize: freezeSize(2, 2),
   normalizeSize: () => freezeSize(2, 2),
+  capabilities: Object.freeze({
+    configurable: true,
+    resizable: true,
+    slotConfigurable: true,
+    weatherEntityConfigurable: false,
+  }),
+  storage: Object.freeze({
+    normalize: (widget = {}) => ({
+      buttons: Array.isArray(widget.buttons)
+        ? widget.buttons.map((button) => ({
+          ...button,
+          entityId: button?.entityId || button?.entity_id || "",
+        }))
+        : [],
+    }),
+  }),
+  shell: Object.freeze({
+    configureMode: "variant",
+  }),
+  placementFlow: "slot-config-first",
   variants: [
     variant("modes-routines-2x2", "Modes & routines 2×2", 2, 2),
   ],

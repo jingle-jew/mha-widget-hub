@@ -86,6 +86,7 @@ import { getNextWidgetVariantEntries, getVariantCandidate, sameVariantSize } fro
 import { normalizeStoredWidgetContract } from "./src/widgets/widget-storage.js?v=phase1";
 import { createWidgetFromCatalogItem } from "./src/widgets/widget-factory.js";
 import {updateClockWidgets} from "./src/widgets/clock-widget.js";
+import { getWidgetPlacementFlow } from "./src/widgets/widget-registry.js?v=phase5b1";
 import {DEFAULT_WIDGETS,getActiveGridRows,getActiveGridUnits,getEffectiveLayout,getInternalGridColumnCountFromLogical,getInternalGridRowCountFromLogical,getLayoutMode,getGridPreset,getWidgetDensity,normalizeWidgetForKind,normalizeWidgetSize,sizeToString} from "./src/layout/layout-engine.js";
 import {
   doesWidgetGroupExactlyFillRect,
@@ -789,11 +790,24 @@ _createWidgetFromCatalogItem(item){
 _beginWidgetPlacement(item){
   if(!this._isEditing||this._isMobileLandscapeLayout())return;
   const widget=this._createWidgetFromCatalogItem(item);
-  if(widget?.kind==="scenes"){
+  const placementFlow=getWidgetPlacementFlow(widget);
+  if(placementFlow==="direct"){
     this._startWidgetPlacement(widget);
     return;
   }
-  if(supportsWidgetConfiguration(widget)){
+  if(placementFlow==="slot-config-first"){
+    this._widgetManagerOpen=false;
+    this._widgetManagerCategory="";
+    this._widgetConfigSession=createWidgetConfigSession(widget,this._hass,{
+      mode:"create",
+      visibilityConfig:this._entityVisibilityConfig,
+    });
+    this._widgetConfigHassReady=Boolean(this._hass);
+    this._syncWidgetManagerDom();
+    this._syncWidgetConfigDom();
+    return;
+  }
+  if(placementFlow==="configure-first"&&supportsWidgetConfiguration(widget)){
     this._widgetManagerOpen=false;
     this._widgetManagerCategory="";
     this._widgetConfigSession=createWidgetConfigSession(widget,this._hass,{

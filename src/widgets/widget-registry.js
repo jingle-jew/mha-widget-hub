@@ -1,6 +1,20 @@
 import { WIDGET_MODULES } from "./widget-module-registry.js";
 
 const STATIC_PREVIEW_RENDERER = Object.freeze({ mode: "static" });
+const DEFAULT_MANAGER = Object.freeze({
+  entries: Object.freeze([]),
+  hidden: false,
+});
+const DEFAULT_CAPABILITIES = Object.freeze({
+  configurable: false,
+  resizable: true,
+  slotConfigurable: false,
+  weatherEntityConfigurable: false,
+});
+const DEFAULT_SHELL = Object.freeze({
+  configureMode: "variant",
+});
+const DEFAULT_STORAGE = Object.freeze({});
 
 function normalizePreviewRenderer(module = {}) {
   const previewRenderer = module.preview || STATIC_PREVIEW_RENDERER;
@@ -43,6 +57,110 @@ function catalogKeyForEntry(entry = {}) {
     .replace(/^-|-$/g, "");
 }
 
+function normalizeManagerEntry(entry = {}) {
+  return Object.freeze({
+    ...entry,
+    hidden: Boolean(entry.hidden),
+  });
+}
+
+function normalizeManagerDefinition(definition = {}) {
+  const manager = definition.manager || DEFAULT_MANAGER;
+  return Object.freeze({
+    ...DEFAULT_MANAGER,
+    ...manager,
+    hidden: Boolean(manager.hidden),
+    entries: Object.freeze((manager.entries || []).map(normalizeManagerEntry)),
+  });
+}
+
+function normalizeCapabilities(definition = {}) {
+  return Object.freeze({
+    ...DEFAULT_CAPABILITIES,
+    configurable: Boolean(definition.config),
+    ...definition.capabilities,
+  });
+}
+
+function normalizeShellBehavior(definition = {}) {
+  return Object.freeze({
+    ...DEFAULT_SHELL,
+    configureMode: definition.config ? "config" : "variant",
+    ...definition.shell,
+  });
+}
+
+function normalizeStorage(definition = {}) {
+  return Object.freeze({
+    ...DEFAULT_STORAGE,
+    ...(definition.storage || {}),
+  });
+}
+
+function resolveContractValue(value, widget, definition) {
+  return typeof value === "function" ? value(widget, definition) : value;
+}
+
+function getLegacyNormalizedContract(widget = {}, definition, normalized) {
+  const kind = normalized.kind;
+
+  if (kind === "clock" && definition.variantAliases.includes(widget.variant)) {
+    return {
+      variant: widget.variant,
+      entityId: widget.entityId || widget.entity_id || "",
+    };
+  }
+
+  if (kind === "slider") {
+    return {
+      variant: widget.variant || normalized.variant,
+      entityId: widget.entityId || widget.entity_id || "",
+      sliderAction: widget.sliderAction === "volume" || widget.sliderAction === "brightness"
+        ? widget.sliderAction
+        : widget.variant === "volume-slider"
+          ? "volume"
+          : "brightness",
+    };
+  }
+
+  if (kind === "toggle") {
+    return {
+      entityId: widget.entityId || widget.entity_id || "",
+    };
+  }
+
+  if (kind === "button" || kind === "weather") {
+    return {
+      entityId: widget.entityId || widget.entity_id || "",
+      ...(kind === "weather"
+        ? { forecastType: widget.forecastType === "hourly" ? "hourly" : "daily" }
+        : {}),
+    };
+  }
+
+  if (kind === "scenes") {
+    return {
+      buttons: Array.isArray(widget.buttons)
+        ? widget.buttons.map((button) => ({
+          ...button,
+          entityId: button?.entityId || button?.entity_id || "",
+        }))
+        : [],
+    };
+  }
+
+  if (kind === "toggle-slider") {
+    const entityId = widget.lightEntityId || widget.entityId || widget.entity_id || "";
+    return {
+      lightEntityId: entityId,
+      entityId,
+      sliderMode: "brightness",
+    };
+  }
+
+  return {};
+}
+
 Object.entries(DEFINITIONS).forEach(([kind, definition]) => {
   aliasToKind.set(kind, kind);
   definition.aliases.forEach(alias => aliasToKind.set(alias, kind));
@@ -65,10 +183,10 @@ export function getWidgetManagerCategories() {
   const categoryById = new Map(categories.map(category => [category.id, category]));
   
   Object.entries(DEFINITIONS).forEach(([kind, definition]) => {
-    if (["empty", "toggle-buttons"].includes(kind)) return;
+    if (definition.manager?.hidden) return;
     
     definition.manager?.entries?.forEach(entry => {
-      if (entry.variant === "temperature-slider") return;
+      if (entry.hidden) return;
       
       const category = categoryById.get(entry.category);
       if (!category) return;
@@ -108,7 +226,11 @@ export const WIDGET_REGISTRY = Object.freeze(
             ...definition,
             aliases: Object.freeze([...definition.aliases]),
             variantAliases: Object.freeze([...definition.variantAliases]),
-            manager: definition.manager,
+            manager: normalizeManagerDefinition(definition),
+            capabilities: normalizeCapabilities(definition),
+            storage: normalizeStorage(definition),
+            shell: normalizeShellBehavior(definition),
+            placementFlow: definition.placementFlow || (definition.config ? "configure-first" : "direct"),
             css: Object.freeze([...(definition.css || [])]),
             previewRenderer: normalizePreviewRenderer(module),
             variants: Object.freeze([...(definition.variants || [])]),
@@ -150,11 +272,45 @@ export function getWidgetPreviewRenderer(widgetOrKind = {}) {
   return getWidgetDefinition(widgetOrKind)?.previewRenderer || STATIC_PREVIEW_RENDERER;
 }
 
+export function getWidgetCapabilities(widget = {}) {
+  const definition = getWidgetDefinition(widget);
+  if (!definition) return DEFAULT_CAPABILITIES;
+
+  return Object.freeze(
+    Object.fromEntries(
+      Object.entries(definition.capabilities || DEFAULT_CAPABILITIES).map(([key, value]) => [
+        key,
+        resolveContractValue(value, widget, definition),
+      ]),
+    ),
+  );
+}
+
+export function getWidgetShellBehavior(widget = {}) {
+  const definition = getWidgetDefinition(widget);
+  if (!definition) return DEFAULT_SHELL;
+
+  return Object.freeze({
+    ...definition.shell,
+    configureMode: resolveContractValue(
+      definition.shell?.configureMode ?? DEFAULT_SHELL.configureMode,
+      widget,
+      definition,
+    ),
+  });
+}
+
+export function getWidgetPlacementFlow(widget = {}) {
+  const definition = getWidgetDefinition(widget);
+  if (!definition) return "direct";
+  return resolveContractValue(definition.placementFlow || "direct", widget, definition) || "direct";
+}
+
 export function getWidgetConfigType(widget = {}) {
   const definition = getWidgetDefinition(widget);
-  if (resolveWidgetKind(widget) === "clock") {
-    return widget.variant === "digital-weather" ? "weather" : "";
-  }
+  const capabilities = getWidgetCapabilities(widget);
+  if (capabilities.weatherEntityConfigurable) return "weather";
+  if (!capabilities.configurable) return "";
   return definition?.config || "";
 }
 
@@ -204,37 +360,20 @@ export function normalizeWidgetContract(widget = {}, normalizeBottomeSize) {
     h: size.h,
   };
 
-  if (kind === "clock" && definition.variantAliases.includes(widget.variant)) {
-    normalized.variant = widget.variant;
-    normalized.entityId = widget.entityId || widget.entity_id || "";
-  } else if (kind === "slider") {
-    normalized.variant = widget.variant || normalized.variant;
-    normalized.entityId = widget.entityId || widget.entity_id || "";
-    normalized.sliderAction = widget.sliderAction === "volume" || widget.sliderAction === "brightness"
-      ? widget.sliderAction
-      : widget.variant === "volume-slider"
-        ? "volume"
-        : "brightness";
-  } else if (kind === "toggle") {
-    normalized.entityId = widget.entityId || widget.entity_id || "";
-  } else if (kind === "button" || kind === "weather") {
-    normalized.entityId = widget.entityId || widget.entity_id || "";
-    if (kind === "weather") normalized.forecastType = widget.forecastType === "hourly" ? "hourly" : "daily";
-  } else if (kind === "scenes") {
-    normalized.buttons = Array.isArray(widget.buttons)
-      ? widget.buttons.map(button => ({
-        ...button,
-        entityId: button?.entityId || button?.entity_id || "",
-      }))
-      : [];
-  }
+  const normalizedPatch = definition.storage?.normalize?.(widget, {
+    definition,
+    kind,
+    normalizeBottomeSize,
+    normalizeRegisteredWidgetSize: (nextWidget = widget) => (
+      normalizeRegisteredWidgetSize(nextWidget, normalizeBottomeSize)
+    ),
+  });
 
-  if (kind === "toggle-slider") {
-    const entityId = widget.lightEntityId || widget.entityId || widget.entity_id || "";
-    normalized.lightEntityId = entityId;
-    normalized.entityId = entityId;
-    normalized.sliderMode = "brightness";
-  }
-
-  return normalized;
+  return {
+    ...normalized,
+    ...(
+      normalizedPatch
+      ?? getLegacyNormalizedContract(widget, definition, normalized)
+    ),
+  };
 }
