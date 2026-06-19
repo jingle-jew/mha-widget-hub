@@ -2,6 +2,7 @@ import { getWidgetManagerCategories } from "../widgets/widget-registry.js";
 import { createBackButton, createCloseButton } from "../system/system-buttons.js";
 import { createLiveWidgetPreview } from "../widgets/widget-preview-renderer.js";
 import { resolveWidgetKind } from "../widgets/widget-registry.js";
+import { createPanelShell } from "../panels/panel-shell.js";
 import { t } from "../i18n/index.js";
 export { WIDGET_VARIANTS, getWidgetVariants, getNextWidgetVariantEntries } from "../widgets/widget-variants.js";
 
@@ -109,27 +110,7 @@ function createWidgetButton(category, item, onSelectWidget) {
 
 export function createWidgetManager({open=false,activeCategory="",categories=WIDGET_MANAGER_CATEGORIES,onClose,onBack,onSelectCategory,onSelectWidget} = {}) {
   const selectedCategory = categories.find((category) => category.id === activeCategory) || null;
-  const root = document.createElement("aside");
-  root.className = "mha-widget-manager-panel mha-settings-panel";
-  root.dataset.open = String(Boolean(open));
-  root.dataset.view = selectedCategory ? "widgets" : "categories";
-  root.setAttribute("aria-hidden", String(!open));
-  root.hidden = !open;
-  const scrim = document.createElement("button");
-  scrim.className = "mha-widget-manager-scrim mha-settings-scrim";
-  scrim.type = "button";
-  scrim.setAttribute("aria-label", t("widgets.manager.close", "Close widget manager"));
-  scrim.addEventListener("click", (event) => { event.stopPropagation(); onClose?.(); });
-  const sheet = document.createElement("div");
-  sheet.className = "mha-widget-manager-sheet mha-settings-sheet";
-  sheet.setAttribute("role", "dialog");
-  sheet.setAttribute("aria-modal", "true");
-  sheet.setAttribute("aria-label", t("widgets.manager.ariaLabel", "Widget manager"));
-  ["pointerdown","pointerup","click","touchstart","touchmove","touchend","wheel"].forEach((type) => {
-    root.addEventListener(type, (event) => event.stopPropagation(), { passive: type !== "wheel" });
-  });
-  const header = document.createElement("header");
-  header.className = "mha-widget-manager-header mha-settings-header";
+
   const title = document.createElement("div");
   title.className = "mha-settings-title-block";
   const eyebrow = document.createElement("span");
@@ -139,6 +120,7 @@ export function createWidgetManager({open=false,activeCategory="",categories=WID
   h2.className = "mha-settings-title";
   h2.textContent = selectedCategory ? t(`widgets.categories.${selectedCategory.id}`, selectedCategory.label) : t("widgets.manager.title", "Widgets");
   title.append(eyebrow, h2);
+
   const actions = document.createElement("div");
   actions.className = "mha-widget-manager-actions";
   if (selectedCategory) {
@@ -155,7 +137,7 @@ export function createWidgetManager({open=false,activeCategory="",categories=WID
     onClick: () => onClose?.(),
   });
   actions.append(close);
-  header.append(title, actions);
+
   const body = document.createElement("div");
   body.className = "mha-widget-manager-body mha-settings-body";
   if (selectedCategory) {
@@ -169,7 +151,30 @@ export function createWidgetManager({open=false,activeCategory="",categories=WID
     categories.forEach((category) => grid.append(createCategoryButton(category, onSelectCategory)));
     body.append(grid);
   }
-  sheet.append(header, body);
-  root.append(scrim, sheet);
+
+  const root = createPanelShell({
+    open,
+    rootClassName: "mha-widget-manager-panel mha-settings-panel",
+    scrimClassName: "mha-widget-manager-scrim mha-settings-scrim",
+    sheetClassName: "mha-widget-manager-sheet mha-settings-sheet",
+    headerClassName: "mha-widget-manager-header mha-settings-header",
+    closeClassName: "mha-settings-close",
+    title: selectedCategory ? t(`widgets.categories.${selectedCategory.id}`, selectedCategory.label) : t("widgets.manager.title", "Widgets"),
+    ariaLabel: t("widgets.manager.ariaLabel", "Widget manager"),
+    closeLabel: t("common.close", "Close"),
+    scrimLabel: t("widgets.manager.close", "Close widget manager"),
+    onClose: () => onClose?.(),
+    children: [body],
+  });
+  root.dataset.view = selectedCategory ? "widgets" : "categories";
+  root.hidden = !open;
+
+  const header = root.querySelector(".mha-widget-manager-header");
+  header?.replaceChildren(title, actions);
+
+  ["pointerdown","pointerup","click","touchstart","touchmove","touchend","wheel"].forEach((type) => {
+    root.addEventListener(type, (event) => event.stopPropagation(), { passive: type !== "wheel" });
+  });
+
   return root;
 }
