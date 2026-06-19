@@ -6,10 +6,6 @@ import {
 import { appendLayoutModeControl } from "./layout-mode-control.js";
 import { replaceSettingsPanelPreservingUiState } from "./settings-panel-orchestrator.js";
 
-function createPanelWithEnhancements(createPanel, props) {
-  return appendLayoutModeControl(createPanel(props));
-}
-
 export function buildSettingsCoordinatorProps({
   settingsOpen = false,
   screensaverSettingsOpen = false,
@@ -77,14 +73,14 @@ export function syncSettingsPanels({
   const all = replaceSettingsPanelPreservingUiState({
     root,
     existing: root?.querySelector?.('.mha-settings-panel[data-settings-scope="all"]'),
-    next: createPanelWithEnhancements(createPanel, props.all),
+    next: appendLayoutModeControl(createPanel(props.all)),
     updatePanel,
   });
 
   const screensaver = replaceSettingsPanelPreservingUiState({
     root,
     existing: root?.querySelector?.('.mha-settings-panel[data-settings-scope="screensaver"]'),
-    next: createPanelWithEnhancements(createPanel, props.screensaver),
+    next: appendLayoutModeControl(createPanel(props.screensaver)),
     updatePanel,
   });
 

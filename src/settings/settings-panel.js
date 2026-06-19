@@ -3,6 +3,12 @@ import { createToggle } from "../ui/toggle.js";
 import { createIcon } from "../ui/icon.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
 import { createBackButton, createCloseButton, createMoveUpButton, createMoveDownButton, createRemoveButton } from "../system/system-buttons.js";
+import { createPanelShell } from "../panels/panel-shell.js";
+import {
+  applyPanelSurfaceContract,
+  PANEL_MOBILE_PRESENTATIONS,
+  PANEL_SURFACE_ROLES,
+} from "../panels/panel-surface-contract.js";
 import { validateWallpaperFile } from "./wallpaper-storage.js";
 import { getThemeStyleOptions } from "./theme-registry.js";
 import {
@@ -231,6 +237,17 @@ function createWallpaperControls({ mode, wallpaper, onImport, onReset } = {}) {
 
   wrapper.append(status, actions, input, message, preview);
   return wrapper;
+}
+
+function finalizeSettingsPanel(root, header, body, onClose) {
+  const sheet = root.querySelector(".mha-settings-sheet");
+  const shellHeader = root.querySelector(".mha-settings-header");
+  shellHeader?.replaceWith(header);
+  sheet?.append(body);
+  root.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") onClose?.();
+  });
+  return root;
 }
 
 
@@ -898,29 +915,26 @@ export function createSettingsPanel({
   onWallpaperReset,
 } = {}) {
   const isScreensaverScope = scope === "screensaver";
-  const root = document.createElement("aside");
-  root.className = "mha-settings-panel";
+  const root = applyPanelSurfaceContract(createPanelShell({
+    open,
+    rootClassName: "mha-settings-panel",
+    scrimClassName: "mha-settings-scrim",
+    sheetClassName: "mha-settings-sheet",
+    headerClassName: "mha-settings-header",
+    closeClassName: "mha-settings-close",
+    title: "",
+    ariaLabel: isScreensaverScope ? t("settings.screensaver", "Screensaver") : t("settings.title", "Settings"),
+    closeLabel: t("common.close", "Close"),
+    scrimLabel: t("settings.closeSettings", "Close settings"),
+    onClose: () => onClose?.(),
+  }), {
+    surfaceRole: PANEL_SURFACE_ROLES.PANEL,
+    mobilePresentation: PANEL_MOBILE_PRESENTATIONS.SHEET,
+  });
   root.dataset.settingsScope = scope;
   root.dataset.settingsPage = isScreensaverScope ? "screensaver" : settingsPage;
-  root.dataset.open = String(Boolean(open));
   root.dataset.iconShape = effectiveIconShape;
-  root.setAttribute("aria-hidden", String(!open));
   root.hidden = !open;
-
-  const scrim = document.createElement("button");
-  scrim.className = "mha-settings-scrim";
-  scrim.type = "button";
-  scrim.setAttribute("aria-label", t("settings.closeSettings", "Close settings"));
-  scrim.addEventListener("click", (event) => {
-    event.stopPropagation();
-    onClose?.();
-  });
-
-  const sheet = document.createElement("div");
-  sheet.className = "mha-settings-sheet";
-  sheet.setAttribute("role", "dialog");
-  sheet.setAttribute("aria-modal", "true");
-  sheet.setAttribute("aria-label", isScreensaverScope ? t("settings.screensaver", "Screensaver") : t("settings.title", "Settings"));
   ["pointerdown", "pointerup", "click", "touchstart", "touchmove", "touchend", "wheel"].forEach((type) => {
     root.addEventListener(type, (event) => event.stopPropagation(), { passive: type !== "wheel" });
   });
@@ -997,10 +1011,7 @@ export function createSettingsPanel({
       }),
     ]));
     body.append(...sections);
-    sheet.append(header, body);
-    root.append(scrim, sheet);
-    root.addEventListener("keydown", (event) => { if (event.key === "Escape") onClose?.(); });
-    return root;
+    return finalizeSettingsPanel(root, header, body, onClose);
   }
 
   if (!isScreensaverScope && settingsPage === "dock-detail") {
@@ -1014,10 +1025,7 @@ export function createSettingsPanel({
       }),
     ]));
     body.append(...sections);
-    sheet.append(header, body);
-    root.append(scrim, sheet);
-    root.addEventListener("keydown", (event) => { if (event.key === "Escape") onClose?.(); });
-    return root;
+    return finalizeSettingsPanel(root, header, body, onClose);
   }
 
   if (!isScreensaverScope && settingsPage === "wallpaper") {
@@ -1038,10 +1046,7 @@ export function createSettingsPanel({
       }),
     ]));
     body.append(...sections);
-    sheet.append(header, body);
-    root.append(scrim, sheet);
-    root.addEventListener("keydown", (event) => { if (event.key === "Escape") onClose?.(); });
-    return root;
+    return finalizeSettingsPanel(root, header, body, onClose);
   }
 
   if (!isScreensaverScope && (settingsPage === "screensaver-nowbar" || settingsPage === "nowbar")) {
@@ -1068,10 +1073,7 @@ export function createSettingsPanel({
       onNowItemChange: onScreensaverNowBarNowItemChange,
     }));
     body.append(...sections);
-    sheet.append(header, body);
-    root.append(scrim, sheet);
-    root.addEventListener("keydown", (event) => { if (event.key === "Escape") onClose?.(); });
-    return root;
+    return finalizeSettingsPanel(root, header, body, onClose);
   }
 
   if (!isScreensaverScope) {
@@ -1201,12 +1203,5 @@ export function createSettingsPanel({
     body.append(createSection(t("settings.layout", "Layout"), [resetButton]));
   }
 
-  sheet.append(header, body);
-  root.append(scrim, sheet);
-
-  root.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") onClose?.();
-  });
-
-  return root;
+  return finalizeSettingsPanel(root, header, body, onClose);
 }

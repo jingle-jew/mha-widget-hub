@@ -1,0 +1,38 @@
+/*
+ * MHA panel surface contract.
+ *
+ * Desktop/tablet placement is role-based:
+ * - panel/subpanel: shell-bottom-end anchored panels
+ * - popup: popup/modal placement remains owned by the popup styles
+ *
+ * Mobile presentation is shared:
+ * - every surface marked as data-mobile-presentation="sheet" becomes a bottom sheet
+ */
+
+@media (min-width: 768px) {
+  [data-surface-role="panel"] > [role="dialog"],
+  [data-surface-role="subpanel"] > [role="dialog"] {
+    --mha-panel-shell-inset: var(--mha-shell-frame-inset, clamp(1rem, 2.6vw, 2rem));
+    --mha-panel-shell-top-gap: max(var(--mha-statusbar-reserved-top, var(--mha-panel-shell-inset)), var(--mha-panel-shell-inset));
+    inset-block-start: var(--mha-panel-shell-top-gap);
+    inset-block-end: var(--mha-panel-shell-inset);
+    inset-inline-end: var(--mha-panel-shell-inset);
+    max-block-size: calc(100dvh - var(--mha-panel-shell-top-gap) - var(--mha-panel-shell-inset));
+    transform-origin: right bottom;
+  }
+}
+
+@media (max-width: 767px) {
+  [data-mobile-presentation="sheet"] > [role="dialog"] {
+    --mha-mobile-sheet-top-gap: max(var(--mha-page-padding, clamp(.65rem, 2.5vw, 1rem)), env(safe-area-inset-top));
+    inset-inline: 0;
+    inset-block-start: var(--mha-mobile-sheet-top-gap);
+    inset-block-end: 0;
+    inline-size: auto;
+    max-inline-size: none;
+    max-block-size: calc(100dvh - var(--mha-mobile-sheet-top-gap));
+    border-end-start-radius: 0;
+    border-end-end-radius: 0;
+    transform-origin: bottom center;
+  }
+}

@@ -1,7 +1,12 @@
 import { buildPageCreatorState } from "./page-creator-props.js?v=phase6";
 import { createIcon } from "../ui/icon.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
-import { createCloseButton } from "../system/system-buttons.js";
+import { createPanelShell } from "../panels/panel-shell.js";
+import {
+  applyPanelSurfaceContract,
+  PANEL_MOBILE_PRESENTATIONS,
+  PANEL_SURFACE_ROLES,
+} from "../panels/panel-surface-contract.js";
 import { t } from "../i18n/index.js";
 
 export function createPageCreatorPanel({
@@ -15,33 +20,6 @@ export function createPageCreatorPanel({
     open,
     selectedIcon,
   });
-  const panel = document.createElement("section");
-  panel.className = "mha-page-creator";
-  panel.dataset.open = String(pageCreatorState.open);
-  panel.setAttribute("aria-hidden", String(!pageCreatorState.open));
-
-  const scrim = document.createElement("button");
-  scrim.className = "mha-page-creator-scrim";
-  scrim.type = "button";
-  scrim.setAttribute("aria-label", t("settings.pageCreatorClose", "Close icon picker"));
-  scrim.onclick = onClose;
-
-  const sheet = document.createElement("div");
-  sheet.className = "mha-page-creator-sheet";
-  sheet.setAttribute("role", "dialog");
-  sheet.setAttribute("aria-modal", "true");
-  sheet.setAttribute("aria-label", t("settings.pageCreatorTitle", "New page"));
-
-  const header = document.createElement("div");
-  header.className = "mha-page-creator-header";
-  const title = document.createElement("h2");
-  title.textContent = t("settings.pageCreatorTitle", "New page");
-  const close = createCloseButton({
-    label: t("common.close", "Close"),
-    className: "mha-page-creator-close",
-    onClick: onClose,
-  });
-  header.append(title, close);
 
   const hint = document.createElement("p");
   hint.className = "mha-page-creator-hint";
@@ -84,9 +62,23 @@ export function createPageCreatorPanel({
   create.onclick = onCreate;
   actions.append(cancel, create);
 
-  sheet.append(header, hint, grid, actions);
-  panel.append(scrim, sheet);
-  return panel;
+  return applyPanelSurfaceContract(createPanelShell({
+    open: pageCreatorState.open,
+    rootClassName: "mha-page-creator",
+    scrimClassName: "mha-page-creator-scrim",
+    sheetClassName: "mha-page-creator-sheet",
+    headerClassName: "mha-page-creator-header",
+    closeClassName: "mha-page-creator-close",
+    title: t("settings.pageCreatorTitle", "New page"),
+    ariaLabel: t("settings.pageCreatorTitle", "New page"),
+    closeLabel: t("common.close", "Close"),
+    scrimLabel: t("settings.pageCreatorClose", "Close icon picker"),
+    onClose,
+    children: [hint, grid, actions],
+  }), {
+    surfaceRole: PANEL_SURFACE_ROLES.POPUP,
+    mobilePresentation: PANEL_MOBILE_PRESENTATIONS.SHEET,
+  });
 }
 
 export function syncPageCreatorPanel(root, props) {
