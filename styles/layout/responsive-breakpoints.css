@@ -1,0 +1,18 @@
+/*
+ * Keep CSS-only dock desktop sizing aligned with the JS responsive contract.
+ *
+ * The app layout now remains tablet until 1400px. dock.css still has a legacy
+ * desktop sizing query at 1180px, so this override keeps 1180px..1399px in the
+ * tablet visual rhythm without touching mobile rules.
+ */
+@media (min-width: 1180px) and (max-width: 1399px) {
+  .mha-dock {
+    --mha-dock-empty-width: var(--mha-dock-unit-size);
+    --mha-dock-empty-height: auto;
+    --mha-icon-size: clamp(
+      calc(var(--mha-square-unit) - var(--mha-grid-gap) - var(--mha-grid-gap)),
+      calc(var(--mha-square-unit) - var(--mha-grid-gap)),
+      var(--mha-square-unit)
+    );
+  }
+}
