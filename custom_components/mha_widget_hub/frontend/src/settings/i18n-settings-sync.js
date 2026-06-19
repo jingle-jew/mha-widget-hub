@@ -1,7 +1,6 @@
 import { writeStorageValue } from "../core/storage.js";
 import { LANGUAGE, normalizeLanguageSetting } from "../core/mha-persistence.js";
 import { configureI18n, normalizeLanguage } from "../i18n/index.js";
-import { syncSettingsPanels } from "./settings-panel-coordinator.js";
 
 export function createI18nSettingsSync(host) {
   function configure() {
@@ -14,37 +13,35 @@ export function createI18nSettingsSync(host) {
     });
   }
 
+  function getSettingsSurface() {
+    return host._settingsSurfaceCoordinator;
+  }
+
   function syncSettingsModalState() {
-    host.classList.toggle("is-settings-open", host._settingsOpen);
-    host.dataset.settingsOpen = String(host._settingsOpen);
+    return getSettingsSurface().syncSettingsOpenState();
   }
 
   function syncSettingsDom() {
-    syncSettingsModalState();
-    const syncPanels = typeof host._syncSettingsPanels === "function"
-      ? host._syncSettingsPanels
-      : syncSettingsPanels;
-    syncPanels({
-      root: host.shadowRoot,
-      props: host._getSettingsPanelsProps(),
-    });
+    return getSettingsSurface().sync();
+  }
+
+  function openSettingsPage(page = "main", { dockPageId = "" } = {}) {
+    host._settingsOpen = true;
+    host._settingsPage = page || "main";
+    host._dockSettingsPageId = host._settingsPage === "dock-detail" ? dockPageId : "";
+    host._setScreensaverActive(false);
+    host._screensaverController.clearIdleTimer();
+    syncSettingsDom();
   }
 
   function openSettings(page = "main") {
-    host._settingsOpen = true;
-    host._settingsPage = page || "main";
-    if (host._settingsPage !== "dock-detail") host._dockSettingsPageId = "";
-    host._setScreensaverActive(false);
-    host._screensaverController.clearIdleTimer();
-    syncSettingsModalState();
-    syncSettingsDom();
+    openSettingsPage(page);
   }
 
   function closeSettings() {
     host._settingsOpen = false;
     host._settingsPage = "main";
     host._dockSettingsPageId = "";
-    syncSettingsModalState();
     syncSettingsDom();
     host._scheduleScreensaverIdleTimer();
   }
@@ -56,7 +53,6 @@ export function createI18nSettingsSync(host) {
     else writeStorageValue(LANGUAGE, language);
     configure();
     syncSettingsDom();
-    host._syncScreensaverSettingsDom();
     host._syncDocksDom();
     host._syncWidgetManagerDom();
     if (host._widgetConfigSession) host._syncWidgetConfigDom();
@@ -68,6 +64,7 @@ export function createI18nSettingsSync(host) {
     configure,
     syncSettingsModalState,
     syncSettingsDom,
+    openSettingsPage,
     openSettings,
     closeSettings,
     applyLanguageFromSettings,

@@ -26,10 +26,14 @@ test("i18n settings sync applies language and refreshes dependent surfaces", () 
       toggle() {},
     },
     shadowRoot: {},
-    _getSettingsPanelsProps() {
-      return { all: { scope: "all" }, screensaver: { scope: "screensaver" } };
+    _settingsSurfaceCoordinator: {
+      syncSettingsOpenState() {
+        calls.push("syncSettingsOpenState");
+      },
+      sync() {
+        calls.push("syncSettingsSurface");
+      },
     },
-    _syncSettingsPanels() {},
     _syncScreensaverSettingsDom() {
       calls.push("syncScreensaverSettingsDom");
     },
@@ -51,7 +55,6 @@ test("i18n settings sync applies language and refreshes dependent surfaces", () 
   };
 
   const sync = createI18nSettingsSync(host);
-  host._syncSettingsDom = () => sync.syncSettingsDom();
 
   sync.applyLanguageFromSettings("fr-CA");
 
@@ -59,7 +62,7 @@ test("i18n settings sync applies language and refreshes dependent surfaces", () 
   assert.equal(getLanguage(), "en");
   assert.deepEqual(removed, ["mha-language"]);
   assert.deepEqual(calls, [
-    "syncScreensaverSettingsDom",
+    "syncSettingsSurface",
     "syncDocksDom",
     "syncWidgetManagerDom",
     "syncWidgetConfigDom",
@@ -86,10 +89,10 @@ test("i18n settings sync normalizes supported language values", () => {
       toggle() {},
     },
     shadowRoot: {},
-    _getSettingsPanelsProps() {
-      return { all: { scope: "all" }, screensaver: { scope: "screensaver" } };
+    _settingsSurfaceCoordinator: {
+      syncSettingsOpenState() {},
+      sync() {},
     },
-    _syncSettingsPanels() {},
     _syncScreensaverSettingsDom() {},
     _syncDocksDom() {},
     _syncWidgetManagerDom() {},
@@ -98,10 +101,54 @@ test("i18n settings sync normalizes supported language values", () => {
   };
 
   const sync = createI18nSettingsSync(host);
-  host._syncSettingsDom = () => sync.syncSettingsDom();
 
   sync.applyLanguageFromSettings("fr");
 
   assert.equal(host._language, "fr");
   assert.equal(getLanguage(), "fr");
+});
+
+test("i18n settings sync routes dock detail through canonical settings page opening", () => {
+  const calls = [];
+  const host = {
+    _language: "auto",
+    _hass: null,
+    _settingsOpen: false,
+    _settingsPage: "main",
+    _dockSettingsPageId: "",
+    dataset: {},
+    classList: {
+      toggle() {},
+    },
+    shadowRoot: {},
+    _settingsSurfaceCoordinator: {
+      syncSettingsOpenState() {
+        calls.push("syncSettingsOpenState");
+      },
+      sync() {
+        calls.push("syncSettingsSurface");
+      },
+    },
+    _setScreensaverActive(value) {
+      calls.push(["setScreensaverActive", value]);
+    },
+    _screensaverController: {
+      clearIdleTimer() {
+        calls.push("clearIdleTimer");
+      },
+    },
+    _scheduleScreensaverIdleTimer() {},
+  };
+
+  const sync = createI18nSettingsSync(host);
+  sync.openSettingsPage("dock-detail", { dockPageId: "lights" });
+
+  assert.equal(host._settingsOpen, true);
+  assert.equal(host._settingsPage, "dock-detail");
+  assert.equal(host._dockSettingsPageId, "lights");
+  assert.deepEqual(calls, [
+    ["setScreensaverActive", false],
+    "clearIdleTimer",
+    "syncSettingsSurface",
+  ]);
 });

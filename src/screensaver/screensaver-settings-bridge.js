@@ -1,67 +1,10 @@
-import { buildSettingsCoordinatorProps, syncSettingsPanels } from "../settings/settings-panel-coordinator.js";
-
 export function createScreensaverSettingsBridge(host) {
+  function getSettingsSurface() {
+    return host._settingsSurfaceCoordinator;
+  }
+
   function getSettingsPanelsProps() {
-    const themeState = host._themeController.read();
-    const screensaverState = host._screensaverController.read();
-    return buildSettingsCoordinatorProps({
-      settingsOpen: host._settingsOpen,
-      screensaverSettingsOpen: host._screensaverSettingsOpen,
-      language: host._language,
-      hideHaSidebar: host._hideHaSidebar,
-      accentPaletteExpanded: host._accentPaletteExpanded,
-      settingsPage: host._settingsPage,
-      dockPages: host._pages,
-      activeDockPageId: host._activePageId,
-      selectedDockPageId: host._dockSettingsPageId,
-      dockPosition: host._dockPosition,
-      customWallpapers: host._customWallpapers,
-      hass: host._hass,
-      entityVisibilityConfig: host._entityVisibilityConfig,
-      themeState,
-      screensaverState,
-      hostIconShape: host.dataset.iconShape,
-      documentIconShape: document.documentElement.dataset.iconShape,
-      callbacks: {
-        onClose: () => host._closeSettings(),
-        onCloseScreensaver: () => closeScreensaverSettings(),
-        onLanguageChange: (value) => host._applyLanguageFromSettings(value),
-        onThemeChange: (value) => host._applyThemeFromSettings(value),
-        onThemeStyleChange: (value) => host._applyThemeStyleFromSettings(value),
-        onIosGlassChange: (value) => host._applyIosGlassFromSettings(value),
-        onAccentChange: (value) => host._applyAccentFromSettings(value),
-        onAccentModeChange: (value) => host._applyAccentModeFromSettings(value),
-        onAccentPaletteExpandedChange: (value) => host._setAccentPaletteExpanded(value),
-        onIconShapeChange: (value) => host._applyIconShapeFromSettings(value),
-        onHideHaSidebarChange: (value) => host._applyHideHaSidebarFromSettings(value),
-        onScreensaverEnabledChange: (value) => applyEnabledFromSettings(value),
-        onScreensaverDelayChange: (value) => applyDelayFromSettings(value),
-        onScreensaverPreviewChange: (value) => applyPreviewFromSettings(value),
-        onScreensaverNowBarChange: (value) => applyNowBarFromSettings(value),
-        onScreensaverNowBarItemChange: (item, enabled) => applyNowBarItemFromSettings(item, enabled),
-        onScreensaverNowBarTileEnabledChange: (tile, enabled) => applyNowBarTileEnabledFromSettings(tile, enabled),
-        onScreensaverNowBarEntitySelectionChange: (section, entityId, selected) => (
-          applyNowBarEntitySelectionFromSettings(section, entityId, selected)
-        ),
-        onScreensaverNowBarNowItemChange: (item, selected) => applyNowBarNowItemFromSettings(item, selected),
-        onScreensaverClockVariantChange: (value) => applyClockVariantFromSettings(value),
-        onResetGrid: () => host.resetGrid(),
-        onOpenWallpaperSettings: () => host._openWallpaperSettings(),
-        onOpenNowBarSettings: () => host._openNowBarSettings(),
-        onWallpaperMainBack: () => host._openSettings(),
-        onOpenDockSettings: () => host._openDockSettings(),
-        onDockBack: () => host._openDockSettings(),
-        onDockPageSelect: (id) => host._openDockPageSettings(id),
-        onDockMovePage: (id, direction) => host._moveDockPage(id, direction),
-        onDockDeletePage: (id) => host._deleteDockPage(id),
-        onDockMainBack: () => host._openSettings(),
-        onDockRenamePage: (id, name) => host._renameDockPage(id, name),
-        onDockIconChange: (id, icon) => host._changeDockPageIcon(id, icon),
-        onDockPositionChange: (value) => host._applyDockPositionFromSettings(value),
-        onWallpaperImport: (mode, payload) => host._saveCustomWallpaper(mode, payload),
-        onWallpaperReset: (mode) => host._resetCustomWallpaper(mode),
-      },
-    });
+    return getSettingsSurface().getProps();
   }
 
   function openScreensaverSettings() {
@@ -75,15 +18,8 @@ export function createScreensaverSettingsBridge(host) {
   }
 
   function syncScreensaverSettingsDom() {
-    host.classList.toggle("is-screensaver-settings-open", host._screensaverSettingsOpen);
-    host.dataset.screensaverSettingsOpen = String(host._screensaverSettingsOpen);
-    const syncPanels = typeof host._syncSettingsPanels === "function"
-      ? host._syncSettingsPanels
-      : syncSettingsPanels;
-    syncPanels({
-      root: host.shadowRoot,
-      props: getSettingsPanelsProps(),
-    });
+    getSettingsSurface().syncScreensaverOpenState();
+    getSettingsSurface().sync();
   }
 
   function isBlocked() {
@@ -112,7 +48,6 @@ export function createScreensaverSettingsBridge(host) {
 
   function syncSettingsSurfaces() {
     host._syncSettingsDom();
-    syncScreensaverSettingsDom();
   }
 
   function syncNowBarCalendarEvents({ force = false } = {}) {

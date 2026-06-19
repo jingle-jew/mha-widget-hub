@@ -11,6 +11,18 @@ test("screensaver settings bridge syncs calendar refresh and settings surfaces f
   };
 
   const calls = [];
+  const settingsSurface = {
+    getProps() {
+      return { screensaver: { scope: "screensaver", open: true } };
+    },
+    syncScreensaverOpenState() {
+      calls.push("syncScreensaverOpenState");
+      host.dataset.screensaverSettingsOpen = String(host._screensaverSettingsOpen);
+    },
+    sync() {
+      calls.push("syncSettingsSurface");
+    },
+  };
   const host = {
     dataset: {},
     classList: { toggle() {} },
@@ -73,11 +85,9 @@ test("screensaver settings bridge syncs calendar refresh and settings surfaces f
     _recordPersistenceResult(value) {
       calls.push(["recordPersistenceResult", value]);
     },
+    _settingsSurfaceCoordinator: settingsSurface,
     _syncSettingsDom() {
       calls.push("syncSettingsDom");
-    },
-    _syncSettingsPanels({ root, props }) {
-      calls.push(["syncSettingsPanels", root, props.screensaver.scope, props.screensaver.open]);
     },
     _closeSettings() {},
     _applyLanguageFromSettings() {},
@@ -114,7 +124,5 @@ test("screensaver settings bridge syncs calendar refresh and settings surfaces f
     ["requestNowBarCalendarEvents", { force: true }],
     ["syncDom", host.shadowRoot, { force: false }],
     "syncSettingsDom",
-    ["syncSettingsPanels", host.shadowRoot, "screensaver", true],
   ]);
-  assert.equal(host.dataset.screensaverSettingsOpen, "true");
 });
