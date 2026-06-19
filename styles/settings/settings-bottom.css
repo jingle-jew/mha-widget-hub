@@ -1,16 +1,16 @@
 @media (max-width: 767px) {
   .mha-settings-panel .mha-settings-sheet {
-    --mha-mobile-sheet-height: min(88vh, 36rem);
+    --mha-mobile-sheet-top-gap: max(var(--mha-page-padding, clamp(.65rem, 2.5vw, 1rem)), env(safe-area-inset-top));
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
-    top: auto;
+    top: var(--mha-mobile-sheet-top-gap);
     width: auto;
-    height: var(--mha-mobile-sheet-height);
+    height: auto;
     max-width: none;
-    max-height: var(--mha-mobile-sheet-height);
-    overflow: auto;
+    max-height: calc(100dvh - var(--mha-mobile-sheet-top-gap));
+    overflow: hidden;
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
     transform-origin: bottom center;

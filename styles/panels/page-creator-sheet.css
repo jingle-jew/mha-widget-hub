@@ -1,10 +1,12 @@
 @media (max-width: 767px) {
   .mha-page-creator[data-mobile-presentation="sheet"] .mha-page-creator-sheet {
+    --mha-mobile-sheet-top-gap: max(var(--mha-page-padding, clamp(.65rem, 2.5vw, 1rem)), env(safe-area-inset-top));
     inset-inline: 0;
-    inset-block-start: auto;
+    inset-block-start: var(--mha-mobile-sheet-top-gap);
     inset-block-end: 0;
     inline-size: auto;
     max-inline-size: none;
+    max-block-size: calc(100dvh - var(--mha-mobile-sheet-top-gap));
     border-end-start-radius: 0;
     border-end-end-radius: 0;
   }
