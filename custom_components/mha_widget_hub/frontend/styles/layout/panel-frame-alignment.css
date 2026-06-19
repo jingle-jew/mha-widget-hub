@@ -1,14 +1,32 @@
 /*
  * Panel frame alignment.
  *
- * Settings and Widget Manager sheets are fixed overlays, so they do not inherit
- * the shell frame directly. Align their bottom-right corner with the same
- * viewport spacing used by the main layout frame.
+ * Settings, Widget Manager, Page Creator, and widget config sheets are fixed
+ * overlays, so they do not inherit the shell frame directly. Tablet/desktop
+ * follows the main layout frame. Mobile uses a full-width bottom sheet with only
+ * the top corners rounded.
  */
 
 @media (min-width: 768px) {
   .mha-settings-sheet {
     inset-inline-end: var(--mha-page-padding) !important;
     inset-block-end: var(--mha-page-padding) !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .mha-settings-sheet,
+  .mha-page-creator-sheet,
+  .mha-widget-config-sheet {
+    inset-inline: 0 !important;
+    inset-block-start: auto !important;
+    inset-block-end: 0 !important;
+    inline-size: 100vw !important;
+    max-inline-size: 100vw !important;
+    block-size: auto !important;
+    max-block-size: min(80vh, 42rem) !important;
+    min-block-size: min(75vh, 42rem);
+    border-radius: clamp(1.35rem, 5vw, 1.9rem) clamp(1.35rem, 5vw, 1.9rem) 0 0 !important;
+    transform-origin: bottom center !important;
   }
 }
