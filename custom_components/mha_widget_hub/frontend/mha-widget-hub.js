@@ -31,28 +31,14 @@ import {
   saveHubPages,
   syncActivePageWidgets,
 } from "./src/core/mha-state.js?v=phase2";
-import {
-  addPage,
-  changePageIcon,
-  deletePage,
-  movePage,
-  removePageWidgetPositions,
-  renamePage,
-  selectPage,
-} from "./src/pages/page-controller.js";
-import {
-  updatePageCreatorIconSelection,
-} from "./src/pages/page-creator.js?v=phase6";
 import {destroyDomSubtree} from "./src/core/dom-lifecycle.js";
 import {ICONS} from "./src/components/icons.js";
 import {createShell} from "./src/layout/shell.js";
 import {createMobileDock} from "./src/layout/mobile-dock.js";
-import { buildDockStateProps } from "./src/layout/dock-props.js?v=phase3";
 import {
-  createDockProps,
   syncDockActiveState,
-  syncDocks,
 } from "./src/layout/dock-controller.js";
+import { createPageUiCoordinator } from "./src/pages/page-ui-coordinator.js?v=phase10";
 import {createSettingsPanel} from "./src/settings/settings-panel.js";
 import { buildSettingsCoordinatorProps, syncSettingsPanels } from "./src/settings/settings-panel-coordinator.js?v=phase8";
 import { WIDGET_MANAGER_CATEGORIES } from "./src/widget-manager/widget-manager.js";
@@ -63,13 +49,11 @@ import {
 } from "./src/widget-config/widget-config-popup.js";
 import { getScenesDefaultButtonIndex } from "./src/widget-config/widget-config-props.js?v=phase5";
 import {
-  buildPageCreatorPanelProps,
   buildWidgetConfigPanelProps,
   buildWidgetManagerPanelProps,
   createPageCreatorPanel,
   createWidgetConfigPanel,
   createWidgetManagerPanel,
-  syncPageCreatorPanel,
   syncWidgetConfigPanel,
   syncWidgetManagerPanel,
 } from "./src/widgets/widget-placement-orchestrator.js?v=phase1";
@@ -160,6 +144,43 @@ constructor(){
     onWake:()=>this._wakeScreensaver(),
     onSyncVisibilityState:()=>this._syncScreensaverVisibilityState(),
     onCalendarEventsChange:()=>this._syncScreensaverDom(),
+  });
+  this._pageUiCoordinator=createPageUiCoordinator({
+    getRoot:()=>this.shadowRoot,
+    getPages:()=>this._pages,
+    setPages:(pages)=>{this._pages=pages;},
+    getActivePageId:()=>this._activePageId,
+    setActivePageId:(id)=>{this._activePageId=id;},
+    getWidgets:()=>this._widgets,
+    setWidgets:(widgets)=>{this._widgets=widgets;},
+    getWidgetPositions:()=>this._widgetPositions,
+    setWidgetPositions:(positions)=>{this._widgetPositions=positions;},
+    getPageCreatorOpen:()=>this._pageCreatorOpen,
+    setPageCreatorOpen:(open)=>{this._pageCreatorOpen=open;},
+    getNewPageIcon:()=>this._newPageIcon,
+    setNewPageIcon:(icon)=>{this._newPageIcon=icon;},
+    getDockSettingsPageId:()=>this._dockSettingsPageId,
+    setDockSettingsPageId:(id)=>{this._dockSettingsPageId=id;},
+    setSettingsPage:(page)=>{this._settingsPage=page;},
+    getIsEditing:()=>this._isEditing,
+    isMobileLandscapeLayout:()=>this._isMobileLandscapeLayout(),
+    normalizeWidget:normalizeStoredWidgetContract,
+    savePages:()=>this._savePages(),
+    readWidgets:()=>this._readWidgets(),
+    writeActivePage:(id)=>writeStorageValue(ACTIVE_PAGE,id),
+    writeWidgetPositions:(positions)=>writeJson(POSITIONS,positions),
+    recordPersistenceResult:(success)=>this._recordPersistenceResult(success),
+    refreshActiveGridOnly:()=>this._refreshActiveGridOnly(),
+    syncWidgetDropSlots:()=>this._syncWidgetDropSlots(),
+    syncSettingsDom:()=>this._syncSettingsDom(),
+    openDockSettings:()=>this._openDockSettings(),
+    openSettings:()=>this._openSettings(),
+    clearPlacementState:()=>{
+      this._activeMoveWidgetId="";
+      this._pendingWidgetPlacement=null;
+      this._widgetManagerOpen=false;
+      this._widgetManagerCategory="";
+    },
   });
   this._initialized=false;
   this._bootComplete=false;
@@ -959,52 +980,16 @@ _openDockPageSettings(id=""){
   this._syncSettingsDom();
 }
 _moveDockPage(id="",direction=0){
-  const result=movePage(this._pages,id,direction);
-  if(!result)return;
-  this._pages=result.pages;
-  this._savePages();
-  this._syncDocksDom();
-  this._syncSettingsDom();
+  return this._pageUiCoordinator.moveDockPage(id,direction);
 }
 _renameDockPage(id="",name=""){
-  const result=renamePage(this._pages,id,name);
-  if(!result)return;
-  this._pages=result.pages;
-  this._savePages();
-  this._syncDocksDom();
-  this._syncSettingsDom();
+  return this._pageUiCoordinator.renameDockPage(id,name);
 }
 _changeDockPageIcon(id="",icon="grid"){
-  const result=changePageIcon(this._pages,id,icon);
-  this._pages=result.pages;
-  this._savePages();
-  this._syncDocksDom();
-  this._syncSettingsDom();
+  return this._pageUiCoordinator.changeDockPageIcon(id,icon);
 }
 _deleteDockPage(id=""){
-  const result=deletePage(this._pages,this._activePageId,id);
-  if(!result)return;
-  this._pages=result.pages;
-  this._activePageId=result.activePageId;
-  if(result.activePageChanged){
-    this._widgets=this._readWidgets();
-  }
-  this._widgetPositions=removePageWidgetPositions(
-    this._widgetPositions,
-    id,
-    result.removedWidgetIds,
-  );
-  const positionsSaved=writeJson(POSITIONS,this._widgetPositions);
-  if(this._dockSettingsPageId===id){
-    this._settingsPage="dock";
-    this._dockSettingsPageId="";
-  }
-  const pagesSaved=this._savePages();
-  this._recordPersistenceResult(positionsSaved&&pagesSaved);
-  this._syncDocksDom();
-  this._syncSettingsDom();
-  this._refreshActiveGridOnly();
-  this._syncWidgetDropSlots();
+  return this._pageUiCoordinator.deleteDockPage(id);
 }
 
 /*
@@ -1306,81 +1291,36 @@ _syncActivePageWidgets(){
   return success?this._recordPersistenceResult(success):false;
 }
 _setActivePage(id){
-  const result=selectPage(this._pages,this._activePageId,id);
-  if(!result)return;
-  this._activeMoveWidgetId="";
-  this._pendingWidgetPlacement=null;
-  this._widgetManagerOpen=false;
-  this._widgetManagerCategory="";
-  this._activePageId=result.activePageId;
-  this._recordPersistenceResult(writeStorageValue(ACTIVE_PAGE,result.activePageId));
-  this._widgets=this._readWidgets();
-  this._refreshActiveGridOnly();
-  this._syncDocksDom();
+  return this._pageUiCoordinator.selectPage(id);
 }
 
 _addGridPage({icon="grid"}={}){
-  const result=addPage(this._pages,{
-    icon,
-    normalizeWidget:normalizeStoredWidgetContract,
-  });
-  this._pages=result.pages;
-  this._activePageId=result.activePageId;
-  this._widgets=[];
-  this._pageCreatorOpen=false;
-  this._newPageIcon="grid";
-  this._savePages();
-  this._syncDocksDom();
-  this._syncPageCreatorDom();
-  this._refreshActiveGridOnly();
-  this._syncWidgetDropSlots();
+  return this._pageUiCoordinator.addGridPage({icon});
 }
 _openPageCreator(){
-  if(!this._isEditing||this._isMobileLandscapeLayout())return;
-  this._pageCreatorOpen=true;
-  this._newPageIcon=this._newPageIcon||"grid";
-  this._syncPageCreatorDom();
+  return this._pageUiCoordinator.openPageCreator();
 }
 _closePageCreator(){
-  this._pageCreatorOpen=false;
-  this._syncPageCreatorDom();
+  return this._pageUiCoordinator.closePageCreator();
 }
 _setPageCreatorIcon(icon="grid"){
-  this._newPageIcon=String(icon||"grid");
-  updatePageCreatorIconSelection(this.shadowRoot,this._newPageIcon);
+  return this._pageUiCoordinator.setPageCreatorIcon(icon);
 }
 _createPageFromCreator(){
-  if(!this._isEditing||this._isMobileLandscapeLayout())return;
-  this._addGridPage({icon:this._newPageIcon||"grid"});
+  return this._pageUiCoordinator.createPageFromCreator();
 }
 _syncPageCreatorDom(){
-  syncPageCreatorPanel(this.shadowRoot,buildPageCreatorPanelProps({
-    open:this._pageCreatorOpen,
-    selectedIcon:this._newPageIcon||"grid",
-    onClose:()=>this._closePageCreator(),
-    onSelectIcon:icon=>this._setPageCreatorIcon(icon),
-    onCreate:()=>this._createPageFromCreator(),
-  }));
+  return this._pageUiCoordinator.syncPageCreator();
 }
 
 _updateDockActiveState(){
   syncDockActiveState(this.shadowRoot,this._activePageId);
 }
 _getDockProps(){
-  return createDockProps({
-    ...buildDockStateProps({
-      pages:this._pages,
-      activePageId:this._activePageId,
-      isEditing:this._isEditing,
-    }),
-    onPageSelect:id=>this._setActivePage(id),
-    onAddPage:()=>this._openPageCreator(),
-    onDockSettings:()=>this._openDockSettings(),
-    onSettings:()=>this._openSettings(),
-  });
+  return this._pageUiCoordinator.buildDockProps();
 }
 _syncDocksDom(){
-  syncDocks(this.shadowRoot,this._getDockProps());
+  return this._pageUiCoordinator.syncDocks();
 }
 _refreshActiveGridOnly(){
   cancelAnimationFrame(this._widgetRenderFrame);
@@ -2159,13 +2099,7 @@ _appendDeferredUi({layout,renderId}){
       onSelectCategory:id=>this._selectWidgetManagerCategory(id),
       onSelectWidget:item=>this._beginWidgetPlacement(item),
     })));
-    this.shadowRoot.append(createPageCreatorPanel(buildPageCreatorPanelProps({
-      open:this._pageCreatorOpen,
-      selectedIcon:this._newPageIcon||"grid",
-      onClose:()=>this._closePageCreator(),
-      onSelectIcon:icon=>this._setPageCreatorIcon(icon),
-      onCreate:()=>this._createPageFromCreator(),
-    })));
+    this.shadowRoot.append(createPageCreatorPanel(this._pageUiCoordinator.buildPageCreatorProps()));
     this.shadowRoot.append(createWidgetConfigPanel(buildWidgetConfigPanelProps({
       session:this._widgetConfigSession,
       hass:this._hass,
