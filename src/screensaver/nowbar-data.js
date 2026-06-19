@@ -58,9 +58,14 @@ export function mergeNowBarConfig(value = {}, legacyItems = {}) {
   });
 }
 
-function getAuthorizedDomainEntities(hass, domain, visibilityConfig) {
+function getAuthorizedDomainEntities(hass, domain, visibilityConfig, {
+  availableOnly = false,
+} = {}) {
   const options = Object.entries(hass?.states || {})
-    .filter(([entityId]) => getEntityDomain(entityId) === domain)
+    .filter(([entityId, entityState]) => (
+      getEntityDomain(entityId) === domain
+      && (!availableOnly || isEntityAvailable(entityState))
+    ))
     .map(([entityId, entityState]) => ({
       entity_id: entityId,
       name: getFriendlyEntityName(entityState, entityId),
@@ -76,7 +81,7 @@ function getAuthorizedDomainEntities(hass, domain, visibilityConfig) {
 export function getNowBarEntityOptions(hass, visibilityConfig) {
   return {
     calendar: getAuthorizedDomainEntities(hass, "calendar", visibilityConfig),
-    media: getAuthorizedDomainEntities(hass, "media_player", visibilityConfig),
+    media: getAuthorizedDomainEntities(hass, "media_player", visibilityConfig, { availableOnly: true }),
     weather: getAuthorizedDomainEntities(hass, "weather", visibilityConfig),
   };
 }
