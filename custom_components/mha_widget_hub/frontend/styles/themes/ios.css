@@ -348,8 +348,8 @@
 :host([data-theme-style="ios"][data-ios-glass="liquid"][data-theme="light"]) {
   --mha-ios-liquid-surface: rgba(255,255,255,.24);
   --mha-ios-liquid-primary-surface:
-    radial-gradient(circle at 20% 10%, rgba(255,255,255,.34), transparent 34%),
-    linear-gradient(145deg, rgba(255,255,255,.24), rgba(255,255,255,.12));
+    radial-gradient(circle at 20% 10%, rgba(255,255,255,.40), transparent 34%),
+    linear-gradient(145deg, rgba(255,255,255,.30), rgba(255,255,255,.16));
   --mha-ios-liquid-surface-active: rgba(255,255,255,.82);
   --mha-ios-liquid-surface-muted: rgba(255,255,255,.16);
   --mha-ios-liquid-border: rgba(255,255,255,.62);
@@ -370,8 +370,8 @@
 :host([data-theme-style="ios"][data-ios-glass="liquid"][data-theme="dark"]) {
   --mha-ios-liquid-surface: rgba(255,255,255,.085);
   --mha-ios-liquid-primary-surface:
-    radial-gradient(circle at 20% 10%, rgba(255,255,255,.18), transparent 34%),
-    linear-gradient(145deg, rgba(255,255,255,.105), rgba(255,255,255,.045));
+    radial-gradient(circle at 20% 10%, rgba(255,255,255,.22), transparent 34%),
+    linear-gradient(145deg, rgba(255,255,255,.125), rgba(255,255,255,.060));
   --mha-ios-liquid-surface-active: rgba(255,255,255,.88);
   --mha-ios-liquid-surface-muted: rgba(255,255,255,.055);
   --mha-ios-liquid-border: rgba(235,243,255,.24);
@@ -402,7 +402,7 @@
 }
 
 :host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="light"]) {
-  --mha-ios-frosted-surface: linear-gradient(145deg, rgba(255,255,255,.76), rgba(255,246,238,.58));
+  --mha-ios-frosted-surface: linear-gradient(145deg, rgba(255,255,255,.70), rgba(255,246,238,.52));
   --mha-ios-frosted-surface-active: linear-gradient(145deg, rgba(255,255,255,.88), rgba(255,240,230,.70));
   --mha-ios-frosted-surface-muted: rgba(255,255,255,.58);
   --mha-ios-frosted-border: rgba(110,92,78,.12);
@@ -429,7 +429,7 @@
 }
 
 :host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="dark"]) {
-  --mha-ios-frosted-surface: linear-gradient(145deg, rgba(255,240,226,.18), rgba(255,255,255,.105));
+  --mha-ios-frosted-surface: linear-gradient(145deg, rgba(255,240,226,.16), rgba(255,255,255,.090));
   --mha-ios-frosted-surface-active: linear-gradient(145deg, rgba(255,236,219,.26), rgba(255,255,255,.15));
   --mha-ios-frosted-surface-muted: rgba(255,240,226,.16);
   --mha-ios-frosted-border: rgba(255,236,219,.18);
