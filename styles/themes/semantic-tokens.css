@@ -408,6 +408,9 @@
 
 :host([data-theme-style="ios"][data-ios-glass="frosted"]),
 :root[data-theme-style="ios"][data-ios-glass="frosted"] {
+  --mha-on-primary-surface: var(--mha-ios-frosted-tile-surface);
+  --mha-preview-surface: var(--mha-on-primary-surface);
+  --mha-preview-surface-hover: var(--mha-ios-frosted-tile-surface-hover);
   --mha-ios-slider-track-border: var(--mha-ios-frosted-border);
   --mha-ios-slider-track-surface: var(--mha-ios-frosted-surface-muted);
   --mha-ios-slider-track-blur: var(--mha-ios-frosted-blur);
@@ -420,6 +423,9 @@
 
 :host([data-theme-style="ios"][data-ios-glass="liquid"]),
 :root[data-theme-style="ios"][data-ios-glass="liquid"] {
+  --mha-on-primary-surface: var(--mha-ios-liquid-surface-muted);
+  --mha-preview-surface: var(--mha-on-primary-surface);
+  --mha-preview-surface-hover: color-mix(in srgb, var(--mha-accent) 7%, var(--mha-on-primary-surface));
   --mha-ios-slider-track-border: var(--mha-primary-border);
   --mha-ios-slider-track-surface: var(--mha-primary-surface);
 }

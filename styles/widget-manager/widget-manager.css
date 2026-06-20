@@ -726,7 +726,7 @@
 :host([data-theme-style="ios"][data-ios-glass="liquid"]) .mha-widget-manager-category,
 :host([data-theme-style="ios"][data-ios-glass="liquid"]) .mha-widget-manager-widget,
 :host([data-theme-style="ios"][data-ios-glass="liquid"]) .mha-widget-manager-back {
-  background: var(--mha-ios-liquid-surface);
+  background: var(--mha-on-primary-surface);
   border-color: transparent;
   box-shadow: var(--mha-ios-liquid-shadow);
 }
@@ -742,7 +742,7 @@
 :host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-widget-manager-category,
 :host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-widget-manager-widget,
 :host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-widget-manager-back {
-  background: var(--mha-ios-frosted-tile-surface);
+  background: var(--mha-on-primary-surface);
   border-color: var(--mha-ios-frosted-tile-border);
   box-shadow: var(--mha-ios-frosted-tile-shadow);
 }

@@ -1122,7 +1122,7 @@
 }
 
 :host([data-theme-style="ios"][data-ios-glass="liquid"]) .mha-settings-section {
-  background: var(--mha-ios-liquid-surface-muted);
+  background: var(--mha-on-primary-surface);
   border-color: transparent;
   box-shadow: none;
 }
@@ -1159,7 +1159,7 @@
 :host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-settings-section,
 :host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-settings-select,
 :host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-settings-reset {
-  background: var(--mha-ios-frosted-tile-surface);
+  background: var(--mha-on-primary-surface);
   border-color: var(--mha-ios-frosted-tile-border);
   box-shadow: var(--mha-ios-frosted-tile-shadow);
 }
