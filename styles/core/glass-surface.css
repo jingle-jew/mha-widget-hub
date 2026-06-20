@@ -1,0 +1,87 @@
+/*
+ * MHA Glass Surface Primitive
+ *
+ * Shared contract for translucent glass surfaces used by the shell and by
+ * future widget/theme packs. Keep browser-specific backdrop behavior here so
+ * persistent surfaces do not need to duplicate filter declarations.
+ */
+
+:host,
+:root {
+  --mha-glass-surface-background: var(--mha-primary-surface, var(--mha-surface-primary, rgba(255,255,255,.12)));
+  --mha-glass-surface-border: var(--mha-primary-border, var(--mha-border-primary, rgba(255,255,255,.16)));
+  --mha-glass-surface-blur: var(--mha-blur-primary, var(--mha-surface-blur, 22px));
+  --mha-glass-surface-saturation: var(--mha-surface-saturation, 140%);
+  --mha-glass-surface-brightness: 1;
+  --mha-glass-surface-filter: blur(var(--mha-glass-surface-blur)) saturate(var(--mha-glass-surface-saturation)) brightness(var(--mha-glass-surface-brightness));
+  --mha-glass-surface-fallback-filter: saturate(var(--mha-glass-surface-saturation)) brightness(var(--mha-glass-surface-brightness));
+  --mha-glass-reflection-blend-mode: screen;
+}
+
+:host([data-theme-style="ios"]),
+:root[data-theme-style="ios"] {
+  --mha-glass-surface-brightness: 1.02;
+}
+
+:host([data-theme-style="oneui"]),
+:root[data-theme-style="oneui"] {
+  --mha-glass-surface-brightness: .98;
+}
+
+.mha-glass-surface,
+.mha-widget,
+.mha-dock,
+.mha-status-bar,
+.mha-screensaver-nowbar-tile {
+  background: var(--mha-glass-surface-background);
+  border-color: var(--mha-glass-surface-border);
+  -webkit-backdrop-filter: var(--mha-glass-surface-fallback-filter);
+  backdrop-filter: var(--mha-glass-surface-fallback-filter);
+}
+
+@supports (backdrop-filter: blur(1px)) {
+  .mha-glass-surface,
+  .mha-widget,
+  .mha-dock,
+  .mha-status-bar,
+  .mha-screensaver-nowbar-tile {
+    backdrop-filter: var(--mha-glass-surface-filter);
+  }
+}
+
+@supports (-webkit-backdrop-filter: blur(1px)) {
+  .mha-glass-surface,
+  .mha-widget,
+  .mha-dock,
+  .mha-status-bar,
+  .mha-screensaver-nowbar-tile {
+    -webkit-backdrop-filter: var(--mha-glass-surface-filter);
+  }
+}
+
+/* Firefox backdrop-filter can be visually clipped by blend-mode based reflection
+ * layers on persistent shell surfaces. Keep the material readable and let the
+ * tint carry the surface when Firefox creates a smaller backdrop root.
+ */
+@-moz-document url-prefix() {
+  :host,
+  :root {
+    --mha-glass-reflection-blend-mode: normal;
+  }
+
+  .mha-glass-surface,
+  .mha-widget,
+  .mha-dock,
+  .mha-status-bar,
+  .mha-screensaver-nowbar-tile {
+    background: color-mix(in srgb, var(--mha-glass-surface-background) 88%, transparent);
+    -webkit-backdrop-filter: var(--mha-glass-surface-filter);
+    backdrop-filter: var(--mha-glass-surface-filter);
+  }
+
+  .mha-widget::after,
+  .mha-status-bar::after,
+  .mha-screensaver-nowbar-tile::after {
+    mix-blend-mode: var(--mha-glass-reflection-blend-mode);
+  }
+}
