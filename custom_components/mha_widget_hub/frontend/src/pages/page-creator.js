@@ -1,6 +1,7 @@
 import { buildPageCreatorState } from "./page-creator-props.js?v=phase6";
 import { createIcon } from "../ui/icon.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
+import { createButton } from "../ui/button.js";
 import { createPanelShell } from "../panels/panel-shell.js";
 import {
   applyPanelSurfaceContract,
@@ -50,16 +51,18 @@ export function createPageCreatorPanel({
 
   const actions = document.createElement("div");
   actions.className = "mha-page-creator-actions";
-  const cancel = document.createElement("button");
-  cancel.className = "mha-page-creator-secondary";
-  cancel.type = "button";
-  cancel.textContent = t("common.cancel", "Cancel");
-  cancel.onclick = onClose;
-  const create = document.createElement("button");
-  create.className = "mha-page-creator-primary";
-  create.type = "button";
-  create.textContent = t("settings.pageCreatorCreate", "Create page");
-  create.onclick = onCreate;
+  const cancel = createButton({
+    label: t("common.cancel", "Cancel"),
+    variant: "default",
+    className: "mha-page-creator-secondary",
+    onClick: onClose,
+  });
+  const create = createButton({
+    label: t("settings.pageCreatorCreate", "Create page"),
+    variant: "primary",
+    className: "mha-page-creator-primary",
+    onClick: onCreate,
+  });
   actions.append(cancel, create);
 
   return applyPanelSurfaceContract(createPanelShell({
