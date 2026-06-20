@@ -77,6 +77,16 @@
 }
 
 @media (max-width: 767px) {
+  .mha-widget-config-popup .mha-widget-config-sheet {
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+  }
+
+  .mha-widget-config-popup .mha-widget-config-fields {
+    min-block-size: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
   .mha-widget-config-popup .mha-widget-config-actions {
     align-items: center;
     justify-content: flex-end;
