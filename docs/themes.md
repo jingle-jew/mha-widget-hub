@@ -2,24 +2,6 @@
 
 This document describes the real theme system currently used by MHA Widget Hub.
 
-It is based on the current project structure:
-
-```text
-src/settings/theme-registry.js
-src/settings/theme-controller.js
-src/settings/accent-palettes.js
-src/settings/wallpaper-accent.js
-src/styles/style-manifest.js
-
-styles/themes/ios.css
-styles/themes/oneui.css
-styles/themes/material.css
-styles/themes/accent-palettes.css
-styles/themes/semantic-tokens.css
-styles/themes/light-text-contract.css
-styles/SEMANTIC_TOKENS.md
-```
-
 ---
 
 ## 1. Current Theme Model
@@ -45,14 +27,14 @@ data-ios-glass="liquid"
 data-ios-glass="frosted"
 ```
 
-So technically, MHA currently exposes these visual experiences:
+So MHA exposes these visual experiences:
 
-- OneUI
-- Material You
-- iOS Liquid Glass
-- iOS Frosted Glass
+- OneUI;
+- Material You;
+- iOS Liquid Glass;
+- iOS Frosted Glass.
 
-But in the registry, Liquid and Frosted are not separate themes. They are two modes of the same `ios` theme style.
+In the registry, Liquid and Frosted are not separate themes. They are two modes of the same `ios` theme style.
 
 ---
 
@@ -66,9 +48,9 @@ src/settings/theme-controller.js
 
 The controller reads and synchronizes theme-related settings between:
 
-- `localStorage`
-- the custom element host dataset
-- `document.documentElement.dataset`
+- `localStorage`;
+- the custom element host dataset;
+- `document.documentElement.dataset`.
 
 The synchronized attributes are:
 
@@ -120,31 +102,31 @@ This means each visual system can remember its own accent independently.
 
 ## 4. Style Manifest Loading Order
 
-Theme CSS is not loaded randomly. It is part of the global style manifest:
+Theme CSS is part of the global style manifest:
 
 ```text
 src/styles/style-manifest.js
 ```
 
-The current load order is:
+Current high-level order:
 
 ```text
 1. Core tokens
-2. Base reusable components
+2. Base reusable components and system controls
 3. Registered theme CSS files
 4. Accent palettes
 5. Semantic token adapters
 6. Core background/layout CSS
-7. Settings panel CSS
-8. Widget manager CSS
-9. Widget config popup CSS
+7. Dock/status/grid/floating-control CSS
+8. Settings, widget manager and config popup CSS
+9. Shared panel CSS
 10. Light text contract
 11. Widget layout/shell CSS
-12. Widget-specific CSS
+12. Widget-specific CSS from the widget registry
 13. Screensaver CSS
 ```
 
-More specifically:
+Current concrete order:
 
 ```text
 styles/core/tokens.css
@@ -171,10 +153,17 @@ styles/layout/status-bar.css
 styles/layout/dock.css
 styles/layout/mobile-dock.css
 styles/layout/floating-controls.css
+styles/layout/dock-glyph-stability.css
+styles/layout/frame-alignment.css
 
 styles/settings/settings-panel.css
 styles/widget-manager/widget-manager.css
 styles/widget-manager/widget-config-popup.css
+styles/panels/panel-surface-contract.css
+styles/panels/panel-frame-alignment.css
+styles/panels/page-creator-sheet.css
+styles/panels/page-creator-bottom.css
+styles/settings/settings-bottom.css
 
 styles/themes/light-text-contract.css
 
@@ -184,15 +173,13 @@ styles/widgets/widget-shell.css
 widget CSS from the widget registry
 
 styles/screensaver/screensaver.css
+styles/screensaver/screensaver-clock.css
+styles/screensaver/screensaver-hotcorner.css
 ```
 
-### Important consequence
+Important consequence:
 
-Theme files define the raw visual language.
-
-`semantic-tokens.css` then maps those raw values into the canonical semantic contract.
-
-Component and widget files should consume semantic tokens or adapter tokens, not reinvent visual values.
+Theme files define the raw visual language. `semantic-tokens.css` maps those raw values into the canonical semantic contract. Component, panel and widget files should consume semantic tokens or adapter tokens, not reinvent visual values.
 
 ---
 
@@ -208,7 +195,7 @@ Create:
 styles/themes/my-theme.css
 ```
 
-The file should define at least:
+The file should define raw theme values such as:
 
 ```css
 :host([data-theme-style="my-theme"]) {
@@ -265,29 +252,7 @@ Edit:
 src/settings/accent-palettes.js
 ```
 
-Add:
-
-```js
-mytheme: Object.freeze([
-  { value: "blue", label: "Blue" },
-  ...
-])
-```
-
-And add reference colors:
-
-```js
-mytheme: Object.freeze({
-  blue: "#...",
-  ...
-})
-```
-
-If the theme should support wallpaper-based automatic accents, add it to:
-
-```js
-AUTO_ACCENT_STYLES
-```
+Add options/reference colors. If the theme should support wallpaper-based automatic accents, add it to the auto-accent support list.
 
 ### Step 4 — Add CSS palette selectors
 
@@ -313,9 +278,9 @@ Usually, no change should be needed in:
 styles/themes/semantic-tokens.css
 ```
 
-But if the new theme needs a special mapping between raw theme values and semantic roles, add a small theme-specific adapter there.
+If the new theme needs a special mapping between raw theme values and semantic roles, add a small theme-specific adapter there.
 
-### Step 6 — Test
+### Step 6 — Test manually
 
 Test:
 
@@ -328,9 +293,11 @@ Test:
 - settings panel;
 - widget manager;
 - config popup;
+- shared panel sheets;
 - dock left/right/bottom;
 - status bar;
-- widgets.
+- widgets;
+- screensaver/NowBar.
 
 ---
 
@@ -401,11 +368,9 @@ Current direction:
 - neutral gray/white tinting;
 - visually distinct from OneUI.
 
-### Important
+Important:
 
-Liquid and Frosted are not separate registry entries.
-
-Do not add `ios-liquid` and `ios-frosted` to `theme-registry.js` unless the architecture intentionally changes.
+Liquid and Frosted are not separate registry entries. Do not add `ios-liquid` and `ios-frosted` to `theme-registry.js` unless the architecture intentionally changes.
 
 ---
 
@@ -460,7 +425,7 @@ These should remain Material-specific unless the design system is intentionally 
 
 Accent data is split between JavaScript and CSS.
 
-### JavaScript source of truth
+JavaScript source of truth:
 
 ```text
 src/settings/accent-palettes.js
@@ -473,15 +438,7 @@ This file defines:
 - auto-accent support;
 - wallpaper color matching logic.
 
-Current supported auto-accent themes:
-
-```js
-ios
-oneui
-material
-```
-
-### CSS application layer
+CSS application layer:
 
 ```text
 styles/themes/accent-palettes.css
@@ -538,7 +495,6 @@ Recommended base tokens to define:
 ```css
 --mha-text
 --mha-muted
-
 --mha-widget-surface
 --mha-widget-surface-edit
 --mha-widget-border
@@ -546,19 +502,14 @@ Recommended base tokens to define:
 --mha-widget-shadow
 --mha-widget-reflection
 --mha-widget-reflection-opacity
-
 --mha-control-surface
 --mha-control-surface-edit
-
 --mha-dock-surface
 --mha-dock-slot-surface
 --mha-dock-shadow
-
 --mha-statusbar-surface
-
 --mha-surface-blur
 --mha-surface-saturation
-
 --mha-bg-base-1
 --mha-bg-base-2
 --mha-bg-radial-1
@@ -596,6 +547,7 @@ Avoid adding theme-specific hacks inside:
 styles/widgets/*
 styles/widget-manager/*
 styles/settings/*
+styles/panels/*
 ```
 
 Unless the exception is genuinely component-specific.
@@ -616,7 +568,7 @@ over this:
 }
 ```
 
-Theme files should make widgets look right through tokens.
+Theme files should make widgets and panels look right through tokens.
 
 Widgets should not need to know the theme name.
 
@@ -624,7 +576,7 @@ Widgets should not need to know the theme name.
 
 ## 14. Current Architecture Verdict
 
-The theme architecture is already in a good transitional state.
+The theme architecture is in a good transitional state.
 
 Strengths:
 
@@ -633,12 +585,13 @@ Strengths:
 - centralized style manifest;
 - accent palettes separated from theme CSS;
 - semantic token layer exists;
-- iOS Liquid/Frosted uses data attributes rather than duplicated theme registrations.
+- iOS Liquid/Frosted uses data attributes rather than duplicated theme registrations;
+- panel and screensaver CSS are now better separated from monolithic files.
 
 Main remaining cleanup opportunities:
 
 - reduce legacy component-specific tokens over time;
-- migrate more widgets toward canonical semantic tokens;
+- migrate more widgets and panels toward canonical semantic tokens;
 - keep exceptions centralized in theme files;
 - document which tokens are public contract vs internal adapter;
 - avoid growing `styles/themes/ios.css` into too many unrelated component patches.
