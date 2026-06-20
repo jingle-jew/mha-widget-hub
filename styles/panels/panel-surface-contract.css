@@ -25,7 +25,7 @@
 @media (max-width: 767px) {
   [data-mobile-presentation="sheet"] > [role="dialog"] {
     --mha-mobile-sheet-top-gap: max(var(--mha-page-padding, clamp(.65rem, 2.5vw, 1rem)), env(safe-area-inset-top));
-    --mha-mobile-sheet-max-height: min(80dvh, calc(100dvh - var(--mha-mobile-sheet-top-gap)));
+    --mha-mobile-sheet-max-height: min(85dvh, calc(100dvh - var(--mha-mobile-sheet-top-gap)));
     inset-inline: 0;
     inset-block-start: auto;
     inset-block-end: 0;
