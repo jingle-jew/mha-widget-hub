@@ -205,11 +205,55 @@ Nested metadata surfaces
 
 ---
 
+# System Window
+
+## Purpose
+
+System-level MHA windows.
+
+In MHA, panels and popups are part of the same conceptual family: system windows, similar in spirit to macOS system windows/sheets/dialogs.
+
+They should usually share the same base material language, while keeping separate roles for elevation, size, modality and behavior.
+
+## Reference
+
+Primary reference:
+
+```text
+Settings Panel
+```
+
+Validation examples:
+
+```text
+Widget Manager Sheet
+Widget Config Popup
+Page Creator
+Admin Panel
+Dialogs
+Future modal flows
+```
+
+## Future base roles
+
+```css
+--mha-system-window-surface
+--mha-system-window-border
+--mha-system-window-shadow
+--mha-system-window-blur
+```
+
+These base roles may be added later if the implementation needs an explicit common parent for panel and popup tokens.
+
+---
+
 # Panel
 
 ## Purpose
 
-Large structural sheet.
+Large structural system window.
+
+Panels are persistent or semi-persistent system windows used for settings, management and admin flows.
 
 ## Reference
 
@@ -235,25 +279,34 @@ Admin Panel
 --mha-blur-panel
 ```
 
+## Relationship to popup
+
+Panel and popup should share the same system-window material family.
+
+The separate panel role exists so MHA can tune large sheets differently from smaller focused modal windows if needed.
+
 ---
 
 # Popup
 
 ## Purpose
 
-Focused modal interface.
+Focused modal system window.
+
+Popups belong to the same system-window family as panels, but are usually smaller, more focused and more modal.
 
 ## Reference
 
 Primary reference:
 
 ```text
-Settings panel
+Settings Panel system-window material
 ```
 
 Validation examples:
 
 ```text
+Widget Config Popup
 Page Creator
 Dialogs
 Future modal flows
@@ -267,6 +320,12 @@ Future modal flows
 --mha-shadow-popup
 --mha-blur-popup
 ```
+
+## Relationship to panel
+
+Popup should inherit the same base material language as panel.
+
+The separate popup role exists for differences in elevation, shadow, blur strength, scale or modality, not because popups should look like a completely unrelated theme layer.
 
 ---
 
