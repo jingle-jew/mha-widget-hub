@@ -17,8 +17,10 @@ src/
   admin/
   core/
   ha/
+  i18n/
   layout/
   pages/
+  panels/
   screensaver/
   settings/
   styles/
@@ -32,6 +34,7 @@ styles/
   components/
   core/
   layout/
+  panels/
   screensaver/
   settings/
   system/
@@ -48,9 +51,7 @@ The main file is:
 mha-widget-hub.js
 ```
 
-It should remain an orchestrator.
-
-Most feature work should happen inside `src/` modules and `styles/`.
+It should remain an application shell and orchestration entry point. Most feature work should happen inside `src/` modules and `styles/`.
 
 ---
 
@@ -73,9 +74,9 @@ npm run dev
 npm run build
 npm test
 npm run check:syntax
+npm run check:sync
+npm run check
 ```
-
-Depending on the current package scripts, not all commands may exist in every branch.
 
 Use:
 
@@ -106,6 +107,8 @@ Then test manually in:
 - tablet;
 - mobile.
 
+The user/project owner prefers manual visual validation. Do not add automated browser screenshots or heavy visual comparison workflows unless explicitly requested.
+
 ---
 
 ## 5. dev.html
@@ -116,14 +119,13 @@ Use it for:
 
 - layout testing;
 - widget manager testing;
+- config popup testing;
 - theme testing;
 - preview testing;
 - responsive testing;
 - visual regression checks.
 
-Do not assume that `dev.html` is enough.
-
-Always test final behavior inside Home Assistant too.
+Do not assume that `dev.html` is enough. Always test final behavior inside Home Assistant too.
 
 ---
 
@@ -179,6 +181,7 @@ styles/components
 styles/system
 styles/themes
 styles/layout
+styles/panels
 styles/settings
 styles/widget-manager
 styles/widgets
@@ -188,11 +191,12 @@ styles/screensaver
 General rules:
 
 - define visual identity in theme CSS;
-- consume tokens in widgets/components;
-- avoid hardcoded colors;
+- consume tokens in widgets/components/panels;
+- avoid hardcoded colors when a token exists;
 - avoid theme-specific widget hacks;
 - keep layout CSS separate from visual theme CSS;
-- keep widget-specific CSS in widget files or `styles/widgets`.
+- keep widget-specific CSS in `styles/widgets`;
+- keep shared panel surfaces in `styles/panels`.
 
 Prefer semantic tokens:
 
@@ -214,7 +218,7 @@ color: #fff;
 border: 1px solid rgba(...);
 ```
 
-unless the value is intentionally local.
+unless the value is intentionally local and no suitable token exists.
 
 ---
 
@@ -235,7 +239,11 @@ A widget module should own:
 - config manifest if needed;
 - preview renderer if needed;
 - CSS metadata;
-- aliases/variants.
+- aliases/variants;
+- capabilities;
+- storage normalization;
+- shell behavior;
+- placement flow.
 
 Avoid adding new widget-specific branches to:
 
@@ -251,6 +259,7 @@ See:
 
 ```text
 docs/widgets.md
+docs/adding-widgets.md
 docs/preview-system.md
 docs/config-flows.md
 ```
@@ -266,9 +275,7 @@ src/settings/theme-registry.js
 styles/themes/
 ```
 
-Themes should define values.
-
-Components and widgets should consume tokens.
+Themes should define values. Components and widgets should consume tokens.
 
 See:
 
@@ -289,6 +296,12 @@ src/widget-config/widget-config-popup.js
 src/widget-config/*-config.js
 ```
 
+Config field rendering should live in the config manifest through:
+
+```js
+renderFields(session, hass, visibilityConfig, onChange, helpers)
+```
+
 Best practices:
 
 - keep draft state separate from widget state;
@@ -296,7 +309,8 @@ Best practices:
 - display friendly entity names;
 - respect MHA Admin visibility filtering;
 - do not call Home Assistant services from config UI;
-- disable save when invalid.
+- disable save when invalid;
+- keep field rendering inside the manifest instead of adding popup branches.
 
 See:
 
@@ -306,7 +320,55 @@ docs/config-flows.md
 
 ---
 
-## 12. Home Assistant Abstraction Rules
+## 12. Panel Development Rules
+
+Shared panel/overlay primitives live in:
+
+```text
+src/panels/
+styles/panels/
+```
+
+Use the panel shell and panel surface contract for popup/sheet surfaces when possible.
+
+Good candidates:
+
+- config popup;
+- widget manager;
+- page creator;
+- settings-related panels.
+
+Avoid inventing a separate modal contract unless the visual/behavioral needs are truly different.
+
+---
+
+## 13. Coordinator Development Rules
+
+The main file now delegates to domain coordinators.
+
+When adding orchestration, first ask whether it belongs in one of these areas:
+
+```text
+src/core/*coordinator.js
+src/layout/*coordinator.js
+src/pages/*coordinator.js
+src/settings/*coordinator.js
+src/screensaver/*coordinator.js
+src/widgets/*coordinator.js
+```
+
+A coordinator should:
+
+- keep a narrow responsibility;
+- preserve existing behavior;
+- expose small methods called by the root;
+- be testable without full visual automation where practical.
+
+Avoid turning a coordinator into a second giant root file.
+
+---
+
+## 14. Home Assistant Abstraction Rules
 
 Use helpers from:
 
@@ -321,14 +383,15 @@ for:
 - availability;
 - toggle behavior;
 - slider behavior;
-- service actions;
-- weather helpers.
+- media helpers;
+- weather helpers;
+- service actions.
 
 Avoid scattering direct `hass.callService()` and raw entity parsing inside widgets.
 
 ---
 
-## 13. Placement/Layout Rules
+## 15. Placement/Layout Rules
 
 Placement math should stay pure and testable.
 
@@ -345,6 +408,8 @@ Use:
 
 ```text
 src/layout/placement-controller.js
+src/widgets/widget-placement-orchestrator.js
+src/widgets/widget-flow-coordinator.js
 ```
 
 for DOM/runtime coordination.
@@ -353,7 +418,7 @@ When changing placement behavior, add or update tests.
 
 ---
 
-## 14. Main File Rules
+## 16. Main File Rules
 
 `mha-widget-hub.js` should coordinate modules.
 
@@ -365,13 +430,15 @@ It should not become the place for:
 - Home Assistant service logic;
 - large CSS strings;
 - config field rendering;
-- placement math.
+- placement math;
+- panel DOM contracts;
+- reusable widget state logic.
 
-If a change makes the main file larger, ask whether the logic belongs in a module.
+If a change makes the main file larger, ask whether the logic belongs in a module or coordinator.
 
 ---
 
-## 15. Manual Visual Test Matrix
+## 17. Manual Visual Test Matrix
 
 For UI changes, check:
 
@@ -380,6 +447,7 @@ For UI changes, check:
 - config popup open/close;
 - settings panel open/close;
 - page creator popup;
+- panels as bottom sheets on mobile;
 - dock left;
 - dock right;
 - dock bottom;
@@ -391,11 +459,16 @@ For UI changes, check:
 - OneUI;
 - Material;
 - iOS Liquid;
-- iOS Frosted.
+- iOS Frosted;
+- screensaver;
+- NowBar;
+- widget add/configure/move/resize/remove flows.
+
+The final visual judgment is manual.
 
 ---
 
-## 16. Cache Notes
+## 18. Cache Notes
 
 Home Assistant frontend caching can hide changes.
 
@@ -411,17 +484,17 @@ Do not assume a bug is fixed until the updated frontend file is actually loaded.
 
 ---
 
-## 17. Safe Commit Strategy
+## 19. Safe Commit Strategy
 
 Prefer small, committable phases.
 
 Good commit examples:
 
 ```text
-docs: add preview system guide
-widgets: move slider preview into widget module
+docs: update config flow guide
+widgets: add live preview for media widget
 themes: normalize iOS frosted surface tokens
-config: add media widget config manifest
+config: add scenes widget config manifest
 layout: fix dock bottom grid columns
 ```
 
@@ -435,7 +508,7 @@ Small commits make regressions much easier to isolate.
 
 ---
 
-## 18. Before Opening A Pull Request
+## 20. Before Opening A Pull Request
 
 Run:
 
@@ -459,22 +532,23 @@ Update documentation when changing extension contracts.
 
 ---
 
-## 19. Documentation Rule
+## 21. Documentation Rule
 
 If a change affects how contributors add or modify something, update the matching doc:
 
 | Change | Update |
 |---|---|
-| widget module contract | `docs/widgets.md` |
+| widget module contract | `docs/widgets.md`, `docs/adding-widgets.md` |
 | theme contract | `docs/themes.md`, `docs/theme-tokens.md` |
 | preview behavior | `docs/preview-system.md` |
 | config flow behavior | `docs/config-flows.md` |
+| panel/surface behavior | `docs/architecture.md`, `docs/development.md` |
 | internal architecture | `docs/architecture.md` |
 | build/test/release process | `docs/development.md`, `docs/testing.md`, `docs/release-checklist.md` |
 
 ---
 
-## 20. Development Philosophy
+## 22. Development Philosophy
 
 MHA is becoming a real frontend platform, not a single custom card.
 
@@ -486,6 +560,7 @@ module
 manifest
 token
 helper
+coordinator
 test
 ```
 
