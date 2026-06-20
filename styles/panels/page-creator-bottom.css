@@ -5,15 +5,25 @@
     bottom: 0;
     left: 0;
     right: 0;
-    top: var(--mha-mobile-sheet-top-gap);
+    top: auto;
     width: auto;
     height: auto;
     max-width: none;
-    max-height: calc(100dvh - var(--mha-mobile-sheet-top-gap));
+    max-height: var(--mha-mobile-sheet-max-height);
     overflow: hidden;
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
     transform-origin: bottom center;
+  }
+
+  section.mha-page-creator:not(.mha-widget-config-popup) .mha-page-creator-sheet {
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+  }
+
+  section.mha-page-creator:not(.mha-widget-config-popup) .mha-page-creator-icons {
+    min-block-size: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
 
   section.mha-page-creator:not(.mha-widget-config-popup) .mha-page-creator-actions {
