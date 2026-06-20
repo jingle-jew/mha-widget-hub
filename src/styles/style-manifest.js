@@ -29,6 +29,7 @@ const STATIC_STYLE_MANIFEST_AFTER_THEMES = Object.freeze([
   entry("styles/settings/settings-panel.css", "component"),
   entry("styles/widget-manager/widget-manager.css", "component"),
   entry("styles/widget-manager/widget-config-popup.css", "component"),
+  entry("styles/widget-manager/widget-surface-backdrop.css", "component"),
   entry("styles/panels/panel-surface-contract.css", "component"),
   entry("styles/panels/panel-frame-alignment.css", "component"),
   entry("styles/panels/page-creator-sheet.css", "component"),
@@ -81,7 +82,7 @@ export function getWidgetStyleManifestEntries() {
 }
 
 export function getStyleManifest() {
-  return Object.freeze([
+  return uniqueEntries([
     ...STATIC_STYLE_MANIFEST_BEFORE_THEMES,
     ...getThemeStyleManifestEntries(),
     ...STATIC_STYLE_MANIFEST_AFTER_THEMES,
