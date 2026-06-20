@@ -9,6 +9,7 @@ import {
   PANEL_SURFACE_ROLES,
 } from "../panels/panel-surface-contract.js";
 import { t } from "../i18n/index.js";
+import { createButton } from "../ui/button.js";
 
 export function supportsWidgetConfiguration(widget = {}) {
   return Boolean(getWidgetConfigType(widget));
