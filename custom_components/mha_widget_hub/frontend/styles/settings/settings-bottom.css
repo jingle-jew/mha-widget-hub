@@ -1,7 +1,7 @@
 @media (max-width: 767px) {
   .mha-settings-panel .mha-settings-sheet {
     --mha-mobile-sheet-top-gap: max(var(--mha-page-padding, clamp(.65rem, 2.5vw, 1rem)), env(safe-area-inset-top));
-    --mha-mobile-sheet-max-height: min(80vh, calc(100vh - var(--mha-mobile-sheet-top-gap)));
+    --mha-mobile-sheet-max-height: min(85vh, calc(100vh - var(--mha-mobile-sheet-top-gap)));
     position: fixed;
     bottom: 0;
     left: 0;
