@@ -17,6 +17,7 @@ const STATIC_STYLE_MANIFEST_BEFORE_THEMES = Object.freeze([
 const STATIC_STYLE_MANIFEST_AFTER_THEMES = Object.freeze([
   entry("styles/themes/accent-palettes.css", "theme"),
   entry("styles/themes/semantic-tokens.css", "theme"),
+  entry("styles/core/glass-surface.css", "structure"),
   entry("styles/core/background.css", "structure"),
   entry("styles/layout/shell.css", "structure"),
   entry("styles/layout/widget-grid.css", "structure"),
