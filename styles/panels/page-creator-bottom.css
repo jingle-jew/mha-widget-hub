@@ -15,4 +15,32 @@
     border-bottom-right-radius: 0;
     transform-origin: bottom center;
   }
+
+  section.mha-page-creator:not(.mha-widget-config-popup) .mha-page-creator-actions {
+    align-items: center;
+    justify-content: flex-end;
+    gap: clamp(.55rem, 2.4vw, .75rem);
+    margin-block-start: auto;
+    padding-block-start: clamp(.25rem, 1.4vw, .5rem);
+  }
+
+  section.mha-page-creator:not(.mha-widget-config-popup) .mha-page-creator-primary,
+  section.mha-page-creator:not(.mha-widget-config-popup) .mha-page-creator-secondary {
+    --mha-page-creator-action-height: clamp(2.45rem, 9vw, 2.85rem);
+    inline-size: auto;
+    block-size: var(--mha-page-creator-action-height);
+    min-inline-size: clamp(5.25rem, 23vw, 7.25rem);
+    min-block-size: var(--mha-page-creator-action-height);
+    max-block-size: var(--mha-page-creator-action-height);
+    padding-block: 0;
+    padding-inline: clamp(1rem, 4vw, 1.35rem);
+    border-radius: var(--mha-button-radius, var(--mha-control-radius, 999px));
+    aspect-ratio: auto;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  section.mha-page-creator:not(.mha-widget-config-popup) .mha-page-creator-primary {
+    min-inline-size: clamp(6.75rem, 34vw, 8.75rem);
+  }
 }
