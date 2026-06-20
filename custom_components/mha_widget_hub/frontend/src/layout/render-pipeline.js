@@ -22,6 +22,7 @@ import {
   createPageCreatorPanel,
   createWidgetConfigPanel,
   createWidgetManagerPanel,
+  syncWidgetSurfaceOpenState,
 } from "../widgets/widget-placement-orchestrator.js";
 
 export function createRenderPipeline(host, options = {}) {
@@ -166,6 +167,7 @@ export function createRenderPipeline(host, options = {}) {
         onRerender: () => host._syncWidgetConfigDom(),
       })));
       host.shadowRoot.append(createSettingsPanel(settingsPanels.screensaver));
+      syncWidgetSurfaceOpenState(host.shadowRoot);
       host._syncEditModeDom();
       host._syncScreensaverVisibilityState();
       host._scheduleIconSymbolRefresh();
