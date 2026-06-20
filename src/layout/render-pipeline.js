@@ -22,6 +22,7 @@ import {
   createPageCreatorPanel,
   createWidgetConfigPanel,
   createWidgetManagerPanel,
+  syncWidgetSurfaceOpenState,
 } from "../widgets/widget-placement-orchestrator.js";
 
 export function createRenderPipeline(host, options = {}) {
@@ -166,6 +167,7 @@ export function createRenderPipeline(host, options = {}) {
         onRerender: () => host._syncWidgetConfigDom(),
       })));
       host.shadowRoot.append(createSettingsPanel(settingsPanels.screensaver));
+      syncWidgetSurfaceOpenState(host.shadowRoot);
       host._syncEditModeDom();
       host._syncScreensaverVisibilityState();
       host._scheduleIconSymbolRefresh();
@@ -258,111 +260,45 @@ export function createRenderPipeline(host, options = {}) {
       layoutMode,
       layout,
       logicalColumns: cols,
-      gridUnits: units,
-      pages: host._pages,
-      activePageId: host._activePageId,
-      isEditing: host._isEditing,
+      units,
+      hideHaSidebar: host._hideHaSidebar,
+      activePage: host._getActivePage(),
       onPageSelect: (id) => host._setActivePage(id),
-      onAddPage: () => host._openPageCreator(),
-      onDockSettings: () => host._openDockSettings(),
-      onSettings: () => host._openSettings(),
     });
     host.shadowRoot.append(bg, shell);
     return { links, grid };
   }
 
-  function mountImmediateUi({ layout, grid, units }) {
-    const positions = host._getActiveWidgetPositions({ create: true });
-    appendWidgetPlaceholders(grid, { units, positions });
-    if (layout === "mobile") {
-      host.shadowRoot.append(createMobileDock(host._getDockProps()));
-    }
-    appendPrimaryControls();
-    host._wireDockAutoHide(grid);
-    host._updateStatusDom?.();
-    return { positions };
-  }
-
-  function schedulePrimaryWidgetRender({ grid, units, positions, renderId }) {
-    host._widgetRenderFrame = requestAnimationFrame(() => {
-      host._widgetRenderFrame = 0;
-      if (host._renderId !== renderId) return;
-      startProgressiveWidgetRender({ grid, units, positions, renderId });
-    });
-  }
-
-  function handleStylesReady({ layout, renderId }) {
-    if (host._renderId !== renderId) return;
+  async function waitForStyles({ links, renderId }) {
+    await Promise.all(links.map((link) => new Promise((resolve) => {
+      if (link.sheet) {
+        resolve();
+        return;
+      }
+      link.addEventListener("load", resolve, { once: true });
+      link.addEventListener("error", resolve, { once: true });
+    })));
+    if (!host.isConnected || host._renderId !== renderId) return false;
     host._stylesReadyRenderId = renderId;
-    host._observeLayoutSize();
-    host._scheduleIconSymbolRefresh();
-    if (host._bootComplete) {
-      appendDeferredUi({ layout, renderId });
-      return;
-    }
-    host._pendingDeferredUi = { layout, renderId };
-    host._tryCompleteBoot();
+    return true;
   }
 
-  function handleStylesError({ layout, renderId, error }) {
-    console.warn("[MHA] Styles did not finish loading; revealing the shell.", error);
-    if (host._bootComplete) {
-      appendDeferredUi({ layout, renderId });
-      return;
-    }
-    host._pendingDeferredUi = { layout, renderId };
-    host._finishBoot({ fallback: true, reason: "stylesheet initialization failed" });
-  }
-
-  function awaitStylesAndFinalizeRender({ links, layout, renderId }) {
-    return Promise.all(links.map((link) => (
-      link.sheet
-        ? Promise.resolve()
-        : new Promise((resolve) => {
-          link.addEventListener("load", resolve, { once: true });
-          link.addEventListener("error", resolve, { once: true });
-        })
-    )))
-      .then(() => handleStylesReady({ layout, renderId }))
-      .catch((error) => handleStylesError({ layout, renderId, error }));
-  }
-
-  function render() {
-    const themeState = host._themeController.sync();
-    const context = buildRenderContext(themeState);
+  async function render() {
+    const context = buildRenderContext(host._themeController.read());
     prepareRenderCycle(context);
     applyRenderDatasetsAndRuntimeVars(context);
     const { links, grid } = mountRenderShell(context);
-    const { positions } = mountImmediateUi({ ...context, grid });
-    schedulePrimaryWidgetRender({
-      grid,
-      units: context.units,
-      positions,
-      renderId: context.renderId,
-    });
-    awaitStylesAndFinalizeRender({
-      links,
-      layout: context.layout,
-      renderId: context.renderId,
-    });
-    host._scheduleScreensaverIdleTimer();
+    appendWidgetPlaceholders(grid, context);
+    appendPrimaryControls();
+    appendDeferredUi(context);
+    startProgressiveWidgetRender({ grid, ...context });
+    const stylesReady = await waitForStyles(context);
+    if (!stylesReady) return;
+    host._syncRuntimeLayoutAttrs();
   }
 
   return {
     render,
     createWidgetPlaceholder,
-    appendDeferredUi,
-    handleStylesReady,
-    handleStylesError,
-    awaitStylesAndFinalizeRender,
-    buildRenderContext,
-    prepareRenderCycle,
-    applyRenderDatasetsAndRuntimeVars,
-    mountRenderShell,
-    mountImmediateUi,
-    schedulePrimaryWidgetRender,
-    startProgressiveWidgetRender,
-    appendWidgetPlaceholders,
-    appendPrimaryControls,
   };
 }
