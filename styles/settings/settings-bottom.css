@@ -1,3 +1,15 @@
+:host([data-layout="tablet"]) .mha-settings-panel[data-settings-page="main"] .mha-settings-sheet,
+:host([data-layout="desktop"]) .mha-settings-panel[data-settings-page="main"] .mha-settings-sheet {
+  inline-size: min(56rem, calc(100vw - clamp(2rem, 5.2vw, 4rem)));
+  max-inline-size: calc(100vw - clamp(2rem, 5.2vw, 4rem));
+}
+
+:host([data-layout="tablet"]) .mha-settings-panel[data-settings-page="main"] .mha-settings-body,
+:host([data-layout="desktop"]) .mha-settings-panel[data-settings-page="main"] .mha-settings-body {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+}
+
 @media (max-width: 767px) {
   .mha-settings-panel .mha-settings-sheet {
     --mha-mobile-sheet-top-gap: max(var(--mha-page-padding, clamp(.65rem, 2.5vw, 1rem)), env(safe-area-inset-top));
