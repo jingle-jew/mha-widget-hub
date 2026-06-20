@@ -25,8 +25,8 @@ Before installing MHA Widget Hub, ensure you have:
 After installation:
 
 1. Open Home Assistant.
-2. Locate MHA Widget Hub in the sidebar.
-3. Open the panel.
+2. Go to Integrations & Devices
+3. Search for MHA Widget Hub
 4. Complete the initial setup if prompted.
 
 ---
