@@ -22,6 +22,7 @@ const STATIC_STYLE_MANIFEST_AFTER_THEMES = Object.freeze([
   entry("styles/layout/shell.css", "structure"),
   entry("styles/layout/widget-grid.css", "structure"),
   entry("styles/layout/status-bar.css", "structure"),
+  entry("styles/layout/status-bar-glass-override.css", "structure"),
   entry("styles/layout/dock.css", "structure"),
   entry("styles/layout/mobile-dock.css", "structure"),
   entry("styles/layout/floating-controls.css", "structure"),
