@@ -21,14 +21,6 @@
   transition:
     filter 240ms ease,
     transform 240ms cubic-bezier(.2,.8,.2,1);
-  pointer-events: none;
-}
-
-:host(.is-widget-surface-open) .mha-widget-manager-panel,
-:host(.is-widget-surface-open) .mha-page-creator {
-  filter: none;
-  transform: none;
-  pointer-events: auto;
 }
 
 @media (prefers-reduced-motion: reduce) {
