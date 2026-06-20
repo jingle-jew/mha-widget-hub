@@ -9,7 +9,6 @@ import {
   PANEL_SURFACE_ROLES,
 } from "../panels/panel-surface-contract.js";
 import { t } from "../i18n/index.js";
-import { createButton } from "../ui/button.js";
 
 export function supportsWidgetConfiguration(widget = {}) {
   return Boolean(getWidgetConfigType(widget));
@@ -130,23 +129,25 @@ export function createWidgetConfigPopup({
   const actions = document.createElement("div");
   actions.className = "mha-widget-config-actions mha-page-creator-actions";
   const cancel = document.createElement("button");
-  cancel.className = "mha-widget-config-secondary mha-page-creator-secondary";
+  cancel.className = "mha-button mha-widget-config-secondary mha-page-creator-secondary";
+  cancel.dataset.variant = "default";
   cancel.type = "button";
   cancel.textContent = t("common.cancel", "Cancel");
   cancel.onclick = () => onCancel?.();
 
-  const save = document.createElement("button");
-  save.className = "mha-widget-config-primary mha-page-creator-primary";
-  save.type = "button";
-  save.textContent = session?.mode === "edit"
+  const primaryAction = document.createElement("button");
+  primaryAction.className = "mha-button mha-widget-config-primary mha-page-creator-primary";
+  primaryAction.dataset.variant = "primary";
+  primaryAction.type = "button";
+  primaryAction.textContent = session?.mode === "edit"
     ? t("common.save", "Save")
     : t("common.continue", "Continue");
-  save.disabled = !content.canSave;
+  primaryAction.disabled = !content.canSave;
   content.fields.addEventListener("input", () => {
-    if (content.isValid) save.disabled = !content.isValid();
+    if (content.isValid) primaryAction.disabled = !content.isValid();
   });
-  save.onclick = () => onSave?.();
-  actions.append(cancel, save);
+  primaryAction.onclick = () => onSave?.();
+  actions.append(cancel, primaryAction);
 
   return applyPanelSurfaceContract(createPanelShell({
     open: Boolean(session),
