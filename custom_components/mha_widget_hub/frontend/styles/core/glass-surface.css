@@ -28,13 +28,16 @@
   --mha-glass-surface-brightness: .98;
 }
 
+.mha-glass-surface {
+  background: var(--mha-glass-surface-background);
+  border-color: var(--mha-glass-surface-border);
+}
+
 .mha-glass-surface,
 .mha-widget,
 .mha-dock,
 .mha-status-bar,
 .mha-screensaver-nowbar-tile {
-  background: var(--mha-glass-surface-background);
-  border-color: var(--mha-glass-surface-border);
   -webkit-backdrop-filter: var(--mha-glass-surface-fallback-filter);
   backdrop-filter: var(--mha-glass-surface-fallback-filter);
 }
@@ -60,8 +63,8 @@
 }
 
 /* Firefox backdrop-filter can be visually clipped by blend-mode based reflection
- * layers on persistent shell surfaces. Keep the material readable and let the
- * tint carry the surface when Firefox creates a smaller backdrop root.
+ * layers on persistent shell surfaces. Keep the material readable without
+ * overriding each component's own surface tokens.
  */
 @-moz-document url-prefix() {
   :host,
@@ -74,7 +77,6 @@
   .mha-dock,
   .mha-status-bar,
   .mha-screensaver-nowbar-tile {
-    background: color-mix(in srgb, var(--mha-glass-surface-background) 88%, transparent);
     -webkit-backdrop-filter: var(--mha-glass-surface-filter);
     backdrop-filter: var(--mha-glass-surface-filter);
   }
