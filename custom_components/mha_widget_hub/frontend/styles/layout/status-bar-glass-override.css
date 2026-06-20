@@ -1,0 +1,20 @@
+/*
+ * Status bar glass override.
+ *
+ * Loaded after status-bar.css so the permanent status bar can consume the shared
+ * glass primitive without rewriting the legacy status-bar material blocks.
+ */
+
+:host([data-theme-style="oneui"]) .mha-status-bar {
+  background: var(
+    --mha-statusbar-surface,
+    var(--mha-shell-status-surface, var(--mha-shell-surface, var(--mha-surface-glass)))
+  );
+  border-color: color-mix(in srgb, var(--mha-primary-border, var(--mha-border-primary)) 78%, rgba(255,255,255,.16));
+  -webkit-backdrop-filter: var(--mha-glass-surface-filter);
+  backdrop-filter: var(--mha-glass-surface-filter);
+}
+
+:host([data-theme-style="oneui"]) .mha-status-bar::after {
+  mix-blend-mode: var(--mha-glass-reflection-blend-mode, screen);
+}
