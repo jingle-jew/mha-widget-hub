@@ -2,9 +2,7 @@
 
 This document describes the long-term direction of MHA Widget Hub.
 
-It is not a promise that every item is implemented today.
-
-It is a guide for future architecture, contribution decisions and project priorities.
+It is not a promise that every item is implemented today. It is a guide for future architecture, contribution decisions and project priorities.
 
 ---
 
@@ -23,6 +21,8 @@ The goal is to provide a controlled, beautiful, touch-friendly launcher where:
 - Home Assistant complexity is hidden behind human UI.
 
 MHA should feel less like a technical dashboard and more like a home interface.
+
+MHA should also remain native to itself: no embedded Home Assistant dashboard cards and no dependency on external HACS/custom cards for core widgets.
 
 ---
 
@@ -53,6 +53,10 @@ Widget module owns:
   css
   aliases
   variants
+  capabilities
+  storage compatibility
+  shell behavior
+  placement flow
 
 Theme owns:
   registry entry
@@ -70,151 +74,181 @@ MHA is already moving toward:
 - registry-driven widgets;
 - registry-driven themes;
 - live widget previews;
-- config manifests;
+- manifest-driven config flows;
 - semantic theme tokens;
 - Home Assistant abstraction helpers;
 - modular layout and placement logic;
-- dedicated admin visibility controls.
+- shared panel shell/surface contracts;
+- dedicated admin visibility controls;
+- domain coordinators around root orchestration.
 
-The project is no longer a single custom card.
-
-It is becoming a small frontend platform.
+The project is no longer a single custom card. It is becoming a small frontend platform.
 
 ---
 
-## 4. Near-Term Priorities
+## 4. Recently Stabilized Architecture
 
-### 4.1 Complete config-flow modularity
+The following items are now substantially in place:
+
+- config field rendering moved into manifests through `renderFields`;
+- popup title/hint can be manifest-driven or dynamic;
+- manager visibility can be declarative through `manager.hidden` and entry `hidden`;
+- widget-specific stored-data patches can live in `definition.storage.normalize`;
+- widget manager/config/page creator surfaces share panel primitives;
+- screensaver CSS is split into smaller files;
+- root orchestration is reduced through dedicated coordinators;
+- scenes widget is registered as a native MHA widget with config and live preview.
+
+These should be treated as stable direction, not temporary experiments.
+
+---
+
+## 5. Near-Term Priorities
+
+### 5.1 Strengthen extension contract tests
 
 Current state:
 
-- config manifests exist;
-- config registry collects manifests from widget modules;
-- popup still contains central field rendering branches.
+- widget module contracts exist;
+- config manifests are discovered from modules;
+- previews are discovered from modules;
+- CSS is discovered from definitions;
+- some contract tests exist.
+
+Target:
+
+```text
+A broken widget module contract should fail tests quickly.
+```
+
+Recommended coverage:
+
+- every registered widget has a stable kind;
+- every renderer key resolves;
+- every CSS path is valid;
+- every config type resolves to a manifest;
+- every configurable widget has `renderFields`, `createDraft` and `build`;
+- every live preview can create a widget without HA side effects.
+
+---
+
+### 5.2 Extract reusable config field primitives
+
+Current state:
+
+- config fields are manifest-driven;
+- each config file still builds much of its own DOM.
+
+Target:
+
+```text
+Config manifests remain owners of fields,
+but use shared primitives for common controls.
+```
+
+Potential primitives:
+
+- entity selector;
+- domain selector;
+- text input;
+- JSON textarea;
+- segmented control;
+- select field;
+- icon picker;
+- label field;
+- empty-state helper.
+
+Result:
+
+```text
+New config flows stay module-owned without duplicating basic field UI.
+```
+
+---
+
+### 5.3 Continue widget-owned normalization
+
+Current state:
+
+- registry normalization is more generic;
+- widget definitions can provide `storage.normalize`.
 
 Target:
 
 ```js
-config: {
-  type,
-  title,
-  hint,
-  createDraft,
-  build,
-  renderFields
+storage: {
+  normalize(widget, helpers) {
+    return { ...patch };
+  }
 }
 ```
 
 Result:
 
 ```text
-Adding a new config flow should not require editing widget-config-popup.js.
+Legacy compatibility rules live near the widget that owns them.
 ```
 
 ---
 
-### 4.2 Move widget-specific normalization into widget definitions
+### 5.4 Continue reducing the main file conservatively
 
 Current state:
 
-- `normalizeWidgetContract()` still contains kind-specific compatibility logic.
+`mha-widget-hub.js` has been substantially reduced through coordinators, but still coordinates the application shell.
 
 Target:
-
-```js
-definition.normalizeContract(widget, helpers)
-```
-
-Result:
-
-```text
-The registry becomes more generic.
-Each widget owns its own legacy compatibility rules.
-```
-
----
-
-### 4.3 Make manager visibility declarative
-
-Current state:
-
-Some manager exclusions are still hardcoded.
-
-Target:
-
-```js
-manager: {
-  visible: false
-}
-```
-
-or:
-
-```js
-manager: {
-  entries: []
-}
-```
-
-Result:
-
-```text
-Widget manager should not need to know special widget names.
-```
-
----
-
-### 4.4 Continue reducing the main file
-
-Current state:
-
-`mha-widget-hub.js` is already smaller than before, but still coordinates many systems.
-
-Target extractions:
-
-```text
-app-lifecycle-controller
-widget-grid-controller
-panel-controller
-home-assistant-connection-controller
-secondary-ui-controller
-```
-
-Result:
 
 ```text
 The main file stays a readable application shell.
 ```
 
+Future extraction candidates:
+
+```text
+home-assistant-connection-controller
+panel coordination refinements
+remaining boot/app shell seams
+```
+
+Rule:
+
+```text
+One coherent extraction at a time.
+```
+
+Do not refactor for sport.
+
 ---
 
-### 4.5 Stabilize token contracts
+### 5.5 Stabilize token contracts
 
 Current state:
 
 - semantic tokens exist;
 - legacy adapter tokens still exist;
-- some widget-specific tokens remain.
+- some widget-specific tokens remain;
+- panel CSS now participates in the shared visual contract.
 
 Target:
 
 ```text
 Themes define visual identity.
-Components consume semantic tokens.
+Components, panels and widgets consume semantic tokens.
 Widgets only expose private tokens when genuinely needed.
 ```
 
 Result:
 
 ```text
-Themes can restyle the whole launcher without editing widget code.
+Themes can restyle the launcher without editing widget code.
 ```
 
 ---
 
-## 5. Medium-Term Priorities
+## 6. Medium-Term Priorities
 
-### 5.1 Widget packs
+### 6.1 Widget packs
 
 Future widget packs could group related widgets.
 
@@ -242,13 +276,11 @@ assets
 documentation
 ```
 
-Initial implementation can remain static.
-
-Dynamic plugin loading should wait until internal contracts are stable.
+Initial implementation can remain static. Dynamic plugin loading should wait until internal contracts are stable.
 
 ---
 
-### 5.2 Theme packs
+### 6.2 Theme packs
 
 Future theme packs could group visual systems.
 
@@ -277,7 +309,7 @@ documentation
 
 ---
 
-### 5.3 More widget configuration types
+### 6.3 More widget configuration field types
 
 Potential future config field types:
 
@@ -304,7 +336,7 @@ Config fields should be reusable primitives.
 
 ---
 
-### 5.4 Better admin controls
+### 6.4 Better admin controls
 
 Future admin features could include:
 
@@ -317,7 +349,7 @@ Future admin features could include:
 - room-specific dashboards;
 - device-specific dashboard profiles.
 
-The guiding principle:
+Guiding principle:
 
 ```text
 The admin configures complexity.
@@ -326,7 +358,7 @@ The family sees simplicity.
 
 ---
 
-### 5.5 Import/export
+### 6.5 Import/export
 
 Potential future feature:
 
@@ -343,15 +375,13 @@ This would help with:
 - debugging user reports;
 - creating starter templates.
 
-Important:
-
 Exports should avoid leaking sensitive Home Assistant details unless the user explicitly chooses to include them.
 
 ---
 
-## 6. Long-Term Priorities
+## 7. Long-Term Priorities
 
-### 6.1 Controlled extension ecosystem
+### 7.1 Controlled extension ecosystem
 
 The long-term dream is:
 
@@ -370,13 +400,11 @@ This requires:
 - permission boundaries;
 - documented compatibility rules.
 
-Do not jump there too early.
-
-First stabilize internal extension contracts.
+Do not jump there too early. First stabilize internal extension contracts.
 
 ---
 
-### 6.2 Plugin discovery
+### 7.2 Plugin discovery
 
 Possible future directions:
 
@@ -386,15 +414,11 @@ Possible future directions:
 - curated extension registry;
 - manual import.
 
-Important:
-
-Dynamic discovery should not make the app fragile.
-
-Static registration is acceptable until the extension contract is mature.
+Dynamic discovery should not make the app fragile. Static registration is acceptable until the extension contract is mature.
 
 ---
 
-### 6.3 Theme builder
+### 7.3 Theme builder
 
 A future theme builder could let users create themes without writing CSS.
 
@@ -413,7 +437,7 @@ The builder should output values that map to the same theme token contract.
 
 ---
 
-### 6.4 Widget builder
+### 7.4 Widget builder
 
 A future widget builder could allow limited custom widgets from UI.
 
@@ -434,7 +458,7 @@ Avoid turning MHA into an unrestricted arbitrary-code editor for normal users.
 
 ---
 
-## 7. Compatibility Goals
+## 8. Compatibility Goals
 
 MHA should maintain compatibility across:
 
@@ -456,7 +480,7 @@ When breaking changes are unavoidable, they should include:
 
 ---
 
-## 8. Storage Migration Direction
+## 9. Storage Migration Direction
 
 Future storage migrations should be:
 
@@ -464,7 +488,7 @@ Future storage migrations should be:
 - testable;
 - reversible when possible;
 - tolerant of invalid data;
-- isolated in store/model modules.
+- isolated in store/model/widget definition modules.
 
 Avoid doing storage migrations inside random UI rendering code.
 
@@ -476,13 +500,12 @@ src/core/storage.js
 src/admin/entity-visibility-store.js
 src/settings/*
 src/widgets/widget-registry.js
+widget definition storage adapters
 ```
-
-depending on the data type.
 
 ---
 
-## 9. Home Assistant Integration Direction
+## 10. Home Assistant Integration Direction
 
 MHA should keep Home Assistant behavior behind helpers.
 
@@ -502,7 +525,7 @@ Widgets should consume stable helpers instead of duplicating HA details.
 
 ---
 
-## 10. Visual Direction
+## 11. Visual Direction
 
 MHA should support multiple visual systems while keeping a consistent internal token contract.
 
@@ -523,7 +546,7 @@ styles/themes/semantic-tokens.css
 styles/themes/accent-palettes.css
 ```
 
-Widgets should consume:
+Components, panels and widgets should consume:
 
 ```text
 semantic tokens
@@ -533,7 +556,7 @@ component primitives
 
 ---
 
-## 11. Documentation Direction
+## 12. Documentation Direction
 
 Documentation should remain layered.
 
@@ -561,7 +584,7 @@ The README should not become an architecture manual.
 
 ---
 
-## 12. Contribution Direction
+## 13. Contribution Direction
 
 Future contributions should be judged by whether they move MHA toward:
 
@@ -577,15 +600,15 @@ Avoid features that add long-term architectural debt unless the tradeoff is inte
 
 ---
 
-## 13. Suggested Milestones
+## 14. Suggested Milestones
 
 ### Milestone A — Extension Contract Stabilization
 
-- config field renderers moved into manifests;
-- widget-specific normalization moved into definitions;
-- manager visibility made declarative;
-- docs updated;
-- tests added.
+- contract tests for widget modules;
+- reusable config field primitives;
+- widget-owned storage normalization completed where practical;
+- docs updated with current contracts;
+- no new central widget/config branches.
 
 ### Milestone B — Theme Contract Stabilization
 
@@ -593,7 +616,7 @@ Avoid features that add long-term architectural debt unless the tradeoff is inte
 - legacy token compatibility documented;
 - theme-specific hacks reduced;
 - theme docs tested against code;
-- visual regression checklist created.
+- manual visual regression checklist maintained.
 
 ### Milestone C — Widget Pack Readiness
 
@@ -620,7 +643,7 @@ Avoid features that add long-term architectural debt unless the tradeoff is inte
 
 ---
 
-## 14. Non-Goals For Now
+## 15. Non-Goals For Now
 
 Avoid prioritizing these too early:
 
@@ -629,13 +652,14 @@ Avoid prioritizing these too early:
 - arbitrary user-written widget code;
 - backend sync before local model stabilizes;
 - overengineering plugin discovery;
-- replacing the Home Assistant dashboard system entirely.
+- replacing the Home Assistant dashboard system entirely;
+- embedding native HA dashboard cards or external HACS/custom cards as core widgets.
 
 MHA should first become stable, documented and easy to extend internally.
 
 ---
 
-## 15. Roadmap Principle
+## 16. Roadmap Principle
 
 The north star:
 
