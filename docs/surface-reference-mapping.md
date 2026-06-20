@@ -185,7 +185,7 @@ Nested surface inside a secondary surface.
 Current status:
 
 ```text
-Not fully defined.
+Should be the theme accent color.
 ```
 
 Candidate references:
@@ -248,7 +248,7 @@ Focused modal interface.
 Primary reference:
 
 ```text
-Widget Config Popup
+Settings panel
 ```
 
 Validation examples:
@@ -281,7 +281,7 @@ Interactive controls.
 Primary reference:
 
 ```text
-Settings Select/Input
+Settings Select/Input. 
 ```
 
 Validation examples:
@@ -323,6 +323,7 @@ Toggle ON
 Selected segment
 Primary action
 Selected item
+"Confirm/OK" buttons
 ```
 
 ## Future roles
@@ -372,6 +373,7 @@ Popup backdrop
 The mapping must preserve:
 
 - OneUI appearance
+- OneUI animated background
 - OneUI surface hierarchy
 - OneUI background extraction
 - OneUI automatic accent behavior
@@ -384,7 +386,7 @@ The future surface contract must not become the source of truth for accent extra
 
 ## Migration rule
 
-No component migration should begin until this mapping is validated.
+Mapping is validated.
 
 The next phase after validation is:
 
