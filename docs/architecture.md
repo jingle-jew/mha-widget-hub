@@ -2,71 +2,89 @@
 
 This document describes the current internal architecture of MHA Widget Hub.
 
+MHA Widget Hub is now a modular Home Assistant frontend platform built around native MHA widgets, shared panel surfaces, registry-driven widget contracts, semantic theme tokens and Home Assistant helper modules.
+
 It is intended for contributors and future maintainers.
-
-It is based on the current project structure:
-
-```text
-mha-widget-hub.js
-
-src/core/*
-src/pages/*
-src/layout/*
-src/widgets/*
-src/widget-manager/*
-src/widget-config/*
-src/settings/*
-src/styles/*
-src/ha/*
-src/admin/*
-src/screensaver/*
-src/ui/*
-src/system/*
-
-styles/*
-tests/*
-```
 
 ---
 
 ## 1. Architecture Goal
 
-MHA Widget Hub is moving toward a registry-driven architecture.
-
-The long-term goal is:
+MHA is moving toward this extension model:
 
 ```text
 Add a widget:
   create widget module
-  register widget module
+  register widget module once
 
 Add a theme:
   create theme CSS
-  register theme
+  register theme once
 ```
 
 The project should avoid requiring edits across many unrelated files for every new widget or theme.
 
-Current architecture is already partially there:
+Current architecture is already close to this:
 
 - widgets are centralized through `WIDGET_MODULES`;
 - widget definitions, renderers, previews, config manifests and CSS are collected from modules;
+- config field rendering is delegated to config manifests through `renderFields`;
+- widget manager entries are generated from widget definitions;
+- manager visibility can be controlled through `manager.hidden` and entry `hidden` flags;
+- widget-specific stored-data compatibility can live in definition storage adapters;
 - themes are centralized through `THEME_REGISTRY`;
 - theme CSS is loaded through `style-manifest.js`;
-- widget manager entries are generated from widget definitions;
-- config manifests are collected from widget modules;
-- live previews are delegated to widget preview renderers.
+- live previews are delegated to widget preview renderers;
+- common overlay/sheet visuals are shared through panel shell modules.
 
-The remaining work is mostly about removing final hardcoded branches from:
+Remaining work is now mostly about:
 
-- config popup field rendering;
-- some theme/component CSS exceptions;
-- some legacy widget normalization paths;
-- the main custom element orchestrator.
+- reducing the main custom element carefully;
+- extracting reusable config field primitives;
+- continuing token cleanup;
+- keeping extension contracts tested and documented;
+- avoiding new central branches as widgets grow.
 
 ---
 
-## 2. Top-Level Runtime
+## 2. Current Project Structure
+
+```text
+mha-widget-hub.js
+
+src/admin/*
+src/core/*
+src/ha/*
+src/i18n/*
+src/layout/*
+src/pages/*
+src/panels/*
+src/screensaver/*
+src/settings/*
+src/styles/*
+src/system/*
+src/ui/*
+src/widget-config/*
+src/widget-manager/*
+src/widgets/*
+
+styles/components/*
+styles/core/*
+styles/layout/*
+styles/panels/*
+styles/screensaver/*
+styles/settings/*
+styles/system/*
+styles/themes/*
+styles/widget-manager/*
+styles/widgets/*
+
+tests/*
+```
+
+---
+
+## 3. Top-Level Runtime
 
 The main runtime entry is:
 
@@ -80,33 +98,12 @@ It defines the main custom element:
 class MhaControlHub extends HTMLElement
 ```
 
-This file is currently the application orchestrator.
-
-It imports and coordinates:
-
-- storage;
-- pages;
-- layout;
-- dock;
-- settings;
-- widget manager;
-- widget config popup;
-- theme controller;
-- wallpaper controller;
-- status bar;
-- widgets;
-- placement controller;
-- grid runtime;
-- screensaver;
-- admin entity visibility;
-- style manifest.
-
-The main file should not become the home of widget-specific or theme-specific logic.
+The main file is still the application shell, but many responsibilities have been extracted into coordinators.
 
 Its correct role is:
 
 ```text
-Application shell + lifecycle + orchestration
+Application shell + lifecycle + system orchestration
 ```
 
 not:
@@ -118,64 +115,46 @@ Config registry
 Renderer registry
 CSS contract
 HA business logic
+Panel renderer
+Placement math
 ```
 
 ---
 
-## 3. Current High-Level Module Map
+## 4. Runtime Coordinators
+
+The root custom element now delegates many responsibilities to modules.
+
+Important coordinator modules:
+
+| Area | Module |
+|---|---|
+| boot/lifecycle | `src/core/boot-lifecycle-coordinator.js` |
+| initial state + HA ingress | `src/core/hub-state-ingress-coordinator.js` |
+| render orchestration | `src/layout/render-pipeline.js` |
+| responsive dock state | `src/layout/responsive-dock-coordinator.js` |
+| page UI | `src/pages/page-ui-coordinator.js` |
+| settings + i18n sync | `src/settings/i18n-settings-sync.js` |
+| appearance/theme settings | `src/settings/appearance-coordinator.js` |
+| settings surface props | `src/settings/settings-surface-coordinator.js` |
+| settings panel lifecycle | `src/settings/settings-panel-coordinator.js` |
+| widget creation/config/placement flow | `src/widgets/widget-flow-coordinator.js` |
+| widget interaction surface | `src/widgets/widget-interaction-surface-coordinator.js` |
+| widget layout state | `src/widgets/widget-layout-state-coordinator.js` |
+| widget surface sync | `src/widgets/widget-surface-coordinator.js` |
+| widget resize | `src/widgets/widget-resize-coordinator.js` |
+| screensaver sync | `src/screensaver/screensaver-coordinator.js` |
+| screensaver settings bridge | `src/screensaver/screensaver-settings-bridge.js` |
+
+Rule:
 
 ```text
-mha-widget-hub.js
-  ↓
-src/core
-  storage, storage keys, DOM lifecycle
-
-src/pages
-  page model, page store, page controller
-
-src/layout
-  shell, dock, grid runtime, responsive layout, placement
-
-src/widgets
-  widget modules, registry, renderer registry, shell, previews, variants
-
-src/widget-manager
-  widget manager catalog and UI
-
-src/widget-config
-  config manifests, config registry, config popup
-
-src/settings
-  settings panel, theme controller, theme registry, accent palettes, wallpaper
-
-src/styles
-  CSS manifest generation
-
-src/ha
-  Home Assistant entity/action abstractions
-
-src/admin
-  entity visibility and permissions
-
-src/screensaver
-  screensaver runtime/controller
-
-src/ui
-  reusable UI primitives
-
-src/system
-  system buttons and icons
-
-styles
-  actual CSS files loaded by manifest
-
-tests
-  behavior and architecture coverage
+New orchestration logic should normally start in a domain coordinator, not in mha-widget-hub.js.
 ```
 
 ---
 
-## 4. Boot And Style Loading
+## 5. Boot And Style Loading
 
 MHA does not load CSS by manually writing every stylesheet in the main file.
 
@@ -191,12 +170,6 @@ from:
 src/styles/style-manifest.js
 ```
 
-Then it generates stylesheet links through:
-
-```js
-createFrontendStyleLinks()
-```
-
 The style manifest is composed from:
 
 1. static core/component styles before themes;
@@ -205,106 +178,99 @@ The style manifest is composed from:
 4. widget CSS paths from the widget registry;
 5. final static styles such as screensaver CSS.
 
-Current style loading source:
-
-```text
-src/styles/style-manifest.js
-```
-
-The manifest uses:
-
-```js
-getThemeCssPaths()
-```
-
-from:
-
-```text
-src/settings/theme-registry.js
-```
-
-and:
-
-```js
-WIDGET_REGISTRY
-```
-
-from:
-
-```text
-src/widgets/widget-registry.js
-```
-
-This means registered themes and registered widgets contribute CSS automatically.
+Registered themes and registered widgets contribute CSS automatically.
 
 ---
 
-## 5. Critical Boot Style
+## 6. Current CSS Loading Order
 
-The main element injects a small critical boot style directly.
-
-Purpose:
-
-- avoid showing raw HTML/code-like content while HA loads external styles;
-- keep a styled background visible;
-- hide app content until the layout and external styles are ready.
-
-This is intentionally not part of the normal theme system.
-
-It is a boot safety layer.
-
-Normal visual styling belongs in:
+Current high-level order:
 
 ```text
-styles/*
+1. core tokens
+2. reusable components and system buttons
+3. registered theme CSS
+4. accent palettes and semantic tokens
+5. core background/layout CSS
+6. dock/status/grid/floating controls
+7. settings, widget manager and config popup CSS
+8. shared panel CSS
+9. light text contract
+10. widget layout/shell CSS
+11. widget CSS from the widget registry
+12. screensaver CSS
+```
+
+Notable current structural CSS files include:
+
+```text
+styles/layout/dock-glyph-stability.css
+styles/layout/frame-alignment.css
+styles/panels/panel-surface-contract.css
+styles/panels/panel-frame-alignment.css
+styles/panels/page-creator-sheet.css
+styles/panels/page-creator-bottom.css
+styles/settings/settings-bottom.css
+styles/screensaver/screensaver-clock.css
+styles/screensaver/screensaver-hotcorner.css
 ```
 
 ---
 
-## 6. Storage Layer
+## 7. Panel Architecture
+
+Shared panel behavior lives in:
+
+```text
+src/panels/panel-shell.js
+src/panels/panel-surface-contract.js
+```
+
+The panel shell provides common overlay/sheet structure for surfaces such as:
+
+- widget config popup;
+- widget manager;
+- page creator;
+- settings-related panel surfaces.
+
+The surface contract applies consistent roles and mobile presentations:
+
+```text
+popup
+sheet
+bottom sheet
+panel surface
+```
+
+Rule:
+
+```text
+New overlays should use shared panel primitives when possible.
+```
+
+Avoid creating isolated modal/sheet structures with unrelated CSS unless the component truly needs a separate contract.
+
+---
+
+## 8. Storage Layer
 
 Storage helpers live in:
 
 ```text
 src/core/storage.js
 src/core/storage-keys.js
+src/core/mha-persistence.js
+src/core/mha-state.js
 ```
 
-The main runtime imports:
-
-```js
-readJson
-writeJson
-writeStorageValue
-STORAGE_KEYS
-```
-
-Storage keys include user layout and app state such as:
-
-- widget order;
-- widget sizes;
-- hidden widgets;
-- widget positions;
-- pages;
-- active page;
-- dock position.
-
-Theme-specific storage is handled mostly inside:
+Domain-specific storage also exists in:
 
 ```text
-src/settings/theme-controller.js
-```
-
-Wallpaper storage is handled in:
-
-```text
+src/pages/page-store.js
 src/settings/wallpaper-storage.js
-```
-
-Entity visibility storage is handled in:
-
-```text
+src/settings/theme-controller.js
 src/admin/entity-visibility-store.js
+src/widgets/widget-storage.js
 ```
 
 Rule:
@@ -317,7 +283,7 @@ Avoid scattering raw `localStorage.getItem()` and `localStorage.setItem()` calls
 
 ---
 
-## 7. Page Architecture
+## 9. Page Architecture
 
 Page logic lives in:
 
@@ -325,55 +291,25 @@ Page logic lives in:
 src/pages/page-model.js
 src/pages/page-store.js
 src/pages/page-controller.js
+src/pages/page-ui-coordinator.js
+src/pages/page-creator.js
 ```
 
 Responsibilities:
 
-### page-model.js
+| Module | Responsibility |
+|---|---|
+| `page-model.js` | pure page normalization and helpers |
+| `page-store.js` | persistence and migration |
+| `page-controller.js` | page operations |
+| `page-ui-coordinator.js` | UI-level page sync and interactions |
+| `page-creator.js` | page creation/edit sheet content |
 
-Owns pure page normalization and model helpers.
-
-Examples:
-
-```js
-normalizePage()
-getActivePage()
-```
-
-### page-store.js
-
-Owns persistence and migration.
-
-Examples:
-
-```js
-migratePageStorage()
-readPages()
-savePages()
-readActivePageId()
-```
-
-### page-controller.js
-
-Owns page operations.
-
-Examples:
-
-```js
-addPage()
-renamePage()
-deletePage()
-movePage()
-selectPage()
-changePageIcon()
-removePageWidgetPositions()
-```
-
-The main element should call page operations, not duplicate their logic.
+The main element should call page operations/coordinators, not duplicate page logic.
 
 ---
 
-## 8. Layout Architecture
+## 10. Layout Architecture
 
 Layout logic lives in:
 
@@ -386,10 +322,13 @@ Important files:
 | File | Responsibility |
 |---|---|
 | `layout-engine.js` | widget size contract, density, layout mode, grid presets |
+| `layout-mode.js` | layout mode helpers |
 | `responsive.js` | responsive breakpoint layout selection |
+| `render-pipeline.js` | top-level render composition |
 | `shell.js` | main visual shell creation |
 | `dock.js` | dock DOM |
 | `dock-controller.js` | dock props and active state sync |
+| `responsive-dock-coordinator.js` | responsive dock state/orchestration |
 | `mobile-dock.js` | mobile dock |
 | `grid-runtime.js` | grid runtime behavior |
 | `placement-controller.js` | drag/drop/edit orchestration |
@@ -399,9 +338,9 @@ Important files:
 
 ---
 
-## 9. Widget Size Contract
+## 11. Widget Size Contract
 
-The public widget size contract uses a familiar mobile-widget vocabulary.
+The public widget size contract uses a familiar mobile-widget vocabulary:
 
 ```text
 2×2 = one standard square widget
@@ -416,22 +355,11 @@ Internally:
 1 logical grid cell = 2 internal grid units × 2 internal grid units
 ```
 
-Important constants/functions:
-
-```js
-USER_WIDGET_SIZE_UNIT = 2
-widgetSpanToLogicalCellCount()
-widgetSizeToLogicalSize()
-logicalSizeToWidgetSize()
-getInternalGridColumnCountFromLogical()
-getInternalGridRowCountFromLogical()
-```
-
-This is why a “normal” widget is usually `2×2`.
+This is why a normal widget is usually `2×2`.
 
 ---
 
-## 10. Responsive Layout
+## 12. Responsive Layout
 
 The responsive layout system decides:
 
@@ -440,27 +368,7 @@ The responsive layout system decides:
 - desktop;
 - wallpanel/tablet-like mode.
 
-The main function is:
-
-```js
-getEffectiveLayout(host)
-```
-
-The grid preset function is:
-
-```js
-getGridPreset(host, layout, metrics)
-```
-
-It chooses:
-
-- columns;
-- rows;
-- cell size;
-- fill ratio;
-- comfort score.
-
-The system prioritizes:
+It prioritizes:
 
 1. comfortable widget size;
 2. square cells;
@@ -470,33 +378,35 @@ It intentionally does not simply fill all available width at any cost.
 
 ---
 
-## 11. Placement Architecture
+## 13. Placement Architecture
 
-Widget movement and placement are split into two kinds of modules.
+Widget movement and placement are split into pure and runtime modules.
 
-### Pure geometry
+Pure geometry:
 
 ```text
 src/layout/placement-geometry.js
 ```
 
-This contains low-level rectangle and collision helpers.
-
-### Placement calculations
+Placement calculations:
 
 ```text
 src/layout/placement-calculations.js
 ```
 
-This contains higher-level placement behavior.
-
-### Placement controller
+Runtime controller:
 
 ```text
 src/layout/placement-controller.js
 ```
 
-This coordinates edit/drag/drop behavior with the main UI.
+Widget-level orchestration:
+
+```text
+src/widgets/widget-flow-coordinator.js
+src/widgets/widget-interaction-surface-coordinator.js
+src/widgets/widget-placement-orchestrator.js
+```
 
 Rule:
 
@@ -504,11 +414,11 @@ Rule:
 Geometry/calculation modules should stay pure and testable.
 ```
 
-The controller can deal with DOM/runtime state.
+Controllers/coordinators can deal with DOM/runtime state.
 
 ---
 
-## 12. Widget Architecture Overview
+## 14. Widget Architecture Overview
 
 The widget system is centered on:
 
@@ -521,8 +431,10 @@ Each real widget exports a `WIDGET_MODULE`.
 Current widget modules include:
 
 ```text
+empty-widget.js
 clock-widget.js
 simple-button-widget.js
+scenes-widget.js
 slider-widget.js
 toggle-widget.js
 toggle-slider-widget.js
@@ -531,13 +443,11 @@ weather-widget.js
 media-widget.js
 ```
 
-There is also an internal empty placeholder module.
-
 This is the core extension point for widgets.
 
 ---
 
-## 13. WIDGET_MODULE Contract
+## 15. WIDGET_MODULE Contract
 
 A widget module can contain:
 
@@ -547,47 +457,11 @@ A widget module can contain:
   definition,
   renderer,
   config,
-  preview
+  preview,
 }
 ```
 
-### kind
-
-Stable widget kind.
-
-Examples:
-
-```text
-clock
-button
-slider
-toggle
-toggle-slider
-weather
-media
-```
-
-### definition
-
-Widget metadata and catalog contract.
-
-### renderer
-
-Content renderer object.
-
-### config
-
-Optional config manifest.
-
-### preview
-
-Optional preview renderer metadata.
-
----
-
-## 14. Widget Definition Contract
-
-A widget definition typically contains:
+The definition can include metadata such as:
 
 ```js
 {
@@ -604,31 +478,17 @@ A widget definition typically contains:
   variants,
   variantGroups,
   config,
-  normalizeSize
+  capabilities,
+  storage,
+  shell,
+  placementFlow,
+  normalizeSize,
 }
 ```
 
-Important responsibilities:
-
-| Field | Purpose |
-|---|---|
-| `component` | shell/component identity |
-| `category` | default manager/category grouping |
-| `manager.entries` | widget manager catalog entries |
-| `renderer` | renderer key used to find content renderer |
-| `css` | widget CSS paths |
-| `aliases` | legacy kind/component compatibility |
-| `variantAliases` | legacy variant compatibility |
-| `defaultSize` | fallback widget size |
-| `defaultVariant` | fallback variant |
-| `variants` | available variants |
-| `variantGroups` | orientation-specific variants |
-| `config` | config type id |
-| `normalizeSize` | optional kind-specific size normalization |
-
 ---
 
-## 15. Widget Registry
+## 16. Widget Registry
 
 Main file:
 
@@ -636,19 +496,9 @@ Main file:
 src/widgets/widget-registry.js
 ```
 
-The widget registry builds:
+The widget registry builds `WIDGET_REGISTRY` from `WIDGET_MODULES`.
 
-```js
-WIDGET_REGISTRY
-```
-
-from:
-
-```js
-WIDGET_MODULES
-```
-
-It owns:
+It owns or delegates:
 
 - widget manager metadata;
 - category generation;
@@ -661,23 +511,21 @@ It owns:
 - registered variant lookup;
 - stored widget contract normalization.
 
-Important functions:
+Widget-specific stored-data patches should use the definition storage adapter:
 
 ```js
-getWidgetManagerCategories()
-resolveWidgetKind()
-getWidgetDefinition()
-getWidgetPreviewRenderer()
-getWidgetConfigType()
-isWidgetKind()
-normalizeRegisteredWidgetSize()
-getRegisteredWidgetVariants()
-normalizeWidgetContract()
+storage: {
+  normalize(widget, helpers) {
+    return { ...patch };
+  }
+}
 ```
+
+This keeps compatibility close to the widget that owns it.
 
 ---
 
-## 16. Widget Manager Catalog Flow
+## 17. Widget Manager Catalog Flow
 
 The widget manager does not maintain a separate hardcoded catalog.
 
@@ -703,17 +551,26 @@ Each widget contributes manager entries through:
 definition.manager.entries
 ```
 
-Current known special cases:
+Current manager visibility is declarative:
 
-- `empty` is skipped from the normal manager;
-- `toggle-buttons` is skipped from the normal manager;
-- `temperature-slider` is skipped.
+```js
+manager: {
+  hidden: true,
+}
+```
 
-These special cases should eventually be represented declaratively instead of hardcoded.
+or per entry:
+
+```js
+{
+  ...entry,
+  hidden: true,
+}
+```
 
 ---
 
-## 17. Widget Renderer Registry
+## 18. Widget Renderer Registry
 
 Renderer registration lives in:
 
@@ -721,23 +578,7 @@ Renderer registration lives in:
 src/widgets/widget-renderer-registry.js
 ```
 
-It creates:
-
-```js
-WIDGET_CONTENT_RENDERERS
-```
-
-from:
-
-```js
-WIDGET_MODULES
-```
-
-Renderer lookup and rendering are handled by:
-
-```text
-src/widgets/widget-renderers.js
-```
+It creates `WIDGET_CONTENT_RENDERERS` from `WIDGET_MODULES`.
 
 Renderer flow:
 
@@ -753,19 +594,20 @@ WIDGET_CONTENT_RENDERERS[rendererName]
 renderer.render({ widget, ...context })
 ```
 
-This means widget content rendering is no longer a giant `switch`.
+Widget content rendering is no longer a giant `switch`.
 
 ---
 
-## 18. Widget Shell
+## 19. Widget Shell
 
 Widget shell logic lives in:
 
 ```text
 src/widgets/widget-shell.js
+src/widgets/widget-shell-props.js
 ```
 
-The shell is responsible for:
+The shell owns:
 
 - outer widget wrapper;
 - common dataset attributes;
@@ -773,22 +615,11 @@ The shell is responsible for:
 - edit state;
 - content placement.
 
-Content should be delegated to:
-
-```text
-src/widgets/widget-renderers.js
-```
-
-Rule:
-
-```text
-The shell owns common widget chrome.
 The renderer owns widget-specific content.
-```
 
 ---
 
-## 19. Widget Factory
+## 20. Widget Factory
 
 Widget creation from manager catalog entries lives in:
 
@@ -802,114 +633,11 @@ Important function:
 createWidgetFromCatalogItem(item)
 ```
 
-Flow:
-
-```text
-manager item
-  ↓
-resolveWidgetKind()
-  ↓
-getWidgetDefinition()
-  ↓
-choose variant/category/base size
-  ↓
-normalizeWidgetForKind()
-  ↓
-normalizeWidgetContract()
-  ↓
-new widget object with generated id
-```
-
-The generated id pattern includes:
-
-```text
-widget-{category}-{variant}-{timestamp}-{random}
-```
-
-This factory should remain the default entry point for creating new widgets from catalog items.
+The factory resolves widget kind/definition, chooses creation defaults, applies variants and normalizes the resulting widget contract.
 
 ---
 
-## 20. Widget Contract Normalization
-
-Stored widgets may come from old versions.
-
-The registry normalizes them through:
-
-```js
-normalizeWidgetContract(widget, normalizeBaseSize)
-```
-
-It ensures:
-
-- stable `kind`;
-- stable `type`;
-- correct `component`;
-- category fallback;
-- variant fallback;
-- normalized `w` and `h`.
-
-It also includes kind-specific compatibility handling for:
-
-- clock weather variant;
-- slider `sliderAction`;
-- toggle entity id;
-- button entity id;
-- weather entity id;
-- toggle-slider `lightEntityId` and `sliderMode`.
-
-This is legacy compatibility logic.
-
-It is acceptable in the registry, but should not grow endlessly.
-
----
-
-## 21. Widget Variant Architecture
-
-Variant helpers live in:
-
-```text
-src/widgets/widget-variants.js
-```
-
-Purpose:
-
-- choose next available variant;
-- support orientation/size-dependent variants;
-- keep variant behavior out of widget shell code.
-
-Widget definitions may expose:
-
-```js
-variants
-variantGroups
-variantAliases
-```
-
----
-
-## 22. Widget Preview Architecture
-
-Preview architecture is documented in detail in:
-
-```text
-docs/preview-system.md
-```
-
-Main files:
-
-```text
-src/widgets/widget-preview-renderer.js
-src/widgets/widget-preview-context.js
-src/widgets/widget-preview-data.js
-src/widgets/widget-preview-images.js
-```
-
-Live previews should be owned by widget modules, not by the widget manager.
-
----
-
-## 23. Widget Config Architecture
+## 21. Widget Config Architecture
 
 Config architecture is documented in detail in:
 
@@ -936,58 +664,41 @@ widget-config-registry collects manifests from WIDGET_MODULES
         ↓
 widget-config-popup creates session/draft
         ↓
+manifest.renderFields() renders fields
+        ↓
 user edits draft
         ↓
 manifest build() creates configured widget
 ```
 
-Strength:
+Config field rendering is now manifest-driven through `renderFields`.
 
-```text
-Config manifests are already collected from widget modules.
-```
-
-Remaining gap:
-
-```text
-Field renderers still live centrally in widget-config-popup.js.
-```
-
-Target:
-
-```text
-Config manifest should own field renderer.
-```
+The remaining improvement is to extract more reusable field primitives so manifests do not duplicate select/text/label boilerplate.
 
 ---
 
-## 24. Widget Manager Architecture
+## 22. Widget Preview Architecture
 
-Main file:
-
-```text
-src/widget-manager/widget-manager.js
-```
-
-Responsibilities:
-
-- render widget category navigation;
-- render manager entries;
-- render previews;
-- handle widget selection;
-- provide selected catalog item back to main runtime.
-
-The manager should not know widget internals.
-
-It should consume:
+Preview architecture is documented in detail in:
 
 ```text
-registry metadata + preview renderer output
+docs/preview-system.md
 ```
+
+Main files:
+
+```text
+src/widgets/widget-preview-renderer.js
+src/widgets/widget-preview-context.js
+src/widgets/widget-preview-data.js
+src/widgets/widget-preview-images.js
+```
+
+Live previews should be owned by widget modules, not by the widget manager.
 
 ---
 
-## 25. Theme Architecture
+## 23. Theme Architecture
 
 Theme architecture is documented in detail in:
 
@@ -1006,12 +717,6 @@ src/settings/wallpaper-accent.js
 styles/themes/*
 ```
 
-Theme registry:
-
-```js
-THEME_REGISTRY
-```
-
 Current registered theme styles:
 
 | id | Label | CSS |
@@ -1026,9 +731,7 @@ Default:
 oneui
 ```
 
-iOS Liquid/Frosted is not two separate registry themes.
-
-It is controlled by:
+iOS Liquid/Frosted is not two separate registry themes. It is controlled by:
 
 ```text
 data-ios-glass="liquid"
@@ -1037,217 +740,61 @@ data-ios-glass="frosted"
 
 ---
 
-## 26. Theme Controller
+## 24. Settings Architecture
 
-Main file:
-
-```text
-src/settings/theme-controller.js
-```
-
-Responsibilities:
-
-- read theme settings;
-- store theme settings;
-- resolve auto/dark/light;
-- sync dataset attributes on host and document;
-- handle theme style;
-- handle iOS glass variant;
-- handle accent mode and accent value;
-- handle icon shape preference.
-
-CSS should react to dataset attributes such as:
+Settings modules live in:
 
 ```text
-data-theme-setting
-data-theme
-data-theme-style
-data-ios-glass
-data-accent
-data-accent-mode
-data-icon-shape-setting
-data-icon-shape
+src/settings/*
 ```
 
-Rule:
+Important modules:
 
-```text
-Theme behavior should be driven by state attributes and CSS variables.
-```
-
-not JavaScript conditionals inside widget renderers.
-
----
-
-## 27. Accent Architecture
-
-Accent logic lives in:
-
-```text
-src/settings/accent-palettes.js
-src/settings/wallpaper-accent.js
-styles/themes/accent-palettes.css
-```
-
-JavaScript owns:
-
-- accent option lists;
-- reference colors;
-- wallpaper color extraction/matching;
-- per-theme accent support.
-
-CSS owns:
-
-- actual variable application through selectors.
-
-Important accent variables include:
-
-```css
---mha-accent
---mha-accent-soft
---mha-accent-strong
---mha-accent-contrast
-```
-
----
-
-## 28. Wallpaper Architecture
-
-Wallpaper logic lives in:
-
-```text
-src/settings/wallpaper-controller.js
-src/settings/wallpaper-storage.js
-src/settings/wallpaper-accent.js
-```
-
-Responsibilities:
-
-- manage custom wallpapers;
-- store light/dark wallpapers locally;
-- apply wallpaper CSS variables;
-- support accent extraction.
-
-Wallpaper is intentionally frontend/local.
-
-There is no backend sync layer in the current architecture.
-
----
-
-## 29. Settings Panel Architecture
-
-Main file:
-
-```text
-src/settings/settings-panel.js
-```
-
-Responsibilities:
-
-- render settings UI;
-- theme selection;
-- iOS glass selection;
-- accent selection;
-- dock position;
-- wallpaper settings;
-- page-related settings when relevant.
-
-Settings panel styling:
-
-```text
-styles/settings/settings-panel.css
-```
-
-The settings panel should consume theme tokens and not define separate theme identities.
-
----
-
-## 30. Style Architecture
-
-Style manifest:
-
-```text
-src/styles/style-manifest.js
-```
-
-CSS folders:
-
-```text
-styles/core
-styles/components
-styles/system
-styles/themes
-styles/layout
-styles/settings
-styles/widget-manager
-styles/widgets
-styles/screensaver
-```
-
-Current conceptual CSS layers:
-
-| Folder | Purpose |
+| Module | Responsibility |
 |---|---|
-| `core` | base tokens/background |
-| `components` | reusable UI primitives |
-| `system` | system controls |
-| `themes` | visual systems and token mapping |
-| `layout` | shell/grid/dock/status layout |
-| `settings` | settings panel |
-| `widget-manager` | manager and config popup |
-| `widgets` | widget shell/layout/widget-specific CSS |
-| `screensaver` | screensaver |
+| `settings-panel.js` | settings UI rendering |
+| `settings-panel-coordinator.js` | panel lifecycle/sync |
+| `settings-surface-coordinator.js` | shared settings surface props |
+| `appearance-coordinator.js` | appearance/theme-related state |
+| `i18n-settings-sync.js` | settings state + language/i18n sync |
+| `layout-mode-control.js` | layout mode controls |
+| `theme-controller.js` | theme storage/dataset synchronization |
+| `theme-registry.js` | registered theme styles |
+| `accent-palettes.js` | accent options/reference values |
+| `wallpaper-controller.js` | wallpaper UI/application |
+| `wallpaper-storage.js` | wallpaper persistence |
+| `wallpaper-accent.js` | wallpaper accent extraction |
 
-Rule:
-
-```text
-Theme files define visual identity.
-Component/widget CSS consumes tokens.
-```
+Settings panel styling should consume tokens and shared panel contracts.
 
 ---
 
-## 31. Semantic Token Architecture
+## 25. Screensaver Architecture
 
-Semantic token mapping lives in:
-
-```text
-styles/themes/semantic-tokens.css
-styles/SEMANTIC_TOKENS.md
-```
-
-The intended flow:
+Screensaver logic lives in:
 
 ```text
-theme raw variables
-    ↓
-semantic tokens
-    ↓
-component/widget adapter tokens
-    ↓
-actual CSS usage
+src/screensaver/screensaver.js
+src/screensaver/screensaver-controller.js
+src/screensaver/screensaver-coordinator.js
+src/screensaver/screensaver-orchestrator.js
+src/screensaver/screensaver-settings-bridge.js
+src/screensaver/nowbar-data.js
 ```
 
-Canonical token direction:
+CSS is split across:
 
-```css
---mha-primary-surface
---mha-on-primary-surface
---mha-secondary-surface
---mha-on-secondary-surface
---mha-primary-border
---mha-secondary-border
---mha-primary-text
---mha-secondary-text
---mha-accent-surface
---mha-on-accent-surface
+```text
+styles/screensaver/screensaver.css
+styles/screensaver/screensaver-clock.css
+styles/screensaver/screensaver-hotcorner.css
 ```
 
-Avoid expanding widget-specific tokens unless the widget truly needs a private visual adapter.
+The controller owns idle/preview state. The coordinator/orchestrator own UI synchronization. The renderer owns screensaver DOM and updates.
 
 ---
 
-## 32. Home Assistant Abstraction Layer
+## 26. Home Assistant Abstraction Layer
 
 Home Assistant logic lives in:
 
@@ -1266,6 +813,7 @@ Important files:
 | `toggle.js` | toggle behavior |
 | `slider.js` | slider behavior |
 | `actions.js` | generic service actions |
+| `media.js` | media model/actions/artwork helpers |
 | `weather.js` | weather helpers |
 
 Widgets should use the HA abstraction layer instead of directly scattering:
@@ -1279,12 +827,13 @@ This keeps HA behavior consistent and testable.
 
 ---
 
-## 33. Admin / Entity Visibility Architecture
+## 27. Admin / Entity Visibility Architecture
 
 Admin logic lives in:
 
 ```text
 src/admin/admin-panel.js
+src/admin/admin-ha-api.js
 src/admin/entity-permissions.js
 src/admin/entity-visibility-store.js
 ```
@@ -1296,13 +845,11 @@ Responsibilities:
 - filter entities for current user;
 - support the dedicated MHA Admin panel.
 
-The config flow uses entity visibility filtering when building selection lists.
-
-This prevents users from selecting entities they are not allowed to see.
+Config flows use entity visibility filtering when building selection lists. This prevents users from selecting entities they are not allowed to see.
 
 ---
 
-## 34. UI Primitives
+## 28. UI Primitives
 
 Reusable UI components live in:
 
@@ -1323,8 +870,6 @@ system-buttons.js
 toggle.js
 ```
 
-These should become the preferred building blocks for repeated UI patterns.
-
 Goal:
 
 ```text
@@ -1333,70 +878,7 @@ Widgets compose primitives instead of duplicating control markup/styles.
 
 ---
 
-## 35. System Controls
-
-System-level buttons/icons live in:
-
-```text
-src/system/*
-```
-
-Examples:
-
-```text
-index.js
-system-buttons.js
-system-icons.js
-```
-
-These are not widget content.
-
-They are app/system chrome.
-
----
-
-## 36. Screensaver Architecture
-
-Screensaver logic lives in:
-
-```text
-src/screensaver/screensaver.js
-src/screensaver/screensaver-controller.js
-```
-
-The controller owns idle behavior.
-
-The renderer owns screensaver DOM and updates.
-
-Screensaver CSS:
-
-```text
-styles/screensaver/screensaver.css
-```
-
----
-
-## 37. DOM Lifecycle
-
-DOM cleanup helpers live in:
-
-```text
-src/core/dom-lifecycle.js
-```
-
-The main runtime imports:
-
-```js
-destroyDomSubtree()
-```
-
-Use this kind of helper when replacing dynamic UI sections that may contain event listeners, observers, timers, or nested state.
-
-Avoid manual partial cleanup scattered across unrelated functions.
-
----
-
-## 38. Data Flow: Widget Creation
+## 29. Data Flow: Widget Creation
 
 Typical widget creation flow:
 
@@ -1416,6 +898,7 @@ supportsWidgetConfiguration(widget)?
 if yes:
     createWidgetConfigSession()
     createWidgetConfigPopup()
+    manifest.renderFields()
     buildConfiguredWidget()
         ↓
 normalizeWidgetContract()
@@ -1425,21 +908,9 @@ place widget on grid
 save page/widget state
 ```
 
-Important:
-
-The catalog item should preserve:
-
-- kind;
-- variant;
-- size;
-- label/title;
-- category.
-
-The config flow should preserve those values by spreading the original widget.
-
 ---
 
-## 39. Data Flow: Widget Rendering
+## 30. Data Flow: Widget Rendering
 
 Typical widget rendering flow:
 
@@ -1459,47 +930,9 @@ renderer.render()
 widget shell content
 ```
 
-The renderer receives a render context created through:
-
-```text
-src/widgets/widget-preview-context.js
-```
-
-Despite the name, this module also creates the standard widget render context.
-
 ---
 
-## 40. Data Flow: Widget Preview
-
-Typical preview flow:
-
-```text
-Manager catalog item
-        ↓
-createLiveWidgetPreview()
-        ↓
-getWidgetPreviewRenderer()
-        ↓
-createWidgetPreviewRenderContext()
-        ↓
-previewRenderer.createWidget()
-        ↓
-previewRenderer.render() or normal registered widget renderer
-        ↓
-preview shell
-        ↓
-scaled in widget manager
-```
-
-Preview details are documented separately in:
-
-```text
-docs/preview-system.md
-```
-
----
-
-## 41. Data Flow: Theme Application
+## 31. Data Flow: Theme Application
 
 Typical theme flow:
 
@@ -1519,222 +952,77 @@ semantic tokens
 component/widget CSS
 ```
 
-Theme style CSS is loaded by:
-
-```text
-style-manifest.js
-```
-
-using paths from:
-
-```text
-theme-registry.js
-```
-
 ---
 
-## 42. Data Flow: CSS Loading
-
-Full CSS flow:
-
-```text
-getStyleManifest()
-    ↓
-static styles before themes
-    ↓
-getThemeCssPaths()
-    ↓
-static styles after themes
-    ↓
-getWidgetStyleManifestEntries()
-    ↓
-screensaver CSS
-    ↓
-main element injects link tags
-```
-
-This allows:
-
-- new themes to add CSS through theme registry;
-- new widgets to add CSS through widget definition;
-- load order to remain predictable.
-
----
-
-## 43. Data Flow: Entity Selection
-
-Typical entity config flow:
-
-```text
-hass.states
-    ↓
-getEntityOptionsByDomain()
-    ↓
-isEntityAvailable()
-    ↓
-filterEntitiesForCurrentUser()
-    ↓
-friendly labels via getEntityDisplayName()
-    ↓
-config popup select options
-    ↓
-draft
-    ↓
-build widget config
-```
-
-Main helper file:
-
-```text
-src/widget-config/light-options.js
-```
-
-This file is currently broader than its name.
-
-Future name suggestion:
-
-```text
-src/widget-config/entity-options.js
-```
-
----
-
-## 44. Tests
+## 32. Tests
 
 Current tests cover many architectural seams, including:
 
-```text
-dom-lifecycle.test.js
-placement-controller.test.js
-entity-visibility-store.test.js
-page-store.test.js
-page-model.test.js
-widget-manager-catalog.test.js
-entity-permissions.test.js
-widget-preview-context.test.js
-storage.test.js
-responsive-layout.test.js
-placement-calculations.test.js
-page-controller.test.js
-ios-surface-tokens.test.js
-widget-factory.test.js
-wallpaper-storage.test.js
-ha-bindings.test.js
-screensaver-controller.test.js
-theme-text-tokens.test.js
-widget-preview-renderer.test.js
-placement-geometry.test.js
-```
-
-Architecture changes should add or update tests around:
-
-- registry generation;
-- widget normalization;
-- config manifest lookup;
-- preview rendering;
+- registry and widget contracts;
+- config manifests and config flow behavior;
+- preview rendering and preview context;
+- placement geometry/calculations;
+- responsive layout;
+- settings and appearance coordinators;
+- screensaver coordinators;
+- widget surface/layout/resize coordinators;
+- Home Assistant helpers;
+- admin visibility;
 - theme token contracts;
-- placement calculations;
-- page persistence;
-- HA action helpers.
+- storage/page behavior.
+
+Architecture changes should add or update tests around the seam being changed.
 
 ---
 
-## 45. Current Strong Points
+## 33. Current Strong Points
 
-The architecture already has several strong foundations:
+The architecture currently has several strong foundations:
 
 - widget modules are real;
-- registries are centralizing behavior;
+- registries centralize widget contracts;
+- config field rendering is manifest-driven;
+- manager visibility is declarative;
 - style manifest gives predictable CSS order;
+- shared panel shell reduces overlay divergence;
 - HA abstraction exists;
 - preview system is advanced;
-- config flows have clean draft/build separation;
-- tests cover important seams.
+- tests cover important seams;
+- the main file has been substantially reduced through coordinators.
 
 ---
 
-## 46. Current Weak Points
+## 34. Current Weak Points
 
-### Main element still orchestrates a lot
+### Main element still coordinates many systems
 
-`mha-widget-hub.js` is much smaller than before, but still imports many modules and coordinates many responsibilities.
+`mha-widget-hub.js` is much smaller than before, but still imports many modules and coordinates the app shell.
 
-This is acceptable for now, but future extractions should continue.
+This is acceptable for now. Future extractions should be small, targeted and backed by tests.
 
-Possible future modules:
+### Reusable config field primitives are still limited
 
-```text
-app-lifecycle-controller
-widget-grid-controller
-secondary-ui-controller
-boot-controller
-```
-
-### Config popup still has central type branching
-
-Adding a new config flow still requires editing:
-
-```text
-src/widget-config/widget-config-popup.js
-```
-
-Target:
-
-```text
-manifest.renderFields()
-```
-
-### Some manager exclusions are hardcoded
-
-Examples:
-
-```text
-empty
-toggle-buttons
-temperature-slider
-```
-
-Target:
-
-```js
-manager: {
-  hidden: true
-}
-```
-
-or:
-
-```js
-manager: {
-  entries: []
-}
-```
-
-with no special-case code.
-
-### Some normalization is kind-specific
-
-`normalizeWidgetContract()` still contains widget-specific branches.
-
-This is useful for compatibility, but should not become a dumping ground.
+Config fields are manifest-driven, but each config flow still builds much of its own DOM.
 
 Future target:
 
-```js
-definition.normalizeContract(widget, base)
+```text
+shared field primitives for select/text/json/segmented/entity controls
 ```
+
+### Some normalization remains transitional
+
+Widget-specific storage adapters exist, but legacy compatibility should continue moving toward widget-owned definitions when touched.
 
 ### Theme/component boundaries are still transitional
 
-Theme tokens exist, but legacy and widget-specific adapter tokens are still present.
-
-This is normal during migration.
+Semantic tokens exist, but legacy and widget-specific adapter tokens are still present.
 
 Avoid adding new hardcoded visual exceptions outside theme/token layers.
 
 ---
 
-## 47. What Not To Hardcode
+## 35. What Not To Hardcode
 
 Avoid hardcoding widget lists in:
 
@@ -1750,48 +1038,27 @@ Use:
 WIDGET_MODULES
 WIDGET_REGISTRY
 definition.manager.entries
+definition.capabilities
+definition.storage
+definition.shell
+definition.placementFlow
 ```
 
-Avoid hardcoding renderer switches.
-
-Use:
+Avoid hardcoding renderer switches. Use:
 
 ```text
 WIDGET_CONTENT_RENDERERS
 ```
 
-Avoid hardcoding theme CSS paths outside:
+Avoid hardcoding config flow decisions outside config manifests.
 
-```text
-theme-registry.js
-style-manifest.js
-```
-
-Avoid hardcoding config flow decisions outside:
-
-```text
-config manifests
-```
-
-Current exception:
-
-```text
-widget-config-popup.js
-```
-
-but this should shrink over time.
-
-Avoid hardcoding HA service calls inside widget renderers.
-
-Use:
+Avoid hardcoding HA service calls inside widget renderers. Use:
 
 ```text
 src/ha/*
 ```
 
-Avoid hardcoding colors inside widget CSS.
-
-Use:
+Avoid hardcoding colors inside widget CSS. Use:
 
 ```text
 theme tokens
@@ -1801,106 +1068,65 @@ adapter tokens
 
 ---
 
-## 48. Recommended Refactor Direction
+## 36. Recommended Refactor Direction
 
-### Step 1 — Complete config modularity
-
-Move field renderers into config manifests.
-
-Target:
-
-```js
-config: {
-  type,
-  title,
-  hint,
-  createDraft,
-  build,
-  renderFields
-}
-```
-
-Result:
-
-```text
-New config flow no longer edits widget-config-popup.js.
-```
-
-### Step 2 — Move kind-specific normalization into definitions
-
-Target:
-
-```js
-definition.normalizeContract(widget, helpers)
-```
-
-Result:
-
-```text
-normalizeWidgetContract() becomes generic.
-```
-
-### Step 3 — Make manager exclusions declarative
-
-Target:
-
-```js
-manager: {
-  visible: false
-}
-```
-
-or no manager entries.
-
-Result:
-
-```text
-getWidgetManagerCategories() does not know special widget names.
-```
-
-### Step 4 — Continue main file extraction
-
-Extract orchestration chunks from:
-
-```text
-mha-widget-hub.js
-```
-
-Candidates:
-
-```text
-boot-controller
-widget-grid-controller
-panel-controller
-home-assistant-connection-controller
-```
-
-### Step 5 — Stabilize public extension contracts
+### Step 1 — Stabilize extension contract tests
 
 Document and enforce:
 
 ```text
 WIDGET_MODULE
-THEME_REGISTRY entry
+WIDGET_DEFINITION
 CONFIG_MANIFEST
 PREVIEW_RENDERER
 CSS token contract
 ```
 
+### Step 2 — Extract reusable config primitives
+
+Keep `renderFields` manifest-driven, but reduce repeated DOM boilerplate across config files.
+
+### Step 3 — Continue widget-owned normalization
+
+Prefer:
+
+```js
+definition.storage.normalize(widget, helpers)
+```
+
+over central compatibility branches.
+
+### Step 4 — Continue main file extraction cautiously
+
+Only extract one coherent responsibility at a time.
+
+Candidates:
+
+```text
+home-assistant-connection controller
+panel coordination refinements
+remaining boot/app shell seams
+```
+
+### Step 5 — Stabilize token contracts
+
+Keep visual identity in theme/token CSS and keep widgets consuming semantic roles.
+
 ### Step 6 — Prepare external packs
 
-Once the internal registry contracts are stable, widget/theme packs can become realistic.
+Once internal contracts are stable, widget/theme packs can become realistic.
 
 ---
 
-## 49. Extension Target: Add Widget
+## 37. Extension Target: Add Widget
 
-Target final flow:
+Target current flow:
 
 ```text
 1. Create src/widgets/my-widget.js
 2. Export WIDGET_MODULE
 3. Add module to WIDGET_MODULES
+4. Optional: add styles/widgets/my-widget.css and reference it from the definition
 ```
 
 Everything else should be discovered:
@@ -1911,21 +1137,17 @@ Everything else should be discovered:
 - preview;
 - CSS;
 - variants;
-- aliases.
-
-Today this is almost true.
-
-Remaining blockers:
-
-- config field rendering may require central popup edit;
-- any unusual normalization may require central registry edit;
-- any manager special behavior may require central manager/registry edit.
+- aliases;
+- capabilities;
+- storage adapter;
+- shell behavior;
+- placement flow.
 
 ---
 
-## 50. Extension Target: Add Theme
+## 38. Extension Target: Add Theme
 
-Target final flow:
+Target flow:
 
 ```text
 1. Create styles/themes/my-theme.css
@@ -1941,70 +1163,9 @@ Everything else should be discovered:
 - accent behavior;
 - token mapping.
 
-Today this is mostly true.
-
-Remaining blockers:
-
-- new accent CSS selectors still need `accent-palettes.css`;
-- special semantic mapping may need `semantic-tokens.css`;
-- components must keep consuming tokens instead of direct theme selectors.
-
 ---
 
-## 51. Extension Target: Widget Packs
-
-Future widget packs would ideally provide:
-
-```text
-widget module
-widget CSS
-config manifest
-preview renderer
-preview data
-optional assets
-```
-
-The internal architecture already points in this direction.
-
-The missing piece is dynamic discovery/loading.
-
-Current registry is static:
-
-```text
-WIDGET_MODULES
-```
-
-That is acceptable for now.
-
-Static registry is safer and easier to test.
-
----
-
-## 52. Extension Target: Theme Packs
-
-Future theme packs would ideally provide:
-
-```text
-theme definition
-theme CSS
-accent palette
-semantic adapter overrides if needed
-assets
-```
-
-Current registry is static:
-
-```text
-THEME_REGISTRY
-```
-
-Again, this is acceptable for now.
-
-Do not jump to plugin loading until the internal contracts are stable.
-
----
-
-## 53. Architecture Rules
+## 39. Architecture Rules
 
 Use these rules when contributing:
 
@@ -2018,10 +1179,12 @@ Use these rules when contributing:
 8. If a feature adds widget config, it belongs in a config manifest.
 9. If a feature changes visual identity, it belongs in theme/token CSS.
 10. If a feature changes placement math, keep it pure and test it.
+11. If a feature adds overlay/sheet UI, consider `src/panels` first.
+12. If a feature adds orchestration, consider a small coordinator instead of growing the root.
 
 ---
 
-## 54. Practical File Ownership Table
+## 40. Practical File Ownership Table
 
 | Task | Primary file/folder |
 |---|---|
@@ -2029,27 +1192,32 @@ Use these rules when contributing:
 | Register widget | `src/widgets/widget-module-registry.js` |
 | Add widget CSS | widget definition `css` + `styles/widgets/*` |
 | Add widget manager item | widget definition `manager.entries` |
+| Hide widget from manager | widget definition `manager.hidden` or entry `hidden` |
 | Add widget renderer | widget module `renderer` |
 | Add widget preview | widget module `preview` |
 | Add widget config | `src/widget-config/*` + widget module `config` |
+| Add config fields | config manifest `renderFields` |
+| Add widget storage compatibility | definition `storage.normalize` |
+| Add widget placement behavior | definition `placementFlow` |
 | Add theme | `src/settings/theme-registry.js` + `styles/themes/*` |
 | Add accent | `src/settings/accent-palettes.js` + `styles/themes/accent-palettes.css` |
 | Change layout math | `src/layout/*` |
 | Change page behavior | `src/pages/*` |
 | Change HA entity/service logic | `src/ha/*` |
 | Change admin visibility | `src/admin/*` |
-| Change settings panel | `src/settings/settings-panel.js` |
+| Change settings panel | `src/settings/*` |
 | Change manager UI | `src/widget-manager/widget-manager.js` |
-| Change config popup shell | `src/widget-config/widget-config-popup.js` |
+| Change config popup shell | `src/widget-config/widget-config-popup.js` + `src/panels/*` |
 | Change reusable UI primitive | `src/ui/*` |
+| Change screensaver | `src/screensaver/*` + `styles/screensaver/*` |
 
 ---
 
-## 55. Summary
+## 41. Summary
 
 MHA Widget Hub currently has a healthy modular architecture in transition.
 
-The most important architectural chain is:
+The most important widget chain is:
 
 ```text
 WIDGET_MODULE
@@ -2069,6 +1237,22 @@ widget-shell
 renderer
 ```
 
+The config chain is:
+
+```text
+widget definition config type
+  ↓
+widget module config manifest
+  ↓
+widget-config-registry
+  ↓
+widget-config-popup
+  ↓
+manifest.renderFields + draft/build
+  ↓
+configured widget
+```
+
 The theme chain is:
 
 ```text
@@ -2085,42 +1269,4 @@ semantic tokens
 components/widgets
 ```
 
-The config chain is:
-
-```text
-widget definition config type
-  ↓
-widget module config manifest
-  ↓
-widget-config-registry
-  ↓
-widget-config-popup
-  ↓
-draft/build
-  ↓
-configured widget
-```
-
-The preview chain is:
-
-```text
-widget module preview renderer
-  ↓
-widget-preview-renderer
-  ↓
-mock preview context
-  ↓
-real widget renderer
-  ↓
-scaled manager preview
-```
-
-The project is already close to the desired “1 or 2 files” extension model.
-
-The next architectural wins are:
-
-1. make config field rendering manifest-driven;
-2. make widget-specific normalization definition-driven;
-3. make manager visibility/special cases declarative;
-4. continue reducing the main custom element;
-5. keep visual identity in theme/token layers.
+The project is already close to the desired “1 or 2 files” extension model. The next wins are smaller and more contract-focused: reusable config primitives, stronger tests, token stabilization and conservative root cleanup.
