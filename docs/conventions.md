@@ -16,6 +16,7 @@ module
 manifest
 token
 helper
+coordinator
 test
 ```
 
@@ -60,9 +61,10 @@ theme_controller.js
 | Area | Folder |
 |---|---|
 | Main custom element | project root |
-| Core utilities | `src/core/` |
+| Core utilities/coordinators | `src/core/` |
 | Pages | `src/pages/` |
 | Layout/grid/dock | `src/layout/` |
+| Shared panels/sheets | `src/panels/` |
 | Widgets | `src/widgets/` |
 | Widget manager | `src/widget-manager/` |
 | Widget config flows | `src/widget-config/` |
@@ -94,6 +96,7 @@ weather-widget.js
 media-widget.js
 toggle-slider-widget.js
 simple-button-widget.js
+scenes-widget.js
 ```
 
 Widget kind should be stable and lowercase:
@@ -126,13 +129,14 @@ export const WIDGET_MODULE = Object.freeze({
 
 If a field is not needed, omit it.
 
-Recommended order:
+Recommended order inside a widget file:
 
-```js
+```text
+constants/helpers
 definition
 renderer
-config
-preview
+config manifest
+preview helpers
 WIDGET_MODULE
 ```
 
@@ -145,7 +149,7 @@ The module should own as much widget-specific behavior as possible.
 Widget definitions should be named:
 
 ```js
-{NAME}_WIDGET_DEFINITION
+{Name}_WIDGET_DEFINITION
 ```
 
 Example:
@@ -156,7 +160,7 @@ export const TOGGLE_SLIDER_WIDGET_DEFINITION = Object.freeze({
 });
 ```
 
-Definitions should include:
+Definitions may include:
 
 ```js
 component
@@ -169,10 +173,16 @@ variantAliases
 defaultSize
 defaultVariant
 variants
+variantGroups
 config
+capabilities
+storage
+shell
+placementFlow
+normalizeSize
 ```
 
-as needed.
+Use definition metadata instead of adding widget-specific branches in central files.
 
 ---
 
@@ -181,7 +191,7 @@ as needed.
 Renderer constants should use:
 
 ```js
-{NAME}_WIDGET_CONTENT_RENDERER
+{Name}_WIDGET_CONTENT_RENDERER
 ```
 
 Example:
@@ -202,6 +212,8 @@ Renderers should not own:
 - theme identity;
 - storage migrations.
 
+Use `src/ha/` helpers for Home Assistant-specific behavior.
+
 ---
 
 ## 8. Widget Config Convention
@@ -219,6 +231,7 @@ toggle-config.js
 slider-config.js
 toggle-slider-config.js
 media-config.js
+scenes-config.js
 ```
 
 Export functions should follow this pattern:
@@ -227,12 +240,13 @@ Export functions should follow this pattern:
 create{Name}ConfigDraft()
 reconcile{Name}ConfigDraft()
 build{Name}WidgetConfig()
+render{Name}ConfigFields()
 ```
 
 Config manifests should use:
 
 ```js
-{Name}_CONFIG_MANIFEST
+{Name}_WIDGET_CONFIG_MANIFEST
 ```
 
 Example:
@@ -240,12 +254,24 @@ Example:
 ```js
 export const MEDIA_WIDGET_CONFIG_MANIFEST = Object.freeze({
   type: "media",
-  title: "Configurer le média",
-  hint: "...",
+  title: "Configure media",
+  hint: "Choose a media player and display name.",
   createDraft: createMediaConfigDraft,
   build: buildMediaWidgetConfig,
+  renderFields: renderMediaConfigFields,
 });
 ```
+
+Optional dynamic/i18n fields:
+
+```js
+titleKey
+hintKey
+getTitle
+getHint
+```
+
+Field rendering should live in `renderFields`, not in `widget-config-popup.js`.
 
 ---
 
@@ -261,7 +287,7 @@ Typical fields:
 {
   entityId,
   label,
-  labelCustomized
+  labelCustomized,
 }
 ```
 
@@ -272,7 +298,7 @@ For custom action widgets:
   actionDomain,
   actionService,
   actionData,
-  actionDataValid
+  actionDataValid,
 }
 ```
 
@@ -305,7 +331,38 @@ This preserves:
 
 ---
 
-## 11. Preview Convention
+## 11. Config RenderFields Convention
+
+`renderFields` should use this signature:
+
+```js
+renderFields(session, hass, visibilityConfig, onChange, helpers)
+```
+
+It should return:
+
+```js
+{
+  fields,
+  canSave,
+  isValid,
+}
+```
+
+Use the provided helpers when possible:
+
+```js
+helpers.createField(...)
+helpers.t(...)
+helpers.configOptionLabel(...)
+helpers.emptyLabelForConfigOption(...)
+```
+
+Keep UI small and touch-friendly.
+
+---
+
+## 12. Preview Convention
 
 Preview support should live in the widget module.
 
@@ -313,22 +370,6 @@ Recommended function name:
 
 ```js
 create{Name}PreviewWidget()
-```
-
-Example:
-
-```js
-function createMediaPreviewWidget(item = {}, context = {}) {
-  return {
-    ...item,
-    kind: "media",
-    type: "media",
-    component: "media-widget",
-    mediaEntityId: "media_player.preview",
-    entityId: "media_player.preview",
-    label: item.label || "Salon",
-  };
-}
 ```
 
 Preview manifest:
@@ -344,25 +385,26 @@ Use static previews only when live previews are not practical.
 
 ---
 
-## 12. Manager Entry Convention
+## 13. Manager Entry Convention
 
 Manager entries should live in widget definitions.
 
 Example:
 
 ```js
-manager: {
-  entries: [
-    {
+manager: Object.freeze({
+  hidden: false,
+  entries: Object.freeze([
+    Object.freeze({
       category: "media",
       variant: "media-compact",
-      label: "Média",
-      description: "Contrôle média compact.",
-      size: { w: 2, h: 2 },
+      label: "Media",
+      description: "Compact media control.",
+      size: freezeSize(2, 2),
       order: 10,
-    },
-  ],
-}
+    }),
+  ]),
+})
 ```
 
 Manager entries should include:
@@ -374,11 +416,15 @@ Manager entries should include:
 - size;
 - order when useful.
 
+Use `manager.hidden: true` to hide the whole widget from the manager.
+
+Use `entry.hidden: true` to hide one catalog item.
+
 Avoid defining manager entries in `widget-manager.js`.
 
 ---
 
-## 13. Widget Category Convention
+## 14. Widget Category Convention
 
 Current categories:
 
@@ -398,7 +444,71 @@ A new category should be added centrally and documented.
 
 ---
 
-## 14. Theme Naming
+## 15. Widget Storage Convention
+
+Widget-specific stored-data compatibility should live in the widget definition when possible.
+
+Example:
+
+```js
+storage: Object.freeze({
+  normalize(widget = {}) {
+    return {
+      entityId: widget.entityId || widget.entity_id || "",
+    };
+  },
+})
+```
+
+This keeps legacy field handling close to the widget that owns it.
+
+Avoid growing central normalization branches.
+
+---
+
+## 16. Widget Capability Convention
+
+Use capabilities for behavior that the shell or placement flow needs to know.
+
+Example:
+
+```js
+capabilities: Object.freeze({
+  configurable: true,
+  resizable: true,
+  slotConfigurable: false,
+})
+```
+
+Use capabilities instead of hardcoding widget kinds in shell/flow modules.
+
+---
+
+## 17. Widget Shell And Placement Convention
+
+Use definition metadata for shell/placement behavior:
+
+```js
+shell: Object.freeze({
+  configureMode: "variant",
+})
+```
+
+```js
+placementFlow: "configure-first"
+```
+
+or:
+
+```js
+placementFlow: "slot-config-first"
+```
+
+This keeps special widget behavior declarative.
+
+---
+
+## 18. Theme Naming
 
 Theme ids should be lowercase and stable:
 
@@ -418,7 +528,7 @@ Avoid changing existing theme ids because they may be stored in localStorage.
 
 ---
 
-## 15. Theme File Convention
+## 19. Theme File Convention
 
 Theme CSS files should live in:
 
@@ -432,14 +542,6 @@ and use:
 {name}.css
 ```
 
-Examples:
-
-```text
-ios.css
-oneui.css
-material.css
-```
-
 A theme should be registered in:
 
 ```text
@@ -448,7 +550,7 @@ src/settings/theme-registry.js
 
 ---
 
-## 16. Theme Registry Convention
+## 20. Theme Registry Convention
 
 Theme entries should include:
 
@@ -459,28 +561,15 @@ Theme entries should include:
   order,
   defaultIconShape,
   css,
-  aliases
+  aliases,
 }
-```
-
-Example:
-
-```js
-oneui: freezeTheme({
-  id: "oneui",
-  label: "OneUI",
-  order: 20,
-  defaultIconShape: "squircle",
-  css: css("styles/themes/oneui.css"),
-  aliases: ["samsung", "one-ui"],
-});
 ```
 
 ---
 
-## 17. Token Convention
+## 21. Token Convention
 
-New component/widget CSS should prefer semantic tokens:
+New component/widget/panel CSS should prefer semantic tokens:
 
 ```css
 --mha-primary-surface
@@ -502,7 +591,7 @@ Avoid hardcoded colors unless the value is genuinely local.
 
 ---
 
-## 18. CSS Selector Convention
+## 22. CSS Selector Convention
 
 Prefer host dataset selectors for theme/system state:
 
@@ -517,7 +606,7 @@ Avoid JavaScript-driven class toggles for theme identity when a dataset attribut
 
 ---
 
-## 19. CSS Layer Convention
+## 23. CSS Layer Convention
 
 Use the right CSS folder:
 
@@ -528,6 +617,7 @@ Use the right CSS folder:
 | system controls | `styles/system/` |
 | theme identity | `styles/themes/` |
 | shell/grid/dock/status layout | `styles/layout/` |
+| shared panels/sheets | `styles/panels/` |
 | settings panel | `styles/settings/` |
 | widget manager/config popup | `styles/widget-manager/` |
 | widget shell/widget CSS | `styles/widgets/` |
@@ -537,7 +627,43 @@ Do not put theme identity into widget CSS unless it is a controlled exception.
 
 ---
 
-## 20. JavaScript Naming
+## 24. Panel Convention
+
+Shared overlay/sheet behavior should use:
+
+```text
+src/panels/panel-shell.js
+src/panels/panel-surface-contract.js
+styles/panels/
+```
+
+Use panel surface roles and mobile presentation metadata instead of duplicating modal/sheet structure.
+
+---
+
+## 25. Coordinator Convention
+
+Coordinators should have narrow, domain-specific ownership.
+
+Examples:
+
+```text
+boot-lifecycle-coordinator.js
+render-pipeline.js
+page-ui-coordinator.js
+settings-surface-coordinator.js
+widget-flow-coordinator.js
+widget-surface-coordinator.js
+screensaver-coordinator.js
+```
+
+Use a coordinator when logic is orchestration-heavy and would otherwise grow `mha-widget-hub.js`.
+
+Avoid creating a coordinator for tiny pure helpers.
+
+---
+
+## 26. JavaScript Naming
 
 Use descriptive function names.
 
@@ -550,15 +676,6 @@ getWidgetManagerCategories()
 filterEntitiesForCurrentUser()
 ```
 
-Avoid vague names:
-
-```js
-doStuff()
-handleThing()
-process()
-fixData()
-```
-
 Boolean functions should read like booleans:
 
 ```js
@@ -569,7 +686,7 @@ supportsWidgetConfiguration()
 
 ---
 
-## 21. Constant Naming
+## 27. Constant Naming
 
 Use uppercase for exported constants:
 
@@ -584,7 +701,7 @@ Use descriptive names for module-local constants too.
 
 ---
 
-## 22. Object Immutability
+## 28. Object Immutability
 
 Registry/config metadata should generally be frozen:
 
@@ -601,11 +718,9 @@ Use frozen objects for:
 - option lists;
 - preview data.
 
-This prevents accidental mutation of global contracts.
-
 ---
 
-## 23. Home Assistant Helper Convention
+## 29. Home Assistant Helper Convention
 
 Home Assistant logic should live in:
 
@@ -621,6 +736,7 @@ Use helpers for:
 - capabilities;
 - service calls;
 - weather data;
+- media data;
 - toggle behavior;
 - slider behavior.
 
@@ -628,7 +744,7 @@ Avoid direct service calls in widget renderers when a helper exists.
 
 ---
 
-## 24. Entity Naming Convention
+## 30. Entity Naming Convention
 
 Use `entityId` in MHA widget objects when possible.
 
@@ -639,23 +755,16 @@ entity_id
 entity
 lightEntityId
 mediaEntityId
-```
-
-but normalize toward `entityId`.
-
-For widget-specific roles, explicit names are okay:
-
-```text
-lightEntityId
-mediaEntityId
 weatherEntityId
 ```
 
-when the widget can have more than one entity role.
+Normalize toward `entityId` when the widget only has one primary entity role.
+
+For widget-specific roles, explicit names are okay when a widget can have more than one entity role.
 
 ---
 
-## 25. Local Storage Key Convention
+## 31. Local Storage Key Convention
 
 Storage keys should be centralized.
 
@@ -675,17 +784,9 @@ Key names should start with:
 mha-
 ```
 
-Example:
-
-```text
-mha-theme
-mha-accent
-mha-ios-glass
-```
-
 ---
 
-## 26. Documentation Naming
+## 32. Documentation Naming
 
 Docs should live in:
 
@@ -703,13 +804,11 @@ config-flows.md
 release-checklist.md
 ```
 
-README should remain short and approachable.
-
-Advanced details belong in `docs/`.
+README should remain short and approachable. Advanced details belong in `docs/`.
 
 ---
 
-## 27. Test Naming
+## 33. Test Naming
 
 Test files should use:
 
@@ -717,26 +816,18 @@ Test files should use:
 {name}.test.js
 ```
 
-Examples:
-
-```text
-widget-preview-renderer.test.js
-placement-geometry.test.js
-theme-text-tokens.test.js
-```
-
 Test the contract, not just the implementation detail.
 
 ---
 
-## 28. Commit Message Convention
+## 34. Commit Message Convention
 
 Use short, scoped messages.
 
 Examples:
 
 ```text
-docs: add config flow guide
+docs: update config flow guide
 widgets: add live preview for media widget
 themes: normalize frosted panel surfaces
 layout: fix bottom dock grid columns
@@ -764,12 +855,12 @@ Avoid huge mixed commits.
 
 ---
 
-## 29. Branch Naming Convention
+## 35. Branch Naming Convention
 
 Suggested branch names:
 
 ```text
-docs/phase-9-roadmap
+docs/update-current-architecture
 widgets/media-preview
 themes/ios-token-cleanup
 config/manifest-field-renderers
@@ -778,7 +869,7 @@ layout/bottom-dock-columns
 
 ---
 
-## 30. Changelog Convention
+## 36. Changelog Convention
 
 Use:
 
@@ -799,7 +890,7 @@ Mention breaking changes clearly.
 
 ---
 
-## 31. Versioning Direction
+## 37. Versioning Direction
 
 MHA should eventually follow semantic versioning:
 
@@ -819,7 +910,7 @@ Before a stable public release, `0.x.y` versioning is acceptable.
 
 ---
 
-## 32. Accessibility Conventions
+## 38. Accessibility Conventions
 
 When adding UI:
 
@@ -835,18 +926,18 @@ MHA is a family/shared interface, so clarity matters more than density.
 
 ---
 
-## 33. UX Writing Convention
+## 39. UX Writing Convention
 
 Prefer human labels.
 
 Good:
 
 ```text
-Lumière
-Lecteur média
-Nom affiché
-Continuer
-Enregistrer
+Light
+Media player
+Display name
+Continue
+Save
 ```
 
 Avoid exposing raw technical wording first:
@@ -862,7 +953,7 @@ Developer/admin screens may use technical terms when appropriate.
 
 ---
 
-## 34. French/English Convention
+## 40. French/English Convention
 
 Current project docs may use English, while UI labels may be French or mixed depending on current implementation.
 
@@ -877,7 +968,7 @@ If localization is added later, avoid hardcoding UI strings directly inside logi
 
 ---
 
-## 35. Backward Compatibility Convention
+## 41. Backward Compatibility Convention
 
 When renaming or changing widget kinds/variants:
 
@@ -890,7 +981,7 @@ Do not break existing user layouts without a migration.
 
 ---
 
-## 36. Deprecation Convention
+## 42. Deprecation Convention
 
 When replacing old tokens, fields or modules:
 
@@ -898,70 +989,3 @@ When replacing old tokens, fields or modules:
 2. document the preferred replacement;
 3. migrate usage gradually;
 4. remove only after a clear cleanup phase.
-
-Avoid silent removals.
-
----
-
-## 37. Safety Convention
-
-For changes that affect real Home Assistant actions:
-
-- keep service calls behind helpers;
-- validate entity ids;
-- respect admin visibility;
-- avoid actions during preview/render;
-- avoid service calls during config;
-- make action widgets explicit.
-
-Preview and config UIs should not trigger real Home Assistant actions.
-
----
-
-## 38. Performance Convention
-
-Avoid:
-
-- repeated full re-renders when partial updates work;
-- repeated storage writes during drag;
-- repeated expensive entity scans;
-- unnecessary timers;
-- unbounded observers;
-- layout thrashing;
-- huge synchronous startup work.
-
-For expensive UI work, prefer:
-
-- caching;
-- requestAnimationFrame;
-- lazy rendering;
-- small DOM updates.
-
----
-
-## 39. Review Checklist
-
-Before merging a change, ask:
-
-- Did this add a hardcoded list?
-- Did this duplicate logic?
-- Did this belong in a registry?
-- Did this belong in a helper?
-- Did this preserve old storage?
-- Did this respect admin visibility?
-- Did this update docs?
-- Did this add/update tests?
-- Did this work in Home Assistant, not only dev.html?
-
----
-
-## 40. North Star Convention
-
-Every new feature should move MHA toward this:
-
-```text
-Simple for family.
-Powerful for admin.
-Easy for contributors.
-Stable for Home Assistant.
-```

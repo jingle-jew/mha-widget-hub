@@ -2,34 +2,11 @@
 
 This document describes the live widget preview system currently used by MHA Widget Hub.
 
-It is based on the current project structure:
-
-```text
-src/widget-manager/widget-manager.js
-
-src/widgets/widget-preview-renderer.js
-src/widgets/widget-preview-context.js
-src/widgets/widget-preview-data.js
-src/widgets/widget-preview-images.js
-
-src/widgets/widget-registry.js
-src/widgets/widget-renderers.js
-src/widgets/widget-module-registry.js
-
-styles/widget-manager/widget-manager.css
-
-tests/widget-preview-context.test.js
-tests/widget-preview-renderer.test.js
-tests/widget-manager-catalog.test.js
-```
+The preview system lets the widget manager show realistic widget previews without manually drawing a separate preview for every widget.
 
 ---
 
 ## 1. Purpose
-
-The preview system exists so the widget manager can show realistic widget previews without requiring each preview to be manually drawn.
-
-Earlier static image previews are still supported, but the current direction is live previews.
 
 A live preview is a real widget rendered in a controlled, non-interactive preview context.
 
@@ -40,6 +17,8 @@ This means:
 - widget variants are previewed closer to production;
 - preview data is fake but structured like Home Assistant state;
 - previews remain safe and non-interactive.
+
+Static previews remain supported for placeholders or widgets where live rendering is not useful.
 
 ---
 
@@ -81,21 +60,7 @@ The widget manager uses:
 createLiveWidgetPreview(item) || createGenericPreviewFallback(item)
 ```
 
-from:
-
-```text
-src/widget-manager/widget-manager.js
-```
-
-The preview is inserted inside:
-
-```html
-<div class="mha-widget-manager-preview-area">
-  <div class="mha-widget-manager-preview-media-frame">
-    ...
-  </div>
-</div>
-```
+The preview is inserted inside the widget manager preview frame.
 
 The media frame receives:
 
@@ -142,11 +107,7 @@ Current normalized shape:
 }
 ```
 
-If a widget module has no preview definition, the registry falls back to:
-
-```js
-{ mode: "static" }
-```
+If a widget module has no preview definition, the registry falls back to a static preview descriptor.
 
 ---
 
@@ -159,17 +120,18 @@ The following widgets currently expose live previews:
 | `clock` | live |
 | `media` | live |
 | `button` / simple button | live |
+| `scenes` | live |
 | `slider` | live |
 | `toggle-slider` | live |
 | `toggle` | live |
 | `weather` | live |
 
-The following widgets currently remain static:
+The following internal/utility widgets can remain static or fallback-based when appropriate:
 
 | Widget | Preview mode |
 |---|---|
-| `empty` | static |
-| `toggle-buttons` | static |
+| `empty` | static/fallback |
+| `toggle-buttons` | static/fallback unless promoted to live later |
 
 ---
 
@@ -181,7 +143,7 @@ Preview context is created in:
 src/widgets/widget-preview-context.js
 ```
 
-The core functions are:
+Core functions:
 
 ```js
 createPreviewHassMock(overrides)
@@ -204,13 +166,7 @@ This is important because preview widgets should render like real widgets, but m
 
 ## 7. Mock Home Assistant Object
 
-The preview mock is created by:
-
-```js
-createPreviewHassMock()
-```
-
-It includes:
+The preview mock includes:
 
 ```js
 {
@@ -250,17 +206,10 @@ Current preview data groups:
 clock
 weather
 media
+scenes
 toggle
 light
 slider
-```
-
-The file exports:
-
-```js
-WIDGET_PREVIEW_DATA
-PREVIEW_HASS_STATES
-getWidgetPreviewData(kind)
 ```
 
 Current mock entities include:
@@ -271,6 +220,10 @@ Current mock entities include:
 | `light.preview` | light | Light/toggle/slider preview |
 | `switch.preview` | switch | Toggle/button preview |
 | `media_player.preview` | media_player | Media/volume preview |
+| `scene.preview_evening` | scene | Scenes widget mode preview |
+| `scene.preview_movie` | scene | Scenes widget mode preview |
+| `script.preview_sleep` | script | Scenes widget routine preview |
+| `automation.preview_focus` | automation | Scenes widget routine preview |
 
 This gives widgets realistic data without requiring live Home Assistant entities.
 
@@ -334,9 +287,7 @@ If `render` does not exist, the preview system calls:
 createRegisteredWidgetContent(previewWidget, previewContext)
 ```
 
-This means most widgets do not need a special preview render function.
-
-They only need `createWidget`.
+This means most widgets do not need a special preview render function. They only need `createWidget`.
 
 ---
 
@@ -350,16 +301,10 @@ Instead, it gives every preview a virtual widget size based on a fixed unit:
 PREVIEW_VIRTUAL_UNIT = 112
 ```
 
-A 2×2 widget therefore gets:
+A `2×2` widget therefore gets:
 
 ```text
 224px × 224px
-```
-
-A 4×1 widget gets:
-
-```text
-448px × 112px
 ```
 
 This virtual size is applied inline to the real widget shell so production widget CSS and container logic behave more like they do on the dashboard.
@@ -390,24 +335,7 @@ Orientation is resolved as:
 | `w > h` | `horizontal` |
 | `w === h` | `square` |
 
-The preview frame receives:
-
-```css
---mha-widget-preview-w
---mha-widget-preview-h
---mha-widget-preview-aspect
---mha-widget-preview-virtual-inline-size
---mha-widget-preview-virtual-block-size
---mha-widget-preview-scale
-```
-
-It also mirrors widget sizing values:
-
-```css
---mha-widget-w
---mha-widget-configured-w
---mha-widget-h
-```
+The preview frame receives CSS variables for preview dimensions and scale.
 
 ---
 
@@ -419,61 +347,14 @@ Scaling is handled in:
 src/widgets/widget-preview-renderer.js
 ```
 
-The system measures the preview frame and computes a scale that fits the virtual widget inside the available preview card.
-
 Important current rules:
 
-### Minimum usable frame
-
-If the frame is smaller than `48px × 48px`, the scale update is skipped.
-
-This prevents temporary layout states from collapsing the preview to a tiny line while the manager sheet is still settling.
-
-### Safety insets
-
-The system subtracts a small inset so previews do not touch clipped edges.
-
-Current values:
-
-| Preview type | Inline inset | Block inset |
-|---|---:|---:|
-| Very wide widgets | `8px` | `0px` |
-| Normal widgets | `12px` | `8px` |
-
-A widget is considered very wide when:
-
-```js
-layout.w / layout.h >= 4
-```
-
-### Shared reference scale
-
-Horizontal and square previews share a `4×2` reference scale.
-
-Vertical previews share a `2×4` reference scale.
-
-This prevents smaller horizontal widgets, such as `3×1`, from appearing visually larger than `4×1` widgets in the manager.
-
-### Scale cap
-
-The scale is capped at:
-
-```js
-1
-```
-
-Live previews are not scaled above their virtual size.
-
-### Minimum scale
-
-Current minimums:
-
-| Preview type | Minimum scale |
-|---|---:|
-| Very wide widgets | `0.01` |
-| Other widgets | `0.08` |
-
-Very wide widgets are allowed to scale lower so they do not crop on narrow/mobile manager cards.
+- frames smaller than `48px × 48px` skip scale updates;
+- safety insets prevent clipped preview edges;
+- horizontal/square previews share a `4×2` reference scale;
+- vertical previews share a `2×4` reference scale;
+- live previews are not scaled above their virtual size;
+- very wide widgets can scale lower so they do not crop on narrow/mobile manager cards.
 
 ---
 
@@ -483,9 +364,7 @@ Live previews use `ResizeObserver` when available.
 
 When the preview card changes size, the observer recomputes scale.
 
-If `ResizeObserver` is unavailable, the preview still renders with its initial scheduled scale update.
-
-The scale update is retried up to 8 times using `requestAnimationFrame` or `setTimeout`.
+If `ResizeObserver` is unavailable, the preview still renders with scheduled scale updates.
 
 ---
 
@@ -509,11 +388,9 @@ data-widget-size
 data-preview="true"
 ```
 
-It also receives inline size constraints to prevent the production widget shell CSS from collapsing the preview.
+It also receives inline size constraints to prevent production widget shell CSS from collapsing the preview.
 
-This is critical.
-
-Without the inline virtual size, later `.mha-widget` CSS can override the preview shell and make it appear empty or 1px tall.
+This is critical: without the inline virtual size, later `.mha-widget` CSS can override the preview shell and make it appear empty or 1px tall.
 
 ---
 
@@ -525,441 +402,39 @@ Preview CSS lives mainly in:
 styles/widget-manager/widget-manager.css
 ```
 
-Important classes:
-
-```css
-.mha-widget-manager-live-preview
-.mha-widget-manager-live-preview-stage
-.mha-widget-manager-live-widget-shell
-```
-
-Important behavior:
-
-```css
-.mha-widget-manager-live-preview,
-.mha-widget-manager-live-preview * {
-  pointer-events: none !important;
-}
-```
-
-Live previews are intentionally non-interactive.
-
-The stage is centered and scaled:
-
-```css
-transform: translate(-50%, -50%) scale(var(--mha-widget-preview-scale, .5));
-transform-origin: center;
-```
-
-Widget edit tools are hidden in previews:
-
-```css
-.mha-widget-manager-live-widget-shell .mha-widget-tools,
-.mha-widget-manager-live-widget-shell .mha-widget-move-overlay,
-.mha-widget-manager-live-widget-shell .mha-size-badge {
-  display: none !important;
-}
-```
+Widget-specific preview visuals should usually come from the normal widget CSS, because live previews render real widget content.
 
 ---
 
-## 17. Static Preview Images
+## 17. Testing Checklist
 
-Static preview image support still exists in:
+When adding or changing preview behavior, test:
 
-```text
-src/widgets/widget-preview-images.js
-```
-
-Current mappings:
-
-```js
-"button:simple-button:2x1": "assets/widget-previews/button-simple-preview.png"
-"weather:adaptive-weather:2x2": "assets/widget-previews/2x2-weather-widget-preview.png"
-```
-
-However, the current widget manager path primarily uses live previews or generic fallback.
-
-Static images are useful as compatibility or future fallback, but new widgets should prefer live preview mode.
+- widget manager opens without layout jump;
+- live previews render for all expected catalog entries;
+- fallback previews still render for static/internal entries;
+- preview interactions do not call Home Assistant services;
+- previews scale correctly on desktop, tablet and mobile;
+- wide, tall and square widgets remain readable;
+- theme changes update preview visuals;
+- widget CSS changes do not collapse preview shells.
 
 ---
 
-## 18. Generic Fallback Preview
+## 18. Architecture Verdict
 
-If no live preview is available, the widget manager creates:
+The preview system is strongly aligned with the registry-driven widget architecture.
 
-```html
-<div class="mha-widget-manager-preview-generic-fallback">
-```
+Strengths:
 
-It displays:
+- live previews reuse real renderers and CSS;
+- preview context blocks real HA actions;
+- preview data is centralized;
+- preview metadata lives in widget modules;
+- new widgets can add previews without editing the widget manager.
 
-- widget title or label;
-- widget description;
-- size metadata through the surrounding manager card.
+Remaining opportunities:
 
-This fallback prevents the manager from appearing broken even when a widget has no live preview.
-
----
-
-## 19. Rules For Preview-Safe Widgets
-
-Live previews should be safe.
-
-A widget renderer must not assume preview mode is fully interactive.
-
-Recommended rules:
-
-### Do
-
-- Read data from `hass.states` safely.
-- Use `context.preview` when needed.
-- Use `context.interactive` before binding real interactions.
-- Provide fallback labels and values.
-- Use fake entity ids from `WIDGET_PREVIEW_DATA`.
-- Keep preview data deterministic.
-
-### Do not
-
-- Call real Home Assistant services during render.
-- Start timers that cannot be cleaned up.
-- Subscribe to real external resources.
-- Depend on actual entity availability.
-- Depend on pointer/touch interaction inside preview.
-- Use random data that changes every render.
-- Force layout sizes that ignore preview scale.
-
----
-
-## 20. Preview And Interactivity
-
-Preview context sets:
-
-```js
-interactive: false
-```
-
-Widgets that attach event handlers should respect this.
-
-Recommended pattern:
-
-```js
-if (!context.interactive) {
-  return content;
-}
-
-button.addEventListener("click", ...);
-```
-
-The CSS also disables pointer events, but widgets should still avoid unnecessary event binding during preview.
-
-CSS is the safety net.
-
-Renderer logic should be the first line of defense.
-
----
-
-## 21. Preview And Home Assistant Calls
-
-Preview `hass.callService()` is a no-op.
-
-That prevents accidental service calls.
-
-Still, widgets should avoid calling services during render at all.
-
-Service calls should only happen in response to user actions.
-
----
-
-## 22. Preview And Entity Data
-
-If a widget needs entity data, add a realistic mock entity to:
-
-```text
-src/widgets/widget-preview-data.js
-```
-
-Example shape:
-
-```js
-export const WIDGET_PREVIEW_DATA = Object.freeze({
-  myWidget: Object.freeze({
-    entityId: "sensor.preview",
-    name: "Preview Sensor",
-    state: "42",
-  }),
-});
-```
-
-Then add a matching entry to:
-
-```js
-PREVIEW_HASS_STATES
-```
-
-Example:
-
-```js
-"sensor.preview": Object.freeze({
-  entity_id: "sensor.preview",
-  state: "42",
-  attributes: Object.freeze({
-    friendly_name: "Preview Sensor",
-    unit_of_measurement: "%",
-  }),
-})
-```
-
-This keeps preview widgets close to real Home Assistant behavior.
-
----
-
-## 23. Preview And Widget Size
-
-A preview widget should always preserve the selected manager item size.
-
-Recommended:
-
-```js
-const size = item.size || { w: item.w, h: item.h };
-
-return {
-  ...
-  w: size?.w || 2,
-  h: size?.h || 2,
-};
-```
-
-Do not hardcode `2×2` in `createWidget` unless the widget truly has only one possible size.
-
----
-
-## 24. Preview And Variants
-
-Manager entries can represent different variants and sizes of the same widget.
-
-A preview should preserve:
-
-```js
-item.variant
-item.size
-item.label
-item.title
-```
-
-Recommended:
-
-```js
-variant: item.variant || "default",
-label: item.label || item.title || "Preview",
-title: item.title || item.label || "Preview",
-```
-
-This ensures the manager preview matches the item the user selected.
-
----
-
-## 25. Preview And Config Flows
-
-The preview system is separate from config flows.
-
-Current flow:
-
-```text
-User selects widget in manager
-        ↓
-Manager shows preview
-        ↓
-User clicks widget entry
-        ↓
-Config popup may open
-        ↓
-Widget draft is created
-        ↓
-Widget is dropped onto grid
-```
-
-Preview should not depend on config popup state.
-
-If the widget requires configuration, `createWidget` should provide safe fake defaults.
-
----
-
-## 26. Known Design Decisions
-
-### Real widget shell in preview
-
-The preview system intentionally uses:
-
-```css
-.mha-widget
-```
-
-inside the preview.
-
-This allows widget CSS to behave like production.
-
-Tradeoff:
-
-- previews are more accurate;
-- preview renderer must protect against production layout CSS overriding preview sizing.
-
-This is why the virtual size is written inline.
-
-### Uniform reference scaling
-
-The preview system intentionally does not scale every widget only against its own size.
-
-This avoids visual inconsistency in the manager.
-
-A `3×1` widget should not look taller than a `4×1` widget just because it has less virtual width.
-
-### Very wide widgets can scale very low
-
-This avoids cropping on narrow/mobile manager cards.
-
-Weather `4×1` is the important case.
-
----
-
-## 27. Testing
-
-Existing tests:
-
-```text
-tests/widget-preview-context.test.js
-tests/widget-preview-renderer.test.js
-tests/widget-manager-catalog.test.js
-```
-
-Recommended test coverage for preview changes:
-
-- preview context sets `preview: true`;
-- preview context sets `interactive: false`;
-- mock hass contains expected states;
-- live preview returns a DOM node for live widgets;
-- static widgets fall back correctly;
-- layout metadata is correct for 1×1, 2×2, 4×1, 1×2, 2×4;
-- scale variables are set;
-- manager catalog entries can all render previews or fallback safely.
-
----
-
-## 28. Checklist For Adding A Live Preview
-
-When adding or converting a widget to live preview:
-
-1. Add or confirm preview fake data in `widget-preview-data.js`.
-2. Add `createWidgetPreviewWidget()` in the widget file.
-3. Preserve `item.variant`.
-4. Preserve `item.size`.
-5. Add safe fake entity ids.
-6. Add `preview: Object.freeze({ mode: "live", createWidget })`.
-7. Verify the widget appears in the manager.
-8. Test narrow/mobile manager cards.
-9. Test wide widgets such as `4×1`.
-10. Confirm no pointer interaction works in preview.
-11. Confirm no Home Assistant service is called from render.
-12. Run preview tests.
-
----
-
-## 29. Troubleshooting
-
-### Preview appears as a thin line
-
-Likely causes:
-
-- widget shell lost its virtual size;
-- production `.mha-widget` CSS overrode preview dimensions;
-- frame measured too early while the sheet was still opening.
-
-Check:
-
-```text
-applyVirtualWidgetSize()
-bindPreviewScale()
-.mha-widget-manager-live-widget-shell
-```
-
-### Preview is cropped horizontally
-
-Likely causes:
-
-- scale minimum too high;
-- very wide widget not detected;
-- preview CSS overflow clipping expected content.
-
-Check:
-
-```js
-const isVeryWide = layout.w / layout.h >= 4;
-const minScale = isVeryWide ? 0.01 : 0.08;
-```
-
-### Preview is too large compared to other widgets
-
-Likely causes:
-
-- widget uses its own size instead of manager item size;
-- custom preview CSS ignores `--mha-widget-preview-scale`;
-- widget has fixed pixel dimensions internally.
-
-### Preview triggers actions
-
-Likely causes:
-
-- widget ignores `context.interactive`;
-- event listeners are attached unconditionally;
-- service calls are executed during render.
-
-Fix by checking:
-
-```js
-if (!context.interactive) return;
-```
-
-before binding interactions.
-
-### Preview shows unavailable entity
-
-Likely causes:
-
-- fake entity id not present in `PREVIEW_HASS_STATES`;
-- widget uses a different entity property name;
-- widget expects a specific attributes shape.
-
-Add or adjust mock data in:
-
-```text
-src/widgets/widget-preview-data.js
-```
-
----
-
-## 30. Future Direction
-
-The preview system is already strong enough to support the next architecture goal:
-
-```text
-Widget module owns:
-  definition
-  renderer
-  config
-  preview
-  css
-```
-
-Target state:
-
-```text
-Add widget file
-    +
-Register widget module
-```
-
-The widget manager should not need custom preview logic per widget.
-
-Static image previews should become optional fallback, not the normal path.
-
-Longer term, widget packs should be able to ship their own preview data and preview renderer alongside the widget module.
+- promote any useful static/fallback widgets to live previews when it adds value;
+- keep preview data updated when new widget domains are added;
+- keep scaling rules conservative so visual previews remain stable across responsive layouts.

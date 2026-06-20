@@ -2,20 +2,27 @@
 
 This document explains how widgets are added to MHA Widget Hub using the current registry-driven architecture.
 
+MHA widgets should be native MHA widgets. Do not embed Home Assistant dashboard cards or external HACS/custom cards as widget dependencies.
+
 ---
 
-# Architecture Overview
+## 1. Architecture Overview
 
 Every widget is packaged as a `WIDGET_MODULE`.
 
-A widget module contains:
+A widget module may contain:
 
-- definition
-- renderer
-- preview configuration
-- CSS
-- aliases
-- manager metadata
+- definition;
+- renderer;
+- config manifest;
+- preview metadata;
+- CSS metadata;
+- aliases;
+- variants;
+- storage normalization;
+- capabilities;
+- shell behavior;
+- placement flow.
 
 Flow:
 
@@ -28,12 +35,14 @@ widget-registry.js
     ↓
 widget-renderer-registry.js
     ↓
-Widget Manager / Grid / Preview System
+Widget Manager / Grid / Preview System / Config Popup
 ```
+
+The only current central widget registration seam is `src/widgets/widget-module-registry.js`.
 
 ---
 
-# Step 1 — Create the Widget File
+## 2. Create The Widget File
 
 Create a new file:
 
@@ -43,162 +52,335 @@ src/widgets/my-widget.js
 
 The file exports a `WIDGET_MODULE` object.
 
-Example structure:
+Minimal shape:
 
 ```js
-export const WIDGET_MODULE = {
+export const WIDGET_MODULE = Object.freeze({
   kind: "my-widget",
-  definition,
-  renderer,
-  preview,
-};
+  definition: MY_WIDGET_DEFINITION,
+  renderer: MY_WIDGET_CONTENT_RENDERER,
+  config: MY_WIDGET_CONFIG_MANIFEST,
+  preview: MY_WIDGET_PREVIEW,
+});
 ```
+
+If a field is not needed, omit it.
 
 ---
 
-# Step 2 — Widget Definition
+## 3. Widget Definition
 
-The definition describes the widget.
+The definition describes the widget contract.
 
 Typical fields:
 
 ```js
-const definition = {
+export const MY_WIDGET_DEFINITION = Object.freeze({
   component: "my-widget",
   category: "utilities",
-  manager: {
-    entries: [
-      {
+  manager: Object.freeze({
+    hidden: false,
+    entries: Object.freeze([
+      Object.freeze({
         category: "utilities",
-        variant: "my-widget",
+        variant: "default",
         label: "My Widget",
-        size: { w: 2, h: 2 },
-        description: "Example widget"
-      }
-    ]
-  },
+        size: freezeSize(2, 2),
+        description: "Example widget",
+        order: 100,
+      }),
+    ]),
+  }),
+  renderer: "my-widget",
+  css: css("styles/widgets/my-widget.css"),
+  preview: "my-widget",
+  config: "my-widget",
   aliases: ["my-widget"],
   variantAliases: [],
-  defaultSize: { w: 2, h: 2 }
-};
+  defaultVariant: "default",
+  defaultSize: freezeSize(2, 2),
+  variants: [
+    variant("default", "Default", 2, 2),
+  ],
+});
 ```
+
+Important fields:
+
+| Field | Purpose |
+|---|---|
+| `component` | shell/component identity |
+| `category` | fallback widget category |
+| `manager` | widget manager behavior and catalog entries |
+| `renderer` | renderer key used by the renderer registry |
+| `css` | CSS paths loaded by the style manifest |
+| `preview` | preview renderer key/metadata |
+| `config` | config manifest type id |
+| `aliases` | legacy kind/component compatibility |
+| `variantAliases` | legacy variant compatibility |
+| `defaultSize` | fallback widget size |
+| `defaultVariant` | fallback variant |
+| `variants` | available variants |
+| `capabilities` | feature flags used by shell/flows |
+| `storage` | widget-specific storage compatibility adapter |
+| `shell` | shell behavior hints |
+| `placementFlow` | creation/placement behavior |
 
 ---
 
-# Manager Entries
+## 4. Manager Entries
 
 Manager entries control what appears in the widget manager.
 
 Current categories:
 
-- utilities
-- actions
-- lights
-- climate
-- media
-- security
-- system
+- utilities;
+- actions;
+- lights;
+- climate;
+- media;
+- security;
+- system.
 
-Each entry defines:
+Each entry can define:
 
-- category
-- variant
-- label
-- description
-- size
-- order
+- category;
+- variant;
+- label;
+- labelKey;
+- description;
+- descriptionKey;
+- icon;
+- size;
+- order;
+- hidden.
+
+Use `manager.hidden: true` to hide an entire widget from the manager. Use `entry.hidden: true` to hide a single catalog entry.
+
+Do not add widget-specific catalog branches to `widget-manager.js`.
 
 ---
 
-# Step 3 — Renderer
+## 5. Renderer
 
 The renderer generates widget content.
 
 Example:
 
 ```js
-const renderer = {
-  render(context) {
-    return html`
-      <div>Hello MHA</div>
-    `;
-  }
-};
+export const MY_WIDGET_CONTENT_RENDERER = Object.freeze({
+  render({ widget, hass, interactive, isEditing }) {
+    const root = document.createElement("div");
+    root.className = "mha-my-widget";
+    root.textContent = widget.label || "My Widget";
+    return root;
+  },
+});
 ```
 
-Keep rendering logic inside the renderer.
+Keep widget-specific DOM/content logic inside the renderer.
 
-Avoid hardcoding widget-manager behavior here.
+Avoid hardcoding widget-manager behavior, theme identity, global layout behavior or Home Assistant service calls directly in the renderer.
+
+Use helpers from `src/ha/` for Home Assistant behavior.
 
 ---
 
-# Step 4 — CSS
+## 6. CSS
 
-Each widget owns its CSS.
-
-Example:
+Each widget can own CSS through the widget definition:
 
 ```js
-css`
-.widget-my-widget {
-  display: flex;
-}
-`
+css: css("styles/widgets/my-widget.css")
 ```
 
-Use theme tokens whenever possible.
+Create:
 
-Avoid direct colors.
+```text
+styles/widgets/my-widget.css
+```
+
+Use theme/semantic tokens whenever possible.
 
 Prefer:
 
 ```css
-var(--mha-primary-surface)
-var(--mha-primary-text)
+background: var(--mha-primary-surface);
+color: var(--mha-primary-text);
+border: 1px solid var(--mha-primary-border);
 ```
 
-instead of:
+over:
 
 ```css
-#ffffff
-rgba(...)
+background: #ffffff;
+color: rgba(...);
+border: 1px solid rgba(...);
 ```
+
+Widget CSS should not define a separate visual identity per theme unless the exception is truly local and intentional.
 
 ---
 
-# Step 5 — Preview Support
+## 7. Preview Support
 
 MHA supports live previews.
 
-Current preview modes:
+Preferred preview shape:
 
 ```js
-preview: {
-  mode: "live"
+function createMyWidgetPreviewWidget(item = {}, context = {}) {
+  return {
+    ...item,
+    kind: "my-widget",
+    type: "my-widget",
+    component: "my-widget",
+    variant: item.variant || "default",
+    label: item.label || "Preview Label",
+  };
 }
+
+export const MY_WIDGET_PREVIEW = Object.freeze({
+  mode: "live",
+  createWidget: createMyWidgetPreviewWidget,
+});
 ```
 
-or
+Most widgets should use live previews because the preview system can reuse the real widget renderer and CSS in a safe, non-interactive context.
 
-```js
-preview: {
-  mode: "static"
-}
+Static previews remain available for simple or placeholder widgets.
+
+See:
+
+```text
+docs/preview-system.md
 ```
-
-Live previews are preferred for new widgets.
-
-The preview system uses:
-
-- widget-preview-renderer.js
-- widget-preview-context.js
-- widget-preview-data.js
-
-to generate isolated preview instances.
 
 ---
 
-# Step 6 — Register the Widget
+## 8. Config Flows
+
+Widgets may optionally provide configuration flows.
+
+Current configurable widgets include:
+
+- button;
+- scenes;
+- toggle;
+- slider;
+- toggle + slider;
+- weather;
+- media.
+
+A configurable widget provides:
+
+```js
+export const MY_WIDGET_CONFIG_MANIFEST = Object.freeze({
+  type: "my-widget",
+  title: "Configure my widget",
+  hint: "Choose options for this widget.",
+  createDraft,
+  build,
+  renderFields,
+});
+```
+
+The config popup is generic and delegates field rendering to `renderFields`.
+
+See:
+
+```text
+docs/config-flows.md
+```
+
+---
+
+## 9. Capabilities
+
+Widget definitions can expose capabilities used by shell and placement flows.
+
+Example:
+
+```js
+capabilities: Object.freeze({
+  configurable: true,
+  resizable: true,
+  slotConfigurable: false,
+  weatherEntityConfigurable: false,
+})
+```
+
+Common capability meanings:
+
+| Capability | Purpose |
+|---|---|
+| `configurable` | widget supports a config flow |
+| `resizable` | widget can expose size/variant controls |
+| `slotConfigurable` | widget can configure a specific internal slot |
+| `weatherEntityConfigurable` | widget can configure a weather entity |
+
+Use capabilities instead of adding widget-specific checks in the shell or manager.
+
+---
+
+## 10. Storage Normalization
+
+Widget definitions can provide storage compatibility through:
+
+```js
+storage: Object.freeze({
+  normalize(widget = {}) {
+    return {
+      entityId: widget.entityId || widget.entity_id || "",
+    };
+  },
+})
+```
+
+`normalizeWidgetContract()` applies the generic registry contract and then merges the widget-specific storage patch.
+
+Use this for compatibility aliases, legacy fields or widget-specific stored data normalization.
+
+Avoid growing central normalization branches in the registry.
+
+---
+
+## 11. Shell Behavior
+
+Widget definitions can provide shell behavior hints:
+
+```js
+shell: Object.freeze({
+  configureMode: "variant",
+})
+```
+
+Use shell behavior metadata instead of hardcoding one widget kind in `widget-shell.js`.
+
+---
+
+## 12. Placement Flow
+
+Widget definitions can control how placement starts:
+
+```js
+placementFlow: "configure-first"
+```
+
+or:
+
+```js
+placementFlow: "slot-config-first"
+```
+
+Examples:
+
+- regular configurable widgets can use configure-first behavior;
+- the scenes widget uses slot-config-first behavior so a specific button can be configured before placement.
+
+---
+
+## 13. Register The Widget
 
 Import the widget inside:
 
@@ -209,24 +391,23 @@ src/widgets/widget-module-registry.js
 Example:
 
 ```js
-import { WIDGET_MODULE as myWidgetModule }
-from "./my-widget.js";
+import { WIDGET_MODULE as myWidgetModule } from "./my-widget.js";
 ```
 
 Add it to:
 
 ```js
-export const WIDGET_MODULES = [
+export const WIDGET_MODULES = Object.freeze([
   ...
-  myWidgetModule
-];
+  myWidgetModule,
+]);
 ```
 
 This is currently the only required registry registration step.
 
 ---
 
-# Aliases
+## 14. Aliases
 
 Aliases provide backward compatibility.
 
@@ -234,15 +415,15 @@ Example:
 
 ```js
 aliases: [
-  "old-widget-name"
+  "old-widget-name",
 ]
 ```
 
-Variant aliases can also be mapped.
+Variant aliases can also be mapped:
 
 ```js
 variantAliases: [
-  "legacy-variant"
+  "legacy-variant",
 ]
 ```
 
@@ -250,78 +431,76 @@ The registry resolves aliases automatically.
 
 ---
 
-# Widget Sizes
+## 15. Widget Sizes
 
-Most widgets expose a default size.
-
-Example:
-
-```js
-defaultSize: {
-  w: 2,
-  h: 2
-}
-```
-
-Manager entries may expose additional sizes through variants.
-
----
-
-# Configuration Flows
-
-Widgets may optionally provide configuration flows.
-
-Examples currently used in MHA:
-
-- Toggle
-- Slider
-- Toggle + Slider
-- Weather
-- Media
-
-Configuration flows are documented separately in:
+MHA uses a public widget-size vocabulary:
 
 ```text
-docs/config-flows.md
+2×2 = standard square widget
+4×2 = wide widget
+2×4 = tall widget
+4×4 = large widget
 ```
+
+Most widgets expose a default size:
+
+```js
+defaultSize: freezeSize(2, 2)
+```
+
+Manager entries and variants may expose additional sizes.
 
 ---
 
-# Existing Widgets
+## 16. Existing Widgets
 
 Current widget modules include:
 
-- clock-widget
-- simple-button-widget
-- slider-widget
-- toggle-widget
-- toggle-slider-widget
-- toggle-buttons-widget
-- weather-widget
-- media-widget
+- `empty-widget`
+- `clock-widget`
+- `simple-button-widget`
+- `scenes-widget`
+- `slider-widget`
+- `toggle-widget`
+- `toggle-slider-widget`
+- `toggle-buttons-widget`
+- `weather-widget`
+- `media-widget`
 
-These are the best reference implementations for new widgets.
+Good reference implementations:
+
+| Need | Reference |
+|---|---|
+| simple renderer | `simple-button-widget.js` |
+| HA entity config | `toggle-widget.js`, `slider-widget.js` |
+| combined entity behavior | `toggle-slider-widget.js` |
+| media model/actions | `media-widget.js` |
+| slot config | `scenes-widget.js` |
+| weather data | `weather-widget.js` |
 
 ---
 
-# Recommended Development Workflow
+## 17. Recommended Development Workflow
 
-1. Create widget file.
+1. Create the widget file.
 2. Define manager entries.
 3. Implement renderer.
-4. Add CSS.
+4. Add CSS if needed.
 5. Add preview support.
-6. Register in widget-module-registry.
-7. Verify preview rendering.
-8. Verify widget manager integration.
-9. Test in Home Assistant.
-10. Commit as a standalone change.
+6. Add config manifest if needed.
+7. Add storage normalization if needed.
+8. Register in `widget-module-registry.js`.
+9. Add or update tests.
+10. Verify preview rendering.
+11. Verify widget manager integration.
+12. Test in Home Assistant.
+13. Commit as a standalone change.
 
 ---
 
-# Long-Term Goal
+## 18. Long-Term Goal
 
-The target architecture is:
+The target architecture remains:
 
 ```text
 Add widget file
@@ -329,4 +508,4 @@ Add widget file
 Register widget module
 ```
 
-A contributor should eventually be able to add a complete widget by touching only one or two files.
+A contributor should be able to add a complete widget by touching only one or two files, with CSS/config/preview/metadata discovered from the widget module.
