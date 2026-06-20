@@ -1,10 +1,10 @@
 @media (min-width: 768px) {
-  .mha-settings-panel[data-settings-page="main"] .mha-settings-sheet {
-    inline-size: min(56rem, calc(100vw - (var(--mha-page-padding, clamp(1rem, 2.6vw, 2rem)) * 2)));
-    max-inline-size: calc(100vw - (var(--mha-page-padding, clamp(1rem, 2.6vw, 2rem)) * 2));
+  .mha-settings-panel[data-settings-scope="all"]:not([data-settings-page="dock"]):not([data-settings-page="dock-detail"]):not([data-settings-page="wallpaper"]):not([data-settings-page="screensaver-nowbar"]):not([data-settings-page="nowbar"]) .mha-settings-sheet {
+    inline-size: min(56rem, calc(100vw - clamp(2rem, 5.2vw, 4rem)));
+    max-inline-size: calc(100vw - clamp(2rem, 5.2vw, 4rem));
   }
 
-  .mha-settings-panel[data-settings-page="main"] .mha-settings-body {
+  .mha-settings-panel[data-settings-scope="all"]:not([data-settings-page="dock"]):not([data-settings-page="dock-detail"]):not([data-settings-page="wallpaper"]):not([data-settings-page="screensaver-nowbar"]):not([data-settings-page="nowbar"]) .mha-settings-body {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: start;
   }
