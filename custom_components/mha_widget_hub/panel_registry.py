@@ -50,6 +50,7 @@ MHA_PANELS: dict[str, dict[str, Any]] = {
         "require_admin": False,
         "default_enabled": True,
         "available": True,
+        "configurable": False,
     },
     PANEL_ADMIN: {
         "title": ADMIN_PANEL_TITLE,
@@ -60,6 +61,7 @@ MHA_PANELS: dict[str, dict[str, Any]] = {
         "require_admin": True,
         "default_enabled": False,
         "available": True,
+        "configurable": True,
     },
     PANEL_THEME_BUILDER: {
         "title": "MHA Theme Builder",
@@ -70,6 +72,7 @@ MHA_PANELS: dict[str, dict[str, Any]] = {
         "require_admin": True,
         "default_enabled": False,
         "available": False,
+        "configurable": True,
     },
     PANEL_DIAGNOSTICS: {
         "title": "MHA Diagnostics",
@@ -80,6 +83,7 @@ MHA_PANELS: dict[str, dict[str, Any]] = {
         "require_admin": True,
         "default_enabled": False,
         "available": False,
+        "configurable": True,
     },
 }
 
@@ -134,6 +138,40 @@ def iter_enabled_panel_definitions(
             panel_definitions.append((panel_id, definition))
 
     return panel_definitions
+
+
+def iter_configurable_panel_definitions() -> list[tuple[str, dict[str, Any]]]:
+    """Return panels that can be toggled from config/options flows."""
+    panel_definitions: list[tuple[str, dict[str, Any]]] = []
+
+    for panel_id, definition in MHA_PANELS.items():
+        if not definition.get("available", True):
+            continue
+        if not definition.get("configurable", True):
+            continue
+        panel_definitions.append((panel_id, deepcopy(definition)))
+
+    return panel_definitions
+
+
+def build_enabled_panels_from_options(
+    user_input: dict[str, Any] | None,
+) -> list[str]:
+    """Build the enabled panel list from config/options form data.
+
+    The dashboard remains mandatory in this phase. Optional extension panels are
+    appended in registry order when selected.
+    """
+    enabled_panels = [PANEL_DASHBOARD]
+
+    if not user_input:
+        return enabled_panels
+
+    for panel_id, _definition in iter_configurable_panel_definitions():
+        if user_input.get(panel_id):
+            enabled_panels.append(panel_id)
+
+    return normalize_enabled_panels(enabled_panels)
 
 
 def _get_registered_panel_ids(integration_data: dict[str, Any]) -> set[str]:
