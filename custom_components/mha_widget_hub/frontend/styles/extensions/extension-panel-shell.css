@@ -1,0 +1,139 @@
+:host {
+  display: block;
+  min-block-size: 100dvh;
+  color: var(--mha-primary-text, var(--mha-text, #fff));
+  background: var(--mha-page-bg, var(--mha-bg-primary, #10131f));
+  font-family: var(--mha-font-family, -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.mha-extension-shell {
+  min-block-size: 100dvh;
+  padding: max(24px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(28px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+  background:
+    radial-gradient(circle at 12% 8%, var(--mha-accent-soft, rgba(80,140,255,.18)), transparent 34%),
+    var(--mha-page-bg, var(--mha-bg-primary, #10131f));
+}
+
+.mha-extension-hero,
+.mha-extension-card,
+.mha-extension-appearance {
+  border: 1px solid var(--mha-primary-border, rgba(255,255,255,.16));
+  background: var(--mha-primary-surface, rgba(255,255,255,.12));
+  box-shadow: var(--mha-shadow-panel, var(--mha-shadow-primary, 0 18px 42px rgba(0,0,0,.22)));
+  backdrop-filter: blur(var(--mha-blur-primary, 22px)) saturate(155%);
+}
+
+.mha-extension-hero {
+  max-width: 1180px;
+  margin: 0 auto 16px;
+  padding: clamp(22px, 4vw, 38px);
+  border-radius: 32px;
+}
+
+.mha-extension-eyebrow {
+  margin: 0 0 8px;
+  color: var(--mha-accent-surface, var(--mha-accent, #5aa2ff));
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.mha-extension-hero h1,
+.mha-extension-card h2,
+.mha-extension-appearance h2 {
+  margin: 0;
+  color: var(--mha-primary-text, var(--mha-text, #fff));
+  letter-spacing: -.03em;
+}
+
+.mha-extension-hero h1 {
+  font-size: clamp(34px, 7vw, 64px);
+  line-height: .95;
+}
+
+.mha-extension-description,
+.mha-extension-card-description {
+  color: var(--mha-secondary-text, var(--mha-muted, rgba(255,255,255,.72)));
+  line-height: 1.45;
+}
+
+.mha-extension-description {
+  max-width: 720px;
+  margin: 14px 0 0;
+  font-size: clamp(15px, 2vw, 18px);
+}
+
+.mha-extension-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 14px;
+  max-width: 1180px;
+  margin: 14px auto 0;
+}
+
+.mha-extension-card {
+  min-height: 210px;
+  padding: 20px;
+  border-radius: 28px;
+}
+
+.mha-extension-card h2 {
+  font-size: 22px;
+}
+
+.mha-extension-card-description {
+  margin: 8px 0 16px;
+  font-size: 14px;
+}
+
+.mha-extension-card-body {
+  display: grid;
+  gap: 10px;
+}
+
+.mha-extension-metric {
+  display: grid;
+  gap: 2px;
+  padding: 12px;
+  border: 1px solid var(--mha-tertiary-border, rgba(255,255,255,.10));
+  border-radius: 18px;
+  background: var(--mha-on-primary-surface, rgba(255,255,255,.08));
+}
+
+.mha-extension-metric span,
+.mha-extension-metric small {
+  color: var(--mha-secondary-text, rgba(255,255,255,.70));
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.mha-extension-metric strong {
+  color: var(--mha-primary-text, #fff);
+  font-size: 20px;
+  font-weight: 850;
+  line-height: 1.1;
+}
+
+:host([data-theme-style="material"]) .mha-extension-hero,
+:host([data-theme-style="material"]) .mha-extension-card,
+:host([data-theme-style="material"]) .mha-extension-appearance {
+  backdrop-filter: none;
+  box-shadow: var(--mha-shadow-primary, 0 1px 2px rgba(0,0,0,.12));
+}
+
+@media (max-width: 720px) {
+  .mha-extension-shell {
+    padding-inline: 12px;
+  }
+
+  .mha-extension-hero,
+  .mha-extension-card,
+  .mha-extension-appearance {
+    border-radius: 24px;
+  }
+}
