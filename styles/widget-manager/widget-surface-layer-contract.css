@@ -1,0 +1,11 @@
+/*
+ * Widget Surface Layer Contract
+ *
+ * Phase 5H: centralize overlay adapter defaults for widget/settings surfaces.
+ */
+
+:host {
+  --mha-surface-layer-blur: var(--mha-backdrop-blur, var(--mha-blur-overlay, 10px));
+  --mha-surface-layer-saturation: var(--mha-backdrop-saturation, var(--mha-saturation-overlay, .82));
+  --mha-surface-layer-brightness: var(--mha-backdrop-brightness, var(--mha-brightness-overlay, .86));
+}
