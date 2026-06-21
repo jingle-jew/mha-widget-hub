@@ -72,8 +72,7 @@ class MhaWidgetHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             enabled_panels = build_enabled_panels_from_options(user_input)
             return self.async_create_entry(
                 title="MHA Widget Hub",
-                data={},
-                options={CONF_ENABLED_PANELS: enabled_panels},
+                data={CONF_ENABLED_PANELS: enabled_panels},
             )
 
         return self.async_show_form(
