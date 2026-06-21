@@ -55,6 +55,7 @@ const STATIC_STYLE_MANIFEST_AFTER_THEMES = Object.freeze([
   entry("styles/widgets/widget-layout.css", "structure"),
   entry("styles/widgets/widget-shell.css", "structure"),
   entry("styles/widgets/widget-shell-contract.css", "structure"),
+  entry("styles/widgets/widget-internals-contract.css", "structure"),
 ]);
 
 const STATIC_STYLE_MANIFEST_AFTER_WIDGETS = Object.freeze([
