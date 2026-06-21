@@ -4,12 +4,25 @@
     "step": {
       "user": {
         "title": "Set up MHA Widget Hub",
-        "description": "Register the MHA launcher panel in the Home Assistant sidebar."
+        "description": "Choose optional MHA sidebar modules. The main MHA dashboard is always enabled.",
+        "data": {
+          "admin": "MHA Admin"
+        }
       }
     },
     "abort": {
       "already_configured": "MHA Widget Hub is already configured."
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "MHA Sidebar Modules",
+        "description": "Choose which optional MHA modules should appear in the Home Assistant sidebar. The main MHA dashboard remains enabled.",
+        "data": {
+          "admin": "MHA Admin"
+        }
+      }
+    }
   }
 }
-
