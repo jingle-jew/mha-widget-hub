@@ -1,6 +1,7 @@
 import { createDeviceInsightsPublisher } from "../device-insights/device-insights-publisher.js";
 import { isDeviceInsightsEnabled } from "../device-insights/device-insights-storage.js";
 import { t } from "../i18n/index.js";
+import { createBackButton } from "../system/system-buttons.js";
 import { createToggle } from "../ui/toggle.js";
 
 function getHost(panel) {
@@ -117,13 +118,12 @@ function ensureAdvancedBackButton(panel, onBack) {
   const actions = panel.querySelector?.(".mha-settings-header-actions");
   if (!actions || actions.querySelector?.("[data-advanced-settings-back]")) return;
 
-  const back = document.createElement("button");
-  back.className = "mha-settings-back";
-  back.type = "button";
+  const back = createBackButton({
+    label: t("settings.backToSettings", "Back to settings"),
+    className: "mha-settings-back",
+    onClick: () => (onBack || (() => openSettingsPage(panel, "main")))(),
+  });
   back.dataset.advancedSettingsBack = "true";
-  back.setAttribute("aria-label", t("settings.backToSettings", "Back to settings"));
-  back.textContent = "←";
-  back.addEventListener("click", () => (onBack || (() => openSettingsPage(panel, "main")))());
   actions.prepend(back);
 }
 
