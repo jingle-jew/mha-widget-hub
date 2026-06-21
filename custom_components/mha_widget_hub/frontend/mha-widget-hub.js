@@ -57,6 +57,11 @@ import {
   getNextEditMode,
 } from "./src/widgets/widget-edit-state.js";
 import { resetWidgetGridState } from "./src/widgets/widget-grid-reset.js";
+import {
+  setScreensaverClockVariantState,
+  toggleNowBarPreviewState,
+  toggleScreensaverPreviewState,
+} from "./src/screensaver/screensaver-preview-actions.js";
 import { getStyleManifest } from "./src/styles/style-manifest.js";
 
 const MHA_FRONTEND_ROOT_URL = new URL(".", import.meta.url);
@@ -695,7 +700,7 @@ toggleEditMode(){
   this._syncWidgetDropSlots();
 
   if(wasEditing!==this._isEditing)this._scheduleSquareUnitSync();
-}toggleScreensaverPreview(){const state=this._screensaverController.read();this._screensaverController.setPreviewState(!state.preview);this._syncScreensaverDom()}toggleNowBarPreview(){const state=this._screensaverController.read();this._screensaverController.setNowBarState(!state.nowBar);this._syncScreensaverDom()}setScreensaverClockVariant(v="digital"){this._screensaverController.setClockVariantState(v);this._syncScreensaverDom()}resetGrid(){return resetWidgetGridState(this,{clearGridStorageRef:clearGridStorage})}
+}toggleScreensaverPreview(){toggleScreensaverPreviewState(this)}toggleNowBarPreview(){toggleNowBarPreviewState(this)}setScreensaverClockVariant(v="digital"){setScreensaverClockVariantState(this,v)}resetGrid(){return resetWidgetGridState(this,{clearGridStorageRef:clearGridStorage})}
 _migrateStorageSchema(){
   return getHubStateIngressCoordinatorForHost(this).migrateStorageSchema();
 }
