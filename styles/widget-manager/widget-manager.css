@@ -581,66 +581,6 @@
   letter-spacing: .08em;
 }
 
-/* THEME-SPECIFIC PARITY WITH SETTINGS */
-
-/* iOS: keep settings-style liquid glass and soft highlights. */
-:host([data-theme-style="ios"]) .mha-widget-manager-category,
-:host([data-theme-style="ios"]) .mha-widget-manager-widget,
-:host([data-theme-style="ios"]) .mha-widget-manager-back {
-  -webkit-backdrop-filter: blur(var(--mha-surface-blur)) saturate(var(--mha-surface-saturation));
-  backdrop-filter: blur(var(--mha-surface-blur)) saturate(var(--mha-surface-saturation));
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.22),
-    0 10px 28px rgba(0,0,0,.10);
-}
-
-/* OneUI: same warm floating control surface as settings sections. */
-:host([data-theme-style="oneui"]) .mha-widget-manager-category,
-:host([data-theme-style="oneui"]) .mha-widget-manager-widget,
-:host([data-theme-style="oneui"]) .mha-widget-manager-back {
-  background: var(--mha-preview-surface);
-  border-color: var(--mha-preview-border);
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--mha-preview-text) 7%, transparent),
-    0 10px 26px rgba(36,21,14,.10);
-}
-
-:host([data-theme-style="oneui"]) .mha-widget-manager-category:hover,
-:host([data-theme-style="oneui"]) .mha-widget-manager-category:focus-visible,
-:host([data-theme-style="oneui"]) .mha-widget-manager-widget:hover,
-:host([data-theme-style="oneui"]) .mha-widget-manager-widget:focus-visible {
-  background: color-mix(in srgb, var(--mha-accent) 8%, var(--mha-preview-surface));
-}
-
-/* Material: follow settings' tonal containers and borderless surface direction. */
-:host([data-theme-style="material"]) .mha-widget-manager-sheet {
-  background: var(--mha-material-surface-container-high, var(--mha-widget-shell-surface, var(--mha-surface-primary)));
-  border-color: transparent;
-  box-shadow: var(--mha-floating-shadow, var(--mha-widget-shadow));
-}
-
-:host([data-theme-style="material"]) .mha-widget-manager-category,
-:host([data-theme-style="material"]) .mha-widget-manager-widget,
-:host([data-theme-style="material"]) .mha-widget-manager-back {
-  background: var(--mha-material-surface-container, var(--mha-preview-surface));
-  border-color: transparent;
-  box-shadow: none;
-}
-
-:host([data-theme-style="material"]) .mha-widget-manager-preview-area,
-:host([data-theme-style="material"]) .mha-widget-manager-static-preview,
-:host([data-theme-style="material"]) .mha-widget-manager-category-icon {
-  border-color: transparent;
-}
-
-:host([data-theme-style="material"]) .mha-widget-manager-category:hover,
-:host([data-theme-style="material"]) .mha-widget-manager-category:focus-visible,
-:host([data-theme-style="material"]) .mha-widget-manager-widget:hover,
-:host([data-theme-style="material"]) .mha-widget-manager-widget:focus-visible {
-  background: var(--mha-material-surface-container-highest, color-mix(in srgb, var(--mha-accent) 8%, var(--mha-preview-surface)));
-  box-shadow: none;
-}
-
 @media (orientation: portrait) {
   :host([data-layout="mobile"]) .mha-widget-manager-sheet {
     inline-size: auto;
