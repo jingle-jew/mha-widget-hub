@@ -15,6 +15,17 @@ import {
 } from "./diagnostics-constants.js";
 import { renderDiagnosticsPanel } from "./diagnostics-render.js";
 
+const DEVICE_INSIGHTS_REFRESH_INTERVAL = 5000;
+
+function getDeviceInsightsSignature(devices = []) {
+  return JSON.stringify(devices.map(device => ({
+    id: device.device_id,
+    lastSeen: device.last_seen,
+    pages: device.pages,
+    widgets: device.widgets,
+  })));
+}
+
 class MhaDiagnosticsPanel extends HTMLElement {
   constructor() {
     super();
@@ -23,10 +34,13 @@ class MhaDiagnosticsPanel extends HTMLElement {
     this._hassRenderSignature = "";
     this._hasRendered = false;
     this._deviceInsights = [];
+    this._deviceInsightsSignature = "";
     this._deviceInsightsLoading = false;
+    this._deviceInsightsRefreshing = false;
     this._deviceInsightsError = "";
     this._deviceInsightsLoadedUserId = "";
     this._deviceInsightsRequestId = 0;
+    this._deviceInsightsRefreshTimer = 0;
     this._onStorage = event => {
       if (event.key && !event.key.startsWith("mha-")) return;
       this.render();
@@ -35,11 +49,18 @@ class MhaDiagnosticsPanel extends HTMLElement {
       if (event.detail?.storageKey !== EXTENSION_PANEL_APPEARANCE_STORAGE) return;
       this.render();
     };
+    this._onVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        this._ensureDeviceInsightsLoaded({ force: true, silent: true });
+        this._scheduleDeviceInsightsRefresh();
+      }
+    };
   }
 
   set hass(value) {
     this._hass = value;
     this._ensureDeviceInsightsLoaded();
+    this._scheduleDeviceInsightsRefresh();
     const signature = this._getHassRenderSignature(value);
     if (this._hasRendered && signature === this._hassRenderSignature) return;
     this._hassRenderSignature = signature;
@@ -54,13 +75,17 @@ class MhaDiagnosticsPanel extends HTMLElement {
     this._upgradePredefinedProperty("hass");
     window.addEventListener("storage", this._onStorage);
     window.addEventListener("mha-extension-panel-appearance-change", this._onAppearanceChange);
+    document.addEventListener("visibilitychange", this._onVisibilityChange);
     this._ensureDeviceInsightsLoaded();
+    this._scheduleDeviceInsightsRefresh();
     if (!this._hasRendered) this.render();
   }
 
   disconnectedCallback() {
     window.removeEventListener("storage", this._onStorage);
     window.removeEventListener("mha-extension-panel-appearance-change", this._onAppearanceChange);
+    document.removeEventListener("visibilitychange", this._onVisibilityChange);
+    this._clearDeviceInsightsRefresh();
   }
 
   _upgradePredefinedProperty(name) {
@@ -75,41 +100,69 @@ class MhaDiagnosticsPanel extends HTMLElement {
     return JSON.stringify({
       connected: Boolean(hass),
       entityCount: Object.keys(states).length,
-      devices: this._deviceInsights.length,
+      deviceInsightsSignature: this._deviceInsightsSignature,
       deviceInsightsLoading: this._deviceInsightsLoading,
+      deviceInsightsRefreshing: this._deviceInsightsRefreshing,
       deviceInsightsError: this._deviceInsightsError,
     });
   }
 
-  _ensureDeviceInsightsLoaded() {
+  _ensureDeviceInsightsLoaded({ force = false, silent = false } = {}) {
     const userId = String(this._hass?.user?.id || "");
     if (!this._hass || !userId) return false;
-    if (this._deviceInsightsLoading) return true;
-    if (this._deviceInsightsLoadedUserId === userId) return false;
-    this._loadDeviceInsights(userId);
+    if (this._deviceInsightsLoading || this._deviceInsightsRefreshing) return true;
+    if (!force && this._deviceInsightsLoadedUserId === userId) return false;
+    this._loadDeviceInsights(userId, { silent });
     return true;
   }
 
-  async _loadDeviceInsights(userId) {
+  _clearDeviceInsightsRefresh() {
+    clearTimeout(this._deviceInsightsRefreshTimer);
+    this._deviceInsightsRefreshTimer = 0;
+  }
+
+  _scheduleDeviceInsightsRefresh() {
+    this._clearDeviceInsightsRefresh();
+    if (!this.isConnected || !this._hass) return;
+    if (document.visibilityState === "hidden") return;
+
+    this._deviceInsightsRefreshTimer = window.setTimeout(() => {
+      this._deviceInsightsRefreshTimer = 0;
+      this._ensureDeviceInsightsLoaded({ force: true, silent: true });
+      this._scheduleDeviceInsightsRefresh();
+    }, DEVICE_INSIGHTS_REFRESH_INTERVAL);
+  }
+
+  async _loadDeviceInsights(userId, { silent = false } = {}) {
     const requestId = ++this._deviceInsightsRequestId;
-    this._deviceInsightsLoading = true;
+    if (silent) {
+      this._deviceInsightsRefreshing = true;
+    } else {
+      this._deviceInsightsLoading = true;
+      this.render();
+    }
     this._deviceInsightsError = "";
-    this.render();
 
     try {
       const devices = await loadDeviceInsights(this._hass);
       if (requestId !== this._deviceInsightsRequestId) return;
+      const signature = getDeviceInsightsSignature(devices);
+      const changed = signature !== this._deviceInsightsSignature;
       this._deviceInsights = devices;
+      this._deviceInsightsSignature = signature;
       this._deviceInsightsLoadedUserId = userId;
+      if (changed || !silent) this.render();
     } catch (error) {
       console.warn("[MHA Insights] Unable to load multi-device snapshots.", error);
       if (requestId !== this._deviceInsightsRequestId) return;
       this._deviceInsights = [];
+      this._deviceInsightsSignature = "";
       this._deviceInsightsError = "Multi-device insights unavailable.";
+      this.render();
     } finally {
       if (requestId === this._deviceInsightsRequestId) {
         this._deviceInsightsLoading = false;
-        this.render();
+        this._deviceInsightsRefreshing = false;
       }
     }
   }
@@ -125,8 +178,11 @@ class MhaDiagnosticsPanel extends HTMLElement {
     const shell = this.shadowRoot?.querySelector(".mha-extension-shell");
     if (shell && state.scrollTop) shell.scrollTop = state.scrollTop;
     if (state.activeField) {
+      const escaped = typeof CSS !== "undefined" && CSS.escape
+        ? CSS.escape(state.activeField)
+        : String(state.activeField).replace(/'/g, "\\'");
       this.shadowRoot
-        ?.querySelector(`[data-appearance-field='${CSS.escape(state.activeField)}']`)
+        ?.querySelector(`[data-appearance-field='${escaped}']`)
         ?.focus();
     }
   }
@@ -144,7 +200,9 @@ class MhaDiagnosticsPanel extends HTMLElement {
       deviceInsights: {
         devices: this._deviceInsights,
         loading: this._deviceInsightsLoading,
+        refreshing: this._deviceInsightsRefreshing,
         error: this._deviceInsightsError,
+        refreshInterval: DEVICE_INSIGHTS_REFRESH_INTERVAL,
       },
     });
 
