@@ -56,13 +56,12 @@ function renderAppearanceCard({ appearance }) {
     "Appearance",
     [
       renderMetric("Mode", appearance?.mode === "custom" ? "Custom" : "Follow MHA", "Per-panel appearance contract"),
-      renderMetric("Theme", state.theme || "unknown", state.themeSetting ? `Setting: ${state.themeSetting}` : ""),
-      renderMetric("Style", state.themeStyle || "unknown", state.iosGlass ? `iOS glass: ${state.iosGlass}` : ""),
-      renderMetric("Accent", state.accent || "unknown", state.accentMode ? `Mode: ${state.accentMode}` : ""),
+      renderMetric("Visual style", state.themeStyle || "unknown", "Effective panel style"),
+      renderMetric("Light / dark", state.theme || "unknown", state.themeSetting ? `Setting: ${state.themeSetting}` : ""),
     ].join(""),
     {
       eyebrow: "Theme",
-      description: "Effective theme values applied to this panel.",
+      description: "Only the visual style and light/dark theme are configurable in this panel.",
     },
   );
 }
