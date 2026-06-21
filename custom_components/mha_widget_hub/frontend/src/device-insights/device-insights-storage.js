@@ -4,8 +4,8 @@ import { STORAGE_KEYS } from "../core/storage-keys.js";
 const DEVICE_ID_PREFIX = "mha-device";
 
 function createRandomToken() {
-  if (typeof crypto?.randomUUID === "function") {
-    return crypto.randomUUID();
+  if (typeof globalThis.crypto?.randomUUID === "function") {
+    return globalThis.crypto.randomUUID();
   }
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
