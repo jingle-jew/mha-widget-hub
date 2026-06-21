@@ -1,0 +1,124 @@
+/*
+ * MHA Surface Contract — Component Adapter Tokens
+ *
+ * Dormant reference module.
+ *
+ * This file is intentionally not loaded by the style manifest yet.
+ */
+
+:host,
+:root {
+  /* Widget shell adapters. */
+  --mha-widget-shell-surface: initial;
+  --mha-widget-shell-border: initial;
+  --mha-widget-shell-shadow: initial;
+  --mha-widget-shell-blur: initial;
+  --mha-widget-shell-saturation: initial;
+  --mha-widget-shell-brightness: initial;
+  --mha-widget-shell-filter: initial;
+  --mha-widget-shell-highlight: initial;
+  --mha-widget-shell-highlight-opacity: initial;
+
+  --mha-widget-shell-surface-edit: initial;
+  --mha-widget-shell-border-edit: initial;
+  --mha-widget-shell-shadow-edit: initial;
+
+  /* Widget internal adapters. */
+  --mha-widget-section-surface: initial;
+  --mha-widget-section-border: initial;
+  --mha-widget-section-shadow: initial;
+  --mha-widget-control-surface: initial;
+  --mha-widget-control-border: initial;
+  --mha-widget-control-active-surface: initial;
+  --mha-widget-control-active-border: initial;
+
+  /* Shell/chrome adapters. */
+  --mha-shell-surface: initial;
+  --mha-shell-border: initial;
+  --mha-shell-shadow: initial;
+  --mha-shell-blur: initial;
+  --mha-shell-saturation: initial;
+  --mha-shell-brightness: initial;
+  --mha-shell-filter: initial;
+  --mha-shell-highlight: initial;
+  --mha-shell-highlight-opacity: initial;
+
+  --mha-shell-dock-surface: initial;
+  --mha-shell-status-surface: initial;
+  --mha-shell-nowbar-surface: initial;
+  --mha-shell-mobile-dock-surface: initial;
+
+  /* Panel adapters. */
+  --mha-panel-surface: initial;
+  --mha-panel-border: initial;
+  --mha-panel-shadow: initial;
+  --mha-panel-blur: initial;
+  --mha-panel-saturation: initial;
+  --mha-panel-brightness: initial;
+  --mha-panel-filter: initial;
+  --mha-panel-highlight: initial;
+  --mha-panel-highlight-opacity: initial;
+
+  --mha-panel-section-surface: initial;
+  --mha-panel-section-border: initial;
+  --mha-panel-section-shadow: initial;
+  --mha-panel-control-surface: initial;
+  --mha-panel-control-border: initial;
+
+  /* Popup adapters. */
+  --mha-popup-surface: initial;
+  --mha-popup-border: initial;
+  --mha-popup-shadow: initial;
+  --mha-popup-blur: initial;
+  --mha-popup-saturation: initial;
+  --mha-popup-brightness: initial;
+  --mha-popup-filter: initial;
+  --mha-popup-highlight: initial;
+  --mha-popup-highlight-opacity: initial;
+
+  --mha-popup-section-surface: initial;
+  --mha-popup-section-border: initial;
+  --mha-popup-control-surface: initial;
+  --mha-popup-control-border: initial;
+
+  /* Tile adapters. */
+  --mha-tile-surface: initial;
+  --mha-tile-surface-hover: initial;
+  --mha-tile-surface-active: initial;
+  --mha-tile-surface-selected: initial;
+  --mha-tile-border: initial;
+  --mha-tile-border-hover: initial;
+  --mha-tile-border-active: initial;
+  --mha-tile-shadow: initial;
+  --mha-tile-highlight: initial;
+  --mha-tile-highlight-opacity: initial;
+
+  /* Control adapters. */
+  --mha-control-surface: initial;
+  --mha-control-surface-hover: initial;
+  --mha-control-surface-active: initial;
+  --mha-control-surface-disabled: initial;
+  --mha-control-border: initial;
+  --mha-control-border-hover: initial;
+  --mha-control-border-active: initial;
+  --mha-control-border-disabled: initial;
+  --mha-control-shadow: initial;
+  --mha-control-shadow-hover: initial;
+  --mha-control-shadow-active: initial;
+  --mha-control-blur: initial;
+  --mha-control-saturation: initial;
+  --mha-control-brightness: initial;
+  --mha-control-filter: initial;
+
+  --mha-control-accent-surface: initial;
+  --mha-control-accent-border: initial;
+  --mha-control-accent-shadow: initial;
+
+  /* Scrim/backdrop adapters. */
+  --mha-scrim-surface: initial;
+  --mha-scrim-opacity: initial;
+  --mha-backdrop-blur: initial;
+  --mha-backdrop-saturation: initial;
+  --mha-backdrop-brightness: initial;
+  --mha-backdrop-filter: initial;
+}
