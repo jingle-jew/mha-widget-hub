@@ -1,0 +1,35 @@
+/*
+ * Control Widget Internals Contract
+ *
+ * Phase 5N-B: map local control-widget variables to the shared widget internals
+ * aliases from widget-internals-contract.css. Loaded after widget CSS so it can
+ * bridge existing widgets without changing layout or component structure.
+ */
+
+.mha-widget[data-widget-kind="button"] {
+  --mha-simple-button-icon-bg: var(--mha-widget-icon-bubble-surface, var(--mha-icon-bg, color-mix(in srgb, var(--mha-accent) 72%, var(--mha-surface-secondary))));
+  --mha-simple-button-icon-border: var(--mha-widget-icon-bubble-border, var(--mha-icon-border, color-mix(in srgb, var(--mha-text-primary) 12%, transparent)));
+  --mha-simple-button-icon-shadow: var(--mha-widget-icon-bubble-shadow, var(--mha-icon-shadow, inset 0 1px 0 color-mix(in srgb, var(--mha-text-primary) 18%, transparent)));
+}
+
+.mha-widget[data-widget-kind="toggle"],
+.mha-widget[data-widget-kind="toggle-buttons"] {
+  --mha-toggle-widget-icon-bg: var(--mha-widget-icon-bubble-surface, var(--mha-icon-bg, color-mix(in srgb, var(--mha-accent) 72%, var(--mha-surface-secondary))));
+  --mha-toggle-widget-icon-border: var(--mha-widget-icon-bubble-border, var(--mha-icon-border, color-mix(in srgb, var(--mha-text-primary) 12%, transparent)));
+  --mha-toggle-widget-icon-shadow: var(--mha-widget-icon-bubble-shadow, var(--mha-icon-shadow, inset 0 1px 0 color-mix(in srgb, var(--mha-text-primary) 18%, transparent)));
+}
+
+.mha-widget[data-widget-kind="toggle-buttons"] {
+  --mha-toggle-buttons-button-bg: var(--mha-widget-control-surface, color-mix(in srgb, var(--mha-surface-secondary) 78%, transparent));
+  --mha-toggle-buttons-button-border: var(--mha-widget-control-border, color-mix(in srgb, var(--mha-text-primary) 8%, transparent));
+  --mha-toggle-buttons-button-shadow: var(--mha-widget-control-shadow, none);
+  --mha-toggle-buttons-button-active-bg: var(--mha-widget-control-accent-surface, color-mix(in srgb, var(--mha-accent) 78%, var(--mha-surface-secondary)));
+}
+
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="button"],
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="toggle"],
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="toggle-buttons"] {
+  --mha-simple-button-icon-shadow: none;
+  --mha-toggle-widget-icon-shadow: none;
+  --mha-toggle-buttons-button-shadow: none;
+}
