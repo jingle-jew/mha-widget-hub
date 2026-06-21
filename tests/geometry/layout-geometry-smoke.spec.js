@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { test } from "@playwright/test";
 
 test("dev page exposes the MHA host", async ({ page }) => {
   await page.goto("/dev.html");
