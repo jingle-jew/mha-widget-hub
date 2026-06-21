@@ -43,6 +43,7 @@ const STATIC_STYLE_MANIFEST_AFTER_THEMES = Object.freeze([
   entry("styles/widget-manager/widget-surface-backdrop.css", "component"),
   entry("styles/widget-manager/widget-surface-layer-contract.css", "component"),
   entry("styles/panels/panel-surface-contract.css", "component"),
+  entry("styles/panels/panel-material-contract.css", "component"),
   entry("styles/panels/panel-frame-alignment.css", "component"),
   entry("styles/panels/page-creator-sheet.css", "component"),
   entry("styles/panels/page-creator-bottom.css", "component"),
@@ -101,6 +102,6 @@ export function getStyleManifest() {
     ...getThemeStyleManifestEntries(),
     ...STATIC_STYLE_MANIFEST_AFTER_THEMES,
     ...getWidgetStyleManifestEntries(),
-    ...STATIC_STYLE_MANIFEST_AFTER_WIDGETS,
+    ...STATIC_STYLE_MANifest_AFTER_WIDGETS,
   ]);
 }
