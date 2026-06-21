@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
@@ -13,11 +14,13 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, STATIC_URL_PATH
 from .panel_registry import (
+    CONF_ENABLED_PANELS,
     PANEL_ADMIN,
     PANEL_DASHBOARD,
     async_register_enabled_panels,
     async_remove_registered_panels,
     get_registered_panel_url_paths,
+    normalize_enabled_panels,
 )
 from .websocket import async_register_websocket_commands
 
@@ -25,10 +28,33 @@ _LOGGER = logging.getLogger(__name__)
 
 _DATA_STATIC_REGISTERED = "static_registered"
 _DATA_WEBSOCKET_REGISTERED = "websocket_registered"
-_CURRENT_ENABLED_PANELS = (PANEL_DASHBOARD, PANEL_ADMIN)
+_LEGACY_ENABLED_PANELS = (PANEL_DASHBOARD, PANEL_ADMIN)
 
 
-async def _async_register_frontend(hass: HomeAssistant) -> bool:
+async def _async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Reload the integration when sidebar module options change."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
+def _get_entry_enabled_panels(entry: ConfigEntry) -> list[str]:
+    """Return enabled panels for a config entry.
+
+    Existing entries created before panel options existed keep the legacy
+    dashboard + admin behavior until options are explicitly saved.
+    """
+    if CONF_ENABLED_PANELS in entry.options:
+        return normalize_enabled_panels(entry.options.get(CONF_ENABLED_PANELS))
+
+    if CONF_ENABLED_PANELS in entry.data:
+        return normalize_enabled_panels(entry.data.get(CONF_ENABLED_PANELS))
+
+    return normalize_enabled_panels(_LEGACY_ENABLED_PANELS)
+
+
+async def _async_register_frontend(
+    hass: HomeAssistant,
+    enabled_panels: Iterable[str] | None = None,
+) -> bool:
     """Serve the bundled frontend and register the MHA panels."""
     integration_data: dict[str, Any] = hass.data.setdefault(DOMAIN, {})
     frontend_dir = Path(__file__).parent / "frontend"
@@ -56,7 +82,7 @@ async def _async_register_frontend(hass: HomeAssistant) -> bool:
     if not await async_register_enabled_panels(
         hass,
         integration_data,
-        _CURRENT_ENABLED_PANELS,
+        enabled_panels,
     ):
         return False
 
@@ -73,12 +99,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up MHA Widget Hub from YAML when configured."""
     if DOMAIN not in config:
         return True
-    return await _async_register_frontend(hass)
+    return await _async_register_frontend(hass, _LEGACY_ENABLED_PANELS)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up MHA Widget Hub from a config entry."""
-    return await _async_register_frontend(hass)
+    entry.async_on_unload(entry.add_update_listener(_async_options_updated))
+    return await _async_register_frontend(hass, _get_entry_enabled_panels(entry))
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
