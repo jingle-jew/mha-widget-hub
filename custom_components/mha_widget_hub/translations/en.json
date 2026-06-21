@@ -6,7 +6,8 @@
         "title": "Set up MHA Widget Hub",
         "description": "Choose optional MHA sidebar modules. The main MHA dashboard is always enabled.",
         "data": {
-          "admin": "MHA Admin"
+          "admin": "MHA Admin",
+          "diagnostics": "MHA Insights"
         }
       }
     },
@@ -20,7 +21,8 @@
         "title": "MHA Sidebar Modules",
         "description": "Choose which optional MHA modules should appear in the Home Assistant sidebar. The main MHA dashboard remains enabled.",
         "data": {
-          "admin": "MHA Admin"
+          "admin": "MHA Admin",
+          "diagnostics": "MHA Insights"
         }
       }
     }
