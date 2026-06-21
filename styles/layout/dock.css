@@ -392,40 +392,6 @@
   }
 }
 
-/* MATERIAL DOCK DYNAMIC SURFACE */
-:host([data-theme-style="material"]) .mha-dock {
-  background:
-    linear-gradient(
-      145deg,
-      color-mix(in srgb, var(--mha-material-surface-tint) 48%, transparent),
-      transparent 54%
-    ),
-    var(--mha-dock-surface);
-  border-color: var(--mha-material-outline-variant);
-}
-
-/* MATERIAL BORDERLESS DOCK SURFACE */
-:host([data-theme-style="material"]) .mha-dock {
-  border-color: transparent;
-}
-
-/* SEMANTIC DOCK SHELL TOKENS
- * Phase 4 routes the persistent dock through shell semantic roles.
- */
-.mha-dock {
-  background: var(--mha-shell-dock-surface, var(--mha-surface-glass));
-  border-color: var(--mha-shell-border, var(--mha-border-secondary));
-  box-shadow: var(--mha-shell-shadow, var(--mha-shadow-floating));
-  -webkit-backdrop-filter: blur(var(--mha-shell-blur, var(--mha-blur-primary))) saturate(var(--mha-surface-saturation));
-  backdrop-filter: blur(var(--mha-shell-blur, var(--mha-blur-primary))) saturate(var(--mha-surface-saturation));
-}
-
-:host([data-theme-style="material"]) .mha-dock {
-  background: var(--mha-shell-dock-surface, var(--mha-surface-tonal));
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-}
-
 /* Dock active page selection
  * Structure > glow: the selected page gets a denser icon surface, a soft
  * border/lift, and a tiny indicator pill. No neon/pulse effect.
