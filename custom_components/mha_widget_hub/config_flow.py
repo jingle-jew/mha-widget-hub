@@ -7,7 +7,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, OptionsFlowWithReload
 from homeassistant.core import callback
 
 from .const import DOMAIN
@@ -61,7 +61,7 @@ class MhaWidgetHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> config_entries.OptionsFlow:
         """Create the options flow."""
-        return MhaWidgetHubOptionsFlow(config_entry)
+        return MhaWidgetHubOptionsFlow()
 
     async def async_step_user(self, user_input=None):
         """Create the single MHA Widget Hub config entry."""
@@ -84,25 +84,20 @@ class MhaWidgetHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class MhaWidgetHubOptionsFlow(config_entries.OptionsFlow):
+class MhaWidgetHubOptionsFlow(OptionsFlowWithReload):
     """Configure MHA Widget Hub options."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize the options flow."""
-        self._config_entry = config_entry
 
     async def async_step_init(self, user_input=None):
         """Manage optional sidebar modules."""
         if user_input is not None:
             enabled_panels = build_enabled_panels_from_options(user_input)
             return self.async_create_entry(
-                title="",
                 data={CONF_ENABLED_PANELS: enabled_panels},
             )
 
         return self.async_show_form(
             step_id="init",
             data_schema=_build_panel_options_schema(
-                _get_entry_enabled_panels(self._config_entry),
+                _get_entry_enabled_panels(self.config_entry),
             ),
         )
