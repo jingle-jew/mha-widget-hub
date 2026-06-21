@@ -34,6 +34,7 @@ const STATIC_STYLE_MANIFEST_AFTER_THEMES = Object.freeze([
   entry("styles/layout/dock-glyph-stability.css", "structure"),
   entry("styles/layout/frame-alignment.css", "structure"),
   entry("styles/settings/settings-panel.css", "component"),
+  entry("styles/settings/settings-panel-contract.css", "component"),
   entry("styles/widget-manager/widget-manager.css", "component"),
   entry("styles/widget-manager/widget-config-popup.css", "component"),
   entry("styles/widget-manager/widget-surface-backdrop.css", "component"),
