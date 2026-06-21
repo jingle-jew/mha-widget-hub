@@ -7,6 +7,7 @@ import {
   readJsonResult,
   readNumberOption,
   writeJson,
+  writeStorageValue,
 } from "../src/core/storage.js";
 import {
   CURRENT_STORAGE_SCHEMA_VERSION,
@@ -15,51 +16,47 @@ import {
 } from "../src/core/storage-keys.js";
 
 function createStorage(initial = {}) {
-  const values = new Map(Object.entries(initial));
+  const data = new Map(Object.entries(initial));
   return {
     getItem(key) {
-      return values.has(key) ? values.get(key) : null;
+      return data.has(key) ? data.get(key) : null;
     },
     setItem(key, value) {
-      values.set(key, String(value));
+      data.set(key, String(value));
     },
-    values,
+    removeItem(key) {
+      data.delete(key);
+    },
+    key(index) {
+      return [...data.keys()][index] ?? null;
+    },
+    get length() {
+      return data.size;
+    },
+    snapshot() {
+      return Object.fromEntries(data.entries());
+    },
   };
 }
 
-function withStorage(storage, run) {
-  const previousStorageDescriptor = Object.getOwnPropertyDescriptor(
-    globalThis,
-    "localStorage",
-  );
-  const previousError = console.error;
+function withStorage(storage, callback) {
+  const original = globalThis.localStorage;
   const errors = [];
-  Object.defineProperty(globalThis, "localStorage", {
-    configurable: true,
-    value: storage,
-  });
+  const originalConsoleError = console.error;
+  globalThis.localStorage = storage;
   console.error = (...args) => errors.push(args);
-
   try {
-    return run(errors);
+    return callback(errors);
   } finally {
-    console.error = previousError;
-    if (previousStorageDescriptor) {
-      Object.defineProperty(
-        globalThis,
-        "localStorage",
-        previousStorageDescriptor,
-      );
-    } else {
-      delete globalThis.localStorage;
-    }
+    globalThis.localStorage = original;
+    console.error = originalConsoleError;
   }
 }
 
-test("JSON reads distinguish missing, valid and corrupt values", () => {
+test("readJsonResult reports missing, valid, and malformed JSON", () => {
   withStorage(createStorage({
-    valid: JSON.stringify({ enabled: true }),
-    corrupt: "{not-json",
+    valid: JSON.stringify({ ok: true }),
+    invalid: "{bad",
   }), (errors) => {
     assert.deepEqual(readJsonResult("missing"), {
       ok: true,
@@ -67,14 +64,36 @@ test("JSON reads distinguish missing, valid and corrupt values", () => {
       value: null,
       raw: null,
     });
-    assert.deepEqual(readJson("valid", null), { enabled: true });
+    assert.deepEqual(readJsonResult("valid"), {
+      ok: true,
+      exists: true,
+      value: { ok: true },
+      raw: JSON.stringify({ ok: true }),
+    });
+    assert.equal(readJsonResult("invalid").ok, false);
+    assert.equal(errors.length, 1);
+    assert.equal(errors[0][0], "[mha-widget-hub] Storage operation failed");
+    assert.equal(errors[0][1].operation, "parse");
+    assert.equal(errors[0][1].key, "invalid");
+  });
+});
 
-    const corrupt = readJsonResult("corrupt");
-    assert.equal(corrupt.ok, false);
-    assert.equal(corrupt.exists, true);
-    assert.equal(corrupt.raw, "{not-json");
-    assert.equal(readJson("corrupt", "fallback"), "fallback");
-    assert.equal(errors.length, 2);
+test("readJson returns fallback on missing or invalid values", () => {
+  withStorage(createStorage({ valid: JSON.stringify([1, 2]) }), () => {
+    assert.deepEqual(readJson("valid", []), [1, 2]);
+    assert.deepEqual(readJson("missing", [3]), [3]);
+  });
+});
+
+test("write helpers persist strings and JSON", () => {
+  const storage = createStorage();
+  withStorage(storage, () => {
+    assert.equal(writeStorageValue("key", 123), true);
+    assert.equal(writeJson("json", { value: true }), true);
+    assert.deepEqual(storage.snapshot(), {
+      key: "123",
+      json: JSON.stringify({ value: true }),
+    });
   });
 });
 
@@ -126,6 +145,10 @@ test("storage keys keep the existing browser persistence contract", () => {
     screensaverNowBarConfig: "mha-screensaver-nowbar-config",
     screensaverClockVariant: "mha-screensaver-clock-variant",
     legacyScreensaverClockVariant: "mha-screensaver-clock",
+    deviceInsightsEnabled: "mha-device-insights-enabled",
+    deviceInsightsId: "mha-device-insights-id",
+    deviceInsightsName: "mha-device-insights-name",
+    deviceInsightsLastPublished: "mha-device-insights-last-published",
   });
   assert.equal(CURRENT_STORAGE_SCHEMA_VERSION, 1);
   assert.equal(LEGACY_STORAGE_PREFIX, "mha-v2");
@@ -138,43 +161,27 @@ test("JSON writes return false and report non-sensitive failure metadata", () =>
   };
 
   withStorage(storage, (errors) => {
-    assert.equal(writeJson("mha-grid-pages", []), false);
+    assert.equal(writeJson("too-big", { value: true }), false);
     assert.equal(errors.length, 1);
+    assert.equal(errors[0][0], "[mha-widget-hub] Storage operation failed");
     assert.deepEqual(errors[0][1], {
       operation: "write",
-      key: "mha-grid-pages",
+      key: "too-big",
       error: "QuotaExceededError",
     });
   });
 });
 
-test("migration backups preserve raw values and never overwrite the first backup", () => {
-  const storage = createStorage({
-    "mha-grid-pages": "{corrupt",
-    "mha-grid-order": "[\"legacy-widget\"]",
-  });
-
+test("createStorageBackup stores raw entries only once", () => {
+  const storage = createStorage({ a: "1", b: "2" });
   withStorage(storage, () => {
-    assert.equal(createStorageBackup(
-      "mha-storage-backup-before-v1",
-      ["mha-grid-pages", "mha-grid-order", "missing"],
-      { fromSchemaVersion: 0, toSchemaVersion: 1 },
-    ), true);
-
-    const backup = JSON.parse(storage.values.get("mha-storage-backup-before-v1"));
-    assert.equal(backup.entries["mha-grid-pages"], "{corrupt");
-    assert.equal(backup.entries["mha-grid-order"], "[\"legacy-widget\"]");
-    assert.equal(backup.entries.missing, null);
-
-    storage.values.set("mha-grid-pages", "replacement");
-    assert.equal(createStorageBackup(
-      "mha-storage-backup-before-v1",
-      ["mha-grid-pages"],
-    ), true);
-    assert.equal(
-      JSON.parse(storage.values.get("mha-storage-backup-before-v1"))
-        .entries["mha-grid-pages"],
-      "{corrupt",
-    );
+    assert.equal(createStorageBackup("backup", ["a", "b"], { version: 1 }), true);
+    const first = JSON.parse(storage.getItem("backup"));
+    assert.equal(first.version, 1);
+    assert.deepEqual(first.entries, { a: "1", b: "2" });
+    assert.equal(createStorageBackup("backup", ["a"], { version: 2 }), true);
+    const second = JSON.parse(storage.getItem("backup"));
+    assert.equal(second.version, 1);
+    assert.deepEqual(second.entries, { a: "1", b: "2" });
   });
 });

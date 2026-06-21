@@ -19,3 +19,5 @@ ADMIN_FRONTEND_MODULE = "mha-admin-loader.js"
 
 STORAGE_KEY = "mha_widget_hub.entity_visibility"
 STORAGE_VERSION = 1
+DEVICE_INSIGHTS_STORAGE_KEY = "mha_widget_hub.device_insights"
+DEVICE_INSIGHTS_STORAGE_VERSION = 1

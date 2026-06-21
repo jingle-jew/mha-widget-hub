@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en" data-theme="dark" data-theme-style="oneui" data-icon-shape="squircle">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>MHA Insights Dev</title>
+  <style>
+    html,
+    body {
+      width: 100%;
+      min-height: 100%;
+      margin: 0;
+      background: linear-gradient(135deg, #171b30, #242844);
+      color: white;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+    }
+
+    body {
+      overflow: auto;
+    }
+
+    .dev-diagnostics-toolbar {
+      position: fixed;
+      z-index: 9999;
+      top: max(14px, env(safe-area-inset-top));
+      right: max(14px, env(safe-area-inset-right));
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+      max-width: min(720px, calc(100vw - 28px));
+      padding: 10px;
+      border: 1px solid rgba(255, 255, 255, .16);
+      border-radius: 18px;
+      background: rgba(10, 10, 18, .72);
+      box-shadow: 0 22px 70px rgba(0, 0, 0, .36);
+      backdrop-filter: blur(24px) saturate(155%);
+    }
+
+    .dev-diagnostics-toolbar button,
+    .dev-diagnostics-toolbar select {
+      appearance: none;
+      min-height: 34px;
+      border: 0;
+      border-radius: 999px;
+      padding: 8px 12px;
+      background: rgba(255, 255, 255, .12);
+      color: inherit;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 750;
+      cursor: pointer;
+    }
+
+    .dev-diagnostics-stage {
+      width: 100vw;
+      min-height: 100dvh;
+    }
+
+    mha-diagnostics-panel {
+      display: block;
+      min-height: 100dvh;
+    }
+
+    @media (max-width: 720px) {
+      .dev-diagnostics-toolbar {
+        position: sticky;
+        top: 0;
+        right: auto;
+        justify-content: stretch;
+        max-width: none;
+        border-radius: 0;
+      }
+
+      .dev-diagnostics-toolbar button,
+      .dev-diagnostics-toolbar select {
+        flex: 1 1 140px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="dev-diagnostics-toolbar" aria-label="MHA Insights dev tools">
+    <button type="button" data-dev-action="theme">Toggle light/dark</button>
+    <select data-dev-action="style" aria-label="Theme style">
+      <option value="oneui">OneUI</option>
+      <option value="ios">iOS</option>
+      <option value="material">Material</option>
+    </select>
+    <select data-dev-action="accent" aria-label="Accent">
+      <option value="sky">Sky</option>
+      <option value="blue">Blue</option>
+      <option value="violet">Violet</option>
+      <option value="green">Green</option>
+      <option value="pink">Pink</option>
+      <option value="slate">Slate</option>
+    </select>
+    <button type="button" data-dev-action="reset-panel">Reset panel appearance</button>
+  </div>
+
+  <div class="dev-diagnostics-stage" data-diagnostics-stage></div>
+
+  <script type="module">
+    import "./mha-diagnostics-loader.js?v=diagnostics-dev";
+
+    const stage = document.querySelector("[data-diagnostics-stage]");
+    const styleSelect = document.querySelector("[data-dev-action='style']");
+    const accentSelect = document.querySelector("[data-dev-action='accent']");
+
+    const mockHass = {
+      states: createMockStates(),
+      user: { id: "dev-user", name: "Dev User", is_admin: true },
+      async callWS(payload) {
+        if (payload?.type === "mha_widget_hub/device_insights/get") {
+          return { devices: createMockDevices() };
+        }
+        return {};
+      },
+    };
+
+    function createMockEntity(entityId, state, attributes = {}) {
+      return {
+        entity_id: entityId,
+        state,
+        attributes,
+        last_changed: new Date().toISOString(),
+        last_updated: new Date().toISOString(),
+      };
+    }
+
+    function createMockStates() {
+      return {
+        "light.living_room": createMockEntity("light.living_room", "on", { friendly_name: "Living room lights" }),
+        "media_player.living_room": createMockEntity("media_player.living_room", "playing", { friendly_name: "Living room speaker" }),
+        "weather.home": createMockEntity("weather.home", "partlycloudy", { friendly_name: "Home weather" }),
+        "sensor.energy_today": createMockEntity("sensor.energy_today", "7.4", { unit_of_measurement: "kWh" }),
+        "binary_sensor.front_door": createMockEntity("binary_sensor.front_door", "off", { device_class: "door" }),
+      };
+    }
+
+    function createMockDevices() {
+      const now = Date.now();
+      return [
+        {
+          device_id: "mha-device-dev-wall-tablet",
+          device_name: "Kitchen Wall Tablet",
+          last_seen: new Date(now - 90_000).toISOString(),
+          pages: 3,
+          widgets: 18,
+          empty_pages: 0,
+          configured_entities: 12,
+          widget_kinds: { button: 8, weather: 2, media: 1 },
+          entity_domains: { light: 6, switch: 3, weather: 1 },
+          theme_style: "oneui",
+          theme: "dark",
+          frontend_version: "dev",
+        },
+        {
+          device_id: "mha-device-dev-phone",
+          device_name: "Julien Phone",
+          last_seen: new Date(now - 3_600_000).toISOString(),
+          pages: 2,
+          widgets: 10,
+          empty_pages: 1,
+          configured_entities: 5,
+          widget_kinds: { sensor: 4, button: 3, weather: 1 },
+          entity_domains: { sensor: 4, light: 1 },
+          theme_style: "ios",
+          theme: "light",
+          frontend_version: "dev",
+        },
+      ];
+    }
+
+    function syncDocumentDataset() {
+      const themeSetting = localStorage.getItem("mha-theme") || "auto";
+      const themeStyle = localStorage.getItem("mha-theme-style") || "oneui";
+      const accent = localStorage.getItem("mha-accent") || "sky";
+      const theme = themeSetting === "light" ? "light" : "dark";
+      document.documentElement.dataset.themeSetting = themeSetting;
+      document.documentElement.dataset.theme = theme;
+      document.documentElement.dataset.themeStyle = themeStyle;
+      document.documentElement.dataset.accent = accent;
+      document.documentElement.dataset.accentMode = "manual";
+      document.documentElement.dataset.iosGlass = localStorage.getItem("mha-ios-glass") || "liquid";
+      document.documentElement.dataset.iconShapeSetting = "auto";
+      document.documentElement.dataset.iconShape = "squircle";
+      styleSelect.value = themeStyle;
+      accentSelect.value = accent;
+    }
+
+    function renderPanel() {
+      syncDocumentDataset();
+      stage.innerHTML = "";
+      const panel = document.createElement("mha-diagnostics-panel");
+      panel.hass = mockHass;
+      stage.append(panel);
+    }
+
+    document.querySelector("[data-dev-action='theme']").addEventListener("click", () => {
+      const current = localStorage.getItem("mha-theme") || "dark";
+      localStorage.setItem("mha-theme", current === "light" ? "dark" : "light");
+      renderPanel();
+    });
+
+    styleSelect.addEventListener("change", () => {
+      localStorage.setItem("mha-theme-style", styleSelect.value);
+      localStorage.setItem("mha-accent", styleSelect.value === "oneui" ? "sky" : "blue");
+      renderPanel();
+    });
+
+    accentSelect.addEventListener("change", () => {
+      localStorage.setItem("mha-accent", accentSelect.value);
+      renderPanel();
+    });
+
+    document.querySelector("[data-dev-action='reset-panel']").addEventListener("click", () => {
+      const store = JSON.parse(localStorage.getItem("mha-extension-panel-appearance") || "{}");
+      delete store.diagnostics;
+      localStorage.setItem("mha-extension-panel-appearance", JSON.stringify(store));
+      renderPanel();
+    });
+
+    localStorage.setItem("mha-theme", localStorage.getItem("mha-theme") || "dark");
+    localStorage.setItem("mha-theme-style", localStorage.getItem("mha-theme-style") || "oneui");
+    localStorage.setItem("mha-accent", localStorage.getItem("mha-accent") || "sky");
+    localStorage.setItem("mha-accent-mode", "manual");
+    renderPanel();
+  </script>
+</body>
+</html>

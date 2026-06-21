@@ -1,6 +1,7 @@
 export const FRONTEND_SOURCES = Object.freeze([
   ["mha-widget-hub-loader.js", "mha-widget-hub-loader.js"],
   ["mha-admin-loader.js", "mha-admin-loader.js"],
+  ["mha-diagnostics-loader.js", "mha-diagnostics-loader.js"],
   ["mha-widget-hub.js", "mha-widget-hub.js"],
   ["src", "src"],
   ["styles", "styles"],

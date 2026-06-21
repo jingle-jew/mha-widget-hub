@@ -3,6 +3,7 @@ import {
   buildSettingsPanelState,
   resolveEffectiveIconShape,
 } from "./settings-panel-props.js";
+import { appendAdvancedSettingsControls } from "./advanced-settings-control.js";
 import { appendLayoutModeControl } from "./layout-mode-control.js";
 import { replaceSettingsPanelPreservingUiState } from "./settings-panel-orchestrator.js";
 
@@ -64,6 +65,13 @@ export function buildSettingsCoordinatorProps({
   };
 }
 
+function decorateSettingsPanel(panel, props = {}) {
+  return appendAdvancedSettingsControls(
+    appendLayoutModeControl(panel),
+    props,
+  );
+}
+
 export function syncSettingsPanels({
   root,
   props = {},
@@ -73,7 +81,7 @@ export function syncSettingsPanels({
   const all = replaceSettingsPanelPreservingUiState({
     root,
     existing: root?.querySelector?.('.mha-settings-panel[data-settings-scope="all"]'),
-    next: appendLayoutModeControl(createPanel(props.all)),
+    next: decorateSettingsPanel(createPanel(props.all), props.all),
     updatePanel,
   });
 
