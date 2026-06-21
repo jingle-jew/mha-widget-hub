@@ -1,0 +1,35 @@
+/*
+ * Widget Internals Surface Contract
+ *
+ * Phase 5N-A: expose shared internal widget surface aliases without forcing
+ * individual widget layouts. Widget-specific CSS loaded later may override.
+ */
+
+.mha-widget {
+  --mha-widget-section-surface: var(--mha-surface-on-primary, var(--mha-tile-surface, transparent));
+  --mha-widget-section-border: var(--mha-border-on-primary, var(--mha-tile-border, transparent));
+  --mha-widget-section-shadow: var(--mha-tile-shadow, none);
+
+  --mha-widget-control-surface: var(--mha-control-surface, var(--mha-surface-control, transparent));
+  --mha-widget-control-border: var(--mha-control-border, var(--mha-border-control, transparent));
+  --mha-widget-control-shadow: var(--mha-control-shadow, none);
+
+  --mha-widget-control-accent-surface: var(--mha-control-accent-surface, var(--mha-surface-accent, var(--mha-accent)));
+  --mha-widget-control-accent-border: var(--mha-control-accent-border, transparent);
+  --mha-widget-control-accent-shadow: var(--mha-control-accent-shadow, none);
+
+  --mha-widget-chip-surface: var(--mha-tile-surface, var(--mha-widget-section-surface));
+  --mha-widget-chip-border: var(--mha-tile-border, var(--mha-widget-section-border));
+  --mha-widget-chip-shadow: var(--mha-tile-shadow, none);
+
+  --mha-widget-icon-bubble-surface: var(--mha-widget-control-surface);
+  --mha-widget-icon-bubble-border: var(--mha-widget-control-border);
+  --mha-widget-icon-bubble-shadow: var(--mha-widget-control-shadow);
+}
+
+:host([data-theme-style="material"]) .mha-widget {
+  --mha-widget-section-shadow: none;
+  --mha-widget-control-shadow: none;
+  --mha-widget-chip-shadow: none;
+  --mha-widget-icon-bubble-shadow: none;
+}
