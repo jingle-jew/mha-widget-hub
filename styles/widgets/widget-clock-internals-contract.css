@@ -1,0 +1,17 @@
+/*
+ * Clock Widget Internals Contract
+ *
+ * Phase 5N-G: provide shared widget-internal fallbacks for ClockWidget semantic
+ * face tokens. Clock layout, hand geometry, density and screensaver usage remain
+ * owned by clock-widget.css.
+ */
+
+.mha-widget[data-widget-kind="clock"] {
+  --mha-clock-widget-face-surface: var(--mha-clock-widget-face-surface, var(--mha-widget-section-surface, transparent));
+  --mha-clock-widget-face-border: var(--mha-clock-widget-face-border, var(--mha-widget-section-border, transparent));
+  --mha-clock-widget-face-shadow: var(--mha-clock-widget-face-shadow, var(--mha-widget-section-shadow, none));
+}
+
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="clock"] {
+  --mha-clock-widget-face-shadow: none;
+}
