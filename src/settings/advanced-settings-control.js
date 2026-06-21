@@ -1,5 +1,27 @@
+import { createDeviceInsightsPublisher } from "../device-insights/device-insights-publisher.js";
+import { isDeviceInsightsEnabled } from "../device-insights/device-insights-storage.js";
 import { t } from "../i18n/index.js";
 import { createToggle } from "../ui/toggle.js";
+
+function getHost(panel) {
+  return panel?.getRootNode?.()?.host || null;
+}
+
+function getPublisher(panel) {
+  const host = getHost(panel);
+  if (!host) return null;
+  if (!host._deviceInsightsPublisher) {
+    host._deviceInsightsPublisher = createDeviceInsightsPublisher(host);
+  }
+  return host._deviceInsightsPublisher;
+}
+
+function openSettingsPage(panel, page = "main") {
+  const host = getHost(panel);
+  if (!host) return;
+  host._settingsPage = page;
+  host._syncSettingsDom?.();
+}
 
 function createSection(title, children = []) {
   const section = document.createElement("section");
@@ -13,12 +35,12 @@ function createSection(title, children = []) {
   return section;
 }
 
-function createAdvancedTile({ onClick } = {}) {
+function createAdvancedTile(panel, { onClick } = {}) {
   const button = document.createElement("button");
   button.className = "mha-settings-nav-tile";
   button.type = "button";
   button.dataset.advancedSettingsEntry = "true";
-  button.addEventListener("click", () => onClick?.());
+  button.addEventListener("click", () => (onClick || (() => openSettingsPage(panel, "advanced")))());
 
   const text = document.createElement("span");
   text.className = "mha-settings-nav-text";
@@ -41,7 +63,7 @@ function createAdvancedTile({ onClick } = {}) {
   return button;
 }
 
-function createDeviceInsightsSwitch({ checked = false, onChange } = {}) {
+function createDeviceInsightsSwitch(panel, { checked = false, onChange } = {}) {
   const field = document.createElement("div");
   field.className = "mha-settings-switch";
 
@@ -68,7 +90,16 @@ function createDeviceInsightsSwitch({ checked = false, onChange } = {}) {
     label: label.textContent,
     checked,
     className: "mha-settings-toggle",
-    onChange: event => onChange?.(Boolean(event.currentTarget?.checked)),
+    onChange: async event => {
+      const enabled = Boolean(event.currentTarget?.checked);
+      const publisher = getPublisher(panel);
+      if (onChange) {
+        onChange(enabled);
+      } else if (publisher) {
+        await publisher.setEnabled(enabled);
+        getHost(panel)?._syncSettingsDom?.();
+      }
+    },
   });
 
   const input = toggle.querySelector(".mha-toggle-input");
@@ -92,7 +123,7 @@ function ensureAdvancedBackButton(panel, onBack) {
   back.dataset.advancedSettingsBack = "true";
   back.setAttribute("aria-label", t("settings.backToSettings", "Back to settings"));
   back.textContent = "←";
-  back.addEventListener("click", () => onBack?.());
+  back.addEventListener("click", () => (onBack || (() => openSettingsPage(panel, "main")))());
   actions.prepend(back);
 }
 
@@ -105,8 +136,8 @@ function renderAdvancedPanel(panel, props = {}) {
   const body = panel.querySelector(".mha-settings-body");
   if (!body) return panel;
   body.replaceChildren(createSection(t("settings.deviceInsights", "MHA Insights"), [
-    createDeviceInsightsSwitch({
-      checked: Boolean(props.deviceInsightsEnabled),
+    createDeviceInsightsSwitch(panel, {
+      checked: props.deviceInsightsEnabled ?? isDeviceInsightsEnabled(),
       onChange: props.onDeviceInsightsEnabledChange,
     }),
   ]));
@@ -120,7 +151,7 @@ function appendAdvancedEntry(panel, props = {}) {
   const layoutSection = [...body.querySelectorAll(".mha-settings-section")]
     .find(section => section.querySelector(".mha-settings-section-title")?.textContent === t("settings.layout", "Layout"));
   const section = createSection(t("settings.advanced", "Advanced"), [
-    createAdvancedTile({ onClick: props.onOpenAdvancedSettings }),
+    createAdvancedTile(panel, { onClick: props.onOpenAdvancedSettings }),
   ]);
 
   if (layoutSection) {
