@@ -1,0 +1,325 @@
+/*
+ * MHA Widget Hub — Theme Template
+ *
+ * Copy this file when starting a new theme. Do not load this template directly.
+ *
+ * Suggested implementation flow:
+ * 1. Copy this file to styles/themes/<theme-id>.css.
+ * 2. Replace <theme-id> and <Theme Name>.
+ * 3. Add the theme to src/settings/theme-registry.js.
+ * 4. Mirror the CSS file under custom_components/mha_widget_hub/frontend/styles/themes/.
+ * 5. Run npm run check:syntax, npm test and npm run check:sync.
+ * 6. Validate visuals manually.
+ *
+ * Theme authoring rule:
+ * Prefer feeding the surface contract below instead of styling components directly.
+ */
+
+:host([data-theme-style="<theme-id>"]) {
+  /* ------------------------------------------------------------------------
+   * 1. Theme identity and geometry
+   * --------------------------------------------------------------------- */
+
+  --mha-theme-name: "<Theme Name>";
+
+  --mha-widget-radius: 24px;
+  --mha-widget-inner-radius: 18px;
+  --mha-control-radius: 999px;
+  --mha-dock-radius: 28px;
+  --mha-statusbar-radius: 999px;
+
+  --mha-radius-widget: var(--mha-widget-radius);
+  --mha-radius-widget-inner: var(--mha-widget-inner-radius);
+  --mha-radius-control: var(--mha-control-radius);
+  --mha-radius-shell: var(--mha-dock-radius);
+  --mha-radius-panel: 28px;
+  --mha-radius-popup: 28px;
+  --mha-radius-tile: 18px;
+  --mha-radius-pill: 999px;
+  --mha-radius-circle: 50%;
+
+  /* ------------------------------------------------------------------------
+   * 2. Accent and text
+   * --------------------------------------------------------------------- */
+
+  --mha-accent: #5b8cff;
+  --mha-accent-soft: color-mix(in srgb, var(--mha-accent) 18%, transparent);
+  --mha-accent-strong: color-mix(in srgb, var(--mha-accent) 88%, #000 12%);
+  --mha-accent-contrast: #ffffff;
+
+  --mha-text-primary: rgba(255,255,255,.94);
+  --mha-text-secondary: rgba(255,255,255,.70);
+  --mha-text-tertiary: rgba(255,255,255,.52);
+  --mha-text-muted: var(--mha-text-tertiary);
+  --mha-text-disabled: rgba(255,255,255,.34);
+  --mha-text-inverse: rgba(0,0,0,.92);
+  --mha-text-accent: var(--mha-accent);
+
+  --mha-primary-text: var(--mha-text-primary);
+  --mha-secondary-text: var(--mha-text-secondary);
+  --mha-muted-text: var(--mha-text-muted);
+
+  /* ------------------------------------------------------------------------
+   * 3. Canvas and background
+   * --------------------------------------------------------------------- */
+
+  --mha-bg-primary: #101114;
+  --mha-bg-secondary: #17191f;
+  --mha-bg-elevated: #1f222a;
+  --mha-bg-overlay: rgba(0,0,0,.48);
+
+  --mha-surface-canvas: var(--mha-bg-primary);
+  --mha-canvas-background: var(--mha-bg-primary);
+  --mha-canvas-background-image:
+    radial-gradient(circle at 18% 12%, color-mix(in srgb, var(--mha-accent) 24%, transparent), transparent 34%),
+    linear-gradient(145deg, var(--mha-bg-primary), var(--mha-bg-secondary));
+  --mha-canvas-background-overlay: transparent;
+  --mha-canvas-background-tint: transparent;
+  --mha-canvas-background-vibrance: 100%;
+  --mha-canvas-background-noise: none;
+
+  /* ------------------------------------------------------------------------
+   * 4. Core surfaces
+   * --------------------------------------------------------------------- */
+
+  --mha-surface-primary: rgba(255,255,255,.10);
+  --mha-surface-on-primary: rgba(255,255,255,.075);
+  --mha-surface-secondary: rgba(255,255,255,.065);
+  --mha-surface-on-secondary: rgba(255,255,255,.05);
+  --mha-surface-tertiary: rgba(255,255,255,.04);
+  --mha-surface-on-tertiary: rgba(255,255,255,.032);
+
+  --mha-primary-surface: var(--mha-surface-primary);
+  --mha-on-primary-surface: var(--mha-surface-on-primary);
+  --mha-secondary-surface: var(--mha-surface-secondary);
+  --mha-on-secondary-surface: var(--mha-surface-on-secondary);
+
+  /* ------------------------------------------------------------------------
+   * 5. Specialized surfaces
+   * --------------------------------------------------------------------- */
+
+  --mha-surface-shell: rgba(255,255,255,.10);
+  --mha-surface-panel: rgba(20,22,28,.94);
+  --mha-surface-popup: rgba(20,22,28,.97);
+  --mha-surface-control: rgba(255,255,255,.08);
+  --mha-surface-control-hover: rgba(255,255,255,.11);
+  --mha-surface-control-active: var(--mha-accent);
+  --mha-surface-control-disabled: rgba(255,255,255,.045);
+  --mha-surface-accent: var(--mha-accent);
+  --mha-surface-danger: color-mix(in srgb, #ff453a 22%, var(--mha-surface-control));
+  --mha-surface-warning: color-mix(in srgb, #ffcc00 22%, var(--mha-surface-control));
+  --mha-surface-success: color-mix(in srgb, #30d158 22%, var(--mha-surface-control));
+  --mha-surface-info: color-mix(in srgb, var(--mha-accent) 22%, var(--mha-surface-control));
+  --mha-surface-elevated: rgba(255,255,255,.12);
+  --mha-surface-sunken: rgba(0,0,0,.16);
+  --mha-surface-overlay: var(--mha-bg-overlay);
+  --mha-surface-scrim: var(--mha-bg-overlay);
+  --mha-surface-selection: var(--mha-accent-soft);
+  --mha-surface-focus-ring: var(--mha-accent);
+
+  --mha-accent-surface: var(--mha-surface-accent);
+  --mha-on-accent-surface: var(--mha-accent-contrast);
+
+  /* ------------------------------------------------------------------------
+   * 6. Borders
+   * --------------------------------------------------------------------- */
+
+  --mha-border-primary: rgba(255,255,255,.16);
+  --mha-border-secondary: rgba(255,255,255,.10);
+  --mha-border-subtle: rgba(255,255,255,.07);
+  --mha-border-focus: var(--mha-accent);
+
+  --mha-border-on-primary: var(--mha-border-secondary);
+  --mha-border-on-secondary: var(--mha-border-subtle);
+  --mha-border-tertiary: var(--mha-border-subtle);
+  --mha-border-on-tertiary: rgba(255,255,255,.05);
+  --mha-border-shell: var(--mha-border-secondary);
+  --mha-border-panel: rgba(255,255,255,.14);
+  --mha-border-popup: var(--mha-border-panel);
+  --mha-border-control: rgba(255,255,255,.12);
+  --mha-border-control-hover: rgba(255,255,255,.18);
+  --mha-border-control-active: var(--mha-accent);
+  --mha-border-control-disabled: rgba(255,255,255,.05);
+  --mha-border-accent: var(--mha-accent);
+  --mha-primary-border: var(--mha-border-primary);
+  --mha-secondary-border: var(--mha-border-secondary);
+
+  /* ------------------------------------------------------------------------
+   * 7. Effects
+   * --------------------------------------------------------------------- */
+
+  --mha-blur-primary: 18px;
+  --mha-blur-secondary: 14px;
+  --mha-blur-shell: var(--mha-blur-primary);
+  --mha-blur-panel: 22px;
+  --mha-blur-popup: var(--mha-blur-panel);
+  --mha-blur-control: 10px;
+  --mha-blur-overlay: 10px;
+
+  --mha-saturation-primary: 150%;
+  --mha-saturation-secondary: 140%;
+  --mha-saturation-shell: var(--mha-saturation-primary);
+  --mha-saturation-panel: var(--mha-saturation-primary);
+  --mha-saturation-popup: var(--mha-saturation-panel);
+  --mha-saturation-control: 130%;
+  --mha-saturation-overlay: 90%;
+
+  --mha-brightness-primary: 1;
+  --mha-brightness-secondary: 1;
+  --mha-brightness-shell: 1;
+  --mha-brightness-panel: 1;
+  --mha-brightness-popup: 1;
+  --mha-brightness-control: 1;
+  --mha-brightness-overlay: .9;
+
+  --mha-filter-primary: blur(var(--mha-blur-primary)) saturate(var(--mha-saturation-primary)) brightness(var(--mha-brightness-primary));
+  --mha-filter-shell: blur(var(--mha-blur-shell)) saturate(var(--mha-saturation-shell)) brightness(var(--mha-brightness-shell));
+  --mha-filter-panel: blur(var(--mha-blur-panel)) saturate(var(--mha-saturation-panel)) brightness(var(--mha-brightness-panel));
+  --mha-filter-popup: blur(var(--mha-blur-popup)) saturate(var(--mha-saturation-popup)) brightness(var(--mha-brightness-popup));
+  --mha-filter-control: blur(var(--mha-blur-control)) saturate(var(--mha-saturation-control)) brightness(var(--mha-brightness-control));
+  --mha-filter-overlay: blur(var(--mha-blur-overlay)) saturate(var(--mha-saturation-overlay)) brightness(var(--mha-brightness-overlay));
+
+  --mha-shadow-primary: 0 12px 32px rgba(0,0,0,.22);
+  --mha-shadow-secondary: none;
+  --mha-shadow-tertiary: none;
+  --mha-shadow-shell: 0 10px 28px rgba(0,0,0,.22);
+  --mha-shadow-panel: 0 18px 48px rgba(0,0,0,.30);
+  --mha-shadow-popup: var(--mha-shadow-panel);
+  --mha-shadow-control: none;
+  --mha-shadow-control-hover: none;
+  --mha-shadow-control-active: none;
+  --mha-shadow-floating: var(--mha-shadow-shell);
+  --mha-shadow-elevated: var(--mha-shadow-panel);
+  --mha-shadow-sunken: inset 0 1px 2px rgba(0,0,0,.18);
+  --mha-shadow-none: none;
+
+  --mha-highlight-primary: linear-gradient(135deg, rgba(255,255,255,.18), transparent 54%);
+  --mha-highlight-secondary: linear-gradient(135deg, rgba(255,255,255,.10), transparent 58%);
+  --mha-highlight-tertiary: none;
+  --mha-highlight-shell: var(--mha-highlight-primary);
+  --mha-highlight-panel: var(--mha-highlight-secondary);
+  --mha-highlight-popup: var(--mha-highlight-panel);
+  --mha-highlight-control: none;
+  --mha-highlight-overlay: none;
+  --mha-highlight-opacity-primary: .32;
+  --mha-highlight-opacity-secondary: .18;
+  --mha-highlight-opacity-shell: .28;
+  --mha-highlight-opacity-panel: .16;
+  --mha-highlight-opacity-popup: .16;
+  --mha-highlight-opacity-control: 0;
+
+  /* ------------------------------------------------------------------------
+   * 8. Component adapters
+   * --------------------------------------------------------------------- */
+
+  --mha-widget-shell-surface: var(--mha-surface-primary);
+  --mha-widget-shell-border: var(--mha-border-primary);
+  --mha-widget-shell-shadow: var(--mha-shadow-primary);
+  --mha-widget-shell-filter: var(--mha-filter-primary);
+  --mha-widget-shell-highlight: var(--mha-highlight-primary);
+  --mha-widget-shell-highlight-opacity: var(--mha-highlight-opacity-primary);
+
+  --mha-widget-section-surface: var(--mha-surface-on-primary);
+  --mha-widget-section-border: var(--mha-border-on-primary);
+  --mha-widget-section-shadow: var(--mha-shadow-secondary);
+  --mha-widget-control-surface: var(--mha-surface-control);
+  --mha-widget-control-border: var(--mha-border-control);
+  --mha-widget-control-shadow: var(--mha-shadow-control);
+  --mha-widget-control-accent-surface: var(--mha-accent);
+  --mha-widget-control-accent-border: transparent;
+  --mha-widget-control-accent-shadow: none;
+  --mha-widget-chip-surface: var(--mha-tile-surface);
+  --mha-widget-chip-border: var(--mha-tile-border);
+  --mha-widget-chip-shadow: var(--mha-tile-shadow);
+  --mha-widget-icon-bubble-surface: var(--mha-widget-control-surface);
+  --mha-widget-icon-bubble-border: var(--mha-widget-control-border);
+  --mha-widget-icon-bubble-shadow: var(--mha-widget-control-shadow);
+
+  --mha-shell-surface: var(--mha-surface-shell);
+  --mha-shell-border: var(--mha-border-shell);
+  --mha-shell-shadow: var(--mha-shadow-shell);
+  --mha-shell-filter: var(--mha-filter-shell);
+  --mha-shell-dock-surface: var(--mha-shell-surface);
+  --mha-shell-status-surface: var(--mha-shell-surface);
+  --mha-shell-nowbar-surface: var(--mha-shell-surface);
+  --mha-shell-mobile-dock-surface: var(--mha-shell-surface);
+
+  --mha-panel-surface: var(--mha-surface-panel);
+  --mha-panel-border: var(--mha-border-panel);
+  --mha-panel-shadow: var(--mha-shadow-panel);
+  --mha-panel-filter: var(--mha-filter-panel);
+  --mha-panel-section-surface: var(--mha-surface-on-primary);
+  --mha-panel-section-border: var(--mha-border-on-primary);
+  --mha-panel-section-shadow: none;
+  --mha-panel-control-surface: var(--mha-surface-control);
+  --mha-panel-control-border: var(--mha-border-control);
+
+  --mha-popup-surface: var(--mha-panel-surface);
+  --mha-popup-border: var(--mha-panel-border);
+  --mha-popup-shadow: var(--mha-panel-shadow);
+  --mha-popup-filter: var(--mha-panel-filter);
+  --mha-popup-section-surface: var(--mha-panel-section-surface);
+  --mha-popup-section-border: var(--mha-panel-section-border);
+  --mha-popup-control-surface: var(--mha-panel-control-surface);
+  --mha-popup-control-border: var(--mha-panel-control-border);
+
+  --mha-tile-surface: var(--mha-surface-secondary);
+  --mha-tile-surface-hover: color-mix(in srgb, var(--mha-accent) 7%, var(--mha-tile-surface));
+  --mha-tile-surface-active: var(--mha-accent);
+  --mha-tile-surface-selected: var(--mha-accent-soft);
+  --mha-tile-border: var(--mha-border-secondary);
+  --mha-tile-border-hover: color-mix(in srgb, var(--mha-accent) 34%, var(--mha-tile-border));
+  --mha-tile-border-active: var(--mha-accent);
+  --mha-tile-shadow: none;
+
+  --mha-preview-surface: var(--mha-tile-surface);
+  --mha-preview-surface-hover: var(--mha-tile-surface-hover);
+  --mha-preview-border: var(--mha-tile-border);
+  --mha-preview-border-hover: var(--mha-tile-border-hover);
+  --mha-preview-text: var(--mha-text-primary);
+
+  --mha-control-surface: var(--mha-surface-control);
+  --mha-control-surface-hover: var(--mha-surface-control-hover);
+  --mha-control-surface-active: var(--mha-surface-control-active);
+  --mha-control-border: var(--mha-border-control);
+  --mha-control-border-hover: var(--mha-border-control-hover);
+  --mha-control-border-active: var(--mha-border-control-active);
+  --mha-control-shadow: var(--mha-shadow-control);
+  --mha-control-accent-surface: var(--mha-accent);
+  --mha-control-accent-border: transparent;
+  --mha-control-accent-shadow: none;
+
+  --mha-scrim-surface: var(--mha-surface-scrim);
+  --mha-scrim-opacity: 1;
+  --mha-backdrop-filter: var(--mha-filter-overlay);
+}
+
+:host([data-theme-style="<theme-id>"][data-theme="light"]) {
+  /* Optional light-mode overrides. */
+  --mha-bg-primary: #f5f6fa;
+  --mha-bg-secondary: #e8ebf2;
+  --mha-text-primary: rgba(0,0,0,.92);
+  --mha-text-secondary: rgba(0,0,0,.66);
+  --mha-text-tertiary: rgba(0,0,0,.46);
+  --mha-surface-primary: rgba(255,255,255,.76);
+  --mha-surface-on-primary: rgba(255,255,255,.58);
+  --mha-surface-panel: rgba(255,255,255,.94);
+  --mha-surface-popup: rgba(255,255,255,.97);
+  --mha-border-primary: rgba(0,0,0,.12);
+  --mha-border-secondary: rgba(0,0,0,.08);
+}
+
+:host([data-theme-style="<theme-id>"][data-theme="dark"]) {
+  /* Optional dark-mode overrides. Keep this block if dark needs special tuning. */
+}
+
+/*
+ * Optional expressive exceptions.
+ * Keep these rare and documented. Prefer token remapping above first.
+ */
+/*
+:host([data-theme-style="<theme-id>"]) .mha-widget[data-widget-kind="weather"] {
+  --mha-weather-bg-start: #8edcff;
+  --mha-weather-bg-end: #4c86ff;
+}
+*/
