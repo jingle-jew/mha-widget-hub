@@ -6,7 +6,8 @@
         "title": "Configurer MHA Widget Hub",
         "description": "Choisissez les modules MHA optionnels à afficher dans la barre latérale. Le tableau de bord principal MHA reste toujours activé.",
         "data": {
-          "admin": "MHA Admin"
+          "admin": "MHA Admin",
+          "diagnostics": "MHA Insights"
         }
       }
     },
@@ -20,7 +21,8 @@
         "title": "Modules MHA de la barre latérale",
         "description": "Choisissez les modules MHA optionnels qui doivent apparaître dans la barre latérale de Home Assistant. Le tableau de bord principal MHA reste activé.",
         "data": {
-          "admin": "MHA Admin"
+          "admin": "MHA Admin",
+          "diagnostics": "MHA Insights"
         }
       }
     }
