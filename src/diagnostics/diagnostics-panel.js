@@ -177,12 +177,9 @@ class MhaDiagnosticsPanel extends HTMLElement {
   _restoreRenderState(state = {}) {
     const shell = this.shadowRoot?.querySelector(".mha-extension-shell");
     if (shell && state.scrollTop) shell.scrollTop = state.scrollTop;
-    if (state.activeField) {
-      const escaped = typeof CSS !== "undefined" && CSS.escape
-        ? CSS.escape(state.activeField)
-        : String(state.activeField).replace(/'/g, "\\'");
+    if (state.activeField && typeof CSS !== "undefined" && CSS.escape) {
       this.shadowRoot
-        ?.querySelector(`[data-appearance-field='${escaped}']`)
+        ?.querySelector(`[data-appearance-field='${CSS.escape(state.activeField)}']`)
         ?.focus();
     }
   }
