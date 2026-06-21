@@ -31,6 +31,7 @@ const STATIC_STYLE_MANIFEST_AFTER_THEMES = Object.freeze([
   entry("styles/layout/dock-contract.css", "structure"),
   entry("styles/layout/mobile-dock.css", "structure"),
   entry("styles/layout/floating-controls.css", "structure"),
+  entry("styles/layout/floating-controls-contract.css", "structure"),
   entry("styles/layout/dock-glyph-stability.css", "structure"),
   entry("styles/layout/frame-alignment.css", "structure"),
   entry("styles/settings/settings-panel.css", "component"),
