@@ -63,6 +63,7 @@ const STATIC_STYLE_MANIFEST_AFTER_WIDGETS = Object.freeze([
   entry("styles/widgets/widget-slider-internals-contract.css", "component"),
   entry("styles/widgets/widget-media-internals-contract.css", "component"),
   entry("styles/widgets/widget-scenes-internals-contract.css", "component"),
+  entry("styles/widgets/widget-clock-internals-contract.css", "component"),
   entry("styles/screensaver/screensaver.css", "component"),
   entry("styles/screensaver/screensaver-contract.css", "component"),
   entry("styles/screensaver/screensaver-clock.css", "component"),
