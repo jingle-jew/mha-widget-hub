@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { createHubRuntimeDefaults } from "../src/core/hub-runtime-defaults.js";
+import {
+  applyHubRuntimeDefaults,
+  createHubRuntimeDefaults,
+} from "../src/core/hub-runtime-defaults.js";
 
 test("createHubRuntimeDefaults returns the expected initial runtime state", () => {
   const defaults = createHubRuntimeDefaults();
@@ -36,4 +39,19 @@ test("createHubRuntimeDefaults returns fresh mutable containers", () => {
   assert.notEqual(first._pages, second._pages);
   assert.notEqual(first._widgets, second._widgets);
   assert.notEqual(first._entityVisibilityConfig, second._entityVisibilityConfig);
+});
+
+test("applyHubRuntimeDefaults applies defaults to an existing host", () => {
+  const host = {
+    _initialized: true,
+    _widgets: [{ id: "existing" }],
+  };
+
+  const result = applyHubRuntimeDefaults(host);
+
+  assert.equal(result, host);
+  assert.equal(host._initialized, false);
+  assert.deepEqual(host._widgets, []);
+  assert.deepEqual(host._pages, []);
+  assert.deepEqual(host._entityVisibilityConfig, { version: 1, users: {} });
 });
