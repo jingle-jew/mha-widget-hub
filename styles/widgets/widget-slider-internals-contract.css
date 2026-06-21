@@ -1,0 +1,35 @@
+/*
+ * Slider Widget Internals Contract
+ *
+ * Phase 5N-C: map slider-family widget internals to shared widget internals
+ * aliases. Slider geometry, iOS full-surface fader layers and input behavior
+ * remain owned by slider-widget.css and toggle-slider-widget.css.
+ */
+
+.mha-widget[data-widget-kind="slider"] .mha-slider-widget-icon {
+  --mha-icon-bg: var(--mha-widget-icon-bubble-surface, var(--mha-icon-bg));
+  --mha-icon-border: var(--mha-widget-icon-bubble-border, var(--mha-icon-border));
+  --mha-icon-shadow: var(--mha-widget-icon-bubble-shadow, var(--mha-icon-shadow));
+}
+
+.mha-widget[data-widget-kind="toggle-slider"] {
+  --mha-toggle-widget-icon-bg: var(--mha-widget-icon-bubble-surface, var(--mha-icon-bg, color-mix(in srgb, var(--mha-accent) 72%, var(--mha-surface-secondary))));
+  --mha-toggle-widget-icon-border: var(--mha-widget-icon-bubble-border, var(--mha-icon-border, color-mix(in srgb, var(--mha-text-primary) 12%, transparent)));
+  --mha-toggle-widget-icon-shadow: var(--mha-widget-icon-bubble-shadow, var(--mha-icon-shadow, inset 0 1px 0 color-mix(in srgb, var(--mha-text-primary) 18%, transparent)));
+}
+
+.combined-toggle-slider__slider {
+  background: var(--mha-widget-section-surface, transparent);
+  border-color: var(--mha-widget-section-border, transparent);
+  box-shadow: var(--mha-widget-section-shadow, none);
+}
+
+.combined-toggle-slider__slider-value {
+  color: var(--mha-text-secondary);
+}
+
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="slider"] .mha-slider-widget-icon,
+:host([data-theme-style="material"]) .mha-widget[data-widget-kind="toggle-slider"] {
+  --mha-icon-shadow: none;
+  --mha-toggle-widget-icon-shadow: none;
+}
