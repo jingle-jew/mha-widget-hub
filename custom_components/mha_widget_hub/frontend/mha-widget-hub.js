@@ -46,8 +46,11 @@ import { createGridRuntime } from "./src/layout/grid-runtime.js";
 import {normalizeClockVariant,updateScreensaverClock} from "./src/screensaver/screensaver.js";
 import { createScreensaverController } from "./src/screensaver/screensaver-controller.js";
 import { createScreensaverCoordinator } from "./src/screensaver/screensaver-coordinator.js?v=phase9";
+import { applyHaSidebarMode } from "./src/core/ha-sidebar-mode.js";
 import { applyHubRuntimeDefaults } from "./src/core/hub-runtime-defaults.js";
 import { scheduleIconSymbolRefresh } from "./src/core/icon-symbol-refresh-scheduler.js";
+import { upgradePredefinedProperty } from "./src/core/custom-element-property.js";
+import { getEditButtonIcon } from "./src/core/edit-button-icon.js";
 import { getStyleManifest } from "./src/styles/style-manifest.js";
 
 const MHA_FRONTEND_ROOT_URL = new URL(".", import.meta.url);
@@ -359,10 +362,7 @@ _initialize(){
   return getHubStateIngressCoordinatorForHost(this).initialize();
 }
 _upgradePredefinedProperty(name){
-  if(!Object.prototype.hasOwnProperty.call(this,name))return;
-  const value=this[name];
-  delete this[name];
-  this[name]=value;
+  return upgradePredefinedProperty(this,name);
 }
 set hass(h){
   return getHubStateIngressCoordinatorForHost(this).setHass(h);
@@ -449,7 +449,7 @@ async _syncAutoAccentFromWallpaper(){
   return this._appearanceCoordinator.syncAutoAccentFromWallpaper();
 }
 _getEditButtonIcon(editing=this._isEditing){
-  return editing?ICONS.close:ICONS.edit;
+  return getEditButtonIcon(ICONS,editing);
 }
 _getWidgetManagerCategories(){
   return getWidgetFlowCoordinatorForHost(this).getWidgetManagerCategories();
@@ -525,14 +525,7 @@ _applyDockPositionFromSettings(position="left"){
   return getResponsiveDockCoordinatorForHost(this).applyDockPositionFromSettings(position);
 }
 _applyHaSidebarMode(enabled=false){
-  const shouldHide=Boolean(enabled);
-  document.documentElement.classList.toggle("mha-hide-ha-sidebar",shouldHide);
-  window.dispatchEvent(new CustomEvent("hass-kiosk-mode",{
-    detail:{enable:shouldHide},
-  }));
-  window.dispatchEvent(new CustomEvent("hass-dock-sidebar",{
-    detail:{dock:shouldHide?"always_hidden":"docked"},
-  }));
+  return applyHaSidebarMode(enabled);
 }
 _applyHideHaSidebarFromSettings(enabled=false){
   const shouldHide=Boolean(enabled);
