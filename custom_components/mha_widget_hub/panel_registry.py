@@ -75,14 +75,14 @@ MHA_PANELS: dict[str, dict[str, Any]] = {
         "configurable": True,
     },
     PANEL_DIAGNOSTICS: {
-        "title": "MHA Diagnostics",
-        "icon": "mdi:bug-check",
+        "title": "MHA Insights",
+        "icon": "mdi:chart-box-outline",
         "url_path": "mha-diagnostics",
-        "webcomponent_name": "mha-diagnostics",
+        "webcomponent_name": "mha-diagnostics-panel",
         "module_url": f"{STATIC_URL_PATH}/mha-diagnostics-loader.js?v={VERSION}",
         "require_admin": True,
         "default_enabled": False,
-        "available": False,
+        "available": True,
         "configurable": True,
     },
 }
