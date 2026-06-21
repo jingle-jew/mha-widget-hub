@@ -1,0 +1,51 @@
+/*
+ * Media Widget Internals Contract
+ *
+ * Phase 5N-E: map MediaWidget controls, progress and metadata chips to shared
+ * widget internals. Artwork imagery and blurred background layers remain owned
+ * by media-widget.css.
+ */
+
+.mha-widget[data-widget-kind="media"] {
+  --mha-media-control-surface: var(--mha-widget-control-surface, color-mix(in srgb, var(--mha-text-primary) 10%, transparent));
+  --mha-media-control-border: var(--mha-widget-control-border, transparent);
+  --mha-media-control-shadow: var(--mha-widget-control-shadow, none);
+  --mha-media-control-active-surface: var(--mha-widget-control-accent-surface, var(--mha-accent));
+  --mha-media-control-active-color: var(--mha-accent-contrast, #fff);
+  --mha-media-chip-surface: var(--mha-widget-chip-surface, color-mix(in srgb, var(--mha-text-primary) 8%, transparent));
+  --mha-media-chip-border: var(--mha-widget-chip-border, transparent);
+  --mha-media-chip-shadow: var(--mha-widget-chip-shadow, none);
+  --mha-media-progress-track: var(--mha-widget-section-surface, color-mix(in srgb, var(--mha-text-primary) 14%, transparent));
+  --mha-media-progress-fill: var(--mha-widget-control-accent-surface, var(--mha-accent));
+}
+
+.mha-media-widget-control {
+  background: var(--mha-media-control-surface);
+  border: 1px solid var(--mha-media-control-border);
+  box-shadow: var(--mha-media-control-shadow);
+}
+
+.mha-media-widget-control[data-primary="true"],
+.mha-media-widget-control[data-primary] {
+  background: var(--mha-media-control-active-surface);
+  color: var(--mha-media-control-active-color);
+}
+
+.mha-media-widget-progress {
+  background: var(--mha-media-progress-track);
+}
+
+.mha-media-widget-progress-fill {
+  background: var(--mha-media-progress-fill);
+}
+
+.mha-media-widget-chip {
+  background: var(--mha-media-chip-surface);
+  border: 1px solid var(--mha-media-chip-border);
+  box-shadow: var(--mha-media-chip-shadow);
+}
+
+:host([data-theme-style="material"]) .mha-media-widget-control,
+:host([data-theme-style="material"]) .mha-media-widget-chip {
+  box-shadow: none;
+}
