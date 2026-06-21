@@ -24,10 +24,6 @@
   color: var(--mha-preview-text);
 }
 
-:host([data-theme-style="oneui"]) .mha-widget-manager-sheet.mha-settings-sheet {
-  background: var(--mha-oneui-panel-surface, var(--mha-surface-panel));
-}
-
 .mha-widget-manager-actions {
   display: flex;
   align-items: center;
@@ -611,50 +607,6 @@
   }
 }
 
-
-/* SEMANTIC WIDGET MANAGER TOKEN CONSUMERS
- * Widget Manager tiles now follow panel/section semantic roles.
- */
-.mha-widget-manager-category,
-.mha-widget-manager-widget,
-.mha-widget-manager-back {
-  border-color: var(--mha-preview-border);
-  background: var(--mha-preview-surface);
-  color: var(--mha-preview-text);
-}
-
-.mha-widget-manager-category:hover,
-.mha-widget-manager-category:focus-visible,
-.mha-widget-manager-widget:hover,
-.mha-widget-manager-widget:focus-visible {
-  border-color: var(--mha-preview-border-hover);
-  background: var(--mha-preview-surface-hover);
-}
-
-:host([data-theme-style="material"]) .mha-widget-manager-category,
-:host([data-theme-style="material"]) .mha-widget-manager-widget,
-:host([data-theme-style="material"]) .mha-widget-manager-back {
-  box-shadow: none;
-}
-
-/* SEMANTIC WIDGET PREVIEW TOKEN CONSUMERS
- * Phase 5B-2 routes Widget Manager previews/categories through preview roles.
- */
-.mha-widget-manager-category,
-.mha-widget-manager-widget,
-.mha-widget-manager-back {
-  background: var(--mha-preview-surface);
-  border-color: var(--mha-preview-border);
-  color: var(--mha-preview-text);
-}
-
-.mha-widget-manager-category:hover,
-.mha-widget-manager-category:focus-visible,
-.mha-widget-manager-widget:hover,
-.mha-widget-manager-widget:focus-visible {
-  background: var(--mha-preview-surface-hover);
-  border-color: var(--mha-preview-border-hover);
-}
 
 /* iOS panels consume the same material tokens as widget shells. */
 :host([data-theme-style="ios"][data-ios-glass="liquid"][data-theme]) .mha-widget-manager-sheet.mha-settings-sheet {
