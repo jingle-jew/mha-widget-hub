@@ -14,7 +14,6 @@ export const STYLES = Object.freeze([
   "styles/themes/semantic-tokens.css",
   "styles/extensions/extension-panel-shell.css",
   "styles/extensions/extension-panel-appearance-control.css",
-  "styles/diagnostics/diagnostics-panel.css",
 ]);
 
 export function assetUrl(path = "") {
