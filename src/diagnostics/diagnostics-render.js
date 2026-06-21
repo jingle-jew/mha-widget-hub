@@ -4,50 +4,48 @@ import {
   renderMetric,
 } from "../extensions/extension-panel-shell.js";
 import { renderExtensionPanelAppearanceControl } from "../extensions/extension-panel-appearance-control.js";
+import { collectDiagnosticsStats } from "./diagnostics-data.js";
 import { DIAGNOSTICS_TITLE, FRONTEND_VERSION } from "./diagnostics-constants.js";
-
-function countMhaStorageKeys() {
-  try {
-    return Object.keys(localStorage).filter(key => key.startsWith("mha-")).length;
-  } catch (_error) {
-    return 0;
-  }
-}
-
-function countStates(hass) {
-  return Object.keys(hass?.states || {}).length;
-}
 
 function yesNo(value) {
   return value ? "Yes" : "No";
 }
 
-function renderOverviewCard({ hass }) {
+function formatListSummary(items = [], labelKey = "kind", empty = "None yet") {
+  if (!items.length) return empty;
+  return items
+    .slice(0, 3)
+    .map(item => `${item[labelKey]} ×${item.count}`)
+    .join(", ");
+}
+
+function renderOverviewCard({ hass, stats }) {
   return renderCard(
     "Overview",
     [
       renderMetric("Panel", DIAGNOSTICS_TITLE, "Optional sidebar module"),
-      renderMetric("Home Assistant connection", yesNo(Boolean(hass)), "Read-only shell check"),
-      renderMetric("HA entities visible to panel", String(countStates(hass)), "Count only, no entity data shown"),
+      renderMetric("Pages", String(stats.totals.pages), stats.activePage ? `Active: ${stats.activePage.name || stats.activePage.id}` : "No active page found"),
+      renderMetric("Widgets", String(stats.totals.widgets), `${stats.totals.widgetKinds} widget type${stats.totals.widgetKinds === 1 ? "" : "s"}`),
+      renderMetric("Home Assistant connection", yesNo(Boolean(hass)), `${stats.totals.hassEntities} HA entities visible to panel`),
     ].join(""),
     {
       eyebrow: "Status",
-      description: "High-level state for the MHA Insights extension panel.",
+      description: "High-level read-only state for this MHA install on the current device.",
     },
   );
 }
 
-function renderUsageCard() {
+function renderUsageCard({ stats }) {
   return renderCard(
     "Usage Stats",
     [
-      renderMetric("MHA local storage keys", String(countMhaStorageKeys()), "Local device only"),
-      renderMetric("Widget stats", "Coming next", "Planned read-only dashboard usage summary"),
-      renderMetric("Page stats", "Coming next", "Planned pages/widgets overview"),
+      renderMetric("Widget mix", formatListSummary(stats.widgetKinds, "kind"), "Top widget types on this device"),
+      renderMetric("Empty pages", String(stats.emptyPages.length), "Pages with no widgets"),
+      renderMetric("Configured entity refs", String(stats.totals.configuredEntities), formatListSummary(stats.entityDomains, "domain", "No entity refs found")),
     ].join(""),
     {
       eyebrow: "Stats",
-      description: "This section will become the safe, non-sensitive stats view.",
+      description: "Local dashboard stats from MHA storage. No entity states or sensitive values are shown.",
     },
   );
 }
@@ -69,28 +67,30 @@ function renderAppearanceCard({ appearance }) {
   );
 }
 
-function renderConfigurationCard() {
+function renderConfigurationCard({ stats }) {
   return renderCard(
     "Configuration",
     [
       renderMetric("Diagnostics module", "Available", "Toggleable from MHA options"),
       renderMetric("Dashboard module", "Always enabled", "Current phase guardrail"),
       renderMetric("Theme Builder", "Unavailable", "Future optional module"),
+      renderMetric("Storage health", stats.storage.hasPages ? "Pages found" : "No pages key", `${stats.storage.keyCount} MHA local keys`),
     ].join(""),
     {
       eyebrow: "Modules",
-      description: "Safe module availability summary for this phase.",
+      description: "Safe module and storage availability summary for this phase.",
     },
   );
 }
 
-function renderSupportCard() {
+function renderSupportCard({ stats }) {
   return renderCard(
     "Support Info",
     [
       renderMetric("Frontend version", FRONTEND_VERSION || "dev", "Loader query version"),
       renderMetric("Custom element", "mha-diagnostics-panel", "Dedicated extension entrypoint"),
       renderMetric("Runtime", "Read-only", "No admin writes or destructive actions"),
+      renderMetric("Panel override saved", yesNo(stats.storage.hasPanelAppearance), "Local appearance override storage"),
     ].join(""),
     {
       eyebrow: "Support",
@@ -100,13 +100,14 @@ function renderSupportCard() {
 }
 
 export function renderDiagnosticsPanel(root, { linksHtml = "", appearance, hass } = {}) {
+  const stats = collectDiagnosticsStats({ hass });
   const appearanceHtml = renderExtensionPanelAppearanceControl({ appearance });
   const contentHtml = [
-    renderOverviewCard({ hass }),
-    renderUsageCard(),
+    renderOverviewCard({ hass, stats }),
+    renderUsageCard({ stats }),
     renderAppearanceCard({ appearance }),
-    renderConfigurationCard(),
-    renderSupportCard(),
+    renderConfigurationCard({ stats }),
+    renderSupportCard({ stats }),
   ].join("");
 
   root.innerHTML = `
