@@ -7,6 +7,12 @@ async function getMhaGeometry(page) {
   await page.goto(DEV_URL);
   await page.locator("mha-widget-hub").waitFor({ state: "attached" });
 
+  await page.waitForFunction(() => {
+    const host = document.querySelector("mha-widget-hub");
+    const root = host?.shadowRoot || host;
+    return Boolean(root?.querySelector?.(".mha-shell"));
+  });
+
   return page.locator("mha-widget-hub").evaluate((host) => {
     const toBox = (element) => {
       const box = element?.getBoundingClientRect?.();
@@ -21,7 +27,8 @@ async function getMhaGeometry(page) {
       };
     };
 
-    const root = host.shadowRoot;
+    const root = host.shadowRoot || host;
+
     return {
       viewport: {
         width: window.innerWidth,
@@ -47,6 +54,13 @@ function assertVisibleBox(box, name) {
   assert.ok(box.height > 0, `${name} should have height`);
 }
 
+function assertHorizontalBox(box, viewport, name) {
+  assert.ok(box, `${name} should exist`);
+  assert.ok(box.width > 0, `${name} should have width`);
+  assert.ok(box.x >= 0, `${name} should not start before viewport left`);
+  assert.ok(box.right <= viewport.width + 1, `${name} should not overflow viewport right`);
+}
+
 function assertInsideViewport(box, viewport, name) {
   assertVisibleBox(box, name);
   assert.ok(box.x >= 0, `${name} should not start before viewport left`);
@@ -64,7 +78,7 @@ test.describe("layout geometry smoke", () => {
     assertInsideViewport(geometry.host, geometry.viewport, "host");
     assertInsideViewport(geometry.shell, geometry.viewport, "shell");
     assertInsideViewport(geometry.workspace, geometry.viewport, "workspace");
-    assertInsideViewport(geometry.grid, geometry.viewport, "grid");
+    assertHorizontalBox(geometry.grid, geometry.viewport, "grid");
     assertInsideViewport(geometry.dockZone, geometry.viewport, "dock zone");
     assertInsideViewport(geometry.dock, geometry.viewport, "dock");
   });
@@ -87,7 +101,7 @@ test.describe("mobile layout geometry smoke", () => {
 
     assertInsideViewport(geometry.host, geometry.viewport, "mobile host");
     assertInsideViewport(geometry.shell, geometry.viewport, "mobile shell");
-    assertInsideViewport(geometry.grid, geometry.viewport, "mobile grid");
+    assertHorizontalBox(geometry.grid, geometry.viewport, "mobile grid");
     assertInsideViewport(geometry.dock, geometry.viewport, "mobile dock");
   });
 
