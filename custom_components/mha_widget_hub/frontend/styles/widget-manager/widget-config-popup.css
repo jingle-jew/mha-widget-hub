@@ -6,10 +6,6 @@
   inline-size: min(34rem, calc(100vw - 2rem));
 }
 
-:host([data-theme-style="oneui"]) .mha-widget-config-sheet {
-  background: var(--mha-oneui-panel-surface, var(--mha-surface-panel));
-}
-
 .mha-widget-config-fields {
   display: grid;
   gap: .9rem;
