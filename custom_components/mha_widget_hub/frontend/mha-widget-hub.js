@@ -51,6 +51,11 @@ import { applyHubRuntimeDefaults } from "./src/core/hub-runtime-defaults.js";
 import { scheduleIconSymbolRefresh } from "./src/core/icon-symbol-refresh-scheduler.js";
 import { upgradePredefinedProperty } from "./src/core/custom-element-property.js";
 import { getEditButtonIcon } from "./src/core/edit-button-icon.js";
+import {
+  canToggleEditMode,
+  clearWidgetPlacementState,
+  getNextEditMode,
+} from "./src/widgets/widget-edit-state.js";
 import { getStyleManifest } from "./src/styles/style-manifest.js";
 
 const MHA_FRONTEND_ROOT_URL = new URL(".", import.meta.url);
@@ -671,12 +676,15 @@ _syncScreensaverDom({force=false}={}){
   return getScreensaverSettingsBridgeForHost(this).syncDom({force});
 }
 toggleEditMode(){
-  if(!this._isEditing&&this._isMobileLandscapeLayout())return;
+  if(!canToggleEditMode({
+    isEditing:this._isEditing,
+    isMobileLandscape:this._isMobileLandscapeLayout(),
+  }))return;
   const wasEditing=this._isEditing;
-  this._isEditing=!this._isEditing;
+  this._isEditing=getNextEditMode(this._isEditing);
 
   if(!this._isEditing){
-    this._activeMoveWidgetId="";this._pendingWidgetPlacement=null;this._widgetManagerOpen=false;this._widgetManagerCategory="";
+    clearWidgetPlacementState(this);
     const grid=this.shadowRoot?.querySelector?.(".mha-grid");
     if(grid)this._renderWidgetDropSlots(grid);
   }
