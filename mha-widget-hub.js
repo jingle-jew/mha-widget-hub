@@ -46,7 +46,25 @@ import { createGridRuntime } from "./src/layout/grid-runtime.js";
 import {normalizeClockVariant,updateScreensaverClock} from "./src/screensaver/screensaver.js";
 import { createScreensaverController } from "./src/screensaver/screensaver-controller.js";
 import { createScreensaverCoordinator } from "./src/screensaver/screensaver-coordinator.js?v=phase9";
-import { normalizeEntityVisibilityConfig } from "./src/admin/entity-permissions.js";
+import { applyHaSidebarMode } from "./src/core/ha-sidebar-mode.js";
+import { applyHubRuntimeDefaults } from "./src/core/hub-runtime-defaults.js";
+import { scheduleIconSymbolRefresh } from "./src/core/icon-symbol-refresh-scheduler.js";
+import { upgradePredefinedProperty } from "./src/core/custom-element-property.js";
+import { getEditButtonIcon } from "./src/core/edit-button-icon.js";
+import {
+  canToggleEditMode,
+  clearWidgetPlacementState,
+  getNextEditMode,
+} from "./src/widgets/widget-edit-state.js";
+import { resetWidgetGridState } from "./src/widgets/widget-grid-reset.js";
+import { saveWidgetsForCurrentPage } from "./src/widgets/widget-save-state.js";
+import {
+  setScreensaverClockVariantState,
+  toggleNowBarPreviewState,
+  toggleScreensaverPreviewState,
+} from "./src/screensaver/screensaver-preview-actions.js";
+import { applyHideHaSidebarSetting } from "./src/settings/ha-sidebar-setting.js";
+import { openDockPageSettingsForPage } from "./src/settings/dock-page-settings.js";
 import { getStyleManifest } from "./src/styles/style-manifest.js";
 
 const MHA_FRONTEND_ROOT_URL = new URL(".", import.meta.url);
@@ -312,57 +330,7 @@ constructor(){
   this._responsiveDockCoordinator=getResponsiveDockCoordinatorForHost(this);
   this._widgetInteractionSurfaceCoordinator=getWidgetInteractionSurfaceCoordinatorForHost(this);
   this._hubStateIngressCoordinator=getHubStateIngressCoordinatorForHost(this);
-  this._initialized=false;
-  this._bootComplete=false;
-  this._bootWatchdog=0;
-  this._stylesReadyRenderId=0;
-  this._widgetRenderFrame=0;
-  this._secondaryUiFrame=0;
-  this._pendingDeferredUi=null;
-  this._hass=null;
-  this._entityVisibilityConfig=normalizeEntityVisibilityConfig(null);
-  this._entityVisibilityUserId="";
-  this._hassUpdateFrame=0;
-  this._hasConnectedOnce=false;
-  this._connectionActive=false;
-  this._connectionListenersAttached=false;
-  this._lifecycleRecoveryListener=null;
-  this._visibilityRecoveryListener=null;
-  this._isEditing=false;
-  this._activeMoveWidgetId="";
-  this._widgetPositions={};
-  this._draggedId="";
-  this._isResizingWidget=false;
-  this._resizeState=null;
-  this._widgetDropSlotsFrame=0;
-  this._renderId=0;
-  this._readyRaf=0;
-  this._viewportRaf=0;
-  this._relayoutTimer=0;
-  this._systemThemeListener=null;
-  this._iconSymbolRefreshFrame=0;
-  this._gridScrollCleanup=null;
-  this._settingsOpen=false;
-  this._settingsPage="main";
-  this._accentPaletteExpanded=false;
-  this._dockSettingsPageId="";
-  this._screensaverSettingsOpen=false;
-  this._lastResponsiveSignature="";
-  this._responsiveRelayoutTimer=null;
-  this._widgetManagerOpen=false;
-  this._widgetManagerCategory="";
-  this._widgetConfigSession=null;
-  this._widgetConfigHassReady=false;
-  this._pendingWidgetPlacement=null;
-  this._pageCreatorOpen=false;
-  this._newPageIcon="grid";
-  this._dockPosition="left";
-  this._hideHaSidebar=false;
-  this._language="auto";
-  this._customWallpapers={light:null,dark:null};
-  this._pages=[];
-  this._activePageId="";
-  this._widgets=[];
+  applyHubRuntimeDefaults(this);
   this._placementController=createPlacementController({
     getWidgets:()=>this._widgets,
     getPositions:()=>this._getActiveWidgetPositions({create:true}),
@@ -408,10 +376,7 @@ _initialize(){
   return getHubStateIngressCoordinatorForHost(this).initialize();
 }
 _upgradePredefinedProperty(name){
-  if(!Object.prototype.hasOwnProperty.call(this,name))return;
-  const value=this[name];
-  delete this[name];
-  this[name]=value;
+  return upgradePredefinedProperty(this,name);
 }
 set hass(h){
   return getHubStateIngressCoordinatorForHost(this).setHass(h);
@@ -498,7 +463,7 @@ async _syncAutoAccentFromWallpaper(){
   return this._appearanceCoordinator.syncAutoAccentFromWallpaper();
 }
 _getEditButtonIcon(editing=this._isEditing){
-  return editing?ICONS.close:ICONS.edit;
+  return getEditButtonIcon(ICONS,editing);
 }
 _getWidgetManagerCategories(){
   return getWidgetFlowCoordinatorForHost(this).getWidgetManagerCategories();
@@ -574,21 +539,13 @@ _applyDockPositionFromSettings(position="left"){
   return getResponsiveDockCoordinatorForHost(this).applyDockPositionFromSettings(position);
 }
 _applyHaSidebarMode(enabled=false){
-  const shouldHide=Boolean(enabled);
-  document.documentElement.classList.toggle("mha-hide-ha-sidebar",shouldHide);
-  window.dispatchEvent(new CustomEvent("hass-kiosk-mode",{
-    detail:{enable:shouldHide},
-  }));
-  window.dispatchEvent(new CustomEvent("hass-dock-sidebar",{
-    detail:{dock:shouldHide?"always_hidden":"docked"},
-  }));
+  return applyHaSidebarMode(enabled);
 }
 _applyHideHaSidebarFromSettings(enabled=false){
-  const shouldHide=Boolean(enabled);
-  this._hideHaSidebar=shouldHide;
-  this._recordPersistenceResult(writeStorageValue(HIDE_HA_SIDEBAR,shouldHide));
-  this._applyHaSidebarMode(shouldHide);
-  this._syncSettingsDom();
+  return applyHideHaSidebarSetting(this,enabled,{
+    storageKey:HIDE_HA_SIDEBAR,
+    writeStorageValueRef:writeStorageValue,
+  });
 }
 _openDockSettings(){
   return getI18nSettingsSyncForHost(this).openSettingsPage("dock");
@@ -600,8 +557,9 @@ _openNowBarSettings(){
   return getI18nSettingsSyncForHost(this).openSettingsPage("screensaver-nowbar");
 }
 _openDockPageSettings(id=""){
-  if(!this._pages.some(page=>page.id===id))return;
-  return getI18nSettingsSyncForHost(this).openSettingsPage("dock-detail",{dockPageId:id});
+  return openDockPageSettingsForPage(this,id,{
+    openSettingsPageRef:(page,options)=>getI18nSettingsSyncForHost(this).openSettingsPage(page,options),
+  });
 }
 _moveDockPage(id="",direction=0){
   return this._pageUiCoordinator.moveDockPage(id,direction);
@@ -631,18 +589,7 @@ _deleteDockPage(id=""){
  */
 
 _scheduleIconSymbolRefresh(){
-  cancelAnimationFrame(this._iconSymbolRefreshFrame);
-  this._iconSymbolRefreshFrame=requestAnimationFrame(()=>{
-    if(!this.isConnected||!this.shadowRoot)return;
-    const symbols=[...this.shadowRoot.querySelectorAll(".mha-icon-symbol")];
-    for(const symbol of symbols){
-      // Force the browser to repaint SVG glyphs after theme token changes.
-      symbol.style.transform="translateZ(0)";
-      symbol.getBoundingClientRect();
-      symbol.style.transform="";
-    }
-    this._iconSymbolRefreshFrame=0;
-  });
+  return scheduleIconSymbolRefresh(this);
 }
 
 _applyLanguageFromSettings(value="auto"){
@@ -738,12 +685,15 @@ _syncScreensaverDom({force=false}={}){
   return getScreensaverSettingsBridgeForHost(this).syncDom({force});
 }
 toggleEditMode(){
-  if(!this._isEditing&&this._isMobileLandscapeLayout())return;
+  if(!canToggleEditMode({
+    isEditing:this._isEditing,
+    isMobileLandscape:this._isMobileLandscapeLayout(),
+  }))return;
   const wasEditing=this._isEditing;
-  this._isEditing=!this._isEditing;
+  this._isEditing=getNextEditMode(this._isEditing);
 
   if(!this._isEditing){
-    this._activeMoveWidgetId="";this._pendingWidgetPlacement=null;this._widgetManagerOpen=false;this._widgetManagerCategory="";
+    clearWidgetPlacementState(this);
     const grid=this.shadowRoot?.querySelector?.(".mha-grid");
     if(grid)this._renderWidgetDropSlots(grid);
   }
@@ -753,7 +703,7 @@ toggleEditMode(){
   this._syncWidgetDropSlots();
 
   if(wasEditing!==this._isEditing)this._scheduleSquareUnitSync();
-}toggleScreensaverPreview(){const state=this._screensaverController.read();this._screensaverController.setPreviewState(!state.preview);this._syncScreensaverDom()}toggleNowBarPreview(){const state=this._screensaverController.read();this._screensaverController.setNowBarState(!state.nowBar);this._syncScreensaverDom()}setScreensaverClockVariant(v="digital"){this._screensaverController.setClockVariantState(v);this._syncScreensaverDom()}resetGrid(){clearGridStorage();this._widgetPositions={};this._activeMoveWidgetId="";this._pages=this._readPages();this._activePageId=this._readActivePageId();this._widgets=this._readWidgets();this.render()}
+}toggleScreensaverPreview(){toggleScreensaverPreviewState(this)}toggleNowBarPreview(){toggleNowBarPreviewState(this)}setScreensaverClockVariant(v="digital"){setScreensaverClockVariantState(this,v)}resetGrid(){return resetWidgetGridState(this,{clearGridStorageRef:clearGridStorage})}
 _migrateStorageSchema(){
   return getHubStateIngressCoordinatorForHost(this).migrateStorageSchema();
 }
@@ -821,20 +771,9 @@ _getWidgetShellProps(widget,{units,position,widgetId=widget?.id||""}={}){
 }
 
 _saveWidgets(){
-  /*
-   * Persistence is independent from the legacy auto-pack validator.
-   *
-   * The current grid uses explicit ghost-slot positions. Placement is validated
-   * before this method by the position-map validator, while resize/move paths
-   * validate their own candidate state before calling save.
-   *
-   * mha-grid-pages is the single source of truth after schema migration.
-   * Legacy order/size/custom-widget keys remain readable for one-time import,
-   * but runtime saves must not mirror only the active page back into them.
-   */
-  this._widgets=this._normalizeWidgetsToGridBounds(this._widgets.map(normalizeStoredWidgetContract));
-
-  return this._syncActivePageWidgets();
+  return saveWidgetsForCurrentPage(this,{
+    normalizeStoredWidgetContractRef:normalizeStoredWidgetContract,
+  });
 }
 _removeWidget(id){
   return getWidgetInteractionSurfaceCoordinatorForHost(this).removeWidget(id);
