@@ -57,6 +57,7 @@ import {
   getNextEditMode,
 } from "./src/widgets/widget-edit-state.js";
 import { resetWidgetGridState } from "./src/widgets/widget-grid-reset.js";
+import { saveWidgetsForCurrentPage } from "./src/widgets/widget-save-state.js";
 import {
   setScreensaverClockVariantState,
   toggleNowBarPreviewState,
@@ -768,20 +769,9 @@ _getWidgetShellProps(widget,{units,position,widgetId=widget?.id||""}={}){
 }
 
 _saveWidgets(){
-  /*
-   * Persistence is independent from the legacy auto-pack validator.
-   *
-   * The current grid uses explicit ghost-slot positions. Placement is validated
-   * before this method by the position-map validator, while resize/move paths
-   * validate their own candidate state before calling save.
-   *
-   * mha-grid-pages is the single source of truth after schema migration.
-   * Legacy order/size/custom-widget keys remain readable for one-time import,
-   * but runtime saves must not mirror only the active page back into them.
-   */
-  this._widgets=this._normalizeWidgetsToGridBounds(this._widgets.map(normalizeStoredWidgetContract));
-
-  return this._syncActivePageWidgets();
+  return saveWidgetsForCurrentPage(this,{
+    normalizeStoredWidgetContractRef:normalizeStoredWidgetContract,
+  });
 }
 _removeWidget(id){
   return getWidgetInteractionSurfaceCoordinatorForHost(this).removeWidget(id);
