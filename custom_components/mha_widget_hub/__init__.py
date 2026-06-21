@@ -6,40 +6,30 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from homeassistant.components import frontend
 from homeassistant.components.http import StaticPathConfig
-from homeassistant.components.panel_custom import async_register_panel
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    ADMIN_FRONTEND_MODULE,
-    ADMIN_PANEL_COMPONENT,
-    ADMIN_PANEL_ICON,
-    ADMIN_PANEL_TITLE,
-    ADMIN_PANEL_URL_PATH,
-    DOMAIN,
-    FRONTEND_MODULE,
-    PANEL_COMPONENT,
-    PANEL_ICON,
-    PANEL_TITLE,
-    PANEL_URL_PATH,
-    STATIC_URL_PATH,
-    VERSION,
+from .const import DOMAIN, STATIC_URL_PATH
+from .panel_registry import (
+    PANEL_ADMIN,
+    PANEL_DASHBOARD,
+    async_register_enabled_panels,
+    async_remove_registered_panels,
+    get_registered_panel_url_paths,
 )
 from .websocket import async_register_websocket_commands
 
 _LOGGER = logging.getLogger(__name__)
 
-_DATA_PANEL_REGISTERED = "panel_registered"
-_DATA_ADMIN_PANEL_REGISTERED = "admin_panel_registered"
 _DATA_STATIC_REGISTERED = "static_registered"
 _DATA_WEBSOCKET_REGISTERED = "websocket_registered"
+_CURRENT_ENABLED_PANELS = (PANEL_DASHBOARD, PANEL_ADMIN)
 
 
 async def _async_register_frontend(hass: HomeAssistant) -> bool:
-    """Serve the bundled frontend and register the MHA panel."""
+    """Serve the bundled frontend and register the MHA panels."""
     integration_data: dict[str, Any] = hass.data.setdefault(DOMAIN, {})
     frontend_dir = Path(__file__).parent / "frontend"
 
@@ -63,50 +53,18 @@ async def _async_register_frontend(hass: HomeAssistant) -> bool:
         async_register_websocket_commands(hass)
         integration_data[_DATA_WEBSOCKET_REGISTERED] = True
 
-    if (
-        integration_data.get(_DATA_PANEL_REGISTERED)
-        and integration_data.get(_DATA_ADMIN_PANEL_REGISTERED)
+    if not await async_register_enabled_panels(
+        hass,
+        integration_data,
+        _CURRENT_ENABLED_PANELS,
     ):
-        return True
-
-    try:
-        if not integration_data.get(_DATA_PANEL_REGISTERED):
-            await async_register_panel(
-                hass,
-                frontend_url_path=PANEL_URL_PATH,
-                webcomponent_name=PANEL_COMPONENT,
-                sidebar_title=PANEL_TITLE,
-                sidebar_icon=PANEL_ICON,
-                module_url=f"{STATIC_URL_PATH}/{FRONTEND_MODULE}?v={VERSION}",
-                require_admin=False,
-            )
-            integration_data[_DATA_PANEL_REGISTERED] = True
-
-        if not integration_data.get(_DATA_ADMIN_PANEL_REGISTERED):
-            await async_register_panel(
-                hass,
-                frontend_url_path=ADMIN_PANEL_URL_PATH,
-                webcomponent_name=ADMIN_PANEL_COMPONENT,
-                sidebar_title=ADMIN_PANEL_TITLE,
-                sidebar_icon=ADMIN_PANEL_ICON,
-                module_url=(
-                    f"{STATIC_URL_PATH}/{ADMIN_FRONTEND_MODULE}?v={VERSION}"
-                ),
-                require_admin=True,
-            )
-            integration_data[_DATA_ADMIN_PANEL_REGISTERED] = True
-    except ValueError as err:
-        _LOGGER.error(
-            "Cannot register MHA panels: %s",
-            err,
-        )
         return False
 
+    registered_panels = get_registered_panel_url_paths(integration_data)
     _LOGGER.info(
-        "MHA Widget Hub loaded: frontend %s, panels /%s and /%s",
+        "MHA Widget Hub loaded: frontend %s, panels %s",
         STATIC_URL_PATH,
-        PANEL_URL_PATH,
-        ADMIN_PANEL_URL_PATH,
+        ", ".join(f"/{panel}" for panel in registered_panels) or "none",
     )
     return True
 
@@ -124,12 +82,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload the MHA panel."""
+    """Unload the MHA panels."""
     integration_data = hass.data.get(DOMAIN, {})
-    if integration_data.get(_DATA_PANEL_REGISTERED):
-        frontend.async_remove_panel(hass, PANEL_URL_PATH)
-        integration_data[_DATA_PANEL_REGISTERED] = False
-    if integration_data.get(_DATA_ADMIN_PANEL_REGISTERED):
-        frontend.async_remove_panel(hass, ADMIN_PANEL_URL_PATH)
-        integration_data[_DATA_ADMIN_PANEL_REGISTERED] = False
+    async_remove_registered_panels(hass, integration_data)
     return True
