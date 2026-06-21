@@ -55,3 +55,8 @@ export function createHubRuntimeDefaults() {
     _widgets: [],
   };
 }
+
+export function applyHubRuntimeDefaults(host) {
+  Object.assign(host, createHubRuntimeDefaults());
+  return host;
+}
