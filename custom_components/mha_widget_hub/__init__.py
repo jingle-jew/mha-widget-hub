@@ -31,11 +31,6 @@ _DATA_WEBSOCKET_REGISTERED = "websocket_registered"
 _LEGACY_ENABLED_PANELS = (PANEL_DASHBOARD, PANEL_ADMIN)
 
 
-async def _async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Reload the integration when sidebar module options change."""
-    await hass.config_entries.async_reload(entry.entry_id)
-
-
 def _get_entry_enabled_panels(entry: ConfigEntry) -> list[str]:
     """Return enabled panels for a config entry.
 
@@ -104,7 +99,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up MHA Widget Hub from a config entry."""
-    entry.async_on_unload(entry.add_update_listener(_async_options_updated))
     return await _async_register_frontend(hass, _get_entry_enabled_panels(entry))
 
 
