@@ -1,3 +1,4 @@
+import { loadDeviceInsights } from "../device-insights/device-insights-ha-api.js";
 import {
   applyExtensionPanelAppearance,
   EXTENSION_PANEL_APPEARANCE_STORAGE,
@@ -21,6 +22,11 @@ class MhaDiagnosticsPanel extends HTMLElement {
     this._hass = null;
     this._hassRenderSignature = "";
     this._hasRendered = false;
+    this._deviceInsights = [];
+    this._deviceInsightsLoading = false;
+    this._deviceInsightsError = "";
+    this._deviceInsightsLoadedUserId = "";
+    this._deviceInsightsRequestId = 0;
     this._onStorage = event => {
       if (event.key && !event.key.startsWith("mha-")) return;
       this.render();
@@ -33,6 +39,7 @@ class MhaDiagnosticsPanel extends HTMLElement {
 
   set hass(value) {
     this._hass = value;
+    this._ensureDeviceInsightsLoaded();
     const signature = this._getHassRenderSignature(value);
     if (this._hasRendered && signature === this._hassRenderSignature) return;
     this._hassRenderSignature = signature;
@@ -47,6 +54,7 @@ class MhaDiagnosticsPanel extends HTMLElement {
     this._upgradePredefinedProperty("hass");
     window.addEventListener("storage", this._onStorage);
     window.addEventListener("mha-extension-panel-appearance-change", this._onAppearanceChange);
+    this._ensureDeviceInsightsLoaded();
     if (!this._hasRendered) this.render();
   }
 
@@ -67,7 +75,43 @@ class MhaDiagnosticsPanel extends HTMLElement {
     return JSON.stringify({
       connected: Boolean(hass),
       entityCount: Object.keys(states).length,
+      devices: this._deviceInsights.length,
+      deviceInsightsLoading: this._deviceInsightsLoading,
+      deviceInsightsError: this._deviceInsightsError,
     });
+  }
+
+  _ensureDeviceInsightsLoaded() {
+    const userId = String(this._hass?.user?.id || "");
+    if (!this._hass || !userId) return false;
+    if (this._deviceInsightsLoading) return true;
+    if (this._deviceInsightsLoadedUserId === userId) return false;
+    this._loadDeviceInsights(userId);
+    return true;
+  }
+
+  async _loadDeviceInsights(userId) {
+    const requestId = ++this._deviceInsightsRequestId;
+    this._deviceInsightsLoading = true;
+    this._deviceInsightsError = "";
+    this.render();
+
+    try {
+      const devices = await loadDeviceInsights(this._hass);
+      if (requestId !== this._deviceInsightsRequestId) return;
+      this._deviceInsights = devices;
+      this._deviceInsightsLoadedUserId = userId;
+    } catch (error) {
+      console.warn("[MHA Insights] Unable to load multi-device snapshots.", error);
+      if (requestId !== this._deviceInsightsRequestId) return;
+      this._deviceInsights = [];
+      this._deviceInsightsError = "Multi-device insights unavailable.";
+    } finally {
+      if (requestId === this._deviceInsightsRequestId) {
+        this._deviceInsightsLoading = false;
+        this.render();
+      }
+    }
   }
 
   _captureRenderState() {
@@ -97,6 +141,11 @@ class MhaDiagnosticsPanel extends HTMLElement {
       linksHtml: links,
       appearance,
       hass: this._hass,
+      deviceInsights: {
+        devices: this._deviceInsights,
+        loading: this._deviceInsightsLoading,
+        error: this._deviceInsightsError,
+      },
     });
 
     bindExtensionPanelAppearanceControl(this.shadowRoot, {
