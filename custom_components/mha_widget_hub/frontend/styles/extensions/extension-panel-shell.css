@@ -1,6 +1,8 @@
 :host {
   display: block;
-  min-block-size: 100dvh;
+  block-size: 100dvh;
+  min-block-size: 0;
+  overflow: hidden;
   color: var(--mha-primary-text, var(--mha-text, #fff));
   background: var(--mha-page-bg, var(--mha-bg-primary, #10131f));
   font-family: var(--mha-font-family, -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif);
@@ -11,7 +13,11 @@
 }
 
 .mha-extension-shell {
-  min-block-size: 100dvh;
+  block-size: 100%;
+  min-block-size: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   padding: max(24px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(28px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
   background:
     radial-gradient(circle at 12% 8%, var(--mha-accent-soft, rgba(80,140,255,.18)), transparent 34%),
