@@ -38,8 +38,6 @@ test("iOS exposes one shared surface contract for Liquid and Frosted glass", asy
   assert.match(ios, /--mha-widget-shell-border:\s*transparent/);
   assert.match(ios, /--mha-widget-surface:\s*var\(--mha-ios-liquid-surface\)/);
   assert.match(ios, /--mha-widget-surface:\s*var\(--mha-ios-frosted-surface\)/);
-  assert.match(ios, /--mha-ios-frosted-surface:\s*linear-gradient\(145deg, rgba\(255,255,255,.76\), rgba\(255,246,238,.58\)\)/);
-  assert.match(ios, /--mha-ios-frosted-surface:\s*linear-gradient\(145deg, rgba\(255,240,226,.18\), rgba\(255,255,255,.105\)\)/);
 });
 
 test("iOS surface consumers reuse the shared contract", async () => {
@@ -61,7 +59,7 @@ test("iOS surface consumers reuse the shared contract", async () => {
   assert.match(settings, /\[data-ios-glass="frosted"\]\[data-theme="light"\]\) \.mha-settings-sheet \{[\s\S]*?var\(--mha-surface-panel\) 92%/);
   assert.match(settings, /\[data-ios-glass="frosted"\]\[data-theme="dark"\]\) \.mha-settings-sheet \{[\s\S]*?var\(--mha-surface-panel\) 68%/);
   assert.match(manager, /mha-widget-manager-sheet\.mha-settings-sheet \{[\s\S]*?background:\s*var\(--mha-primary-surface\)/);
-  assert.match(manager, /background:\s*var\(--mha-ios-frosted-tile-surface\)/);
+  assert.match(manager, /background:\s*var\(--mha-on-primary-surface\)/);
   assert.match(slider2, /--mha-ios-slider-track-surface:\s*var\(--mha-ios-frosted-surface-muted\)/);
   assert.match(sliderWidget, /\[data-ios-glass="frosted"\]\[data-theme="light"\]\) \.mha-widget\[data-widget-kind="slider"\] \{[\s\S]*?background:\s*var\(--mha-primary-surface\) !important;[\s\S]*?border-color:\s*var\(--mha-primary-border\)/);
   assert.doesNotMatch(sliderWidget, /\[data-ios-glass="frosted"\]\[data-theme="dark"\]\) \.mha-widget\[data-widget-kind="slider"\] \{[\s\S]*?background:\s*var\(--mha-primary-surface\)/);

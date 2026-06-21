@@ -233,25 +233,6 @@
   cursor: pointer;
 }
 
-:host([data-theme-style="ios"]) .mha-settings-sheet {
-  background:
-    linear-gradient(145deg, rgba(255,255,255,.24), rgba(255,255,255,.08)),
-    rgba(18,20,28,.78);
-}
-
-:host([data-theme-style="oneui"]) .mha-settings-sheet {
-  background: rgba(246,247,252,.92);
-}
-
-:host([data-theme-style="oneui"][data-theme="dark"]) .mha-settings-sheet {
-  background: rgba(18,20,28,.94);
-}
-
-:host([data-theme-style="material"]) .mha-settings-sheet {
-  background: var(--mha-widget-surface);
-  color: var(--mha-text-primary);
-}
-
 @media (max-width: 767px) {
   .mha-settings-sheet {
     inset-inline: clamp(.65rem, 2.5vw, 1rem);
@@ -336,30 +317,6 @@
     transform: none;
   }
 }
-
-/* SETTINGS USE WIDGET SURFACE TOKENS
- * The settings panel should visually belong to the current theme.
- * It uses widget/surface tokens instead of its own disconnected color system.
- */
-.mha-settings-sheet {
-  background: var(--mha-widget-surface);
-  border-color: var(--mha-widget-border);
-  color: var(--mha-text-primary);
-  box-shadow: var(--mha-floating-shadow);
-}
-
-.mha-settings-section {
-  background: var(--mha-control-surface, var(--mha-widget-surface));
-  border-color: var(--mha-widget-border);
-}
-
-.mha-settings-select,
-.mha-settings-reset {
-  background: var(--mha-control-surface, var(--mha-widget-surface));
-  border-color: var(--mha-widget-border);
-  color: var(--mha-text-primary);
-}
-
 
 /* iOS light only: make settings brighter and glassier, while still aligned with widget style. */
 :host([data-theme="light"][data-theme-style="ios"]) .mha-settings-sheet {

@@ -1,0 +1,66 @@
+/*
+ * Widget Shell Contract
+ *
+ * Phase 5A: make the outer widget shell consume the global surface adapters.
+ *
+ * This file intentionally targets only the widget shell. Widget internals remain
+ * owned by their widget-specific CSS modules.
+ */
+
+.mha-widget {
+  border-color: var(--mha-widget-shell-border, var(--mha-border-primary));
+  background: var(--mha-widget-shell-surface, var(--mha-surface-primary));
+  -webkit-backdrop-filter: var(
+    --mha-widget-shell-filter,
+    blur(var(--mha-widget-shell-blur, var(--mha-blur-primary, var(--mha-surface-blur))))
+      saturate(var(--mha-widget-shell-saturation, var(--mha-saturation-primary, var(--mha-surface-saturation))))
+      brightness(var(--mha-widget-shell-brightness, var(--mha-brightness-primary, 1)))
+  );
+  backdrop-filter: var(
+    --mha-widget-shell-filter,
+    blur(var(--mha-widget-shell-blur, var(--mha-blur-primary, var(--mha-surface-blur))))
+      saturate(var(--mha-widget-shell-saturation, var(--mha-saturation-primary, var(--mha-surface-saturation))))
+      brightness(var(--mha-widget-shell-brightness, var(--mha-brightness-primary, 1)))
+  );
+  box-shadow: var(--mha-widget-shell-shadow, var(--mha-shadow-primary));
+}
+
+.mha-widget::after {
+  background: var(--mha-widget-shell-highlight, var(--mha-highlight-primary, none));
+  opacity: var(--mha-widget-shell-highlight-opacity, var(--mha-highlight-opacity-primary, var(--mha-widget-reflection-opacity, 0)));
+}
+
+:host(.is-editing) .mha-widget {
+  background: var(--mha-widget-shell-surface-edit, var(--mha-widget-shell-surface, var(--mha-surface-secondary)));
+  border-color: var(--mha-widget-shell-border-edit, var(--mha-edit-outline-color));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--mha-edit-outline-color) 72%, transparent),
+    0 0 0 4px color-mix(in srgb, var(--mha-edit-outline-color) 16%, transparent),
+    var(--mha-widget-shell-shadow-edit, var(--mha-widget-shell-shadow, var(--mha-shadow-primary)));
+}
+
+/* iOS shell material is now selected by the iOS surface map, not hardcoded here. */
+:host([data-theme-style="ios"][data-theme]) .mha-widget {
+  background: var(--mha-widget-shell-surface, var(--mha-surface-primary));
+  border-color: var(--mha-widget-shell-border, var(--mha-border-primary));
+  box-shadow: var(--mha-widget-shell-shadow, var(--mha-shadow-primary));
+}
+
+/* Preserve the existing OneUI flat-depth contract. */
+:host([data-theme-style="oneui"]) .mha-widget {
+  border-color: var(--mha-oneui-flat-widget-border) !important;
+  box-shadow: none !important;
+}
+
+/* Preserve Material's opaque tonal shell. */
+:host([data-theme-style="material"]) .mha-widget {
+  background: var(--mha-widget-shell-surface, var(--mha-surface-primary));
+  border-color: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+:host([data-theme-style="material"].is-editing) .mha-widget {
+  background: var(--mha-widget-shell-surface-edit, var(--mha-surface-secondary));
+  border-color: color-mix(in srgb, var(--mha-accent) 26%, transparent);
+}

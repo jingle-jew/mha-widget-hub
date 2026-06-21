@@ -1,0 +1,77 @@
+/*
+ * MHA Surface Contract — Effect Tokens
+ *
+ * Dormant reference module.
+ *
+ * This file is intentionally not loaded by the style manifest yet.
+ */
+
+:host,
+:root {
+  /* Shadow roles. */
+  --mha-shadow-primary: initial;
+  --mha-shadow-secondary: initial;
+  --mha-shadow-tertiary: initial;
+  --mha-shadow-shell: initial;
+  --mha-shadow-panel: initial;
+  --mha-shadow-popup: initial;
+  --mha-shadow-control: initial;
+  --mha-shadow-control-hover: initial;
+  --mha-shadow-control-active: initial;
+  --mha-shadow-floating: initial;
+  --mha-shadow-elevated: initial;
+  --mha-shadow-sunken: initial;
+  --mha-shadow-none: initial;
+
+  /* Blur roles. */
+  --mha-blur-primary: initial;
+  --mha-blur-secondary: initial;
+  --mha-blur-shell: initial;
+  --mha-blur-panel: initial;
+  --mha-blur-popup: initial;
+  --mha-blur-control: initial;
+  --mha-blur-overlay: initial;
+
+  /* Saturation roles. */
+  --mha-saturation-primary: initial;
+  --mha-saturation-secondary: initial;
+  --mha-saturation-shell: initial;
+  --mha-saturation-panel: initial;
+  --mha-saturation-popup: initial;
+  --mha-saturation-control: initial;
+  --mha-saturation-overlay: initial;
+
+  /* Brightness roles. */
+  --mha-brightness-primary: initial;
+  --mha-brightness-secondary: initial;
+  --mha-brightness-shell: initial;
+  --mha-brightness-panel: initial;
+  --mha-brightness-popup: initial;
+  --mha-brightness-control: initial;
+  --mha-brightness-overlay: initial;
+
+  /* Derived filter bundles. */
+  --mha-filter-primary: initial;
+  --mha-filter-shell: initial;
+  --mha-filter-panel: initial;
+  --mha-filter-popup: initial;
+  --mha-filter-control: initial;
+  --mha-filter-overlay: initial;
+
+  /* Highlight/reflection roles. */
+  --mha-highlight-primary: initial;
+  --mha-highlight-secondary: initial;
+  --mha-highlight-tertiary: initial;
+  --mha-highlight-shell: initial;
+  --mha-highlight-panel: initial;
+  --mha-highlight-popup: initial;
+  --mha-highlight-control: initial;
+  --mha-highlight-overlay: initial;
+
+  --mha-highlight-opacity-primary: initial;
+  --mha-highlight-opacity-secondary: initial;
+  --mha-highlight-opacity-shell: initial;
+  --mha-highlight-opacity-panel: initial;
+  --mha-highlight-opacity-popup: initial;
+  --mha-highlight-opacity-control: initial;
+}
