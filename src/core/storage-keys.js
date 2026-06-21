@@ -18,6 +18,10 @@ export const STORAGE_KEYS = Object.freeze({
   screensaverNowBarConfig: "mha-screensaver-nowbar-config",
   screensaverClockVariant: "mha-screensaver-clock-variant",
   legacyScreensaverClockVariant: "mha-screensaver-clock",
+  deviceInsightsEnabled: "mha-device-insights-enabled",
+  deviceInsightsId: "mha-device-insights-id",
+  deviceInsightsName: "mha-device-insights-name",
+  deviceInsightsLastPublished: "mha-device-insights-last-published",
 });
 
 export const CURRENT_STORAGE_SCHEMA_VERSION = 1;
