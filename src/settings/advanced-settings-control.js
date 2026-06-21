@@ -137,7 +137,7 @@ function renderAdvancedPanel(panel, props = {}) {
   if (!body) return panel;
   body.replaceChildren(createSection(t("settings.deviceInsights", "MHA Insights"), [
     createDeviceInsightsSwitch(panel, {
-      checked: props.deviceInsightsEnabled ?? isDeviceInsightsEnabled(),
+      checked: isDeviceInsightsEnabled(),
       onChange: props.onDeviceInsightsEnabledChange,
     }),
   ]));
