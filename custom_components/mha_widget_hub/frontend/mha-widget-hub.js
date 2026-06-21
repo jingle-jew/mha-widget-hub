@@ -47,6 +47,7 @@ import {normalizeClockVariant,updateScreensaverClock} from "./src/screensaver/sc
 import { createScreensaverController } from "./src/screensaver/screensaver-controller.js";
 import { createScreensaverCoordinator } from "./src/screensaver/screensaver-coordinator.js?v=phase9";
 import { applyHubRuntimeDefaults } from "./src/core/hub-runtime-defaults.js";
+import { scheduleIconSymbolRefresh } from "./src/core/icon-symbol-refresh-scheduler.js";
 import { getStyleManifest } from "./src/styles/style-manifest.js";
 
 const MHA_FRONTEND_ROOT_URL = new URL(".", import.meta.url);
@@ -581,18 +582,7 @@ _deleteDockPage(id=""){
  */
 
 _scheduleIconSymbolRefresh(){
-  cancelAnimationFrame(this._iconSymbolRefreshFrame);
-  this._iconSymbolRefreshFrame=requestAnimationFrame(()=>{
-    if(!this.isConnected||!this.shadowRoot)return;
-    const symbols=[...this.shadowRoot.querySelectorAll(".mha-icon-symbol")];
-    for(const symbol of symbols){
-      // Force the browser to repaint SVG glyphs after theme token changes.
-      symbol.style.transform="translateZ(0)";
-      symbol.getBoundingClientRect();
-      symbol.style.transform="";
-    }
-    this._iconSymbolRefreshFrame=0;
-  });
+  return scheduleIconSymbolRefresh(this);
 }
 
 _applyLanguageFromSettings(value="auto"){
