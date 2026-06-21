@@ -102,6 +102,6 @@ export function getStyleManifest() {
     ...getThemeStyleManifestEntries(),
     ...STATIC_STYLE_MANIFEST_AFTER_THEMES,
     ...getWidgetStyleManifestEntries(),
-    ...STATIC_STYLE_MANifest_AFTER_WIDGETS,
+    ...STATIC_STYLE_MANIFEST_AFTER_WIDGETS,
   ]);
 }
