@@ -63,6 +63,8 @@ import {
   toggleNowBarPreviewState,
   toggleScreensaverPreviewState,
 } from "./src/screensaver/screensaver-preview-actions.js";
+import { applyHideHaSidebarSetting } from "./src/settings/ha-sidebar-setting.js";
+import { openDockPageSettingsForPage } from "./src/settings/dock-page-settings.js";
 import { getStyleManifest } from "./src/styles/style-manifest.js";
 
 const MHA_FRONTEND_ROOT_URL = new URL(".", import.meta.url);
@@ -540,11 +542,10 @@ _applyHaSidebarMode(enabled=false){
   return applyHaSidebarMode(enabled);
 }
 _applyHideHaSidebarFromSettings(enabled=false){
-  const shouldHide=Boolean(enabled);
-  this._hideHaSidebar=shouldHide;
-  this._recordPersistenceResult(writeStorageValue(HIDE_HA_SIDEBAR,shouldHide));
-  this._applyHaSidebarMode(shouldHide);
-  this._syncSettingsDom();
+  return applyHideHaSidebarSetting(this,enabled,{
+    storageKey:HIDE_HA_SIDEBAR,
+    writeStorageValueRef:writeStorageValue,
+  });
 }
 _openDockSettings(){
   return getI18nSettingsSyncForHost(this).openSettingsPage("dock");
@@ -556,8 +557,9 @@ _openNowBarSettings(){
   return getI18nSettingsSyncForHost(this).openSettingsPage("screensaver-nowbar");
 }
 _openDockPageSettings(id=""){
-  if(!this._pages.some(page=>page.id===id))return;
-  return getI18nSettingsSyncForHost(this).openSettingsPage("dock-detail",{dockPageId:id});
+  return openDockPageSettingsForPage(this,id,{
+    openSettingsPageRef:(page,options)=>getI18nSettingsSyncForHost(this).openSettingsPage(page,options),
+  });
 }
 _moveDockPage(id="",direction=0){
   return this._pageUiCoordinator.moveDockPage(id,direction);
