@@ -1,4 +1,3 @@
-import { getAccentOptions } from "../settings/accent-palettes.js";
 import {
   EXTENSION_APPEARANCE_CUSTOM,
   EXTENSION_APPEARANCE_INHERIT,
@@ -16,18 +15,6 @@ const STYLE_OPTIONS = Object.freeze([
   { value: "oneui", label: "OneUI" },
   { value: "ios", label: "iOS" },
   { value: "material", label: "Material" },
-]);
-
-const IOS_GLASS_OPTIONS = Object.freeze([
-  { value: "liquid", label: "Liquid Glass" },
-  { value: "frosted", label: "Frosted Glass" },
-]);
-
-const ICON_SHAPE_OPTIONS = Object.freeze([
-  { value: "auto", label: "Auto" },
-  { value: "rounded-square", label: "Rounded square" },
-  { value: "squircle", label: "Squircle" },
-  { value: "circle", label: "Circle" },
 ]);
 
 function escapeHtml(value = "") {
@@ -51,7 +38,6 @@ export function renderExtensionPanelAppearanceControl({ appearance } = {}) {
   const state = appearance?.state || {};
   const customActive = mode === EXTENSION_APPEARANCE_CUSTOM;
   const disabled = customActive ? "" : " disabled";
-  const accentOptions = getAccentOptions(state.themeStyle || "oneui");
 
   return `
     <section class="mha-extension-appearance" data-custom-active="${customActive ? "true" : "false"}">
@@ -63,34 +49,21 @@ export function renderExtensionPanelAppearanceControl({ appearance } = {}) {
         <button class="mha-extension-reset" type="button" data-appearance-reset${customActive ? "" : " disabled"}>Reset</button>
       </div>
 
-      <label class="mha-extension-field mha-extension-field-wide">
-        <span>Mode</span>
-        <select data-appearance-field="mode">
-          <option value="inherit"${mode === EXTENSION_APPEARANCE_INHERIT ? " selected" : ""}>Follow MHA Widget Hub</option>
-          <option value="custom"${mode === EXTENSION_APPEARANCE_CUSTOM ? " selected" : ""}>Custom for this panel</option>
-        </select>
-      </label>
-
-      <div class="mha-extension-custom-grid">
+      <div class="mha-extension-appearance-row">
         <label class="mha-extension-field">
-          <span>Theme</span>
-          <select data-appearance-field="themeSetting"${disabled}>${renderOptions(THEME_OPTIONS, state.themeSetting)}</select>
+          <span>Mode</span>
+          <select data-appearance-field="mode">
+            <option value="inherit"${mode === EXTENSION_APPEARANCE_INHERIT ? " selected" : ""}>Follow MHA Widget Hub</option>
+            <option value="custom"${mode === EXTENSION_APPEARANCE_CUSTOM ? " selected" : ""}>Custom for this panel</option>
+          </select>
         </label>
         <label class="mha-extension-field">
-          <span>Style</span>
+          <span>Visual style</span>
           <select data-appearance-field="themeStyle"${disabled}>${renderOptions(STYLE_OPTIONS, state.themeStyle)}</select>
         </label>
         <label class="mha-extension-field">
-          <span>iOS glass</span>
-          <select data-appearance-field="iosGlass"${disabled}>${renderOptions(IOS_GLASS_OPTIONS, state.iosGlass)}</select>
-        </label>
-        <label class="mha-extension-field">
-          <span>Accent</span>
-          <select data-appearance-field="accent"${disabled}>${renderOptions(accentOptions, state.accent)}</select>
-        </label>
-        <label class="mha-extension-field">
-          <span>Icon shape</span>
-          <select data-appearance-field="iconShapeSetting"${disabled}>${renderOptions(ICON_SHAPE_OPTIONS, state.iconShapeSetting)}</select>
+          <span>Light / dark</span>
+          <select data-appearance-field="themeSetting"${disabled}>${renderOptions(THEME_OPTIONS, state.themeSetting)}</select>
         </label>
       </div>
     </section>
