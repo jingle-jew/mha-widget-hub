@@ -109,7 +109,13 @@
 
     const mockHass = {
       states: createMockStates(),
-      user: { name: "Dev User", is_admin: true },
+      user: { id: "dev-user", name: "Dev User", is_admin: true },
+      async callWS(payload) {
+        if (payload?.type === "mha_widget_hub/device_insights/get") {
+          return { devices: createMockDevices() };
+        }
+        return {};
+      },
     };
 
     function createMockEntity(entityId, state, attributes = {}) {
@@ -130,6 +136,40 @@
         "sensor.energy_today": createMockEntity("sensor.energy_today", "7.4", { unit_of_measurement: "kWh" }),
         "binary_sensor.front_door": createMockEntity("binary_sensor.front_door", "off", { device_class: "door" }),
       };
+    }
+
+    function createMockDevices() {
+      const now = Date.now();
+      return [
+        {
+          device_id: "mha-device-dev-wall-tablet",
+          device_name: "Kitchen Wall Tablet",
+          last_seen: new Date(now - 90_000).toISOString(),
+          pages: 3,
+          widgets: 18,
+          empty_pages: 0,
+          configured_entities: 12,
+          widget_kinds: { button: 8, weather: 2, media: 1 },
+          entity_domains: { light: 6, switch: 3, weather: 1 },
+          theme_style: "oneui",
+          theme: "dark",
+          frontend_version: "dev",
+        },
+        {
+          device_id: "mha-device-dev-phone",
+          device_name: "Julien Phone",
+          last_seen: new Date(now - 3_600_000).toISOString(),
+          pages: 2,
+          widgets: 10,
+          empty_pages: 1,
+          configured_entities: 5,
+          widget_kinds: { sensor: 4, button: 3, weather: 1 },
+          entity_domains: { sensor: 4, light: 1 },
+          theme_style: "ios",
+          theme: "light",
+          frontend_version: "dev",
+        },
+      ];
     }
 
     function syncDocumentDataset() {
