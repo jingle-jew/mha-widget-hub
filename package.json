@@ -11,10 +11,14 @@
     "check:syntax": "node tools/check-syntax.mjs",
     "check:sync": "node tools/sync-integration-frontend.mjs --check",
     "check": "npm run check:syntax && npm test && npm run check:sync",
+    "check:layout": "playwright test tests/geometry",
     "sync:frontend": "node tools/sync-integration-frontend.mjs",
     "dev": "npm run sync:frontend",
     "build": "npm run check && npm run sync:frontend",
     "release:zip": "node tools/create-release-zip.mjs",
     "deploy:dev": "node tools/deploy-dev.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.0"
   }
 }
