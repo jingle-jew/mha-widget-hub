@@ -1,3 +1,4 @@
+import { createDeviceInsightsPublisher } from "../device-insights/device-insights-publisher.js";
 import { readJson } from "./storage.js";
 import {
   POSITIONS,
@@ -17,6 +18,13 @@ import {
 } from "./mha-state.js";
 import { loadEntityVisibilityConfig } from "../admin/entity-visibility-store.js";
 
+function getDeviceInsightsPublisher(host) {
+  if (!host._deviceInsightsPublisher) {
+    host._deviceInsightsPublisher = createDeviceInsightsPublisher(host);
+  }
+  return host._deviceInsightsPublisher;
+}
+
 export function createHubStateIngressCoordinator(host, {
   defaultWidgets = [],
   normalizeWidget,
@@ -25,6 +33,10 @@ export function createHubStateIngressCoordinator(host, {
   function recordPersistenceResult(success) {
     host.dataset.persistenceState = success ? "saved" : "error";
     return success;
+  }
+
+  function scheduleDeviceInsightsPublish(delay = 0) {
+    getDeviceInsightsPublisher(host).schedulePublish(delay);
   }
 
   function migrateStorageSchema() {
@@ -57,11 +69,13 @@ export function createHubStateIngressCoordinator(host, {
   }
 
   function savePages() {
-    return recordPersistenceResult(saveHubPages(
+    const success = recordPersistenceResult(saveHubPages(
       host._pages,
       host._activePageId,
       { normalizeWidget },
     ));
+    if (success) scheduleDeviceInsightsPublish();
+    return success;
   }
 
   function readWidgets() {
@@ -80,7 +94,10 @@ export function createHubStateIngressCoordinator(host, {
       widgets: host._widgets,
       normalizeWidget,
     });
-    return success ? recordPersistenceResult(success) : false;
+    if (!success) return false;
+    recordPersistenceResult(success);
+    scheduleDeviceInsightsPublish();
+    return success;
   }
 
   function initialize() {
@@ -92,6 +109,7 @@ export function createHubStateIngressCoordinator(host, {
     host.dataset.widgetsState = "pending";
     host.dataset.ready = "false";
     host.shadowRoot.innerHTML = host._createCriticalBootStyle();
+    getDeviceInsightsPublisher(host);
     migrateStorageSchema();
     host._widgetPositions = readJson(POSITIONS, {}) || {};
     host._screensaverController.load({
@@ -110,6 +128,7 @@ export function createHubStateIngressCoordinator(host, {
     host._activePageId = readActivePageId();
     host._widgets = readWidgets();
     host._upgradePredefinedProperty("hass");
+    scheduleDeviceInsightsPublish(1000);
   }
 
   async function loadEntityVisibilityConfigForHass(hass) {
@@ -137,6 +156,7 @@ export function createHubStateIngressCoordinator(host, {
       host._widgetConfigHassReady = true;
       host._syncWidgetConfigDom();
     }
+    if (hass) scheduleDeviceInsightsPublish(1000);
     host._ensureMounted({ reason: "hass update" });
     host._scheduleHassUpdate();
   }
