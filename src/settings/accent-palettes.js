@@ -75,6 +75,7 @@ export const ACCENT_PALETTES = Object.freeze({
   ]),
 });
 
+export const DEFAULT_ACCENT_PALETTE = ACCENT_PALETTES.oneui;
 
 export const ACCENT_REFERENCE_COLORS = Object.freeze({
   ios: Object.freeze({
@@ -398,7 +399,7 @@ export const DEFAULT_ACCENT_BY_STYLE = Object.freeze(Object.fromEntries(
 export function getAccentOptions(themeStyle = "oneui") {
   const registryOptions = getThemeAccentContract(themeStyle).accents;
   if (registryOptions.length) return registryOptions;
-  return ACCENT_PALETTES[themeStyle] || ACCENT_PALETTES.oneui;
+  return ACCENT_PALETTES[themeStyle] || DEFAULT_ACCENT_PALETTE;
 }
 
 export function normalizeAccent(themeStyle = "oneui", accent = "") {
