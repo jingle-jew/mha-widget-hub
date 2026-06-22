@@ -2,6 +2,8 @@
   cursor: grabbing;
 }
 
+:host(.is-widget-drag-pending) .mha-grid,
+:host(.is-widget-drag-pending) .mha-widget,
 :host(.is-widget-dragging) .mha-grid,
 :host(.is-widget-dragging) .mha-widget {
   touch-action: none;
