@@ -69,7 +69,3 @@
   --mha-bg-blob-4: #7df3ff;
   --mha-bg-blob-opacity: .36;
 }
-
-:host([data-theme-style="alexa"]) .mha-background::after {
-  opacity: .78;
-}
