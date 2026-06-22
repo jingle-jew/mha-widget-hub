@@ -851,6 +851,7 @@ export function createSettingsPanel({
   theme = "auto",
   language = "auto",
   themeStyle = "oneui",
+  themeVariant = "",
   iosGlass = "liquid",
   accent = "",
   accentMode = "manual",
@@ -877,6 +878,7 @@ export function createSettingsPanel({
   onLanguageChange,
   onThemeChange,
   onThemeStyleChange,
+  onThemeVariantChange,
   onIosGlassChange,
   onAccentChange,
   onAccentModeChange,
@@ -1088,11 +1090,12 @@ export function createSettingsPanel({
 
     const themeVariantOptions = getThemeVariantOptions(themeStyle);
     if (themeVariantOptions.length) {
+      const effectiveThemeVariant = themeVariant || iosGlass;
       appearanceControls.push(createSelect({
         label: t("settings.themeVariant", "Theme variant"),
-        value: iosGlass,
+        value: effectiveThemeVariant,
         options: themeVariantOptions,
-        onChange: onIosGlassChange,
+        onChange: onThemeVariantChange || onIosGlassChange,
       }));
     }
 
