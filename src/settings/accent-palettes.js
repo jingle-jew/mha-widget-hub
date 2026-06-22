@@ -1,3 +1,5 @@
+import { getThemeAccentContract, getThemeDefinitions } from "./theme-registry.js";
+
 /*
  * MHA accent palettes.
  *
@@ -140,10 +142,14 @@ export const ACCENT_REFERENCE_COLORS = Object.freeze({
   }),
 });
 
-export const AUTO_ACCENT_STYLES = new Set(["ios", "oneui", "material"]);
+export const AUTO_ACCENT_STYLES = new Set(
+  getThemeDefinitions()
+    .filter(({ supportsAutoAccent }) => supportsAutoAccent)
+    .map(({ id }) => id),
+);
 
 export function supportsAutoAccent(themeStyle = "oneui") {
-  return AUTO_ACCENT_STYLES.has(themeStyle);
+  return getThemeAccentContract(themeStyle).supportsAutoAccent;
 }
 
 function hexToRgb(hex = "") {
@@ -356,16 +362,20 @@ function accentDistance(targetRgb, referenceRgb) {
     + (labDistance(targetLab, referenceLab) * 0.22);
 }
 
+function getDefaultAccent(themeStyle = "oneui") {
+  return getThemeAccentContract(themeStyle).defaultAccent || getThemeAccentContract("oneui").defaultAccent;
+}
+
 export function findClosestAccent(themeStyle = "oneui", rgb = null) {
   if (!supportsAutoAccent(themeStyle) || !rgb) {
-    return DEFAULT_ACCENT_BY_STYLE[themeStyle] || DEFAULT_ACCENT_BY_STYLE.oneui;
+    return getDefaultAccent(themeStyle);
   }
 
   const harmonizedAccent = resolveHarmonizedAccent(themeStyle, rgb);
   if (harmonizedAccent) return normalizeAccent(themeStyle, harmonizedAccent);
 
   const reference = ACCENT_REFERENCE_COLORS[themeStyle] || {};
-  let bestAccent = DEFAULT_ACCENT_BY_STYLE[themeStyle] || DEFAULT_ACCENT_BY_STYLE.oneui;
+  let bestAccent = getDefaultAccent(themeStyle);
   let bestDistance = Number.POSITIVE_INFINITY;
 
   for (const [accent, hex] of Object.entries(reference)) {
@@ -381,11 +391,9 @@ export function findClosestAccent(themeStyle = "oneui", rgb = null) {
   return normalizeAccent(themeStyle, bestAccent);
 }
 
-export const DEFAULT_ACCENT_BY_STYLE = Object.freeze({
-  ios: "blue",
-  oneui: "sky",
-  material: "purple",
-});
+export const DEFAULT_ACCENT_BY_STYLE = Object.freeze(Object.fromEntries(
+  getThemeDefinitions().map(({ id }) => [id, getDefaultAccent(id)]),
+));
 
 export function getAccentOptions(themeStyle = "oneui") {
   return ACCENT_PALETTES[themeStyle] || ACCENT_PALETTES.oneui;
@@ -395,5 +403,5 @@ export function normalizeAccent(themeStyle = "oneui", accent = "") {
   const options = getAccentOptions(themeStyle);
   const exists = options.some((item) => item.value === accent);
   if (exists) return accent;
-  return DEFAULT_ACCENT_BY_STYLE[themeStyle] || DEFAULT_ACCENT_BY_STYLE.oneui;
+  return getDefaultAccent(themeStyle);
 }
