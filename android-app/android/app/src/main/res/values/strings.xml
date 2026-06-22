@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">MHA Control Hub</string>
+    <string name="title_activity_main">MHA Control Hub</string>
+    <string name="package_name">app.mha.controlhub</string>
+    <string name="custom_url_scheme">app.mha.controlhub</string>
+</resources>
