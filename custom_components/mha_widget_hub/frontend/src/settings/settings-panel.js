@@ -1,4 +1,4 @@
-import { getAccentOptions, normalizeAccent, supportsAutoAccent } from "./accent-palettes.js";
+import { ACCENT_REFERENCE_COLORS, getAccentOptions, normalizeAccent, supportsAutoAccent } from "./accent-palettes.js";
 import { createToggle } from "../ui/toggle.js";
 import { createIcon } from "../ui/icon.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
@@ -466,6 +466,8 @@ function createAccentPicker({
     button.setAttribute("aria-label", item.label);
     button.setAttribute("aria-pressed", String(!isAuto && item.value === resolved));
     button.title = item.label;
+    const swatchColor = item.color || ACCENT_REFERENCE_COLORS[themeStyle]?.[item.value];
+    if (swatchColor) button.style.setProperty("--mha-swatch-color", swatchColor);
     button.addEventListener("click", () => onChange?.(item.value));
     swatches.append(button);
   }

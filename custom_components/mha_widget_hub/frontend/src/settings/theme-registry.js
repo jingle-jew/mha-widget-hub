@@ -69,6 +69,20 @@ const MATERIAL_ACCENTS = Object.freeze([
   { value: "brown", label: "Brown" },
 ]);
 
+const ALEXA_ACCENTS = Object.freeze([
+  { value: "cyan", label: "Cyan" },
+  { value: "blue", label: "Blue" },
+  { value: "sky", label: "Sky" },
+  { value: "navy", label: "Navy" },
+  { value: "teal", label: "Teal" },
+  { value: "aqua", label: "Aqua" },
+  { value: "emerald", label: "Emerald" },
+  { value: "violet", label: "Violet" },
+  { value: "pink", label: "Pink" },
+  { value: "amber", label: "Amber" },
+  { value: "slate", label: "Slate" },
+]);
+
 function freezeArray(items = []) {
   return Object.freeze([...items]);
 }
@@ -249,6 +263,25 @@ const THEMES = {
     defaultAccent: "purple",
     supportsAutoAccent: true,
     aliases: ["material-you", "material3", "material-3"],
+  }),
+  alexa: normalizeThemeDefinition({
+    id: "alexa",
+    label: "Alexa",
+    order: 40,
+    defaultIconShape: "circle",
+    css: css("styles/themes/alexa.css"),
+    wallpaper: {
+      type: "advanced",
+      accentSource: {
+        type: "color",
+        light: "#00a8e1",
+        dark: "#53d8ff",
+      },
+    },
+    accents: ALEXA_ACCENTS,
+    defaultAccent: "cyan",
+    supportsAutoAccent: true,
+    aliases: ["echo", "amazon-alexa", "amazon"],
   }),
 };
 
