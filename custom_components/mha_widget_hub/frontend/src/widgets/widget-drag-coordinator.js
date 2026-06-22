@@ -82,11 +82,15 @@ export function createWidgetDragCoordinator(host, {
   longPressDelay = DEFAULT_LONG_PRESS_DELAY,
   moveTolerance = DEFAULT_MOVE_TOLERANCE,
 } = {}) {
+  function clearTouchLock() {
+    host?.classList?.remove?.("is-widget-drag-pending", "is-widget-dragging");
+  }
+
   function cancelSession(session, { clearSourceState = true } = {}) {
     if (!session) return;
     if (session.timer) clearTimeout(session.timer);
     clearHoveredDropSlot(session);
-    host?.classList?.remove?.("is-widget-dragging");
+    clearTouchLock();
     session.element?.releasePointerCapture?.(session.pointerId);
     if (clearSourceState) {
       session.element?.classList?.remove?.("is-drag-source", "is-drag-armed");
@@ -99,6 +103,7 @@ export function createWidgetDragCoordinator(host, {
     session.armed = true;
     host._activeMoveWidgetId = session.widgetId;
     host._pendingWidgetPlacement = null;
+    host?.classList?.remove?.("is-widget-drag-pending");
     host?.classList?.add?.("is-widget-dragging");
     session.element?.classList?.add?.("is-drag-source", "is-drag-armed");
     if (session.element?.dataset) session.element.dataset.dragState = "armed";
@@ -135,6 +140,7 @@ export function createWidgetDragCoordinator(host, {
         cancelled: false,
         timer: null,
       };
+      host?.classList?.add?.("is-widget-drag-pending");
       element.setPointerCapture?.(event.pointerId);
       session.timer = setTimeout(() => armDragSession(session), longPressDelay);
     };
