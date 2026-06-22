@@ -291,6 +291,19 @@ export function getDefaultThemeVariant(themeStyle = getDefaultThemeStyle()) {
   return getThemeDefinition(themeStyle).defaultVariant;
 }
 
+export function getThemeVariantOptions(themeStyle = getDefaultThemeStyle()) {
+  return getThemeVariants(themeStyle).map(({ id, label }) => ({ value: id, label }));
+}
+
+export function normalizeThemeVariantSelection(themeStyle = getDefaultThemeStyle(), variant = "") {
+  const variants = getThemeVariants(themeStyle);
+  if (!variants.length) return "";
+  const normalized = String(variant || "").trim();
+  return variants.some(item => item.id === normalized)
+    ? normalized
+    : getDefaultThemeVariant(themeStyle);
+}
+
 export function getThemeAccentContract(themeStyle = getDefaultThemeStyle()) {
   const definition = getThemeDefinition(themeStyle);
   return Object.freeze({

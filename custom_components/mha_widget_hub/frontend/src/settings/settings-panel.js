@@ -10,7 +10,7 @@ import {
   PANEL_SURFACE_ROLES,
 } from "../panels/panel-surface-contract.js";
 import { validateWallpaperFile } from "./wallpaper-storage.js";
-import { getThemeStyleOptions } from "./theme-registry.js";
+import { getThemeStyleOptions, getThemeVariantOptions } from "./theme-registry.js";
 import {
   NOW_BAR_NOW_ITEMS,
   getNowBarEntityOptions,
@@ -39,12 +39,6 @@ const LANGUAGE_OPTIONS = [
 ];
 
 const STYLE_OPTIONS = getThemeStyleOptions();
-
-const IOS_GLASS_OPTIONS = [
-  { value: "liquid", label: "Liquid Glass" },
-  { value: "frosted", label: "Frosted Glass" },
-];
-
 
 const DOCK_POSITION_OPTIONS = [
   { value: "left", label: "Left", labelKey: "settings.dockPositions.left" },
@@ -1092,11 +1086,12 @@ export function createSettingsPanel({
       }),
     ];
 
-    if (themeStyle === "ios") {
+    const themeVariantOptions = getThemeVariantOptions(themeStyle);
+    if (themeVariantOptions.length) {
       appearanceControls.push(createSelect({
-        label: t("settings.iosGlass", "iOS glass"),
+        label: t("settings.themeVariant", "Theme variant"),
         value: iosGlass,
-        options: IOS_GLASS_OPTIONS,
+        options: themeVariantOptions,
         onChange: onIosGlassChange,
       }));
     }

@@ -11,7 +11,9 @@ import {
   getThemeDefinitions,
   getThemeStyleIds,
   getThemeStyleOptions,
+  getThemeVariantOptions,
   getThemeVariants,
+  normalizeThemeVariantSelection,
 } from "../src/settings/theme-registry.js";
 import { getAccentOptions } from "../src/settings/accent-palettes.js";
 
@@ -50,9 +52,21 @@ describe("theme registry", () => {
       { id: "liquid", label: "Liquid Glass", order: 10, default: true },
       { id: "frosted", label: "Frosted Glass", order: 20, default: false },
     ]);
+    assert.deepEqual(getThemeVariantOptions("ios"), [
+      { value: "liquid", label: "Liquid Glass" },
+      { value: "frosted", label: "Frosted Glass" },
+    ]);
     assert.equal(getDefaultThemeVariant("ios"), "liquid");
     assert.deepEqual(getThemeVariants("oneui"), []);
+    assert.deepEqual(getThemeVariantOptions("oneui"), []);
     assert.equal(getDefaultThemeVariant("oneui"), "");
+  });
+
+  it("normalizes theme variant selections", () => {
+    assert.equal(normalizeThemeVariantSelection("ios", "frosted"), "frosted");
+    assert.equal(normalizeThemeVariantSelection("ios", "unknown"), "liquid");
+    assert.equal(normalizeThemeVariantSelection("oneui", "anything"), "");
+    assert.equal(normalizeThemeVariantSelection("unknown", "anything"), "");
   });
 
   it("exposes accent options from the theme registry", () => {
