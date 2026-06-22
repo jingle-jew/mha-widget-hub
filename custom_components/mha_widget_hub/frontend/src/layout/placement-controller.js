@@ -209,92 +209,29 @@ export class PlacementController {
     return true;
   }
 
-  applyDropSlotPositions(nextPositions) {
-    this.savePositions(nextPositions);
-    this.setActiveMoveWidgetId("");
-    this.applyPositions(nextPositions);
-    this.refreshDropSlots();
-    this.syncEditMode();
-    this.scheduleLayoutSync();
-  }
-
   moveToDropSlot(widgetId, x, y) {
     if (!this.canMoveWidget(widgetId)) return false;
 
     const positions = this.getPositions();
     const widgets = this.getWidgets();
-    const current = positions?.[widgetId];
-    const widget = widgets.find(item => item.id === widgetId);
-    if (!positions || !current || !widget) return false;
-
     const { units, rowUnits } = this.getGridBounds();
-    const size = normalizeWidgetForKind(widget);
-    const width = Math.min(units, size.w);
-    const height = size.h;
-    const candidate = {
-      x: Number(x) || 1,
-      y: Number(y) || 1,
+    const next = {
+      ...positions,
+      [widgetId]: {
+        x: Number(x) || 1,
+        y: Number(y) || 1,
+      },
     };
-    const maxY = this.isMobileLayout()
-      ? Number.POSITIVE_INFINITY
-      : rowUnits - height + 1;
-    if (
-      candidate.x < 1
-      || candidate.x + width - 1 > units
-      || candidate.y < 1
-      || candidate.y > maxY
-    ) {
+    if (!this.isPositionMapValid(next, widgets, units, rowUnits)) {
       return false;
     }
 
-    const directPositions = {
-      ...positions,
-      [widgetId]: candidate,
-    };
-    if (this.isPositionMapValid(directPositions, widgets, units, rowUnits)) {
-      this.applyDropSlotPositions(directPositions);
-      return true;
-    }
-
-    const candidateRect = {
-      ...candidate,
-      w: width,
-      h: height,
-    };
-    const currentRect = getWidgetRectFromPosition(widget, current, units);
-    const occupants = getWidgetsInCandidateRect(
-      widgets,
-      widgetId,
-      candidateRect,
-      positions,
-      units,
-    );
-    if (
-      !occupants.length
-      || !doesWidgetGroupExactlyFillRect(
-        occupants,
-        candidateRect,
-        positions,
-        units,
-      )
-    ) {
-      return false;
-    }
-
-    let nextPositions = {
-      ...positions,
-      [widgetId]: candidate,
-    };
-    nextPositions = translateWidgetGroupPositions(
-      occupants,
-      candidateRect,
-      currentRect,
-      nextPositions,
-    );
-    if (!this.isPositionMapValid(nextPositions, widgets, units, rowUnits)) return false;
-    if (!hasNoWidgetOverlaps(widgets, nextPositions, units)) return false;
-
-    this.applyDropSlotPositions(nextPositions);
+    this.savePositions(next);
+    this.setActiveMoveWidgetId("");
+    this.applyPositions(next);
+    this.refreshDropSlots();
+    this.syncEditMode();
+    this.scheduleLayoutSync();
     return true;
   }
 
