@@ -1,12 +1,38 @@
 # Themes Guide
 
-This document describes the real theme system currently used by MHA Widget Hub.
+This document describes the current theme system used by MHA Widget Hub.
 
 ---
 
-## 1. Current Theme Model
+## 1. Target Model
 
-MHA currently has three registered theme styles:
+MHA themes are registry-driven.
+
+The target contract is:
+
+```text
+1 theme = 1 CSS + 1 manifest entry + optional accent palette
+```
+
+A minimal theme only needs:
+
+```text
+styles/themes/my-theme.css
+src/settings/theme-registry.js
+```
+
+A theme may also provide a dedicated accent palette in:
+
+```text
+src/settings/accent-palettes.js
+styles/themes/accent-palettes.css
+```
+
+If a theme does not provide its own accent palette, MHA falls back to the default accent palette.
+
+---
+
+## 2. Current Registered Themes
 
 | Theme style id | Label | CSS file | Default icon shape | Aliases |
 |---|---|---|---|---|
@@ -20,25 +46,67 @@ The default theme style is:
 oneui
 ```
 
-The iOS theme has an additional glass variant controlled separately:
+The iOS theme currently exposes two variants:
 
-```text
-data-ios-glass="liquid"
-data-ios-glass="frosted"
-```
+- Liquid Glass
+- Frosted Glass
 
-So MHA exposes these visual experiences:
-
-- OneUI;
-- Material You;
-- iOS Liquid Glass;
-- iOS Frosted Glass.
-
-In the registry, Liquid and Frosted are not separate themes. They are two modes of the same `ios` theme style.
+These are theme variants, not separate theme styles.
 
 ---
 
-## 2. Theme State
+## 3. Theme Registry
+
+Theme definitions live in:
+
+```text
+src/settings/theme-registry.js
+```
+
+The registry is the source of truth for:
+
+- theme id;
+- label;
+- display order;
+- CSS files;
+- aliases;
+- default icon shape;
+- wallpaper metadata;
+- variants;
+- accent options;
+- default accent;
+- auto accent support.
+
+A registry entry may define:
+
+```js
+{
+  id: "mytheme",
+  label: "My Theme",
+  order: 40,
+  defaultIconShape: "rounded-square",
+  css: css("styles/themes/my-theme.css"),
+  wallpaper: {
+    type: "advanced",
+    accentSource: {
+      type: "color",
+      light: "#8bbdff",
+      dark: "#65a8ff",
+    },
+  },
+  variants: [],
+  accents: [],
+  defaultAccent: "sky",
+  supportsAutoAccent: true,
+  aliases: ["my-theme"],
+}
+```
+
+The registry normalizes definitions before exposing them to the rest of the app.
+
+---
+
+## 4. Theme State
 
 Theme state is handled by:
 
@@ -46,40 +114,49 @@ Theme state is handled by:
 src/settings/theme-controller.js
 ```
 
-The controller reads and synchronizes theme-related settings between:
+The controller reads and synchronizes theme settings between:
 
 - `localStorage`;
 - the custom element host dataset;
 - `document.documentElement.dataset`.
 
-The synchronized attributes are:
+Synchronized attributes include:
 
 | Dataset attribute | Meaning |
 |---|---|
 | `data-theme-setting` | User preference: `auto`, `dark`, or `light` |
 | `data-theme` | Resolved visual mode: `dark` or `light` |
 | `data-theme-style` | Visual system: `ios`, `oneui`, or `material` |
-| `data-ios-glass` | iOS material mode: `liquid` or `frosted` |
+| `data-theme-variant` | Generic theme variant id |
+| `data-ios-glass` | Legacy iOS compatibility attribute: `liquid` or `frosted` |
 | `data-accent` | Active accent key |
 | `data-accent-mode` | `manual` or `auto` |
 | `data-icon-shape-setting` | `auto`, `rounded-square`, `squircle`, or `circle` |
 | `data-icon-shape` | Resolved icon shape |
 
-Theme CSS should target these attributes instead of relying on JavaScript branching.
+Theme CSS should target dataset attributes instead of relying on JavaScript branching.
 
 Example:
 
 ```css
-:host([data-theme-style="ios"][data-ios-glass="liquid"]) {
+:host([data-theme-style="ios"][data-theme-variant="liquid"]) {
   --mha-surface-blur: 10px;
+}
+```
+
+For now, iOS CSS may still target the legacy compatibility attribute:
+
+```css
+:host([data-theme-style="ios"][data-ios-glass="frosted"]) {
+  --mha-surface-blur: 22px;
 }
 ```
 
 ---
 
-## 3. Stored Theme Keys
+## 5. Stored Theme Keys
 
-The theme controller currently uses these local storage keys:
+The theme controller uses these local storage keys:
 
 | Key | Purpose |
 |---|---|
@@ -87,8 +164,10 @@ The theme controller currently uses these local storage keys:
 | `mha-dev-theme` | Dev fallback for theme mode |
 | `mha-theme-style` | Main visual style |
 | `mha-dev-theme-style` | Dev fallback for visual style |
-| `mha-ios-glass` | Main iOS glass variant |
-| `mha-dev-ios-glass` | Dev fallback for iOS glass variant |
+| `mha-theme-variant` | Generic theme variant |
+| `mha-theme-variant-{themeStyle}` | Per-theme variant |
+| `mha-ios-glass` | Legacy iOS glass variant |
+| `mha-dev-ios-glass` | Legacy dev fallback for iOS glass variant |
 | `mha-accent-mode` | Global accent mode |
 | `mha-accent-mode-{themeStyle}` | Per-theme accent mode |
 | `mha-accent` | Active accent value |
@@ -96,11 +175,11 @@ The theme controller currently uses these local storage keys:
 | `mha-accent-auto-{themeStyle}` | Per-theme automatic accent |
 | `mha-icon-shape` | Icon shape preference |
 
-This means each visual system can remember its own accent independently.
+Each visual style can remember its own accent independently.
 
 ---
 
-## 4. Style Manifest Loading Order
+## 6. Style Manifest Loading Order
 
 Theme CSS is part of the global style manifest:
 
@@ -108,7 +187,9 @@ Theme CSS is part of the global style manifest:
 src/styles/style-manifest.js
 ```
 
-Current high-level order:
+Theme CSS paths are read from the theme registry through `getThemeCssPaths()`.
+
+High-level order:
 
 ```text
 1. Core tokens
@@ -126,66 +207,13 @@ Current high-level order:
 13. Screensaver CSS
 ```
 
-Current concrete order:
-
-```text
-styles/core/tokens.css
-
-styles/components/icon.css
-styles/components/icon-symbol.css
-styles/components/slider.css
-styles/components/toggle.css
-styles/components/pill.css
-styles/components/button.css
-styles/system/system-buttons.css
-
-styles/themes/ios.css
-styles/themes/oneui.css
-styles/themes/material.css
-
-styles/themes/accent-palettes.css
-styles/themes/semantic-tokens.css
-
-styles/core/background.css
-styles/layout/shell.css
-styles/layout/widget-grid.css
-styles/layout/status-bar.css
-styles/layout/dock.css
-styles/layout/mobile-dock.css
-styles/layout/floating-controls.css
-styles/layout/dock-glyph-stability.css
-styles/layout/frame-alignment.css
-
-styles/settings/settings-panel.css
-styles/widget-manager/widget-manager.css
-styles/widget-manager/widget-config-popup.css
-styles/panels/panel-surface-contract.css
-styles/panels/panel-frame-alignment.css
-styles/panels/page-creator-sheet.css
-styles/panels/page-creator-bottom.css
-styles/settings/settings-bottom.css
-
-styles/themes/light-text-contract.css
-
-styles/widgets/widget-layout.css
-styles/widgets/widget-shell.css
-
-widget CSS from the widget registry
-
-styles/screensaver/screensaver.css
-styles/screensaver/screensaver-clock.css
-styles/screensaver/screensaver-hotcorner.css
-```
-
 Important consequence:
 
-Theme files define the raw visual language. `semantic-tokens.css` maps those raw values into the canonical semantic contract. Component, panel and widget files should consume semantic tokens or adapter tokens, not reinvent visual values.
+Theme files define the raw visual language. `semantic-tokens.css` maps those raw values into the canonical semantic contract. Component, panel and widget files should consume semantic tokens or adapter tokens instead of reinventing visual values.
 
 ---
 
-## 5. Adding A New Theme
-
-To add a new theme today, the minimum path is:
+## 7. Adding A New Theme
 
 ### Step 1 — Create the theme CSS
 
@@ -198,7 +226,7 @@ styles/themes/my-theme.css
 The file should define raw theme values such as:
 
 ```css
-:host([data-theme-style="my-theme"]) {
+:host([data-theme-style="mytheme"]) {
   --mha-text: ...;
   --mha-muted: ...;
   --mha-widget-surface: ...;
@@ -214,11 +242,11 @@ The file should define raw theme values such as:
 And ideally both light and dark modes:
 
 ```css
-:host([data-theme-style="my-theme"][data-theme="light"]) {
+:host([data-theme-style="mytheme"][data-theme="light"]) {
   ...
 }
 
-:host([data-theme-style="my-theme"][data-theme="dark"]) {
+:host([data-theme-style="mytheme"][data-theme="dark"]) {
   ...
 }
 ```
@@ -234,35 +262,63 @@ src/settings/theme-registry.js
 Add a new entry:
 
 ```js
-mytheme: freezeTheme({
+mytheme: normalizeThemeDefinition({
   id: "mytheme",
   label: "My Theme",
   order: 40,
   defaultIconShape: "rounded-square",
   css: css("styles/themes/my-theme.css"),
+  defaultAccent: "sky",
+  supportsAutoAccent: true,
   aliases: ["my-theme"],
 }),
 ```
 
-### Step 3 — Add accent support
+### Step 3 — Add variants, if needed
 
-Edit:
+Variants are optional.
+
+Example:
+
+```js
+variants: [
+  { id: "soft", label: "Soft", order: 10, default: true },
+  { id: "solid", label: "Solid", order: 20 },
+],
+```
+
+If a theme defines variants, Settings automatically displays a variant selector.
+
+### Step 4 — Add accent support, if needed
+
+Accent palettes are optional.
+
+A theme can provide accent options in the registry:
+
+```js
+accents: [
+  { value: "blue", label: "Blue" },
+  { value: "green", label: "Green" },
+],
+```
+
+If no registry accent list is provided, MHA falls back to the matching `ACCENT_PALETTES[themeStyle]` entry.
+
+If no matching palette exists, MHA falls back to `DEFAULT_ACCENT_PALETTE`.
+
+For dedicated reference colors or wallpaper-based matching, edit:
 
 ```text
 src/settings/accent-palettes.js
 ```
 
-Add options/reference colors. If the theme should support wallpaper-based automatic accents, add it to the auto-accent support list.
-
-### Step 4 — Add CSS palette selectors
-
-Edit:
+For CSS application of accent variables, edit:
 
 ```text
 styles/themes/accent-palettes.css
 ```
 
-Add selectors:
+Example:
 
 ```css
 :host([data-theme-style="mytheme"][data-accent="blue"]) {
@@ -289,6 +345,7 @@ Test:
 - auto mode;
 - manual accents;
 - auto accent if supported;
+- variants if defined;
 - icon shape `auto`;
 - settings panel;
 - widget manager;
@@ -297,11 +354,17 @@ Test:
 - dock left/right/bottom;
 - status bar;
 - widgets;
-- screensaver/NowBar.
+- screensaver/Now Bar.
+
+Also run:
+
+```bash
+npm run check
+```
 
 ---
 
-## 6. Theme Responsibilities
+## 8. Theme Responsibilities
 
 A theme owns the visual language of MHA.
 
@@ -319,6 +382,7 @@ Themes may define:
 - blur strength;
 - saturation;
 - icon shape defaults;
+- variants;
 - accent color behavior;
 - text contrast.
 
@@ -332,13 +396,19 @@ Themes should not define:
 
 ---
 
-## 7. iOS Theme Notes
+## 9. iOS Theme Notes
 
-The iOS theme is special because it contains two glass modes.
+The iOS theme contains two glass variants.
 
 ### Liquid Glass
 
-Selector:
+Preferred generic selector:
+
+```css
+:host([data-theme-style="ios"][data-theme-variant="liquid"])
+```
+
+Legacy compatibility selector:
 
 ```css
 :host([data-theme-style="ios"][data-ios-glass="liquid"])
@@ -354,7 +424,13 @@ Current direction:
 
 ### Frosted Glass
 
-Selector:
+Preferred generic selector:
+
+```css
+:host([data-theme-style="ios"][data-theme-variant="frosted"])
+```
+
+Legacy compatibility selector:
 
 ```css
 :host([data-theme-style="ios"][data-ios-glass="frosted"])
@@ -374,7 +450,7 @@ Liquid and Frosted are not separate registry entries. Do not add `ios-liquid` an
 
 ---
 
-## 8. OneUI Theme Notes
+## 10. OneUI Theme Notes
 
 OneUI is currently the default theme style.
 
@@ -394,7 +470,7 @@ Current direction:
 
 ---
 
-## 9. Material Theme Notes
+## 11. Material Theme Notes
 
 Material is handled as:
 
@@ -421,11 +497,19 @@ These should remain Material-specific unless the design system is intentionally 
 
 ---
 
-## 10. Accent System
+## 12. Accent System
 
-Accent data is split between JavaScript and CSS.
+Accent data is split between registry metadata, JavaScript matching logic, and CSS application.
 
-JavaScript source of truth:
+Resolution order for accent options:
+
+```text
+registry accents
+→ ACCENT_PALETTES[themeStyle]
+→ DEFAULT_ACCENT_PALETTE
+```
+
+JavaScript accent logic lives in:
 
 ```text
 src/settings/accent-palettes.js
@@ -433,10 +517,10 @@ src/settings/accent-palettes.js
 
 This file defines:
 
-- user-facing accent options;
+- fallback accent palettes;
 - reference colors;
-- auto-accent support;
-- wallpaper color matching logic.
+- wallpaper color matching logic;
+- default palette fallback.
 
 CSS application layer:
 
@@ -463,7 +547,7 @@ Core accent tokens:
 
 ---
 
-## 11. Icon Shape System
+## 13. Icon Shape System
 
 Default icon shapes are defined in the theme registry:
 
@@ -486,7 +570,7 @@ When set to `auto`, the resolved shape comes from the theme registry.
 
 ---
 
-## 12. Recommended Theme Contract
+## 14. Recommended Theme Tokens
 
 New themes should define raw theme values, then let the semantic layer translate them.
 
@@ -518,92 +602,4 @@ Recommended base tokens to define:
 --mha-bg-blob-1
 --mha-bg-blob-2
 --mha-bg-blob-3
---mha-bg-blob-4
---mha-bg-blob-opacity
 ```
-
-Then confirm that semantic tokens resolve correctly:
-
-```css
---mha-primary-surface
---mha-on-primary-surface
---mha-secondary-surface
---mha-on-secondary-surface
---mha-primary-border
---mha-secondary-border
---mha-primary-text
---mha-secondary-text
---mha-accent-surface
---mha-on-accent-surface
-```
-
----
-
-## 13. What To Avoid
-
-Avoid adding theme-specific hacks inside:
-
-```text
-styles/widgets/*
-styles/widget-manager/*
-styles/settings/*
-styles/panels/*
-```
-
-Unless the exception is genuinely component-specific.
-
-Prefer this:
-
-```css
-:host([data-theme-style="mytheme"]) {
-  --mha-widget-surface: ...;
-}
-```
-
-over this:
-
-```css
-:host([data-theme-style="mytheme"]) .mha-weather-widget {
-  background: ...;
-}
-```
-
-Theme files should make widgets and panels look right through tokens.
-
-Widgets should not need to know the theme name.
-
----
-
-## 14. Current Architecture Verdict
-
-The theme architecture is in a good transitional state.
-
-Strengths:
-
-- registry-driven theme list;
-- centralized theme state controller;
-- centralized style manifest;
-- accent palettes separated from theme CSS;
-- semantic token layer exists;
-- iOS Liquid/Frosted uses data attributes rather than duplicated theme registrations;
-- panel and screensaver CSS are now better separated from monolithic files.
-
-Main remaining cleanup opportunities:
-
-- reduce legacy component-specific tokens over time;
-- migrate more widgets and panels toward canonical semantic tokens;
-- keep exceptions centralized in theme files;
-- document which tokens are public contract vs internal adapter;
-- avoid growing `styles/themes/ios.css` into too many unrelated component patches.
-
-Target state:
-
-```text
-Add theme CSS
-    +
-Register theme
-    +
-Optionally add accent palette
-```
-
-A new theme should not require touching widget renderers.
