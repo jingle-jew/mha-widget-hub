@@ -141,6 +141,19 @@ export const ACCENT_REFERENCE_COLORS = Object.freeze({
     lavender: "#7350b8",
     magenta: "#9c3d8f",
   }),
+  alexa: Object.freeze({
+    cyan: "#00a8e1",
+    blue: "#2f8cff",
+    sky: "#53d8ff",
+    navy: "#2451a6",
+    teal: "#00c2b8",
+    aqua: "#35d6d9",
+    emerald: "#2fbe7d",
+    violet: "#8b72ff",
+    pink: "#ff6aa2",
+    amber: "#f7bf45",
+    slate: "#6f8faa",
+  }),
 });
 
 export const AUTO_ACCENT_STYLES = new Set(
