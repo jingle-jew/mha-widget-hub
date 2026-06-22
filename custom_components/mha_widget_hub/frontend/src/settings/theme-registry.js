@@ -3,6 +3,72 @@ const WALLPAPER_TYPES = new Set(["image", "css", "token", "advanced"]);
 const ACCENT_SOURCE_TYPES = new Set(["image", "color", "token", "none"]);
 const ICON_SHAPES = new Set(["rounded-square", "squircle", "circle"]);
 
+const IOS_ACCENTS = Object.freeze([
+  { value: "red", label: "Red" },
+  { value: "orange", label: "Orange" },
+  { value: "yellow", label: "Yellow" },
+  { value: "lime", label: "Lime" },
+  { value: "green", label: "Green" },
+  { value: "mint", label: "Mint" },
+  { value: "seafoam", label: "Seafoam" },
+  { value: "teal", label: "Teal" },
+  { value: "cyan", label: "Cyan" },
+  { value: "blue", label: "Blue" },
+  { value: "indigo", label: "Indigo" },
+  { value: "lavender", label: "Lavender" },
+  { value: "purple", label: "Purple" },
+  { value: "berry", label: "Berry" },
+  { value: "pink", label: "Pink" },
+  { value: "rose", label: "Rose" },
+  { value: "brown", label: "Brown" },
+  { value: "graphite", label: "Graphite" },
+  { value: "gray", label: "Gray" },
+]);
+
+const ONEUI_ACCENTS = Object.freeze([
+  { value: "coral", label: "Coral" },
+  { value: "peach", label: "Peach" },
+  { value: "orange", label: "Orange" },
+  { value: "amber", label: "Amber" },
+  { value: "lemon", label: "Lemon" },
+  { value: "lime", label: "Lime" },
+  { value: "green", label: "Green" },
+  { value: "emerald", label: "Emerald" },
+  { value: "aqua", label: "Aqua" },
+  { value: "sky", label: "Sky" },
+  { value: "blue", label: "Blue" },
+  { value: "navy", label: "Navy" },
+  { value: "violet", label: "Violet" },
+  { value: "lavender", label: "Lavender" },
+  { value: "lilac", label: "Lilac" },
+  { value: "magenta", label: "Magenta" },
+  { value: "pink", label: "Pink" },
+  { value: "rose", label: "Rose" },
+  { value: "slate", label: "Slate" },
+]);
+
+const MATERIAL_ACCENTS = Object.freeze([
+  { value: "red", label: "Red" },
+  { value: "orange", label: "Orange" },
+  { value: "yellow", label: "Yellow" },
+  { value: "lime", label: "Lime" },
+  { value: "olive", label: "Olive" },
+  { value: "green", label: "Green" },
+  { value: "emerald", label: "Emerald" },
+  { value: "sea", label: "Sea" },
+  { value: "teal", label: "Teal" },
+  { value: "cyan", label: "Cyan" },
+  { value: "sky", label: "Sky" },
+  { value: "blue", label: "Blue" },
+  { value: "navy", label: "Navy" },
+  { value: "indigo", label: "Indigo" },
+  { value: "lavender", label: "Lavender" },
+  { value: "purple", label: "Purple" },
+  { value: "magenta", label: "Magenta" },
+  { value: "pink", label: "Pink" },
+  { value: "brown", label: "Brown" },
+]);
+
 function freezeArray(items = []) {
   return Object.freeze([...items]);
 }
@@ -141,6 +207,7 @@ const THEMES = {
       { id: "liquid", label: "Liquid Glass", order: 10, default: true },
       { id: "frosted", label: "Frosted Glass", order: 20 },
     ],
+    accents: IOS_ACCENTS,
     defaultAccent: "blue",
     supportsAutoAccent: true,
     aliases: ["apple", "liquid-glass", "frosted-glass"],
@@ -159,6 +226,7 @@ const THEMES = {
         dark: "#65a8ff",
       },
     },
+    accents: ONEUI_ACCENTS,
     defaultAccent: "sky",
     supportsAutoAccent: true,
     aliases: ["samsung", "one-ui"],
@@ -177,6 +245,7 @@ const THEMES = {
         dark: "#d0bcff",
       },
     },
+    accents: MATERIAL_ACCENTS,
     defaultAccent: "purple",
     supportsAutoAccent: true,
     aliases: ["material-you", "material3", "material-3"],

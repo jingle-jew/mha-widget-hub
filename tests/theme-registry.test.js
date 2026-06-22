@@ -13,6 +13,7 @@ import {
   getThemeStyleOptions,
   getThemeVariants,
 } from "../src/settings/theme-registry.js";
+import { getAccentOptions } from "../src/settings/accent-palettes.js";
 
 describe("theme registry", () => {
   it("exposes the registered theme styles in display order", () => {
@@ -54,23 +55,31 @@ describe("theme registry", () => {
     assert.equal(getDefaultThemeVariant("oneui"), "");
   });
 
-  it("exposes a stable accent contract from the theme registry", () => {
-    assert.deepEqual(getThemeAccentContract("ios"), {
-      accents: [],
-      defaultAccent: "blue",
-      supportsAutoAccent: true,
-    });
-    assert.deepEqual(getThemeAccentContract("oneui"), {
-      accents: [],
-      defaultAccent: "sky",
-      supportsAutoAccent: true,
-    });
-    assert.deepEqual(getThemeAccentContract("material"), {
-      accents: [],
-      defaultAccent: "purple",
-      supportsAutoAccent: true,
-    });
-    assert.deepEqual(getThemeAccentContract("unknown"), getThemeAccentContract("oneui"));
+  it("exposes accent options from the theme registry", () => {
+    const ios = getThemeAccentContract("ios");
+    const oneui = getThemeAccentContract("oneui");
+    const material = getThemeAccentContract("material");
+
+    assert.equal(ios.accents.length, 19);
+    assert.equal(oneui.accents.length, 19);
+    assert.equal(material.accents.length, 19);
+
+    assert.equal(ios.defaultAccent, "blue");
+    assert.equal(oneui.defaultAccent, "sky");
+    assert.equal(material.defaultAccent, "purple");
+
+    assert.equal(ios.supportsAutoAccent, true);
+    assert.equal(oneui.supportsAutoAccent, true);
+    assert.equal(material.supportsAutoAccent, true);
+
+    assert.deepEqual(getThemeAccentContract("unknown"), oneui);
+  });
+
+  it("keeps accent options compatible with accent-palettes consumers", () => {
+    assert.deepEqual(getAccentOptions("ios"), getThemeAccentContract("ios").accents);
+    assert.deepEqual(getAccentOptions("oneui"), getThemeAccentContract("oneui").accents);
+    assert.deepEqual(getAccentOptions("material"), getThemeAccentContract("material").accents);
+    assert.deepEqual(getAccentOptions("unknown"), getThemeAccentContract("oneui").accents);
   });
 
   it("keeps theme definitions immutable", () => {

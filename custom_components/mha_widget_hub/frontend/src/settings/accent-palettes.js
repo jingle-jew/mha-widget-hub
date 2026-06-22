@@ -396,6 +396,8 @@ export const DEFAULT_ACCENT_BY_STYLE = Object.freeze(Object.fromEntries(
 ));
 
 export function getAccentOptions(themeStyle = "oneui") {
+  const registryOptions = getThemeAccentContract(themeStyle).accents;
+  if (registryOptions.length) return registryOptions;
   return ACCENT_PALETTES[themeStyle] || ACCENT_PALETTES.oneui;
 }
 
