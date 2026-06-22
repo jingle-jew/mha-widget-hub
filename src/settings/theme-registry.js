@@ -141,6 +141,8 @@ const THEMES = {
       { id: "liquid", label: "Liquid Glass", order: 10, default: true },
       { id: "frosted", label: "Frosted Glass", order: 20 },
     ],
+    defaultAccent: "blue",
+    supportsAutoAccent: true,
     aliases: ["apple", "liquid-glass", "frosted-glass"],
   }),
   oneui: normalizeThemeDefinition({
@@ -157,6 +159,8 @@ const THEMES = {
         dark: "#65a8ff",
       },
     },
+    defaultAccent: "sky",
+    supportsAutoAccent: true,
     aliases: ["samsung", "one-ui"],
   }),
   material: normalizeThemeDefinition({
@@ -173,6 +177,8 @@ const THEMES = {
         dark: "#d0bcff",
       },
     },
+    defaultAccent: "purple",
+    supportsAutoAccent: true,
     aliases: ["material-you", "material3", "material-3"],
   }),
 };
