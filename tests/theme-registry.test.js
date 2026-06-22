@@ -19,11 +19,12 @@ import { getAccentOptions } from "../src/settings/accent-palettes.js";
 
 describe("theme registry", () => {
   it("exposes the registered theme styles in display order", () => {
-    assert.deepEqual(getThemeStyleIds(), ["ios", "oneui", "material"]);
+    assert.deepEqual(getThemeStyleIds(), ["ios", "oneui", "material", "alexa"]);
     assert.deepEqual(getThemeStyleOptions(), [
       { value: "ios", label: "iOS" },
       { value: "oneui", label: "OneUI" },
       { value: "material", label: "Material You" },
+      { value: "alexa", label: "Alexa" },
     ]);
   });
 
@@ -32,6 +33,7 @@ describe("theme registry", () => {
       "styles/themes/ios.css",
       "styles/themes/oneui.css",
       "styles/themes/material.css",
+      "styles/themes/alexa.css",
     ]);
   });
 
@@ -40,6 +42,7 @@ describe("theme registry", () => {
     assert.equal(getDefaultIconShape("ios"), "rounded-square");
     assert.equal(getDefaultIconShape("oneui"), "squircle");
     assert.equal(getDefaultIconShape("material"), "circle");
+    assert.equal(getDefaultIconShape("alexa"), "circle");
   });
 
   it("falls back to the default theme for unknown theme styles", () => {
@@ -73,18 +76,22 @@ describe("theme registry", () => {
     const ios = getThemeAccentContract("ios");
     const oneui = getThemeAccentContract("oneui");
     const material = getThemeAccentContract("material");
+    const alexa = getThemeAccentContract("alexa");
 
     assert.equal(ios.accents.length, 19);
     assert.equal(oneui.accents.length, 19);
     assert.equal(material.accents.length, 19);
+    assert.equal(alexa.accents.length, 11);
 
     assert.equal(ios.defaultAccent, "blue");
     assert.equal(oneui.defaultAccent, "sky");
     assert.equal(material.defaultAccent, "purple");
+    assert.equal(alexa.defaultAccent, "cyan");
 
     assert.equal(ios.supportsAutoAccent, true);
     assert.equal(oneui.supportsAutoAccent, true);
     assert.equal(material.supportsAutoAccent, true);
+    assert.equal(alexa.supportsAutoAccent, true);
 
     assert.deepEqual(getThemeAccentContract("unknown"), oneui);
   });
@@ -93,6 +100,7 @@ describe("theme registry", () => {
     assert.deepEqual(getAccentOptions("ios"), getThemeAccentContract("ios").accents);
     assert.deepEqual(getAccentOptions("oneui"), getThemeAccentContract("oneui").accents);
     assert.deepEqual(getAccentOptions("material"), getThemeAccentContract("material").accents);
+    assert.deepEqual(getAccentOptions("alexa"), getThemeAccentContract("alexa").accents);
     assert.deepEqual(getAccentOptions("unknown"), getThemeAccentContract("oneui").accents);
   });
 
