@@ -1,5 +1,5 @@
 import { normalizeAccent, supportsAutoAccent } from "./accent-palettes.js";
-import { getDefaultIconShape, getThemeStyleIds } from "./theme-registry.js";
+import { getDefaultIconShape, getThemeStyleIds, normalizeThemeVariantSelection } from "./theme-registry.js";
 
 export const THEME_STYLES = Object.freeze(new Set(getThemeStyleIds()));
 
@@ -42,7 +42,27 @@ export function getStoredThemeStyle(host) {
 }
 
 export function normalizeIosGlass(iosGlass = "liquid") {
-  return ["liquid", "frosted"].includes(iosGlass) ? iosGlass : "liquid";
+  return normalizeThemeVariantSelection("ios", iosGlass) || "liquid";
+}
+
+export function getStoredThemeVariant(host, themeStyle = "oneui") {
+  const normalizedStyle = normalizeThemeStyle(themeStyle);
+  const legacyIosGlass = normalizedStyle === "ios"
+    ? localStorage.getItem("mha-ios-glass")
+      || localStorage.getItem("mha-dev-ios-glass")
+      || document.documentElement.dataset.iosGlass
+      || host?.dataset?.iosGlass
+      || ""
+    : "";
+
+  const stored = localStorage.getItem(`mha-theme-variant-${normalizedStyle}`)
+    || localStorage.getItem("mha-theme-variant")
+    || document.documentElement.dataset.themeVariant
+    || host?.dataset?.themeVariant
+    || legacyIosGlass
+    || "";
+
+  return normalizeThemeVariantSelection(normalizedStyle, stored);
 }
 
 export function getStoredIosGlass(host) {
@@ -125,7 +145,8 @@ export function readThemeState(host) {
   const themeSetting = getStoredThemeSetting(host);
   const theme = resolveTheme(themeSetting);
   const themeStyle = getStoredThemeStyle(host);
-  const iosGlass = getStoredIosGlass(host);
+  const themeVariant = getStoredThemeVariant(host, themeStyle);
+  const iosGlass = themeStyle === "ios" ? normalizeIosGlass(themeVariant) : getStoredIosGlass(host);
   const accentMode = getStoredAccentMode(host, themeStyle);
   const accent = getStoredAccent(host, themeStyle);
   const iconShapeSetting = getStoredIconShapeSetting(host);
@@ -136,6 +157,7 @@ export function readThemeState(host) {
     theme,
     themeStyle,
     iosGlass,
+    themeVariant,
     accent,
     accentMode,
     iconShapeSetting,
@@ -159,6 +181,7 @@ export function syncThemeAttributes(host) {
   setAttribute(host, "theme", state.theme);
   setAttribute(host, "themeStyle", state.themeStyle);
   setAttribute(host, "iosGlass", state.iosGlass);
+  setAttribute(host, "themeVariant", state.themeVariant);
   setAttribute(host, "accent", state.accent);
   setAttribute(host, "accentMode", state.accentMode);
   setAttribute(host, "iconShapeSetting", state.iconShapeSetting);
@@ -168,6 +191,7 @@ export function syncThemeAttributes(host) {
   setAttribute(root, "theme", state.theme);
   setAttribute(root, "themeStyle", state.themeStyle);
   setAttribute(root, "iosGlass", state.iosGlass);
+  setAttribute(root, "themeVariant", state.themeVariant);
   setAttribute(root, "accent", state.accent);
   setAttribute(root, "accentMode", state.accentMode);
   setAttribute(root, "iconShapeSetting", state.iconShapeSetting);
@@ -209,11 +233,24 @@ export class ThemeController {
     return this.sync();
   }
 
-  setIosGlass(value = "liquid") {
-    const iosGlass = normalizeIosGlass(value);
-    localStorage.setItem("mha-ios-glass", iosGlass);
-    localStorage.setItem("mha-dev-ios-glass", iosGlass);
+  setThemeVariant(value = "") {
+    const themeStyle = getStoredThemeStyle(this.host);
+    const themeVariant = normalizeThemeVariantSelection(themeStyle, value);
+    if (!themeVariant) return this.sync();
+
+    localStorage.setItem("mha-theme-variant", themeVariant);
+    localStorage.setItem(`mha-theme-variant-${themeStyle}`, themeVariant);
+
+    if (themeStyle === "ios") {
+      localStorage.setItem("mha-ios-glass", themeVariant);
+      localStorage.setItem("mha-dev-ios-glass", themeVariant);
+    }
+
     return this.sync();
+  }
+
+  setIosGlass(value = "liquid") {
+    return this.setThemeVariant(value);
   }
 
   setAccent(value = "") {

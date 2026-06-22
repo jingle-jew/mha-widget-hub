@@ -10,7 +10,7 @@ import {
   PANEL_SURFACE_ROLES,
 } from "../panels/panel-surface-contract.js";
 import { validateWallpaperFile } from "./wallpaper-storage.js";
-import { getThemeStyleOptions } from "./theme-registry.js";
+import { getThemeStyleOptions, getThemeVariantOptions } from "./theme-registry.js";
 import {
   NOW_BAR_NOW_ITEMS,
   getNowBarEntityOptions,
@@ -39,12 +39,6 @@ const LANGUAGE_OPTIONS = [
 ];
 
 const STYLE_OPTIONS = getThemeStyleOptions();
-
-const IOS_GLASS_OPTIONS = [
-  { value: "liquid", label: "Liquid Glass" },
-  { value: "frosted", label: "Frosted Glass" },
-];
-
 
 const DOCK_POSITION_OPTIONS = [
   { value: "left", label: "Left", labelKey: "settings.dockPositions.left" },
@@ -857,6 +851,7 @@ export function createSettingsPanel({
   theme = "auto",
   language = "auto",
   themeStyle = "oneui",
+  themeVariant = "",
   iosGlass = "liquid",
   accent = "",
   accentMode = "manual",
@@ -883,6 +878,7 @@ export function createSettingsPanel({
   onLanguageChange,
   onThemeChange,
   onThemeStyleChange,
+  onThemeVariantChange,
   onIosGlassChange,
   onAccentChange,
   onAccentModeChange,
@@ -1092,12 +1088,14 @@ export function createSettingsPanel({
       }),
     ];
 
-    if (themeStyle === "ios") {
+    const themeVariantOptions = getThemeVariantOptions(themeStyle);
+    if (themeVariantOptions.length) {
+      const effectiveThemeVariant = themeVariant || iosGlass;
       appearanceControls.push(createSelect({
-        label: t("settings.iosGlass", "iOS glass"),
-        value: iosGlass,
-        options: IOS_GLASS_OPTIONS,
-        onChange: onIosGlassChange,
+        label: t("settings.themeVariant", "Theme variant"),
+        value: effectiveThemeVariant,
+        options: themeVariantOptions,
+        onChange: onThemeVariantChange || onIosGlassChange,
       }));
     }
 
