@@ -1,8 +1,10 @@
 import { writeJson } from "../core/storage.js";
 import { POSITIONS } from "../core/mha-persistence.js";
 import { syncDropSlotRenderer } from "./drop-slot-renderer.js";
+import { createWidgetDragCoordinator } from "./widget-drag-coordinator.js";
 
 export function createWidgetInteractionSurfaceCoordinator(host) {
+  const dragCoordinator = createWidgetDragCoordinator(host);
   function syncEditModeDom() {
     if (!host._isEditing || host._isMobileLandscapeLayout()) {
       const hadWidgetConfig = Boolean(host._widgetConfigSession);
@@ -147,10 +149,8 @@ export function createWidgetInteractionSurfaceCoordinator(host) {
     });
   }
 
-  function wireDrag(element) {
-    if (!element) return;
-    element.draggable = false;
-    element.removeAttribute("draggable");
+  function wireDrag(element, widget = {}) {
+    dragCoordinator.wireWidget(element, widget);
   }
 
   return {
