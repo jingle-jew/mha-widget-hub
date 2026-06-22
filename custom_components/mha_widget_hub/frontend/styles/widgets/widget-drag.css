@@ -2,6 +2,12 @@
   cursor: grabbing;
 }
 
+:host(.is-widget-dragging) .mha-grid,
+:host(.is-widget-dragging) .mha-widget {
+  touch-action: none;
+  overscroll-behavior: contain;
+}
+
 :host(.is-editing) .mha-widget-drop-slot.is-drag-hover {
   z-index: 4;
   border-color: var(--mha-accent);
