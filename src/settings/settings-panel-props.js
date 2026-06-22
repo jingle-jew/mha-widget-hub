@@ -31,6 +31,7 @@ export function buildSettingsPanelState({
     theme: themeState.themeSetting,
     language,
     themeStyle: themeState.themeStyle,
+    themeVariant: themeState.themeVariant || "",
     iosGlass: themeState.iosGlass,
     accent: themeState.accent,
     accentMode: themeState.accentMode,

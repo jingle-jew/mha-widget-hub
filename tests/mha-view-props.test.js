@@ -22,6 +22,7 @@ test("settings panel state derives the current scope openness and preserves stat
   const themeState = {
     themeSetting: "dark",
     themeStyle: "oneui",
+    themeVariant: "",
     iosGlass: "liquid",
     accent: "sky",
     accentMode: "manual",
@@ -62,6 +63,7 @@ test("settings panel state derives the current scope openness and preserves stat
     theme: "dark",
     language: "fr",
     themeStyle: "oneui",
+    themeVariant: "",
     iosGlass: "liquid",
     accent: "sky",
     accentMode: "manual",
