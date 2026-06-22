@@ -1,2 +1,4 @@
 # Codex local instructions
 AGENTS.md
+node_modules/
+test-results/
