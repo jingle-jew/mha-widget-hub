@@ -86,6 +86,7 @@ export function createWidgetDragCoordinator(host, {
     if (!session) return;
     if (session.timer) clearTimeout(session.timer);
     clearHoveredDropSlot(session);
+    host?.classList?.remove?.("is-widget-dragging");
     session.element?.releasePointerCapture?.(session.pointerId);
     if (clearSourceState) {
       session.element?.classList?.remove?.("is-drag-source", "is-drag-armed");
@@ -98,6 +99,7 @@ export function createWidgetDragCoordinator(host, {
     session.armed = true;
     host._activeMoveWidgetId = session.widgetId;
     host._pendingWidgetPlacement = null;
+    host?.classList?.add?.("is-widget-dragging");
     session.element?.classList?.add?.("is-drag-source", "is-drag-armed");
     if (session.element?.dataset) session.element.dataset.dragState = "armed";
     host._syncEditModeDom?.();
@@ -140,15 +142,21 @@ export function createWidgetDragCoordinator(host, {
     const onPointerMove = (event) => {
       if (!session) return;
       if (session.armed) {
+        event.preventDefault?.();
+        event.stopPropagation?.();
         syncHoveredDropSlot(host, session, event);
         return;
       }
       if (getDistance(session.start, getPoint(event)) > moveTolerance) cancelPending();
     };
 
-    const onPointerUp = () => {
+    const onPointerUp = (event) => {
       if (!session) return;
       const wasArmed = session.armed;
+      if (wasArmed) {
+        event?.preventDefault?.();
+        event?.stopPropagation?.();
+      }
       const moved = commitHoveredDropSlot(host, session);
       cancelSession(session, { clearSourceState: true });
       session = null;
