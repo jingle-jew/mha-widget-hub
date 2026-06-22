@@ -1,0 +1,13 @@
+:host(.is-editing) .mha-widget.is-drag-armed {
+  cursor: grabbing;
+}
+
+:host(.is-editing) .mha-widget-drop-slot.is-drag-hover {
+  z-index: 4;
+  border-color: var(--mha-accent);
+  background: var(--mha-accent-soft);
+  opacity: 1;
+  outline: 2px solid var(--mha-accent);
+  outline-offset: 2px;
+  transform: scale(.985);
+}
