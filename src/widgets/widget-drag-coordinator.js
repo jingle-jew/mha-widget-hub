@@ -32,6 +32,27 @@ function getDistance(a, b) {
   return Math.hypot(dx, dy);
 }
 
+function getElementFromPoint(host, point) {
+  return host?.shadowRoot?.elementFromPoint?.(point.x, point.y)
+    || document.elementFromPoint?.(point.x, point.y)
+    || null;
+}
+
+function clearHoveredDropSlot(session) {
+  session?.hoveredDropSlot?.classList?.remove?.("is-drag-hover");
+  if (session) session.hoveredDropSlot = null;
+}
+
+function syncHoveredDropSlot(host, session, event) {
+  if (!session?.armed) return;
+  const point = getPoint(event);
+  const hovered = getElementFromPoint(host, point)?.closest?.(".mha-widget-drop-slot") || null;
+  if (hovered === session.hoveredDropSlot) return;
+  clearHoveredDropSlot(session);
+  session.hoveredDropSlot = hovered;
+  hovered?.classList?.add?.("is-drag-hover");
+}
+
 export function canStartWidgetDrag({ host, element, event, widgetId = "" } = {}) {
   if (!host?._isEditing) return false;
   if (host?._isMobileLandscapeLayout?.()) return false;
@@ -49,6 +70,7 @@ export function createWidgetDragCoordinator(host, {
   function cancelSession(session, { clearSourceState = true } = {}) {
     if (!session) return;
     if (session.timer) clearTimeout(session.timer);
+    clearHoveredDropSlot(session);
     session.element?.releasePointerCapture?.(session.pointerId);
     if (clearSourceState) {
       session.element?.classList?.remove?.("is-drag-source", "is-drag-armed");
@@ -91,6 +113,7 @@ export function createWidgetDragCoordinator(host, {
         widgetId,
         pointerId: event.pointerId,
         start,
+        hoveredDropSlot: null,
         armed: false,
         cancelled: false,
         timer: null,
@@ -100,7 +123,11 @@ export function createWidgetDragCoordinator(host, {
     };
 
     const onPointerMove = (event) => {
-      if (!session || session.armed) return;
+      if (!session) return;
+      if (session.armed) {
+        syncHoveredDropSlot(host, session, event);
+        return;
+      }
       if (getDistance(session.start, getPoint(event)) > moveTolerance) cancelPending();
     };
 
