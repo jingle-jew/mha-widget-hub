@@ -10,6 +10,14 @@
   overscroll-behavior: contain;
 }
 
+:host(.is-editing) .mha-weather-widget-temp,
+:host(.is-editing) .mha-weather-widget-summary,
+:host(.is-editing) .mha-weather-widget-forecast-temp {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
 :host(.is-editing) .mha-widget-drop-slot.is-drag-hover {
   z-index: 4;
   border-color: var(--mha-accent);
