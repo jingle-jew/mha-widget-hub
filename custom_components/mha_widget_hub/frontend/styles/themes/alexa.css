@@ -69,3 +69,22 @@
   --mha-bg-blob-4: #7df3ff;
   --mha-bg-blob-opacity: .36;
 }
+
+/* Safari beta mitigation: reduce Alexa background gradient intensity. */
+:host([data-theme-style="alexa"][data-theme="dark"]) {
+  --mha-bg-radial-1: rgba(0,168,225,.24);
+  --mha-bg-radial-2: rgba(83,216,255,.16);
+  --mha-bg-radial-3: rgba(61,126,255,.12);
+  --mha-bg-blob-opacity: .22;
+}\n
+/* Safari compositing mitigation for Alexa background. */
+:host([data-theme-style="alexa"]) .mha-background {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  isolation: isolate;
+}
+
+:host([data-theme-style="alexa"]) .mha-background span {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
