@@ -1,5 +1,8 @@
 const DEFAULT_LONG_PRESS_DELAY = 350;
 const DEFAULT_MOVE_TOLERANCE = 8;
+const DEFAULT_EDGE_SNAP_COOLDOWN_MS = 650;
+const DEFAULT_EDGE_SNAP_ZONE_RATIO = 0.12;
+const DEFAULT_EDGE_SNAP_MIN_ZONE = 48;
 const BLOCKED_DRAG_START_SELECTOR = [
   "button",
   "a",
@@ -36,6 +39,44 @@ function getElementFromPoint(host, point) {
   return host?.shadowRoot?.elementFromPoint?.(point.x, point.y)
     || document.elementFromPoint?.(point.x, point.y)
     || null;
+}
+
+function getWidgetScrollArea(host) {
+  return host?.shadowRoot?.querySelector?.(".mha-widget-area") || null;
+}
+
+function getEdgeSnapDirection(scrollArea, point) {
+  if (!scrollArea) return 0;
+  const rect = scrollArea.getBoundingClientRect?.();
+  if (!rect) return 0;
+  const edgeSize = Math.max(DEFAULT_EDGE_SNAP_MIN_ZONE, rect.height * DEFAULT_EDGE_SNAP_ZONE_RATIO);
+  if (point.y <= rect.top + edgeSize) return -1;
+  if (point.y >= rect.bottom - edgeSize) return 1;
+  return 0;
+}
+
+function maybeSnapScroll(host, session, event) {
+  if (!session?.armed) return;
+  const now = Date.now();
+  if (now - (session.lastEdgeSnapAt || 0) < DEFAULT_EDGE_SNAP_COOLDOWN_MS) return;
+
+  const scrollArea = getWidgetScrollArea(host);
+  if (!scrollArea) return;
+
+  const direction = getEdgeSnapDirection(scrollArea, getPoint(event));
+  if (!direction) return;
+
+  const maxScrollTop = Math.max(0, scrollArea.scrollHeight - scrollArea.clientHeight);
+  if (maxScrollTop <= 0) return;
+  if (direction < 0 && scrollArea.scrollTop <= 0) return;
+  if (direction > 0 && scrollArea.scrollTop >= maxScrollTop) return;
+
+  const distance = Math.max(scrollArea.clientHeight, window.innerHeight || 0);
+  scrollArea.scrollBy?.({
+    top: direction * distance,
+    behavior: "smooth",
+  });
+  session.lastEdgeSnapAt = now;
 }
 
 function getSlotPosition(slot) {
@@ -136,6 +177,7 @@ export function createWidgetDragCoordinator(host, {
         pointerId: event.pointerId,
         start,
         hoveredDropSlot: null,
+        lastEdgeSnapAt: 0,
         armed: false,
         cancelled: false,
         timer: null,
@@ -151,6 +193,7 @@ export function createWidgetDragCoordinator(host, {
         event.preventDefault?.();
         event.stopPropagation?.();
         syncHoveredDropSlot(host, session, event);
+        maybeSnapScroll(host, session, event);
         return;
       }
       if (getDistance(session.start, getPoint(event)) > moveTolerance) cancelPending();
