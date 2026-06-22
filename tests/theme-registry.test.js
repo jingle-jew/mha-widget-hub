@@ -54,11 +54,21 @@ describe("theme registry", () => {
     assert.equal(getDefaultThemeVariant("oneui"), "");
   });
 
-  it("exposes a stable future accent contract", () => {
+  it("exposes the accent defaults owned by the theme registry", () => {
     assert.deepEqual(getThemeAccentContract("ios"), {
       accents: [],
-      defaultAccent: "",
-      supportsAutoAccent: false,
+      defaultAccent: "blue",
+      supportsAutoAccent: true,
+    });
+    assert.deepEqual(getThemeAccentContract("oneui"), {
+      accents: [],
+      defaultAccent: "sky",
+      supportsAutoAccent: true,
+    });
+    assert.deepEqual(getThemeAccentContract("material"), {
+      accents: [],
+      defaultAccent: "purple",
+      supportsAutoAccent: true,
     });
     assert.deepEqual(getThemeAccentContract("unknown"), getThemeAccentContract("oneui"));
   });
