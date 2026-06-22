@@ -38,6 +38,13 @@ function getElementFromPoint(host, point) {
     || null;
 }
 
+function getSlotPosition(slot) {
+  const x = Number.parseInt(slot?.dataset?.x || "", 10);
+  const y = Number.parseInt(slot?.dataset?.y || "", 10);
+  if (!Number.isInteger(x) || !Number.isInteger(y)) return null;
+  return { x, y };
+}
+
 function clearHoveredDropSlot(session) {
   session?.hoveredDropSlot?.classList?.remove?.("is-drag-hover");
   if (session) session.hoveredDropSlot = null;
@@ -51,6 +58,14 @@ function syncHoveredDropSlot(host, session, event) {
   clearHoveredDropSlot(session);
   session.hoveredDropSlot = hovered;
   hovered?.classList?.add?.("is-drag-hover");
+}
+
+function commitHoveredDropSlot(host, session) {
+  if (!session?.armed || !session.hoveredDropSlot) return false;
+  const position = getSlotPosition(session.hoveredDropSlot);
+  if (!position) return false;
+  host._moveWidgetToDropSlot?.(session.widgetId, position.x, position.y);
+  return true;
 }
 
 export function canStartWidgetDrag({ host, element, event, widgetId = "" } = {}) {
@@ -134,9 +149,10 @@ export function createWidgetDragCoordinator(host, {
     const onPointerUp = () => {
       if (!session) return;
       const wasArmed = session.armed;
+      const moved = commitHoveredDropSlot(host, session);
       cancelSession(session, { clearSourceState: true });
       session = null;
-      if (wasArmed) host._syncEditModeDom?.();
+      if (wasArmed && !moved) host._syncEditModeDom?.();
     };
 
     const onPointerCancel = () => cancelPending();
