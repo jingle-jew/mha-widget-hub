@@ -54,7 +54,7 @@ describe("theme registry", () => {
     assert.equal(getDefaultThemeVariant("oneui"), "");
   });
 
-  it("exposes the accent defaults owned by the theme registry", () => {
+  it("exposes a stable accent contract from the theme registry", () => {
     assert.deepEqual(getThemeAccentContract("ios"), {
       accents: [],
       defaultAccent: "blue",

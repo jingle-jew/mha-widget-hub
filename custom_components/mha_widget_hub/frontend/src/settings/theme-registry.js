@@ -1,6 +1,46 @@
 const css = (...paths) => Object.freeze(paths);
 const WALLPAPER_TYPES = new Set(["image", "css", "token", "advanced"]);
 const ACCENT_SOURCE_TYPES = new Set(["image", "color", "token", "none"]);
+const ICON_SHAPES = new Set(["rounded-square", "squircle", "circle"]);
+
+function freezeArray(items = []) {
+  return Object.freeze([...items]);
+}
+
+function normalizeThemeAliases(aliases = []) {
+  if (!Array.isArray(aliases)) return Object.freeze([]);
+  return freezeArray(aliases.map(alias => String(alias || "").trim()).filter(Boolean));
+}
+
+function normalizeThemeCss(cssPaths = []) {
+  if (!Array.isArray(cssPaths)) return Object.freeze([]);
+  return freezeArray(cssPaths.map(path => String(path || "").trim()).filter(Boolean));
+}
+
+function normalizeThemeVariant(definition = {}, index = 0) {
+  const id = String(definition?.id || "").trim();
+  if (!id) return null;
+
+  return Object.freeze({
+    id,
+    label: String(definition.label || id),
+    order: Number.isFinite(definition.order) ? definition.order : index,
+    default: Boolean(definition.default),
+  });
+}
+
+function normalizeThemeVariants(variants = []) {
+  if (!Array.isArray(variants)) return Object.freeze([]);
+  return freezeArray(variants.map(normalizeThemeVariant).filter(Boolean));
+}
+
+function normalizeThemeAccents(accents = []) {
+  if (!Array.isArray(accents)) return Object.freeze([]);
+  return freezeArray(accents.map(accent => Object.freeze({
+    value: String(accent?.value || "").trim(),
+    label: String(accent?.label || accent?.value || ""),
+  })).filter(accent => accent.value));
+}
 
 function normalizeThemeWallpaper(definition = null) {
   if (typeof definition === "string") {
@@ -8,6 +48,7 @@ function normalizeThemeWallpaper(definition = null) {
       type: "image",
       light: definition,
       dark: definition,
+      accentSource: normalizeThemeAccentSource(),
     });
   }
 
@@ -16,6 +57,7 @@ function normalizeThemeWallpaper(definition = null) {
       type: "advanced",
       light: "",
       dark: "",
+      accentSource: normalizeThemeAccentSource(),
     });
   }
 
@@ -53,15 +95,35 @@ function normalizeThemeAccentSource(definition = null) {
   });
 }
 
-const freezeTheme = (definition) => Object.freeze({
-  ...definition,
-  aliases: Object.freeze([...(definition.aliases || [])]),
-  css: Object.freeze([...(definition.css || [])]),
-  wallpaper: normalizeThemeWallpaper(definition.wallpaper),
-});
+function normalizeDefaultIconShape(defaultIconShape = "rounded-square") {
+  return ICON_SHAPES.has(defaultIconShape) ? defaultIconShape : "rounded-square";
+}
+
+function normalizeThemeDefinition(definition = {}) {
+  const id = String(definition.id || "").trim();
+  const variants = normalizeThemeVariants(definition.variants);
+  const defaultVariant = variants.find(variant => variant.default)?.id || variants[0]?.id || "";
+  const accents = normalizeThemeAccents(definition.accents);
+
+  return Object.freeze({
+    ...definition,
+    id,
+    label: String(definition.label || id),
+    order: Number.isFinite(definition.order) ? definition.order : 0,
+    defaultIconShape: normalizeDefaultIconShape(definition.defaultIconShape),
+    aliases: normalizeThemeAliases(definition.aliases),
+    css: normalizeThemeCss(definition.css),
+    wallpaper: normalizeThemeWallpaper(definition.wallpaper),
+    variants,
+    defaultVariant: String(definition.defaultVariant || defaultVariant),
+    accents,
+    defaultAccent: String(definition.defaultAccent || accents[0]?.value || ""),
+    supportsAutoAccent: Boolean(definition.supportsAutoAccent),
+  });
+}
 
 const THEMES = {
-  ios: freezeTheme({
+  ios: normalizeThemeDefinition({
     id: "ios",
     label: "iOS",
     order: 10,
@@ -75,9 +137,15 @@ const THEMES = {
         dark: "#5f7dff",
       },
     },
+    variants: [
+      { id: "liquid", label: "Liquid Glass", order: 10, default: true },
+      { id: "frosted", label: "Frosted Glass", order: 20 },
+    ],
+    defaultAccent: "blue",
+    supportsAutoAccent: true,
     aliases: ["apple", "liquid-glass", "frosted-glass"],
   }),
-  oneui: freezeTheme({
+  oneui: normalizeThemeDefinition({
     id: "oneui",
     label: "OneUI",
     order: 20,
@@ -91,9 +159,11 @@ const THEMES = {
         dark: "#65a8ff",
       },
     },
+    defaultAccent: "sky",
+    supportsAutoAccent: true,
     aliases: ["samsung", "one-ui"],
   }),
-  material: freezeTheme({
+  material: normalizeThemeDefinition({
     id: "material",
     label: "Material You",
     order: 30,
@@ -107,6 +177,8 @@ const THEMES = {
         dark: "#d0bcff",
       },
     },
+    defaultAccent: "purple",
+    supportsAutoAccent: true,
     aliases: ["material-you", "material3", "material-3"],
   }),
 };
@@ -140,6 +212,23 @@ export function getThemeDefinition(themeStyle = getDefaultThemeStyle()) {
 
 export function getDefaultIconShape(themeStyle = getDefaultThemeStyle()) {
   return getThemeDefinition(themeStyle).defaultIconShape;
+}
+
+export function getThemeVariants(themeStyle = getDefaultThemeStyle()) {
+  return getThemeDefinition(themeStyle).variants;
+}
+
+export function getDefaultThemeVariant(themeStyle = getDefaultThemeStyle()) {
+  return getThemeDefinition(themeStyle).defaultVariant;
+}
+
+export function getThemeAccentContract(themeStyle = getDefaultThemeStyle()) {
+  const definition = getThemeDefinition(themeStyle);
+  return Object.freeze({
+    accents: definition.accents,
+    defaultAccent: definition.defaultAccent,
+    supportsAutoAccent: definition.supportsAutoAccent,
+  });
 }
 
 export function getThemeWallpaper(themeStyle = getDefaultThemeStyle(), theme = "dark") {
