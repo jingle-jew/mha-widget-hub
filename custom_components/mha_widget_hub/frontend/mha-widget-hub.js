@@ -66,6 +66,7 @@ import {
 import { applyHideHaSidebarSetting } from "./src/settings/ha-sidebar-setting.js";
 import { openDockPageSettingsForPage } from "./src/settings/dock-page-settings.js";
 import { getStyleManifest } from "./src/styles/style-manifest.js";
+import { createDefaultPageConfig, isMediaPlayersPage, normalizeMediaPageConfig, PAGE_TYPES } from "./src/pages/page-types.js";
 
 const MHA_FRONTEND_ROOT_URL = new URL(".", import.meta.url);
 const MHA_FRONTEND_VERSION = new URL(import.meta.url).searchParams.get("v");
@@ -234,6 +235,8 @@ constructor(){
     setWidgetPositions:(positions)=>{this._widgetPositions=positions;},
     getPageCreatorOpen:()=>this._pageCreatorOpen,
     setPageCreatorOpen:(open)=>{this._pageCreatorOpen=open;},
+    getNewPageType:()=>this._newPageType,
+    setNewPageType:(type)=>{this._newPageType=type;},
     getNewPageIcon:()=>this._newPageIcon,
     setNewPageIcon:(icon)=>{this._newPageIcon=icon;},
     getDockSettingsPageId:()=>this._dockSettingsPageId,
@@ -442,6 +445,63 @@ _syncSettingsDom(){
 }
 _getSettingsPanelsProps(){
   return getSettingsSurfaceCoordinatorForHost(this).getProps();
+}
+_buildMediaPageProps(){
+  return {
+    hass:this._hass,
+    visibilityConfig:this._entityVisibilityConfig,
+    onSelectPlayer:(playerId)=>this._selectMediaPagePlayer(playerId),
+    onOpenSettings:()=>this._openMediaPageSettings(),
+  };
+}
+_buildMediaPageSettingsProps(){
+  return {
+    open:this._mediaPageSettingsOpen,
+    page:this._getActivePage(),
+    hass:this._hass,
+    visibilityConfig:this._entityVisibilityConfig,
+    onClose:()=>this._closeMediaPageSettings(),
+    onConfigChange:(patch)=>this._updateActiveMediaPageConfig(patch),
+  };
+}
+_syncMediaPageSettingsDom(){
+  return this.render();
+}
+_canAddWidgetToActivePage(){
+  return !isMediaPlayersPage(this._getActivePage());
+}
+_openMediaPageSettings(){
+  if(!isMediaPlayersPage(this._getActivePage()))return false;
+  this._mediaPageSettingsOpen=true;
+  this.render();
+  return true;
+}
+_closeMediaPageSettings(){
+  if(!this._mediaPageSettingsOpen)return false;
+  this._mediaPageSettingsOpen=false;
+  this.render();
+  return true;
+}
+_updatePageConfig(pageId,updater){
+  const updated=this._pageUiCoordinator.updatePageConfig(pageId,updater);
+  if(updated)this._refreshActiveGridOnly();
+  return updated;
+}
+_updateActiveMediaPageConfig(patch={}){
+  const page=this._getActivePage();
+  if(!isMediaPlayersPage(page))return false;
+  const updated=this._updatePageConfig(page.id,(config={})=>{
+    const next=normalizeMediaPageConfig({...config,...patch});
+    const enabledIds=Array.isArray(next.enabledPlayerIds)?next.enabledPlayerIds.filter(Boolean):[];
+    if(next.defaultPlayerId&&!enabledIds.includes(next.defaultPlayerId))next.defaultPlayerId=enabledIds[0]||"";
+    if(next.selectedPlayerId&&!enabledIds.includes(next.selectedPlayerId))next.selectedPlayerId=next.defaultPlayerId||enabledIds[0]||"";
+    return next;
+  });
+  if(updated)this.render();
+  return updated;
+}
+_selectMediaPagePlayer(playerId=""){
+  return this._updateActiveMediaPageConfig({selectedPlayerId:String(playerId||"").trim()});
 }
 
 _migrateLegacyCustomWallpaper(){
@@ -732,11 +792,13 @@ _syncActivePageWidgets(){
   return getHubStateIngressCoordinatorForHost(this).syncActivePageWidgets();
 }
 _setActivePage(id){
-  return this._pageUiCoordinator.selectPage(id);
+  const changed=this._pageUiCoordinator.selectPage(id);
+  if(changed&&!isMediaPlayersPage(this._getActivePage()))this._mediaPageSettingsOpen=false;
+  return changed;
 }
 
 _addGridPage({icon="grid"}={}){
-  return this._pageUiCoordinator.addGridPage({icon});
+  return this._pageUiCoordinator.addPage({icon,pageType:PAGE_TYPES.GRID,pageConfig:createDefaultPageConfig(PAGE_TYPES.GRID)});
 }
 _openPageCreator(){
   return this._pageUiCoordinator.openPageCreator();

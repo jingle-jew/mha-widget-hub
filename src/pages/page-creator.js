@@ -12,8 +12,11 @@ import { t } from "../i18n/index.js";
 
 export function createPageCreatorPanel({
   open = false,
+  selectedPageType = "grid",
+  pageTypeOptions = [],
   selectedIcon = "grid",
   onClose = () => {},
+  onSelectPageType = () => {},
   onSelectIcon = () => {},
   onCreate = () => {},
 } = {}) {
@@ -24,7 +27,44 @@ export function createPageCreatorPanel({
 
   const hint = document.createElement("p");
   hint.className = "mha-page-creator-hint";
-  hint.textContent = t("settings.pageCreatorHint", "Choose the icon that will appear in the dock.");
+  hint.textContent = t("settings.pageCreatorHint", "Choose the page type and dock icon.");
+
+  const typeLabel = document.createElement("p");
+  typeLabel.className = "mha-page-creator-hint";
+  typeLabel.textContent = t("settings.pageCreatorTypeLabel", "Page type");
+
+  const typeGrid = document.createElement("div");
+  typeGrid.className = "mha-page-creator-types";
+  pageTypeOptions.forEach((option) => {
+    const button = document.createElement("button");
+    button.className = "mha-page-creator-type";
+    button.type = "button";
+    button.dataset.pageType = option.value;
+    button.dataset.selected = String(option.selected);
+    button.setAttribute("aria-pressed", String(option.selected));
+    button.onclick = () => onSelectPageType(option.value);
+    button.append(
+      createIcon({
+        name: option.icon,
+        category: "navigation",
+        label: option.label,
+        children: createIconSymbol({ name: option.icon, label: option.label }),
+      }),
+    );
+    const text = document.createElement("div");
+    text.className = "mha-page-creator-type-copy";
+    const title = document.createElement("strong");
+    title.textContent = option.label;
+    const description = document.createElement("span");
+    description.textContent = option.description;
+    text.append(title, description);
+    button.append(text);
+    typeGrid.append(button);
+  });
+
+  const iconHint = document.createElement("p");
+  iconHint.className = "mha-page-creator-hint";
+  iconHint.textContent = t("settings.pageCreatorIconLabel", "Dock icon");
 
   const grid = document.createElement("div");
   grid.className = "mha-page-creator-icons";
@@ -77,7 +117,7 @@ export function createPageCreatorPanel({
     closeLabel: t("common.close", "Close"),
     scrimLabel: t("settings.pageCreatorClose", "Close icon picker"),
     onClose,
-    children: [hint, grid, actions],
+    children: [hint, typeLabel, typeGrid, iconHint, grid, actions],
   }), {
     surfaceRole: PANEL_SURFACE_ROLES.POPUP,
     mobilePresentation: PANEL_MOBILE_PRESENTATIONS.SHEET,
@@ -94,6 +134,15 @@ export function updatePageCreatorIconSelection(root, selectedIcon) {
   root?.querySelectorAll?.("section.mha-page-creator:not(.mha-widget-config-popup) .mha-page-creator-icon")
     ?.forEach((button) => {
       const selected = button.dataset?.icon === selectedIcon;
+      button.dataset.selected = String(selected);
+      button.setAttribute("aria-pressed", String(selected));
+    });
+}
+
+export function updatePageCreatorTypeSelection(root, selectedPageType) {
+  root?.querySelectorAll?.("section.mha-page-creator:not(.mha-widget-config-popup) .mha-page-creator-type")
+    ?.forEach((button) => {
+      const selected = button.dataset?.pageType === selectedPageType;
       button.dataset.selected = String(selected);
       button.setAttribute("aria-pressed", String(selected));
     });

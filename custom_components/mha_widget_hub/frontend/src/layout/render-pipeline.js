@@ -16,6 +16,9 @@ import {
   sizeToString,
 } from "./layout-engine.js";
 import { createSettingsPanel } from "../settings/settings-panel.js";
+import { createMediaPage } from "../pages/media-page.js";
+import { syncMediaPageSettingsPanel } from "../pages/media-page-settings.js";
+import { isMediaPlayersPage } from "../pages/page-types.js";
 import {
   buildWidgetConfigPanelProps,
   buildWidgetManagerPanelProps,
@@ -24,6 +27,10 @@ import {
   createWidgetManagerPanel,
   syncWidgetSurfaceOpenState,
 } from "../widgets/widget-placement-orchestrator.js";
+
+function getActivePage(host) {
+  return host._getActivePage?.() || null;
+}
 
 export function createRenderPipeline(host, options = {}) {
   const {
@@ -124,7 +131,7 @@ export function createRenderPipeline(host, options = {}) {
     addWidget.type = "button";
     addWidget.innerHTML = `<svg viewBox="0 0 24 24"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5Z"/></svg>`;
     addWidget.setAttribute("aria-label", t("settings.addWidget", "Add widget"));
-    addWidget.hidden = !host._isEditing;
+    addWidget.hidden = !host._isEditing || host._canAddWidgetToActivePage?.() === false;
     addWidget.onclick = (event) => {
       event.preventDefault();
       event.stopPropagation();
@@ -158,6 +165,7 @@ export function createRenderPipeline(host, options = {}) {
         onSelectWidget: (item) => host._beginWidgetPlacement(item),
       })));
       host.shadowRoot.append(createPageCreatorPanel(host._pageUiCoordinator.buildPageCreatorProps()));
+      syncMediaPageSettingsPanel(host.shadowRoot, host._buildMediaPageSettingsProps?.() || {});
       host.shadowRoot.append(createWidgetConfigPanel(buildWidgetConfigPanelProps({
         session: host._widgetConfigSession,
         hass: host._hass,
@@ -274,8 +282,18 @@ export function createRenderPipeline(host, options = {}) {
   }
 
   function mountImmediateUi({ layout, grid, units }) {
-    const positions = host._getActiveWidgetPositions({ create: true });
-    appendWidgetPlaceholders(grid, { units, positions });
+    const activePage = getActivePage(host);
+    const isMediaPage = isMediaPlayersPage(activePage);
+    const positions = isMediaPage ? {} : host._getActiveWidgetPositions({ create: true });
+    if (!grid) return { positions };
+    if (grid.dataset) grid.dataset.pageType = activePage?.type || "grid";
+    grid.classList?.toggle?.("mha-grid--media-page", isMediaPage);
+    if (isMediaPage) {
+      grid.append(createMediaPage(activePage, host._buildMediaPageProps?.() || {}));
+      host.dataset.widgetsState = "ready";
+    } else {
+      appendWidgetPlaceholders(grid, { units, positions });
+    }
     if (layout === "mobile") {
       host.shadowRoot.append(createMobileDock(host._getDockProps()));
     }
@@ -286,6 +304,12 @@ export function createRenderPipeline(host, options = {}) {
   }
 
   function schedulePrimaryWidgetRender({ grid, units, positions, renderId }) {
+    if (isMediaPlayersPage(getActivePage(host))) {
+      host._scheduleHassUpdate();
+      host._syncEditModeDom?.();
+      host._scheduleIconSymbolRefresh();
+      return;
+    }
     host._widgetRenderFrame = requestAnimationFrame(() => {
       host._widgetRenderFrame = 0;
       if (host._renderId !== renderId) return;

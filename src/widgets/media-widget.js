@@ -223,6 +223,13 @@ function createTitleStack(data) {
   return stack;
 }
 
+function createMetaDetails(data) {
+  const details = document.createElement("div");
+  details.className = "mha-media-widget-meta-details";
+  details.append(createText("mha-media-widget-source", data.app));
+  return details;
+}
+
 function createControlButton(label, symbol, {
   primary = false,
   action = "",
@@ -289,6 +296,7 @@ function createVolumeButtons(data, { interactive = true, onAction } = {}) {
     createControlButton(data.muted ? t("widgets.mediaControls.unmute", "Unmute") : t("widgets.mediaControls.mute", "Mute"), data.muted ? t("widgets.mediaControls.mute", "Mute") : "Vol", {
       primary: true,
       action: "mute",
+      className: "mha-media-widget-play-toggle",
       disabled: !data.canMute,
       interactive,
       onAction,
@@ -425,6 +433,8 @@ export function createMediaWidgetContent(widget = {}, {
     root.dataset.hasArtwork = String(Boolean(nextData.artworkUrl));
     root.querySelector(".mha-media-widget-title").textContent = nextData.title;
     root.querySelector(".mha-media-widget-artist").textContent = nextData.subtitle;
+    const sourceNode = root.querySelector(".mha-media-widget-source");
+    if (sourceNode) sourceNode.textContent = nextData.app;
     const artworkNode = root.querySelector(".mha-media-widget-artwork");
     artworkNode?.setAttribute("data-playing", String(nextData.playing));
     if (artworkNode) setArtworkImage(artworkNode, nextData.artworkUrl);
@@ -452,6 +462,7 @@ export function createMediaWidgetContent(widget = {}, {
   const background = createArtworkBackground(data);
   const artwork = createArtwork(data);
   const text = createTitleStack(data);
+  const metaDetails = createMetaDetails(data);
   const controls = createControls(data, {
     mode: context.controlsMode,
     interactive,
@@ -469,10 +480,10 @@ export function createMediaWidgetContent(widget = {}, {
     info.append(text, progress, controls);
     root.append(artwork, info);
   } else {
-    const header = document.createElement("div");
-    header.className = "mha-media-widget-header";
-    header.append(artwork, text);
-    root.append(header, createMetaRows(data), progress, controls);
+    const info = document.createElement("div");
+    info.className = "mha-media-widget-info";
+    info.append(text, metaDetails);
+    root.append(artwork, info, progress, controls);
   }
 
   if (!interactive) {
