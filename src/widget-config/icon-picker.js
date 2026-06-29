@@ -238,7 +238,7 @@ function clampNumber(value, min, max) {
 export function createIconPickerControl({
   value = "auto",
   suggestedIcon = "",
-  searchPlaceholder = "Search icons",
+  searchPlaceholder = "Recherche",
   emptyLabel = "No icons found",
   onChange,
   t = (key, fallback) => fallback,
