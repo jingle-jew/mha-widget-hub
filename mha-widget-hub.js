@@ -255,6 +255,9 @@ constructor(){
     syncSettingsDom:()=>this._syncSettingsDom(),
     openDockSettings:()=>this._openDockSettings(),
     openSettings:()=>this._openSettings(),
+    exitEditMode:()=>this._disableEditMode(),
+    transitionPageRender:(previousPage,nextPage)=>this._renderPageTransition(previousPage,nextPage),
+    renderRoot:()=>this.render(),
     clearPlacementState:()=>{
       this._activeMoveWidgetId="";
       this._pendingWidgetPlacement=null;
@@ -483,22 +486,18 @@ _closeMediaPageSettings(){
   return true;
 }
 _updatePageConfig(pageId,updater){
-  const updated=this._pageUiCoordinator.updatePageConfig(pageId,updater);
-  if(updated)this._refreshActiveGridOnly();
-  return updated;
+  return this._pageUiCoordinator.updatePageConfig(pageId,updater);
 }
 _updateActiveMediaPageConfig(patch={}){
   const page=this._getActivePage();
   if(!isMediaPlayersPage(page))return false;
-  const updated=this._updatePageConfig(page.id,(config={})=>{
+  return this._updatePageConfig(page.id,(config={})=>{
     const next=normalizeMediaPageConfig({...config,...patch});
     const enabledIds=Array.isArray(next.enabledPlayerIds)?next.enabledPlayerIds.filter(Boolean):[];
     if(next.defaultPlayerId&&!enabledIds.includes(next.defaultPlayerId))next.defaultPlayerId=enabledIds[0]||"";
     if(next.selectedPlayerId&&!enabledIds.includes(next.selectedPlayerId))next.selectedPlayerId=next.defaultPlayerId||enabledIds[0]||"";
     return next;
   });
-  if(updated)this.render();
-  return updated;
 }
 _selectMediaPagePlayer(playerId=""){
   return this._updateActiveMediaPageConfig({selectedPlayerId:String(playerId||"").trim()});
@@ -763,6 +762,65 @@ toggleEditMode(){
   this._syncWidgetDropSlots();
 
   if(wasEditing!==this._isEditing)this._scheduleSquareUnitSync();
+}
+_disableEditMode(){
+  if(!this._isEditing)return false;
+  this._isEditing=false;
+  clearWidgetPlacementState(this);
+  const grid=this.shadowRoot?.querySelector?.(".mha-grid");
+  if(grid)this._renderWidgetDropSlots(grid);
+  this._syncEditModeDom();
+  this._syncDocksDom();
+  this._syncWidgetDropSlots();
+  this._scheduleSquareUnitSync();
+  return true;
+}
+_getPageTransitionDirection(){
+  if(this._isMobileDefaultLayout())return"bottom";
+  if(this._dockPosition==="right")return"left";
+  return"right";
+}
+_renderPageTransition(previousPage=null,nextPage=null){
+  const prefersReducedMotion=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+  const currentPanel=this.shadowRoot?.querySelector?.(".mha-page-panel");
+  const currentRect=currentPanel?.getBoundingClientRect?.();
+  const snapshot=currentPanel&&currentRect?.width&&currentRect?.height
+    ? currentPanel.cloneNode(true)
+    : null;
+  const direction=this._getPageTransitionDirection();
+
+  this.shadowRoot?.querySelectorAll?.(".mha-page-panel-snapshot")?.forEach?.(node=>node.remove());
+
+  if(snapshot){
+    snapshot.classList.add("mha-page-panel-snapshot","mha-page-panel-snapshot--leaving");
+    snapshot.dataset.transitionDirection=direction;
+    snapshot.style.top=`${currentRect.top}px`;
+    snapshot.style.left=`${currentRect.left}px`;
+    snapshot.style.width=`${currentRect.width}px`;
+    snapshot.style.height=`${currentRect.height}px`;
+  }
+
+  this.render();
+
+  if(prefersReducedMotion)return;
+
+  const nextPanel=this.shadowRoot?.querySelector?.(".mha-page-panel");
+  if(nextPanel){
+    nextPanel.dataset.transitionDirection=direction;
+    nextPanel.classList.remove("mha-page-panel--entering");
+    void nextPanel.offsetWidth;
+    nextPanel.classList.add("mha-page-panel--entering");
+    nextPanel.addEventListener("animationend",()=>{
+      nextPanel.classList.remove("mha-page-panel--entering");
+      delete nextPanel.dataset.transitionDirection;
+    },{once:true});
+  }
+
+  if(snapshot){
+    this.shadowRoot.append(snapshot);
+    requestAnimationFrame(()=>snapshot.classList.add("is-animating"));
+    snapshot.addEventListener("animationend",()=>snapshot.remove(),{once:true});
+  }
 }toggleScreensaverPreview(){toggleScreensaverPreviewState(this)}toggleNowBarPreview(){toggleNowBarPreviewState(this)}setScreensaverClockVariant(v="digital"){setScreensaverClockVariantState(this,v)}resetGrid(){return resetWidgetGridState(this,{clearGridStorageRef:clearGridStorage})}
 _migrateStorageSchema(){
   return getHubStateIngressCoordinatorForHost(this).migrateStorageSchema();
@@ -792,7 +850,14 @@ _syncActivePageWidgets(){
   return getHubStateIngressCoordinatorForHost(this).syncActivePageWidgets();
 }
 _setActivePage(id){
+  const previousPage=this._getActivePage();
+  const shouldCloseMediaPageSettings=this._mediaPageSettingsOpen
+    && isMediaPlayersPage(previousPage)
+    && previousPage?.id!==id;
+  if(shouldCloseMediaPageSettings)this._mediaPageSettingsOpen=false;
   const changed=this._pageUiCoordinator.selectPage(id);
+  if(!changed&&shouldCloseMediaPageSettings)this._mediaPageSettingsOpen=true;
+  if(changed&&isMediaPlayersPage(this._getActivePage()))this._disableEditMode();
   if(changed&&!isMediaPlayersPage(this._getActivePage()))this._mediaPageSettingsOpen=false;
   return changed;
 }

@@ -6,16 +6,16 @@ import {
   getScenesDefaultButtonIndex,
 } from "../src/widget-config/widget-config-props.js";
 
-test("page creator state exposes labeled icon options with one selected entry", () => {
+test("page creator state exposes typed page options with one selected entry", () => {
   const state = buildPageCreatorState({
     open: true,
-    selectedIcon: "gear",
+    selectedPageType: "media-players",
   });
 
   assert.equal(state.open, true);
-  assert.equal(state.selectedIcon, "gear");
-  assert.equal(state.iconOptions.some((option) => option.name === "gear" && option.selected), true);
-  assert.equal(state.iconOptions.some((option) => option.label), true);
+  assert.equal(state.selectedPageType, "media-players");
+  assert.equal(state.pageTypeOptions.some((option) => option.value === "media-players" && option.selected), true);
+  assert.equal(state.pageTypeOptions.some((option) => option.label && option.description), true);
 });
 
 test("widget config popup state preserves the current session payload", () => {

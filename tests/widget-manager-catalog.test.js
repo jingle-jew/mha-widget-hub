@@ -24,3 +24,15 @@ test("placeholder-only categories are absent from the widget manager", () => {
   assert.ok(!categoryIds.includes("security"));
   assert.ok(!categoryIds.includes("system"));
 });
+
+test("widget manager categories expose icon names instead of legacy glyph text", () => {
+  const iconsByCategory = Object.fromEntries(
+    WIDGET_MANAGER_CATEGORIES.map(category => [category.id, category.icon]),
+  );
+
+  assert.equal(iconsByCategory.utilities, "clock");
+  assert.equal(iconsByCategory.actions, "plus");
+  assert.equal(iconsByCategory.lights, "light");
+  assert.equal(iconsByCategory.climate, "temperature");
+  assert.equal(iconsByCategory.media, "media-player");
+});

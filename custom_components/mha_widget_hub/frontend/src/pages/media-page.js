@@ -159,6 +159,7 @@ export function createMediaPage(page = {}, {
   visibilityConfig = null,
   onSelectPlayer = () => {},
   onOpenSettings = () => {},
+  onBackgroundArtworkChange = () => {},
 } = {}) {
   const root = document.createElement("section");
   root.className = "mha-media-page";
@@ -179,6 +180,9 @@ export function createMediaPage(page = {}, {
     root.dataset.hasArtwork = String(Boolean(view.artworkUrl));
     root.dataset.backgroundBlur = String(view.blurBackground);
     root.style.setProperty("--mha-media-page-background-image", view.artworkUrl ? `url("${view.artworkUrl}")` : "none");
+    onBackgroundArtworkChange(view.artworkUrl || "", {
+      blurBackground: view.blurBackground,
+    });
 
     const background = document.createElement("div");
     background.className = "mha-media-page-background";
@@ -273,7 +277,7 @@ export function createMediaPage(page = {}, {
     controls.className = "mha-media-page-controls";
 
     const playback = document.createElement("div");
-    playback.className = "mha-media-page-control-group";
+    playback.className = "mha-media-page-control-group mha-media-page-control-group--playback";
     playback.append(
       createActionButton({
         label: t("widgets.mediaControls.previous", "Previous"),
@@ -302,7 +306,7 @@ export function createMediaPage(page = {}, {
     );
 
     const volume = document.createElement("div");
-    volume.className = "mha-media-page-control-group";
+    volume.className = "mha-media-page-control-group mha-media-page-control-group--volume";
     volume.append(
       createActionButton({
         label: t("widgets.mediaControls.volumeDown", "Volume down"),
@@ -365,6 +369,9 @@ export function createMediaPage(page = {}, {
   root.__mhaDestroy = () => {
     if (progressTimer) clearInterval(progressTimer);
     progressTimer = 0;
+    onBackgroundArtworkChange("", {
+      blurBackground: false,
+    });
   };
 
   refresh();

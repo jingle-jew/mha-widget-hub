@@ -8,12 +8,13 @@ function createHarness(overrides = {}) {
     syncDocks: 0,
     syncPageCreator: 0,
     refreshActiveGridOnly: 0,
+    transitionPageRender: [],
     syncWidgetDropSlots: 0,
     syncSettingsDom: 0,
+    renderRoot: 0,
     recordPersistenceResult: [],
     writeActivePage: [],
     writeWidgetPositions: [],
-    updatePageCreatorIconSelection: [],
   };
 
   const state = {
@@ -28,6 +29,7 @@ function createHarness(overrides = {}) {
       "lights:desktop:8x6": { lamp: { x: 2, y: 1 } },
     },
     pageCreatorOpen: false,
+    newPageType: "grid",
     newPageIcon: "grid",
     dockSettingsPageId: "lights",
     settingsPage: "dock-detail",
@@ -52,6 +54,8 @@ function createHarness(overrides = {}) {
     setWidgetPositions: (positions) => { state.widgetPositions = positions; },
     getPageCreatorOpen: () => state.pageCreatorOpen,
     setPageCreatorOpen: (open) => { state.pageCreatorOpen = open; },
+    getNewPageType: () => state.newPageType,
+    setNewPageType: (type) => { state.newPageType = type; },
     getNewPageIcon: () => state.newPageIcon,
     setNewPageIcon: (icon) => { state.newPageIcon = icon; },
     getDockSettingsPageId: () => state.dockSettingsPageId,
@@ -75,8 +79,17 @@ function createHarness(overrides = {}) {
       return success;
     },
     refreshActiveGridOnly: () => { calls.refreshActiveGridOnly += 1; },
+    transitionPageRender: (previousPage, nextPage) => {
+      calls.transitionPageRender.push({
+        previousPageId: previousPage?.id || "",
+        nextPageId: nextPage?.id || "",
+        previousPageType: previousPage?.type || "grid",
+        nextPageType: nextPage?.type || "grid",
+      });
+    },
     syncWidgetDropSlots: () => { calls.syncWidgetDropSlots += 1; },
     syncSettingsDom: () => { calls.syncSettingsDom += 1; },
+    renderRoot: () => { calls.renderRoot += 1; },
     openDockSettings: () => {},
     openSettings: () => {},
     clearPlacementState: () => {
@@ -87,9 +100,6 @@ function createHarness(overrides = {}) {
     },
     syncDocksFn: () => { calls.syncDocks += 1; },
     syncPageCreatorPanelFn: () => { calls.syncPageCreator += 1; },
-    updatePageCreatorIconSelectionFn: (_root, icon) => {
-      calls.updatePageCreatorIconSelection.push(icon);
-    },
     ...overrides.options,
   });
 
@@ -107,7 +117,13 @@ test("selecting a page closes placement state and reloads widgets", () => {
   assert.equal(state.widgetManagerOpen, false);
   assert.equal(state.widgetManagerCategory, "");
   assert.deepEqual(calls.writeActivePage, ["lights"]);
-  assert.equal(calls.refreshActiveGridOnly, 1);
+  assert.deepEqual(calls.transitionPageRender, [{
+    previousPageId: "home",
+    nextPageId: "lights",
+    previousPageType: "grid",
+    nextPageType: "grid",
+  }]);
+  assert.equal(calls.refreshActiveGridOnly, 0);
   assert.equal(calls.syncDocks, 1);
 });
 
@@ -140,25 +156,41 @@ test("deleting a page cleans positions and reloads widgets when the active page 
   assert.deepEqual(calls.writeWidgetPositions, [{
     "home:desktop:8x6": { clock: { x: 1, y: 1 } },
   }]);
-  assert.equal(calls.refreshActiveGridOnly, 1);
-  assert.equal(calls.syncWidgetDropSlots, 1);
+  assert.deepEqual(calls.transitionPageRender, [{
+    previousPageId: "lights",
+    nextPageId: "home",
+    previousPageType: "grid",
+    nextPageType: "grid",
+  }]);
+  assert.equal(calls.refreshActiveGridOnly, 0);
+  assert.equal(calls.syncWidgetDropSlots, 0);
 });
 
-test("creating a page resets the page creator state and refreshes dock and grid", () => {
+test("creating a media page resets the page creator state and triggers a full render", () => {
   const { coordinator, state, calls } = createHarness({
     state: {
       pageCreatorOpen: true,
+      newPageType: "media-players",
       newPageIcon: "star",
     },
   });
 
   assert.equal(coordinator.createPageFromCreator(), true);
   assert.equal(state.pageCreatorOpen, false);
-  assert.equal(state.newPageIcon, "grid");
+  assert.equal(state.newPageType, "grid");
   assert.equal(state.activePageId.startsWith("page-"), true);
   assert.deepEqual(state.widgets, []);
+  assert.equal(state.pages.at(-1)?.type, "media-players");
+  assert.equal(state.pages.at(-1)?.icon, "media-player");
   assert.equal(calls.syncDocks, 1);
   assert.equal(calls.syncPageCreator, 1);
-  assert.equal(calls.refreshActiveGridOnly, 1);
-  assert.equal(calls.syncWidgetDropSlots, 1);
+  assert.deepEqual(calls.transitionPageRender, [{
+    previousPageId: "home",
+    nextPageId: state.activePageId,
+    previousPageType: "grid",
+    nextPageType: "media-players",
+  }]);
+  assert.equal(calls.refreshActiveGridOnly, 0);
+  assert.equal(calls.syncWidgetDropSlots, 0);
+  assert.equal(calls.renderRoot, 0);
 });

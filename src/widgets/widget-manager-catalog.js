@@ -1,12 +1,12 @@
 export const WIDGET_MANAGER_METADATA = Object.freeze({
   categories: Object.freeze({
-    utilities: Object.freeze({ label: "Utilities", description: "Clocks and quick info.", icon: "◷", order: 10 }),
-    actions: Object.freeze({ label: "Actions", description: "Buttons and shortcuts.", icon: "●", order: 20 }),
-    lights: Object.freeze({ label: "Lights", description: "Quick controls and brightness.", icon: "💡", order: 30 }),
-    climate: Object.freeze({ label: "Climate", description: "Temperature and comfort.", icon: "🌡", order: 40 }),
-    media: Object.freeze({ label: "Media", description: "Playback and volume.", icon: "♪", order: 50 }),
-    security: Object.freeze({ label: "Security", description: "Alarms, locks, and state.", icon: "⌂", order: 60 }),
-    system: Object.freeze({ label: "System", description: "Maintenance, network, and energy.", icon: "⚙", order: 70 }),
+    utilities: Object.freeze({ label: "Utilities", description: "Clocks and quick info.", icon: "clock", order: 10 }),
+    actions: Object.freeze({ label: "Actions", description: "Buttons and shortcuts.", icon: "plus", order: 20 }),
+    lights: Object.freeze({ label: "Lights", description: "Quick controls and brightness.", icon: "light", order: 30 }),
+    climate: Object.freeze({ label: "Climate", description: "Temperature and comfort.", icon: "temperature", order: 40 }),
+    media: Object.freeze({ label: "Media", description: "Playback and volume.", icon: "media-player", order: 50 }),
+    security: Object.freeze({ label: "Security", description: "Alarms, locks, and state.", icon: "shield", order: 60 }),
+    system: Object.freeze({ label: "System", description: "Maintenance, network, and energy.", icon: "gear", order: 70 }),
   }),
 });
 
@@ -74,7 +74,7 @@ export function buildWidgetManagerCategories(
         title: entry.label,
         description: entry.description,
         descriptionKey: entry.descriptionKey || `widgets.catalog.${catalogKeyForEntry(entry)}.description`,
-        icon: entry.icon || WIDGET_MANAGER_METADATA.categories[entry.category]?.icon || "◷",
+        icon: entry.icon || WIDGET_MANAGER_METADATA.categories[entry.category]?.icon || "clock",
         size: entry.size,
         order: entry.order || 0,
       });

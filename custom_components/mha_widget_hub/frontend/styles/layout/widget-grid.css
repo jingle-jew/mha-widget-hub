@@ -62,6 +62,36 @@
   overflow: visible;
 }
 
+.mha-page-stage {
+  box-sizing: border-box;
+  inline-size: 100%;
+  block-size: 100%;
+  min-inline-size: 0;
+  min-block-size: 0;
+  display: grid;
+  place-items: start center;
+  overflow: visible;
+}
+
+.mha-page-panel {
+  box-sizing: border-box;
+  inline-size: 100%;
+  block-size: 100%;
+  min-inline-size: 0;
+  min-block-size: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.mha-page-panel--grid {
+  display: grid;
+  place-items: start center;
+}
+
+.mha-page-panel--media {
+  display: block;
+}
+
 .mha-dock-zone {
   box-sizing: border-box;
   grid-column: 2;
@@ -118,10 +148,24 @@
   block-size: 0 !important;
 }
 
+:host([data-media-page-active="true"]) .mha-widget-area {
+  --mha-widget-area-top-gutter: var(--mha-page-padding) !important;
+  padding-inline: 0;
+  padding-block-end: 0;
+}
+
+:host([data-media-page-active="true"]) .mha-grid {
+  transform: none;
+}
+
 @media (max-width: 767px) {
   :host {
     --mha-statusbar-reserved-top: 0px;
     --mha-mobile-grid-gutter: var(--mha-page-padding, clamp(1rem, 2.6vw, 2rem));
+  }
+
+  .mha-shell {
+    row-gap: 0 !important;
   }
 
   .mha-workspace {
@@ -130,6 +174,11 @@
 
   .mha-dock-zone {
     display: none;
+  }
+
+  .mha-widget-area {
+    --mha-widget-area-top-gutter: 0px !important;
+    padding-block-start: 0 !important;
   }
 }
 
@@ -163,13 +212,27 @@
   overscroll-behavior-y: contain;
 }
 
-:host([data-layout="mobile"]) .mha-widget-area > .mha-grid {
+:host([data-layout="mobile"]) .mha-page-panel--grid > .mha-grid {
   inline-size: 100%;
   width: 100%;
   max-inline-size: 100%;
   justify-self: stretch;
   margin-inline: 0;
   touch-action: pan-y;
+}
+
+:host([data-layout="mobile"]) .mha-page-stage {
+  justify-items: stretch;
+}
+
+:host([data-layout="mobile"]) .mha-page-panel--grid {
+  padding-block-start: var(--mha-page-padding);
+}
+
+:host([data-layout="mobile"][data-media-page-active="true"]) .mha-widget-area {
+  padding-inline: 0;
+  overflow-y: hidden;
+  overscroll-behavior-y: none;
 }
 
 /* GRID FRAME LEFT NUDGE
@@ -186,6 +249,10 @@
 
   .mha-grid {
     transform: translateX(calc(-1 * var(--mha-grid-frame-nudge-x)));
+  }
+
+  :host([data-media-page-active="true"]) .mha-grid {
+    transform: none;
   }
 }
 /* Desktop/tablet dock position

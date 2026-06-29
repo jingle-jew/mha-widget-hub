@@ -83,7 +83,7 @@ export const en = Object.freeze({
     deletePage: "Delete {name}",
     pageCreatorClose: "Close icon picker",
     pageCreatorTitle: "New page",
-    pageCreatorHint: "Choose the page type and dock icon.",
+    pageCreatorHint: "Choose the kind of page to create.",
     pageCreatorTypeLabel: "Page type",
     pageCreatorIconLabel: "Dock icon",
     pageCreatorCreate: "Create page",
@@ -200,11 +200,11 @@ export const en = Object.freeze({
     }),
     pageTypeLabels: Object.freeze({
       grid: "Grid",
-      "media-players": "Media Players",
+      "media-players": "Media",
     }),
     pageTypeDescriptions: Object.freeze({
-      grid: "A standard widget page for the dashboard grid.",
-      "media-players": "A dedicated page for controlling Home Assistant media players.",
+      grid: "A standard page with MHA widgets.",
+      "media-players": "A dedicated page for media players.",
     }),
     mediaPageVisualStyles: Object.freeze({
       theme: "Follow active theme",

@@ -91,21 +91,17 @@ export function syncWidgetConfigPanel(root, props = {}) {
 export function buildPageCreatorPanelProps({
   open = false,
   selectedPageType = "grid",
-  selectedIcon = "grid",
   onClose = () => {},
   onSelectPageType = () => {},
-  onSelectIcon = () => {},
   onCreate = () => {},
 } = {}) {
   return {
     ...buildPageCreatorState({
       open,
       selectedPageType,
-      selectedIcon,
     }),
     onClose,
     onSelectPageType,
-    onSelectIcon,
     onCreate,
   };
 }

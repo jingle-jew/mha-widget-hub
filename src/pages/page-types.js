@@ -89,13 +89,13 @@ export function getPageCreatorTypeOptions() {
       value: PAGE_TYPES.GRID,
       icon: "grid",
       label: t("settings.pageTypeLabels.grid", "Grid"),
-      description: t("settings.pageTypeDescriptions.grid", "A standard widget page for the dashboard grid."),
+      description: t("settings.pageTypeDescriptions.grid", "A standard page with MHA widgets."),
     }),
     Object.freeze({
       value: PAGE_TYPES.MEDIA_PLAYERS,
       icon: "media-player",
-      label: t("settings.pageTypeLabels.media-players", "Media Players"),
-      description: t("settings.pageTypeDescriptions.media-players", "A dedicated page for controlling Home Assistant media players."),
+      label: t("settings.pageTypeLabels.media-players", "Media"),
+      description: t("settings.pageTypeDescriptions.media-players", "A dedicated page for media players."),
     }),
   ];
 }

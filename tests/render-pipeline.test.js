@@ -3,6 +3,69 @@ import test from "node:test";
 
 let hubPrototypePromise = null;
 
+function createMockClassList() {
+  return {
+    added: [],
+    toggled: [],
+    add(...tokens) {
+      this.added.push(...tokens);
+    },
+    toggle(token, force) {
+      this.toggled.push([token, force]);
+    },
+  };
+}
+
+function createMockStyle() {
+  return {
+    values: {},
+    setProperty(name, value) {
+      this.values[name] = value;
+    },
+    removeProperty(name) {
+      delete this.values[name];
+    },
+  };
+}
+
+function createMockElement(tag = "div", namespace = null) {
+  return {
+    tag,
+    namespace,
+    className: "",
+    type: "",
+    hidden: false,
+    textContent: "",
+    innerHTML: "",
+    onclick: null,
+    disabled: false,
+    dataset: {},
+    attributes: {},
+    appended: [],
+    style: createMockStyle(),
+    classList: createMockClassList(),
+    append(...nodes) {
+      this.appended.push(...nodes);
+    },
+    appendChild(node) {
+      this.appended.push(node);
+      return node;
+    },
+    replaceChildren(...nodes) {
+      this.appended = [...nodes];
+    },
+    setAttribute(name, value) {
+      this.attributes[name] = value;
+    },
+    addEventListener() {},
+    removeEventListener() {},
+    querySelector() {
+      return null;
+    },
+    remove() {},
+  };
+}
+
 async function loadHubPrototype() {
   if (hubPrototypePromise) return hubPrototypePromise;
 
@@ -203,6 +266,7 @@ test("render helpers preserve widgetsState transitions from pending to loading t
 
   const grid = {
     appended: [],
+    dataset: {},
     placeholders: new Map(),
     append(node) {
       if (node?.isFragment) {
@@ -218,9 +282,7 @@ test("render helpers preserve widgetsState transitions from pending to loading t
   };
   const host = {
     dataset: { layoutMode: "desktop" },
-    style: {
-      setProperty() {},
-    },
+    style: createMockStyle(),
     classList: {
       toggle() {},
     },
@@ -277,6 +339,12 @@ test("render helpers preserve widgetsState transitions from pending to loading t
         },
       };
     },
+    createElement(tag) {
+      return createMockElement(tag);
+    },
+    createElementNS(namespace, tag) {
+      return createMockElement(tag, namespace);
+    },
   };
 
   prototype._appendWidgetPlaceholders.call(host, grid, {
@@ -316,15 +384,10 @@ test("primary controls use host edit icon and widget-manager bridge callbacks", 
   globalThis.document = {
     ...globalThis.document,
     createElement(tag) {
-      return {
-        tag,
-        className: "",
-        type: "",
-        innerHTML: "",
-        hidden: false,
-        onclick: null,
-        setAttribute() {},
-      };
+      return createMockElement(tag);
+    },
+    createElementNS(namespace, tag) {
+      return createMockElement(tag, namespace);
     },
   };
 
@@ -360,10 +423,10 @@ test("primary controls use host edit icon and widget-manager bridge callbacks", 
     stopPropagation() {},
   });
 
-  assert.equal(editButton.innerHTML, "<svg>close</svg>");
+  assert.equal(editButton.appended.length, 1);
+  assert.equal(addButton.appended.length, 1);
   assert.equal(addButton.hidden, false);
   assert.deepEqual(calls, [
-    ["icon", true],
     "toggleEditMode",
     "openWidgetManager",
   ]);
@@ -388,31 +451,14 @@ test("immediate UI delegates status updates through the host bridge", async () =
       };
     },
     createElement(tag) {
-      return {
-        tag,
-        className: "",
-        type: "",
-        innerHTML: "",
-        hidden: false,
-        onclick: null,
-        setAttribute() {},
-      };
+      return createMockElement(tag);
+    },
+    createElementNS(namespace, tag) {
+      return createMockElement(tag, namespace);
     },
   };
 
-  const grid = {
-    appended: [],
-    append(node) {
-      if (node?.isFragment) {
-        node.childNodes.forEach((child) => this.append(child));
-        return;
-      }
-      this.appended.push(node);
-    },
-    closest() {
-      return null;
-    },
-  };
+  const pageStage = createMockElement("div");
   const host = {
     _widgets: [],
     _isEditing: false,
@@ -440,15 +486,22 @@ test("immediate UI delegates status updates through the host bridge", async () =
     _updateStatusDom() {
       calls.push("updateStatusDom");
     },
+    _getActivePage() {
+      return { id: "home", type: "grid" };
+    },
+    _getActiveWidgetPositions() {
+      return {};
+    },
   };
 
   prototype._mountImmediateUi.call(host, {
     layout: "desktop",
-    grid,
+    pageStage,
     units: 4,
   });
 
   assert.deepEqual(calls, ["wireDockAutoHide", "updateStatusDom"]);
+  assert.equal(pageStage.appended.length, 1);
   globalThis.document = previousDocument;
 });
 
@@ -481,40 +534,17 @@ test("widget config sync builds the panel props without relying on removed globa
     ...globalThis.document,
     createElement() {
       return {
-        className: "",
-        textContent: "",
-        disabled: false,
-        type: "",
-        dataset: {},
-        style: { setProperty() {} },
-        append() {},
-        addEventListener() {},
-        setAttribute() {},
-        onclick: null,
+        ...createMockElement("div"),
         querySelector() {
           return {
             dataset: {},
             replaceChildren() {},
           };
         },
-        addEventListener() {},
-        remove() {},
       };
     },
     createElementNS() {
-      return {
-        className: "",
-        innerHTML: "",
-        textContent: "",
-        dataset: {},
-        style: { setProperty() {} },
-        append() {},
-        appendChild() {},
-        setAttribute() {},
-        querySelector() {
-          return null;
-        },
-      };
+      return createMockElement("svg", "http://www.w3.org/2000/svg");
     },
   };
 

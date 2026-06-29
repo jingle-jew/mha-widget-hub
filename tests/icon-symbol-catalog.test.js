@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { getIconSymbol } from "../src/icons/icon-symbol-catalog.js";
+import { resolveTablerIconForMhaName } from "../src/ui/tabler-icons.js";
 
 test("icon symbol catalog exposes the new media and system icons", () => {
   const requiredIcons = [
@@ -65,4 +66,19 @@ test("icon symbol catalog resolves useful aliases", () => {
   assert.equal(getIconSymbol("volume-muted")?.name, "volume-muted");
   assert.equal(getIconSymbol("skip-next")?.name, "next");
   assert.equal(getIconSymbol("skip-previous")?.name, "previous");
+});
+
+test("Tabler provider resolves the first migrated MHA icon names", () => {
+  assert.equal(resolveTablerIconForMhaName("apps")?.name, "apps");
+  assert.equal(resolveTablerIconForMhaName("home")?.name, "home");
+  assert.equal(resolveTablerIconForMhaName("grid")?.name, "layout-grid");
+  assert.equal(resolveTablerIconForMhaName("gear")?.name, "settings");
+  assert.equal(resolveTablerIconForMhaName("media-player")?.name, "device-speaker");
+  assert.equal(resolveTablerIconForMhaName("play")?.name, "player-play");
+  assert.equal(resolveTablerIconForMhaName("volume-off")?.name, "volume-off");
+});
+
+test("Tabler provider stays opt-in and preserves local fallback for unmapped icons", () => {
+  assert.equal(resolveTablerIconForMhaName("dashboard"), null);
+  assert.equal(getIconSymbol("dashboard")?.name, "dashboard");
 });

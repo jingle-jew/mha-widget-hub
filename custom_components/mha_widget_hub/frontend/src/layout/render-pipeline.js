@@ -17,8 +17,10 @@ import {
 } from "./layout-engine.js";
 import { createSettingsPanel } from "../settings/settings-panel.js";
 import { createMediaPage } from "../pages/media-page.js";
+import { createPagePanel } from "../pages/page-panel.js";
 import { syncMediaPageSettingsPanel } from "../pages/media-page-settings.js";
 import { isMediaPlayersPage } from "../pages/page-types.js";
+import { getPrimaryEditIconName, setFloatingControlButtonIcon } from "../ui/floating-control-icons.js";
 import {
   buildWidgetConfigPanelProps,
   buildWidgetManagerPanelProps,
@@ -38,6 +40,26 @@ export function createRenderPipeline(host, options = {}) {
     frontendVersion,
     styleManifest = [],
   } = options;
+
+  function syncMediaPageBackdropState({
+    activePage = getActivePage(host),
+    artworkUrl = "",
+    blurBackground = activePage?.config?.blurBackground !== false,
+  } = {}) {
+    const isMediaPage = isMediaPlayersPage(activePage);
+    host.dataset.activePageType = activePage?.type || "grid";
+    host.dataset.mediaPageActive = String(isMediaPage);
+    host.dataset.mediaPageBackgroundBlur = String(isMediaPage && blurBackground);
+
+    if (isMediaPage && artworkUrl) {
+      host.dataset.mediaPageWallpaper = "true";
+      host.style.setProperty("--mha-media-page-wallpaper-image", `url("${artworkUrl}")`);
+      return;
+    }
+
+    host.dataset.mediaPageWallpaper = "false";
+    host.style.removeProperty("--mha-media-page-wallpaper-image");
+  }
 
   function createWidgetPlaceholder(widget, { units, position }) {
     const size = normalizeWidgetSize(widget);
@@ -122,15 +144,22 @@ export function createRenderPipeline(host, options = {}) {
     const edit = document.createElement("button");
     edit.className = "mha-edit-button mha-main-edit-button mha-primary-edit-button";
     edit.type = "button";
-    edit.innerHTML = host._getEditButtonIcon?.(host._isEditing) || "";
+    edit.setAttribute("aria-label", t(host._isEditing ? "common.close" : "common.edit", host._isEditing ? "Close" : "Edit"));
+    setFloatingControlButtonIcon(edit, {
+      name: getPrimaryEditIconName(host._isEditing),
+      label: t(host._isEditing ? "common.close" : "common.edit", host._isEditing ? "Close" : "Edit"),
+    });
     edit.onclick = () => host.toggleEditMode();
     host.shadowRoot.append(edit);
 
     const addWidget = document.createElement("button");
     addWidget.className = "mha-edit-button mha-main-edit-button mha-add-widget-button";
     addWidget.type = "button";
-    addWidget.innerHTML = `<svg viewBox="0 0 24 24"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5Z"/></svg>`;
     addWidget.setAttribute("aria-label", t("settings.addWidget", "Add widget"));
+    setFloatingControlButtonIcon(addWidget, {
+      name: "plus",
+      label: t("settings.addWidget", "Add widget"),
+    });
     addWidget.hidden = !host._isEditing || host._canAddWidgetToActivePage?.() === false;
     addWidget.onclick = (event) => {
       event.preventDefault();
@@ -211,6 +240,7 @@ export function createRenderPipeline(host, options = {}) {
   function prepareRenderCycle({ renderId, themeState }) {
     host._applyCustomWallpaperState(themeState);
     host._applyHaSidebarMode(host._hideHaSidebar);
+    syncMediaPageBackdropState();
     host._renderId = renderId;
     cancelAnimationFrame(host._widgetRenderFrame);
     cancelAnimationFrame(host._secondaryUiFrame);
@@ -254,6 +284,19 @@ export function createRenderPipeline(host, options = {}) {
     document.documentElement.dataset.iconShape = iconShape;
   }
 
+  function createGridPanel(page = {}) {
+    const grid = document.createElement("section");
+    grid.className = "mha-grid";
+    grid.setAttribute("aria-label", t("settings.widgetGrid", "Widget grid"));
+    const panel = createPagePanel({
+      page,
+      kind: "grid",
+      content: grid,
+    });
+    panel.classList.add("mha-page-panel--grid");
+    return { panel, grid };
+  }
+
   function mountRenderShell({ layoutMode, layout, cols, units }) {
     destroyDomSubtree(host.shadowRoot);
     host.shadowRoot.innerHTML = createCriticalBootStyle() + createFrontendStyleLinks(
@@ -264,7 +307,7 @@ export function createRenderPipeline(host, options = {}) {
       },
     );
     const links = [...host.shadowRoot.querySelectorAll('link[rel="stylesheet"]')];
-    const { bg, shell, grid } = createShell({
+    const { bg, shell, pageStage } = createShell({
       layoutMode,
       layout,
       logicalColumns: cols,
@@ -278,29 +321,51 @@ export function createRenderPipeline(host, options = {}) {
       onSettings: () => host._openSettings(),
     });
     host.shadowRoot.append(bg, shell);
-    return { links, grid };
+    return { links, pageStage };
   }
 
-  function mountImmediateUi({ layout, grid, units }) {
+  function mountImmediateUi({ layout, pageStage, units }) {
     const activePage = getActivePage(host);
     const isMediaPage = isMediaPlayersPage(activePage);
     const positions = isMediaPage ? {} : host._getActiveWidgetPositions({ create: true });
-    if (!grid) return { positions };
-    if (grid.dataset) grid.dataset.pageType = activePage?.type || "grid";
-    grid.classList?.toggle?.("mha-grid--media-page", isMediaPage);
+    let grid = null;
+    let activeSurface = null;
+    if (!pageStage) return { positions, grid, activeSurface };
     if (isMediaPage) {
-      grid.append(createMediaPage(activePage, host._buildMediaPageProps?.() || {}));
+      const mediaPageProps = host._buildMediaPageProps?.() || {};
+      const mediaPage = createMediaPage(activePage, {
+        ...mediaPageProps,
+        onBackgroundArtworkChange: (artworkUrl = "", meta = {}) => {
+          syncMediaPageBackdropState({
+            artworkUrl,
+            blurBackground: meta.blurBackground,
+          });
+        },
+      });
+      const panel = createPagePanel({
+        page: activePage,
+        kind: "media",
+        content: mediaPage,
+      });
+      panel.classList.add("mha-page-panel--media");
+      pageStage.append(panel);
+      activeSurface = mediaPage;
       host.dataset.widgetsState = "ready";
     } else {
+      const gridPanel = createGridPanel(activePage);
+      grid = gridPanel.grid;
+      pageStage.append(gridPanel.panel);
+      if (grid.dataset) grid.dataset.pageType = activePage?.type || "grid";
       appendWidgetPlaceholders(grid, { units, positions });
+      activeSurface = grid;
     }
     if (layout === "mobile") {
       host.shadowRoot.append(createMobileDock(host._getDockProps()));
     }
     appendPrimaryControls();
-    host._wireDockAutoHide(grid);
+    host._wireDockAutoHide(activeSurface);
     host._updateStatusDom?.();
-    return { positions };
+    return { positions, grid, activeSurface };
   }
 
   function schedulePrimaryWidgetRender({ grid, units, positions, renderId }) {
@@ -358,8 +423,8 @@ export function createRenderPipeline(host, options = {}) {
     const context = buildRenderContext(themeState);
     prepareRenderCycle(context);
     applyRenderDatasetsAndRuntimeVars(context);
-    const { links, grid } = mountRenderShell(context);
-    const { positions } = mountImmediateUi({ ...context, grid });
+    const { links, pageStage } = mountRenderShell(context);
+    const { positions, grid } = mountImmediateUi({ ...context, pageStage });
     schedulePrimaryWidgetRender({
       grid,
       units: context.units,
