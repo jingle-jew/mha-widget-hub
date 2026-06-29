@@ -14,7 +14,10 @@ export function createBootLifecycleCoordinator(host) {
     return Boolean(
       host.shadowRoot?.querySelector?.(".mha-background")
       && host.shadowRoot?.querySelector?.(".mha-shell")
-      && host.shadowRoot?.querySelector?.(".mha-grid"),
+      && (
+        host.shadowRoot?.querySelector?.(".mha-page-stage")
+        || host.shadowRoot?.querySelector?.(".mha-grid")
+      ),
     );
   }
 
@@ -104,7 +107,8 @@ export function createBootLifecycleCoordinator(host) {
     host.dataset.ready = "true";
     host.setAttribute("data-ready", "true");
     host.classList.add("is-boot-revealing");
-    const grid = host.shadowRoot?.querySelector?.(".mha-grid");
+    const grid = host.shadowRoot?.querySelector?.(".mha-grid")
+      || host.shadowRoot?.querySelector?.(".mha-page-panel");
     const finishReveal = () => {
       host.classList.remove("is-boot-revealing");
       document.getElementById("mha-widget-hub-boot-style")?.remove();

@@ -17,13 +17,10 @@
   );
 }
 
-.mha-grid.mha-grid--media-page {
+.mha-page-panel--media {
   inline-size: 100%;
   block-size: 100% !important;
   min-block-size: 0;
-  display: block;
-  padding: 0 !important;
-  transform: none;
   align-self: stretch;
   justify-self: stretch;
 }

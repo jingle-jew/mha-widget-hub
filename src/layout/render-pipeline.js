@@ -17,6 +17,7 @@ import {
 } from "./layout-engine.js";
 import { createSettingsPanel } from "../settings/settings-panel.js";
 import { createMediaPage } from "../pages/media-page.js";
+import { createPagePanel } from "../pages/page-panel.js";
 import { syncMediaPageSettingsPanel } from "../pages/media-page-settings.js";
 import { isMediaPlayersPage } from "../pages/page-types.js";
 import {
@@ -275,6 +276,19 @@ export function createRenderPipeline(host, options = {}) {
     document.documentElement.dataset.iconShape = iconShape;
   }
 
+  function createGridPanel(page = {}) {
+    const grid = document.createElement("section");
+    grid.className = "mha-grid";
+    grid.setAttribute("aria-label", t("settings.widgetGrid", "Widget grid"));
+    const panel = createPagePanel({
+      page,
+      kind: "grid",
+      content: grid,
+    });
+    panel.classList.add("mha-page-panel--grid");
+    return { panel, grid };
+  }
+
   function mountRenderShell({ layoutMode, layout, cols, units }) {
     destroyDomSubtree(host.shadowRoot);
     host.shadowRoot.innerHTML = createCriticalBootStyle() + createFrontendStyleLinks(
@@ -285,7 +299,7 @@ export function createRenderPipeline(host, options = {}) {
       },
     );
     const links = [...host.shadowRoot.querySelectorAll('link[rel="stylesheet"]')];
-    const { bg, shell, grid } = createShell({
+    const { bg, shell, pageStage } = createShell({
       layoutMode,
       layout,
       logicalColumns: cols,
@@ -299,19 +313,19 @@ export function createRenderPipeline(host, options = {}) {
       onSettings: () => host._openSettings(),
     });
     host.shadowRoot.append(bg, shell);
-    return { links, grid };
+    return { links, pageStage };
   }
 
-  function mountImmediateUi({ layout, grid, units }) {
+  function mountImmediateUi({ layout, pageStage, units }) {
     const activePage = getActivePage(host);
     const isMediaPage = isMediaPlayersPage(activePage);
     const positions = isMediaPage ? {} : host._getActiveWidgetPositions({ create: true });
-    if (!grid) return { positions };
-    if (grid.dataset) grid.dataset.pageType = activePage?.type || "grid";
-    grid.classList?.toggle?.("mha-grid--media-page", isMediaPage);
+    let grid = null;
+    let activeSurface = null;
+    if (!pageStage) return { positions, grid, activeSurface };
     if (isMediaPage) {
       const mediaPageProps = host._buildMediaPageProps?.() || {};
-      grid.append(createMediaPage(activePage, {
+      const mediaPage = createMediaPage(activePage, {
         ...mediaPageProps,
         onBackgroundArtworkChange: (artworkUrl = "", meta = {}) => {
           syncMediaPageBackdropState({
@@ -319,18 +333,31 @@ export function createRenderPipeline(host, options = {}) {
             blurBackground: meta.blurBackground,
           });
         },
-      }));
+      });
+      const panel = createPagePanel({
+        page: activePage,
+        kind: "media",
+        content: mediaPage,
+      });
+      panel.classList.add("mha-page-panel--media");
+      pageStage.append(panel);
+      activeSurface = mediaPage;
       host.dataset.widgetsState = "ready";
     } else {
+      const gridPanel = createGridPanel(activePage);
+      grid = gridPanel.grid;
+      pageStage.append(gridPanel.panel);
+      if (grid.dataset) grid.dataset.pageType = activePage?.type || "grid";
       appendWidgetPlaceholders(grid, { units, positions });
+      activeSurface = grid;
     }
     if (layout === "mobile") {
       host.shadowRoot.append(createMobileDock(host._getDockProps()));
     }
     appendPrimaryControls();
-    host._wireDockAutoHide(grid);
+    host._wireDockAutoHide(activeSurface);
     host._updateStatusDom?.();
-    return { positions };
+    return { positions, grid, activeSurface };
   }
 
   function schedulePrimaryWidgetRender({ grid, units, positions, renderId }) {
@@ -388,8 +415,8 @@ export function createRenderPipeline(host, options = {}) {
     const context = buildRenderContext(themeState);
     prepareRenderCycle(context);
     applyRenderDatasetsAndRuntimeVars(context);
-    const { links, grid } = mountRenderShell(context);
-    const { positions } = mountImmediateUi({ ...context, grid });
+    const { links, pageStage } = mountRenderShell(context);
+    const { positions, grid } = mountImmediateUi({ ...context, pageStage });
     schedulePrimaryWidgetRender({
       grid,
       units: context.units,

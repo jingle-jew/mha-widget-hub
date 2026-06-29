@@ -256,6 +256,7 @@ constructor(){
     openDockSettings:()=>this._openDockSettings(),
     openSettings:()=>this._openSettings(),
     exitEditMode:()=>this._disableEditMode(),
+    transitionPageRender:(previousPage,nextPage)=>this._renderPageTransition(previousPage,nextPage),
     renderRoot:()=>this.render(),
     clearPlacementState:()=>{
       this._activeMoveWidgetId="";
@@ -773,6 +774,53 @@ _disableEditMode(){
   this._syncWidgetDropSlots();
   this._scheduleSquareUnitSync();
   return true;
+}
+_getPageTransitionDirection(){
+  if(this._isMobileDefaultLayout())return"bottom";
+  if(this._dockPosition==="right")return"left";
+  return"right";
+}
+_renderPageTransition(previousPage=null,nextPage=null){
+  const prefersReducedMotion=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+  const currentPanel=this.shadowRoot?.querySelector?.(".mha-page-panel");
+  const currentRect=currentPanel?.getBoundingClientRect?.();
+  const snapshot=currentPanel&&currentRect?.width&&currentRect?.height
+    ? currentPanel.cloneNode(true)
+    : null;
+  const direction=this._getPageTransitionDirection();
+
+  this.shadowRoot?.querySelectorAll?.(".mha-page-panel-snapshot")?.forEach?.(node=>node.remove());
+
+  if(snapshot){
+    snapshot.classList.add("mha-page-panel-snapshot","mha-page-panel-snapshot--leaving");
+    snapshot.dataset.transitionDirection=direction;
+    snapshot.style.top=`${currentRect.top}px`;
+    snapshot.style.left=`${currentRect.left}px`;
+    snapshot.style.width=`${currentRect.width}px`;
+    snapshot.style.height=`${currentRect.height}px`;
+  }
+
+  this.render();
+
+  if(prefersReducedMotion)return;
+
+  const nextPanel=this.shadowRoot?.querySelector?.(".mha-page-panel");
+  if(nextPanel){
+    nextPanel.dataset.transitionDirection=direction;
+    nextPanel.classList.remove("mha-page-panel--entering");
+    void nextPanel.offsetWidth;
+    nextPanel.classList.add("mha-page-panel--entering");
+    nextPanel.addEventListener("animationend",()=>{
+      nextPanel.classList.remove("mha-page-panel--entering");
+      delete nextPanel.dataset.transitionDirection;
+    },{once:true});
+  }
+
+  if(snapshot){
+    this.shadowRoot.append(snapshot);
+    requestAnimationFrame(()=>snapshot.classList.add("is-animating"));
+    snapshot.addEventListener("animationend",()=>snapshot.remove(),{once:true});
+  }
 }toggleScreensaverPreview(){toggleScreensaverPreviewState(this)}toggleNowBarPreview(){toggleNowBarPreviewState(this)}setScreensaverClockVariant(v="digital"){setScreensaverClockVariantState(this,v)}resetGrid(){return resetWidgetGridState(this,{clearGridStorageRef:clearGridStorage})}
 _migrateStorageSchema(){
   return getHubStateIngressCoordinatorForHost(this).migrateStorageSchema();

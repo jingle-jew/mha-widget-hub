@@ -29,9 +29,9 @@ export function createShell(meta = {}) {
   widgetArea.className = "mha-widget-area";
   widgetArea.setAttribute("aria-label", t("settings.widgetArea", "Widget area"));
 
-  const grid = document.createElement("section");
-  grid.className = "mha-grid";
-  grid.setAttribute("aria-label", t("settings.widgetGrid", "Widget grid"));
+  const pageStage = document.createElement("section");
+  pageStage.className = "mha-page-stage";
+  pageStage.setAttribute("aria-label", t("settings.widgetGrid", "Widget grid"));
 
   const dockZone = document.createElement("aside");
   dockZone.className = "mha-dock-zone";
@@ -46,9 +46,9 @@ export function createShell(meta = {}) {
     onDockSettings: meta.onDockSettings,
     onSettings: meta.onSettings,
   }));
-  widgetArea.append(grid);
+  widgetArea.append(pageStage);
   workspace.append(widgetArea, dockZone);
   shell.append(statusBar, statusBarFill, workspace);
 
-  return { bg, shell, grid };
+  return { bg, shell, pageStage };
 }
