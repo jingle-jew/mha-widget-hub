@@ -228,7 +228,7 @@ export function renderButtonConfigFields(session, hass, visibilityConfig, onChan
 
   const iconNameRow = document.createElement("div");
   iconNameRow.className = "mha-widget-config-icon-name-row";
-  iconNameRow.append(iconPicker, label);
+  iconNameRow.append(label, iconPicker);
   fields.append(createField(t("widgets.modesRoutines.displayName", "Display name"), iconNameRow));
 
   const isValid = () => (draft.buttonType === "action"
