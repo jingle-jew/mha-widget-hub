@@ -493,6 +493,7 @@ test("button and weather configuration only persist authorized selections", () =
     entityId: "button.blocked",
   }, hass, visibilityConfig);
   assert.deepEqual(button.options.map(option => option.value), ["button.allowed"]);
+  assert.equal(button.draft.icon, "auto");
   assert.equal(buildButtonWidgetConfig({}, button.draft, hass, visibilityConfig).entityId, "button.allowed");
 
   const weather = createWeatherConfigDraft({}, hass, visibilityConfig);
@@ -784,6 +785,7 @@ test("toggle configuration filters supported domains and stores one entity id", 
   assert.deepEqual(light.options.map(option => option.label), ["Cuisine"]);
   assert.equal(light.draft.entityId, "light.kitchen");
   assert.equal(light.draft.label, "Cuisine");
+  assert.equal(light.draft.icon, "auto");
 
   const switchConfig = updateToggleDeviceType(light.draft, "switch", hass);
   assert.deepEqual(switchConfig.options.map(option => option.label), ["Cafetière"]);
@@ -800,5 +802,26 @@ test("toggle configuration filters supported domains and stores one entity id", 
     variant: "toggle-widget",
     entityId: "input_boolean.guest",
     label: "Mode invités",
+    icon: "auto",
   });
+});
+
+test("button configuration persists manual icon selections", () => {
+  const hass = {
+    states: {
+      "switch.coffee": entity("switch.coffee", "off", {
+        friendly_name: "Cafetière",
+      }),
+    },
+  };
+
+  const config = createButtonConfigDraft({}, hass);
+  config.draft.icon = "coffee";
+
+  const configured = buildButtonWidgetConfig({
+    kind: "button",
+    variant: "simple-button",
+  }, config.draft, hass);
+
+  assert.equal(configured.icon, "coffee");
 });

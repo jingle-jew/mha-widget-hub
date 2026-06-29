@@ -1,4 +1,6 @@
 import { getEntityDomain } from "../ha/entity.js";
+import { resolveWidgetIconName } from "../ui/icon-name-resolver.js";
+import { createIconPickerControl, normalizeIconPickerValue } from "./icon-picker.js";
 import { getEntityOptionsByDomain } from "./light-options.js";
 
 export const BUTTON_TYPES = Object.freeze([
@@ -30,6 +32,7 @@ export function createButtonConfigDraft(widget = {}, hass, visibilityConfig) {
     buttonType: getButtonType(configuredType).value,
     entityId,
     label: String(widget.label || "").trim(),
+    icon: normalizeIconPickerValue(widget.icon || "auto"),
     labelCustomized: Boolean(String(widget.label || "").trim()),
     actionDomain: String(widget.action?.domain || widget.actionDomain || "").trim(),
     actionService: String(widget.action?.service || widget.actionService || widget.service || "").trim(),
@@ -73,11 +76,7 @@ export function updateButtonLabel(draft, label) {
 
 export function buildButtonWidgetConfig(widget, draft, hass, visibilityConfig) {
   const { buttonType, selected } = reconcileButtonConfigDraft(draft, hass, visibilityConfig);
-  const legacyIcon = String(widget.icon || "").trim() === "home"
-    && ["", "home"].includes(String(widget.iconCategory || "").trim().toLowerCase());
-  const resolvedIcon = legacyIcon
-    ? "auto"
-    : String(widget.icon || "").trim();
+  const resolvedIcon = normalizeIconPickerValue(draft.icon || widget.icon || "auto");
   if (buttonType.value === "action") {
     return {
       ...widget,
@@ -206,6 +205,29 @@ export function renderButtonConfigFields(session, hass, visibilityConfig, onChan
     onChange?.();
   });
   fields.append(createField(t("widgets.modesRoutines.displayName", "Display name"), label));
+
+  const suggestedIcon = resolveWidgetIconName({
+    explicitIcon: "auto",
+    label: draft.label,
+    entityId: draft.entityId,
+    domain: draft.buttonType === "action" ? "" : getEntityDomain(draft.entityId),
+    kind: "button",
+    fallback: "button",
+  });
+  const iconPicker = createIconPickerControl({
+    value: draft.icon,
+    suggestedIcon,
+    searchPlaceholder: t("widgets.config.searchIcon", "Search icons"),
+    emptyLabel: t("widgets.config.noIconFound", "No icons found"),
+    onChange: (value) => {
+      draft.icon = value;
+      onChange?.();
+    },
+    t,
+  });
+  fields.append(createField(t("widgets.config.icon", "Icon"), iconPicker, {
+    hint: t("widgets.config.iconHint", "Choose Auto or a manual icon."),
+  }));
 
   const isValid = () => (draft.buttonType === "action"
     ? Boolean(draft.actionDomain.trim() && draft.actionService.trim() && draft.actionDataValid)
