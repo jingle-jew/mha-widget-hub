@@ -19,13 +19,6 @@ jobs:
       run:
         working-directory: android-app
 
-    env:
-      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-      ANDROID_KEYSTORE_PATH: ${{ github.workspace }}/android-app/android/release-keystore.jks
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -49,12 +42,6 @@ jobs:
       - name: Install Android wrapper dependencies
         run: npm ci
 
-      - name: Decode release keystore
-        if: ${{ env.ANDROID_KEYSTORE_BASE64 != '' }}
-        shell: bash
-        run: |
-          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$ANDROID_KEYSTORE_PATH"
-
       - name: Sync Capacitor assets
         run: npm run sync
 
@@ -62,27 +49,13 @@ jobs:
         working-directory: android-app/android
         run: chmod +x ./gradlew
 
-      - name: Build release APK
+      - name: Build debug APK
         working-directory: android-app/android
-        run: ./gradlew assembleRelease
+        run: ./gradlew assembleDebug
 
-      - name: Upload signed release APK
-        if: ${{ env.ANDROID_KEYSTORE_BASE64 != '' }}
+      - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: mha-widget-hub-apk
-          path: android-app/android/app/build/outputs/apk/release/app-release.apk
+          name: mha-widget-hub-debug-apk
+          path: android-app/android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
-
-      - name: Upload unsigned release APK
-        if: ${{ env.ANDROID_KEYSTORE_BASE64 == '' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: mha-widget-hub-apk
-          path: android-app/android/app/build/outputs/apk/release/app-release-unsigned.apk
-          if-no-files-found: error
-
-      - name: Remove temporary keystore
-        if: ${{ always() && env.ANDROID_KEYSTORE_BASE64 != '' }}
-        shell: bash
-        run: rm -f "$ANDROID_KEYSTORE_PATH"
