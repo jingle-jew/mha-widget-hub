@@ -14,7 +14,8 @@
 
 .mha-grid.mha-grid--media-page {
   inline-size: min(100%, 78rem);
-  block-size: 100%;
+  block-size: auto !important;
+  min-block-size: clamp(26rem, 72vh, 52rem);
   display: block;
   padding: 0 !important;
   transform: none;
@@ -26,7 +27,7 @@
   grid-template-rows: auto auto auto;
   gap: var(--mha-media-page-content-gap);
   inline-size: 100%;
-  min-block-size: min(100%, 48rem);
+  min-block-size: clamp(26rem, 72vh, 52rem);
   padding: clamp(1rem, 2vw, 1.4rem);
   border-radius: clamp(1.75rem, 3vw, 2.5rem);
   overflow: hidden;
@@ -335,7 +336,7 @@
 
 @media (max-width: 767px) {
   .mha-media-page {
-    min-block-size: auto;
+    min-block-size: clamp(30rem, 78vh, 44rem);
     grid-template-rows: auto auto auto;
   }
 
