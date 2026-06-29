@@ -166,7 +166,7 @@ export function renderToggleConfigFields(session, hass, visibilityConfig, onChan
 
   const iconNameRow = document.createElement("div");
   iconNameRow.className = "mha-widget-config-icon-name-row";
-  iconNameRow.append(iconPicker, nameInput);
+  iconNameRow.append(nameInput, iconPicker);
 
   fields.append(
     createField(t("widgets.config.deviceType", "Device type"), typeSelect),
