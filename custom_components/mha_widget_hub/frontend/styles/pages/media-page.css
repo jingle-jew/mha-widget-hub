@@ -11,6 +11,7 @@
   --mha-media-page-on-surface: var(--mha-text-primary, var(--mha-text));
   --mha-media-page-safe-inline-start: clamp(2.4cqi, 3.2cqi, 4.4cqi);
   --mha-media-page-safe-inline-end: clamp(2.4cqi, 3.2cqi, 4.4cqi);
+  --mha-media-page-safe-block-start: clamp(2.2svh, 2.8svh, 3.4svh);
   --mha-media-page-safe-block-end: max(
     clamp(1.8svh, 2.8svh, 3.6svh),
     calc(var(--mha-safe-bottom, 0px) + clamp(9svh, 12svh, 15svh))
@@ -34,7 +35,7 @@
   inline-size: 100%;
   min-block-size: 100%;
   padding:
-    clamp(2.2svh, 2.8svh, 3.4svh)
+    var(--mha-media-page-safe-block-start)
     var(--mha-media-page-safe-inline-end)
     var(--mha-media-page-safe-block-end)
     var(--mha-media-page-safe-inline-start);
@@ -250,13 +251,19 @@
 
 @media (min-width: 768px) {
   .mha-media-page {
+    --mha-media-page-safe-block-start: calc(
+      var(--mha-page-padding) + clamp(0.25rem, 0.55vw, 0.6rem)
+    );
+  }
+
+  .mha-media-page {
     padding-bottom: clamp(1.6rem, 3vw, 2.4rem);
   }
 }
 
 @media (max-width: 767px) {
   .mha-media-page {
-    padding-top: clamp(1svh, 1.6svh, 2.2svh);
+    --mha-media-page-safe-block-start: clamp(1svh, 1.6svh, 2.2svh);
   }
 
   .mha-media-page-hero {
