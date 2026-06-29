@@ -12,6 +12,9 @@ export function createShell(meta = {}) {
   shell.className = "mha-shell";
 
   const statusBar = createStatusBar(meta);
+  const statusBarFill = document.createElement("div");
+  statusBarFill.className = "mha-statusbar-fill";
+  statusBarFill.setAttribute("aria-hidden", "true");
 
   const workspace = document.createElement("section");
   workspace.className = "mha-workspace";
@@ -40,7 +43,7 @@ export function createShell(meta = {}) {
   }));
   widgetArea.append(grid);
   workspace.append(widgetArea, dockZone);
-  shell.append(statusBar, workspace);
+  shell.append(statusBar, statusBarFill, workspace);
 
   return { bg, shell, grid };
 }

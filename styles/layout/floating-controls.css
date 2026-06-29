@@ -6,8 +6,8 @@
  */
 
 .mha-edit-button {
-  --mha-edit-button-edge: var(--mha-mobile-dock-edge, max(env(safe-area-inset-left), clamp(.9rem, 3vw, 1.25rem)));
-  --mha-edit-button-bottom: var(--mha-mobile-dock-bottom, max(env(safe-area-inset-bottom), clamp(.9rem, 3vw, 1.25rem)));
+  --mha-edit-button-edge: var(--mha-mobile-dock-edge, max(var(--mha-safe-left, 0px), clamp(.9rem, 3vw, 1.25rem)));
+  --mha-edit-button-bottom: var(--mha-mobile-dock-bottom, max(var(--mha-safe-bottom, 0px), clamp(.9rem, 3vw, 1.25rem)));
   --mha-edit-icon-glyph-size: var(--mha-icon-glyph-size, 56%);
 
   position: absolute;
@@ -64,8 +64,8 @@
   .mha-edit-button {
     position: fixed;
     z-index: 90;
-    inset-inline-end: max(var(--mha-safe-area-right, env(safe-area-inset-right)), clamp(.9rem, 3vw, 1.25rem));
-    inset-block-end: max(var(--mha-safe-area-bottom, env(safe-area-inset-bottom)), clamp(.9rem, 3vw, 1.25rem));
+    inset-inline-end: max(var(--mha-safe-area-right, 0px), clamp(.9rem, 3vw, 1.25rem));
+    inset-block-end: max(var(--mha-safe-area-bottom, 0px), clamp(.9rem, 3vw, 1.25rem));
   }
 }
 

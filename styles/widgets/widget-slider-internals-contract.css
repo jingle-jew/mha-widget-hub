@@ -19,9 +19,9 @@
 }
 
 .combined-toggle-slider__slider {
-  background: var(--mha-widget-section-surface, transparent);
-  border-color: var(--mha-widget-section-border, transparent);
-  box-shadow: var(--mha-widget-section-shadow, none);
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
 }
 
 .combined-toggle-slider__slider-value {

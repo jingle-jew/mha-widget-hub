@@ -1,0 +1,38 @@
+:host(.mha-android-edge-to-edge) {
+  min-block-size: 100dvh;
+}
+
+:host(.mha-android-edge-to-edge) .mha-shell {
+  min-block-size: 100dvh;
+}
+
+:host(.mha-android-edge-to-edge) .mha-statusbar-fill {
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline: 0;
+  block-size: var(--mha-safe-top, 0px);
+  z-index: 6;
+  pointer-events: none;
+  opacity: 0;
+  background: var(
+    --mha-statusbar-surface-semantic,
+    var(--mha-statusbar-surface, var(--mha-shell-surface, var(--mha-surface-glass)))
+  );
+  -webkit-backdrop-filter: blur(calc(var(--mha-shell-blur, var(--mha-blur-primary)) * .82)) saturate(var(--mha-surface-saturation));
+  backdrop-filter: blur(calc(var(--mha-shell-blur, var(--mha-blur-primary)) * .82)) saturate(var(--mha-surface-saturation));
+  transition:
+    opacity 160ms ease,
+    background var(--mha-theme-crossfade-duration, 2000ms) var(--mha-theme-crossfade-easing, ease);
+}
+
+:host(.mha-android-edge-to-edge.mha-is-scrolled) .mha-statusbar-fill,
+:host(.mha-android-edge-to-edge.is-settings-open) .mha-statusbar-fill {
+  opacity: 1;
+}
+
+@media (max-width: 767px) {
+  :host(.mha-android-edge-to-edge) .mha-widget-area {
+    --mha-widget-area-top-gutter: calc((var(--mha-page-padding) * 2) + var(--mha-safe-top, 0px)) !important;
+    padding-block-end: calc(clamp(0.35rem, 0.7vw, 0.75rem) + var(--mha-safe-bottom, 0px));
+  }
+}

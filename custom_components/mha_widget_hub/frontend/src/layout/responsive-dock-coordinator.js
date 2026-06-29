@@ -3,6 +3,10 @@ import { DOCK_POSITION, normalizeDockPosition } from "../core/mha-persistence.js
 import { syncDockActiveState } from "./dock-controller.js";
 
 export function createResponsiveDockCoordinator(host) {
+  function syncStatusBarFillScrollState(scrolled = false) {
+    host.classList.toggle("mha-is-scrolled", Boolean(scrolled));
+  }
+
   function isMobileLauncherLayout() {
     return host._getRuntimeLayout?.() === "mobile"
       || host._layout === "mobile"
@@ -54,6 +58,7 @@ export function createResponsiveDockCoordinator(host) {
   function clearGridScrollListener() {
     host._gridScrollCleanup?.();
     host._gridScrollCleanup = null;
+    syncStatusBarFillScrollState(false);
   }
 
   function wireDockAutoHide(grid) {
@@ -72,6 +77,7 @@ export function createResponsiveDockCoordinator(host) {
     }
 
     let previousScrollTop = scrollContainer.scrollTop;
+    syncStatusBarFillScrollState(previousScrollTop > 4);
     const threshold = 10;
     const onScroll = () => {
       if (!isMobileLayout() || isLandscape()) {
@@ -79,11 +85,13 @@ export function createResponsiveDockCoordinator(host) {
           "is-mobile-floating-controls-hidden",
           isMobileLayout() && isLandscape(),
         );
+        syncStatusBarFillScrollState(false);
         previousScrollTop = scrollContainer.scrollTop;
         return;
       }
 
       const currentScrollTop = scrollContainer.scrollTop;
+      syncStatusBarFillScrollState(currentScrollTop > 4);
       if (currentScrollTop <= 4) {
         host.classList.remove("is-mobile-floating-controls-hidden");
         previousScrollTop = currentScrollTop;

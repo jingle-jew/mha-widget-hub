@@ -197,7 +197,7 @@
     --mha-dock-unit-size: var(--mha-square-unit);
     --mha-dock-zone-width: var(--mha-dock-unit-size);
     --mha-bottom-dock-clearance: max(
-      env(safe-area-inset-bottom),
+      var(--mha-safe-bottom, 0px),
       var(--mha-grid-gap)
     );
     --mha-bottom-dock-height: calc(
