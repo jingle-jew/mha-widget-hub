@@ -10,7 +10,7 @@
   --mha-icon-symbol-min-size: 1rem;
   --mha-icon-symbol-color: var(--mha-icon-color, var(--mha-text-primary, #fff));
   --mha-icon-symbol-opacity: .86;
-  --mha-icon-symbol-stroke-width: 0;
+  --mha-icon-symbol-stroke-width: 2;
 }
 
 .mha-icon-symbol {
@@ -36,14 +36,33 @@
   min-inline-size: var(--mha-icon-symbol-min-size);
   min-block-size: var(--mha-icon-symbol-min-size);
   display: block;
-  fill: var(--mha-icon-symbol-color, var(--mha-icon-color, var(--mha-text-primary, #fff)));
-  stroke: none;
+  color: inherit;
   overflow: visible;
 }
 
-.mha-icon-symbol path {
-  fill: var(--mha-icon-symbol-color, var(--mha-icon-color, var(--mha-text-primary, #fff)));
+.mha-icon-symbol svg[data-icon-render-mode="fill"] {
+  fill: currentColor;
   stroke: none;
+}
+
+.mha-icon-symbol svg[data-icon-render-mode="fill"] path {
+  fill: currentColor;
+  stroke: none;
+}
+
+.mha-icon-symbol svg[data-icon-render-mode="stroke"] {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: var(--mha-icon-symbol-stroke-width, 2);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.mha-icon-symbol svg[data-icon-render-mode="stroke"] path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: inherit;
+  vector-effect: non-scaling-stroke;
 }
 
 .mha-icon-symbol[data-icon-symbol=""] {

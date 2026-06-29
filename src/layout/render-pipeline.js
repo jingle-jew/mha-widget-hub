@@ -20,6 +20,7 @@ import { createMediaPage } from "../pages/media-page.js";
 import { createPagePanel } from "../pages/page-panel.js";
 import { syncMediaPageSettingsPanel } from "../pages/media-page-settings.js";
 import { isMediaPlayersPage } from "../pages/page-types.js";
+import { getPrimaryEditIconName, setFloatingControlButtonIcon } from "../ui/floating-control-icons.js";
 import {
   buildWidgetConfigPanelProps,
   buildWidgetManagerPanelProps,
@@ -143,15 +144,22 @@ export function createRenderPipeline(host, options = {}) {
     const edit = document.createElement("button");
     edit.className = "mha-edit-button mha-main-edit-button mha-primary-edit-button";
     edit.type = "button";
-    edit.innerHTML = host._getEditButtonIcon?.(host._isEditing) || "";
+    edit.setAttribute("aria-label", t(host._isEditing ? "common.close" : "common.edit", host._isEditing ? "Close" : "Edit"));
+    setFloatingControlButtonIcon(edit, {
+      name: getPrimaryEditIconName(host._isEditing),
+      label: t(host._isEditing ? "common.close" : "common.edit", host._isEditing ? "Close" : "Edit"),
+    });
     edit.onclick = () => host.toggleEditMode();
     host.shadowRoot.append(edit);
 
     const addWidget = document.createElement("button");
     addWidget.className = "mha-edit-button mha-main-edit-button mha-add-widget-button";
     addWidget.type = "button";
-    addWidget.innerHTML = `<svg viewBox="0 0 24 24"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5Z"/></svg>`;
     addWidget.setAttribute("aria-label", t("settings.addWidget", "Add widget"));
+    setFloatingControlButtonIcon(addWidget, {
+      name: "plus",
+      label: t("settings.addWidget", "Add widget"),
+    });
     addWidget.hidden = !host._isEditing || host._canAddWidgetToActivePage?.() === false;
     addWidget.onclick = (event) => {
       event.preventDefault();

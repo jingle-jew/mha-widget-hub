@@ -44,6 +44,14 @@
   stroke: currentColor;
 }
 
+.mha-floating-control-symbol {
+  --mha-icon-symbol-size: var(--mha-edit-icon-glyph-size);
+  --mha-icon-symbol-min-size: 0;
+  --mha-icon-symbol-color: var(--mha-system-button-color, var(--mha-icon-color, var(--mha-text-primary, #fff)));
+  color: var(--mha-system-button-color, var(--mha-icon-color, var(--mha-text-primary, #fff)));
+  opacity: 1;
+}
+
 @media (max-width: 767px) {
   .mha-edit-button {
     right: var(--mha-edit-button-edge);
@@ -146,6 +154,7 @@
     color-mix(in srgb, var(--mha-surface-floating) 82%, transparent);
   --mha-system-button-border:
     color-mix(in srgb, var(--mha-border-primary) 82%, rgba(255,255,255,.14));
+  --mha-system-button-color: rgba(255,255,255,.96);
   --mha-system-button-shadow:
     inset 0 1px 0 rgba(255,255,255,.16),
     0 10px 24px rgba(0,0,0,.26);
@@ -168,6 +177,7 @@
 :host([data-theme-style="material"][data-theme="dark"]) {
   --mha-system-button-bg: var(--mha-material-surface-container-high, var(--mha-surface-tonal));
   --mha-system-button-border: var(--mha-border-subtle);
+  --mha-system-button-color: rgba(255,255,255,.96);
   --mha-system-button-shadow: var(--mha-shadow-floating);
   --mha-system-button-highlight-opacity: .12;
 }
@@ -197,6 +207,7 @@
     color-mix(in srgb, var(--mha-surface-floating) 62%, transparent);
   --mha-system-button-border:
     color-mix(in srgb, var(--mha-border-primary) 84%, rgba(255,255,255,.08));
+  --mha-system-button-color: rgba(255,255,255,.96);
   --mha-system-button-shadow:
     inset 0 1px 0 rgba(255,255,255,.13),
     0 9px 20px rgba(0,0,0,.24),

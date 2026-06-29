@@ -2,6 +2,8 @@ import { writeJson } from "../core/storage.js";
 import { POSITIONS } from "../core/mha-persistence.js";
 import { syncDropSlotRenderer } from "./drop-slot-renderer.js";
 import { createWidgetDragCoordinator } from "./widget-drag-coordinator.js";
+import { getPrimaryEditIconName, setFloatingControlButtonIcon } from "../ui/floating-control-icons.js";
+import { t } from "../i18n/index.js";
 
 export function createWidgetInteractionSurfaceCoordinator(host) {
   const dragCoordinator = createWidgetDragCoordinator(host);
@@ -30,7 +32,14 @@ export function createWidgetInteractionSurfaceCoordinator(host) {
     host.dataset.editing = String(host._isEditing);
     if (host._isEditing) host.classList.remove("is-mobile-floating-controls-hidden", "is-dock-hidden");
     const edit = host.shadowRoot.querySelector(".mha-primary-edit-button");
-    if (edit) edit.innerHTML = host._getEditButtonIcon();
+    if (edit) {
+      const label = t(host._isEditing ? "common.close" : "common.edit", host._isEditing ? "Close" : "Edit");
+      edit.setAttribute("aria-label", label);
+      setFloatingControlButtonIcon(edit, {
+        name: getPrimaryEditIconName(host._isEditing),
+        label,
+      });
+    }
     const add = host.shadowRoot.querySelector(".mha-add-widget-button");
     if (add) add.hidden = !host._isEditing || host._isMobileLandscapeLayout() || host._canAddWidgetToActivePage?.() === false;
     host.shadowRoot?.querySelectorAll?.(".mha-widget")?.forEach((element) => {

@@ -3,6 +3,7 @@ import { createBackButton, createCloseButton } from "../system/system-buttons.js
 import { createLiveWidgetPreview } from "../widgets/widget-preview-renderer.js";
 import { resolveWidgetKind } from "../widgets/widget-registry.js";
 import { createPanelShell } from "../panels/panel-shell.js";
+import { createIconSymbol } from "../ui/icon-symbol.js";
 import { t } from "../i18n/index.js";
 export { WIDGET_VARIANTS, getWidgetVariants, getNextWidgetVariantEntries } from "../widgets/widget-variants.js";
 
@@ -69,7 +70,11 @@ function createCategoryButton(category, onSelectCategory) {
   button.type = "button";
   const icon = document.createElement("span");
   icon.className = "mha-widget-manager-category-icon";
-  icon.textContent = category.icon || "□";
+  icon.append(createIconSymbol({
+    name: category.icon || "clock",
+    label: t(`widgets.categories.${category.id}`, category.label),
+    className: "mha-widget-manager-category-symbol",
+  }));
   const text = document.createElement("span");
   text.className = "mha-widget-manager-category-text";
   const label = document.createElement("strong");
