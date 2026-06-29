@@ -354,21 +354,22 @@
 
 .mha-widget-config-icon-name-row {
   display: grid;
-  grid-template-columns: 2.8rem minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) 2.8rem;
   align-items: center;
   gap: .6rem;
 }
 
+.mha-widget-config-icon-name-row > input.mha-widget-config-control {
+  grid-column: 1;
+  min-inline-size: 0;
+}
+
 .mha-widget-config-icon-name-row > .mha-widget-icon-picker {
+  grid-column: 2;
   inline-size: 2.8rem;
   block-size: 2.8rem;
   min-inline-size: 2.8rem;
   max-inline-size: 2.8rem;
-}
-
-.mha-widget-config-icon-name-row > input.mha-widget-config-control {
-  grid-column: 2;
-  min-inline-size: 0;
 }
 
 .mha-widget-icon-picker--inline .mha-widget-icon-picker-trigger.mha-widget-config-control {
