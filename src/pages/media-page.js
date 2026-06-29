@@ -277,7 +277,7 @@ export function createMediaPage(page = {}, {
     controls.className = "mha-media-page-controls";
 
     const playback = document.createElement("div");
-    playback.className = "mha-media-page-control-group";
+    playback.className = "mha-media-page-control-group mha-media-page-control-group--playback";
     playback.append(
       createActionButton({
         label: t("widgets.mediaControls.previous", "Previous"),
@@ -306,7 +306,7 @@ export function createMediaPage(page = {}, {
     );
 
     const volume = document.createElement("div");
-    volume.className = "mha-media-page-control-group";
+    volume.className = "mha-media-page-control-group mha-media-page-control-group--volume";
     volume.append(
       createActionButton({
         label: t("widgets.mediaControls.volumeDown", "Volume down"),
