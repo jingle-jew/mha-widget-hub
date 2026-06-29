@@ -70,6 +70,10 @@ test("icon symbol catalog resolves useful aliases", () => {
 
 test("Tabler provider resolves the first migrated MHA icon names", () => {
   assert.equal(resolveTablerIconForMhaName("apps")?.name, "apps");
+  assert.equal(resolveTablerIconForMhaName("coffee")?.name, "coffee");
+  assert.equal(resolveTablerIconForMhaName("tv")?.name, "device-tv");
+  assert.equal(resolveTablerIconForMhaName("lamp")?.name, "lamp");
+  assert.equal(resolveTablerIconForMhaName("fan")?.name, "propeller");
   assert.equal(resolveTablerIconForMhaName("home")?.name, "home");
   assert.equal(resolveTablerIconForMhaName("grid")?.name, "layout-grid");
   assert.equal(resolveTablerIconForMhaName("gear")?.name, "settings");

@@ -76,11 +76,17 @@ export function updateToggleConfigLabel(draft, label) {
 
 export function buildToggleWidgetConfig(widget, draft, hass, visibilityConfig) {
   const { selected } = reconcileToggleConfigDraft(draft, hass, visibilityConfig);
+  const legacyIcon = String(widget.icon || "").trim() === "home"
+    && ["", "home"].includes(String(widget.iconCategory || "").trim().toLowerCase());
+  const resolvedIcon = legacyIcon
+    ? "auto"
+    : String(widget.icon || "").trim();
   return {
     ...widget,
     kind: "toggle",
     entityId: draft.entityId || "",
     label: String(draft.label || selected?.label || "").trim(),
+    ...(resolvedIcon ? { icon: resolvedIcon } : {}),
   };
 }
 

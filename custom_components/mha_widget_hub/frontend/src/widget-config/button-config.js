@@ -73,6 +73,11 @@ export function updateButtonLabel(draft, label) {
 
 export function buildButtonWidgetConfig(widget, draft, hass, visibilityConfig) {
   const { buttonType, selected } = reconcileButtonConfigDraft(draft, hass, visibilityConfig);
+  const legacyIcon = String(widget.icon || "").trim() === "home"
+    && ["", "home"].includes(String(widget.iconCategory || "").trim().toLowerCase());
+  const resolvedIcon = legacyIcon
+    ? "auto"
+    : String(widget.icon || "").trim();
   if (buttonType.value === "action") {
     return {
       ...widget,
@@ -80,6 +85,7 @@ export function buildButtonWidgetConfig(widget, draft, hass, visibilityConfig) {
       buttonType: "action",
       entityId: "",
       label: String(draft.label || "Action").trim(),
+      ...(resolvedIcon ? { icon: resolvedIcon } : {}),
       action: {
         domain: String(draft.actionDomain || "").trim(),
         service: String(draft.actionService || "").trim(),
@@ -93,6 +99,7 @@ export function buildButtonWidgetConfig(widget, draft, hass, visibilityConfig) {
     buttonType: buttonType.value,
     entityId: draft.entityId || "",
     label: String(draft.label || selected?.label || "").trim(),
+    ...(resolvedIcon ? { icon: resolvedIcon } : {}),
   };
 }
 
