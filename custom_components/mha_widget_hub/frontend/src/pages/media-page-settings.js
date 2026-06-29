@@ -10,29 +10,31 @@ import { getMediaPageVisualStyleOptions } from "./page-types.js";
 
 function createCheckboxRow({ label, checked = false, onChange = () => {} } = {}) {
   const labelNode = document.createElement("label");
-  labelNode.className = "mha-media-page-settings-checkbox";
+  labelNode.className = "mha-settings-checkbox mha-media-page-settings-checkbox";
 
   const input = document.createElement("input");
   input.type = "checkbox";
+  input.className = "mha-settings-checkbox-input";
   input.checked = Boolean(checked);
   input.addEventListener("change", () => onChange(input.checked));
 
   const text = document.createElement("span");
+  text.className = "mha-settings-label";
   text.textContent = label;
-  labelNode.append(input, text);
+  labelNode.append(text, input);
   return labelNode;
 }
 
 function createSelectField({ label, value = "", options = [], onChange = () => {} } = {}) {
   const field = document.createElement("label");
-  field.className = "mha-media-page-settings-field";
+  field.className = "mha-settings-field mha-media-page-settings-field";
 
   const text = document.createElement("span");
-  text.className = "mha-media-page-settings-field-label";
+  text.className = "mha-settings-label mha-media-page-settings-field-label";
   text.textContent = label;
 
   const select = document.createElement("select");
-  select.className = "mha-media-page-settings-select";
+  select.className = "mha-settings-select mha-media-page-settings-select";
   select.value = value;
   select.addEventListener("change", () => onChange(select.value));
 
@@ -49,10 +51,10 @@ function createSelectField({ label, value = "", options = [], onChange = () => {
 
 function createSection(title, children = []) {
   const section = document.createElement("section");
-  section.className = "mha-media-page-settings-section";
+  section.className = "mha-settings-section mha-media-page-settings-section";
 
   const heading = document.createElement("h3");
-  heading.className = "mha-media-page-settings-section-title";
+  heading.className = "mha-settings-section-title mha-media-page-settings-section-title";
   heading.textContent = title;
   section.append(heading, ...children);
   return section;
@@ -74,11 +76,11 @@ export function createMediaPageSettingsPanel({
 
   const root = applyPanelSurfaceContract(createPanelShell({
     open,
-    rootClassName: "mha-media-page-settings-panel",
-    scrimClassName: "mha-media-page-settings-scrim",
-    sheetClassName: "mha-media-page-settings-sheet",
-    headerClassName: "mha-media-page-settings-header",
-    closeClassName: "mha-media-page-settings-close",
+    rootClassName: "mha-settings-panel mha-media-page-settings-panel",
+    scrimClassName: "mha-settings-scrim mha-media-page-settings-scrim",
+    sheetClassName: "mha-settings-sheet mha-media-page-settings-sheet",
+    headerClassName: "mha-settings-header mha-media-page-settings-header",
+    closeClassName: "mha-settings-close mha-media-page-settings-close",
     title: t("mediaPage.settingsTitle", "Media page settings"),
     ariaLabel: t("mediaPage.settingsTitle", "Media page settings"),
     closeLabel: t("common.close", "Close"),
@@ -92,7 +94,7 @@ export function createMediaPageSettingsPanel({
   root.hidden = !open;
 
   const body = document.createElement("div");
-  body.className = "mha-media-page-settings-body";
+  body.className = "mha-settings-body mha-media-page-settings-body";
 
   const playerRows = availablePlayers.length
     ? availablePlayers.map((player) => createCheckboxRow({
@@ -137,13 +139,13 @@ export function createMediaPageSettingsPanel({
     ]),
   );
 
-  root.querySelector(".mha-panel-sheet, .mha-media-page-settings-sheet")?.append(body);
+  root.querySelector(".mha-settings-sheet")?.append(body);
   return root;
 }
 
 function createEmptyState(text = "") {
   const node = document.createElement("p");
-  node.className = "mha-media-page-settings-empty";
+  node.className = "mha-settings-description mha-media-page-settings-empty";
   node.textContent = text;
   return node;
 }
