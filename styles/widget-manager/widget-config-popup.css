@@ -113,11 +113,11 @@
 }
 
 .mha-widget-icon-picker-panel {
-  --mha-icon-picker-tile-size: 2.95rem;
-  --mha-icon-picker-grid-gap: .45rem;
+  --mha-icon-picker-tile-size: 2.35rem;
+  --mha-icon-picker-grid-gap: .24rem;
   --mha-icon-picker-visible-rows: 7;
   --mha-icon-picker-auto-size: 2.7rem;
-  --mha-icon-picker-results-gap: .65rem;
+  --mha-icon-picker-results-gap: .55rem;
   position: fixed;
   z-index: 10000;
   inline-size: min(21.5rem, calc(100vw - 1.5rem));
@@ -265,11 +265,17 @@
   inline-size: var(--mha-icon-picker-tile-size);
   block-size: var(--mha-icon-picker-tile-size);
   min-block-size: var(--mha-icon-picker-tile-size);
-  border-radius: .95rem;
+  border-radius: .8rem;
   border: 1px solid transparent;
   background: transparent;
   color: inherit;
   cursor: pointer;
+}
+
+.mha-widget-icon-picker-tile .mha-icon-symbol,
+.mha-widget-icon-picker-tile-glyph {
+  inline-size: 1.05rem;
+  block-size: 1.05rem;
 }
 
 .mha-widget-icon-picker-tile--compact {
