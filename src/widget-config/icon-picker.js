@@ -61,6 +61,8 @@ const TABLER_ONLY_ICON_CATEGORIES = Object.freeze({
   movie: "media_player",
 });
 
+const MOBILE_BREAKPOINT_PX = 767;
+
 function titleCase(value = "") {
   return String(value || "")
     .split(/\s+/)
@@ -317,6 +319,14 @@ export function createIconPickerControl({
   const ownerDocument = root.ownerDocument || globalThis.document;
   const ownerWindow = ownerDocument?.defaultView || globalThis.window;
 
+  function isMobileViewport() {
+    if (ownerWindow?.matchMedia) {
+      return ownerWindow.matchMedia(`(max-width: ${MOBILE_BREAKPOINT_PX}px)`).matches;
+    }
+    const viewportWidth = ownerWindow?.innerWidth || ownerDocument?.documentElement?.clientWidth || 0;
+    return viewportWidth <= MOBILE_BREAKPOINT_PX;
+  }
+
   function dispatchInput() {
     root.dispatchEvent(new Event("input", { bubbles: true }));
   }
@@ -339,6 +349,20 @@ export function createIconPickerControl({
       return;
     }
     if (!ownerDocument?.body || !panel.isConnected) return;
+
+    if (isMobileViewport()) {
+      panel.dataset.mobilePresentation = "sheet";
+      panel.style.left = "";
+      panel.style.top = "";
+      panel.style.maxBlockSize = "";
+      results.style.blockSize = "";
+      results.style.maxBlockSize = "";
+      return;
+    }
+
+    panel.dataset.mobilePresentation = "popup";
+    results.style.blockSize = "";
+    results.style.maxBlockSize = "";
 
     const viewportWidth = ownerWindow?.innerWidth || ownerDocument.documentElement.clientWidth || 0;
     const viewportHeight = ownerWindow?.innerHeight || ownerDocument.documentElement.clientHeight || 0;

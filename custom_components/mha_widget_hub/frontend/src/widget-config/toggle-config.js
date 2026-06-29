@@ -162,14 +162,16 @@ export function renderToggleConfigFields(session, hass, visibilityConfig, onChan
     },
     t,
   });
+  iconPicker.classList.add("mha-widget-icon-picker--inline");
+
+  const iconNameRow = document.createElement("div");
+  iconNameRow.className = "mha-widget-config-icon-name-row";
+  iconNameRow.append(nameInput, iconPicker);
 
   fields.append(
     createField(t("widgets.config.deviceType", "Device type"), typeSelect),
     createField(t("widgets.config.device", "Device"), deviceSelect),
-    createField(t("widgets.modesRoutines.displayName", "Display name"), nameInput),
-    createField(t("widgets.config.icon", "Icon"), iconPicker, {
-      hint: t("widgets.config.iconHint", "Choose Auto or a manual icon."),
-    }),
+    createField(t("widgets.modesRoutines.displayName", "Display name"), iconNameRow),
   );
   return { fields, canSave: Boolean(reconciled.selected) };
 }
