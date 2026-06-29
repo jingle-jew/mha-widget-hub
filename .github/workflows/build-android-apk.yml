@@ -59,10 +59,12 @@ jobs:
         run: npm run sync
 
       - name: Make Gradle wrapper executable
-        run: chmod +x android/gradlew
+        working-directory: android-app/android
+        run: chmod +x ./gradlew
 
       - name: Build release APK
-        run: ./android/gradlew assembleRelease
+        working-directory: android-app/android
+        run: ./gradlew assembleRelease
 
       - name: Upload signed release APK
         if: ${{ env.ANDROID_KEYSTORE_BASE64 != '' }}
