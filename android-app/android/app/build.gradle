@@ -1,8 +1,27 @@
 apply plugin: 'com.android.application'
 
+def keystorePath = System.getenv("ANDROID_KEYSTORE_PATH") ?: "${rootDir}/release-keystore.jks"
+def keystoreFile = file(keystorePath)
+def releaseSigningCredentials = [
+    System.getenv("ANDROID_KEYSTORE_PASSWORD"),
+    System.getenv("ANDROID_KEY_ALIAS"),
+    System.getenv("ANDROID_KEY_PASSWORD"),
+]
+def hasReleaseSigning = releaseSigningCredentials.every { value -> value != null && !value.trim().isEmpty() } && keystoreFile.exists()
+
 android {
     namespace = "app.mha.controlhub"
     compileSdk = rootProject.ext.compileSdkVersion
+    signingConfigs {
+        if (hasReleaseSigning) {
+            release {
+                storeFile keystoreFile
+                storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                keyAlias System.getenv("ANDROID_KEY_ALIAS")
+                keyPassword System.getenv("ANDROID_KEY_PASSWORD")
+            }
+        }
+    }
     defaultConfig {
         applicationId "app.mha.controlhub"
         minSdkVersion rootProject.ext.minSdkVersion
@@ -20,6 +39,11 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (hasReleaseSigning) {
+                signingConfig signingConfigs.release
+            } else {
+                logger.lifecycle("Release signing secrets or keystore file not found. assembleRelease will produce an unsigned APK.")
+            }
         }
     }
 }

@@ -1,6 +1,6 @@
-# MHA Android WebView prototype
+# MHA Android WebView wrapper
 
-This folder is an isolated first attempt at running MHA Control Hub as a launcher-friendly Android app.
+This folder contains the Android wrapper used to run MHA Control Hub as a launcher-friendly app and to build APK artifacts from GitHub Actions.
 
 The app is intentionally thin:
 
@@ -17,25 +17,77 @@ npm install
 npm run start
 ```
 
-## Create the Android project
+## Open the native Android project
 
 ```bash
 cd android-app
 npm install
-npm run build
-npx cap add android
-npx cap open android
-```
-
-After the native Android project exists, use:
-
-```bash
 npm run android
 ```
+
+The native `android/` project is already committed in this repository, so `npx cap add android` is no longer part of the normal workflow.
+
+## Build APKs locally
+
+### Debug APK
+
+```bash
+cd android-app
+npm install
+npm run build:apk:debug
+```
+
+Output:
+
+```bash
+android-app/android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+### Release APK
+
+```bash
+cd android-app
+npm install
+npm run build:apk:release
+```
+
+If release signing secrets are configured and a keystore file is available, Gradle produces a signed release APK. If they are missing, Gradle logs a clear fallback message and produces an unsigned release APK instead.
+
+Expected output folder:
+
+```bash
+android-app/android/app/build/outputs/apk/release/
+```
+
+## GitHub Actions artifact build
+
+The workflow [`.github/workflows/build-android-apk.yml`](../.github/workflows/build-android-apk.yml) builds the Android wrapper and uploads the release APK as a GitHub Actions artifact.
+
+After the workflow finishes:
+
+1. Open the workflow run in GitHub.
+2. Open the `Artifacts` section.
+3. Download the `mha-control-hub-apk` artifact.
+
+This first phase only publishes the APK as an Actions artifact. Automatic GitHub Release assets can be added later without changing the Android build path.
+
+## GitHub secrets for signed release builds
+
+Create these repository secrets before expecting a signed release artifact:
+
+- `ANDROID_KEYSTORE_BASE64`
+- `ANDROID_KEYSTORE_PASSWORD`
+- `ANDROID_KEY_ALIAS`
+- `ANDROID_KEY_PASSWORD`
+
+The workflow decodes `ANDROID_KEYSTORE_BASE64` into a temporary keystore file on the runner only. No keystore should be committed to the repository.
+
+If these secrets are absent, the workflow still runs and uploads an unsigned release APK artifact. That fallback is useful for validating the build chain before enabling signing.
 
 ## Notes
 
 This V1 does not store or inject a Long-Lived Access Token. That is deliberate: a future version should use platform secure storage before handling tokens directly.
+
 ## External Home Assistant URLs
 
 Capacitor normally protects the app WebView by opening external origins in the device browser. This prototype sets `server.allowNavigation` to `["*"]` so the configured Home Assistant URL stays inside the MHA app WebView.
