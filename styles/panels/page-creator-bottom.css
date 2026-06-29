@@ -1,6 +1,6 @@
 @media (max-width: 767px) {
   .mha-page-creator .mha-page-creator-sheet {
-    --mha-mobile-sheet-top-gap: max(var(--mha-page-padding, clamp(.65rem, 2.5vw, 1rem)), env(safe-area-inset-top));
+    --mha-mobile-sheet-top-gap: max(var(--mha-page-padding, clamp(.65rem, 2.5vw, 1rem)), var(--mha-safe-top, 0px));
     position: fixed;
     bottom: 0;
     left: 0;

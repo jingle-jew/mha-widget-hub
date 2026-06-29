@@ -11,8 +11,8 @@
 
 @media (max-width: 767px) {
   .mha-mobile-dock {
-    --mha-mobile-dock-edge: max(env(safe-area-inset-left), clamp(.9rem, 3vw, 1.25rem));
-    --mha-mobile-dock-bottom: max(env(safe-area-inset-bottom), clamp(.9rem, 3vw, 1.25rem));
+    --mha-mobile-dock-edge: max(var(--mha-safe-left, 0px), clamp(.9rem, 3vw, 1.25rem));
+    --mha-mobile-dock-bottom: max(var(--mha-safe-bottom, 0px), clamp(.9rem, 3vw, 1.25rem));
     --mha-mobile-dock-launcher-size: clamp(3.75rem, 15vw, 4.8rem);
     --mha-mobile-dock-panel-width: min(24rem, calc(100vw - (var(--mha-mobile-dock-edge) * 2)));
     --mha-mobile-dock-gap: clamp(.55rem, 2vw, .8rem);

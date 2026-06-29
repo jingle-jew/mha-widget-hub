@@ -70,8 +70,16 @@
   --mha-motion-duration:260ms;
   --mha-motion-easing:cubic-bezier(.22,1,.36,1);
   --mha-bar-height:54px;
-  --mha-floating-edge:max(18px,env(safe-area-inset-bottom));
-  --mha-floating-top:max(18px,env(safe-area-inset-top));
+  --mha-safe-top:env(safe-area-inset-top);
+  --mha-safe-right:env(safe-area-inset-right);
+  --mha-safe-bottom:env(safe-area-inset-bottom);
+  --mha-safe-left:env(safe-area-inset-left);
+  --mha-safe-area-top:var(--mha-safe-top);
+  --mha-safe-area-right:var(--mha-safe-right);
+  --mha-safe-area-bottom:var(--mha-safe-bottom);
+  --mha-safe-area-left:var(--mha-safe-left);
+  --mha-floating-edge:max(18px,var(--mha-safe-bottom));
+  --mha-floating-top:max(18px,var(--mha-safe-top));
   --mha-statusbar-reserved-top:calc(var(--mha-floating-top) + var(--mha-bar-height) + var(--mha-grid-gap));
   --mha-dock-max-width:calc(100% - (var(--mha-page-padding) * 2));
   --mha-dock-bottom:var(--mha-floating-edge);

@@ -22,6 +22,7 @@ const STATIC_STYLE_MANIFEST_AFTER_THEMES = Object.freeze([
   entry("styles/themes/ios-surface-map.css", "theme"),
   entry("styles/core/glass-surface.css", "structure"),
   entry("styles/core/background.css", "structure"),
+  entry("styles/core/android-edge-to-edge.css", "structure"),
   entry("styles/layout/shell.css", "structure"),
   entry("styles/layout/widget-grid.css", "structure"),
   entry("styles/layout/status-bar.css", "structure"),
