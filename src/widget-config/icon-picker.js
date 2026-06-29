@@ -231,6 +231,10 @@ function createCategoryTab({
   return button;
 }
 
+function clampNumber(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+
 export function createIconPickerControl({
   value = "auto",
   suggestedIcon = "",
@@ -242,6 +246,7 @@ export function createIconPickerControl({
   let selectedValue = normalizeIconPickerValue(value);
   let query = "";
   let activeCategory = suggestedIcon ? resolveIconCategory(suggestedIcon) : "suggested";
+  let cleanupMutationObserver = null;
 
   const root = document.createElement("div");
   root.className = "mha-widget-icon-picker";
@@ -249,6 +254,10 @@ export function createIconPickerControl({
   const trigger = document.createElement("button");
   trigger.type = "button";
   trigger.className = "mha-widget-icon-picker-trigger mha-widget-config-control";
+  trigger.setAttribute("aria-haspopup", "dialog");
+
+  const panelId = `mha-widget-icon-picker-${Math.random().toString(36).slice(2)}`;
+  trigger.setAttribute("aria-controls", panelId);
 
   const triggerIcon = document.createElement("span");
   triggerIcon.className = "mha-widget-icon-picker-trigger-icon";
@@ -266,7 +275,9 @@ export function createIconPickerControl({
   trigger.append(triggerIcon, triggerText);
 
   const panel = document.createElement("div");
+  panel.id = panelId;
   panel.className = "mha-widget-icon-picker-panel";
+  panel.setAttribute("role", "dialog");
 
   const searchWrap = document.createElement("label");
   searchWrap.className = "mha-widget-icon-picker-search";
@@ -286,6 +297,7 @@ export function createIconPickerControl({
   searchInput.addEventListener("input", (event) => {
     query = event.currentTarget.value;
     renderResults();
+    renderTabs();
   });
   searchWrap.append(searchIcon, searchInput);
 
@@ -300,22 +312,97 @@ export function createIconPickerControl({
 
   footer.append(categoryTabs);
   panel.append(searchWrap, results, footer);
-  root.append(trigger, panel);
+  root.append(trigger);
+
+  const ownerDocument = root.ownerDocument || globalThis.document;
+  const ownerWindow = ownerDocument?.defaultView || globalThis.window;
 
   function dispatchInput() {
     root.dispatchEvent(new Event("input", { bubbles: true }));
   }
 
+  function isExpanded() {
+    return root.dataset.expanded === "true";
+  }
+
+  function placePanel() {
+    if (!ownerDocument?.body || !panel.isConnected) return;
+
+    const viewportWidth = ownerWindow?.innerWidth || ownerDocument.documentElement.clientWidth || 0;
+    const viewportHeight = ownerWindow?.innerHeight || ownerDocument.documentElement.clientHeight || 0;
+    const margin = 12;
+    const gap = 8;
+    const triggerRect = trigger.getBoundingClientRect();
+
+    panel.style.maxBlockSize = `${Math.max(260, viewportHeight - margin * 2)}px`;
+
+    const panelRect = panel.getBoundingClientRect();
+    const panelWidth = panelRect.width || Math.min(344, viewportWidth - margin * 2);
+    const panelHeight = panelRect.height || Math.min(496, viewportHeight - margin * 2);
+
+    const maxLeft = Math.max(margin, viewportWidth - panelWidth - margin);
+    const left = clampNumber(triggerRect.left, margin, maxLeft);
+
+    const bottomTop = triggerRect.bottom + gap;
+    const top = bottomTop + panelHeight <= viewportHeight - margin
+      ? bottomTop
+      : clampNumber(triggerRect.top - panelHeight - gap, margin, viewportHeight - panelHeight - margin);
+
+    panel.style.left = `${Math.round(left)}px`;
+    panel.style.top = `${Math.round(top)}px`;
+  }
+
+  function addFloatingListeners() {
+    ownerDocument?.addEventListener?.("pointerdown", handleDocumentPointerDown, true);
+    ownerDocument?.addEventListener?.("keydown", handleDocumentKeyDown, true);
+    ownerWindow?.addEventListener?.("resize", placePanel);
+    ownerWindow?.addEventListener?.("scroll", placePanel, true);
+  }
+
+  function removeFloatingListeners() {
+    ownerDocument?.removeEventListener?.("pointerdown", handleDocumentPointerDown, true);
+    ownerDocument?.removeEventListener?.("keydown", handleDocumentKeyDown, true);
+    ownerWindow?.removeEventListener?.("resize", placePanel);
+    ownerWindow?.removeEventListener?.("scroll", placePanel, true);
+  }
+
   function closePanel() {
     root.dataset.expanded = "false";
     trigger.setAttribute("aria-expanded", "false");
+    removeFloatingListeners();
+    panel.remove();
+  }
+
+  function cleanupPicker() {
+    closePanel();
+    cleanupMutationObserver?.disconnect();
+    cleanupMutationObserver = null;
   }
 
   function openPanel() {
+    if (!ownerDocument?.body) return;
+
     root.dataset.expanded = "true";
     trigger.setAttribute("aria-expanded", "true");
-    searchInput.focus({ preventScroll: true });
-    searchInput.select();
+
+    if (!panel.isConnected) {
+      ownerDocument.body.append(panel);
+    }
+
+    renderTabs();
+    renderResults();
+    placePanel();
+    addFloatingListeners();
+
+    ownerWindow?.requestAnimationFrame?.(() => {
+      placePanel();
+      searchInput.focus({ preventScroll: true });
+      searchInput.select();
+    });
+    if (!ownerWindow?.requestAnimationFrame) {
+      searchInput.focus({ preventScroll: true });
+      searchInput.select();
+    }
   }
 
   function setSelectedValue(nextValue) {
@@ -394,22 +481,28 @@ export function createIconPickerControl({
           activeCategory = nextCategory;
           renderTabs();
           renderResults();
+          placePanel();
         },
       }));
     });
   }
 
-  trigger.addEventListener("click", () => {
-    const expanded = root.dataset.expanded === "true";
-    if (expanded) closePanel();
-    else openPanel();
-  });
-
-  const ownerDocument = globalThis.document;
-  ownerDocument?.addEventListener?.("pointerdown", (event) => {
-    if (root.dataset.expanded !== "true") return;
-    if (root.contains(event.target)) return;
+  function handleDocumentPointerDown(event) {
+    if (!isExpanded()) return;
+    if (root.contains(event.target) || panel.contains(event.target)) return;
     closePanel();
+  }
+
+  function handleDocumentKeyDown(event) {
+    if (!isExpanded() || event.key !== "Escape") return;
+    event.preventDefault();
+    closePanel();
+    trigger.focus({ preventScroll: true });
+  }
+
+  trigger.addEventListener("click", () => {
+    if (isExpanded()) closePanel();
+    else openPanel();
   });
 
   root.dataset.expanded = "false";
@@ -417,6 +510,16 @@ export function createIconPickerControl({
   updateTrigger();
   renderTabs();
   renderResults();
+
+  if (ownerDocument?.documentElement && "MutationObserver" in globalThis) {
+    cleanupMutationObserver = new MutationObserver(() => {
+      if (!root.isConnected) cleanupPicker();
+    });
+    cleanupMutationObserver.observe(ownerDocument.documentElement, {
+      childList: true,
+      subtree: true,
+    });
+  }
 
   return root;
 }
