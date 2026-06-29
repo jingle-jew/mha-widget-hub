@@ -8,6 +8,7 @@ function createHarness(overrides = {}) {
     syncDocks: 0,
     syncPageCreator: 0,
     refreshActiveGridOnly: 0,
+    transitionPageRender: [],
     syncWidgetDropSlots: 0,
     syncSettingsDom: 0,
     renderRoot: 0,
@@ -78,6 +79,14 @@ function createHarness(overrides = {}) {
       return success;
     },
     refreshActiveGridOnly: () => { calls.refreshActiveGridOnly += 1; },
+    transitionPageRender: (previousPage, nextPage) => {
+      calls.transitionPageRender.push({
+        previousPageId: previousPage?.id || "",
+        nextPageId: nextPage?.id || "",
+        previousPageType: previousPage?.type || "grid",
+        nextPageType: nextPage?.type || "grid",
+      });
+    },
     syncWidgetDropSlots: () => { calls.syncWidgetDropSlots += 1; },
     syncSettingsDom: () => { calls.syncSettingsDom += 1; },
     renderRoot: () => { calls.renderRoot += 1; },
@@ -108,7 +117,13 @@ test("selecting a page closes placement state and reloads widgets", () => {
   assert.equal(state.widgetManagerOpen, false);
   assert.equal(state.widgetManagerCategory, "");
   assert.deepEqual(calls.writeActivePage, ["lights"]);
-  assert.equal(calls.refreshActiveGridOnly, 1);
+  assert.deepEqual(calls.transitionPageRender, [{
+    previousPageId: "home",
+    nextPageId: "lights",
+    previousPageType: "grid",
+    nextPageType: "grid",
+  }]);
+  assert.equal(calls.refreshActiveGridOnly, 0);
   assert.equal(calls.syncDocks, 1);
 });
 
@@ -141,8 +156,14 @@ test("deleting a page cleans positions and reloads widgets when the active page 
   assert.deepEqual(calls.writeWidgetPositions, [{
     "home:desktop:8x6": { clock: { x: 1, y: 1 } },
   }]);
-  assert.equal(calls.refreshActiveGridOnly, 1);
-  assert.equal(calls.syncWidgetDropSlots, 1);
+  assert.deepEqual(calls.transitionPageRender, [{
+    previousPageId: "lights",
+    nextPageId: "home",
+    previousPageType: "grid",
+    nextPageType: "grid",
+  }]);
+  assert.equal(calls.refreshActiveGridOnly, 0);
+  assert.equal(calls.syncWidgetDropSlots, 0);
 });
 
 test("creating a media page resets the page creator state and triggers a full render", () => {
@@ -163,7 +184,13 @@ test("creating a media page resets the page creator state and triggers a full re
   assert.equal(state.pages.at(-1)?.icon, "media-player");
   assert.equal(calls.syncDocks, 1);
   assert.equal(calls.syncPageCreator, 1);
+  assert.deepEqual(calls.transitionPageRender, [{
+    previousPageId: "home",
+    nextPageId: state.activePageId,
+    previousPageType: "grid",
+    nextPageType: "media-players",
+  }]);
   assert.equal(calls.refreshActiveGridOnly, 0);
   assert.equal(calls.syncWidgetDropSlots, 0);
-  assert.equal(calls.renderRoot, 1);
+  assert.equal(calls.renderRoot, 0);
 });
