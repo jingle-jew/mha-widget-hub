@@ -519,7 +519,13 @@ export function createIconPickerControl({
 
   function handleDocumentPointerDown(event) {
     if (!isExpanded()) return;
-    if (root.contains(event.target) || panel.contains(event.target)) return;
+    const eventPath = event.composedPath?.() || [];
+    if (
+      root.contains(event.target)
+      || panel.contains(event.target)
+      || eventPath.includes(root)
+      || eventPath.includes(panel)
+    ) return;
     closePanel();
   }
 
