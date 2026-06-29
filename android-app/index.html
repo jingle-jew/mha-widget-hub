@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#030406" />
+  <title>MHA Widget Hub</title>
+  <script type="module" src="/src/main.js"></script>
+</head>
+<body>
+  <main class="mha-shell" aria-labelledby="mhaAppTitle">
+    <section class="mha-card">
+      <p class="mha-kicker">MHA Android</p>
+      <h1 id="mhaAppTitle">Ouvrir MHA Widget Hub</h1>
+      <p class="mha-copy">
+        Entre l’URL de ton instance Home Assistant. L’app ouvrira automatiquement
+        <strong>/mha-widget-hub</strong> dans cette WebView.
+      </p>
+
+      <form id="mhaLaunchForm" class="mha-form">
+        <label class="mha-field">
+          <span>URL Home Assistant</span>
+          <input
+            id="mhaHaUrl"
+            name="haUrl"
+            type="url"
+            inputmode="url"
+            autocomplete="url"
+            placeholder="http://homeassistant.local:8123"
+            required
+          />
+        </label>
+
+        <label class="mha-field mha-path-field">
+          <span>Chemin MHA</span>
+          <input id="mhaPanelPath" name="panelPath" type="text" value="/mha-widget-hub" />
+        </label>
+
+        <div class="mha-actions">
+          <button class="mha-primary" type="submit">Ouvrir MHA</button>
+          <button class="mha-secondary" id="mhaReset" type="button">Réinitialiser</button>
+        </div>
+      </form>
+
+      <p class="mha-note">
+        Prototype V1 : le token n’est pas géré ici. Home Assistant affichera son login au besoin,
+        puis gardera sa session dans la WebView.
+      </p>
+    </section>
+  </main>
+</body>
+</html>

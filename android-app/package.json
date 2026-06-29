@@ -1,0 +1,25 @@
+{
+  "name": "mha-control-hub-android-app",
+  "version": "0.1.5",
+  "private": true,
+  "description": "Android WebView wrapper for MHA Widget Hub.",
+  "type": "module",
+  "scripts": {
+    "start": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "sync": "npm run build && npx cap sync android && npm run android:immersive",
+    "build:apk:debug": "npm run sync && sh ./android/gradlew assembleDebug",
+    "build:apk:release": "npm run sync && sh ./android/gradlew assembleRelease",
+    "android": "npm run sync && npx cap open android",
+    "android:immersive": "node ./scripts/apply-android-immersive.mjs"
+  },
+  "dependencies": {
+    "@capacitor/android": "latest",
+    "@capacitor/core": "latest",
+    "@capacitor/status-bar": "latest"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "latest",
+    "vite": "latest"
+  }
+}
