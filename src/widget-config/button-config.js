@@ -204,7 +204,6 @@ export function renderButtonConfigFields(session, hass, visibilityConfig, onChan
     updateButtonLabel(draft, event.currentTarget.value);
     onChange?.();
   });
-  fields.append(createField(t("widgets.modesRoutines.displayName", "Display name"), label));
 
   const suggestedIcon = resolveWidgetIconName({
     explicitIcon: "auto",
@@ -225,9 +224,12 @@ export function renderButtonConfigFields(session, hass, visibilityConfig, onChan
     },
     t,
   });
-  fields.append(createField(t("widgets.config.icon", "Icon"), iconPicker, {
-    hint: t("widgets.config.iconHint", "Choose Auto or a manual icon."),
-  }));
+  iconPicker.classList.add("mha-widget-icon-picker--inline");
+
+  const iconNameRow = document.createElement("div");
+  iconNameRow.className = "mha-widget-config-icon-name-row";
+  iconNameRow.append(iconPicker, label);
+  fields.append(createField(t("widgets.modesRoutines.displayName", "Display name"), iconNameRow));
 
   const isValid = () => (draft.buttonType === "action"
     ? Boolean(draft.actionDomain.trim() && draft.actionService.trim() && draft.actionDataValid)
