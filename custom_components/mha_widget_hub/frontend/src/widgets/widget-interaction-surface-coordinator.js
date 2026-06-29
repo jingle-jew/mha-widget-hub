@@ -32,7 +32,7 @@ export function createWidgetInteractionSurfaceCoordinator(host) {
     const edit = host.shadowRoot.querySelector(".mha-primary-edit-button");
     if (edit) edit.innerHTML = host._getEditButtonIcon();
     const add = host.shadowRoot.querySelector(".mha-add-widget-button");
-    if (add) add.hidden = !host._isEditing || host._isMobileLandscapeLayout();
+    if (add) add.hidden = !host._isEditing || host._isMobileLandscapeLayout() || host._canAddWidgetToActivePage?.() === false;
     host.shadowRoot?.querySelectorAll?.(".mha-widget")?.forEach((element) => {
       element.draggable = false;
       element.removeAttribute("draggable");

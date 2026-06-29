@@ -1,3 +1,11 @@
+import {
+  getDefaultPageIcon,
+  getDefaultPageName,
+  normalizePageConfig,
+  normalizePageType,
+  PAGE_TYPES,
+} from "./page-types.js";
+
 function identity(value) {
   return value;
 }
@@ -9,19 +17,26 @@ export function normalizePage(
 ) {
   const fallbackId = `page-${index + 1}`;
   const id = String(page.id || fallbackId).trim() || fallbackId;
-
-  return {
+  const type = normalizePageType(page.type || PAGE_TYPES.GRID);
+  const normalized = {
     id,
     name: String(
       page.name
       || page.label
-      || (index === 0 ? "Home" : `Page ${index + 1}`),
+      || getDefaultPageName(type, index),
     ),
-    icon: String(page.icon || (index === 0 ? "home" : "grid")),
+    icon: String(page.icon || (index === 0 && type === PAGE_TYPES.GRID ? "home" : getDefaultPageIcon(type))),
     widgets: Array.isArray(page.widgets)
       ? page.widgets.map(normalizeWidget)
       : [],
   };
+
+  if (type !== PAGE_TYPES.GRID || page.type || page.config) {
+    normalized.type = type;
+    normalized.config = normalizePageConfig(type, page.config || {});
+  }
+
+  return normalized;
 }
 
 export function normalizePages(

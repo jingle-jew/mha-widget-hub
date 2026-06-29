@@ -1,4 +1,12 @@
 import { normalizePage } from "./page-model.js";
+import {
+  createDefaultPageConfig,
+  getDefaultPageIcon,
+  getDefaultPageName,
+  normalizePageConfig,
+  normalizePageType,
+  PAGE_TYPES,
+} from "./page-types.js";
 
 export function selectPage(pages, activePageId, pageId) {
   if (
@@ -16,22 +24,30 @@ export function addPage(
   pages,
   {
     icon = "grid",
+    pageType = PAGE_TYPES.GRID,
+    pageConfig = {},
     now = Date.now,
     normalizeWidget,
   } = {},
 ) {
   const index = pages.length + 1;
   const id = `page-${now().toString(36)}-${index}`;
-  const page = normalizePage(
-    {
-      id,
-      name: `Page ${index}`,
-      icon,
-      widgets: [],
-    },
-    index - 1,
-    { normalizeWidget },
+  const type = normalizePageType(pageType);
+  const config = normalizePageConfig(
+    type,
+    Object.keys(pageConfig || {}).length ? pageConfig : createDefaultPageConfig(type),
   );
+  const rawPage = {
+    id,
+    name: getDefaultPageName(type, index - 1),
+    icon: icon || getDefaultPageIcon(type),
+    widgets: [],
+  };
+  if (type !== PAGE_TYPES.GRID) {
+    rawPage.type = type;
+    rawPage.config = config;
+  }
+  const page = normalizePage(rawPage, index - 1, { normalizeWidget });
 
   return {
     pages: [...pages, page],
@@ -72,6 +88,26 @@ export function changePageIcon(pages, pageId, icon = "grid") {
       page.id === pageId ? { ...page, icon: nextIcon } : page
     )),
     icon: nextIcon,
+  };
+}
+
+export function updatePageConfig(pages, pageId, updater = {}) {
+  const page = pages.find(candidate => candidate.id === pageId);
+  if (!page) return null;
+
+  const nextConfig = typeof updater === "function"
+    ? updater(page.config || {}, page)
+    : { ...(page.config || {}), ...(updater || {}) };
+
+  return {
+    pages: pages.map(candidate => (
+      candidate.id === pageId
+        ? {
+          ...candidate,
+          config: normalizePageConfig(candidate.type, nextConfig),
+        }
+        : candidate
+    )),
   };
 }
 
