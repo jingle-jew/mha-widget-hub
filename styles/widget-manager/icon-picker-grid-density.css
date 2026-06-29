@@ -1,0 +1,19 @@
+.mha-widget-icon-picker-panel {
+  --mha-icon-picker-tile-size: 2.55rem;
+  --mha-icon-picker-grid-gap: .28rem;
+}
+
+.mha-widget-icon-picker-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  justify-content: stretch;
+}
+
+.mha-widget-icon-picker-tile {
+  inline-size: 100%;
+}
+
+.mha-widget-icon-picker-tile .mha-icon-symbol,
+.mha-widget-icon-picker-tile-glyph {
+  inline-size: 1.12rem;
+  block-size: 1.12rem;
+}
