@@ -48,7 +48,7 @@ function normalizeBaseUrl(value) {
 }
 
 function normalizePanelPath(value) {
-  const trimmed = value.trim() || "/mha-control-hub";
+  const trimmed = value.trim() || "/mha-widget-hub";
   return trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
 }
 
@@ -65,7 +65,7 @@ function saveSettings() {
 
 function loadSettings() {
   haUrlInput.value = localStorage.getItem(STORAGE_KEYS.haUrl) || "";
-  panelPathInput.value = localStorage.getItem(STORAGE_KEYS.panelPath) || "/mha-control-hub";
+  panelPathInput.value = localStorage.getItem(STORAGE_KEYS.panelPath) || "/mha-widget-hub";
 }
 
 function openMha() {

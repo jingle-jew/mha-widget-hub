@@ -2,7 +2,7 @@
   "name": "mha-control-hub-android-app",
   "version": "0.1.5",
   "private": true,
-  "description": "Android WebView wrapper for MHA Control Hub.",
+  "description": "Android WebView wrapper for MHA Widget Hub.",
   "type": "module",
   "scripts": {
     "start": "vite --host 0.0.0.0",

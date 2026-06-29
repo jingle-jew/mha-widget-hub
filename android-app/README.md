@@ -1,12 +1,12 @@
 # MHA Android WebView wrapper
 
-This folder contains the Android wrapper used to run MHA Control Hub as a launcher-friendly app and to build APK artifacts from GitHub Actions.
+This folder contains the Android wrapper used to run MHA Widget Hub as a launcher-friendly app and to build APK artifacts from GitHub Actions.
 
 The app is intentionally thin:
 
 - it asks for a Home Assistant base URL on first launch;
 - it saves that URL locally;
-- it opens `<Home Assistant URL>/mha-control-hub` in the same Android WebView;
+- it opens `<Home Assistant URL>/mha-widget-hub` in the same Android WebView;
 - Home Assistant handles login/session persistence inside the WebView.
 
 ## Try it locally
@@ -67,9 +67,18 @@ After the workflow finishes:
 
 1. Open the workflow run in GitHub.
 2. Open the `Artifacts` section.
-3. Download the `mha-control-hub-apk` artifact.
+3. Download the `mha-widget-hub-apk` artifact.
 
-This first phase only publishes the APK as an Actions artifact. Automatic GitHub Release assets can be added later without changing the Android build path.
+This first phase publishes the APK as an Actions artifact. A second workflow can also attach the same APK build output to a GitHub Release without changing the Android build path.
+
+## GitHub Release asset publishing
+
+The workflow [`.github/workflows/publish-android-release-asset.yml`](../.github/workflows/publish-android-release-asset.yml) is the next step for distribution.
+
+- On a published GitHub Release, it rebuilds the Android wrapper and attaches the APK to that release.
+- On `workflow_dispatch`, it falls back to uploading the APK as an artifact so the workflow can still be tested without publishing a release.
+
+If signing secrets are present, the release receives a signed APK. If not, it receives an unsigned APK with `-unsigned` in the filename.
 
 ## GitHub secrets for signed release builds
 
@@ -126,6 +135,6 @@ before opening Android Studio.
 
 ## Android shell theme
 
-The local launcher screen now follows the Android/browser color scheme automatically. Before MHA is opened, the setup card uses the same glass-inspired visual language as MHA Control Hub, with separate light and dark token values through `prefers-color-scheme`.
+The local launcher screen now follows the Android/browser color scheme automatically. Before MHA is opened, the setup card uses the same glass-inspired visual language as MHA Widget Hub, with separate light and dark token values through `prefers-color-scheme`.
 
-This only affects the local Android setup shell. Once the app navigates to `/mha-control-hub`, the real MHA frontend and its own theme system take over.
+This only affects the local Android setup shell. Once the app navigates to `/mha-widget-hub`, the real MHA frontend and its own theme system take over.
