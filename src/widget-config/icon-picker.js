@@ -325,7 +325,19 @@ export function createIconPickerControl({
     return root.dataset.expanded === "true";
   }
 
+  function getPanelHost() {
+    const rootNode = root.getRootNode?.();
+    if (rootNode && rootNode !== ownerDocument && typeof rootNode.append === "function") {
+      return rootNode;
+    }
+    return ownerDocument?.body || null;
+  }
+
   function placePanel() {
+    if (!root.isConnected) {
+      closePanel();
+      return;
+    }
     if (!ownerDocument?.body || !panel.isConnected) return;
 
     const viewportWidth = ownerWindow?.innerWidth || ownerDocument.documentElement.clientWidth || 0;
@@ -352,6 +364,20 @@ export function createIconPickerControl({
     panel.style.top = `${Math.round(top)}px`;
   }
 
+  function watchRootRemoval() {
+    cleanupMutationObserver?.disconnect();
+    cleanupMutationObserver = null;
+    if (!ownerDocument?.documentElement || !("MutationObserver" in globalThis)) return;
+
+    cleanupMutationObserver = new MutationObserver(() => {
+      if (!root.isConnected) cleanupPicker();
+    });
+    cleanupMutationObserver.observe(ownerDocument.documentElement, {
+      childList: true,
+      subtree: true,
+    });
+  }
+
   function addFloatingListeners() {
     ownerDocument?.addEventListener?.("pointerdown", handleDocumentPointerDown, true);
     ownerDocument?.addEventListener?.("keydown", handleDocumentKeyDown, true);
@@ -370,29 +396,33 @@ export function createIconPickerControl({
     root.dataset.expanded = "false";
     trigger.setAttribute("aria-expanded", "false");
     removeFloatingListeners();
+    cleanupMutationObserver?.disconnect();
+    cleanupMutationObserver = null;
     panel.remove();
   }
 
   function cleanupPicker() {
     closePanel();
-    cleanupMutationObserver?.disconnect();
-    cleanupMutationObserver = null;
   }
 
   function openPanel() {
-    if (!ownerDocument?.body) return;
+    if (!ownerDocument?.body || !root.isConnected) return;
+
+    const panelHost = getPanelHost();
+    if (!panelHost) return;
 
     root.dataset.expanded = "true";
     trigger.setAttribute("aria-expanded", "true");
 
     if (!panel.isConnected) {
-      ownerDocument.body.append(panel);
+      panelHost.append(panel);
     }
 
     renderTabs();
     renderResults();
     placePanel();
     addFloatingListeners();
+    watchRootRemoval();
 
     ownerWindow?.requestAnimationFrame?.(() => {
       placePanel();
@@ -500,7 +530,9 @@ export function createIconPickerControl({
     trigger.focus({ preventScroll: true });
   }
 
-  trigger.addEventListener("click", () => {
+  trigger.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
     if (isExpanded()) closePanel();
     else openPanel();
   });
@@ -510,16 +542,6 @@ export function createIconPickerControl({
   updateTrigger();
   renderTabs();
   renderResults();
-
-  if (ownerDocument?.documentElement && "MutationObserver" in globalThis) {
-    cleanupMutationObserver = new MutationObserver(() => {
-      if (!root.isConnected) cleanupPicker();
-    });
-    cleanupMutationObserver.observe(ownerDocument.documentElement, {
-      childList: true,
-      subtree: true,
-    });
-  }
 
   return root;
 }
