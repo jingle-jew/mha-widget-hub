@@ -21,6 +21,7 @@ import {
 import {
   createDefaultPageConfig,
   getDefaultPageIcon,
+  isMediaPlayersPage,
   PAGE_TYPES,
 } from "./page-types.js";
 
@@ -58,6 +59,7 @@ export class PageUiCoordinator {
     openDockSettings = () => {},
     openSettings = () => {},
     clearPlacementState = () => {},
+    renderRoot = () => {},
     syncDocksFn = syncDocks,
     createDockPropsFn = createDockProps,
     buildDockStatePropsFn = buildDockStateProps,
@@ -98,6 +100,7 @@ export class PageUiCoordinator {
     this.openDockSettings = (...args) => openDockSettings(...args);
     this.openSettings = (...args) => openSettings(...args);
     this.clearPlacementState = (...args) => clearPlacementState(...args);
+    this.renderRoot = (...args) => renderRoot(...args);
     this.syncDocksFn = (...args) => syncDocksFn(...args);
     this.createDockPropsFn = (...args) => createDockPropsFn(...args);
     this.buildDockStatePropsFn = (...args) => buildDockStatePropsFn(...args);
@@ -141,7 +144,23 @@ export class PageUiCoordinator {
     this.syncPageCreatorPanelFn(this.getRoot(), this.buildPageCreatorProps());
   }
 
+  shouldUseFullRenderForPageTransition(previousPage, nextPage) {
+    return isMediaPlayersPage(previousPage) || isMediaPlayersPage(nextPage);
+  }
+
+  refreshAfterActivePageChange(previousPage, nextPage) {
+    if (this.shouldUseFullRenderForPageTransition(previousPage, nextPage)) {
+      this.renderRoot();
+      return true;
+    }
+
+    this.refreshActiveGridOnly();
+    this.syncWidgetDropSlots();
+    return true;
+  }
+
   selectPage(id) {
+    const previousPage = this.getPages().find(page => page.id === this.getActivePageId()) || null;
     const result = selectPage(this.getPages(), this.getActivePageId(), id);
     if (!result) return false;
 
@@ -149,12 +168,14 @@ export class PageUiCoordinator {
     this.setActivePageId(result.activePageId);
     this.recordPersistenceResult(this.writeActivePage(result.activePageId));
     this.setWidgets(this.readWidgets());
-    this.refreshActiveGridOnly();
+    const nextPage = this.getPages().find(page => page.id === result.activePageId) || null;
+    this.refreshAfterActivePageChange(previousPage, nextPage);
     this.syncDocks();
     return true;
   }
 
   addPage({ icon = "grid", pageType = PAGE_TYPES.GRID, pageConfig = {} } = {}) {
+    const previousPage = this.getPages().find(page => page.id === this.getActivePageId()) || null;
     const result = addPage(this.getPages(), {
       icon,
       pageType,
@@ -171,8 +192,7 @@ export class PageUiCoordinator {
     this.savePages();
     this.syncDocks();
     this.syncPageCreator();
-    this.refreshActiveGridOnly();
-    this.syncWidgetDropSlots();
+    this.refreshAfterActivePageChange(previousPage, result.page);
     return true;
   }
 
@@ -221,11 +241,16 @@ export class PageUiCoordinator {
   }
 
   updatePageConfig(pageId, updater) {
+    const previousPage = this.getPages().find(page => page.id === pageId) || null;
     const result = updatePageConfig(this.getPages(), pageId, updater);
     if (!result) return false;
     this.setPages(result.pages);
     this.savePages();
     this.syncSettingsDom();
+    const nextPage = result.pages.find(page => page.id === pageId) || null;
+    if (pageId === this.getActivePageId() && this.shouldUseFullRenderForPageTransition(previousPage, nextPage)) {
+      this.renderRoot();
+    }
     return true;
   }
 
@@ -259,6 +284,7 @@ export class PageUiCoordinator {
   }
 
   deleteDockPage(id = "") {
+    const previousPage = this.getPages().find(page => page.id === this.getActivePageId()) || null;
     const result = deletePage(this.getPages(), this.getActivePageId(), id);
     if (!result) return false;
 
@@ -285,8 +311,8 @@ export class PageUiCoordinator {
     this.recordPersistenceResult(positionsSaved && pagesSaved);
     this.syncDocks();
     this.syncSettingsDom();
-    this.refreshActiveGridOnly();
-    this.syncWidgetDropSlots();
+    const nextPage = this.getPages().find(page => page.id === this.getActivePageId()) || null;
+    this.refreshAfterActivePageChange(previousPage, nextPage);
     return true;
   }
 }

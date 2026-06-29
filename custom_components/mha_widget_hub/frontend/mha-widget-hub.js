@@ -255,6 +255,7 @@ constructor(){
     syncSettingsDom:()=>this._syncSettingsDom(),
     openDockSettings:()=>this._openDockSettings(),
     openSettings:()=>this._openSettings(),
+    renderRoot:()=>this.render(),
     clearPlacementState:()=>{
       this._activeMoveWidgetId="";
       this._pendingWidgetPlacement=null;
@@ -483,22 +484,18 @@ _closeMediaPageSettings(){
   return true;
 }
 _updatePageConfig(pageId,updater){
-  const updated=this._pageUiCoordinator.updatePageConfig(pageId,updater);
-  if(updated)this._refreshActiveGridOnly();
-  return updated;
+  return this._pageUiCoordinator.updatePageConfig(pageId,updater);
 }
 _updateActiveMediaPageConfig(patch={}){
   const page=this._getActivePage();
   if(!isMediaPlayersPage(page))return false;
-  const updated=this._updatePageConfig(page.id,(config={})=>{
+  return this._updatePageConfig(page.id,(config={})=>{
     const next=normalizeMediaPageConfig({...config,...patch});
     const enabledIds=Array.isArray(next.enabledPlayerIds)?next.enabledPlayerIds.filter(Boolean):[];
     if(next.defaultPlayerId&&!enabledIds.includes(next.defaultPlayerId))next.defaultPlayerId=enabledIds[0]||"";
     if(next.selectedPlayerId&&!enabledIds.includes(next.selectedPlayerId))next.selectedPlayerId=next.defaultPlayerId||enabledIds[0]||"";
     return next;
   });
-  if(updated)this.render();
-  return updated;
 }
 _selectMediaPagePlayer(playerId=""){
   return this._updateActiveMediaPageConfig({selectedPlayerId:String(playerId||"").trim()});
@@ -792,7 +789,13 @@ _syncActivePageWidgets(){
   return getHubStateIngressCoordinatorForHost(this).syncActivePageWidgets();
 }
 _setActivePage(id){
+  const previousPage=this._getActivePage();
+  const shouldCloseMediaPageSettings=this._mediaPageSettingsOpen
+    && isMediaPlayersPage(previousPage)
+    && previousPage?.id!==id;
+  if(shouldCloseMediaPageSettings)this._mediaPageSettingsOpen=false;
   const changed=this._pageUiCoordinator.selectPage(id);
+  if(!changed&&shouldCloseMediaPageSettings)this._mediaPageSettingsOpen=true;
   if(changed&&!isMediaPlayersPage(this._getActivePage()))this._mediaPageSettingsOpen=false;
   return changed;
 }
