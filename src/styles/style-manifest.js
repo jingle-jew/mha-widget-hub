@@ -43,6 +43,7 @@ const STATIC_STYLE_MANIFEST_AFTER_THEMES = Object.freeze([
   entry("styles/widget-manager/widget-manager.css", "component"),
   entry("styles/widget-manager/widget-manager-contract.css", "component"),
   entry("styles/widget-manager/widget-config-popup.css", "component"),
+  entry("styles/widget-manager/icon-picker-grid-density.css", "component"),
   entry("styles/widget-manager/widget-config-popup-contract.css", "component"),
   entry("styles/widget-manager/widget-surface-backdrop.css", "component"),
   entry("styles/widget-manager/widget-surface-layer-contract.css", "component"),
