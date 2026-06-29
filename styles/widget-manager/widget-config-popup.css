@@ -113,11 +113,16 @@
 }
 
 .mha-widget-icon-picker-panel {
+  --mha-icon-picker-tile-size: 2.95rem;
+  --mha-icon-picker-grid-gap: .45rem;
+  --mha-icon-picker-visible-rows: 7;
+  --mha-icon-picker-auto-size: 2.7rem;
+  --mha-icon-picker-results-gap: .65rem;
   position: fixed;
   z-index: 10000;
   inline-size: min(21.5rem, calc(100vw - 1.5rem));
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-rows: auto auto auto;
   gap: .7rem;
   padding: .8rem;
   border-radius: 1.45rem;
@@ -185,7 +190,13 @@
 .mha-widget-icon-picker-results {
   display: grid;
   align-content: start;
-  gap: .65rem;
+  gap: var(--mha-icon-picker-results-gap);
+  block-size: calc(
+    var(--mha-icon-picker-auto-size)
+    + var(--mha-icon-picker-results-gap)
+    + (var(--mha-icon-picker-tile-size) * var(--mha-icon-picker-visible-rows))
+    + (var(--mha-icon-picker-grid-gap) * (var(--mha-icon-picker-visible-rows) - 1))
+  );
   min-block-size: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -197,7 +208,7 @@
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: .6rem;
-  min-block-size: 2.7rem;
+  min-block-size: var(--mha-icon-picker-auto-size);
   padding: .55rem .7rem;
   border-radius: .95rem;
   border: 1px solid rgba(0,0,0,.08);
@@ -242,16 +253,18 @@
 
 .mha-widget-icon-picker-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: .45rem;
+  grid-template-columns: repeat(5, var(--mha-icon-picker-tile-size));
+  grid-auto-rows: var(--mha-icon-picker-tile-size);
+  justify-content: center;
+  gap: var(--mha-icon-picker-grid-gap);
 }
 
 .mha-widget-icon-picker-tile {
   display: grid;
   place-items: center;
-  inline-size: 100%;
-  aspect-ratio: 1;
-  min-block-size: 2.95rem;
+  inline-size: var(--mha-icon-picker-tile-size);
+  block-size: var(--mha-icon-picker-tile-size);
+  min-block-size: var(--mha-icon-picker-tile-size);
   border-radius: .95rem;
   border: 1px solid transparent;
   background: transparent;
@@ -260,7 +273,7 @@
 }
 
 .mha-widget-icon-picker-tile--compact {
-  min-block-size: 2.95rem;
+  min-block-size: var(--mha-icon-picker-tile-size);
 }
 
 .mha-widget-icon-picker-empty {
