@@ -15,7 +15,6 @@ import {
   updatePageConfig,
 } from "./page-controller.js";
 import {
-  updatePageCreatorIconSelection,
   updatePageCreatorTypeSelection,
 } from "./page-creator.js";
 import {
@@ -65,7 +64,6 @@ export class PageUiCoordinator {
     buildDockStatePropsFn = buildDockStateProps,
     syncPageCreatorPanelFn = syncPageCreatorPanel,
     buildPageCreatorPanelPropsFn = buildPageCreatorPanelProps,
-    updatePageCreatorIconSelectionFn = updatePageCreatorIconSelection,
     updatePageCreatorTypeSelectionFn = updatePageCreatorTypeSelection,
   } = {}) {
     this.getRoot = (...args) => getRoot(...args);
@@ -106,7 +104,6 @@ export class PageUiCoordinator {
     this.buildDockStatePropsFn = (...args) => buildDockStatePropsFn(...args);
     this.syncPageCreatorPanelFn = (...args) => syncPageCreatorPanelFn(...args);
     this.buildPageCreatorPanelPropsFn = (...args) => buildPageCreatorPanelPropsFn(...args);
-    this.updatePageCreatorIconSelectionFn = (...args) => updatePageCreatorIconSelectionFn(...args);
     this.updatePageCreatorTypeSelectionFn = (...args) => updatePageCreatorTypeSelectionFn(...args);
   }
 
@@ -132,10 +129,8 @@ export class PageUiCoordinator {
     return this.buildPageCreatorPanelPropsFn({
       open: this.getPageCreatorOpen(),
       selectedPageType: this.getNewPageType() || PAGE_TYPES.GRID,
-      selectedIcon: this.getNewPageIcon() || "grid",
       onClose: () => this.closePageCreator(),
       onSelectPageType: (type) => this.setPageCreatorType(type),
-      onSelectIcon: (icon) => this.setPageCreatorIcon(icon),
       onCreate: () => this.createPageFromCreator(),
     });
   }
@@ -188,7 +183,6 @@ export class PageUiCoordinator {
     this.setWidgets([]);
     this.setPageCreatorOpen(false);
     this.setNewPageType(PAGE_TYPES.GRID);
-    this.setNewPageIcon("grid");
     this.savePages();
     this.syncDocks();
     this.syncPageCreator();
@@ -200,7 +194,6 @@ export class PageUiCoordinator {
     if (!this.getIsEditing() || this.isMobileLandscapeLayout()) return false;
     this.setPageCreatorOpen(true);
     this.setNewPageType(this.getNewPageType() || PAGE_TYPES.GRID);
-    this.setNewPageIcon(this.getNewPageIcon() || "grid");
     this.syncPageCreator();
     return true;
   }
@@ -212,20 +205,13 @@ export class PageUiCoordinator {
   }
 
   setPageCreatorIcon(icon = "grid") {
-    const nextIcon = String(icon || "grid");
-    this.setNewPageIcon(nextIcon);
-    this.updatePageCreatorIconSelectionFn(this.getRoot(), nextIcon);
+    this.setNewPageIcon(String(icon || "grid"));
     return true;
   }
 
   setPageCreatorType(type = PAGE_TYPES.GRID) {
     const nextType = type || PAGE_TYPES.GRID;
     this.setNewPageType(nextType);
-    if (!this.getNewPageIcon() || ["grid", "media-player"].includes(this.getNewPageIcon())) {
-      const nextIcon = getDefaultPageIcon(nextType);
-      this.setNewPageIcon(nextIcon);
-      this.updatePageCreatorIconSelectionFn(this.getRoot(), nextIcon);
-    }
     this.updatePageCreatorTypeSelectionFn(this.getRoot(), nextType);
     return true;
   }
@@ -235,7 +221,7 @@ export class PageUiCoordinator {
     const pageType = this.getNewPageType() || PAGE_TYPES.GRID;
     return this.addPage({
       pageType,
-      icon: this.getNewPageIcon() || getDefaultPageIcon(pageType),
+      icon: getDefaultPageIcon(pageType),
       pageConfig: createDefaultPageConfig(pageType),
     });
   }

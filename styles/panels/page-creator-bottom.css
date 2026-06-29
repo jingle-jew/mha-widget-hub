@@ -17,13 +17,7 @@
   }
 
   section.mha-page-creator:not(.mha-widget-config-popup) .mha-page-creator-sheet {
-    grid-template-rows: auto auto minmax(0, 1fr) auto;
-  }
-
-  section.mha-page-creator:not(.mha-widget-config-popup) .mha-page-creator-icons {
-    min-block-size: 0;
-    overflow-y: auto;
-    overscroll-behavior: contain;
+    grid-template-rows: auto auto auto;
   }
 
   section.mha-page-creator:not(.mha-widget-config-popup) .mha-page-creator-actions {

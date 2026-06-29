@@ -10,10 +10,10 @@ function createHarness(overrides = {}) {
     refreshActiveGridOnly: 0,
     syncWidgetDropSlots: 0,
     syncSettingsDom: 0,
+    renderRoot: 0,
     recordPersistenceResult: [],
     writeActivePage: [],
     writeWidgetPositions: [],
-    updatePageCreatorIconSelection: [],
   };
 
   const state = {
@@ -28,6 +28,7 @@ function createHarness(overrides = {}) {
       "lights:desktop:8x6": { lamp: { x: 2, y: 1 } },
     },
     pageCreatorOpen: false,
+    newPageType: "grid",
     newPageIcon: "grid",
     dockSettingsPageId: "lights",
     settingsPage: "dock-detail",
@@ -52,6 +53,8 @@ function createHarness(overrides = {}) {
     setWidgetPositions: (positions) => { state.widgetPositions = positions; },
     getPageCreatorOpen: () => state.pageCreatorOpen,
     setPageCreatorOpen: (open) => { state.pageCreatorOpen = open; },
+    getNewPageType: () => state.newPageType,
+    setNewPageType: (type) => { state.newPageType = type; },
     getNewPageIcon: () => state.newPageIcon,
     setNewPageIcon: (icon) => { state.newPageIcon = icon; },
     getDockSettingsPageId: () => state.dockSettingsPageId,
@@ -77,6 +80,7 @@ function createHarness(overrides = {}) {
     refreshActiveGridOnly: () => { calls.refreshActiveGridOnly += 1; },
     syncWidgetDropSlots: () => { calls.syncWidgetDropSlots += 1; },
     syncSettingsDom: () => { calls.syncSettingsDom += 1; },
+    renderRoot: () => { calls.renderRoot += 1; },
     openDockSettings: () => {},
     openSettings: () => {},
     clearPlacementState: () => {
@@ -87,9 +91,6 @@ function createHarness(overrides = {}) {
     },
     syncDocksFn: () => { calls.syncDocks += 1; },
     syncPageCreatorPanelFn: () => { calls.syncPageCreator += 1; },
-    updatePageCreatorIconSelectionFn: (_root, icon) => {
-      calls.updatePageCreatorIconSelection.push(icon);
-    },
     ...overrides.options,
   });
 
@@ -144,21 +145,25 @@ test("deleting a page cleans positions and reloads widgets when the active page 
   assert.equal(calls.syncWidgetDropSlots, 1);
 });
 
-test("creating a page resets the page creator state and refreshes dock and grid", () => {
+test("creating a media page resets the page creator state and triggers a full render", () => {
   const { coordinator, state, calls } = createHarness({
     state: {
       pageCreatorOpen: true,
+      newPageType: "media-players",
       newPageIcon: "star",
     },
   });
 
   assert.equal(coordinator.createPageFromCreator(), true);
   assert.equal(state.pageCreatorOpen, false);
-  assert.equal(state.newPageIcon, "grid");
+  assert.equal(state.newPageType, "grid");
   assert.equal(state.activePageId.startsWith("page-"), true);
   assert.deepEqual(state.widgets, []);
+  assert.equal(state.pages.at(-1)?.type, "media-players");
+  assert.equal(state.pages.at(-1)?.icon, "media-player");
   assert.equal(calls.syncDocks, 1);
   assert.equal(calls.syncPageCreator, 1);
-  assert.equal(calls.refreshActiveGridOnly, 1);
-  assert.equal(calls.syncWidgetDropSlots, 1);
+  assert.equal(calls.refreshActiveGridOnly, 0);
+  assert.equal(calls.syncWidgetDropSlots, 0);
+  assert.equal(calls.renderRoot, 1);
 });

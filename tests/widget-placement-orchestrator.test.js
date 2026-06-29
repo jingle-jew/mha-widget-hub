@@ -51,21 +51,21 @@ test("widget config panel props rerender only when the popup requests it", () =>
 
 test("page creator panel props retain state and callback routing", () => {
   const onClose = () => {};
-  const onSelectIcon = () => {};
+  const onSelectPageType = () => {};
   const onCreate = () => {};
 
   const props = buildPageCreatorPanelProps({
     open: true,
-    selectedIcon: "gear",
+    selectedPageType: "media-players",
     onClose,
-    onSelectIcon,
+    onSelectPageType,
     onCreate,
   });
 
   assert.equal(props.open, true);
-  assert.equal(props.selectedIcon, "gear");
+  assert.equal(props.selectedPageType, "media-players");
   assert.equal(props.onClose, onClose);
-  assert.equal(props.onSelectIcon, onSelectIcon);
+  assert.equal(props.onSelectPageType, onSelectPageType);
   assert.equal(props.onCreate, onCreate);
 });
 
@@ -123,7 +123,7 @@ test("page creator sync replaces the existing panel", () => {
 
   syncPageCreatorPanel(root, {
     open: true,
-    selectedIcon: "grid",
+    selectedPageType: "grid",
   });
 
   assert.equal(existing.removed, true);
