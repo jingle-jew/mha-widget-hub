@@ -118,6 +118,16 @@
   block-size: 0 !important;
 }
 
+:host([data-media-page-active="true"]) .mha-widget-area {
+  --mha-widget-area-top-gutter: var(--mha-page-padding) !important;
+  padding-inline: 0;
+  padding-block-end: 0;
+}
+
+:host([data-media-page-active="true"]) .mha-grid {
+  transform: none;
+}
+
 @media (max-width: 767px) {
   :host {
     --mha-statusbar-reserved-top: 0px;
@@ -172,6 +182,12 @@
   touch-action: pan-y;
 }
 
+:host([data-layout="mobile"][data-media-page-active="true"]) .mha-widget-area {
+  padding-inline: 0;
+  overflow-y: hidden;
+  overscroll-behavior-y: none;
+}
+
 /* GRID FRAME LEFT NUDGE
  * Tablet/desktop only.
  *
@@ -186,6 +202,10 @@
 
   .mha-grid {
     transform: translateX(calc(-1 * var(--mha-grid-frame-nudge-x)));
+  }
+
+  :host([data-media-page-active="true"]) .mha-grid {
+    transform: none;
   }
 }
 /* Desktop/tablet dock position

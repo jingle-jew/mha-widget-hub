@@ -39,6 +39,26 @@ export function createRenderPipeline(host, options = {}) {
     styleManifest = [],
   } = options;
 
+  function syncMediaPageBackdropState({
+    activePage = getActivePage(host),
+    artworkUrl = "",
+    blurBackground = activePage?.config?.blurBackground !== false,
+  } = {}) {
+    const isMediaPage = isMediaPlayersPage(activePage);
+    host.dataset.activePageType = activePage?.type || "grid";
+    host.dataset.mediaPageActive = String(isMediaPage);
+    host.dataset.mediaPageBackgroundBlur = String(isMediaPage && blurBackground);
+
+    if (isMediaPage && artworkUrl) {
+      host.dataset.mediaPageWallpaper = "true";
+      host.style.setProperty("--mha-media-page-wallpaper-image", `url("${artworkUrl}")`);
+      return;
+    }
+
+    host.dataset.mediaPageWallpaper = "false";
+    host.style.removeProperty("--mha-media-page-wallpaper-image");
+  }
+
   function createWidgetPlaceholder(widget, { units, position }) {
     const size = normalizeWidgetSize(widget);
     const effectiveWidgetW = Math.min(size.w, units);
@@ -211,6 +231,7 @@ export function createRenderPipeline(host, options = {}) {
   function prepareRenderCycle({ renderId, themeState }) {
     host._applyCustomWallpaperState(themeState);
     host._applyHaSidebarMode(host._hideHaSidebar);
+    syncMediaPageBackdropState();
     host._renderId = renderId;
     cancelAnimationFrame(host._widgetRenderFrame);
     cancelAnimationFrame(host._secondaryUiFrame);
@@ -289,7 +310,16 @@ export function createRenderPipeline(host, options = {}) {
     if (grid.dataset) grid.dataset.pageType = activePage?.type || "grid";
     grid.classList?.toggle?.("mha-grid--media-page", isMediaPage);
     if (isMediaPage) {
-      grid.append(createMediaPage(activePage, host._buildMediaPageProps?.() || {}));
+      const mediaPageProps = host._buildMediaPageProps?.() || {};
+      grid.append(createMediaPage(activePage, {
+        ...mediaPageProps,
+        onBackgroundArtworkChange: (artworkUrl = "", meta = {}) => {
+          syncMediaPageBackdropState({
+            artworkUrl,
+            blurBackground: meta.blurBackground,
+          });
+        },
+      }));
       host.dataset.widgetsState = "ready";
     } else {
       appendWidgetPlaceholders(grid, { units, positions });

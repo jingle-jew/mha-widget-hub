@@ -186,6 +186,10 @@
   box-shadow: none !important;
 }
 
+:host([data-media-page-active="true"]) .mha-primary-edit-button {
+  display: none;
+}
+
 @media (min-width: 768px) {
   :host(.is-boot-revealing) .mha-status-bar {
     animation: mha-boot-status-in 320ms cubic-bezier(.2,.8,.2,1) both;

@@ -6,7 +6,12 @@ export function createShell(meta = {}) {
   const bg = document.createElement("div");
   bg.className = "mha-background";
   bg.setAttribute("aria-hidden", "true");
+  const mediaLayer = document.createElement("div");
+  mediaLayer.className = "mha-background-media";
+  const mediaOverlay = document.createElement("div");
+  mediaOverlay.className = "mha-background-media-overlay";
   for (let i = 0; i < 4; i++) bg.append(document.createElement("span"));
+  bg.append(mediaLayer, mediaOverlay);
 
   const shell = document.createElement("main");
   shell.className = "mha-shell";

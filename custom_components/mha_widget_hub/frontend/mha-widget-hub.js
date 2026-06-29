@@ -255,6 +255,7 @@ constructor(){
     syncSettingsDom:()=>this._syncSettingsDom(),
     openDockSettings:()=>this._openDockSettings(),
     openSettings:()=>this._openSettings(),
+    exitEditMode:()=>this._disableEditMode(),
     renderRoot:()=>this.render(),
     clearPlacementState:()=>{
       this._activeMoveWidgetId="";
@@ -760,6 +761,18 @@ toggleEditMode(){
   this._syncWidgetDropSlots();
 
   if(wasEditing!==this._isEditing)this._scheduleSquareUnitSync();
+}
+_disableEditMode(){
+  if(!this._isEditing)return false;
+  this._isEditing=false;
+  clearWidgetPlacementState(this);
+  const grid=this.shadowRoot?.querySelector?.(".mha-grid");
+  if(grid)this._renderWidgetDropSlots(grid);
+  this._syncEditModeDom();
+  this._syncDocksDom();
+  this._syncWidgetDropSlots();
+  this._scheduleSquareUnitSync();
+  return true;
 }toggleScreensaverPreview(){toggleScreensaverPreviewState(this)}toggleNowBarPreview(){toggleNowBarPreviewState(this)}setScreensaverClockVariant(v="digital"){setScreensaverClockVariantState(this,v)}resetGrid(){return resetWidgetGridState(this,{clearGridStorageRef:clearGridStorage})}
 _migrateStorageSchema(){
   return getHubStateIngressCoordinatorForHost(this).migrateStorageSchema();
@@ -796,6 +809,7 @@ _setActivePage(id){
   if(shouldCloseMediaPageSettings)this._mediaPageSettingsOpen=false;
   const changed=this._pageUiCoordinator.selectPage(id);
   if(!changed&&shouldCloseMediaPageSettings)this._mediaPageSettingsOpen=true;
+  if(changed&&isMediaPlayersPage(this._getActivePage()))this._disableEditMode();
   if(changed&&!isMediaPlayersPage(this._getActivePage()))this._mediaPageSettingsOpen=false;
   return changed;
 }

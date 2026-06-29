@@ -10,6 +10,28 @@
     radial-gradient(circle at 52% 90%,var(--mha-bg-radial-3),transparent 36%),
     linear-gradient(135deg,var(--mha-bg-base-1) 0%,var(--mha-bg-base-2) 100%);
 }
+.mha-background-media,
+.mha-background-media-overlay{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity 220ms ease;
+}
+.mha-background-media{
+  background-color:var(--mha-bg-base-1);
+  background-image:var(--mha-media-page-wallpaper-image, none);
+  background-position:center;
+  background-repeat:no-repeat;
+  background-size:cover;
+  filter:blur(clamp(24px, 4vw, 42px));
+  transform:scale(1.08);
+}
+.mha-background-media-overlay{
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--mha-accent) 18%, transparent), transparent 42%),
+    linear-gradient(180deg, rgba(10, 14, 24, .18), rgba(10, 14, 24, .58));
+}
 .mha-background span{
   position:absolute;
   width:42vmax;
@@ -226,6 +248,20 @@
     animation: none !important;
     will-change: auto;
   }
+}
+
+:host([data-media-page-active="true"][data-media-page-wallpaper="true"]) .mha-background-media,
+:host([data-media-page-active="true"][data-media-page-wallpaper="true"]) .mha-background-media-overlay {
+  opacity: 1;
+}
+
+:host([data-media-page-active="true"][data-media-page-wallpaper="true"]) .mha-background span {
+  opacity: 0;
+}
+
+:host([data-media-page-active="true"][data-media-page-wallpaper="true"][data-media-page-background-blur="false"]) .mha-background-media {
+  filter: none;
+  transform: none;
 }
 
 /* ACTIVE WALLPAPER
