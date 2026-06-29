@@ -9,12 +9,12 @@
 .mha-widget[data-widget-kind="media"] {
   --mha-media-control-surface: var(--mha-widget-control-surface, color-mix(in srgb, var(--mha-text-primary) 10%, transparent));
   --mha-media-control-border: var(--mha-widget-control-border, transparent);
-  --mha-media-control-shadow: var(--mha-widget-control-shadow, none);
+  --mha-media-control-shadow: none;
   --mha-media-control-active-surface: var(--mha-widget-control-accent-surface, var(--mha-accent));
   --mha-media-control-active-color: var(--mha-accent-contrast, #fff);
   --mha-media-chip-surface: var(--mha-widget-chip-surface, color-mix(in srgb, var(--mha-text-primary) 8%, transparent));
   --mha-media-chip-border: var(--mha-widget-chip-border, transparent);
-  --mha-media-chip-shadow: var(--mha-widget-chip-shadow, none);
+  --mha-media-chip-shadow: none;
   --mha-media-progress-track: var(--mha-widget-section-surface, color-mix(in srgb, var(--mha-text-primary) 14%, transparent));
   --mha-media-progress-fill: var(--mha-widget-control-accent-surface, var(--mha-accent));
 }

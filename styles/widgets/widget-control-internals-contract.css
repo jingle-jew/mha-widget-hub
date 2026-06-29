@@ -22,7 +22,7 @@
 .mha-widget[data-widget-kind="toggle-buttons"] {
   --mha-toggle-buttons-button-bg: var(--mha-widget-control-surface, color-mix(in srgb, var(--mha-surface-secondary) 78%, transparent));
   --mha-toggle-buttons-button-border: var(--mha-widget-control-border, color-mix(in srgb, var(--mha-text-primary) 8%, transparent));
-  --mha-toggle-buttons-button-shadow: var(--mha-widget-control-shadow, none);
+  --mha-toggle-buttons-button-shadow: none;
   --mha-toggle-buttons-button-active-bg: var(--mha-widget-control-accent-surface, color-mix(in srgb, var(--mha-accent) 78%, var(--mha-surface-secondary)));
 }
 
