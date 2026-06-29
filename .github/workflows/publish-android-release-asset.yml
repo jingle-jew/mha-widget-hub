@@ -56,10 +56,12 @@ jobs:
         run: npm run sync
 
       - name: Make Gradle wrapper executable
-        run: chmod +x android/gradlew
+        working-directory: android-app/android
+        run: chmod +x ./gradlew
 
       - name: Build release APK
-        run: ./android/gradlew assembleRelease
+        working-directory: android-app/android
+        run: ./gradlew assembleRelease
 
       - name: Resolve APK path
         id: apk
