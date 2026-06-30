@@ -355,11 +355,14 @@
   display: none !important;
 }
 
-:host([data-layout="mobile"]) .mha-primary-edit-button[data-touch-edit-close="true"],
-:host([data-layout="tablet"]) .mha-primary-edit-button[data-touch-edit-close="true"] {
+:host([data-layout="mobile"]) .mha-primary-edit-button[data-touch-edit-close="true"] {
   position: fixed;
   z-index: 95;
-  inset-inline-end: max(var(--mha-safe-area-right, 0px), var(--mha-page-padding));
+  inset-inline-end: max(
+    var(--mha-safe-right, 0px),
+    var(--mha-safe-area-right, 0px),
+    var(--mha-edit-button-edge)
+  );
   inset-block-start: max(
     var(--mha-safe-top, 0px),
     var(--mha-safe-area-top, 0px),
@@ -371,13 +374,64 @@
   transform: none !important;
 }
 
-:host([data-layout="mobile"]) .mha-primary-edit-button[data-touch-edit-close="true"] {
-  inset-inline-end: max(var(--mha-safe-area-right, 0px), var(--mha-edit-button-edge));
+:host([data-layout="mobile"].is-editing) .mha-add-widget-button:not([hidden]) {
+  position: fixed;
+  z-index: 95;
+  inset-inline-start: max(
+    var(--mha-safe-left, 0px),
+    var(--mha-safe-area-left, 0px),
+    var(--mha-edit-button-edge)
+  );
   inset-block-start: max(
     var(--mha-safe-top, 0px),
     var(--mha-safe-area-top, 0px),
     var(--mha-page-padding)
   );
+  inset-inline-end: auto;
+  inset-block-end: auto;
+  opacity: 1 !important;
+  pointer-events: auto;
+  transform: none !important;
+}
+
+:host([data-layout="tablet"]) .mha-primary-edit-button[data-touch-edit-close="true"] {
+  position: fixed;
+  z-index: 95;
+  inset-inline-start: auto;
+  inset-inline-end: max(
+    var(--mha-safe-right, 0px),
+    var(--mha-safe-area-right, 0px),
+    var(--mha-page-padding)
+  );
+  inset-block-start: auto;
+  inset-block-end: max(
+    var(--mha-safe-bottom, 0px),
+    var(--mha-safe-area-bottom, 0px),
+    var(--mha-page-padding)
+  );
+  opacity: 1 !important;
+  pointer-events: auto;
+  transform: none !important;
+}
+
+:host([data-layout="tablet"].is-editing) .mha-add-widget-button:not([hidden]) {
+  position: fixed;
+  z-index: 95;
+  inset-inline-start: max(
+    var(--mha-safe-left, 0px),
+    var(--mha-safe-area-left, 0px),
+    var(--mha-page-padding)
+  );
+  inset-inline-end: auto;
+  inset-block-start: auto;
+  inset-block-end: max(
+    var(--mha-safe-bottom, 0px),
+    var(--mha-safe-area-bottom, 0px),
+    var(--mha-page-padding)
+  );
+  opacity: 1 !important;
+  pointer-events: auto;
+  transform: none !important;
 }
 
 
