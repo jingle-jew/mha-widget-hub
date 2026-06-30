@@ -24,6 +24,7 @@ export function buildSettingsPanelState({
   themeState = {},
   screensaverState = {},
   effectiveIconShape = "",
+  supportsScreensaver = true,
 } = {}) {
   return {
     open: scope === "screensaver" ? screensaverSettingsOpen : settingsOpen,
@@ -46,6 +47,7 @@ export function buildSettingsPanelState({
     screensaverNowBarItems: screensaverState.nowBarItems,
     screensaverNowBarConfig: screensaverState.nowBarConfig,
     screensaverClockVariant: screensaverState.clockVariant,
+    supportsScreensaver,
     hass,
     entityVisibilityConfig,
     settingsPage,

@@ -78,6 +78,7 @@ test("settings panel state derives the current scope openness and preserves stat
     screensaverNowBarItems: { media: true },
     screensaverNowBarConfig: { tiles: { media: true } },
     screensaverClockVariant: "digital",
+    supportsScreensaver: true,
     hass: { states: {} },
     entityVisibilityConfig: { users: [] },
     settingsPage: "dock",

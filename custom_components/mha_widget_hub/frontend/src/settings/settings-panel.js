@@ -868,6 +868,7 @@ export function createSettingsPanel({
   screensaverNowBarItems = {},
   screensaverNowBarConfig = {},
   screensaverClockVariant = "digital",
+  supportsScreensaver = true,
   hass,
   entityVisibilityConfig,
   settingsPage = "main",
@@ -1048,14 +1049,16 @@ export function createSettingsPanel({
   }
 
   if (!isScreensaverScope && (settingsPage === "screensaver-nowbar" || settingsPage === "nowbar")) {
-    sections.push(createSection(t("settings.screensaver", "Screensaver"), createScreensaverControls({
-      enabled: screensaverEnabled,
-      delay: screensaverDelay,
-      clockVariant: screensaverClockVariant,
-      onEnabledChange: onScreensaverEnabledChange,
-      onDelayChange: onScreensaverDelayChange,
-      onClockVariantChange: onScreensaverClockVariantChange,
-    })));
+    if (supportsScreensaver) {
+      sections.push(createSection(t("settings.screensaver", "Screensaver"), createScreensaverControls({
+        enabled: screensaverEnabled,
+        delay: screensaverDelay,
+        clockVariant: screensaverClockVariant,
+        onEnabledChange: onScreensaverEnabledChange,
+        onDelayChange: onScreensaverDelayChange,
+        onClockVariantChange: onScreensaverClockVariantChange,
+      })));
+    }
     sections.push(createSection(t("settings.nowBar", "Now Bar"), createNowBarControls({
       enabled: screensaverNowBar,
       items: screensaverNowBarItems,
@@ -1134,12 +1137,14 @@ export function createSettingsPanel({
         description: t("settings.wallpaperDescription", "Choose a separate image for light and dark themes."),
         onClick: onOpenWallpaperSettings,
       }),
-      createSettingsNavTile({
-        icon: "star",
-        label: t("settings.screensaverAndNowBar", "Screensaver and Now Bar"),
-        description: t("settings.screensaverNowBarDescription", "Configure the screensaver and displayed content."),
-        onClick: onOpenNowBarSettings,
-      }),
+      ...(supportsScreensaver ? [
+        createSettingsNavTile({
+          icon: "star",
+          label: t("settings.screensaverAndNowBar", "Screensaver and Now Bar"),
+          description: t("settings.screensaverNowBarDescription", "Configure the screensaver and displayed content."),
+          onClick: onOpenNowBarSettings,
+        }),
+      ] : []),
     ]));
     sections.push(createSection(t("settings.navigation", "Navigation"), [
       createSwitch({
@@ -1180,7 +1185,7 @@ export function createSettingsPanel({
     }));
   }
 
-  if (isScreensaverScope) {
+  if (isScreensaverScope && supportsScreensaver) {
     sections.push(createSection(t("settings.screensaver", "Screensaver"), createScreensaverControls({
       enabled: screensaverEnabled,
       delay: screensaverDelay,
