@@ -25,6 +25,7 @@ export function createSettingsSurfaceCoordinator(host) {
       screensaverState,
       hostIconShape: host.dataset.iconShape,
       documentIconShape: document.documentElement.dataset.iconShape,
+      supportsScreensaver: !host._isMobileLauncherLayout?.(),
       callbacks: {
         onClose: () => host._closeSettings(),
         onCloseScreensaver: () => host._closeScreensaverSettings(),

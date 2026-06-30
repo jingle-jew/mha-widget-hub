@@ -22,24 +22,42 @@ export function createScreensaverSettingsBridge(host) {
     getSettingsSurface().sync();
   }
 
+  function isMobileScreensaverUnsupported() {
+    return Boolean(host._isMobileLauncherLayout?.());
+  }
+
   function isBlocked() {
-    return host._settingsOpen || host._isEditing;
+    return isMobileScreensaverUnsupported() || host._settingsOpen || host._isEditing;
   }
 
   function getVisible() {
-    return host._screensaverController.isVisible();
+    return !isMobileScreensaverUnsupported() && host._screensaverController.isVisible();
   }
 
   function setActive(active = false) {
-    host._screensaverController.setActive(active);
+    host._screensaverController.setActive(
+      isMobileScreensaverUnsupported() ? false : active,
+    );
     syncDom();
   }
 
   function scheduleIdleTimer() {
+    if (isMobileScreensaverUnsupported()) {
+      host._screensaverController.clearIdleTimer();
+      host._screensaverController.setPreviewState(false);
+      host._screensaverController.setActive(false);
+      syncVisibilityState();
+      return false;
+    }
     host._screensaverController.scheduleIdleTimer();
+    return true;
   }
 
   function handleUserActivity() {
+    if (isMobileScreensaverUnsupported()) {
+      scheduleIdleTimer();
+      return false;
+    }
     const deactivated = host._screensaverController.handleActivity({
       settingsOpen: host._screensaverSettingsOpen,
     });
@@ -55,6 +73,12 @@ export function createScreensaverSettingsBridge(host) {
   }
 
   function applyEnabledFromSettings(enabled = false) {
+    if (isMobileScreensaverUnsupported()) {
+      host._screensaverController.setActive(false);
+      syncDom();
+      syncSettingsSurfaces();
+      return false;
+    }
     host._recordPersistenceResult(host._screensaverController.setEnabled(enabled));
     syncDom();
     syncSettingsSurfaces();
@@ -66,6 +90,12 @@ export function createScreensaverSettingsBridge(host) {
   }
 
   function applyPreviewFromSettings(enabled = false) {
+    if (isMobileScreensaverUnsupported()) {
+      host._screensaverController.setPreview(false);
+      syncDom();
+      syncSettingsSurfaces();
+      return false;
+    }
     host._screensaverController.setPreview(enabled);
     syncDom();
     syncSettingsSurfaces();

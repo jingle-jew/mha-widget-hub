@@ -25,6 +25,7 @@ export function buildSettingsCoordinatorProps({
   screensaverState = {},
   hostIconShape = "",
   documentIconShape = "",
+  supportsScreensaver = true,
   callbacks = {},
 } = {}) {
   const effectiveIconShape = resolveEffectiveIconShape({
@@ -52,6 +53,7 @@ export function buildSettingsCoordinatorProps({
       themeState,
       screensaverState,
       effectiveIconShape,
+      supportsScreensaver,
     }),
     ...callbacks,
     onClose: scope === "screensaver"
