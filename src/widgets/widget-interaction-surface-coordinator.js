@@ -43,6 +43,13 @@ const TOUCH_EDIT_BLOCKED_TARGET_SELECTOR = [
 export function createWidgetInteractionSurfaceCoordinator(host) {
   const dragCoordinator = createWidgetDragCoordinator(host);
 
+  function getEventElementTarget(event) {
+    const target = event?.target || null;
+    if (!target) return null;
+    if (typeof target.closest === "function") return target;
+    return target.parentElement || null;
+  }
+
   function getTouchEditLongPressScope() {
     return host._touchEditLongPressScope
       || host.shadowRoot?.querySelector?.(".mha-widget-area")
@@ -93,13 +100,15 @@ export function createWidgetInteractionSurfaceCoordinator(host) {
     if (!isTouchEditLayout() || host._isEditing || host._isMobileLandscapeLayout()) return false;
     if (!event || (typeof event.button === "number" && event.button !== 0)) return false;
     if (event.isPrimary === false) return false;
-    const target = event.target;
-    if (!target?.closest) return false;
+    const target = getEventElementTarget(event);
+    if (!target) return false;
     const scope = getTouchEditLongPressScope();
     if (!scope) return false;
-    const path = typeof event.composedPath === "function" ? event.composedPath() : [];
-    const withinScope = path.includes(scope) || target.closest(".mha-widget-area") === scope;
-    if (!withinScope) return false;
+    if (event.currentTarget !== scope) {
+      const path = typeof event.composedPath === "function" ? event.composedPath() : [];
+      const withinScope = path.includes(scope) || target.closest(".mha-widget-area") === scope;
+      if (!withinScope) return false;
+    }
     if (target.closest(TOUCH_EDIT_BLOCKED_TARGET_SELECTOR)) return false;
     return true;
   }
@@ -190,19 +199,19 @@ export function createWidgetInteractionSurfaceCoordinator(host) {
     host._touchEditLongPressEventTarget?.removeEventListener?.("touchcancel", host._touchEditLongPressHandlers.onTouchCancel);
 
     if (usePointerEvents) {
-      scope.addEventListener("pointerdown", host._touchEditLongPressHandlers.onPointerDown, { passive: true });
-      scope.addEventListener("pointermove", host._touchEditLongPressHandlers.onPointerMove, { passive: true });
-      scope.addEventListener("pointerup", host._touchEditLongPressHandlers.onPointerUp, { passive: true });
-      scope.addEventListener("pointercancel", host._touchEditLongPressHandlers.onPointerCancel, { passive: true });
+      scope.addEventListener("pointerdown", host._touchEditLongPressHandlers.onPointerDown, { passive: true, capture: true });
+      scope.addEventListener("pointermove", host._touchEditLongPressHandlers.onPointerMove, { passive: true, capture: true });
+      scope.addEventListener("pointerup", host._touchEditLongPressHandlers.onPointerUp, { passive: true, capture: true });
+      scope.addEventListener("pointercancel", host._touchEditLongPressHandlers.onPointerCancel, { passive: true, capture: true });
     } else {
-      scope.addEventListener("mousedown", host._touchEditLongPressHandlers.onMouseDown, { passive: true });
-      scope.addEventListener("mousemove", host._touchEditLongPressHandlers.onMouseMove, { passive: true });
-      scope.addEventListener("mouseup", host._touchEditLongPressHandlers.onMouseUp, { passive: true });
+      scope.addEventListener("mousedown", host._touchEditLongPressHandlers.onMouseDown, { passive: true, capture: true });
+      scope.addEventListener("mousemove", host._touchEditLongPressHandlers.onMouseMove, { passive: true, capture: true });
+      scope.addEventListener("mouseup", host._touchEditLongPressHandlers.onMouseUp, { passive: true, capture: true });
     }
-    scope.addEventListener("touchstart", host._touchEditLongPressHandlers.onTouchStart, { passive: true });
-    scope.addEventListener("touchmove", host._touchEditLongPressHandlers.onTouchMove, { passive: true });
-    scope.addEventListener("touchend", host._touchEditLongPressHandlers.onTouchEnd, { passive: true });
-    scope.addEventListener("touchcancel", host._touchEditLongPressHandlers.onTouchCancel, { passive: true });
+    scope.addEventListener("touchstart", host._touchEditLongPressHandlers.onTouchStart, { passive: true, capture: true });
+    scope.addEventListener("touchmove", host._touchEditLongPressHandlers.onTouchMove, { passive: true, capture: true });
+    scope.addEventListener("touchend", host._touchEditLongPressHandlers.onTouchEnd, { passive: true, capture: true });
+    scope.addEventListener("touchcancel", host._touchEditLongPressHandlers.onTouchCancel, { passive: true, capture: true });
     host._touchEditLongPressEventTarget = scope;
     host._touchEditLongPressUsesPointerEvents = usePointerEvents;
 
@@ -231,19 +240,19 @@ export function createWidgetInteractionSurfaceCoordinator(host) {
     const target = host._touchEditLongPressEventTarget;
     if (!handlers || !target) return;
     if (host._touchEditLongPressUsesPointerEvents) {
-      target.removeEventListener("pointerdown", handlers.onPointerDown);
-      target.removeEventListener("pointermove", handlers.onPointerMove);
-      target.removeEventListener("pointerup", handlers.onPointerUp);
-      target.removeEventListener("pointercancel", handlers.onPointerCancel);
+      target.removeEventListener("pointerdown", handlers.onPointerDown, true);
+      target.removeEventListener("pointermove", handlers.onPointerMove, true);
+      target.removeEventListener("pointerup", handlers.onPointerUp, true);
+      target.removeEventListener("pointercancel", handlers.onPointerCancel, true);
     } else {
-      target.removeEventListener("mousedown", handlers.onMouseDown);
-      target.removeEventListener("mousemove", handlers.onMouseMove);
-      target.removeEventListener("mouseup", handlers.onMouseUp);
+      target.removeEventListener("mousedown", handlers.onMouseDown, true);
+      target.removeEventListener("mousemove", handlers.onMouseMove, true);
+      target.removeEventListener("mouseup", handlers.onMouseUp, true);
     }
-    target.removeEventListener("touchstart", handlers.onTouchStart);
-    target.removeEventListener("touchmove", handlers.onTouchMove);
-    target.removeEventListener("touchend", handlers.onTouchEnd);
-    target.removeEventListener("touchcancel", handlers.onTouchCancel);
+    target.removeEventListener("touchstart", handlers.onTouchStart, true);
+    target.removeEventListener("touchmove", handlers.onTouchMove, true);
+    target.removeEventListener("touchend", handlers.onTouchEnd, true);
+    target.removeEventListener("touchcancel", handlers.onTouchCancel, true);
     host._touchEditLongPressEventTarget = null;
     host._touchEditLongPressUsesPointerEvents = false;
     host._touchEditLongPressHandlers = null;
