@@ -8,6 +8,7 @@ import { t } from "../i18n/index.js";
 const TOUCH_EDIT_LONG_PRESS_MS = 420;
 const TOUCH_EDIT_MOVE_THRESHOLD_PX = 12;
 const TOUCH_EDIT_SCROLL_THRESHOLD_PX = 12;
+const TOUCH_EDIT_TOUCH_POINTER_DEDUPE_MS = 750;
 const TOUCH_EDIT_BLOCKED_TARGET_SELECTOR = [
   ".mha-widget",
   ".mha-widget [data-action]",
@@ -78,6 +79,14 @@ export function createWidgetInteractionSurfaceCoordinator(host) {
     host._touchEditLongPressStartX = 0;
     host._touchEditLongPressStartY = 0;
     host._touchEditLongPressStartScrollTop = 0;
+    host._touchEditLongPressSource = "";
+  }
+
+  function shouldIgnoreTouchBackfilledPointer(event) {
+    if (event?.pointerType !== "touch") return false;
+    const lastTouchStartAt = Number(host._touchEditLastTouchStartAt || 0);
+    if (!lastTouchStartAt) return false;
+    return (Date.now() - lastTouchStartAt) < TOUCH_EDIT_TOUCH_POINTER_DEDUPE_MS;
   }
 
   function shouldStartTouchEditLongPress(event) {
@@ -110,10 +119,19 @@ export function createWidgetInteractionSurfaceCoordinator(host) {
 
     if (!host._touchEditLongPressHandlers) {
       const onPressStart = (event) => {
+        if (shouldIgnoreTouchBackfilledPointer(event)) return;
+        const source = event?.type?.startsWith?.("touch") ? "touch" : "pointer";
+        if (
+          host._touchEditLongPressPointerId != null
+          && host._touchEditLongPressSource
+          && host._touchEditLongPressSource !== source
+        ) return;
         clearTouchEditLongPressState();
         if (!shouldStartTouchEditLongPress(event)) return;
         const point = getTouchEditPoint(event);
+        if (source === "touch") host._touchEditLastTouchStartAt = Date.now();
         host._touchEditLongPressPointerId = getTouchEditPointerId(event);
+        host._touchEditLongPressSource = source;
         host._touchEditLongPressTarget = event.target;
         host._touchEditLongPressStartX = point.x;
         host._touchEditLongPressStartY = point.y;
@@ -123,6 +141,9 @@ export function createWidgetInteractionSurfaceCoordinator(host) {
 
       const onPressMove = (event) => {
         if (host._touchEditLongPressPointerId == null) return;
+        if (shouldIgnoreTouchBackfilledPointer(event)) return;
+        const source = event?.type?.startsWith?.("touch") ? "touch" : "pointer";
+        if (host._touchEditLongPressSource && host._touchEditLongPressSource !== source) return;
         if (getTouchEditPointerId(event) !== host._touchEditLongPressPointerId) return;
         const point = getTouchEditPoint(event);
         const deltaX = Math.abs(point.x - host._touchEditLongPressStartX);
@@ -134,6 +155,9 @@ export function createWidgetInteractionSurfaceCoordinator(host) {
 
       const onPressEnd = (event) => {
         if (host._touchEditLongPressPointerId == null) return;
+        if (shouldIgnoreTouchBackfilledPointer(event)) return;
+        const source = event?.type?.startsWith?.("touch") ? "touch" : "pointer";
+        if (host._touchEditLongPressSource && host._touchEditLongPressSource !== source) return;
         if (getTouchEditPointerId(event) !== host._touchEditLongPressPointerId) return;
         clearTouchEditLongPressState();
       };
@@ -174,11 +198,11 @@ export function createWidgetInteractionSurfaceCoordinator(host) {
       scope.addEventListener("mousedown", host._touchEditLongPressHandlers.onMouseDown, { passive: true });
       scope.addEventListener("mousemove", host._touchEditLongPressHandlers.onMouseMove, { passive: true });
       scope.addEventListener("mouseup", host._touchEditLongPressHandlers.onMouseUp, { passive: true });
-      scope.addEventListener("touchstart", host._touchEditLongPressHandlers.onTouchStart, { passive: true });
-      scope.addEventListener("touchmove", host._touchEditLongPressHandlers.onTouchMove, { passive: true });
-      scope.addEventListener("touchend", host._touchEditLongPressHandlers.onTouchEnd, { passive: true });
-      scope.addEventListener("touchcancel", host._touchEditLongPressHandlers.onTouchCancel, { passive: true });
     }
+    scope.addEventListener("touchstart", host._touchEditLongPressHandlers.onTouchStart, { passive: true });
+    scope.addEventListener("touchmove", host._touchEditLongPressHandlers.onTouchMove, { passive: true });
+    scope.addEventListener("touchend", host._touchEditLongPressHandlers.onTouchEnd, { passive: true });
+    scope.addEventListener("touchcancel", host._touchEditLongPressHandlers.onTouchCancel, { passive: true });
     host._touchEditLongPressEventTarget = scope;
     host._touchEditLongPressUsesPointerEvents = usePointerEvents;
 
@@ -215,11 +239,11 @@ export function createWidgetInteractionSurfaceCoordinator(host) {
       target.removeEventListener("mousedown", handlers.onMouseDown);
       target.removeEventListener("mousemove", handlers.onMouseMove);
       target.removeEventListener("mouseup", handlers.onMouseUp);
-      target.removeEventListener("touchstart", handlers.onTouchStart);
-      target.removeEventListener("touchmove", handlers.onTouchMove);
-      target.removeEventListener("touchend", handlers.onTouchEnd);
-      target.removeEventListener("touchcancel", handlers.onTouchCancel);
     }
+    target.removeEventListener("touchstart", handlers.onTouchStart);
+    target.removeEventListener("touchmove", handlers.onTouchMove);
+    target.removeEventListener("touchend", handlers.onTouchEnd);
+    target.removeEventListener("touchcancel", handlers.onTouchCancel);
     host._touchEditLongPressEventTarget = null;
     host._touchEditLongPressUsesPointerEvents = false;
     host._touchEditLongPressHandlers = null;
