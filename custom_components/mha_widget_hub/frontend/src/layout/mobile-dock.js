@@ -2,14 +2,6 @@ import { createIcon } from "../ui/icon.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
 import { t } from "../i18n/index.js";
 
-/*
- * Custom mobile dock.
- *
- * The shell/layout is custom, but icon visuals are NOT custom:
- * all icons are normal .mha-icon components and still follow the global
- * data-icon-shape contract.
- */
-
 function createMobileDockIconButton(item, { className = "", active = false, onClick } = {}) {
   const button = document.createElement("button");
   button.className = ["mha-mobile-dock-item", className].filter(Boolean).join(" ");
@@ -45,46 +37,9 @@ export function createMobileDock({
   onDockSettings,
   onSettings,
 } = {}) {
-  const root = document.createElement("div");
-  root.className = "mha-mobile-dock";
-  root.dataset.open = "false";
-
-  const launcher = document.createElement("button");
-  launcher.className = "mha-mobile-dock-launcher";
-  launcher.type = "button";
-  launcher.setAttribute("aria-label", t("settings.openMobileDock", "Open mobile dock"));
-  launcher.setAttribute("aria-expanded", "false");
-
-  launcher.append(
-    createIcon({
-      name: "apps",
-      category: "system",
-      label: t("settings.dock", "Dock"),
-      children: createIconSymbol({
-        name: "apps",
-        label: t("settings.dock", "Dock"),
-      }),
-    }),
-  );
-
-  const panel = document.createElement("div");
-  panel.className = "mha-mobile-dock-panel";
-  panel.setAttribute("role", "menu");
-  panel.setAttribute("aria-label", t("settings.mobileDock", "Mobile dock"));
-
-  const scrim = document.createElement("button");
-  scrim.className = "mha-mobile-dock-scrim";
-  scrim.type = "button";
-  scrim.setAttribute("aria-label", t("settings.closeMobileDock", "Close mobile dock"));
-
-  const close = document.createElement("button");
-  close.className = "mha-mobile-dock-close";
-  close.type = "button";
-  close.setAttribute("aria-label", t("common.close", "Close"));
-  close.textContent = "×";
-
-  const grid = document.createElement("div");
-  grid.className = "mha-mobile-dock-grid";
+  const dock = document.createElement("nav");
+  dock.className = "mha-mobile-dock";
+  dock.setAttribute("aria-label", t("settings.dock", "Dock"));
 
   const pageItems = (Array.isArray(pages) && pages.length ? pages : [
     { id: "home", name: "Home", icon: "home" },
@@ -97,74 +52,52 @@ export function createMobileDock({
   }));
 
   for (const item of pageItems) {
-    grid.append(createMobileDockIconButton(item, {
+    dock.append(createMobileDockIconButton(item, {
       active: item.pageId === activePageId,
-      onClick: () => {
-        onPageSelect?.(item.pageId);
-        setOpen(false);
-      },
+      onClick: () => onPageSelect?.(item.pageId),
     }));
   }
 
   if (isEditing) {
-    grid.append(createMobileDockIconButton({
+    dock.append(createMobileDockIconButton({
       symbol: "plus",
       category: "utility",
       label: t("settings.addPage", "Add page"),
       action: "add-page",
     }, {
       className: "mha-mobile-dock-add-page",
-      onClick: () => {
-        onAddPage?.();
-        setOpen(false);
-      },
+      onClick: () => onAddPage?.(),
     }));
 
-    grid.append(createMobileDockIconButton({
+    dock.append(createMobileDockIconButton({
       symbol: "edit",
       category: "utility",
       label: t("settings.manageDock", "Manage dock"),
       action: "dock-settings",
     }, {
       className: "mha-mobile-dock-edit",
-      onClick: () => {
-        onDockSettings?.();
-        setOpen(false);
-      },
+      onClick: () => onDockSettings?.(),
     }));
   }
 
-  grid.append(createMobileDockIconButton({
+  dock.append(createMobileDockIconButton({
     symbol: "gear",
     category: "system",
     label: t("settings.title", "Settings"),
     action: "settings",
   }, {
     onClick: () => {
-      if (onSettings) onSettings();
-      else root.dispatchEvent(new CustomEvent("mha-open-settings", { bubbles: true, composed: true }));
-      setOpen(false);
+      if (onSettings) {
+        onSettings();
+        return;
+      }
+
+      dock.dispatchEvent(new CustomEvent("mha-open-settings", {
+        bubbles: true,
+        composed: true,
+      }));
     },
   }));
 
-  panel.append(close, grid);
-  root.append(scrim, panel, launcher);
-
-  function setOpen(open) {
-    root.dataset.open = String(open);
-    launcher.setAttribute("aria-expanded", String(open));
-  }
-
-  launcher.addEventListener("click", () => {
-    setOpen(root.dataset.open !== "true");
-  });
-
-  scrim.addEventListener("click", () => setOpen(false));
-  close.addEventListener("click", () => setOpen(false));
-
-  root.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") setOpen(false);
-  });
-
-  return root;
+  return dock;
 }
