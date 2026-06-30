@@ -51,23 +51,46 @@ export function createWidgetInteractionSurfaceCoordinator(host) {
       clearTimeout(host._touchEditLongPressTimer);
       host._touchEditLongPressTimer = 0;
     }
+    if (host._touchEditLongPressPointerId != null) {
+      host._touchEditLongPressSurface?.releasePointerCapture?.(host._touchEditLongPressPointerId);
+    }
     host._touchEditLongPressPointerId = null;
     host._touchEditLongPressTriggered = false;
     host._touchEditLongPressTarget = null;
+    host._touchEditLongPressSurface = null;
     host._touchEditLongPressStartX = 0;
     host._touchEditLongPressStartY = 0;
   }
 
-  function shouldStartTouchEditLongPress(event) {
+  function getTouchEditSurface(surface) {
+    return surface?.closest?.(".mha-grid") || null;
+  }
+
+  function getTouchEditTargetFromPoint(event) {
+    const pointTarget = (
+      host.shadowRoot?.elementFromPoint?.(Number(event?.clientX || 0), Number(event?.clientY || 0))
+      || document.elementFromPoint?.(Number(event?.clientX || 0), Number(event?.clientY || 0))
+      || event?.target
+      || null
+    );
+    if (typeof pointTarget?.closest === "function") return pointTarget;
+    return pointTarget?.parentElement || null;
+  }
+
+  function isBlockedTouchEditTarget(target, surface) {
+    if (!target?.closest) return true;
+    if (!surface || !surface.contains(target)) return true;
+    return Boolean(target.closest(TOUCH_EDIT_BLOCKED_TARGET_SELECTOR));
+  }
+
+  function shouldStartTouchEditLongPress(event, surface) {
     if (!isTouchEditLayout() || host._isEditing || host._isMobileLandscapeLayout()) return false;
     if (!event || (typeof event.button === "number" && event.button !== 0)) return false;
     if (event.isPrimary === false) return false;
     if (event.pointerType === "mouse") return false;
-    const target = event.target;
-    if (!target?.closest) return false;
-    const grid = target.closest(".mha-grid");
-    if (!grid) return false;
-    if (target.closest(TOUCH_EDIT_BLOCKED_TARGET_SELECTOR)) return false;
+    if (!surface) return false;
+    const target = getTouchEditTargetFromPoint(event);
+    if (isBlockedTouchEditTarget(target, surface)) return false;
     return true;
   }
 
@@ -79,51 +102,61 @@ export function createWidgetInteractionSurfaceCoordinator(host) {
   }
 
   function wireTouchEditLongPress(surface) {
-    if (!host.shadowRoot) return;
+    const touchEditSurface = getTouchEditSurface(surface);
+    clearTouchEditLongPress();
+    if (!host.shadowRoot || !touchEditSurface) return;
 
-    if (!host._touchEditLongPressHandlers) {
-      const onPointerDown = (event) => {
+    const onPointerDown = (event) => {
+      clearTouchEditLongPressState();
+      if (!shouldStartTouchEditLongPress(event, touchEditSurface)) return;
+      host._touchEditLongPressPointerId = event.pointerId ?? "touch";
+      host._touchEditLongPressTarget = getTouchEditTargetFromPoint(event);
+      host._touchEditLongPressSurface = touchEditSurface;
+      host._touchEditLongPressStartX = Number(event.clientX || 0);
+      host._touchEditLongPressStartY = Number(event.clientY || 0);
+      touchEditSurface.setPointerCapture?.(event.pointerId);
+      host._touchEditLongPressTimer = setTimeout(triggerTouchEditLongPress, TOUCH_EDIT_LONG_PRESS_MS);
+    };
+
+    const onPointerMove = (event) => {
+      if (host._touchEditLongPressPointerId == null) return;
+      if ((event.pointerId ?? "touch") !== host._touchEditLongPressPointerId) return;
+      const liveTarget = getTouchEditTargetFromPoint(event);
+      if (isBlockedTouchEditTarget(liveTarget, touchEditSurface)) {
         clearTouchEditLongPressState();
-        if (!shouldStartTouchEditLongPress(event)) return;
-        host._touchEditLongPressPointerId = event.pointerId ?? "touch";
-        host._touchEditLongPressTarget = event.target;
-        host._touchEditLongPressStartX = Number(event.clientX || 0);
-        host._touchEditLongPressStartY = Number(event.clientY || 0);
-        host._touchEditLongPressTimer = setTimeout(triggerTouchEditLongPress, TOUCH_EDIT_LONG_PRESS_MS);
-      };
-
-      const onPointerMove = (event) => {
-        if (host._touchEditLongPressPointerId == null) return;
-        if ((event.pointerId ?? "touch") !== host._touchEditLongPressPointerId) return;
-        const deltaX = Math.abs(Number(event.clientX || 0) - host._touchEditLongPressStartX);
-        const deltaY = Math.abs(Number(event.clientY || 0) - host._touchEditLongPressStartY);
-        if (deltaX > TOUCH_EDIT_MOVE_THRESHOLD_PX || deltaY > TOUCH_EDIT_MOVE_THRESHOLD_PX) {
-          clearTouchEditLongPressState();
-        }
-      };
-
-      const onPointerEnd = (event) => {
-        if (host._touchEditLongPressPointerId == null) return;
-        if ((event.pointerId ?? "touch") !== host._touchEditLongPressPointerId) return;
+        return;
+      }
+      const deltaX = Math.abs(Number(event.clientX || 0) - host._touchEditLongPressStartX);
+      const deltaY = Math.abs(Number(event.clientY || 0) - host._touchEditLongPressStartY);
+      if (deltaX > TOUCH_EDIT_MOVE_THRESHOLD_PX || deltaY > TOUCH_EDIT_MOVE_THRESHOLD_PX) {
         clearTouchEditLongPressState();
-      };
+      }
+    };
 
-      host._touchEditLongPressHandlers = {
-        onPointerDown,
-        onPointerMove,
-        onPointerUp: onPointerEnd,
-        onPointerCancel: onPointerEnd,
-      };
-      host.shadowRoot.addEventListener("pointerdown", onPointerDown, { passive: true });
-      host.shadowRoot.addEventListener("pointermove", onPointerMove, { passive: true });
-      host.shadowRoot.addEventListener("pointerup", onPointerEnd, { passive: true });
-      host.shadowRoot.addEventListener("pointercancel", onPointerEnd, { passive: true });
-    }
+    const onPointerEnd = (event) => {
+      if (host._touchEditLongPressPointerId == null) return;
+      if ((event.pointerId ?? "touch") !== host._touchEditLongPressPointerId) return;
+      clearTouchEditLongPressState();
+    };
+
+    host._touchEditLongPressHandlers = {
+      onPointerDown,
+      onPointerMove,
+      onPointerUp: onPointerEnd,
+      onPointerCancel: onPointerEnd,
+      onLostPointerCapture: onPointerEnd,
+    };
+    host._touchEditLongPressBoundSurface = touchEditSurface;
+    touchEditSurface.addEventListener("pointerdown", onPointerDown);
+    touchEditSurface.addEventListener("pointermove", onPointerMove);
+    touchEditSurface.addEventListener("pointerup", onPointerEnd);
+    touchEditSurface.addEventListener("pointercancel", onPointerEnd);
+    touchEditSurface.addEventListener("lostpointercapture", onPointerEnd);
 
     host._touchEditLongPressScrollCleanup?.();
     host._touchEditLongPressScrollCleanup = null;
 
-    const scrollContainer = surface?.closest?.(".mha-widget-area");
+    const scrollContainer = touchEditSurface.closest?.(".mha-widget-area");
     if (!scrollContainer) return;
 
     const onScroll = () => clearTouchEditLongPressState();
@@ -138,12 +171,15 @@ export function createWidgetInteractionSurfaceCoordinator(host) {
     host._touchEditLongPressScrollCleanup?.();
     host._touchEditLongPressScrollCleanup = null;
     const handlers = host._touchEditLongPressHandlers;
-    if (!handlers || !host.shadowRoot) return;
-    host.shadowRoot.removeEventListener("pointerdown", handlers.onPointerDown);
-    host.shadowRoot.removeEventListener("pointermove", handlers.onPointerMove);
-    host.shadowRoot.removeEventListener("pointerup", handlers.onPointerUp);
-    host.shadowRoot.removeEventListener("pointercancel", handlers.onPointerCancel);
+    const surface = host._touchEditLongPressBoundSurface;
+    if (!handlers || !surface) return;
+    surface.removeEventListener("pointerdown", handlers.onPointerDown);
+    surface.removeEventListener("pointermove", handlers.onPointerMove);
+    surface.removeEventListener("pointerup", handlers.onPointerUp);
+    surface.removeEventListener("pointercancel", handlers.onPointerCancel);
+    surface.removeEventListener("lostpointercapture", handlers.onLostPointerCapture);
     host._touchEditLongPressHandlers = null;
+    host._touchEditLongPressBoundSurface = null;
   }
 
   function syncEditModeDom() {

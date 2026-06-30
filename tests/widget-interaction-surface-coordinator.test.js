@@ -179,29 +179,41 @@ test("widget interaction coordinator enters edit mode on touch long press over e
     },
   };
   const grid = {
+    addEventListener(type, handler) {
+      listeners.set(type, handler);
+    },
+    removeEventListener(type) {
+      listeners.delete(type);
+    },
     closest(selector) {
+      if (selector === ".mha-grid") return this;
       assert.equal(selector, ".mha-widget-area");
       return scrollContainer;
+    },
+    contains(node) {
+      return node === target || node === grid;
     },
   };
   const target = {
     closest(selector) {
-      if (selector === ".mha-grid") return grid;
       if (selector.includes(".mha-widget")) return null;
       return null;
     },
   };
 
-  const shadowListeners = new Map();
+  const previousDocument = globalThis.document;
+  globalThis.document = {
+    elementFromPoint() {
+      return target;
+    },
+  };
+
   const host = {
     _isEditing: false,
     dataset: { layout: "mobile" },
     shadowRoot: {
-      addEventListener(type, handler) {
-        shadowListeners.set(type, handler);
-      },
-      removeEventListener(type) {
-        shadowListeners.delete(type);
+      elementFromPoint() {
+        return target;
       },
     },
     _isMobileLandscapeLayout() {
@@ -225,7 +237,7 @@ test("widget interaction coordinator enters edit mode on touch long press over e
   try {
     const coordinator = createWidgetInteractionSurfaceCoordinator(host);
     coordinator.wireTouchEditLongPress(grid);
-    shadowListeners.get("pointerdown")?.({
+    listeners.get("pointerdown")?.({
       pointerId: 7,
       pointerType: "touch",
       button: 0,
@@ -238,5 +250,6 @@ test("widget interaction coordinator enters edit mode on touch long press over e
   } finally {
     globalThis.setTimeout = previousSetTimeout;
     globalThis.clearTimeout = previousClearTimeout;
+    globalThis.document = previousDocument;
   }
 });
