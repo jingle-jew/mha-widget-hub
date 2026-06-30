@@ -7,6 +7,7 @@ import { t } from "../i18n/index.js";
 
 const TOUCH_EDIT_LONG_PRESS_MS = 420;
 const TOUCH_EDIT_MOVE_THRESHOLD_PX = 12;
+const TOUCH_EDIT_SCROLL_THRESHOLD_PX = 12;
 const TOUCH_EDIT_BLOCKED_TARGET_SELECTOR = [
   ".mha-widget",
   ".mha-widget [data-action]",
@@ -41,6 +42,26 @@ const TOUCH_EDIT_BLOCKED_TARGET_SELECTOR = [
 export function createWidgetInteractionSurfaceCoordinator(host) {
   const dragCoordinator = createWidgetDragCoordinator(host);
 
+  function getTouchEditLongPressScope() {
+    return host._touchEditLongPressScope
+      || host.shadowRoot?.querySelector?.(".mha-widget-area")
+      || null;
+  }
+
+  function getTouchEditPointerId(event) {
+    if (event?.pointerId != null) return event.pointerId;
+    const touch = event?.touches?.[0] || event?.changedTouches?.[0] || null;
+    return touch?.identifier ?? "touch";
+  }
+
+  function getTouchEditPoint(event) {
+    const touch = event?.touches?.[0] || event?.changedTouches?.[0] || null;
+    return {
+      x: Number(touch?.clientX ?? event?.clientX ?? 0),
+      y: Number(touch?.clientY ?? event?.clientY ?? 0),
+    };
+  }
+
   function isTouchEditLayout() {
     const layout = host.dataset?.layout || host._layout || "";
     return layout === "mobile" || layout === "tablet";
@@ -56,17 +77,20 @@ export function createWidgetInteractionSurfaceCoordinator(host) {
     host._touchEditLongPressTarget = null;
     host._touchEditLongPressStartX = 0;
     host._touchEditLongPressStartY = 0;
+    host._touchEditLongPressStartScrollTop = 0;
   }
 
   function shouldStartTouchEditLongPress(event) {
     if (!isTouchEditLayout() || host._isEditing || host._isMobileLandscapeLayout()) return false;
     if (!event || (typeof event.button === "number" && event.button !== 0)) return false;
     if (event.isPrimary === false) return false;
-    if (event.pointerType === "mouse") return false;
     const target = event.target;
     if (!target?.closest) return false;
-    const grid = target.closest(".mha-grid");
-    if (!grid) return false;
+    const scope = getTouchEditLongPressScope();
+    if (!scope) return false;
+    const path = typeof event.composedPath === "function" ? event.composedPath() : [];
+    const withinScope = path.includes(scope) || target.closest(".mha-widget-area") === scope;
+    if (!withinScope) return false;
     if (target.closest(TOUCH_EDIT_BLOCKED_TARGET_SELECTOR)) return false;
     return true;
   }
@@ -79,57 +103,98 @@ export function createWidgetInteractionSurfaceCoordinator(host) {
   }
 
   function wireTouchEditLongPress(surface) {
-    if (!host.shadowRoot) return;
+    host._touchEditLongPressScope = surface?.closest?.(".mha-widget-area") || null;
+    const scope = getTouchEditLongPressScope();
+    if (!scope) return;
+    const usePointerEvents = "PointerEvent" in globalThis;
 
     if (!host._touchEditLongPressHandlers) {
-      const onPointerDown = (event) => {
+      const onPressStart = (event) => {
         clearTouchEditLongPressState();
         if (!shouldStartTouchEditLongPress(event)) return;
-        host._touchEditLongPressPointerId = event.pointerId ?? "touch";
+        const point = getTouchEditPoint(event);
+        host._touchEditLongPressPointerId = getTouchEditPointerId(event);
         host._touchEditLongPressTarget = event.target;
-        host._touchEditLongPressStartX = Number(event.clientX || 0);
-        host._touchEditLongPressStartY = Number(event.clientY || 0);
+        host._touchEditLongPressStartX = point.x;
+        host._touchEditLongPressStartY = point.y;
+        host._touchEditLongPressStartScrollTop = Number(scope.scrollTop || 0);
         host._touchEditLongPressTimer = setTimeout(triggerTouchEditLongPress, TOUCH_EDIT_LONG_PRESS_MS);
       };
 
-      const onPointerMove = (event) => {
+      const onPressMove = (event) => {
         if (host._touchEditLongPressPointerId == null) return;
-        if ((event.pointerId ?? "touch") !== host._touchEditLongPressPointerId) return;
-        const deltaX = Math.abs(Number(event.clientX || 0) - host._touchEditLongPressStartX);
-        const deltaY = Math.abs(Number(event.clientY || 0) - host._touchEditLongPressStartY);
+        if (getTouchEditPointerId(event) !== host._touchEditLongPressPointerId) return;
+        const point = getTouchEditPoint(event);
+        const deltaX = Math.abs(point.x - host._touchEditLongPressStartX);
+        const deltaY = Math.abs(point.y - host._touchEditLongPressStartY);
         if (deltaX > TOUCH_EDIT_MOVE_THRESHOLD_PX || deltaY > TOUCH_EDIT_MOVE_THRESHOLD_PX) {
           clearTouchEditLongPressState();
         }
       };
 
-      const onPointerEnd = (event) => {
+      const onPressEnd = (event) => {
         if (host._touchEditLongPressPointerId == null) return;
-        if ((event.pointerId ?? "touch") !== host._touchEditLongPressPointerId) return;
+        if (getTouchEditPointerId(event) !== host._touchEditLongPressPointerId) return;
         clearTouchEditLongPressState();
       };
 
       host._touchEditLongPressHandlers = {
-        onPointerDown,
-        onPointerMove,
-        onPointerUp: onPointerEnd,
-        onPointerCancel: onPointerEnd,
+        onPointerDown: onPressStart,
+        onPointerMove: onPressMove,
+        onPointerUp: onPressEnd,
+        onPointerCancel: onPressEnd,
+        onMouseDown: onPressStart,
+        onMouseMove: onPressMove,
+        onMouseUp: onPressEnd,
+        onTouchStart: onPressStart,
+        onTouchMove: onPressMove,
+        onTouchEnd: onPressEnd,
+        onTouchCancel: onPressEnd,
       };
-      host.shadowRoot.addEventListener("pointerdown", onPointerDown, { passive: true });
-      host.shadowRoot.addEventListener("pointermove", onPointerMove, { passive: true });
-      host.shadowRoot.addEventListener("pointerup", onPointerEnd, { passive: true });
-      host.shadowRoot.addEventListener("pointercancel", onPointerEnd, { passive: true });
     }
+
+    host._touchEditLongPressEventTarget?.removeEventListener?.("pointerdown", host._touchEditLongPressHandlers.onPointerDown);
+    host._touchEditLongPressEventTarget?.removeEventListener?.("pointermove", host._touchEditLongPressHandlers.onPointerMove);
+    host._touchEditLongPressEventTarget?.removeEventListener?.("pointerup", host._touchEditLongPressHandlers.onPointerUp);
+    host._touchEditLongPressEventTarget?.removeEventListener?.("pointercancel", host._touchEditLongPressHandlers.onPointerCancel);
+    host._touchEditLongPressEventTarget?.removeEventListener?.("mousedown", host._touchEditLongPressHandlers.onMouseDown);
+    host._touchEditLongPressEventTarget?.removeEventListener?.("mousemove", host._touchEditLongPressHandlers.onMouseMove);
+    host._touchEditLongPressEventTarget?.removeEventListener?.("mouseup", host._touchEditLongPressHandlers.onMouseUp);
+    host._touchEditLongPressEventTarget?.removeEventListener?.("touchstart", host._touchEditLongPressHandlers.onTouchStart);
+    host._touchEditLongPressEventTarget?.removeEventListener?.("touchmove", host._touchEditLongPressHandlers.onTouchMove);
+    host._touchEditLongPressEventTarget?.removeEventListener?.("touchend", host._touchEditLongPressHandlers.onTouchEnd);
+    host._touchEditLongPressEventTarget?.removeEventListener?.("touchcancel", host._touchEditLongPressHandlers.onTouchCancel);
+
+    if (usePointerEvents) {
+      scope.addEventListener("pointerdown", host._touchEditLongPressHandlers.onPointerDown, { passive: true });
+      scope.addEventListener("pointermove", host._touchEditLongPressHandlers.onPointerMove, { passive: true });
+      scope.addEventListener("pointerup", host._touchEditLongPressHandlers.onPointerUp, { passive: true });
+      scope.addEventListener("pointercancel", host._touchEditLongPressHandlers.onPointerCancel, { passive: true });
+    } else {
+      scope.addEventListener("mousedown", host._touchEditLongPressHandlers.onMouseDown, { passive: true });
+      scope.addEventListener("mousemove", host._touchEditLongPressHandlers.onMouseMove, { passive: true });
+      scope.addEventListener("mouseup", host._touchEditLongPressHandlers.onMouseUp, { passive: true });
+      scope.addEventListener("touchstart", host._touchEditLongPressHandlers.onTouchStart, { passive: true });
+      scope.addEventListener("touchmove", host._touchEditLongPressHandlers.onTouchMove, { passive: true });
+      scope.addEventListener("touchend", host._touchEditLongPressHandlers.onTouchEnd, { passive: true });
+      scope.addEventListener("touchcancel", host._touchEditLongPressHandlers.onTouchCancel, { passive: true });
+    }
+    host._touchEditLongPressEventTarget = scope;
+    host._touchEditLongPressUsesPointerEvents = usePointerEvents;
 
     host._touchEditLongPressScrollCleanup?.();
     host._touchEditLongPressScrollCleanup = null;
 
-    const scrollContainer = surface?.closest?.(".mha-widget-area");
-    if (!scrollContainer) return;
-
-    const onScroll = () => clearTouchEditLongPressState();
-    scrollContainer.addEventListener("scroll", onScroll, { passive: true });
+    const onScopedScroll = () => {
+      if (host._touchEditLongPressPointerId == null) return;
+      const currentScrollTop = Number(scope.scrollTop || 0);
+      if (Math.abs(currentScrollTop - host._touchEditLongPressStartScrollTop) > TOUCH_EDIT_SCROLL_THRESHOLD_PX) {
+        clearTouchEditLongPressState();
+      }
+    };
+    scope.addEventListener("scroll", onScopedScroll, { passive: true });
     host._touchEditLongPressScrollCleanup = () => {
-      scrollContainer.removeEventListener("scroll", onScroll);
+      scope.removeEventListener("scroll", onScopedScroll);
     };
   }
 
@@ -137,12 +202,26 @@ export function createWidgetInteractionSurfaceCoordinator(host) {
     clearTouchEditLongPressState();
     host._touchEditLongPressScrollCleanup?.();
     host._touchEditLongPressScrollCleanup = null;
+    host._touchEditLongPressScope = null;
     const handlers = host._touchEditLongPressHandlers;
-    if (!handlers || !host.shadowRoot) return;
-    host.shadowRoot.removeEventListener("pointerdown", handlers.onPointerDown);
-    host.shadowRoot.removeEventListener("pointermove", handlers.onPointerMove);
-    host.shadowRoot.removeEventListener("pointerup", handlers.onPointerUp);
-    host.shadowRoot.removeEventListener("pointercancel", handlers.onPointerCancel);
+    const target = host._touchEditLongPressEventTarget;
+    if (!handlers || !target) return;
+    if (host._touchEditLongPressUsesPointerEvents) {
+      target.removeEventListener("pointerdown", handlers.onPointerDown);
+      target.removeEventListener("pointermove", handlers.onPointerMove);
+      target.removeEventListener("pointerup", handlers.onPointerUp);
+      target.removeEventListener("pointercancel", handlers.onPointerCancel);
+    } else {
+      target.removeEventListener("mousedown", handlers.onMouseDown);
+      target.removeEventListener("mousemove", handlers.onMouseMove);
+      target.removeEventListener("mouseup", handlers.onMouseUp);
+      target.removeEventListener("touchstart", handlers.onTouchStart);
+      target.removeEventListener("touchmove", handlers.onTouchMove);
+      target.removeEventListener("touchend", handlers.onTouchEnd);
+      target.removeEventListener("touchcancel", handlers.onTouchCancel);
+    }
+    host._touchEditLongPressEventTarget = null;
+    host._touchEditLongPressUsesPointerEvents = false;
     host._touchEditLongPressHandlers = null;
   }
 
