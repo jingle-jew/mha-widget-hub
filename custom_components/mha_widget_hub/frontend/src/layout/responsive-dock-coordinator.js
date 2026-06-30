@@ -3,6 +3,37 @@ import { DOCK_POSITION, normalizeDockPosition } from "../core/mha-persistence.js
 import { syncDockActiveState } from "./dock-controller.js";
 
 export function createResponsiveDockCoordinator(host) {
+  function scheduleMobileDockEditScroll() {
+    cancelAnimationFrame(host._mobileDockEditScrollFrame || 0);
+    host._mobileDockEditScrollFrame = requestAnimationFrame(() => {
+      host._mobileDockEditScrollFrame = 0;
+      const dock = host.shadowRoot?.querySelector?.(".mha-mobile-dock");
+      if (!dock) return;
+      if (!isMobileLauncherLayout() || isMobileLandscapeLayout()) return;
+      if (!host._isEditing || host._activeMoveWidgetId || host._pendingWidgetPlacement) return;
+      if (dock.scrollWidth <= dock.clientWidth + 1) return;
+      if (typeof dock.scrollTo === "function") {
+        dock.scrollTo({
+          left: dock.scrollWidth,
+          behavior: "smooth",
+        });
+        return;
+      }
+      dock.scrollLeft = dock.scrollWidth - dock.clientWidth;
+    });
+  }
+
+  function syncMobileDockEditScroll() {
+    const isEditing = Boolean(host._isEditing);
+    const enteredEditMode = !host._wasMobileDockEditing && isEditing;
+    host._wasMobileDockEditing = isEditing;
+    if (!enteredEditMode) return false;
+    if (!isMobileLauncherLayout() || isMobileLandscapeLayout()) return false;
+    if (host._activeMoveWidgetId || host._pendingWidgetPlacement) return false;
+    scheduleMobileDockEditScroll();
+    return true;
+  }
+
   function syncStatusBarFillScrollState(scrolled = false) {
     host.classList.toggle("mha-is-scrolled", Boolean(scrolled));
   }
@@ -23,7 +54,9 @@ export function createResponsiveDockCoordinator(host) {
   }
 
   function syncDocksDom() {
-    return host._pageUiCoordinator.syncDocks();
+    const result = host._pageUiCoordinator.syncDocks();
+    syncMobileDockEditScroll();
+    return result;
   }
 
   function applyDockPositionFromSettings(position = "left") {
@@ -112,6 +145,7 @@ export function createResponsiveDockCoordinator(host) {
   return {
     isMobileLauncherLayout,
     isMobileLandscapeLayout,
+    syncMobileDockEditScroll,
     updateDockActiveState,
     syncDocksDom,
     applyDockPositionFromSettings,

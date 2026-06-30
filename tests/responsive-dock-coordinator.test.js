@@ -202,3 +202,129 @@ test("responsive dock coordinator toggles floating controls on portrait scroll d
     globalThis.window = previousWindow;
   }
 });
+
+test("responsive dock coordinator scrolls the mobile dock to the end when editing starts", () => {
+  const previousWindow = globalThis.window;
+  const previousRaf = globalThis.requestAnimationFrame;
+  const previousCancelRaf = globalThis.cancelAnimationFrame;
+  const rafCallbacks = [];
+  globalThis.window = {
+    matchMedia(query) {
+      return { matches: query === "(orientation: landscape)" ? false : false };
+    },
+  };
+  globalThis.requestAnimationFrame = (callback) => {
+    rafCallbacks.push(callback);
+    return rafCallbacks.length;
+  };
+  globalThis.cancelAnimationFrame = () => {};
+
+  const scrollCalls = [];
+  const dock = {
+    scrollWidth: 640,
+    clientWidth: 320,
+    scrollLeft: 0,
+    scrollTo(options) {
+      scrollCalls.push(options);
+    },
+  };
+  const host = {
+    _isEditing: false,
+    _activeMoveWidgetId: "",
+    _pendingWidgetPlacement: null,
+    _wasMobileDockEditing: false,
+    _pageUiCoordinator: {
+      syncDocks() {},
+    },
+    shadowRoot: {
+      querySelector(selector) {
+        assert.equal(selector, ".mha-mobile-dock");
+        return dock;
+      },
+    },
+    dataset: { layout: "mobile" },
+    classList: createClassList(),
+  };
+
+  try {
+    const coordinator = createResponsiveDockCoordinator(host);
+
+    coordinator.syncDocksDom();
+    assert.equal(rafCallbacks.length, 0);
+
+    host._isEditing = true;
+    coordinator.syncDocksDom();
+    assert.equal(rafCallbacks.length, 1);
+    rafCallbacks.shift()?.();
+    assert.deepEqual(scrollCalls, [{ left: 640, behavior: "smooth" }]);
+
+    coordinator.syncDocksDom();
+    assert.equal(rafCallbacks.length, 0);
+
+    host._isEditing = false;
+    coordinator.syncDocksDom();
+    host._isEditing = true;
+    coordinator.syncDocksDom();
+    assert.equal(rafCallbacks.length, 1);
+  } finally {
+    globalThis.window = previousWindow;
+    globalThis.requestAnimationFrame = previousRaf;
+    globalThis.cancelAnimationFrame = previousCancelRaf;
+  }
+});
+
+test("responsive dock coordinator skips auto-scroll outside mobile or without overflow", () => {
+  const previousWindow = globalThis.window;
+  const previousRaf = globalThis.requestAnimationFrame;
+  const previousCancelRaf = globalThis.cancelAnimationFrame;
+  const rafCallbacks = [];
+  globalThis.window = {
+    matchMedia(query) {
+      return { matches: query === "(orientation: landscape)" ? false : false };
+    },
+  };
+  globalThis.requestAnimationFrame = (callback) => {
+    rafCallbacks.push(callback);
+    return rafCallbacks.length;
+  };
+  globalThis.cancelAnimationFrame = () => {};
+
+  const dock = {
+    scrollWidth: 320,
+    clientWidth: 320,
+    scrollLeft: 0,
+    scrollTo() {
+      throw new Error("should not auto-scroll without overflow");
+    },
+  };
+  const host = {
+    _isEditing: true,
+    _activeMoveWidgetId: "",
+    _pendingWidgetPlacement: null,
+    _wasMobileDockEditing: false,
+    _pageUiCoordinator: {
+      syncDocks() {},
+    },
+    shadowRoot: {
+      querySelector() {
+        return dock;
+      },
+    },
+    dataset: { layout: "tablet" },
+    classList: createClassList(),
+  };
+
+  try {
+    const coordinator = createResponsiveDockCoordinator(host);
+    coordinator.syncDocksDom();
+    assert.equal(rafCallbacks.length, 0);
+
+    host.dataset.layout = "mobile";
+    coordinator.syncMobileDockEditScroll();
+    assert.equal(rafCallbacks.length, 0);
+  } finally {
+    globalThis.window = previousWindow;
+    globalThis.requestAnimationFrame = previousRaf;
+    globalThis.cancelAnimationFrame = previousCancelRaf;
+  }
+});
