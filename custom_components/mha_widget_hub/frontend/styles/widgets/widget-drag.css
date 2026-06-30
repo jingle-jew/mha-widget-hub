@@ -1,5 +1,4 @@
 :host(.is-editing) .mha-widget {
-  touch-action: none;
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
@@ -9,9 +8,6 @@
   cursor: grabbing;
 }
 
-:host(.is-widget-drag-pending) .mha-widget-area,
-:host(.is-widget-drag-pending) .mha-grid,
-:host(.is-widget-drag-pending) .mha-widget,
 :host(.is-widget-dragging) .mha-widget-area,
 :host(.is-widget-dragging) .mha-grid,
 :host(.is-widget-dragging) .mha-widget {
