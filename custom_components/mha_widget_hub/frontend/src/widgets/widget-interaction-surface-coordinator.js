@@ -52,7 +52,7 @@ export function createWidgetInteractionSurfaceCoordinator(host) {
 
   function getTouchEditLongPressScope() {
     return host._touchEditLongPressScope
-      || host.shadowRoot?.querySelector?.(".mha-widget-area")
+      || host.shadowRoot?.querySelector?.(".mha-grid")
       || null;
   }
 
@@ -121,7 +121,10 @@ export function createWidgetInteractionSurfaceCoordinator(host) {
   }
 
   function wireTouchEditLongPress(surface) {
-    host._touchEditLongPressScope = surface?.closest?.(".mha-widget-area") || null;
+    host._touchEditLongPressScope = surface?.matches?.(".mha-grid")
+      ? surface
+      : surface?.querySelector?.(".mha-grid")
+        || null;
     const scope = getTouchEditLongPressScope();
     if (!scope) return;
     const usePointerEvents = "PointerEvent" in globalThis;
@@ -144,7 +147,7 @@ export function createWidgetInteractionSurfaceCoordinator(host) {
         host._touchEditLongPressTarget = event.target;
         host._touchEditLongPressStartX = point.x;
         host._touchEditLongPressStartY = point.y;
-        host._touchEditLongPressStartScrollTop = Number(scope.scrollTop || 0);
+        host._touchEditLongPressStartScrollTop = Number(scope.closest?.(".mha-widget-area")?.scrollTop || 0);
         host._touchEditLongPressTimer = setTimeout(triggerTouchEditLongPress, TOUCH_EDIT_LONG_PRESS_MS);
       };
 
@@ -217,17 +220,19 @@ export function createWidgetInteractionSurfaceCoordinator(host) {
 
     host._touchEditLongPressScrollCleanup?.();
     host._touchEditLongPressScrollCleanup = null;
+    const scrollContainer = scope.closest?.(".mha-widget-area");
+    if (!scrollContainer) return;
 
     const onScopedScroll = () => {
       if (host._touchEditLongPressPointerId == null) return;
-      const currentScrollTop = Number(scope.scrollTop || 0);
+      const currentScrollTop = Number(scrollContainer.scrollTop || 0);
       if (Math.abs(currentScrollTop - host._touchEditLongPressStartScrollTop) > TOUCH_EDIT_SCROLL_THRESHOLD_PX) {
         clearTouchEditLongPressState();
       }
     };
-    scope.addEventListener("scroll", onScopedScroll, { passive: true });
+    scrollContainer.addEventListener("scroll", onScopedScroll, { passive: true });
     host._touchEditLongPressScrollCleanup = () => {
-      scope.removeEventListener("scroll", onScopedScroll);
+      scrollContainer.removeEventListener("scroll", onScopedScroll);
     };
   }
 
