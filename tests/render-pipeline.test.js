@@ -295,6 +295,9 @@ test("render helpers preserve widgetsState transitions from pending to loading t
     _applyCustomWallpaperState() {},
     _applyHaSidebarMode() {},
     _clearGridScrollListener() {},
+    _clearTouchEditLongPress() {
+      this.touchEditClears = (this.touchEditClears || 0) + 1;
+    },
     _createWidgetPlaceholder(widget) {
       const placeholder = {
         widgetId: widget.id,
@@ -326,6 +329,7 @@ test("render helpers preserve widgetsState transitions from pending to loading t
 
   prototype._prepareRenderCycle.call(host, { renderId: 4, themeState: {} });
   assert.equal(host.dataset.widgetsState, "pending");
+  assert.equal(host.touchEditClears, 1);
 
   const previousDocument = globalThis.document;
   globalThis.document = {
@@ -483,6 +487,9 @@ test("immediate UI delegates status updates through the host bridge", async () =
     _wireDockAutoHide() {
       calls.push("wireDockAutoHide");
     },
+    _wireTouchEditLongPress(grid) {
+      calls.push(["wireTouchEditLongPress", grid?.className || ""]);
+    },
     _updateStatusDom() {
       calls.push("updateStatusDom");
     },
@@ -500,7 +507,11 @@ test("immediate UI delegates status updates through the host bridge", async () =
     units: 4,
   });
 
-  assert.deepEqual(calls, ["wireDockAutoHide", "updateStatusDom"]);
+  assert.deepEqual(calls, [
+    "wireDockAutoHide",
+    ["wireTouchEditLongPress", "mha-grid"],
+    "updateStatusDom",
+  ]);
   assert.equal(pageStage.appended.length, 1);
   globalThis.document = previousDocument;
 });

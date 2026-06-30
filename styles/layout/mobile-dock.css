@@ -1,8 +1,8 @@
 /*
- * Custom mobile dock.
+ * Mobile dock only.
  *
- * Custom shell, global icon contract:
- * This file must not define border-radius, mask-image or clip-path on .mha-icon.
+ * Tablet/desktop keeps using .mha-dock in dock.css. This file owns the
+ * mobile-only floating launcher-style rail rendered by createMobileDock().
  */
 
 .mha-mobile-dock {
@@ -11,361 +11,147 @@
 
 @media (max-width: 767px) {
   .mha-mobile-dock {
-    --mha-mobile-dock-edge: max(var(--mha-safe-left, 0px), clamp(.9rem, 3vw, 1.25rem));
-    --mha-mobile-dock-bottom: max(var(--mha-safe-bottom, 0px), clamp(.9rem, 3vw, 1.25rem));
-    --mha-mobile-dock-launcher-size: clamp(3.75rem, 15vw, 4.8rem);
-    --mha-mobile-dock-panel-width: min(24rem, calc(100vw - (var(--mha-mobile-dock-edge) * 2)));
-    --mha-mobile-dock-gap: clamp(.55rem, 2vw, .8rem);
-    --mha-mobile-dock-padding: clamp(.8rem, 2.5vw, 1.1rem);
-
-    --mha-icon-size: clamp(3.1rem, 14vw, 4.15rem);
+    --mha-mobile-dock-edge: var(--mha-mobile-grid-gutter, var(--mha-page-padding, clamp(1rem, 2.6vw, 2rem)));
+    --mha-mobile-dock-bottom: max(var(--mha-safe-bottom, env(safe-area-inset-bottom, 0px)), clamp(.85rem, 2.8vw, 1.2rem));
+    --mha-mobile-dock-gap: clamp(0.25rem, 1vw, 0.45rem);
+    --mha-mobile-dock-padding: clamp(0.5rem, 1.5vw, 0.75rem);
+    --mha-mobile-dock-visible-icons: 4;
+    --mha-mobile-dock-width: calc(100vw - (var(--mha-mobile-dock-edge) * 2));
+    --mha-mobile-dock-slot-width: calc(
+      (var(--mha-mobile-dock-width) - (var(--mha-mobile-dock-padding) * 2) - (var(--mha-mobile-dock-gap) * 3))
+      / var(--mha-mobile-dock-visible-icons)
+    );
+    --mha-icon-size: min(var(--mha-mobile-dock-slot-width), clamp(3rem, 14vw, 4.15rem));
     --mha-icon-glyph-size: 82%;
 
-    display: block;
-    position: fixed;
-    inset: 0;
-    z-index: 75;
-    pointer-events: none;
-  }
-
-  .mha-mobile-dock-scrim {
-    position: fixed;
-    inset: 0;
-    border: 0;
-    padding: 0;
-    background: color-mix(in srgb, var(--mha-bg-overlay) 72%, transparent);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 220ms ease;
-  }
-
-  .mha-mobile-dock[data-open="true"] .mha-mobile-dock-scrim {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  .mha-mobile-dock-launcher {
     position: fixed;
     left: var(--mha-mobile-dock-edge);
+    right: var(--mha-mobile-dock-edge);
     bottom: var(--mha-mobile-dock-bottom);
-    inline-size: var(--mha-mobile-dock-launcher-size);
-    block-size: var(--mha-mobile-dock-launcher-size);
+    z-index: 75;
+    box-sizing: border-box;
+    inline-size: var(--mha-mobile-dock-width);
+    min-inline-size: 0;
+    max-inline-size: var(--mha-mobile-dock-width);
+    min-block-size: calc((var(--mha-icon-size) * 1.5) + (var(--mha-mobile-dock-padding) * 2));
+
     display: grid;
-    place-items: center;
+    grid-auto-flow: column;
+    grid-auto-columns: calc(
+      (100% - (var(--mha-mobile-dock-gap) * 3))
+      / var(--mha-mobile-dock-visible-icons)
+    );
+    align-items: center;
+    justify-items: center;
+    justify-content: center;
+    gap: var(--mha-mobile-dock-gap);
+    padding: var(--mha-mobile-dock-padding);
+
     border: 1px solid var(--mha-shell-border, var(--mha-border-secondary));
-    border-radius: clamp(1.25rem, 5vw, 1.75rem);
+    border-radius: clamp(1.45rem, 5vw, var(--mha-dock-radius, 2rem));
     background: var(--mha-shell-dock-surface, var(--mha-surface-glass));
     box-shadow: var(--mha-shell-shadow, var(--mha-shadow-floating));
     -webkit-backdrop-filter: blur(var(--mha-shell-blur, var(--mha-blur-primary))) saturate(var(--mha-surface-saturation));
     backdrop-filter: blur(var(--mha-shell-blur, var(--mha-blur-primary))) saturate(var(--mha-surface-saturation));
-    color: white;
-    padding: 0;
+    color: var(--mha-text);
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--mha-mobile-dock-padding);
+    overscroll-behavior-inline: contain;
     pointer-events: auto;
-    cursor: pointer;
-    transform: translateZ(0);
+    transform: translateY(0);
     transition:
-      transform 220ms cubic-bezier(.2,.8,.2,1),
-      opacity 220ms ease;
+      transform var(--mha-motion-duration, 260ms) var(--mha-motion-easing, ease),
+      opacity var(--mha-motion-duration, 260ms) ease,
+      background var(--mha-theme-crossfade-duration, 2000ms) var(--mha-theme-crossfade-easing, ease),
+      border-color var(--mha-theme-crossfade-duration, 2000ms) var(--mha-theme-crossfade-easing, ease),
+      box-shadow var(--mha-theme-crossfade-duration, 2000ms) var(--mha-theme-crossfade-easing, ease),
+      color var(--mha-theme-crossfade-duration, 2000ms) var(--mha-theme-crossfade-easing, ease);
   }
 
-  .mha-mobile-dock-launcher:active {
-    transform: scale(.96);
-  }
-
-  .mha-mobile-dock-panel {
-    position: fixed;
-    left: var(--mha-mobile-dock-edge);
-    bottom: calc(var(--mha-mobile-dock-bottom) + var(--mha-mobile-dock-launcher-size) + clamp(.65rem, 2vw, .9rem));
-    inline-size: var(--mha-mobile-dock-panel-width);
-    display: grid;
-    gap: var(--mha-mobile-dock-gap);
-    padding: var(--mha-mobile-dock-padding);
-    border: 1px solid var(--mha-shell-border, var(--mha-border-secondary));
-    border-radius: clamp(1.45rem, 5vw, 2.15rem);
-    background: var(--mha-shell-panel-surface, var(--mha-surface-panel));
-    box-shadow: var(--mha-shadow-panel);
-    -webkit-backdrop-filter: blur(var(--mha-blur-strong)) saturate(var(--mha-surface-saturation));
-    backdrop-filter: blur(var(--mha-blur-strong)) saturate(var(--mha-surface-saturation));
-    opacity: 0;
-    pointer-events: none;
-    transform: translateY(12px) scale(.96);
-    transform-origin: left bottom;
-    transition:
-      opacity 240ms ease,
-      transform 240ms cubic-bezier(.2,.8,.2,1);
-  }
-
-  .mha-mobile-dock[data-open="true"] .mha-mobile-dock-panel {
-    opacity: 1;
-    pointer-events: auto;
-    transform: translateY(0) scale(1);
-  }
-
-  .mha-mobile-dock-close {
-    justify-self: end;
-    inline-size: 2rem;
-    block-size: 2rem;
-    display: grid;
-    place-items: center;
-    border: 0;
-    border-radius: 999px;
-    background: #ff3b30;
-    color: white;
-    font-size: 1.35rem;
-    line-height: 1;
-    cursor: pointer;
-  }
-
-  .mha-mobile-dock-grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: var(--mha-mobile-dock-gap);
-    align-items: center;
-    justify-items: center;
+  .mha-mobile-dock::-webkit-scrollbar {
+    display: none;
   }
 
   .mha-mobile-dock-item {
+    position: relative;
+    display: grid;
+    place-items: center;
+    inline-size: var(--mha-mobile-dock-slot-width);
+    block-size: var(--mha-icon-size);
+    min-inline-size: var(--mha-mobile-dock-slot-width);
+    min-block-size: var(--mha-icon-size);
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    justify-self: center;
+    scroll-snap-align: start;
+  }
+
+  .mha-mobile-dock-item > .mha-icon {
     display: grid;
     place-items: center;
     inline-size: var(--mha-icon-size);
     block-size: var(--mha-icon-size);
-    border: 0;
-    padding: 0;
-    margin: 0;
-    background: transparent;
-    color: inherit;
-    cursor: pointer;
+    width: var(--mha-icon-size);
+    height: var(--mha-icon-size);
+    min-inline-size: var(--mha-icon-size);
+    min-block-size: var(--mha-icon-size);
+    justify-self: center;
+    margin-inline: auto;
   }
 
-  .mha-mobile-dock-item > .mha-icon,
-  .mha-mobile-dock-launcher > .mha-icon {
-    inline-size: var(--mha-icon-size);
-    block-size: var(--mha-icon-size);
+  .mha-mobile-dock-item > .mha-icon > .mha-icon-symbol {
+    justify-self: center;
+    margin-inline: auto;
   }
 
   .mha-mobile-dock-item[data-active="true"]::after {
+    content: "";
+    position: absolute;
     left: 50%;
     bottom: -.36rem;
     inline-size: min(1.26rem, 44%);
     block-size: .22rem;
+    border-radius: 999px;
+    background: var(--mha-dock-active-indicator, var(--mha-accent));
     transform: translateX(-50%);
   }
 
-
-  .mha-mobile-dock-launcher > .mha-icon {
-    --mha-icon-size: calc(var(--mha-mobile-dock-launcher-size) * .74);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .mha-mobile-dock-scrim,
-    .mha-mobile-dock-launcher,
-    .mha-mobile-dock-panel {
-      transition: none;
-    }
-  }
-}
-
-/* MOBILE LAUNCHER AS ICON ONLY
- * The launcher is still a semantic button, but the visible shape is only the
- * reusable .mha-icon inside it. No separate button shell.
- */
-@media (max-width: 767px) {
-  .mha-mobile-dock-launcher {
-    inline-size: var(--mha-mobile-dock-launcher-size);
-    block-size: var(--mha-mobile-dock-launcher-size);
-    border: 0 !important;
-    border-radius: 0 !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    backdrop-filter: none !important;
-    padding: 0 !important;
-    overflow: visible;
-    color: inherit;
-  }
-
-  .mha-mobile-dock-launcher > .mha-icon {
-    --mha-icon-size: var(--mha-mobile-dock-launcher-size);
-    --mha-icon-glyph-size: 82%;
-    inline-size: var(--mha-icon-size);
-    block-size: var(--mha-icon-size);
-  }
-
-  .mha-mobile-dock-launcher:focus-visible {
-    outline: none;
-  }
-
-  .mha-mobile-dock-launcher:focus-visible > .mha-icon {
+  .mha-mobile-dock-item:focus-visible {
     outline: 2px solid var(--mha-accent);
-    outline-offset: 4px;
+    outline-offset: 3px;
   }
-}
 
+  :host(.is-mobile-floating-controls-hidden) .mha-mobile-dock {
+    transform: translateY(calc(100% + var(--mha-mobile-dock-bottom) + 18px));
+    opacity: 0;
+    pointer-events: none;
+  }
 
-/* LIGHT THEME MOBILE DOCK TEXT CONTRACT
- * Mobile dock shell can be custom; icon colors remain owned by .mha-icon.
- */
-:host([data-theme="light"]:not([data-theme-style="material"])) .mha-mobile-dock-panel {
-  color: var(--mha-text);
-}
-
-:host([data-theme="light"]:not([data-theme-style="material"])) .mha-mobile-dock-close {
-  color: #fff;
-}
-
-
-/* MOBILE DOCK ORIENTATION FLASH GUARD
- * Prevents the mobile floating launcher/panel from flashing during orientation
- * re-render.
- */
-:host(.is-responsive-relayouting) .mha-mobile-dock {
-  opacity: 0 !important;
-  visibility: hidden !important;
-  pointer-events: none !important;
-  transition: none !important;
-}
-
-/* MOBILE DOCK PANEL SURFACE TOKENS
- * The expanded panel uses the exact same background token as widgets.
- */
-.mha-mobile-dock {
-  --mha-mobile-dock-panel-surface: var(--mha-widget-surface);
-  --mha-mobile-dock-panel-border: var(--mha-widget-border);
-  --mha-mobile-dock-panel-shadow: var(--mha-floating-shadow);
-}
-
-.mha-mobile-dock-panel {
-  background: var(--mha-mobile-dock-panel-surface);
-  border-color: var(--mha-mobile-dock-panel-border);
-  box-shadow: var(--mha-mobile-dock-panel-shadow);
-  color: var(--mha-text);
-}
-
-/* Theme-specific borders and shadows keep their existing visual treatment. */
-:host([data-theme-style="ios"]) .mha-mobile-dock {
-  --mha-mobile-dock-panel-border: color-mix(in srgb, var(--mha-widget-border) 72%, rgba(255,255,255,.28));
-  --mha-mobile-dock-panel-shadow:
-    0 24px 70px rgba(0,0,0,.24),
-    inset 0 1px 0 rgba(255,255,255,.18);
-}
-
-:host([data-theme="light"][data-theme-style="ios"]) .mha-mobile-dock {
-  --mha-mobile-dock-panel-border: rgba(255,255,255,.54);
-  --mha-mobile-dock-panel-shadow:
-    0 24px 70px rgba(65,80,120,.16),
-    inset 0 1px 0 rgba(255,255,255,.62);
-}
-
-:host([data-theme-style="oneui"]) .mha-mobile-dock {
-  --mha-mobile-dock-panel-border: var(--mha-widget-border);
-}
-
-:host([data-theme-style="material"]) .mha-mobile-dock {
-  --mha-mobile-dock-panel-border: var(--mha-widget-border);
-  --mha-mobile-dock-panel-shadow: var(--mha-floating-shadow);
-}
-
-/* The close button is an explicit contrast/danger exception. */
-.mha-mobile-dock-close {
-  color: #fff;
-}
-
-/* Keep the mobile dock available in edit mode: it contains page navigation
- * and the edit-only + button for creating a new grid page.
- */
-:host(.is-editing) .mha-mobile-dock {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: none;
-}
-
-:host(.is-editing) .mha-mobile-dock-launcher,
-:host(.is-editing) .mha-mobile-dock[data-open="true"] .mha-mobile-dock-panel,
-:host(.is-editing) .mha-mobile-dock[data-open="true"] .mha-mobile-dock-scrim {
-  pointer-events: auto;
-}
-
-/* MATERIAL BORDERLESS MOBILE DOCK SURFACE */
-:host([data-theme-style="material"]) .mha-mobile-dock,
-:host([data-theme-style="material"]) .mha-mobile-dock-panel {
-  border-color: transparent;
-}
-
-/* Mobile landscape keeps floating controls out of the widget viewport. */
-@media (orientation: landscape) {
-  :host([data-layout="mobile"]) .mha-mobile-dock {
+  :host(.is-responsive-relayouting) .mha-mobile-dock {
     opacity: 0 !important;
     visibility: hidden !important;
     pointer-events: none !important;
+    transition: none !important;
   }
 
-  :host([data-layout="mobile"]) .mha-mobile-dock-launcher,
-  :host([data-layout="mobile"]) .mha-mobile-dock-panel,
-  :host([data-layout="mobile"]) .mha-mobile-dock-scrim {
-    pointer-events: none !important;
-  }
-}
-
-/* MOBILE DOCK SYSTEM BUTTON TOKEN OVERRIDE
- * This final rule keeps the mobile dock launcher aligned with the shared
- * system-button surface. It intentionally comes after the icon-only launcher
- * rules so it wins the cascade.
- */
-@media (max-width: 767px) {
-  :host .mha-mobile-dock-launcher {
-    border: 1px solid var(--mha-system-button-border) !important;
-    background: var(--mha-system-button-bg) !important;
-    box-shadow: var(--mha-system-button-shadow) !important;
-    -webkit-backdrop-filter: var(--mha-system-button-backdrop-filter) !important;
-    backdrop-filter: var(--mha-system-button-backdrop-filter) !important;
-    color: var(--mha-system-button-color) !important;
-    overflow: hidden;
+  @media (orientation: landscape) {
+    :host([data-layout="mobile"]) .mha-mobile-dock {
+      opacity: 0 !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+    }
   }
 
-  :host .mha-mobile-dock-launcher::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    pointer-events: none;
-    background: var(--mha-system-button-highlight);
-    opacity: var(--mha-system-button-highlight-opacity);
+  @media (prefers-reduced-motion: reduce) {
+    .mha-mobile-dock {
+      transition: none;
+    }
   }
-
-  :host .mha-mobile-dock-launcher > .mha-icon {
-    background: transparent !important;
-    box-shadow: none !important;
-    border-color: transparent !important;
-  }
-}
-
-/* SEMANTIC MOBILE DOCK SHELL TOKENS
- * Phase 4 routes mobile dock panel/scrim through shell semantic roles.
- */
-@media (max-width: 767px) {
-  :host .mha-mobile-dock-panel {
-    background: var(--mha-shell-panel-surface, var(--mha-surface-panel));
-    border-color: var(--mha-shell-border, var(--mha-border-secondary));
-    box-shadow: var(--mha-shadow-panel);
-    -webkit-backdrop-filter: blur(var(--mha-blur-strong)) saturate(var(--mha-surface-saturation));
-    backdrop-filter: blur(var(--mha-blur-strong)) saturate(var(--mha-surface-saturation));
-  }
-
-  :host([data-theme-style="material"]) .mha-mobile-dock-panel {
-    background: var(--mha-surface-panel);
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-  }
-
-  :host([data-theme-style="material"]) .mha-mobile-dock-scrim {
-    background: var(--mha-bg-overlay);
-  }
-}
-
-/* Force mobile dock glyph size at the symbol level so first paint does not rely on inherited fallback timing. */
-.mha-mobile-dock .mha-icon > .mha-icon-symbol {
-  --mha-icon-symbol-size: 82%;
-  inline-size: max(var(--mha-icon-symbol-min-size, 1rem), var(--mha-icon-symbol-size));
-  block-size: max(var(--mha-icon-symbol-min-size, 1rem), var(--mha-icon-symbol-size));
-  width: max(var(--mha-icon-symbol-min-size, 1rem), var(--mha-icon-symbol-size));
-  height: max(var(--mha-icon-symbol-min-size, 1rem), var(--mha-icon-symbol-size));
 }

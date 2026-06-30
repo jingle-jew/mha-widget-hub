@@ -215,6 +215,9 @@
 :host([data-layout="mobile"]) .mha-page-panel--grid > .mha-grid {
   inline-size: 100%;
   width: 100%;
+  block-size: auto;
+  min-block-size: var(--mha-grid-matrix-height, 100%);
+  max-block-size: none;
   max-inline-size: 100%;
   justify-self: stretch;
   margin-inline: 0;
@@ -223,9 +226,14 @@
 
 :host([data-layout="mobile"]) .mha-page-stage {
   justify-items: stretch;
+  block-size: auto;
+  min-block-size: 100%;
 }
 
 :host([data-layout="mobile"]) .mha-page-panel--grid {
+  block-size: auto;
+  min-block-size: 100%;
+  overflow: visible;
   padding-block-start: var(--mha-page-padding);
 }
 

@@ -2,11 +2,18 @@ import { writeJson } from "../core/storage.js";
 import { POSITIONS } from "../core/mha-persistence.js";
 import { syncDropSlotRenderer } from "./drop-slot-renderer.js";
 import { createWidgetDragCoordinator } from "./widget-drag-coordinator.js";
+import { createGridEmptyLongPressCoordinator } from "./grid-empty-long-press-coordinator.js";
 import { getPrimaryEditIconName, setFloatingControlButtonIcon } from "../ui/floating-control-icons.js";
 import { t } from "../i18n/index.js";
 
 export function createWidgetInteractionSurfaceCoordinator(host) {
   const dragCoordinator = createWidgetDragCoordinator(host);
+  const gridEmptyLongPressCoordinator = createGridEmptyLongPressCoordinator(host);
+  function isTouchEditLayout() {
+    const layout = host.dataset?.layout || host._layout || "";
+    return layout === "mobile" || layout === "tablet";
+  }
+
   function syncEditModeDom() {
     if (!host._isEditing || host._isMobileLandscapeLayout()) {
       const hadWidgetConfig = Boolean(host._widgetConfigSession);
@@ -35,6 +42,8 @@ export function createWidgetInteractionSurfaceCoordinator(host) {
     if (edit) {
       const label = t(host._isEditing ? "common.close" : "common.edit", host._isEditing ? "Close" : "Edit");
       edit.setAttribute("aria-label", label);
+      edit.hidden = isTouchEditLayout() ? !host._isEditing : false;
+      edit.dataset.touchEditClose = String(isTouchEditLayout() && host._isEditing);
       setFloatingControlButtonIcon(edit, {
         name: getPrimaryEditIconName(host._isEditing),
         label,
@@ -162,6 +171,14 @@ export function createWidgetInteractionSurfaceCoordinator(host) {
     dragCoordinator.wireWidget(element, widget);
   }
 
+  function wireTouchEditLongPress(grid) {
+    gridEmptyLongPressCoordinator.wire(grid);
+  }
+
+  function clearTouchEditLongPress() {
+    gridEmptyLongPressCoordinator.clear();
+  }
+
   return {
     syncEditModeDom,
     isResizeHandleEvent,
@@ -175,5 +192,7 @@ export function createWidgetInteractionSurfaceCoordinator(host) {
     syncDropSlots,
     clearDropState,
     wireDrag,
+    wireTouchEditLongPress,
+    clearTouchEditLongPress,
   };
 }

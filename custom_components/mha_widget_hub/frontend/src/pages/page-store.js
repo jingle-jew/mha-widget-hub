@@ -11,7 +11,7 @@ import {
   STORAGE_KEYS,
 } from "../core/storage-keys.js";
 import {
-  createFallbackPage,
+  createDefaultPages,
   normalizePage,
   normalizePages,
 } from "./page-model.js";
@@ -119,18 +119,15 @@ export function migratePageStorage({
       normalizeWidget,
       normalizeWidgetForGrid,
     });
-    storedPages = [
-      normalizePage(
-        {
-          id: "home",
-          name: "Home",
-          icon: "home",
-          widgets,
-        },
-        0,
-        { normalizeWidget },
-      ),
-    ];
+    storedPages = createDefaultPages({ normalizeWidget });
+    storedPages[0] = normalizePage(
+      {
+        ...storedPages[0],
+        widgets,
+      },
+      0,
+      { normalizeWidget },
+    );
     if (!writeJson(STORAGE_KEYS.gridPages, storedPages)) {
       return { migrated: true, success: false };
     }
@@ -162,7 +159,7 @@ export function readPages({ normalizeWidget = identity } = {}) {
     };
   }
 
-  const pages = [createFallbackPage({ normalizeWidget })];
+  const pages = createDefaultPages({ normalizeWidget });
   return {
     pages,
     persistenceResult: writeJson(STORAGE_KEYS.gridPages, pages),

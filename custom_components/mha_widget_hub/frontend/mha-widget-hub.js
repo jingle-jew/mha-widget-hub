@@ -166,11 +166,12 @@ function getHubStateIngressCoordinatorForHost(host){
  *
  * Theme: auto
  * Visual style: OneUI
- * Accent: first OneUI blue / sky
+ * Accent: auto
  * Icon shape: auto
- * Screensaver: enabled on tablet/desktop, disabled on mobile
+ * Pages: 3 grid pages + 1 media page
+ * Screensaver: enabled
  * Screensaver delay: 30 seconds
- * Screensaver Now Bar: enabled
+ * Screensaver Now Bar: disabled
  * Screensaver clock: digital
  */
 class MhaControlHub extends HTMLElement{
@@ -1031,6 +1032,12 @@ _clearGridScrollListener(){
 // Mobile floating controls move out of the way on downward portrait scroll.
 _wireDockAutoHide(grid){
   return getResponsiveDockCoordinatorForHost(this).wireDockAutoHide(grid);
+}
+_wireTouchEditLongPress(grid){
+  return getWidgetInteractionSurfaceCoordinatorForHost(this).wireTouchEditLongPress(grid);
+}
+_clearTouchEditLongPress(){
+  return getWidgetInteractionSurfaceCoordinatorForHost(this).clearTouchEditLongPress();
 }
 _scheduleSquareUnitSync(){
   return this._gridRuntime.scheduleSquareUnitSync();

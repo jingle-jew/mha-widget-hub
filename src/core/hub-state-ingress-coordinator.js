@@ -113,7 +113,7 @@ export function createHubStateIngressCoordinator(host, {
     migrateStorageSchema();
     host._widgetPositions = readJson(POSITIONS, {}) || {};
     host._screensaverController.load({
-      enabledFallback: !host._isMobileDefaultLayout(),
+      enabledFallback: true,
     });
     host._dockPosition = getStoredDockPosition();
     host._hideHaSidebar = getStoredHideHaSidebar();

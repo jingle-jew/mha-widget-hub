@@ -4,9 +4,13 @@ import { getDefaultIconShape, getThemeStyleIds, normalizeThemeVariantSelection }
 export const THEME_STYLES = Object.freeze(new Set(getThemeStyleIds()));
 
 function getSystemThemePreference() {
-  return window.matchMedia?.("(prefers-color-scheme: light)")?.matches
-    ? "light"
-    : "dark";
+  if (window.matchMedia?.("(prefers-color-scheme: dark)")?.matches) {
+    return "dark";
+  }
+  if (window.matchMedia?.("(prefers-color-scheme: light)")?.matches) {
+    return "light";
+  }
+  return "light";
 }
 
 export function normalizeThemeSetting(theme = "auto") {
@@ -20,7 +24,6 @@ function resolveTheme(themeSetting = "auto") {
 
 export function getStoredThemeSetting(host) {
   const stored = localStorage.getItem("mha-theme")
-    || localStorage.getItem("mha-dev-theme")
     || host?.dataset?.themeSetting
     || "auto";
 
@@ -33,7 +36,6 @@ export function normalizeThemeStyle(themeStyle = "oneui") {
 
 export function getStoredThemeStyle(host) {
   const stored = localStorage.getItem("mha-theme-style")
-    || localStorage.getItem("mha-dev-theme-style")
     || document.documentElement.dataset.themeStyle
     || host?.dataset?.themeStyle
     || "oneui";
@@ -49,7 +51,6 @@ export function getStoredThemeVariant(host, themeStyle = "oneui") {
   const normalizedStyle = normalizeThemeStyle(themeStyle);
   const legacyIosGlass = normalizedStyle === "ios"
     ? localStorage.getItem("mha-ios-glass")
-      || localStorage.getItem("mha-dev-ios-glass")
       || document.documentElement.dataset.iosGlass
       || host?.dataset?.iosGlass
       || ""
@@ -67,7 +68,6 @@ export function getStoredThemeVariant(host, themeStyle = "oneui") {
 
 export function getStoredIosGlass(host) {
   const stored = localStorage.getItem("mha-ios-glass")
-    || localStorage.getItem("mha-dev-ios-glass")
     || document.documentElement.dataset.iosGlass
     || host?.dataset?.iosGlass
     || "liquid";
@@ -85,7 +85,7 @@ export function getStoredAccentMode(host, themeStyle = "oneui") {
     || localStorage.getItem("mha-accent-mode")
     || document.documentElement.dataset.accentMode
     || host?.dataset?.accentMode
-    || "manual";
+    || "auto";
 
   return normalizeAccentMode(normalizedStyle, stored);
 }

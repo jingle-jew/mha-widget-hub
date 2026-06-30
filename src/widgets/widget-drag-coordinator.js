@@ -144,6 +144,7 @@ export function createWidgetDragCoordinator(host, {
     session.armed = true;
     host._activeMoveWidgetId = session.widgetId;
     host._pendingWidgetPlacement = null;
+    session.element?.setPointerCapture?.(session.pointerId);
     host?.classList?.remove?.("is-widget-drag-pending");
     host?.classList?.add?.("is-widget-dragging");
     session.element?.classList?.add?.("is-drag-source", "is-drag-armed");
@@ -183,7 +184,6 @@ export function createWidgetDragCoordinator(host, {
         timer: null,
       };
       host?.classList?.add?.("is-widget-drag-pending");
-      element.setPointerCapture?.(event.pointerId);
       session.timer = setTimeout(() => armDragSession(session), longPressDelay);
     };
 
