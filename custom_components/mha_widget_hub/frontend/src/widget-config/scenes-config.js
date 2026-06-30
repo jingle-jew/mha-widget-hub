@@ -1,5 +1,8 @@
 import { filterEntitiesForCurrentUser } from "../admin/entity-permissions.js";
 import { getEntityDomain } from "../ha/entity.js";
+import { resolveWidgetIconName } from "../ui/icon-name-resolver.js";
+import { createIconPickerControl, normalizeIconPickerValue } from "./icon-picker.js";
+import { createInlineIconNameRow } from "./icon-picker-field.js";
 import { getEntityDisplayName, humanizeEntityId } from "./light-options.js";
 
 const SCENES_BUTTON_COUNT = 4;
@@ -20,9 +23,7 @@ function normalizeButtonType(value, entityId = "") {
 }
 
 function normalizeButtonIcon(type, value) {
-  const icon = String(value || "").trim();
-  if (icon) return icon;
-  return type === "mode" ? "home" : "play";
+  return normalizeIconPickerValue(value || "auto");
 }
 
 function createButtonDraft(button = {}) {
@@ -151,6 +152,14 @@ export function updateScenesButtonLabel(draft, index, label) {
   return draft;
 }
 
+export function updateScenesButtonIcon(draft, index, icon) {
+  draft.buttons = ensureButtonCount(draft.buttons);
+  const button = draft.buttons[index];
+  if (!button) return draft;
+  button.icon = normalizeButtonIcon(button.type, icon);
+  return draft;
+}
+
 export function buildScenesWidgetConfig(widget, draft, hass, visibilityConfig) {
   const reconciled = reconcileScenesConfigDraft(draft, hass, visibilityConfig);
   return {
@@ -252,10 +261,31 @@ export function renderScenesConfigFields(session, hass, visibilityConfig, onChan
       onChange?.();
     });
 
+    const suggestedIcon = resolveWidgetIconName({
+      explicitIcon: "auto",
+      label: draft.label,
+      entityId: draft.entityId,
+      domain: getEntityDomain(draft.entityId),
+      kind: draft.type === "mode" ? "scene" : "routine",
+      fallback: draft.type === "mode" ? "home" : "play",
+    });
+    const iconPicker = createIconPickerControl({
+      value: draft.icon,
+      suggestedIcon,
+      searchPlaceholder: t("widgets.config.searchIcon", "Search icons"),
+      emptyLabel: t("widgets.config.noIconFound", "No icons found"),
+      onChange: (value) => {
+        updateScenesButtonIcon(reconciled.draft, index, value);
+        onChange?.();
+      },
+      t,
+    });
+    const iconNameRow = createInlineIconNameRow(nameInput, iconPicker);
+
     group.append(
       createField("Type", typeSelect),
       createField(t("widgets.modesRoutines.modeOrRoutine", "Mode or routine"), entitySelect),
-      createField(t("widgets.modesRoutines.displayName", "Display name"), nameInput),
+      createField(t("widgets.modesRoutines.displayName", "Display name"), iconNameRow),
     );
     fields.append(group);
   });

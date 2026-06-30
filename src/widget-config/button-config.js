@@ -1,6 +1,7 @@
 import { getEntityDomain } from "../ha/entity.js";
 import { resolveWidgetIconName } from "../ui/icon-name-resolver.js";
 import { createIconPickerControl, normalizeIconPickerValue } from "./icon-picker.js";
+import { createInlineIconNameRow } from "./icon-picker-field.js";
 import { getEntityOptionsByDomain } from "./light-options.js";
 
 export const BUTTON_TYPES = Object.freeze([
@@ -224,11 +225,7 @@ export function renderButtonConfigFields(session, hass, visibilityConfig, onChan
     },
     t,
   });
-  iconPicker.classList.add("mha-widget-icon-picker--inline");
-
-  const iconNameRow = document.createElement("div");
-  iconNameRow.className = "mha-widget-config-icon-name-row";
-  iconNameRow.append(label, iconPicker);
+  const iconNameRow = createInlineIconNameRow(label, iconPicker);
   fields.append(createField(t("widgets.modesRoutines.displayName", "Display name"), iconNameRow));
 
   const isValid = () => (draft.buttonType === "action"

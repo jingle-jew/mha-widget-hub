@@ -1,4 +1,8 @@
 import { getLightOptions } from "./light-options.js";
+import { getEntityDomain } from "../ha/entity.js";
+import { resolveWidgetIconName } from "../ui/icon-name-resolver.js";
+import { createIconPickerControl, normalizeIconPickerValue } from "./icon-picker.js";
+import { createInlineIconNameRow } from "./icon-picker-field.js";
 
 export function createToggleSliderConfigDraft(widget = {}, hass, visibilityConfig) {
   const lightEntityId = widget.lightEntityId || widget.entityId || widget.entity_id || "";
@@ -6,6 +10,7 @@ export function createToggleSliderConfigDraft(widget = {}, hass, visibilityConfi
   const draft = {
     lightEntityId,
     label: configuredLabel,
+    icon: normalizeIconPickerValue(widget.icon || "auto"),
     labelCustomized: Boolean(configuredLabel),
     sliderMode: "brightness",
   };
@@ -45,11 +50,13 @@ export function updateToggleSliderLabel(draft, label) {
 export function buildToggleSliderWidgetConfig(widget, draft, hass, visibilityConfig) {
   const { selected } = reconcileToggleSliderConfigDraft(draft, hass, visibilityConfig);
   const lightEntityId = draft.lightEntityId || "";
+  const resolvedIcon = normalizeIconPickerValue(draft.icon || widget.icon || "auto");
   return {
     ...widget,
     lightEntityId,
     entityId: lightEntityId,
     label: String(draft.label || selected?.label || "").trim(),
+    ...(resolvedIcon && resolvedIcon !== "auto" ? { icon: resolvedIcon } : {}),
     sliderMode: "brightness",
   };
 }
@@ -74,6 +81,27 @@ export function renderToggleSliderConfigFields(session, hass, visibilityConfig, 
     updateToggleSliderLabel(draft, event.currentTarget.value);
     onChange?.();
   });
+
+  const suggestedIcon = resolveWidgetIconName({
+    explicitIcon: "auto",
+    label: draft.label,
+    entityId: draft.lightEntityId,
+    domain: getEntityDomain(draft.lightEntityId),
+    kind: "toggle",
+    fallback: "lamp",
+  });
+  const iconPicker = createIconPickerControl({
+    value: draft.icon,
+    suggestedIcon,
+    searchPlaceholder: t("widgets.config.searchIcon", "Search icons"),
+    emptyLabel: t("widgets.config.noIconFound", "No icons found"),
+    onChange: (value) => {
+      draft.icon = value;
+      onChange?.();
+    },
+    t,
+  });
+  const iconNameRow = createInlineIconNameRow(nameInput, iconPicker);
 
   const lightSelect = document.createElement("select");
   lightSelect.className = "mha-widget-config-control";
@@ -106,7 +134,7 @@ export function renderToggleSliderConfigFields(session, hass, visibilityConfig, 
   modeSelect.value = "brightness";
 
   fields.append(
-    createField(t("widgets.modesRoutines.displayName", "Display name"), nameInput),
+    createField(t("widgets.modesRoutines.displayName", "Display name"), iconNameRow),
     createField(t("widgets.config.light", "Light"), lightSelect),
     createField(t("widgets.config.sliderControl", "Slider control"), modeSelect),
   );

@@ -1,6 +1,7 @@
 import { getEntityDomain } from "../ha/entity.js";
 import { resolveWidgetIconName } from "../ui/icon-name-resolver.js";
 import { createIconPickerControl, normalizeIconPickerValue } from "./icon-picker.js";
+import { createInlineIconNameRow } from "./icon-picker-field.js";
 import { getEntityOptionsByDomain } from "./light-options.js";
 
 export const TOGGLE_DEVICE_TYPES = Object.freeze([
@@ -162,11 +163,7 @@ export function renderToggleConfigFields(session, hass, visibilityConfig, onChan
     },
     t,
   });
-  iconPicker.classList.add("mha-widget-icon-picker--inline");
-
-  const iconNameRow = document.createElement("div");
-  iconNameRow.className = "mha-widget-config-icon-name-row";
-  iconNameRow.append(nameInput, iconPicker);
+  const iconNameRow = createInlineIconNameRow(nameInput, iconPicker);
 
   fields.append(
     createField(t("widgets.config.deviceType", "Device type"), typeSelect),
