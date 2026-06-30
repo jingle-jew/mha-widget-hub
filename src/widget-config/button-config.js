@@ -1,4 +1,7 @@
 import { getEntityDomain } from "../ha/entity.js";
+import { resolveWidgetIconName } from "../ui/icon-name-resolver.js";
+import { createIconPickerControl, normalizeIconPickerValue } from "./icon-picker.js";
+import { createInlineIconNameRow } from "./icon-picker-field.js";
 import { getEntityOptionsByDomain } from "./light-options.js";
 
 export const BUTTON_TYPES = Object.freeze([
@@ -30,6 +33,7 @@ export function createButtonConfigDraft(widget = {}, hass, visibilityConfig) {
     buttonType: getButtonType(configuredType).value,
     entityId,
     label: String(widget.label || "").trim(),
+    icon: normalizeIconPickerValue(widget.icon || "auto"),
     labelCustomized: Boolean(String(widget.label || "").trim()),
     actionDomain: String(widget.action?.domain || widget.actionDomain || "").trim(),
     actionService: String(widget.action?.service || widget.actionService || widget.service || "").trim(),
@@ -73,6 +77,7 @@ export function updateButtonLabel(draft, label) {
 
 export function buildButtonWidgetConfig(widget, draft, hass, visibilityConfig) {
   const { buttonType, selected } = reconcileButtonConfigDraft(draft, hass, visibilityConfig);
+  const resolvedIcon = normalizeIconPickerValue(draft.icon || widget.icon || "auto");
   if (buttonType.value === "action") {
     return {
       ...widget,
@@ -80,6 +85,7 @@ export function buildButtonWidgetConfig(widget, draft, hass, visibilityConfig) {
       buttonType: "action",
       entityId: "",
       label: String(draft.label || "Action").trim(),
+      ...(resolvedIcon ? { icon: resolvedIcon } : {}),
       action: {
         domain: String(draft.actionDomain || "").trim(),
         service: String(draft.actionService || "").trim(),
@@ -93,6 +99,7 @@ export function buildButtonWidgetConfig(widget, draft, hass, visibilityConfig) {
     buttonType: buttonType.value,
     entityId: draft.entityId || "",
     label: String(draft.label || selected?.label || "").trim(),
+    ...(resolvedIcon ? { icon: resolvedIcon } : {}),
   };
 }
 
@@ -198,7 +205,28 @@ export function renderButtonConfigFields(session, hass, visibilityConfig, onChan
     updateButtonLabel(draft, event.currentTarget.value);
     onChange?.();
   });
-  fields.append(createField(t("widgets.modesRoutines.displayName", "Display name"), label));
+
+  const suggestedIcon = resolveWidgetIconName({
+    explicitIcon: "auto",
+    label: draft.label,
+    entityId: draft.entityId,
+    domain: draft.buttonType === "action" ? "" : getEntityDomain(draft.entityId),
+    kind: "button",
+    fallback: "button",
+  });
+  const iconPicker = createIconPickerControl({
+    value: draft.icon,
+    suggestedIcon,
+    searchPlaceholder: t("widgets.config.searchIcon", "Search icons"),
+    emptyLabel: t("widgets.config.noIconFound", "No icons found"),
+    onChange: (value) => {
+      draft.icon = value;
+      onChange?.();
+    },
+    t,
+  });
+  const iconNameRow = createInlineIconNameRow(label, iconPicker);
+  fields.append(createField(t("widgets.modesRoutines.displayName", "Display name"), iconNameRow));
 
   const isValid = () => (draft.buttonType === "action"
     ? Boolean(draft.actionDomain.trim() && draft.actionService.trim() && draft.actionDataValid)

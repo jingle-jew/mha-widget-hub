@@ -239,6 +239,7 @@ export function createBootLifecycleCoordinator(host) {
     cancelAnimationFrame(host._iconSymbolRefreshFrame);
     host._iconSymbolRefreshFrame = 0;
     host._clearGridScrollListener();
+    host._clearTouchEditLongPress?.();
     ACTIVITY_EVENT_TYPES.forEach((type) => window.removeEventListener(type, host._activityListener));
     host._screensaverController.destroy();
     window.removeEventListener("resize", host._resizeListener);

@@ -1032,6 +1032,12 @@ _clearGridScrollListener(){
 _wireDockAutoHide(grid){
   return getResponsiveDockCoordinatorForHost(this).wireDockAutoHide(grid);
 }
+_wireTouchEditLongPress(surface){
+  return getWidgetInteractionSurfaceCoordinatorForHost(this).wireTouchEditLongPress(surface);
+}
+_clearTouchEditLongPress(){
+  return getWidgetInteractionSurfaceCoordinatorForHost(this).clearTouchEditLongPress();
+}
 _scheduleSquareUnitSync(){
   return this._gridRuntime.scheduleSquareUnitSync();
 }

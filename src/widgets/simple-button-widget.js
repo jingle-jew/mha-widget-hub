@@ -13,6 +13,8 @@ import { runButtonAction } from "../ha/actions.js";
 import { resolveAuthorizedEntity } from "../ha/entity-access.js";
 import { getEntityDisplayName } from "../widget-config/light-options.js";
 import { isToggleEntityOn } from "../ha/toggle.js";
+import { getEntityDomain } from "../ha/entity.js";
+import { resolveWidgetIconName } from "../ui/icon-name-resolver.js";
 import { clampWidth, css, freezeSize, isLocalWidgetKind, variant } from "./widget-definition-utils.js";
 import {
   buildButtonWidgetConfig,
@@ -37,14 +39,30 @@ export function isSimpleButtonWidgetActive(widget = {}) {
   );
 }
 
+function getButtonExplicitIcon(widget = {}) {
+  const icon = String(widget.icon || "").trim();
+  const iconCategory = String(widget.iconCategory || "").trim().toLowerCase();
+  if (icon !== "home") return icon;
+  if (iconCategory && iconCategory !== "home") return icon;
+  return "";
+}
+
 function getButtonData(widget = {}) {
   const active = isSimpleButtonWidgetActive(widget);
   const hasExplicitState = widget.state != null && widget.state !== "";
   const stateOn = widget.stateOn || widget.onLabel || widget.activeState || t("states.on", "On");
   const stateOff = widget.stateOff || widget.offLabel || widget.inactiveState || t("states.off", "Off");
+  const icon = resolveWidgetIconName({
+    explicitIcon: getButtonExplicitIcon(widget),
+    label: widget.label,
+    entityId: widget.entityId || widget.entity_id || "",
+    domain: widget.buttonType === "action" ? "" : getEntityDomain(widget.entityId || widget.entity_id || ""),
+    kind: SIMPLE_BUTTON_WIDGET_KIND,
+    fallback: "button",
+  });
 
   return {
-    icon: widget.icon || "home",
+    icon,
     iconCategory: widget.iconCategory || "home",
     label: widget.label || "Button",
     state: hasExplicitState ? String(widget.state) : (active ? stateOn : stateOff),

@@ -1,6 +1,7 @@
 import { buildSceneRoutineServiceCall, runSceneRoutineAction } from "../ha/actions.js";
 import { getEntityDomain } from "../ha/entity.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
+import { resolveWidgetIconName } from "../ui/icon-name-resolver.js";
 import {
   buildScenesWidgetConfig,
   createScenesConfigDraft,
@@ -57,7 +58,14 @@ function getButtonModel(button = {}, hass) {
     entityId,
     entityState,
     label: getButtonLabel(button, entityState),
-    icon: String(button.icon || "").trim() || getDefaultIcon(type),
+    icon: resolveWidgetIconName({
+      explicitIcon: button.icon || "auto",
+      label: getButtonLabel(button, entityState),
+      entityId,
+      domain: getEntityDomain(entityId),
+      kind: type === "mode" ? "scene" : "routine",
+      fallback: getDefaultIcon(type),
+    }),
     hasEntity,
     actionable,
     unavailable,

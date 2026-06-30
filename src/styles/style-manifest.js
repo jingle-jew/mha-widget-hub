@@ -11,6 +11,7 @@ const STATIC_STYLE_MANIFEST_BEFORE_THEMES = Object.freeze([
   entry("styles/components/toggle.css", "component"),
   entry("styles/components/pill.css", "component"),
   entry("styles/components/button.css", "component"),
+  entry("styles/components/icon-picker.css", "component"),
   entry("styles/system/system-buttons.css", "component"),
 ]);
 

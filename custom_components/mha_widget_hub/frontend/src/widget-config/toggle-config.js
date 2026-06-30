@@ -1,4 +1,7 @@
 import { getEntityDomain } from "../ha/entity.js";
+import { resolveWidgetIconName } from "../ui/icon-name-resolver.js";
+import { createIconPickerControl, normalizeIconPickerValue } from "./icon-picker.js";
+import { createInlineIconNameRow } from "./icon-picker-field.js";
 import { getEntityOptionsByDomain } from "./light-options.js";
 
 export const TOGGLE_DEVICE_TYPES = Object.freeze([
@@ -30,6 +33,7 @@ export function createToggleConfigDraft(widget = {}, hass, visibilityConfig) {
     deviceType: getToggleDeviceType(getEntityDomain(entityId)).value,
     entityId,
     label: configuredLabel,
+    icon: normalizeIconPickerValue(widget.icon || "auto"),
     labelCustomized: Boolean(configuredLabel),
   };
 
@@ -76,11 +80,13 @@ export function updateToggleConfigLabel(draft, label) {
 
 export function buildToggleWidgetConfig(widget, draft, hass, visibilityConfig) {
   const { selected } = reconcileToggleConfigDraft(draft, hass, visibilityConfig);
+  const resolvedIcon = normalizeIconPickerValue(draft.icon || widget.icon || "auto");
   return {
     ...widget,
     kind: "toggle",
     entityId: draft.entityId || "",
     label: String(draft.label || selected?.label || "").trim(),
+    ...(resolvedIcon ? { icon: resolvedIcon } : {}),
   };
 }
 
@@ -138,10 +144,31 @@ export function renderToggleConfigFields(session, hass, visibilityConfig, onChan
     onChange?.();
   });
 
+  const suggestedIcon = resolveWidgetIconName({
+    explicitIcon: "auto",
+    label: draft.label,
+    entityId: draft.entityId,
+    domain: getEntityDomain(draft.entityId),
+    kind: "toggle",
+    fallback: "toggle",
+  });
+  const iconPicker = createIconPickerControl({
+    value: draft.icon,
+    suggestedIcon,
+    searchPlaceholder: t("widgets.config.searchIcon", "Search icons"),
+    emptyLabel: t("widgets.config.noIconFound", "No icons found"),
+    onChange: (value) => {
+      draft.icon = value;
+      onChange?.();
+    },
+    t,
+  });
+  const iconNameRow = createInlineIconNameRow(nameInput, iconPicker);
+
   fields.append(
     createField(t("widgets.config.deviceType", "Device type"), typeSelect),
     createField(t("widgets.config.device", "Device"), deviceSelect),
-    createField(t("widgets.modesRoutines.displayName", "Display name"), nameInput),
+    createField(t("widgets.modesRoutines.displayName", "Display name"), iconNameRow),
   );
   return { fields, canSave: Boolean(reconciled.selected) };
 }

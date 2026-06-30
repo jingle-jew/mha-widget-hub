@@ -1,4 +1,8 @@
 import { getEntityOptionsByDomain } from "./light-options.js";
+import { getEntityDomain } from "../ha/entity.js";
+import { resolveWidgetIconName } from "../ui/icon-name-resolver.js";
+import { createIconPickerControl, normalizeIconPickerValue } from "./icon-picker.js";
+import { createInlineIconNameRow } from "./icon-picker-field.js";
 
 export const SLIDER_ACTIONS = Object.freeze([
   Object.freeze({
@@ -31,6 +35,7 @@ export function createSliderConfigDraft(widget = {}, hass, visibilityConfig) {
   const draft = {
     entityId: widget.entityId || widget.entity_id || "",
     label: configuredLabel,
+    icon: normalizeIconPickerValue(widget.icon || "auto"),
     labelCustomized: Boolean(configuredLabel),
     sliderAction: inferSliderAction(widget),
   };
@@ -78,11 +83,13 @@ export function updateSliderLabel(draft, label) {
 
 export function buildSliderWidgetConfig(widget, draft, hass, visibilityConfig) {
   const { selected } = reconcileSliderConfigDraft(draft, hass, visibilityConfig);
+  const resolvedIcon = normalizeIconPickerValue(draft.icon || widget.icon || "auto");
   return {
     ...widget,
     kind: "slider",
     entityId: draft.entityId || "",
     label: String(draft.label || selected?.label || "").trim(),
+    ...(resolvedIcon && resolvedIcon !== "auto" ? { icon: resolvedIcon } : {}),
     sliderAction: draft.sliderAction,
   };
 }
@@ -141,10 +148,31 @@ export function renderSliderConfigFields(session, hass, visibilityConfig, onChan
     onChange?.();
   });
 
+  const suggestedIcon = resolveWidgetIconName({
+    explicitIcon: "auto",
+    label: draft.label,
+    entityId: draft.entityId,
+    domain: getEntityDomain(draft.entityId),
+    kind: "slider",
+    fallback: draft.sliderAction === "volume" ? "speaker-volume" : "globe",
+  });
+  const iconPicker = createIconPickerControl({
+    value: draft.icon,
+    suggestedIcon,
+    searchPlaceholder: t("widgets.config.searchIcon", "Search icons"),
+    emptyLabel: t("widgets.config.noIconFound", "No icons found"),
+    onChange: (value) => {
+      draft.icon = value;
+      onChange?.();
+    },
+    t,
+  });
+  const iconNameRow = createInlineIconNameRow(nameInput, iconPicker);
+
   fields.append(
     createField(t("widgets.config.action", "Action"), actionSelect),
     createField(t("widgets.config.device", "Device"), deviceSelect),
-    createField(t("widgets.modesRoutines.displayName", "Display name"), nameInput),
+    createField(t("widgets.modesRoutines.displayName", "Display name"), iconNameRow),
   );
   return { fields, canSave: Boolean(reconciled.selected) };
 }

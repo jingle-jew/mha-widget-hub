@@ -72,6 +72,7 @@ export function createResponsiveDockCoordinator(host) {
 
     if (!scrollContainer || !isMobileLayout()) return;
     if (isLandscape()) {
+      host.classList.add("is-dock-hidden");
       host.classList.add("is-mobile-floating-controls-hidden");
       return;
     }
@@ -81,6 +82,7 @@ export function createResponsiveDockCoordinator(host) {
     const threshold = 10;
     const onScroll = () => {
       if (!isMobileLayout() || isLandscape()) {
+        host.classList.toggle("is-dock-hidden", isMobileLayout() && isLandscape());
         host.classList.toggle(
           "is-mobile-floating-controls-hidden",
           isMobileLayout() && isLandscape(),
@@ -93,14 +95,18 @@ export function createResponsiveDockCoordinator(host) {
       const currentScrollTop = scrollContainer.scrollTop;
       syncStatusBarFillScrollState(currentScrollTop > 4);
       if (currentScrollTop <= 4) {
+        host.classList.remove("is-dock-hidden");
         host.classList.remove("is-mobile-floating-controls-hidden");
         previousScrollTop = currentScrollTop;
         return;
       }
 
       const delta = currentScrollTop - previousScrollTop;
-      if (delta > threshold) host.classList.add("is-mobile-floating-controls-hidden");
-      else if (delta < -threshold) host.classList.remove("is-mobile-floating-controls-hidden");
+      if (delta > threshold) {
+        host.classList.add("is-dock-hidden", "is-mobile-floating-controls-hidden");
+      } else if (delta < -threshold) {
+        host.classList.remove("is-dock-hidden", "is-mobile-floating-controls-hidden");
+      }
 
       if (Math.abs(delta) > threshold) previousScrollTop = currentScrollTop;
     };

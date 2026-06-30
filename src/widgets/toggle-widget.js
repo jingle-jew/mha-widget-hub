@@ -12,8 +12,9 @@
 import { createIconSymbol } from "../ui/icon-symbol.js";
 import { createToggle } from "../ui/toggle.js";
 import { runToggleAction } from "../ha/actions.js";
-import { getEntityState, getWidgetEntityId, isEntityAvailable } from "../ha/entity.js";
+import { getEntityDomain, getEntityState, getWidgetEntityId, isEntityAvailable } from "../ha/entity.js";
 import { isToggleEntityOn, supportsToggleEntity } from "../ha/toggle.js";
+import { resolveWidgetIconName } from "../ui/icon-name-resolver.js";
 import { clampWidth, css, freezeSize, isLocalWidgetKind, variant } from "./widget-definition-utils.js";
 import { isEntityAllowedForCurrentUser } from "../admin/entity-permissions.js";
 import {
@@ -30,13 +31,29 @@ export function isToggleWidget(widget = {}) {
   return isLocalWidgetKind(widget, TOGGLE_WIDGET_KIND, ["toggle-widget", "simple-toggle"]);
 }
 
+function getToggleExplicitIcon(widget = {}) {
+  const icon = String(widget.icon || "").trim();
+  const iconCategory = String(widget.iconCategory || "").trim().toLowerCase();
+  if (icon !== "home") return icon;
+  if (iconCategory && iconCategory !== "home") return icon;
+  return "";
+}
+
 function getToggleWidgetData(widget = {}) {
   const checked = typeof widget.checked === "boolean"
     ? widget.checked
     : ["on", "true", "active", "open"].includes(String(widget.state || "").toLowerCase());
+  const icon = resolveWidgetIconName({
+    explicitIcon: getToggleExplicitIcon(widget),
+    label: widget.label || widget.title,
+    entityId: widget.entityId || widget.entity_id || "",
+    domain: getEntityDomain(widget.entityId || widget.entity_id || ""),
+    kind: TOGGLE_WIDGET_KIND,
+    fallback: "toggle",
+  });
 
   return {
-    icon: widget.icon || "home",
+    icon,
     iconCategory: widget.iconCategory || "home",
     label: widget.label || widget.title || "Toggle",
     stateOn: widget.stateOn || t("states.on", "On"),

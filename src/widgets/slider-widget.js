@@ -1,10 +1,11 @@
 import { normalizeSliderWidgetSize } from "../layout/layout-engine.js";
 import { createLatestValueAction, runSliderAction } from "../ha/actions.js";
-import { getEntityState, getWidgetEntityId, isEntityAvailable } from "../ha/entity.js";
+import { getEntityDomain, getEntityState, getWidgetEntityId, isEntityAvailable } from "../ha/entity.js";
 import { getSliderBinding } from "../ha/slider.js";
 import { createIcon } from "../ui/icon.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
 import { createSlider } from "../ui/slider.js";
+import { resolveWidgetIconName } from "../ui/icon-name-resolver.js";
 import { css, freezeSize, isLocalWidgetKind, variant } from "./widget-definition-utils.js";
 import { isEntityAllowedForCurrentUser } from "../admin/entity-permissions.js";
 import {
@@ -110,7 +111,14 @@ export function createSliderWidgetContent(
   slider.querySelector(".mha-slider-input")
     ?.setAttribute("aria-label", widget.label || "Slider");
 
-  const iconName = widget.sliderAction === "volume" ? "speaker-volume" : "globe";
+  const iconName = resolveWidgetIconName({
+    explicitIcon: widget.icon || "auto",
+    label: widget.label || widget.title,
+    entityId,
+    domain: getEntityDomain(entityId),
+    kind: "slider",
+    fallback: widget.sliderAction === "volume" ? "speaker-volume" : "globe",
+  });
   const iconLabel = widget.sliderAction === "volume" ? "Volume" : "Light intensity";
   const icon = createIcon({
     name: iconName,

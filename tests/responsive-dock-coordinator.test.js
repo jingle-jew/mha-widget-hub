@@ -146,6 +146,7 @@ test("responsive dock coordinator hides floating controls in mobile landscape", 
   try {
     const coordinator = createResponsiveDockCoordinator(host);
     coordinator.wireDockAutoHide(grid);
+    assert.equal(host.classList.contains("is-dock-hidden"), true);
     assert.equal(host.classList.contains("is-mobile-floating-controls-hidden"), true);
   } finally {
     globalThis.window = previousWindow;
@@ -190,10 +191,12 @@ test("responsive dock coordinator toggles floating controls on portrait scroll d
 
     scrollContainer.scrollTop = 24;
     onScroll?.();
+    assert.equal(host.classList.contains("is-dock-hidden"), true);
     assert.equal(host.classList.contains("is-mobile-floating-controls-hidden"), true);
 
     scrollContainer.scrollTop = 0;
     onScroll?.();
+    assert.equal(host.classList.contains("is-dock-hidden"), false);
     assert.equal(host.classList.contains("is-mobile-floating-controls-hidden"), false);
 
     coordinator.clearGridScrollListener();
