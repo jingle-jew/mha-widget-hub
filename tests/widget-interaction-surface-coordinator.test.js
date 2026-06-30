@@ -91,3 +91,88 @@ test("widget interaction coordinator clears drop-state classes", () => {
   assert.equal(nodes[0].classList.contains("is-drop-before"), false);
   assert.equal("data-drop-placement" in nodes[0].attributes, false);
 });
+
+test("widget interaction coordinator hides the mobile and tablet edit pencil until editing starts", () => {
+  const previousDocument = globalThis.document;
+  globalThis.document = {
+    createElement() {
+      return {
+        dataset: {},
+        setAttribute() {},
+        append() {},
+        appendChild() {},
+        classList: { add() {} },
+        style: {},
+      };
+    },
+    createElementNS() {
+      return {
+        dataset: {},
+        setAttribute() {},
+        append() {},
+        appendChild() {},
+        classList: { add() {} },
+        style: {},
+      };
+    },
+  };
+  const editButton = {
+    hidden: false,
+    dataset: {},
+    setAttribute(name, value) {
+      this[name] = value;
+    },
+    append() {},
+    replaceChildren() {},
+  };
+  const addButton = { hidden: true };
+
+  function createHost(layout) {
+    return {
+      _isEditing: false,
+      _widgets: [],
+      dataset: { layout },
+      shadowRoot: {
+        querySelector(selector) {
+          if (selector === ".mha-primary-edit-button") return editButton;
+          if (selector === ".mha-add-widget-button") return addButton;
+          return null;
+        },
+        querySelectorAll() {
+          return [];
+        },
+      },
+      _isMobileLandscapeLayout() {
+        return false;
+      },
+      classList: { toggle() {}, remove() {} },
+      _syncPageCreatorDom() {},
+      _syncWidgetConfigDom() {},
+      _canAddWidgetToActivePage() {
+        return true;
+      },
+    };
+  }
+
+  const mobileHost = createHost("mobile");
+  try {
+    const mobileCoordinator = createWidgetInteractionSurfaceCoordinator(mobileHost);
+    mobileCoordinator.syncEditModeDom();
+    assert.equal(editButton.hidden, true);
+    assert.equal(editButton.dataset.touchEditClose, "false");
+
+    mobileHost._isEditing = true;
+    mobileCoordinator.syncEditModeDom();
+    assert.equal(editButton.hidden, false);
+    assert.equal(editButton.dataset.touchEditClose, "true");
+
+    const desktopHost = createHost("desktop");
+    desktopHost._isEditing = false;
+    const desktopCoordinator = createWidgetInteractionSurfaceCoordinator(desktopHost);
+    desktopCoordinator.syncEditModeDom();
+    assert.equal(editButton.hidden, false);
+    assert.equal(editButton.dataset.touchEditClose, "false");
+  } finally {
+    globalThis.document = previousDocument;
+  }
+});
