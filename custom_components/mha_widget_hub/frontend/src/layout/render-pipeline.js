@@ -245,6 +245,7 @@ export function createRenderPipeline(host, options = {}) {
     cancelAnimationFrame(host._widgetRenderFrame);
     cancelAnimationFrame(host._secondaryUiFrame);
     host._clearGridScrollListener();
+    host._clearTouchEditLongPress?.();
     host._stylesReadyRenderId = 0;
     host.dataset.widgetsState = "pending";
   }
@@ -364,6 +365,7 @@ export function createRenderPipeline(host, options = {}) {
     }
     appendPrimaryControls();
     host._wireDockAutoHide(activeSurface);
+    host._wireTouchEditLongPress?.(grid);
     host._updateStatusDom?.();
     return { positions, grid, activeSurface };
   }
