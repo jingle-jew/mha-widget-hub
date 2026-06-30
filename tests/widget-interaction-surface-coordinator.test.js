@@ -179,6 +179,12 @@ test("widget interaction coordinator enters edit mode on touch long press over e
     },
   };
   const grid = {
+    addEventListener(type, handler) {
+      listeners.set(type, handler);
+    },
+    removeEventListener(type) {
+      listeners.delete(type);
+    },
     closest(selector) {
       assert.equal(selector, ".mha-widget-area");
       return scrollContainer;
@@ -198,6 +204,7 @@ test("widget interaction coordinator enters edit mode on touch long press over e
     dataset: { layout: "mobile" },
     shadowRoot: {
       querySelector(selector) {
+        if (selector === ".mha-grid") return grid;
         if (selector === ".mha-widget-area") return scrollContainer;
         return null;
       },
@@ -230,6 +237,7 @@ test("widget interaction coordinator enters edit mode on touch long press over e
       button: 0,
       clientX: 120,
       clientY: 240,
+      currentTarget: grid,
       target,
       touches: [{
         identifier: 7,
@@ -261,6 +269,12 @@ test("widget interaction coordinator accepts long press from empty page-panel sp
     },
   };
   const grid = {
+    addEventListener(type, handler) {
+      listeners.set(type, handler);
+    },
+    removeEventListener(type) {
+      listeners.delete(type);
+    },
     closest(selector) {
       assert.equal(selector, ".mha-widget-area");
       return scrollContainer;
@@ -280,6 +294,7 @@ test("widget interaction coordinator accepts long press from empty page-panel sp
     dataset: { layout: "mobile" },
     shadowRoot: {
       querySelector(selector) {
+        if (selector === ".mha-grid") return grid;
         if (selector === ".mha-widget-area") return scrollContainer;
         return null;
       },
@@ -313,6 +328,7 @@ test("widget interaction coordinator accepts long press from empty page-panel sp
       button: 0,
       clientX: 88,
       clientY: 144,
+      currentTarget: grid,
       touches: [{
         identifier: 9,
         clientX: 88,
@@ -347,6 +363,12 @@ test("widget interaction coordinator supports mouse long press in touch-edit lay
     scrollTop: 0,
   };
   const grid = {
+    addEventListener(type, handler) {
+      listeners.set(type, handler);
+    },
+    removeEventListener(type) {
+      listeners.delete(type);
+    },
     closest() {
       return scrollContainer;
     },
@@ -364,6 +386,7 @@ test("widget interaction coordinator supports mouse long press in touch-edit lay
     dataset: { layout: "tablet" },
     shadowRoot: {
       querySelector(selector) {
+        if (selector === ".mha-grid") return grid;
         if (selector === ".mha-widget-area") return scrollContainer;
         return null;
       },
@@ -396,6 +419,7 @@ test("widget interaction coordinator supports mouse long press in touch-edit lay
       button: 0,
       clientX: 40,
       clientY: 52,
+      currentTarget: grid,
       target,
     });
     timeoutCallback?.();
@@ -418,6 +442,12 @@ test("widget interaction coordinator tolerates tiny scroll drift during long pre
     },
   };
   const grid = {
+    addEventListener(type, handler) {
+      listeners.set(type, handler);
+    },
+    removeEventListener(type) {
+      listeners.delete(type);
+    },
     closest() {
       return scrollContainer;
     },
@@ -434,6 +464,7 @@ test("widget interaction coordinator tolerates tiny scroll drift during long pre
     dataset: { layout: "mobile" },
     shadowRoot: {
       querySelector(selector) {
+        if (selector === ".mha-grid") return grid;
         if (selector === ".mha-widget-area") return scrollContainer;
         return null;
       },
@@ -466,6 +497,7 @@ test("widget interaction coordinator tolerates tiny scroll drift during long pre
       button: 0,
       clientX: 50,
       clientY: 60,
+      currentTarget: grid,
       target,
       touches: [{ identifier: 4, clientX: 50, clientY: 60 }],
       changedTouches: [{ identifier: 4, clientX: 50, clientY: 60 }],
