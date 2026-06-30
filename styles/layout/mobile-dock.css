@@ -43,7 +43,7 @@
     );
     align-items: center;
     justify-items: center;
-    justify-content: start;
+    justify-content: center;
     gap: var(--mha-mobile-dock-gap);
     padding: var(--mha-mobile-dock-padding);
 
@@ -79,9 +79,9 @@
     position: relative;
     display: grid;
     place-items: center;
-    inline-size: var(--mha-icon-size);
+    inline-size: var(--mha-mobile-dock-slot-width);
     block-size: var(--mha-icon-size);
-    min-inline-size: var(--mha-icon-size);
+    min-inline-size: var(--mha-mobile-dock-slot-width);
     min-block-size: var(--mha-icon-size);
     margin: 0;
     padding: 0;
@@ -89,16 +89,26 @@
     background: transparent;
     color: inherit;
     cursor: pointer;
+    justify-self: center;
     scroll-snap-align: start;
   }
 
   .mha-mobile-dock-item > .mha-icon {
+    display: grid;
+    place-items: center;
     inline-size: var(--mha-icon-size);
     block-size: var(--mha-icon-size);
     width: var(--mha-icon-size);
     height: var(--mha-icon-size);
     min-inline-size: var(--mha-icon-size);
     min-block-size: var(--mha-icon-size);
+    justify-self: center;
+    margin-inline: auto;
+  }
+
+  .mha-mobile-dock-item > .mha-icon > .mha-icon-symbol {
+    justify-self: center;
+    margin-inline: auto;
   }
 
   .mha-mobile-dock-item[data-active="true"]::after {
