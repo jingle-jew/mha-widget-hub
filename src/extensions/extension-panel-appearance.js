@@ -29,7 +29,9 @@ const DATA_ATTRIBUTES = Object.freeze({
 function resolveTheme(themeSetting = "auto") {
   const normalized = normalizeThemeSetting(themeSetting);
   if (normalized !== "auto") return normalized;
-  return window.matchMedia?.("(prefers-color-scheme: light)")?.matches ? "light" : "dark";
+  if (window.matchMedia?.("(prefers-color-scheme: dark)")?.matches) return "dark";
+  if (window.matchMedia?.("(prefers-color-scheme: light)")?.matches) return "light";
+  return "light";
 }
 
 function readAppearanceStore() {

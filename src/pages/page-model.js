@@ -1,4 +1,5 @@
 import {
+  createDefaultPageConfig,
   getDefaultPageIcon,
   getDefaultPageName,
   normalizePageConfig,
@@ -79,6 +80,37 @@ export function createFallbackPage({ normalizeWidget = identity } = {}) {
     0,
     { normalizeWidget },
   );
+}
+
+export function createDefaultPages({ normalizeWidget = identity } = {}) {
+  return [
+    {
+      id: "home",
+      name: "Home",
+      icon: "home",
+      widgets: [],
+    },
+    {
+      id: "page-2",
+      name: "Page 2",
+      icon: "grid",
+      widgets: [],
+    },
+    {
+      id: "page-3",
+      name: "Page 3",
+      icon: "grid",
+      widgets: [],
+    },
+    {
+      id: "media",
+      name: "Media Players",
+      icon: "media-player",
+      type: PAGE_TYPES.MEDIA_PLAYERS,
+      config: createDefaultPageConfig(PAGE_TYPES.MEDIA_PLAYERS),
+      widgets: [],
+    },
+  ].map((page, index) => normalizePage(page, index, { normalizeWidget }));
 }
 
 export function getActivePage(pages = [], activePageId = "") {

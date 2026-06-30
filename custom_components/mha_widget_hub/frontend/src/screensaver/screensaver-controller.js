@@ -87,7 +87,7 @@ export class ScreensaverController {
       ...this.state,
       nowBar: readBoolean(
         STORAGE_KEYS.screensaverNowBar,
-        true,
+        false,
         this.storage,
       ),
       nowBarItems,

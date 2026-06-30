@@ -166,11 +166,12 @@ function getHubStateIngressCoordinatorForHost(host){
  *
  * Theme: auto
  * Visual style: OneUI
- * Accent: first OneUI blue / sky
+ * Accent: auto
  * Icon shape: auto
- * Screensaver: enabled on tablet/desktop, disabled on mobile
+ * Pages: 3 grid pages + 1 media page
+ * Screensaver: enabled
  * Screensaver delay: 30 seconds
- * Screensaver Now Bar: enabled
+ * Screensaver Now Bar: disabled
  * Screensaver clock: digital
  */
 class MhaControlHub extends HTMLElement{
