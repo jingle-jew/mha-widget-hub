@@ -164,6 +164,57 @@ test("widget drag cancels before arming when the pointer starts scrolling", () =
   }
 });
 
+test("widget drag start threshold is axis-agnostic before arming", () => {
+  const widget = createWidgetElement();
+  const host = {
+    _isEditing: true,
+    _activeMoveWidgetId: "",
+    _pendingWidgetPlacement: null,
+    _isMobileLandscapeLayout() {
+      return false;
+    },
+    _isResizeHandleEvent() {
+      return false;
+    },
+    _syncEditModeDom() {},
+    _syncWidgetDropSlots() {},
+    classList: createClassList(),
+  };
+
+  const previousSetTimeout = globalThis.setTimeout;
+  const previousClearTimeout = globalThis.clearTimeout;
+  let cleared = false;
+  globalThis.setTimeout = () => 1;
+  globalThis.clearTimeout = () => {
+    cleared = true;
+  };
+
+  try {
+    const coordinator = createWidgetDragCoordinator(host);
+    coordinator.wireWidget(widget, { id: "clock" });
+    widget.listeners.get("pointerdown")?.({
+      pointerId: 5,
+      button: 0,
+      clientX: 10,
+      clientY: 20,
+      target: widget,
+    });
+
+    widget.listeners.get("pointermove")?.({
+      pointerId: 5,
+      clientX: 10,
+      clientY: 29,
+    });
+
+    assert.equal(cleared, true);
+    assert.equal(host.classList.contains("is-widget-drag-pending"), false);
+    assert.equal(host.classList.contains("is-widget-dragging"), false);
+  } finally {
+    globalThis.setTimeout = previousSetTimeout;
+    globalThis.clearTimeout = previousClearTimeout;
+  }
+});
+
 test("canStartWidgetDrag still blocks resize handles and non-primary starts", () => {
   const host = {
     _isEditing: true,

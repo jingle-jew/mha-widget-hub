@@ -4,6 +4,10 @@
   -webkit-touch-callout: none;
 }
 
+:host([data-layout="mobile"].is-editing) .mha-widget {
+  touch-action: none;
+}
+
 :host(.is-editing) .mha-widget.is-drag-armed {
   cursor: grabbing;
 }
