@@ -237,33 +237,34 @@
     --mha-dock-padding: clamp(0.5rem, 1.5vw, 0.75rem);
     --mha-dock-icon-min-size: clamp(3rem, 13vw, 3.6rem);
 
-    --mha-dock-width: calc(100% - (var(--mha-dock-horizontal-gutter) * 2));
+    --mha-dock-width: calc(100vw - (var(--mha-dock-horizontal-gutter) * 2));
     --mha-dock-slot-width: calc(
       (var(--mha-dock-width) - (var(--mha-dock-padding) * 2) - (var(--mha-dock-gap) * 3))
       / 4
     );
-    --mha-icon-size: min(var(--mha-dock-slot-width), clamp(3rem, 14vw, 4.15rem));
+    --mha-dock-item-size: min(var(--mha-dock-slot-width), clamp(3rem, 14vw, 4.15rem));
+    --mha-icon-size: var(--mha-dock-item-size);
     --mha-icon-glyph-size: 82%;
 
     left: var(--mha-dock-horizontal-gutter);
     right: var(--mha-dock-horizontal-gutter);
-    bottom: var(--mha-dock-bottom, var(--mha-floating-edge));
+    bottom: max(
+      var(--mha-safe-bottom, env(safe-area-inset-bottom)),
+      var(--mha-dock-bottom, var(--mha-floating-edge))
+    );
     transform: translateY(0);
 
     inline-size: var(--mha-dock-width);
     min-inline-size: 0;
     max-inline-size: var(--mha-dock-width);
 
-    block-size: calc((var(--mha-icon-size) * 1.5) + (var(--mha-dock-padding) * 2));
-    min-block-size: calc((var(--mha-icon-size) * 1.5) + (var(--mha-dock-padding) * 2));
+    block-size: calc((var(--mha-dock-item-size) * 1.5) + (var(--mha-dock-padding) * 2));
+    min-block-size: calc((var(--mha-dock-item-size) * 1.5) + (var(--mha-dock-padding) * 2));
     max-block-size: clamp(5.25rem, 18vh, 6.75rem);
 
     display: grid;
     grid-auto-flow: column;
-    grid-auto-columns: calc(
-      (100% - (var(--mha-dock-gap) * 3))
-      / 4
-    );
+    grid-auto-columns: var(--mha-dock-slot-width);
     align-items: center;
     justify-items: center;
     justify-content: start;
@@ -285,20 +286,20 @@
   .mha-dock-item {
     display: grid;
     place-items: center;
-    inline-size: var(--mha-icon-size);
-    block-size: var(--mha-icon-size);
-    min-inline-size: var(--mha-icon-size);
-    min-block-size: var(--mha-icon-size);
+    inline-size: var(--mha-dock-item-size);
+    block-size: var(--mha-dock-item-size);
+    min-inline-size: var(--mha-dock-item-size);
+    min-block-size: var(--mha-dock-item-size);
     scroll-snap-align: start;
   }
 
   .mha-dock-item > .mha-icon {
-    inline-size: var(--mha-icon-size);
-    block-size: var(--mha-icon-size);
-    width: var(--mha-icon-size);
-    height: var(--mha-icon-size);
-    min-inline-size: var(--mha-icon-size);
-    min-block-size: var(--mha-icon-size);
+    inline-size: var(--mha-dock-item-size);
+    block-size: var(--mha-dock-item-size);
+    width: var(--mha-dock-item-size);
+    height: var(--mha-dock-item-size);
+    min-inline-size: var(--mha-dock-item-size);
+    min-block-size: var(--mha-dock-item-size);
   }
 
   :host(.is-dock-hidden) .mha-dock,
@@ -315,15 +316,6 @@
   }
 }
 
-
-/* STANDARD DOCK HIDDEN ON MOBILE
- * Mobile uses the custom floating mobile dock instead.
- */
-@media (max-width: 767px) {
-  .mha-dock {
-    display: none;
-  }
-}
 
 /* ADAPTIVE SETTINGS-ONLY DOCK RAIL
  * Tablet/desktop dock adapts to the number of icons inside it.
@@ -799,9 +791,6 @@
 
 /* Force dock glyph size at the symbol level so first paint does not rely on inherited fallback timing. */
 .mha-dock .mha-icon > .mha-icon-symbol {
-  --mha-icon-symbol-size: 82%;
-  inline-size: max(var(--mha-icon-symbol-min-size, 1rem), var(--mha-icon-symbol-size));
-  block-size: max(var(--mha-icon-symbol-min-size, 1rem), var(--mha-icon-symbol-size));
-  width: max(var(--mha-icon-symbol-min-size, 1rem), var(--mha-icon-symbol-size));
-  height: max(var(--mha-icon-symbol-min-size, 1rem), var(--mha-icon-symbol-size));
+  --mha-icon-symbol-size: var(--mha-icon-glyph-size, 82%);
+  --mha-icon-symbol-min-size: 0px;
 }

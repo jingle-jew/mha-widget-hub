@@ -1,5 +1,4 @@
 import { createDock } from "./dock.js";
-import { createMobileDock } from "./mobile-dock.js";
 
 export function createDockProps({
   pages = [],
@@ -36,7 +35,7 @@ export function syncDocks(root, props = {}) {
   if (dock) dock.replaceWith(createDock(props));
 
   const mobileDock = root.querySelector(".mha-mobile-dock");
-  if (mobileDock) mobileDock.replaceWith(createMobileDock(props));
+  if (mobileDock) mobileDock.remove();
 
   syncDockActiveState(root, props.activePageId);
   return true;

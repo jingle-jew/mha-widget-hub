@@ -4,7 +4,6 @@ import {
   createFrontendStyleLinks,
 } from "../core/mha-frontend-assets.js";
 import { t } from "../i18n/index.js";
-import { createMobileDock } from "./mobile-dock.js";
 import { createShell } from "./shell.js";
 import {
   getEffectiveLayout,
@@ -176,10 +175,6 @@ export function createRenderPipeline(host, options = {}) {
     host._secondaryUiFrame = requestAnimationFrame(() => {
       host._secondaryUiFrame = 0;
       if (!host.isConnected || host._renderId !== renderId) return;
-
-      if (layout !== "mobile") {
-        host.shadowRoot.append(createMobileDock(host._getDockProps()));
-      }
 
       const settingsPanels = host._getSettingsPanelsProps();
       host.shadowRoot.append(host._screensaverCoordinator.createDomElement());
@@ -364,6 +359,7 @@ export function createRenderPipeline(host, options = {}) {
     }
     appendPrimaryControls();
     host._wireDockAutoHide(activeSurface);
+    host._wireTouchEditLongPress?.(activeSurface);
     host._updateStatusDom?.();
     return { positions, grid, activeSurface };
   }

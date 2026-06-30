@@ -1,6 +1,7 @@
 .mha-dock .mha-icon > .mha-icon-symbol,
 .mha-mobile-dock .mha-icon > .mha-icon-symbol {
-  --mha-icon-symbol-size: calc(var(--mha-icon-size) * .82);
+  --mha-icon-symbol-size: var(--mha-icon-glyph-size, 82%);
+  --mha-icon-symbol-min-size: 0px;
   inline-size: var(--mha-icon-symbol-size) !important;
   block-size: var(--mha-icon-symbol-size) !important;
   width: var(--mha-icon-symbol-size) !important;

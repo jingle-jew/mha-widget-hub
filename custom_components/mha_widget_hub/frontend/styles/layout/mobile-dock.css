@@ -13,10 +13,15 @@
   .mha-mobile-dock {
     --mha-mobile-dock-edge: max(var(--mha-safe-left, 0px), clamp(.9rem, 3vw, 1.25rem));
     --mha-mobile-dock-bottom: max(var(--mha-safe-bottom, 0px), clamp(.9rem, 3vw, 1.25rem));
-    --mha-mobile-dock-launcher-size: clamp(3.75rem, 15vw, 4.8rem);
-    --mha-mobile-dock-panel-width: min(24rem, calc(100vw - (var(--mha-mobile-dock-edge) * 2)));
+    --mha-mobile-dock-launcher-size: clamp(3.5rem, 14vw, 4rem);
+    --mha-mobile-dock-launcher-shell-width: min(16rem, calc(100vw - (var(--mha-mobile-dock-edge) * 2)));
+    --mha-mobile-dock-launcher-shell-height: clamp(4.25rem, 16vw, 4.9rem);
+    --mha-mobile-dock-launcher-shell-radius: clamp(1.7rem, 7vw, 2.25rem);
+    --mha-mobile-dock-launcher-shell-padding-inline: clamp(1rem, 4vw, 1.35rem);
+    --mha-mobile-dock-panel-width: min(21.5rem, calc(100vw - (var(--mha-mobile-dock-edge) * 2)));
     --mha-mobile-dock-gap: clamp(.55rem, 2vw, .8rem);
-    --mha-mobile-dock-padding: clamp(.8rem, 2.5vw, 1.1rem);
+    --mha-mobile-dock-padding: clamp(.78rem, 2.5vw, 1rem);
+    --mha-mobile-dock-shell-gap: clamp(.6rem, 2vw, .82rem);
 
     --mha-icon-size: clamp(3.1rem, 14vw, 4.15rem);
     --mha-icon-glyph-size: 82%;
@@ -46,50 +51,52 @@
 
   .mha-mobile-dock-launcher {
     position: fixed;
-    left: var(--mha-mobile-dock-edge);
+    left: 50%;
     bottom: var(--mha-mobile-dock-bottom);
-    inline-size: var(--mha-mobile-dock-launcher-size);
-    block-size: var(--mha-mobile-dock-launcher-size);
-    display: grid;
-    place-items: center;
+    inline-size: var(--mha-mobile-dock-launcher-shell-width);
+    block-size: var(--mha-mobile-dock-launcher-shell-height);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--mha-mobile-dock-shell-gap);
     border: 1px solid var(--mha-shell-border, var(--mha-border-secondary));
-    border-radius: clamp(1.25rem, 5vw, 1.75rem);
+    border-radius: var(--mha-mobile-dock-launcher-shell-radius);
     background: var(--mha-shell-dock-surface, var(--mha-surface-glass));
     box-shadow: var(--mha-shell-shadow, var(--mha-shadow-floating));
     -webkit-backdrop-filter: blur(var(--mha-shell-blur, var(--mha-blur-primary))) saturate(var(--mha-surface-saturation));
     backdrop-filter: blur(var(--mha-shell-blur, var(--mha-blur-primary))) saturate(var(--mha-surface-saturation));
-    color: white;
-    padding: 0;
+    color: var(--mha-text);
+    padding-inline: var(--mha-mobile-dock-launcher-shell-padding-inline);
+    transform: translateX(-50%) translateZ(0);
     pointer-events: auto;
     cursor: pointer;
-    transform: translateZ(0);
     transition:
       transform 220ms cubic-bezier(.2,.8,.2,1),
       opacity 220ms ease;
   }
 
   .mha-mobile-dock-launcher:active {
-    transform: scale(.96);
+    transform: translateX(-50%) scale(.985);
   }
 
   .mha-mobile-dock-panel {
     position: fixed;
-    left: var(--mha-mobile-dock-edge);
-    bottom: calc(var(--mha-mobile-dock-bottom) + var(--mha-mobile-dock-launcher-size) + clamp(.65rem, 2vw, .9rem));
+    left: 50%;
+    bottom: calc(var(--mha-mobile-dock-bottom) + var(--mha-mobile-dock-launcher-shell-height) + clamp(.6rem, 2vw, .85rem));
     inline-size: var(--mha-mobile-dock-panel-width);
     display: grid;
     gap: var(--mha-mobile-dock-gap);
     padding: var(--mha-mobile-dock-padding);
     border: 1px solid var(--mha-shell-border, var(--mha-border-secondary));
-    border-radius: clamp(1.45rem, 5vw, 2.15rem);
+    border-radius: clamp(1.75rem, 5vw, 2.35rem);
     background: var(--mha-shell-panel-surface, var(--mha-surface-panel));
     box-shadow: var(--mha-shadow-panel);
     -webkit-backdrop-filter: blur(var(--mha-blur-strong)) saturate(var(--mha-surface-saturation));
     backdrop-filter: blur(var(--mha-blur-strong)) saturate(var(--mha-surface-saturation));
     opacity: 0;
     pointer-events: none;
-    transform: translateY(12px) scale(.96);
-    transform-origin: left bottom;
+    transform: translateX(-50%) translateY(12px) scale(.96);
+    transform-origin: center bottom;
     transition:
       opacity 240ms ease,
       transform 240ms cubic-bezier(.2,.8,.2,1);
@@ -98,20 +105,23 @@
   .mha-mobile-dock[data-open="true"] .mha-mobile-dock-panel {
     opacity: 1;
     pointer-events: auto;
-    transform: translateY(0) scale(1);
+    transform: translateX(-50%) translateY(0) scale(1);
   }
 
   .mha-mobile-dock-close {
     justify-self: end;
-    inline-size: 2rem;
-    block-size: 2rem;
+    inline-size: 2.35rem;
+    block-size: 2.35rem;
     display: grid;
     place-items: center;
-    border: 0;
+    border: 1px solid var(--mha-system-button-border, var(--mha-border-secondary));
     border-radius: 999px;
-    background: #ff3b30;
-    color: white;
-    font-size: 1.35rem;
+    background: var(--mha-system-button-bg, var(--mha-surface-floating));
+    color: var(--mha-system-button-color, var(--mha-text-primary));
+    box-shadow: var(--mha-system-button-shadow, var(--mha-shadow-floating));
+    -webkit-backdrop-filter: var(--mha-system-button-backdrop-filter, none);
+    backdrop-filter: var(--mha-system-button-backdrop-filter, none);
+    font-size: 1.25rem;
     line-height: 1;
     cursor: pointer;
   }
@@ -122,19 +132,44 @@
     gap: var(--mha-mobile-dock-gap);
     align-items: center;
     justify-items: center;
+    border-radius: inherit;
+    padding: clamp(.2rem, 1vw, .35rem);
   }
 
   .mha-mobile-dock-item {
+    position: relative;
     display: grid;
     place-items: center;
     inline-size: var(--mha-icon-size);
     block-size: var(--mha-icon-size);
     border: 0;
+    border-radius: clamp(1rem, 4vw, 1.35rem);
     padding: 0;
     margin: 0;
     background: transparent;
     color: inherit;
     cursor: pointer;
+  }
+
+  .mha-mobile-dock-item::before,
+  .mha-mobile-dock-launcher::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+  }
+
+  .mha-mobile-dock-item::before {
+    opacity: 0;
+    background: color-mix(in srgb, var(--mha-surface-floating) 72%, transparent);
+    transition: opacity 180ms ease, transform 180ms ease;
+    transform: scale(.94);
+  }
+
+  .mha-mobile-dock-item[data-active="true"]::before {
+    opacity: .96;
+    transform: scale(1);
   }
 
   .mha-mobile-dock-item > .mha-icon,
@@ -153,7 +188,7 @@
 
 
   .mha-mobile-dock-launcher > .mha-icon {
-    --mha-icon-size: calc(var(--mha-mobile-dock-launcher-size) * .74);
+    --mha-icon-size: var(--mha-mobile-dock-launcher-size);
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -231,6 +266,11 @@
   --mha-mobile-dock-panel-surface: var(--mha-widget-surface);
   --mha-mobile-dock-panel-border: var(--mha-widget-border);
   --mha-mobile-dock-panel-shadow: var(--mha-floating-shadow);
+  --mha-mobile-dock-launcher-surface: var(--mha-shell-dock-surface, var(--mha-surface-floating));
+  --mha-mobile-dock-launcher-border: var(--mha-shell-border, var(--mha-border-secondary));
+  --mha-mobile-dock-launcher-shadow: var(--mha-shadow-floating);
+  --mha-mobile-dock-launcher-highlight: var(--mha-highlight-primary);
+  --mha-mobile-dock-active-surface: color-mix(in srgb, var(--mha-surface-floating) 78%, transparent);
 }
 
 .mha-mobile-dock-panel {
@@ -240,12 +280,45 @@
   color: var(--mha-text);
 }
 
+.mha-mobile-dock-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: var(--mha-system-button-highlight, var(--mha-highlight-primary));
+  opacity: calc(var(--mha-system-button-highlight-opacity, .2) * .6);
+}
+
+.mha-mobile-dock-launcher {
+  background: var(--mha-mobile-dock-launcher-surface) !important;
+  border-color: var(--mha-mobile-dock-launcher-border) !important;
+  box-shadow: var(--mha-mobile-dock-launcher-shadow) !important;
+}
+
+.mha-mobile-dock-launcher::after {
+  background: var(--mha-mobile-dock-launcher-highlight);
+  opacity: calc(var(--mha-system-button-highlight-opacity, .22) * .78);
+}
+
+.mha-mobile-dock-item::before {
+  background: var(--mha-mobile-dock-active-surface);
+}
+
 /* Theme-specific borders and shadows keep their existing visual treatment. */
 :host([data-theme-style="ios"]) .mha-mobile-dock {
   --mha-mobile-dock-panel-border: color-mix(in srgb, var(--mha-widget-border) 72%, rgba(255,255,255,.28));
   --mha-mobile-dock-panel-shadow:
     0 24px 70px rgba(0,0,0,.24),
     inset 0 1px 0 rgba(255,255,255,.18);
+  --mha-mobile-dock-launcher-border:
+    color-mix(in srgb, var(--mha-system-button-border, var(--mha-widget-border)) 82%, rgba(255,255,255,.36));
+  --mha-mobile-dock-launcher-shadow:
+    inset 0 1px 0 rgba(255,255,255,.22),
+    0 18px 44px rgba(0,0,0,.22);
+  --mha-mobile-dock-active-surface:
+    linear-gradient(145deg, rgba(255,255,255,.18), rgba(255,255,255,.06)),
+    color-mix(in srgb, var(--mha-surface-floating) 84%, transparent);
 }
 
 :host([data-theme="light"][data-theme-style="ios"]) .mha-mobile-dock {
@@ -253,20 +326,34 @@
   --mha-mobile-dock-panel-shadow:
     0 24px 70px rgba(65,80,120,.16),
     inset 0 1px 0 rgba(255,255,255,.62);
+  --mha-mobile-dock-launcher-shadow:
+    inset 0 1px 0 rgba(255,255,255,.34),
+    0 18px 36px rgba(65,80,120,.14);
+  --mha-mobile-dock-active-surface:
+    linear-gradient(145deg, rgba(255,255,255,.44), rgba(255,255,255,.2)),
+    color-mix(in srgb, var(--mha-surface-floating) 72%, rgba(255,255,255,.4));
 }
 
 :host([data-theme-style="oneui"]) .mha-mobile-dock {
   --mha-mobile-dock-panel-border: var(--mha-widget-border);
+  --mha-mobile-dock-launcher-shadow:
+    inset 0 1px 0 rgba(255,255,255,.18),
+    0 14px 30px rgba(0,0,0,.14);
+  --mha-mobile-dock-active-surface:
+    linear-gradient(145deg, rgba(255,255,255,.18), rgba(255,255,255,.08)),
+    color-mix(in srgb, var(--mha-surface-floating) 78%, transparent);
 }
 
 :host([data-theme-style="material"]) .mha-mobile-dock {
   --mha-mobile-dock-panel-border: var(--mha-widget-border);
   --mha-mobile-dock-panel-shadow: var(--mha-floating-shadow);
-}
-
-/* The close button is an explicit contrast/danger exception. */
-.mha-mobile-dock-close {
-  color: #fff;
+  --mha-mobile-dock-launcher-surface: var(--mha-material-surface-container-high, var(--mha-surface-tonal));
+  --mha-mobile-dock-launcher-border: transparent;
+  --mha-mobile-dock-launcher-shadow: var(--mha-shadow-floating);
+  --mha-mobile-dock-launcher-highlight:
+    linear-gradient(135deg, color-mix(in srgb, var(--mha-accent) 8%, transparent), transparent 66%);
+  --mha-mobile-dock-active-surface:
+    color-mix(in srgb, var(--mha-accent) 18%, var(--mha-material-surface-container-high, var(--mha-surface-tonal)));
 }
 
 /* Keep the mobile dock available in edit mode: it contains page navigation

@@ -3,6 +3,15 @@ import test from "node:test";
 
 import { createWidgetInteractionSurfaceCoordinator } from "../src/widgets/widget-interaction-surface-coordinator.js";
 
+function createDomStubElement() {
+  return {
+    dataset: {},
+    classList: { add() {} },
+    setAttribute() {},
+    append() {},
+  };
+}
+
 function createClassList() {
   const set = new Set();
   return {
@@ -90,4 +99,144 @@ test("widget interaction coordinator clears drop-state classes", () => {
 
   assert.equal(nodes[0].classList.contains("is-drop-before"), false);
   assert.equal("data-drop-placement" in nodes[0].attributes, false);
+});
+
+test("widget interaction coordinator hides the primary edit button until touch editing starts", () => {
+  const previousDocument = globalThis.document;
+  globalThis.document = {
+    createElement() {
+      return createDomStubElement();
+    },
+    createElementNS() {
+      return createDomStubElement();
+    },
+  };
+  const editButton = {
+    hidden: false,
+    dataset: {},
+    attributes: {},
+    classList: createClassList(),
+    append() {},
+    replaceChildren() {},
+    setAttribute(name, value) {
+      this.attributes[name] = value;
+    },
+  };
+
+  const host = {
+    _isEditing: false,
+    _widgets: [],
+    _activeMoveWidgetId: "",
+    _pendingWidgetPlacement: null,
+    _widgetManagerOpen: false,
+    _widgetManagerCategory: "",
+    _widgetConfigSession: null,
+    _pageCreatorOpen: false,
+    classList: { toggle() {}, remove() {} },
+    dataset: { layout: "tablet" },
+    shadowRoot: {
+      querySelector(selector) {
+        if (selector === ".mha-primary-edit-button") return editButton;
+        return null;
+      },
+      querySelectorAll() {
+        return [];
+      },
+    },
+    _isMobileLandscapeLayout() {
+      return false;
+    },
+    _syncPageCreatorDom() {},
+    _syncWidgetConfigDom() {},
+    _canAddWidgetToActivePage() {
+      return true;
+    },
+  };
+
+  try {
+    const coordinator = createWidgetInteractionSurfaceCoordinator(host);
+    coordinator.syncEditModeDom();
+    assert.equal(editButton.hidden, true);
+    assert.equal(editButton.dataset.touchEditClose, "false");
+
+    host._isEditing = true;
+    coordinator.syncEditModeDom();
+    assert.equal(editButton.hidden, false);
+    assert.equal(editButton.dataset.touchEditClose, "true");
+  } finally {
+    globalThis.document = previousDocument;
+  }
+});
+
+test("widget interaction coordinator enters edit mode on touch long press over empty grid space", () => {
+  const listeners = new Map();
+  const scrollContainer = {
+    addEventListener(type, handler) {
+      listeners.set(`scroll:${type}`, handler);
+    },
+    removeEventListener(type) {
+      listeners.delete(`scroll:${type}`);
+    },
+  };
+  const grid = {
+    closest(selector) {
+      assert.equal(selector, ".mha-widget-area");
+      return scrollContainer;
+    },
+  };
+  const target = {
+    closest(selector) {
+      if (selector === ".mha-grid") return grid;
+      if (selector.includes(".mha-widget")) return null;
+      return null;
+    },
+  };
+
+  const shadowListeners = new Map();
+  const host = {
+    _isEditing: false,
+    dataset: { layout: "mobile" },
+    shadowRoot: {
+      addEventListener(type, handler) {
+        shadowListeners.set(type, handler);
+      },
+      removeEventListener(type) {
+        shadowListeners.delete(type);
+      },
+    },
+    _isMobileLandscapeLayout() {
+      return false;
+    },
+    toggleEditModeCalls: 0,
+    toggleEditMode() {
+      this.toggleEditModeCalls += 1;
+    },
+  };
+
+  const previousSetTimeout = globalThis.setTimeout;
+  const previousClearTimeout = globalThis.clearTimeout;
+  let timeoutCallback = null;
+  globalThis.setTimeout = (callback) => {
+    timeoutCallback = callback;
+    return 1;
+  };
+  globalThis.clearTimeout = () => {};
+
+  try {
+    const coordinator = createWidgetInteractionSurfaceCoordinator(host);
+    coordinator.wireTouchEditLongPress(grid);
+    shadowListeners.get("pointerdown")?.({
+      pointerId: 7,
+      pointerType: "touch",
+      button: 0,
+      clientX: 120,
+      clientY: 240,
+      target,
+    });
+    timeoutCallback?.();
+    assert.equal(host.toggleEditModeCalls, 1);
+  } finally {
+    globalThis.setTimeout = previousSetTimeout;
+    globalThis.clearTimeout = previousClearTimeout;
+  }
 });

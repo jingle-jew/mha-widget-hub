@@ -261,23 +261,24 @@
 
 @media (max-width: 767px) {
   .mha-mobile-dock-launcher {
-    inline-size: var(--mha-floating-button-size) !important;
-    block-size: var(--mha-floating-button-size) !important;
-    width: var(--mha-floating-button-size) !important;
-    height: var(--mha-floating-button-size) !important;
-    aspect-ratio: 1 / 1;
+    inline-size: var(--mha-mobile-dock-launcher-shell-width, var(--mha-floating-button-size)) !important;
+    block-size: var(--mha-mobile-dock-launcher-shell-height, var(--mha-floating-button-size)) !important;
+    width: var(--mha-mobile-dock-launcher-shell-width, var(--mha-floating-button-size)) !important;
+    height: var(--mha-mobile-dock-launcher-shell-height, var(--mha-floating-button-size)) !important;
+    aspect-ratio: auto;
     border: 1px solid var(--mha-widget-border) !important;
-    border-radius: 999px !important;
+    border-radius: var(--mha-mobile-dock-launcher-shell-radius, 999px) !important;
     background: var(--mha-system-button-bg) !important;
     box-shadow: var(--mha-system-button-shadow) !important;
     color: var(--mha-system-button-color) !important;
     -webkit-backdrop-filter: var(--mha-system-button-backdrop-filter) !important;
     backdrop-filter: var(--mha-system-button-backdrop-filter) !important;
     overflow: hidden;
+    padding-inline: var(--mha-mobile-dock-launcher-shell-padding-inline, 0) !important;
   }
 
   .mha-mobile-dock-launcher > .mha-icon {
-    --mha-icon-size: var(--mha-floating-button-size);
+    --mha-icon-size: var(--mha-mobile-dock-launcher-size, var(--mha-floating-button-size));
     --mha-icon-glyph-size: var(--mha-mobile-floating-button-icon-size);
     --mha-icon-color: var(--mha-system-button-color, var(--mha-text-primary, #fff)) !important;
     border: 0 !important;
@@ -342,6 +343,41 @@
   .mha-main-edit-button {
     right: var(--mha-page-padding) !important;
   }
+}
+
+/* TOUCH EDIT ENTRY
+ * Mobile and tablet enter edit mode via long press on empty grid space.
+ * The primary edit button is therefore hidden until edit mode is active, then
+ * reused as an always-available close affordance in the top-right corner.
+ */
+:host([data-layout="mobile"]) .mha-primary-edit-button[hidden],
+:host([data-layout="tablet"]) .mha-primary-edit-button[hidden] {
+  display: none !important;
+}
+
+:host([data-layout="mobile"]) .mha-primary-edit-button[data-touch-edit-close="true"],
+:host([data-layout="tablet"]) .mha-primary-edit-button[data-touch-edit-close="true"] {
+  position: fixed;
+  z-index: 95;
+  inset-inline-end: max(var(--mha-safe-area-right, 0px), var(--mha-page-padding));
+  inset-block-start: max(
+    var(--mha-safe-top, 0px),
+    var(--mha-safe-area-top, 0px),
+    var(--mha-page-padding)
+  );
+  inset-block-end: auto;
+  opacity: 1 !important;
+  pointer-events: auto;
+  transform: none !important;
+}
+
+:host([data-layout="mobile"]) .mha-primary-edit-button[data-touch-edit-close="true"] {
+  inset-inline-end: max(var(--mha-safe-area-right, 0px), var(--mha-edit-button-edge));
+  inset-block-start: max(
+    var(--mha-safe-top, 0px),
+    var(--mha-safe-area-top, 0px),
+    var(--mha-page-padding)
+  );
 }
 
 
