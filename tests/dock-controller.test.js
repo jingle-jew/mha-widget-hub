@@ -1,6 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  DOCK_STRUCTURE_ITEM_SELECTOR,
+  MOBILE_DOCK_STRUCTURE_ITEM_SELECTOR,
+  buildDockStructureSignature,
+  buildDockStructureSignatureFromDom,
+  buildDockStructureSignatureFromProps,
   createDockProps,
   syncDockActiveState,
   syncDocks,
@@ -55,6 +60,74 @@ test("dock active-state sync updates every page button", () => {
       { active: "true", current: "page" },
     ],
   );
+});
+
+test("dock structure signature serializes resolved dock items", () => {
+  assert.equal(buildDockStructureSignature([
+    { type: "page", action: "page", pageId: "home", symbol: "home" },
+    { type: "action", action: "settings", symbol: "gear" },
+  ]), "page:page:home:home|action:settings::gear");
+});
+
+test("dock structure signature uses the same selector contract for desktop and mobile docks", () => {
+  const selectors = [];
+  const desktopDock = {
+    querySelectorAll(selector) {
+      selectors.push(selector);
+      return [
+        {
+          dataset: { dockItemType: "page", dockAction: "page", pageId: "home" },
+          querySelector() {
+            return { dataset: { icon: "home" } };
+          },
+        },
+        {
+          dataset: { dockItemType: "action", dockAction: "settings" },
+          querySelector() {
+            return { dataset: { icon: "gear" } };
+          },
+        },
+      ];
+    },
+  };
+  const mobileDock = {
+    querySelectorAll(selector) {
+      selectors.push(selector);
+      return [
+        {
+          dataset: { dockItemType: "page", dockAction: "page", pageId: "home" },
+          querySelector() {
+            return { dataset: { icon: "home" } };
+          },
+        },
+        {
+          dataset: { dockItemType: "action", dockAction: "settings" },
+          querySelector() {
+            return { dataset: { icon: "gear" } };
+          },
+        },
+      ];
+    },
+  };
+
+  assert.equal(
+    buildDockStructureSignatureFromDom(desktopDock, DOCK_STRUCTURE_ITEM_SELECTOR),
+    buildDockStructureSignatureFromDom(mobileDock, MOBILE_DOCK_STRUCTURE_ITEM_SELECTOR),
+  );
+  assert.deepEqual(selectors, [
+    DOCK_STRUCTURE_ITEM_SELECTOR,
+    MOBILE_DOCK_STRUCTURE_ITEM_SELECTOR,
+  ]);
+});
+
+test("dock structure signature from props matches the current dock item contract", () => {
+  assert.equal(buildDockStructureSignatureFromProps({
+    pages: [
+      { id: "home", name: "Home", icon: "home" },
+      { id: "lights", name: "Lights", icon: "light" },
+    ],
+    isEditing: true,
+  }), "page:page:home:home|page:page:lights:light|action:settings::gear|action:add-page::plus|action:dock-settings::edit");
 });
 
 test("syncDocks removes existing dock DOM when the theme disables docks", () => {
@@ -120,7 +193,7 @@ test("syncDocks preserves existing dock DOM when only active page changes", () =
   }));
   const dock = {
     querySelectorAll(selector) {
-      assert.equal(selector, ".mha-dock-item, .mha-mobile-dock-item, .mha-dock-spacer, .mha-mobile-dock-spacer");
+      assert.equal(selector, ".mha-dock-item, .mha-dock-spacer, .mha-mobile-dock-item, .mha-mobile-dock-spacer");
       return dockItems;
     },
     replaceWith() {
@@ -129,7 +202,7 @@ test("syncDocks preserves existing dock DOM when only active page changes", () =
   };
   const mobileDock = {
     querySelectorAll(selector) {
-      assert.equal(selector, ".mha-dock-item, .mha-mobile-dock-item, .mha-dock-spacer, .mha-mobile-dock-spacer");
+      assert.equal(selector, ".mha-dock-item, .mha-dock-spacer, .mha-mobile-dock-item, .mha-mobile-dock-spacer");
       return dockItems;
     },
     replaceWith() {

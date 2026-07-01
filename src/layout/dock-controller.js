@@ -2,21 +2,38 @@ import { createDock } from "./dock.js";
 import { createMobileDock } from "./mobile-dock.js";
 import { resolveDockItems } from "./dock-content-registry.js";
 
-function buildDockStructureSignatureFromProps(props = {}) {
-  return resolveDockItems(props)
-    .map(item => [item.type || "", item.action || "", item.pageId || "", item.symbol || ""].join(":"))
+export const DOCK_STRUCTURE_ITEM_SELECTOR = ".mha-dock-item, .mha-dock-spacer";
+export const MOBILE_DOCK_STRUCTURE_ITEM_SELECTOR = ".mha-mobile-dock-item, .mha-mobile-dock-spacer";
+const ALL_DOCK_STRUCTURE_ITEM_SELECTOR = [
+  DOCK_STRUCTURE_ITEM_SELECTOR,
+  MOBILE_DOCK_STRUCTURE_ITEM_SELECTOR,
+].join(", ");
+
+function serializeDockStructureItem(item = {}) {
+  const type = item.type || item.dataset?.dockItemType || "";
+  const action = item.action || item.dataset?.dockAction || "page";
+  const pageId = item.pageId || item.dataset?.pageId || "";
+  const symbol = item.symbol || item.querySelector?.(".mha-icon")?.dataset?.icon || "";
+  return [type, action, pageId, symbol].join(":");
+}
+
+export function buildDockStructureSignature(items = []) {
+  return (Array.isArray(items) ? items : [])
+    .map(item => serializeDockStructureItem(item))
     .join("|");
 }
 
-function buildDockStructureSignatureFromDom(dock) {
-  return Array.from(dock?.querySelectorAll?.(".mha-dock-item, .mha-mobile-dock-item, .mha-dock-spacer, .mha-mobile-dock-spacer") || [])
-    .map(item => [
-      item.dataset.dockItemType || "",
-      item.dataset.dockAction || "page",
-      item.dataset.pageId || "",
-      item.querySelector?.(".mha-icon")?.dataset.icon || "",
-    ].join(":"))
-    .join("|");
+export function buildDockStructureSignatureFromProps(props = {}) {
+  return buildDockStructureSignature(resolveDockItems(props));
+}
+
+export function buildDockStructureSignatureFromDom(
+  dock,
+  itemSelector = ALL_DOCK_STRUCTURE_ITEM_SELECTOR,
+) {
+  return buildDockStructureSignature(
+    Array.from(dock?.querySelectorAll?.(itemSelector) || []),
+  );
 }
 
 function removeDockNode(dock) {
