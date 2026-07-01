@@ -50,6 +50,7 @@ const STATIC_STYLE_MANIFEST_AFTER_THEMES = Object.freeze([
   entry("styles/panels/panel-surface-contract.css", "component"),
   entry("styles/panels/panel-material-contract.css", "component"),
   entry("styles/panels/panel-frame-alignment.css", "component"),
+  entry("styles/panels/page-creator.css", "component"),
   entry("styles/panels/page-creator-sheet.css", "component"),
   entry("styles/panels/page-creator-bottom.css", "component"),
   entry("styles/panels/page-creator-contract.css", "component"),
