@@ -304,6 +304,14 @@
 }
 
 @media (min-width: 768px) {
+  :host([data-theme-style="oneui"][data-dock-position="bottom"]) {
+    --mha-dock-unit-size: var(--mha-oneui-compact-dock-height);
+    --mha-bottom-dock-clearance: 1rem;
+    --mha-bottom-dock-height: calc(
+      var(--mha-oneui-compact-dock-height) + var(--mha-bottom-dock-clearance)
+    );
+  }
+
   :host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock-zone {
     align-items: flex-start;
     justify-content: center;

@@ -115,6 +115,14 @@ test("square metrics preserve desktop and mobile sizing rules", () => {
       matrixHeight: 395.7142857142857,
     },
   );
+  assert.deepEqual(
+    calculateSquareGridMetrics({ ...common, mobile: false, fillWidth: true }),
+    {
+      unit: 91.42857142857143,
+      matrixWidth: 700,
+      matrixHeight: 395.7142857142857,
+    },
+  );
 });
 
 test("runtime applies the existing grid dataset and CSS contract", () => {
