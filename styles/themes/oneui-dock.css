@@ -35,10 +35,10 @@
   :host([data-theme-style="oneui"][data-dock-position="left"]) .mha-dock,
   :host([data-theme-style="oneui"][data-dock-position="right"]) .mha-dock,
   :host([data-theme-style="oneui"]:not([data-dock-position])) .mha-dock {
-    --mha-dock-empty-width: clamp(11.25rem, 16vw, 14.5rem);
+    --mha-dock-empty-width: clamp(12.75rem, 18vw, 16rem);
     --mha-dock-empty-height: auto;
     --mha-dock-rail-padding-block: clamp(.45rem, .9vw, .7rem);
-    --mha-dock-rail-padding-inline: clamp(.42rem, .72vw, .62rem);
+    --mha-dock-rail-padding-inline: clamp(.62rem, .92vw, .85rem);
     --mha-dock-rail-gap: clamp(.42rem, .78vw, .68rem);
     --mha-icon-size: clamp(1.85rem, 2vw, 2.25rem);
     --mha-dock-icon-min-size: var(--mha-icon-size);
@@ -62,12 +62,14 @@
     --mha-dock-item-label-font-weight: 700;
     --mha-dock-item-label-letter-spacing: -.03em;
 
+    box-sizing: border-box;
     width: var(--mha-dock-empty-width);
     min-width: var(--mha-dock-empty-width);
     max-width: min(18rem, calc(100vw - (var(--mha-page-padding, 1rem) * 2)));
     padding-block: var(--mha-dock-rail-padding-block);
     padding-inline: var(--mha-dock-rail-padding-inline);
     gap: var(--mha-dock-rail-gap);
+    overflow: visible;
     border: 0;
     background: transparent;
     box-shadow: none;
@@ -185,6 +187,9 @@
     justify-content: start;
     justify-items: start;
     column-gap: var(--mha-dock-item-gap);
+    box-sizing: border-box;
+    inline-size: 100%;
+    max-inline-size: 100%;
     border: 1px solid var(--mha-control-border, var(--mha-border-secondary));
     background: var(--mha-control-surface, var(--mha-widget-surface, var(--mha-surface-panel)));
     color: var(--mha-text);
