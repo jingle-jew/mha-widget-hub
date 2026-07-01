@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  createDefaultPages,
   createFallbackPage,
   getActivePage,
   normalizePage,
@@ -66,4 +67,22 @@ test("fallback and active-page lookup remain independent from storage", () => {
   assert.equal(getActivePage(pages, "second").id, "second");
   assert.equal(getActivePage(pages, "missing").id, "home");
   assert.equal(getActivePage([], "missing"), null);
+});
+
+test("default first-launch pages are two grids plus one media page", () => {
+  const pages = createDefaultPages();
+
+  assert.deepEqual(
+    pages.map(page => ({
+      id: page.id,
+      name: page.name,
+      icon: page.icon,
+      type: page.type || "grid",
+    })),
+    [
+      { id: "home", name: "Home", icon: "home", type: "grid" },
+      { id: "page-2", name: "Page 2", icon: "grid", type: "grid" },
+      { id: "media", name: "Media Players", icon: "media-player", type: "media-players" },
+    ],
+  );
 });

@@ -168,7 +168,7 @@ function getHubStateIngressCoordinatorForHost(host){
  * Visual style: OneUI
  * Accent: auto
  * Icon shape: auto
- * Pages: 3 grid pages + 1 media page
+ * Pages: 2 grid pages + 1 media page
  * Screensaver: enabled
  * Screensaver delay: 30 seconds
  * Screensaver Now Bar: disabled
@@ -890,6 +890,9 @@ _getDockProps(){
 }
 _syncDocksDom(){
   return getResponsiveDockCoordinatorForHost(this).syncDocksDom();
+}
+_scheduleMobileDockOverflowState(){
+  return getResponsiveDockCoordinatorForHost(this).scheduleMobileDockOverflowState();
 }
 _refreshActiveGridOnly(){
   return this._widgetSurfaceCoordinator.refreshActiveGridOnly();

@@ -75,6 +75,10 @@
     display: none;
   }
 
+  .mha-mobile-dock[data-overflowing="true"] {
+    justify-content: start;
+  }
+
   .mha-mobile-dock-item {
     position: relative;
     display: grid;
