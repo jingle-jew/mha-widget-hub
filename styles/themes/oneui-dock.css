@@ -338,3 +338,30 @@
     aspect-ratio: auto;
   }
 }
+
+
+/* OneUI bottom dock: max 4 wide oval pills per swipe ----------------------- */
+@media (min-width: 768px) {
+  :host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock.mha-dock {
+    --mha-oneui-bottom-dock-visible-items: 4;
+    --mha-oneui-bottom-dock-item-gap: clamp(.22rem, .7vw, .42rem);
+    --mha-dock-gap: var(--mha-oneui-bottom-dock-item-gap);
+  }
+
+  :host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock-item {
+    inline-size: calc(
+      (
+        100% -
+        (var(--mha-oneui-bottom-dock-item-gap) * (var(--mha-oneui-bottom-dock-visible-items) - 1))
+      ) / var(--mha-oneui-bottom-dock-visible-items)
+    );
+    min-inline-size: calc(
+      (
+        100% -
+        (var(--mha-oneui-bottom-dock-item-gap) * (var(--mha-oneui-bottom-dock-visible-items) - 1))
+      ) / var(--mha-oneui-bottom-dock-visible-items)
+    );
+    max-inline-size: none;
+    aspect-ratio: auto;
+  }
+}
