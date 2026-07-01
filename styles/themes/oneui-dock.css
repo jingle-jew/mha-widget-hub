@@ -38,7 +38,7 @@
     --mha-dock-empty-width: clamp(12.75rem, 18vw, 16rem);
     --mha-dock-empty-height: auto;
     --mha-dock-rail-padding-block: clamp(.45rem, .9vw, .7rem);
-    --mha-dock-rail-padding-inline: clamp(.62rem, .92vw, .85rem);
+    --mha-dock-rail-padding-inline: 0;
     --mha-dock-rail-gap: clamp(.42rem, .78vw, .68rem);
     --mha-icon-size: clamp(1.85rem, 2vw, 2.25rem);
     --mha-dock-icon-min-size: var(--mha-icon-size);
@@ -75,6 +75,16 @@
     box-shadow: none;
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
+    position: absolute;
+    inset-block-start: var(--mha-widget-area-top-gutter, calc(var(--mha-page-padding, 1rem) * 2));
+    inset-inline-start: 0;
+    inset-inline-end: auto;
+    transform: none;
+  }
+
+  :host([data-theme-style="oneui"][data-dock-position="right"]) .mha-dock {
+    inset-inline-start: auto;
+    inset-inline-end: 0;
   }
 
   :host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock.mha-dock {
