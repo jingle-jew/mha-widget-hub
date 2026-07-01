@@ -949,7 +949,7 @@
   grid-row: 1;
   align-self: start;
   justify-self: end;
-  margin-block-start: clamp(1.85rem, 10cqb, 2.4rem);
+  margin-block-start: 0;
   inline-size: min(100%, clamp(4.8rem, 30cqi, 6.4rem));
   gap: clamp(.18rem, 1.4cqb, .34rem);
 }
@@ -966,5 +966,19 @@
   grid-row: 3;
   align-self: end;
   justify-self: start;
+  max-inline-size: 100%;
+}
+
+
+/* 3x2: summary owns the full lower row ------------------------------------ */
+.mha-weather-widget[data-weather-size="3x2"] .mha-weather-widget-details {
+  align-self: start;
+  margin-block-start: 0;
+}
+
+.mha-weather-widget[data-weather-size="3x2"] .mha-weather-widget-summary {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  inline-size: 100%;
   max-inline-size: 100%;
 }
