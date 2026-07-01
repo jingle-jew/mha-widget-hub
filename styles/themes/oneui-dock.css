@@ -281,3 +281,50 @@
     padding-inline: clamp(.08rem, .06rem + .12vw, .12rem);
   }
 }
+
+/* OneUI bottom dock on tablet/desktop mirrors the mobile dock -------------- */
+@media (min-width: 768px) {
+  :host([data-theme-style="oneui"][data-dock-position="bottom"]) {
+    --mha-bottom-dock-height: calc(
+      clamp(4.75rem, 7.2vw, 5.65rem) + var(--mha-bottom-dock-clearance, 0px)
+    );
+  }
+
+  :host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock-zone {
+    align-items: flex-start;
+    justify-content: center;
+    overflow: visible;
+  }
+
+  :host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock.mha-dock {
+    --mha-dock-empty-width: min(
+      calc(100vw - (var(--mha-page-padding, 1rem) * 3)),
+      clamp(18rem, 42vw, 28rem)
+    );
+    --mha-dock-empty-height: clamp(4.75rem, 7.2vw, 5.65rem);
+    --mha-dock-empty-padding-block: clamp(.34rem, .72vw, .5rem);
+    --mha-dock-empty-padding-inline: clamp(.5rem, 1vw, .74rem);
+    --mha-dock-gap: clamp(.18rem, .52vw, .34rem);
+    --mha-icon-size: clamp(2.42rem, 3.1vw, 3rem);
+
+    align-self: start;
+    justify-self: center;
+    inline-size: var(--mha-dock-empty-width);
+    min-inline-size: var(--mha-dock-empty-width);
+    max-inline-size: var(--mha-dock-empty-width);
+  }
+
+  :host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock-item {
+    inline-size: calc(var(--mha-icon-size) + clamp(.85rem, 1.45vw, 1.25rem));
+    min-inline-size: calc(var(--mha-icon-size) + clamp(.85rem, 1.45vw, 1.25rem));
+    block-size: calc(var(--mha-icon-size) + 1.25rem);
+    min-block-size: calc(var(--mha-icon-size) + 1.25rem);
+    row-gap: clamp(.08rem, .22vw, .16rem);
+  }
+
+  :host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock-item > .mha-dock-item-label {
+    font-size: clamp(.53rem, .48rem + .16vw, .6rem);
+    line-height: .98;
+    font-weight: 600;
+  }
+}
