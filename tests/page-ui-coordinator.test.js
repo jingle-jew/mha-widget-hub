@@ -129,7 +129,7 @@ test("selecting a page closes placement state and reloads widgets", () => {
   assert.equal(calls.syncDocks, 1);
 });
 
-test("deleting a page cleans positions and reloads widgets when the active page changes", () => {
+test("deleting a selected dock-detail page returns settings to dock and cleans positions when the active page changes", () => {
   const { coordinator, state, calls } = createHarness({
     state: {
       pages: [
