@@ -463,3 +463,30 @@
     --mha-oneui-compact-dock-item-height: 4rem;
   }
 }
+
+
+/* OneUI compact dock: active pill keeps same geometry as dock item --------- */
+:host([data-theme-style="oneui"]) .mha-mobile-dock-item[data-active="true"]::before,
+:host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock-item[data-active="true"]::before {
+  inset: .08rem;
+  border-radius: 999px;
+}
+
+:host([data-theme-style="oneui"]) .mha-mobile-dock-item,
+:host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock-item {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  align-content: center;
+  justify-items: center;
+  padding-block: .22rem .28rem;
+}
+
+:host([data-theme-style="oneui"]) .mha-mobile-dock-item > .mha-icon,
+:host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock-item > .mha-icon {
+  align-self: end;
+}
+
+:host([data-theme-style="oneui"]) .mha-mobile-dock-item > .mha-dock-item-label,
+:host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock-item > .mha-dock-item-label {
+  align-self: start;
+}
