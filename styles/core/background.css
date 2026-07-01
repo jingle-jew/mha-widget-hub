@@ -10,11 +10,22 @@
     radial-gradient(circle at 52% 90%,var(--mha-bg-radial-3),transparent 36%),
     linear-gradient(135deg,var(--mha-bg-base-1) 0%,var(--mha-bg-base-2) 100%);
 }
+.mha-background-wallpaper{
+  position:absolute;
+  inset:0;
+  display:none;
+  inline-size:100%;
+  block-size:100%;
+  object-fit:cover;
+  object-position:center;
+  pointer-events:none;
+}
 .mha-background-media,
 .mha-background-media-overlay{
   position:absolute;
   inset:0;
   pointer-events:none;
+  display:none;
   opacity:0;
   transition:opacity 220ms ease;
 }
@@ -252,6 +263,7 @@
 
 :host([data-media-page-active="true"][data-media-page-wallpaper="true"]) .mha-background-media,
 :host([data-media-page-active="true"][data-media-page-wallpaper="true"]) .mha-background-media-overlay {
+  display:block;
   opacity: 1;
 }
 
@@ -277,6 +289,12 @@
   background-size: cover !important;
   background-position: center !important;
   background-repeat: no-repeat !important;
+}
+
+:host([data-wallpaper-kind="image"][data-wallpaper-source="custom"]) .mha-background-wallpaper,
+:host([data-wallpaper-kind="image"][data-wallpaper-source="theme"]) .mha-background-wallpaper,
+:host([data-custom-wallpaper="true"]) .mha-background-wallpaper {
+  display:block !important;
 }
 
 :host([data-wallpaper-kind="css"][data-wallpaper-source="theme"]) .mha-background {

@@ -44,6 +44,24 @@ function createHost() {
   };
 }
 
+function createUrlRef() {
+  const created = [];
+  const revoked = [];
+  let counter = 0;
+  return {
+    created,
+    revoked,
+    createObjectURL(blob) {
+      created.push(blob);
+      counter += 1;
+      return `blob:mha-test-${counter}`;
+    },
+    revokeObjectURL(value) {
+      revoked.push(value);
+    },
+  };
+}
+
 const wallpaper = {
   dataUrl: "data:image/jpeg;base64,d2FsbHBhcGVy",
   name: "salon.jpg",
@@ -56,10 +74,12 @@ test("wallpaper controller migrates and applies the effective theme", () => {
     [LEGACY_WALLPAPER_STORAGE_KEY]: JSON.stringify(wallpaper),
   });
   const host = createHost();
+  const urlRef = createUrlRef();
   const controller = createWallpaperController(host, {
     storage,
     getTheme: () => "dark",
     getThemeState: () => ({ theme: "dark", themeStyle: "oneui" }),
+    urlRef,
   });
 
   assert.equal(controller.migrateLegacy(), true);
@@ -71,17 +91,21 @@ test("wallpaper controller migrates and applies the effective theme", () => {
   assert.equal(host.dataset.wallpaperSource, "custom");
   assert.equal(
     host.style.properties.get("--mha-custom-wallpaper-image"),
-    `url("${wallpaper.dataUrl}")`,
+    `url("blob:mha-test-1")`,
   );
+  assert.equal(host._activeWallpaper.renderValue, "blob:mha-test-1");
+  assert.equal(urlRef.created.length, 1);
 });
 
 test("wallpaper save and reset keep storage, state and host style aligned", () => {
   const storage = createStorage();
   const host = createHost();
+  const urlRef = createUrlRef();
   const controller = createWallpaperController(host, {
     storage,
     getTheme: () => "light",
     getThemeState: () => ({ theme: "light", themeStyle: "ios" }),
+    urlRef,
   });
 
   assert.deepEqual(controller.save("light", wallpaper), {
@@ -104,6 +128,7 @@ test("wallpaper save and reset keep storage, state and host style aligned", () =
     false,
   );
   assert.equal(host.style.properties.has("--mha-active-wallpaper-image"), false);
+  assert.deepEqual(urlRef.revoked, ["blob:mha-test-1"]);
 });
 
 test("invalid wallpaper payloads preserve the existing error contract", () => {
@@ -141,20 +166,43 @@ test("custom wallpaper keeps priority over theme wallpaper", () => {
     [WALLPAPER_STORAGE_KEYS.dark]: JSON.stringify(wallpaper),
   });
   const host = createHost();
+  const urlRef = createUrlRef();
   const controller = createWallpaperController(host, {
     storage,
     getThemeState: () => ({ theme: "dark", themeStyle: "material" }),
+    urlRef,
   });
 
   const activeWallpaper = controller.getActiveWallpaper();
   assert.equal(activeWallpaper.source, "custom");
   assert.equal(activeWallpaper.kind, "image");
   assert.equal(activeWallpaper.value, wallpaper.dataUrl);
+  assert.equal(activeWallpaper.renderValue, "blob:mha-test-1");
 
   const activeAccentSource = controller.getActiveAccentSource();
   assert.equal(activeAccentSource.source, "custom");
   assert.equal(activeAccentSource.kind, "image");
   assert.equal(activeAccentSource.value, wallpaper.dataUrl);
+});
+
+test("wallpaper controller reuses and releases custom render URLs explicitly", () => {
+  const storage = createStorage({
+    [WALLPAPER_STORAGE_KEYS.dark]: JSON.stringify(wallpaper),
+  });
+  const host = createHost();
+  const urlRef = createUrlRef();
+  const controller = createWallpaperController(host, {
+    storage,
+    getThemeState: () => ({ theme: "dark", themeStyle: "oneui" }),
+    urlRef,
+  });
+
+  controller.apply();
+  controller.apply();
+  assert.equal(urlRef.created.length, 1);
+
+  controller.destroy();
+  assert.deepEqual(urlRef.revoked, ["blob:mha-test-1"]);
 });
 
 test("theme wallpaper contract supports advanced theme backgrounds", () => {
