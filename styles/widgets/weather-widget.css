@@ -876,7 +876,14 @@
   }
 
   .mha-weather-widget[data-weather-size="4x2"] .mha-weather-widget-forecast {
-    display: none;
+    display: grid;
+    gap: clamp(.16rem, 1cqb, .28rem);
+  }
+
+  .mha-weather-widget[data-weather-size="4x2"] .mha-weather-widget-forecast-row {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, auto);
+    min-block-size: 0;
+    padding: clamp(.2rem, .9cqb, .32rem) clamp(.24rem, 1.2cqi, .4rem);
   }
 
   .mha-weather-widget[data-weather-size="3x2"] {
