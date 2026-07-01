@@ -151,8 +151,8 @@ export function resolveDockItems({
   themeStyle = "oneui",
   ...state
 } = {}) {
+  // Keep reading the legacy prop so dock view-models stay shape-compatible.
+  void contentBuilder;
   if (Array.isArray(items) && items.length) return buildDockItemsFromManifest(items, state);
-  if (contentBuilder && contentBuilder !== "default") return buildDockItemsFromManifest(getThemeDockItems(themeStyle), state);
-  if (contentBuilder) return normalizeDockItems(getDockContentBuilder(contentBuilder)(state));
   return buildDockItemsFromManifest(getThemeDockItems(themeStyle), state);
 }
