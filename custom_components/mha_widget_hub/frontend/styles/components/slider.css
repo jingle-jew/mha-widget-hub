@@ -64,12 +64,13 @@
   cursor: pointer;
 }
 
-:host([data-layout="mobile"]) .mha-slider[data-orientation="vertical"] .mha-slider-input {
+:host([data-layout="mobile"]) .mha-widget-area.is-mobile-slider-dragging {
+  overflow-y: hidden;
   touch-action: none;
 }
 
-:host([data-layout="mobile"]) .mha-widget-area.is-mobile-slider-dragging {
-  overflow-y: hidden;
+:host([data-layout="mobile"]) .mha-slider.is-slider-dragging,
+:host([data-layout="mobile"]) .mha-slider.is-slider-dragging .mha-slider-input {
   touch-action: none;
 }
 

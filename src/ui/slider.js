@@ -2,6 +2,10 @@
  * MHA reusable slider component.
  */
 
+export const SLIDER_ARM_DELAY_MS = 140;
+export const SLIDER_MOVE_TOLERANCE_PX = 8;
+export const SLIDER_AXIS_LOCK_PX = 10;
+
 function getSliderPercent(value, min, max) {
   const minNumber = Number(min);
   const maxNumber = Number(max);
@@ -137,7 +141,24 @@ function getSliderWidgetShell(wrapper) {
 
 function getSliderHost(wrapper) {
   const root = wrapper.getRootNode();
-  return root instanceof ShadowRoot ? root.host : null;
+  return typeof ShadowRoot !== "undefined" && root instanceof ShadowRoot ? root.host : null;
+}
+
+function isPrimaryPointer(event) {
+  if (event?.button != null && event.button !== 0) return false;
+  return true;
+}
+
+export function canStartMobileSliderSession({
+  layout = "",
+  disabled = false,
+  isEditing = false,
+  isPreview = false,
+  event = null,
+} = {}) {
+  if (layout !== "mobile") return false;
+  if (disabled || isEditing || isPreview) return false;
+  return isPrimaryPointer(event);
 }
 
 function isFullSliderWidgetPointerControl(wrapper) {
@@ -157,6 +178,31 @@ function isFullSliderWidgetPointerControl(wrapper) {
    * unreliable there: tap works, continuous vertical drag often does not.
    */
   return isIosSlider2 || themeStyle === "ios" || (isMobile && isVertical);
+}
+
+export function resolvePendingSliderGesture({
+  orientation = "horizontal",
+  deltaX = 0,
+  deltaY = 0,
+  moveTolerance = SLIDER_MOVE_TOLERANCE_PX,
+  axisLockPx = SLIDER_AXIS_LOCK_PX,
+} = {}) {
+  const absX = Math.abs(Number(deltaX) || 0);
+  const absY = Math.abs(Number(deltaY) || 0);
+
+  if (absX <= moveTolerance && absY <= moveTolerance) return "pending";
+
+  if (orientation === "horizontal") {
+    if (absY >= axisLockPx && absY > absX) return "cancel";
+    return "pending";
+  }
+
+  /*
+   * Vertical sliders compete directly with page scroll on mobile. Until the
+   * slider is armed, prefer cancelling and letting the page gesture win.
+   */
+  if (absX >= axisLockPx || absY >= axisLockPx) return "cancel";
+  return "pending";
 }
 
 function getFullWidgetSliderValueFromPointer(wrapper, input, event, min, max) {
@@ -180,6 +226,34 @@ function getFullWidgetSliderValueFromPointer(wrapper, input, event, min, max) {
 
 function setFullWidgetSliderValueFromPointer(wrapper, input, event, min, max) {
   const nextValue = getFullWidgetSliderValueFromPointer(wrapper, input, event, min, max);
+  input.value = String(nextValue);
+  input.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+function getSliderValueFromPointer(wrapper, input, event, min, max) {
+  if (isFullSliderWidgetPointerControl(wrapper)) {
+    return getFullWidgetSliderValueFromPointer(wrapper, input, event, min, max);
+  }
+
+  const rect = input.getBoundingClientRect?.() || wrapper.getBoundingClientRect?.();
+  const minNumber = Number(min);
+  const maxNumber = Number(max);
+
+  if (!rect || !Number.isFinite(minNumber) || !Number.isFinite(maxNumber) || maxNumber === minNumber) {
+    return Number(input.value) || 0;
+  }
+
+  const orientation = wrapper.dataset.orientation || "horizontal";
+  const ratio = orientation === "vertical"
+    ? 1 - ((event.clientY - rect.top) / Math.max(1, rect.height))
+    : (event.clientX - rect.left) / Math.max(1, rect.width);
+
+  const clamped = Math.max(0, Math.min(1, ratio));
+  return minNumber + ((maxNumber - minNumber) * clamped);
+}
+
+function setSliderValueFromPointer(wrapper, input, event, min, max) {
+  const nextValue = getSliderValueFromPointer(wrapper, input, event, min, max);
   input.value = String(nextValue);
   input.dispatchEvent(new Event("input", { bubbles: true }));
 }
@@ -228,6 +302,7 @@ export function createSlider({
 
   const rotor = document.createElement("span");
   rotor.className = "mha-slider-rotor";
+  const mobileInteractionTarget = wrapper;
 
   const syncValue = (currentValue) => {
     const percent = getSliderPercent(currentValue, min, max);
@@ -265,98 +340,119 @@ export function createSlider({
     onChange?.(event);
   });
 
-  let activePointerId = null;
-  let activeScrollContainer = null;
-  const getHost = () => {
-    const root = input.getRootNode();
-    return root instanceof ShadowRoot ? root.host : null;
+  let mobileSession = null;
+
+  const getInteractionState = () => {
+    const host = getSliderHost(wrapper);
+    return {
+      host,
+      layout: host?.dataset?.layout || "",
+      isEditing: Boolean(host?.classList?.contains?.("is-editing")),
+      isPreview: Boolean(wrapper.closest?.(".mha-widget-manager-live-preview")),
+    };
   };
-  const isMobileVerticalSlider = () => (
-    wrapper.dataset.orientation === "vertical"
-    && getHost()?.dataset.layout === "mobile"
-  );
-  const finishPointerDrag = (event) => {
-    if (activePointerId === null || (event.pointerId !== undefined && event.pointerId !== activePointerId)) return;
-    const pointerId = activePointerId;
-    activePointerId = null;
+
+  const clearMobileSession = (event, { emitChange = false } = {}) => {
+    if (!mobileSession) return;
+
+    const { pointerId, state, scrollContainer } = mobileSession;
+    clearTimeout(mobileSession.armTimer);
+    mobileSession.armTimer = 0;
     wrapper.classList.remove("is-slider-dragging");
-    activeScrollContainer?.classList.remove("is-mobile-slider-dragging");
-    activeScrollContainer = null;
-    if (event.type !== "lostpointercapture" && input.hasPointerCapture?.(pointerId)) {
-      input.releasePointerCapture?.(pointerId);
-    }
-    event.stopPropagation();
-  };
+    scrollContainer?.classList?.remove?.("is-mobile-slider-dragging");
 
-  input.addEventListener("pointerdown", (event) => {
-    if (!isMobileVerticalSlider() || isFullSliderWidgetPointerControl(wrapper)) return;
-    activePointerId = event.pointerId;
-    activeScrollContainer = wrapper.closest(".mha-widget-area");
-    wrapper.classList.add("is-slider-dragging");
-    activeScrollContainer?.classList.add("is-mobile-slider-dragging");
-    input.setPointerCapture?.(event.pointerId);
-    event.stopPropagation();
-  });
-
-  input.addEventListener("pointermove", (event) => {
-    if (event.pointerId !== activePointerId) return;
-    event.stopPropagation();
-  });
-
-  input.addEventListener("pointerup", finishPointerDrag);
-  input.addEventListener("pointercancel", finishPointerDrag);
-  input.addEventListener("lostpointercapture", finishPointerDrag);
-
-  let activeFullWidgetPointerId = null;
-  let activeFullWidgetScrollContainer = null;
-
-  const startFullWidgetPointer = (event) => {
-    if (!isFullSliderWidgetPointerControl(wrapper)) return;
-    activeFullWidgetPointerId = event.pointerId;
-    activeFullWidgetScrollContainer = wrapper.closest(".mha-widget-area");
-    wrapper.classList.add("is-slider-dragging");
-    activeFullWidgetScrollContainer?.classList.add("is-mobile-slider-dragging");
-    input.setPointerCapture?.(event.pointerId);
-    setFullWidgetSliderValueFromPointer(wrapper, input, event, min, max);
-    event.preventDefault();
-    event.stopImmediatePropagation();
-  };
-
-  const moveFullWidgetPointer = (event) => {
-    if (!isFullSliderWidgetPointerControl(wrapper) || event.pointerId !== activeFullWidgetPointerId) return;
-    setFullWidgetSliderValueFromPointer(wrapper, input, event, min, max);
-    event.preventDefault();
-    event.stopImmediatePropagation();
-  };
-
-  const finishFullWidgetPointer = (event) => {
-    if (!isFullSliderWidgetPointerControl(wrapper)) return;
-    if (event.pointerId !== undefined && event.pointerId !== activeFullWidgetPointerId) return;
-
-    const pointerId = activeFullWidgetPointerId;
-    const hadActivePointer = pointerId !== null;
-    activeFullWidgetPointerId = null;
-    wrapper.classList.remove("is-slider-dragging");
-    activeFullWidgetScrollContainer?.classList.remove("is-mobile-slider-dragging");
-    activeFullWidgetScrollContainer = null;
-
-    if (event.type !== "lostpointercapture" && pointerId !== null && input.hasPointerCapture?.(pointerId)) {
-      input.releasePointerCapture?.(pointerId);
+    if (
+      state === "active"
+      && event?.type !== "lostpointercapture"
+      && mobileInteractionTarget.hasPointerCapture?.(pointerId)
+    ) {
+      mobileInteractionTarget.releasePointerCapture?.(pointerId);
     }
 
-    if (hadActivePointer) {
+    if (emitChange && state === "active") {
       input.dispatchEvent(new Event("change", { bubbles: true }));
     }
 
-    event.preventDefault?.();
-    event.stopImmediatePropagation?.();
+    mobileSession = null;
   };
 
-  input.addEventListener("pointerdown", startFullWidgetPointer, { capture: true });
-  input.addEventListener("pointermove", moveFullWidgetPointer, { capture: true });
-  input.addEventListener("pointerup", finishFullWidgetPointer, { capture: true });
-  input.addEventListener("pointercancel", finishFullWidgetPointer, { capture: true });
-  input.addEventListener("lostpointercapture", finishFullWidgetPointer, { capture: true });
+  const armMobileSession = () => {
+    if (!mobileSession || mobileSession.state !== "pending") return;
+    mobileSession.state = "active";
+    wrapper.classList.add("is-slider-dragging");
+    mobileSession.scrollContainer?.classList?.add?.("is-mobile-slider-dragging");
+    mobileInteractionTarget.setPointerCapture?.(mobileSession.pointerId);
+    if (mobileSession.lastEvent) {
+      setSliderValueFromPointer(wrapper, input, mobileSession.lastEvent, min, max);
+    }
+  };
+
+  const handleMobilePointerDown = (event) => {
+    const state = getInteractionState();
+    if (!canStartMobileSliderSession({
+      layout: state.layout,
+      disabled: input.disabled,
+      isEditing: state.isEditing,
+      isPreview: state.isPreview,
+      event,
+    })) {
+      return;
+    }
+    if (mobileSession?.pointerId === event.pointerId) return;
+
+    clearMobileSession(null);
+    mobileSession = {
+      state: "pending",
+      pointerId: event.pointerId,
+      startX: Number(event.clientX || 0),
+      startY: Number(event.clientY || 0),
+      lastEvent: event,
+      scrollContainer: wrapper.closest(".mha-widget-area"),
+      armTimer: setTimeout(() => armMobileSession(), SLIDER_ARM_DELAY_MS),
+    };
+  };
+
+  const handleMobilePointerMove = (event) => {
+    if (!mobileSession || event.pointerId !== mobileSession.pointerId) return;
+    mobileSession.lastEvent = event;
+
+    if (mobileSession.state === "pending") {
+      const outcome = resolvePendingSliderGesture({
+        orientation: wrapper.dataset.orientation || "horizontal",
+        deltaX: Number(event.clientX || 0) - mobileSession.startX,
+        deltaY: Number(event.clientY || 0) - mobileSession.startY,
+      });
+      if (outcome === "cancel") {
+        clearMobileSession(event);
+      }
+      return;
+    }
+
+    setSliderValueFromPointer(wrapper, input, event, min, max);
+    event.preventDefault?.();
+    event.stopPropagation?.();
+  };
+
+  const finishMobilePointer = (event) => {
+    if (!mobileSession || (event.pointerId !== undefined && event.pointerId !== mobileSession.pointerId)) return;
+
+    const wasActive = mobileSession.state === "active";
+    if (wasActive) {
+      setSliderValueFromPointer(wrapper, input, event, min, max);
+      event.preventDefault?.();
+      event.stopPropagation?.();
+    }
+
+    clearMobileSession(event, { emitChange: wasActive });
+  };
+
+  [mobileInteractionTarget, input].forEach((target) => {
+    target.addEventListener("pointerdown", handleMobilePointerDown);
+    target.addEventListener("pointermove", handleMobilePointerMove);
+    target.addEventListener("pointerup", finishMobilePointer);
+    target.addEventListener("pointercancel", finishMobilePointer);
+    target.addEventListener("lostpointercapture", finishMobilePointer);
+  });
 
   rotor.append(oneUiTrack, input);
   wrapper.append(rotor);
@@ -365,12 +461,14 @@ export function createSlider({
   wrapper.__mhaDestroy = () => {
     stopObservingLayout();
     wrapper.classList.remove("is-slider-dragging");
-    activeScrollContainer?.classList.remove("is-mobile-slider-dragging");
-    activeFullWidgetScrollContainer?.classList.remove("is-mobile-slider-dragging");
-    activePointerId = null;
-    activeFullWidgetPointerId = null;
-    activeScrollContainer = null;
-    activeFullWidgetScrollContainer = null;
+    clearMobileSession(null);
+    [mobileInteractionTarget, input].forEach((target) => {
+      target.removeEventListener?.("pointerdown", handleMobilePointerDown);
+      target.removeEventListener?.("pointermove", handleMobilePointerMove);
+      target.removeEventListener?.("pointerup", finishMobilePointer);
+      target.removeEventListener?.("pointercancel", finishMobilePointer);
+      target.removeEventListener?.("lostpointercapture", finishMobilePointer);
+    });
     delete wrapper.__mhaSliderApi;
   };
 

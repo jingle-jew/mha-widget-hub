@@ -406,7 +406,6 @@
 :host([data-theme-style="ios"]) .mha-widget[data-widget-kind="slider"] .mha-slider-input {
   position: absolute;
   z-index: 5;
-  touch-action: none;
   inset: 0 !important;
   inline-size: 100% !important;
   width: 100% !important;
@@ -414,8 +413,7 @@
   height: 100% !important;
   opacity: 0;
   cursor: pointer;
-  pointer-events: auto !important;
-  touch-action: none !important;
+  pointer-events: auto;
   user-select: none;
   -webkit-user-select: none;
 }
