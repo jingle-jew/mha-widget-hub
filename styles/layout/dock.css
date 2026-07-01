@@ -129,8 +129,10 @@
   outline-offset: 3px;
 }
 
-:host(.is-editing) [data-dock-action="settings"] {
-  display: none;
+@media (min-width: 768px) {
+  :host(.is-editing) [data-dock-action="settings"] {
+    display: none;
+  }
 }
 
 :host(.is-dock-hidden) .mha-dock,

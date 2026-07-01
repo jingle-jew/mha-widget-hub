@@ -124,6 +124,7 @@ export class PageUiCoordinator {
         isEditing: this.getIsEditing(),
       }),
       themeStyle,
+      dockPosition: this.host?._dockPosition || "left",
       usesDock: dockDefinition.usesDock,
       contentBuilder: dockDefinition.contentBuilder,
       onPageSelect: (id) => this.selectPage(id),

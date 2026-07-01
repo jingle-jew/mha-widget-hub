@@ -33,9 +33,9 @@ test("default dock content keeps the current page/edit/settings structure", () =
     [
       { action: "page", pageId: "home", symbol: "home", className: "", mobileClassName: "" },
       { action: "page", pageId: "lights", symbol: "lamp", className: "", mobileClassName: "" },
+      { action: "settings", pageId: "", symbol: "gear", className: "", mobileClassName: "" },
       { action: "add-page", pageId: "", symbol: "plus", className: "mha-dock-add-page", mobileClassName: "mha-mobile-dock-add-page" },
       { action: "dock-settings", pageId: "", symbol: "edit", className: "mha-dock-edit", mobileClassName: "mha-mobile-dock-edit" },
-      { action: "settings", pageId: "", symbol: "gear", className: "", mobileClassName: "" },
     ],
   );
 });

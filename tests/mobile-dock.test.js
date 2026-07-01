@@ -4,7 +4,7 @@ import test from "node:test";
 import { createMobileDock } from "../src/layout/mobile-dock.js";
 
 function createMockElement(tagName, namespaceURI = null) {
-  return {
+  const element = {
     tagName,
     namespaceURI,
     className: "",
@@ -14,6 +14,12 @@ function createMockElement(tagName, namespaceURI = null) {
     attributes: {},
     children: [],
     listeners: {},
+    style: {
+      values: {},
+      setProperty(name, value) {
+        this.values[name] = String(value);
+      },
+    },
     append(...nodes) {
       this.children.push(...nodes);
     },
@@ -28,6 +34,14 @@ function createMockElement(tagName, namespaceURI = null) {
       return true;
     },
   };
+  element.classList = {
+    add: (...names) => {
+      const existing = new Set(String(element.className || "").split(/\s+/).filter(Boolean));
+      names.forEach(name => existing.add(name));
+      element.className = Array.from(existing).join(" ");
+    },
+  };
+  return element;
 }
 
 function withMockDom(run) {
@@ -103,9 +117,9 @@ test("mobile dock keeps page and edit callbacks without the old panel flow", () 
 
   assert.deepEqual(calls, [
     ["page", "home"],
+    "settings",
     "add-page",
     "dock-settings",
-    "settings",
   ]);
 }));
 
@@ -134,4 +148,25 @@ test("mobile dock renders typed spacer items without breaking page and action it
   assert.equal(dock.children[1].className, "mha-mobile-dock-spacer mha-mobile-dock-gap");
   assert.equal(dock.children[1].attributes["aria-hidden"], "true");
   assert.equal(dock.children[2].dataset.dockItemType, "action");
+}));
+
+test("mobile dock groups overflowing items into snap pages of four", () => withMockDom(() => {
+  const dock = createMobileDock({
+    items: [
+      { type: "page", pageId: "p1", symbol: "home", label: "P1" },
+      { type: "page", pageId: "p2", symbol: "grid", label: "P2" },
+      { type: "page", pageId: "p3", symbol: "grid", label: "P3" },
+      { type: "page", pageId: "p4", symbol: "grid", label: "P4" },
+      { type: "page", pageId: "p5", symbol: "grid", label: "P5" },
+    ],
+  });
+
+  assert.equal(dock.className, "mha-mobile-dock is-paged");
+  assert.equal(dock.style.values["--mha-mobile-dock-page-count"], "2");
+  assert.equal(dock.children.length, 1);
+  assert.equal(dock.children[0].className, "mha-dock-pages");
+  assert.equal(dock.children[0].children.length, 2);
+  assert.equal(dock.children[0].children[0].className, "mha-dock-page");
+  assert.equal(dock.children[0].children[0].children.length, 4);
+  assert.equal(dock.children[0].children[1].children.length, 1);
 }));

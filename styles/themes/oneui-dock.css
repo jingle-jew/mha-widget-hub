@@ -303,6 +303,16 @@
   gap: var(--mha-oneui-compact-dock-gap);
 }
 
+:host([data-theme-style="oneui"]) .mha-mobile-dock.is-paged {
+  padding-inline: 0;
+  scroll-padding-inline: 0;
+}
+
+:host([data-theme-style="oneui"]) .mha-mobile-dock.is-paged > .mha-dock-pages > .mha-dock-page {
+  box-sizing: border-box;
+  padding-inline: var(--mha-oneui-compact-dock-padding-inline);
+}
+
 @media (min-width: 768px) {
   :host([data-theme-style="oneui"][data-dock-position="bottom"]) {
     --mha-dock-unit-size: var(--mha-oneui-compact-dock-height);
@@ -319,22 +329,25 @@
   }
 
   :host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock.mha-dock {
-    --mha-dock-empty-width: min(100%, var(--mha-grid-matrix-width, 42rem));
+    --mha-oneui-bottom-dock-item-width: 6.95rem;
+    --mha-dock-empty-width: fit-content;
 
     align-self: start;
     justify-self: center;
-    inline-size: var(--mha-dock-empty-width);
-    width: var(--mha-dock-empty-width);
+    inline-size: fit-content;
+    width: fit-content;
     min-inline-size: 0;
     min-width: 0;
-    max-inline-size: var(--mha-dock-empty-width);
-    max-width: var(--mha-dock-empty-width);
+    max-inline-size: calc(100% - (var(--mha-page-padding, 1rem) * 2));
+    max-width: calc(100% - (var(--mha-page-padding, 1rem) * 2));
     block-size: var(--mha-oneui-compact-dock-height);
     min-block-size: var(--mha-oneui-compact-dock-height);
     max-block-size: var(--mha-oneui-compact-dock-height);
     padding-block: var(--mha-oneui-compact-dock-padding-block);
     padding-inline: var(--mha-oneui-compact-dock-padding-inline);
     gap: var(--mha-oneui-compact-dock-gap);
+    justify-content: start;
+    overflow-x: visible;
   }
 }
 
@@ -362,9 +375,20 @@
   overflow: hidden;
 }
 
+:host([data-theme-style="oneui"]) .mha-mobile-dock.is-paged .mha-mobile-dock-item {
+  inline-size: 100%;
+  min-inline-size: 0;
+  scroll-snap-align: none;
+}
+
 :host([data-theme-style="oneui"]) .mha-mobile-dock-item {
-  inline-size: var(--mha-mobile-dock-slot-width);
-  min-inline-size: var(--mha-mobile-dock-slot-width);
+  inline-size: 100%;
+  min-inline-size: 0;
+}
+
+:host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock-item {
+  inline-size: var(--mha-oneui-bottom-dock-item-width);
+  min-inline-size: var(--mha-oneui-bottom-dock-item-width);
 }
 
 :host([data-theme-style="oneui"]) .mha-mobile-dock-item[data-active="true"]::before,

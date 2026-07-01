@@ -789,9 +789,24 @@ _renderPageTransition(previousPage=null,nextPage=null){
   const snapshot=currentPanel&&currentRect?.width&&currentRect?.height
     ? currentPanel.cloneNode(true)
     : null;
+  const currentDock=this.shadowRoot?.querySelector?.(".mha-mobile-dock");
+  const dockScrollLeft=currentDock?.scrollLeft||0;
+  const dockPageIndex=currentDock?.classList?.contains?.("is-paged")&&currentDock?.clientWidth
+    ? Math.round(dockScrollLeft/currentDock.clientWidth)
+    : -1;
   const direction=this._getPageTransitionDirection();
 
   this.shadowRoot?.querySelectorAll?.(".mha-page-panel-snapshot")?.forEach?.(node=>node.remove());
+
+  const restoreMobileDockScroll=()=>{
+    const dock=this.shadowRoot?.querySelector?.(".mha-mobile-dock");
+    if(!dock)return;
+    if(dockPageIndex>=0&&dock.clientWidth){
+      dock.scrollLeft=dockPageIndex*dock.clientWidth;
+      return;
+    }
+    dock.scrollLeft=dockScrollLeft;
+  };
 
   if(snapshot){
     snapshot.classList.add("mha-page-panel-snapshot","mha-page-panel-snapshot--leaving");
@@ -803,6 +818,8 @@ _renderPageTransition(previousPage=null,nextPage=null){
   }
 
   this.render();
+  restoreMobileDockScroll();
+  requestAnimationFrame(()=>restoreMobileDockScroll());
 
   if(prefersReducedMotion)return;
 

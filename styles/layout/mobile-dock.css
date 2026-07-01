@@ -79,6 +79,31 @@
     justify-content: start;
   }
 
+  .mha-mobile-dock.is-paged {
+    display: block;
+  }
+
+  .mha-mobile-dock.is-paged > .mha-dock-pages {
+    display: flex;
+    inline-size: calc(100% * var(--mha-mobile-dock-page-count, 1));
+    min-inline-size: calc(100% * var(--mha-mobile-dock-page-count, 1));
+    block-size: 100%;
+  }
+
+  .mha-mobile-dock.is-paged > .mha-dock-pages > .mha-dock-page {
+    flex: 0 0 calc(100% / var(--mha-mobile-dock-page-count, 1));
+    inline-size: calc(100% / var(--mha-mobile-dock-page-count, 1));
+    min-inline-size: calc(100% / var(--mha-mobile-dock-page-count, 1));
+    block-size: 100%;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    align-items: center;
+    justify-items: center;
+    gap: var(--mha-mobile-dock-gap);
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
   .mha-mobile-dock-item {
     position: relative;
     display: grid;
@@ -95,6 +120,12 @@
     cursor: pointer;
     justify-self: center;
     scroll-snap-align: start;
+  }
+
+  .mha-mobile-dock.is-paged .mha-mobile-dock-item {
+    inline-size: 100%;
+    min-inline-size: 0;
+    scroll-snap-align: none;
   }
 
   .mha-mobile-dock-item > .mha-icon {

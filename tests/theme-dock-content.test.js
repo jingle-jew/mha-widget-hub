@@ -9,7 +9,6 @@ import {
 test("theme dock content manifests keep the current default dock structure", () => {
   assert.deepEqual(getDefaultThemeDockItems(), [
     { type: "pages" },
-    { type: "edit-actions" },
     {
       type: "action",
       action: "settings",
@@ -17,6 +16,7 @@ test("theme dock content manifests keep the current default dock structure", () 
       category: "system",
       labelKey: "settings",
     },
+    { type: "edit-actions" },
   ]);
 });
 
