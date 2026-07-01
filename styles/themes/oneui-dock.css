@@ -401,3 +401,65 @@
     max-inline-size: none;
   }
 }
+
+
+/* OneUI compact/bottom dock shared rhythm ----------------------------------
+ * Mobile dock and tablet/desktop bottom dock use the same static scalable
+ * contract: fixed rhythm, four visible pills, no viewport-driven drift.
+ */
+:host([data-theme-style="oneui"]) {
+  --mha-oneui-compact-dock-visible-items: 4;
+  --mha-oneui-compact-dock-width: min(24rem, calc(100vw - 2rem));
+  --mha-oneui-compact-dock-height: 4.65rem;
+  --mha-oneui-compact-dock-padding-inline: .22rem;
+  --mha-oneui-compact-dock-padding-block: .2rem;
+  --mha-oneui-compact-dock-gap: .18rem;
+  --mha-oneui-compact-dock-icon-size: 2.42rem;
+  --mha-oneui-compact-dock-item-height: 4.25rem;
+}
+
+:host([data-theme-style="oneui"]) .mha-mobile-dock,
+:host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock.mha-dock {
+  --mha-mobile-dock-gap: var(--mha-oneui-compact-dock-gap);
+  --mha-mobile-dock-padding: var(--mha-oneui-compact-dock-padding-block);
+  --mha-dock-empty-width: var(--mha-oneui-compact-dock-width);
+  --mha-dock-empty-height: var(--mha-oneui-compact-dock-height);
+  --mha-dock-empty-padding-inline: var(--mha-oneui-compact-dock-padding-inline);
+  --mha-dock-empty-padding-block: var(--mha-oneui-compact-dock-padding-block);
+  --mha-dock-gap: var(--mha-oneui-compact-dock-gap);
+  --mha-icon-size: var(--mha-oneui-compact-dock-icon-size);
+}
+
+:host([data-theme-style="oneui"]) .mha-mobile-dock {
+  inline-size: var(--mha-oneui-compact-dock-width);
+  min-inline-size: var(--mha-oneui-compact-dock-width);
+  max-inline-size: var(--mha-oneui-compact-dock-width);
+  min-block-size: var(--mha-oneui-compact-dock-height);
+  padding-block: var(--mha-oneui-compact-dock-padding-block);
+  padding-inline: var(--mha-oneui-compact-dock-padding-inline);
+  gap: var(--mha-oneui-compact-dock-gap);
+}
+
+:host([data-theme-style="oneui"]) .mha-mobile-dock-item,
+:host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock-item {
+  inline-size: calc(
+    (
+      100% -
+      (var(--mha-oneui-compact-dock-gap) * (var(--mha-oneui-compact-dock-visible-items) - 1))
+    ) / var(--mha-oneui-compact-dock-visible-items)
+  );
+  min-inline-size: 0;
+  max-inline-size: none;
+  block-size: var(--mha-oneui-compact-dock-item-height);
+  min-block-size: var(--mha-oneui-compact-dock-item-height);
+  aspect-ratio: auto;
+}
+
+@media (max-width: 430px) {
+  :host([data-theme-style="oneui"]) {
+    --mha-oneui-compact-dock-width: min(21.75rem, calc(100vw - 1.5rem));
+    --mha-oneui-compact-dock-height: 4.4rem;
+    --mha-oneui-compact-dock-icon-size: 2.28rem;
+    --mha-oneui-compact-dock-item-height: 4rem;
+  }
+}
