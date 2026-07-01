@@ -75,7 +75,7 @@ export function syncDocks(root, props = {}) {
   const mobileDock = root.querySelector(".mha-mobile-dock");
 
   if (props.usesDock === false) {
-    removeDockNode(dock);
+    removeDockNode(dock?.closest?.(".mha-dock-zone") || dock);
     removeDockNode(mobileDock);
     return true;
   }
