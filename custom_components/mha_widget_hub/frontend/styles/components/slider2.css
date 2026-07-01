@@ -23,7 +23,6 @@
   overflow: hidden;
   isolation: isolate;
   border-radius: var(--slider2-radius);
-  touch-action: none;
 }
 
 :host([data-theme-style="ios"]) .slider2__surface,
@@ -106,12 +105,11 @@
 :host([data-theme-style="ios"]) .slider2 .mha-slider-input {
   opacity: 0;
   cursor: pointer;
-  touch-action: none;
 }
 
-:host([data-theme-style="ios"].is-editing) .mha-widget[data-widget-kind="toggle-slider"] .slider2,
-:host([data-theme-style="ios"].is-editing) .mha-widget[data-widget-kind="toggle-slider"] .slider2 .mha-slider-input {
-  pointer-events: auto !important;
+:host([data-theme-style="ios"]) .slider2.is-slider-dragging,
+:host([data-theme-style="ios"]) .slider2.is-slider-dragging .mha-slider-input {
+  touch-action: none;
 }
 
 :host([data-theme-style="ios"]) .slider2 .mha-slider-oneui-track {
