@@ -18,6 +18,7 @@ export function buildSettingsPanelState({
   activeDockPageId = "",
   selectedDockPageId = "",
   dockPosition = "left",
+  isMobileLayout = false,
   customWallpapers = {},
   hass = null,
   entityVisibilityConfig = null,
@@ -55,6 +56,7 @@ export function buildSettingsPanelState({
     activeDockPageId,
     selectedDockPageId,
     dockPosition,
+    isMobileLayout,
     customWallpapers,
   };
 }
