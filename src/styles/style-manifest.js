@@ -58,6 +58,7 @@ const STATIC_STYLE_MANIFEST_AFTER_THEMES = Object.freeze([
   entry("styles/settings/settings-bottom.css", "component"),
   entry("styles/themes/light-text-contract.css", "theme"),
   entry("styles/widgets/widget-layout.css", "structure"),
+  entry("styles/layout/layout-density-breakpoints.css", "structure"),
   entry("styles/widgets/widget-shell.css", "structure"),
   entry("styles/widgets/widget-drag.css", "structure"),
   entry("styles/widgets/widget-shell-contract.css", "structure"),
