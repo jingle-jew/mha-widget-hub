@@ -677,3 +677,42 @@
 /* This widget scales from the widget/container contract rather than explicit
  * viewport breakpoints in this file.
  */
+
+
+/* OneUI mobile SliderWidget -------------------------------------------------
+ * Keep the standalone slider visual ratio close to tablet/desktop instead of
+ * letting it shrink into the middle of its card.
+ */
+@media (max-width: 767px) {
+  :host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="slider"] {
+    --mha-slider-widget-safe-inset: calc(var(--mha-widget-inner-padding) * .58);
+  }
+
+  :host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="slider"] .mha-slider-widget-frame {
+    inset: var(--mha-slider-widget-safe-inset);
+  }
+
+  :host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="slider"] .mha-slider[data-orientation="horizontal"] .mha-slider-rotor {
+    block-size: min(100%, calc(var(--mha-slider-control-height) * 1.22));
+  }
+
+  :host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="slider"] .mha-slider[data-orientation="vertical"] .mha-slider-rotor {
+    inline-size: min(100%, calc(var(--mha-slider-control-height) * 1.22));
+  }
+}
+
+
+/* OneUI mobile SliderWidget: use more of the card like tablet/desktop ------ */
+@media (max-width: 767px) {
+  :host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="slider"] {
+    --mha-slider-widget-safe-inset: calc(var(--mha-widget-inner-padding) * .32);
+  }
+
+  :host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="slider"] .mha-slider[data-orientation="horizontal"] .mha-slider-rotor {
+    block-size: min(100%, calc(var(--mha-slider-control-height) * 1.38));
+  }
+
+  :host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="slider"] .mha-slider[data-orientation="vertical"] .mha-slider-rotor {
+    inline-size: min(100%, calc(var(--mha-slider-control-height) * 1.38));
+  }
+}

@@ -163,17 +163,6 @@
 }
 
 @media (max-width: 767px) {
-  :host([data-theme-style="oneui"]) .mha-mobile-dock-item {
-    display: grid;
-    grid-template-rows: var(--mha-icon-size) auto;
-    align-content: center;
-    justify-items: center;
-    row-gap: clamp(.08rem, .26vw, .16rem);
-    min-inline-size: 0;
-    block-size: calc(var(--mha-icon-size) + 1.1rem);
-    min-block-size: calc(var(--mha-icon-size) + 1.1rem);
-  }
-
   :host([data-theme-style="oneui"]) .mha-mobile-dock-item > .mha-dock-item-label {
     display: block;
     inline-size: 100%;
@@ -183,7 +172,7 @@
     text-overflow: ellipsis;
     text-align: center;
     white-space: nowrap;
-    padding-inline: clamp(.08rem, .06rem + .12vw, .12rem);
+    padding-inline: .12rem;
   }
 }
 
@@ -256,16 +245,6 @@
   }
 
   :host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock-item {
-    display: grid;
-    grid-template-rows: var(--mha-icon-size) auto;
-    align-content: center;
-    justify-items: center;
-    row-gap: clamp(.08rem, .2vw, .14rem);
-    inline-size: calc(var(--mha-icon-size) + clamp(.52rem, .95vw, .78rem));
-    min-inline-size: calc(var(--mha-icon-size) + clamp(.52rem, .95vw, .78rem));
-    block-size: calc(var(--mha-icon-size) + 1rem);
-    min-block-size: calc(var(--mha-icon-size) + 1rem);
-    aspect-ratio: auto;
     overflow: hidden;
   }
 
@@ -278,6 +257,148 @@
     text-overflow: ellipsis;
     text-align: center;
     white-space: nowrap;
-    padding-inline: clamp(.08rem, .06rem + .12vw, .12rem);
+    padding-inline: .12rem;
+  }
+}
+
+/* OneUI compact/bottom dock shared contract ---------------------------------
+ * Mobile dock and tablet/desktop bottom dock use one stable geometry:
+ * fixed padding/gap rhythm, four visible pills, and an active capsule that
+ * follows the item instead of viewport-driven clamps.
+ */
+:host([data-theme-style="oneui"]) {
+  --mha-oneui-compact-dock-visible-items: 4;
+  --mha-oneui-compact-dock-width: var(--mha-mobile-dock-width, calc(100vw - (var(--mha-mobile-dock-edge, var(--mha-page-padding, 1rem)) * 2)));
+  --mha-oneui-compact-dock-height: 4.55rem;
+  --mha-oneui-compact-dock-padding-inline: .24rem;
+  --mha-oneui-compact-dock-padding-block: .2rem;
+  --mha-oneui-compact-dock-gap: .18rem;
+  --mha-oneui-compact-dock-icon-size: 2.34rem;
+  --mha-oneui-compact-dock-item-height: 4.15rem;
+  --mha-oneui-compact-dock-item-row-gap: .1rem;
+  --mha-oneui-compact-dock-item-padding-inline: .12rem;
+  --mha-oneui-compact-dock-item-padding-block-start: .22rem;
+  --mha-oneui-compact-dock-item-padding-block-end: .24rem;
+  --mha-oneui-compact-dock-active-inset: .08rem;
+}
+
+:host([data-theme-style="oneui"]) .mha-mobile-dock,
+:host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock.mha-dock {
+  --mha-mobile-dock-gap: var(--mha-oneui-compact-dock-gap);
+  --mha-mobile-dock-padding: var(--mha-oneui-compact-dock-padding-block);
+  --mha-dock-empty-height: var(--mha-oneui-compact-dock-height);
+  --mha-dock-empty-padding-inline: var(--mha-oneui-compact-dock-padding-inline);
+  --mha-dock-empty-padding-block: var(--mha-oneui-compact-dock-padding-block);
+  --mha-dock-gap: var(--mha-oneui-compact-dock-gap);
+  --mha-icon-size: var(--mha-oneui-compact-dock-icon-size);
+}
+
+:host([data-theme-style="oneui"]) .mha-mobile-dock {
+  inline-size: var(--mha-oneui-compact-dock-width);
+  min-inline-size: 0;
+  max-inline-size: var(--mha-oneui-compact-dock-width);
+  min-block-size: var(--mha-oneui-compact-dock-height);
+  padding-block: var(--mha-oneui-compact-dock-padding-block);
+  padding-inline: var(--mha-oneui-compact-dock-padding-inline);
+  gap: var(--mha-oneui-compact-dock-gap);
+}
+
+@media (min-width: 768px) {
+  :host([data-theme-style="oneui"][data-dock-position="bottom"]) {
+    --mha-dock-unit-size: var(--mha-oneui-compact-dock-height);
+    --mha-bottom-dock-clearance: 1rem;
+    --mha-bottom-dock-height: calc(
+      var(--mha-oneui-compact-dock-height) + var(--mha-bottom-dock-clearance)
+    );
+  }
+
+  :host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock-zone {
+    align-items: flex-start;
+    justify-content: center;
+    overflow: visible;
+  }
+
+  :host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock.mha-dock {
+    --mha-dock-empty-width: min(100%, var(--mha-grid-matrix-width, 42rem));
+
+    align-self: start;
+    justify-self: center;
+    inline-size: var(--mha-dock-empty-width);
+    width: var(--mha-dock-empty-width);
+    min-inline-size: 0;
+    min-width: 0;
+    max-inline-size: var(--mha-dock-empty-width);
+    max-width: var(--mha-dock-empty-width);
+    block-size: var(--mha-oneui-compact-dock-height);
+    min-block-size: var(--mha-oneui-compact-dock-height);
+    max-block-size: var(--mha-oneui-compact-dock-height);
+    padding-block: var(--mha-oneui-compact-dock-padding-block);
+    padding-inline: var(--mha-oneui-compact-dock-padding-inline);
+    gap: var(--mha-oneui-compact-dock-gap);
+  }
+}
+
+:host([data-theme-style="oneui"]) .mha-mobile-dock-item,
+:host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock-item {
+  display: grid;
+  grid-template-rows: var(--mha-icon-size) auto;
+  align-content: center;
+  justify-items: center;
+  row-gap: var(--mha-oneui-compact-dock-item-row-gap);
+  justify-self: stretch;
+  inline-size: calc(
+    (
+      100% -
+      (var(--mha-oneui-compact-dock-gap) * (var(--mha-oneui-compact-dock-visible-items) - 1))
+    ) / var(--mha-oneui-compact-dock-visible-items)
+  );
+  min-inline-size: 0;
+  max-inline-size: none;
+  block-size: var(--mha-oneui-compact-dock-item-height);
+  min-block-size: var(--mha-oneui-compact-dock-item-height);
+  padding-block: var(--mha-oneui-compact-dock-item-padding-block-start) var(--mha-oneui-compact-dock-item-padding-block-end);
+  padding-inline: var(--mha-oneui-compact-dock-item-padding-inline);
+  aspect-ratio: auto;
+  overflow: hidden;
+}
+
+:host([data-theme-style="oneui"]) .mha-mobile-dock-item {
+  inline-size: var(--mha-mobile-dock-slot-width);
+  min-inline-size: var(--mha-mobile-dock-slot-width);
+}
+
+:host([data-theme-style="oneui"]) .mha-mobile-dock-item[data-active="true"]::before,
+:host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock-item[data-active="true"]::before {
+  inset: var(--mha-oneui-compact-dock-active-inset);
+  border-radius: 999px;
+}
+
+:host([data-theme-style="oneui"]) .mha-mobile-dock-item > .mha-icon,
+:host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock-item > .mha-icon {
+  align-self: end;
+}
+
+:host([data-theme-style="oneui"]) .mha-mobile-dock-item > .mha-dock-item-label,
+:host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock-item > .mha-dock-item-label {
+  display: block;
+  inline-size: 100%;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  align-self: start;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+  white-space: nowrap;
+  padding-inline: .12rem;
+}
+
+@media (max-width: 430px) {
+  :host([data-theme-style="oneui"]) {
+    --mha-oneui-compact-dock-height: 4.35rem;
+    --mha-oneui-compact-dock-padding-inline: .2rem;
+    --mha-oneui-compact-dock-gap: .16rem;
+    --mha-oneui-compact-dock-icon-size: 2.22rem;
+    --mha-oneui-compact-dock-item-height: 3.95rem;
+    --mha-oneui-compact-dock-item-padding-inline: .1rem;
   }
 }
