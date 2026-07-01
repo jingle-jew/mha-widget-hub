@@ -5,6 +5,11 @@
 }
 
 :host([data-layout="mobile"].is-editing) .mha-widget {
+  /* Mobile Scroll Addendum:
+   * This is a product-level interaction decision, not a visual tweak.
+   * Edit-mode drag reliability currently takes precedence over scrolling
+   * directly on a widget surface. Revisit only with an explicit UX change.
+   */
   touch-action: none;
 }
 

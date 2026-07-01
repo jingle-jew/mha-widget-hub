@@ -362,6 +362,7 @@ export function createRenderPipeline(host, options = {}) {
     }
     if (layout === "mobile") {
       host.shadowRoot.append(createMobileDock(host._getDockProps()));
+      host._scheduleMobileDockOverflowState?.();
     }
     appendPrimaryControls();
     host._wireDockAutoHide(activeSurface);
@@ -388,6 +389,7 @@ export function createRenderPipeline(host, options = {}) {
     if (host._renderId !== renderId) return;
     host._stylesReadyRenderId = renderId;
     host._observeLayoutSize();
+    host._scheduleMobileDockOverflowState?.();
     host._scheduleIconSymbolRefresh();
     if (host._bootComplete) {
       appendDeferredUi({ layout, renderId });

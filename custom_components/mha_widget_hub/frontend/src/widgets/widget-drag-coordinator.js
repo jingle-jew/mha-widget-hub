@@ -17,6 +17,29 @@ const BLOCKED_DRAG_START_SELECTOR = [
   "[data-resize-handle='true']",
 ].join(",");
 
+/*
+ * MHA Core Drag/Edit Contract
+ *
+ * Shared by mobile, tablet, and desktop:
+ * - read: no widget drag, no drop slots, no move target
+ * - edit-idle: widgets may enter drag-pending
+ * - drag-pending: a valid pointerdown is waiting for long-press arm; movement
+ *   beyond tolerance cancels the pending session
+ * - drag-armed: _activeMoveWidgetId is the single source of truth; visible
+ *   drop slots belong only to that widget; drag wins over concurrent
+ *   interactions
+ * - resizing: resize blocks drag start
+ *
+ * Mobile Scroll Addendum:
+ * - mobile is the only layout where page scroll competes with widget drag
+ * - current product decision favors reliable drag over scrolling directly on a
+ *   widget while edit mode is active
+ * - accepted workflow: scroll first, enter edit mode second, then move/edit
+ *
+ * Any change to touch-action or drag start surfaces is a contract change and
+ * must be evaluated as such, not as a visual-only tweak.
+ */
+
 function isPrimaryPointer(event) {
   if (event?.button != null && event.button !== 0) return false;
   return true;

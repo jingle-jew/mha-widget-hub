@@ -221,6 +221,7 @@ test("responsive dock coordinator scrolls the mobile dock to the end when editin
 
   const scrollCalls = [];
   const dock = {
+    dataset: {},
     scrollWidth: 640,
     clientWidth: 320,
     scrollLeft: 0,
@@ -250,22 +251,38 @@ test("responsive dock coordinator scrolls the mobile dock to the end when editin
     const coordinator = createResponsiveDockCoordinator(host);
 
     coordinator.syncDocksDom();
-    assert.equal(rafCallbacks.length, 0);
+    assert.equal(rafCallbacks.length, 1);
+    rafCallbacks.shift()?.();
+    assert.equal(dock.dataset.overflowing, "true");
 
     host._isEditing = true;
     coordinator.syncDocksDom();
-    assert.equal(rafCallbacks.length, 1);
+    assert.equal(rafCallbacks.length, 2);
+    rafCallbacks.shift()?.();
+    assert.equal(dock.dataset.overflowing, "true");
     rafCallbacks.shift()?.();
     assert.deepEqual(scrollCalls, [{ left: 640, behavior: "smooth" }]);
 
     coordinator.syncDocksDom();
-    assert.equal(rafCallbacks.length, 0);
+    assert.equal(rafCallbacks.length, 1);
+    rafCallbacks.shift()?.();
 
     host._isEditing = false;
     coordinator.syncDocksDom();
+    assert.equal(rafCallbacks.length, 1);
+    rafCallbacks.shift()?.();
+    assert.equal(dock.dataset.overflowing, "true");
+
     host._isEditing = true;
     coordinator.syncDocksDom();
-    assert.equal(rafCallbacks.length, 1);
+    assert.equal(rafCallbacks.length, 2);
+    rafCallbacks.shift()?.();
+    assert.equal(dock.dataset.overflowing, "true");
+    rafCallbacks.shift()?.();
+    assert.deepEqual(scrollCalls, [
+      { left: 640, behavior: "smooth" },
+      { left: 640, behavior: "smooth" },
+    ]);
   } finally {
     globalThis.window = previousWindow;
     globalThis.requestAnimationFrame = previousRaf;
@@ -290,6 +307,7 @@ test("responsive dock coordinator skips auto-scroll outside mobile or without ov
   globalThis.cancelAnimationFrame = () => {};
 
   const dock = {
+    dataset: {},
     scrollWidth: 320,
     clientWidth: 320,
     scrollLeft: 0,
@@ -317,14 +335,100 @@ test("responsive dock coordinator skips auto-scroll outside mobile or without ov
   try {
     const coordinator = createResponsiveDockCoordinator(host);
     coordinator.syncDocksDom();
-    assert.equal(rafCallbacks.length, 0);
+    assert.equal(rafCallbacks.length, 1);
+    rafCallbacks.shift()?.();
+    assert.equal(dock.dataset.overflowing, "false");
 
     host.dataset.layout = "mobile";
     coordinator.syncMobileDockEditScroll();
     assert.equal(rafCallbacks.length, 0);
+    coordinator.syncMobileDockOverflowState();
+    assert.equal(dock.dataset.overflowing, "false");
   } finally {
     globalThis.window = previousWindow;
     globalThis.requestAnimationFrame = previousRaf;
     globalThis.cancelAnimationFrame = previousCancelRaf;
+  }
+});
+
+test("responsive dock coordinator schedules initial mobile dock overflow measurement", () => {
+  const previousWindow = globalThis.window;
+  const previousRaf = globalThis.requestAnimationFrame;
+  const previousCancelRaf = globalThis.cancelAnimationFrame;
+  const rafCallbacks = [];
+  globalThis.window = {
+    matchMedia(query) {
+      return { matches: query === "(orientation: landscape)" ? false : false };
+    },
+  };
+  globalThis.requestAnimationFrame = (callback) => {
+    rafCallbacks.push(callback);
+    return rafCallbacks.length;
+  };
+  globalThis.cancelAnimationFrame = () => {};
+
+  const dock = {
+    dataset: {},
+    scrollWidth: 640,
+    clientWidth: 320,
+  };
+  const host = {
+    shadowRoot: {
+      querySelector(selector) {
+        assert.equal(selector, ".mha-mobile-dock");
+        return dock;
+      },
+    },
+    dataset: { layout: "mobile" },
+    classList: createClassList(),
+  };
+
+  try {
+    const coordinator = createResponsiveDockCoordinator(host);
+    coordinator.scheduleMobileDockOverflowState();
+    assert.equal(rafCallbacks.length, 1);
+    rafCallbacks.shift()?.();
+    assert.equal(dock.dataset.overflowing, "true");
+  } finally {
+    globalThis.window = previousWindow;
+    globalThis.requestAnimationFrame = previousRaf;
+    globalThis.cancelAnimationFrame = previousCancelRaf;
+  }
+});
+
+test("responsive dock coordinator marks the mobile dock as non-overflowing or overflowing", () => {
+  const previousWindow = globalThis.window;
+  globalThis.window = {
+    matchMedia(query) {
+      return { matches: query === "(orientation: landscape)" ? false : false };
+    },
+  };
+
+  const dock = {
+    dataset: {},
+    scrollWidth: 320,
+    clientWidth: 320,
+  };
+  const host = {
+    shadowRoot: {
+      querySelector(selector) {
+        assert.equal(selector, ".mha-mobile-dock");
+        return dock;
+      },
+    },
+    dataset: { layout: "mobile" },
+    classList: createClassList(),
+  };
+
+  try {
+    const coordinator = createResponsiveDockCoordinator(host);
+    assert.equal(coordinator.syncMobileDockOverflowState(), false);
+    assert.equal(dock.dataset.overflowing, "false");
+
+    dock.scrollWidth = 640;
+    assert.equal(coordinator.syncMobileDockOverflowState(), true);
+    assert.equal(dock.dataset.overflowing, "true");
+  } finally {
+    globalThis.window = previousWindow;
   }
 });

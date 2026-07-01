@@ -97,12 +97,6 @@ export function createDefaultPages({ normalizeWidget = identity } = {}) {
       widgets: [],
     },
     {
-      id: "page-3",
-      name: "Page 3",
-      icon: "grid",
-      widgets: [],
-    },
-    {
       id: "media",
       name: "Media Players",
       icon: "media-player",

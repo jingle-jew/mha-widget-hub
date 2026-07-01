@@ -37,6 +37,8 @@ test("weather-capable widgets expose configuration without affecting other clock
 test("widget capabilities and flows are read from the widget contract", () => {
   assert.equal(getWidgetCapabilities({ kind: "clock", variant: "digital" }).configurable, false);
   assert.equal(getWidgetCapabilities({ kind: "clock", variant: "digital-weather" }).weatherEntityConfigurable, true);
+  assert.equal(getWidgetShellBehavior({ kind: "clock", variant: "digital" }).configureMode, "variant");
+  assert.equal(getWidgetShellBehavior({ kind: "clock", variant: "digital-weather" }).configureMode, "config");
   assert.equal(getWidgetShellBehavior({ kind: "scenes" }).configureMode, "variant");
   assert.equal(getWidgetPlacementFlow({ kind: "scenes" }), "slot-config-first");
   assert.equal(getWidgetPlacementFlow({ kind: "button" }), "configure-first");

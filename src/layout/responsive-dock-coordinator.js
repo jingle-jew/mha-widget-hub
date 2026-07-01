@@ -3,12 +3,33 @@ import { DOCK_POSITION, normalizeDockPosition } from "../core/mha-persistence.js
 import { syncDockActiveState } from "./dock-controller.js";
 
 export function createResponsiveDockCoordinator(host) {
+  function scheduleMobileDockOverflowState() {
+    cancelAnimationFrame(host._mobileDockOverflowFrame || 0);
+    host._mobileDockOverflowFrame = requestAnimationFrame(() => {
+      host._mobileDockOverflowFrame = 0;
+      syncMobileDockOverflowState();
+    });
+  }
+
+  function syncMobileDockOverflowState() {
+    const dock = host.shadowRoot?.querySelector?.(".mha-mobile-dock");
+    if (!dock) return false;
+    if (!isMobileLauncherLayout() || isMobileLandscapeLayout()) {
+      dock.dataset.overflowing = "false";
+      return false;
+    }
+    const overflowing = dock.scrollWidth > dock.clientWidth + 1;
+    dock.dataset.overflowing = String(overflowing);
+    return overflowing;
+  }
+
   function scheduleMobileDockEditScroll() {
     cancelAnimationFrame(host._mobileDockEditScrollFrame || 0);
     host._mobileDockEditScrollFrame = requestAnimationFrame(() => {
       host._mobileDockEditScrollFrame = 0;
       const dock = host.shadowRoot?.querySelector?.(".mha-mobile-dock");
       if (!dock) return;
+      syncMobileDockOverflowState();
       if (!isMobileLauncherLayout() || isMobileLandscapeLayout()) return;
       if (!host._isEditing || host._activeMoveWidgetId || host._pendingWidgetPlacement) return;
       if (dock.scrollWidth <= dock.clientWidth + 1) return;
@@ -55,6 +76,7 @@ export function createResponsiveDockCoordinator(host) {
 
   function syncDocksDom() {
     const result = host._pageUiCoordinator.syncDocks();
+    scheduleMobileDockOverflowState();
     syncMobileDockEditScroll();
     return result;
   }
@@ -145,6 +167,8 @@ export function createResponsiveDockCoordinator(host) {
   return {
     isMobileLauncherLayout,
     isMobileLandscapeLayout,
+    scheduleMobileDockOverflowState,
+    syncMobileDockOverflowState,
     syncMobileDockEditScroll,
     updateDockActiveState,
     syncDocksDom,

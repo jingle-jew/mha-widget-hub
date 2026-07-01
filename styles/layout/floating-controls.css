@@ -353,7 +353,8 @@
   --mha-touch-edit-pill-height: max(var(--mha-control-height, 34px), 2rem);
   --mha-touch-edit-pill-width: calc(var(--mha-touch-edit-pill-height) + clamp(.45rem, 1.25vw, .7rem));
   --mha-touch-edit-pill-radius: var(--mha-radius-pill, var(--mha-control-radius, 999px));
-  --mha-touch-edit-pill-icon-size: var(--mha-control-icon-glyph-size, 52%);
+  --mha-touch-edit-pill-icon-size: calc(var(--mha-touch-edit-pill-height) * .56);
+  --mha-touch-edit-pill-icon-min-size: max(1rem, calc(var(--mha-touch-edit-pill-height) * .56));
 }
 
 :host([data-layout="mobile"]) .mha-primary-edit-button[data-touch-edit-close="true"],
@@ -378,6 +379,7 @@
 :host([data-layout="tablet"]) .mha-primary-edit-button[data-touch-edit-close="true"] .mha-floating-control-symbol,
 :host([data-layout="tablet"].is-editing) .mha-add-widget-button:not([hidden]) .mha-floating-control-symbol {
   --mha-icon-symbol-size: var(--mha-touch-edit-pill-icon-size);
+  --mha-icon-symbol-min-size: var(--mha-touch-edit-pill-icon-min-size);
 }
 
 :host([data-layout="mobile"]) .mha-primary-edit-button[data-touch-edit-close="true"] {

@@ -245,3 +245,87 @@ test("canStartWidgetDrag still blocks resize handles and non-primary starts", ()
     event: { button: 1, target: { closest() { return null; } } },
   }), false);
 });
+
+test("canStartWidgetDrag stays available on tablet layouts", () => {
+  const host = {
+    _isEditing: true,
+    dataset: { layout: "tablet" },
+    _isMobileLandscapeLayout() {
+      return false;
+    },
+    _isResizeHandleEvent() {
+      return false;
+    },
+  };
+
+  assert.equal(canStartWidgetDrag({
+    host,
+    element: {},
+    widgetId: "clock",
+    event: { button: 0, target: { closest() { return null; } } },
+  }), true);
+});
+
+test("widget drag cleanup on pointercancel clears pending and armed classes", () => {
+  const widget = createWidgetElement();
+  const host = {
+    _isEditing: true,
+    _activeMoveWidgetId: "",
+    _pendingWidgetPlacement: null,
+    _isMobileLandscapeLayout() {
+      return false;
+    },
+    _isResizeHandleEvent() {
+      return false;
+    },
+    _syncEditModeDom() {},
+    _syncWidgetDropSlots() {},
+    classList: createClassList(),
+  };
+
+  const previousSetTimeout = globalThis.setTimeout;
+  const previousClearTimeout = globalThis.clearTimeout;
+  let armedCallback = null;
+  globalThis.setTimeout = (callback) => {
+    armedCallback = callback;
+    return 1;
+  };
+  globalThis.clearTimeout = () => {
+    armedCallback = null;
+  };
+
+  try {
+    const coordinator = createWidgetDragCoordinator(host);
+    coordinator.wireWidget(widget, { id: "clock" });
+
+    widget.listeners.get("pointerdown")?.({
+      pointerId: 11,
+      button: 0,
+      clientX: 10,
+      clientY: 20,
+      target: widget,
+    });
+    assert.equal(host.classList.contains("is-widget-drag-pending"), true);
+
+    widget.listeners.get("pointercancel")?.();
+    assert.equal(host.classList.contains("is-widget-drag-pending"), false);
+    assert.equal(host.classList.contains("is-widget-dragging"), false);
+
+    widget.listeners.get("pointerdown")?.({
+      pointerId: 12,
+      button: 0,
+      clientX: 10,
+      clientY: 20,
+      target: widget,
+    });
+    armedCallback?.();
+    assert.equal(host.classList.contains("is-widget-dragging"), true);
+
+    widget.listeners.get("pointercancel")?.();
+    assert.equal(host.classList.contains("is-widget-drag-pending"), false);
+    assert.equal(host.classList.contains("is-widget-dragging"), false);
+  } finally {
+    globalThis.setTimeout = previousSetTimeout;
+    globalThis.clearTimeout = previousClearTimeout;
+  }
+});

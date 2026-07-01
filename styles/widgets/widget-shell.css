@@ -41,6 +41,37 @@
   -webkit-user-drag: none;
 }
 
+/* Widgets are never editable text surfaces. Prevent native text selection and
+ * iOS/Android callout handles from stealing long-press gestures near cards.
+ */
+.mha-widget,
+.mha-widget :not(input):not(select):not(textarea) {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Text content inside widgets is presentation-only. Keep controls interactive,
+ * but never let plain copy act as its own pointer target.
+ */
+.mha-widget :is(
+  p,
+  span,
+  strong,
+  em,
+  b,
+  small,
+  time,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6
+) {
+  pointer-events: none;
+}
+
 .mha-widget[draggable="true"] {
   cursor: default;
 }
