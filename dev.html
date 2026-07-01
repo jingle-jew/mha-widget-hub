@@ -280,6 +280,20 @@
             { condition: "cloudy", temperature: 20, templow: 13 },
           ],
         }),
+        "weather.home": createMockEntity("weather.home", "partlycloudy", {
+          friendly_name: "Maison",
+          temperature: 22,
+          temperature_unit: "°C",
+          humidity: 48,
+          wind_speed: 9,
+          wind_speed_unit: "km/h",
+          forecast: [
+            { condition: "partlycloudy", temperature: 23, templow: 14 },
+            { condition: "sunny", temperature: 25, templow: 15 },
+            { condition: "rainy", temperature: 19, templow: 12 },
+            { condition: "cloudy", temperature: 20, templow: 13 },
+          ],
+        }),
       };
 
       return {

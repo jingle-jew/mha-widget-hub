@@ -320,7 +320,7 @@ export const CLOCK_WIDGET_DEFINITION = Object.freeze({
     ),
   }),
   shell: Object.freeze({
-    configureMode: "variant",
+    configureMode: (widget = {}) => (widget.variant === "digital-weather" ? "config" : "variant"),
   }),
   placementFlow: "direct",
   variants: [
