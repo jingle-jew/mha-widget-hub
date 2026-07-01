@@ -4,6 +4,7 @@ import { t } from "../i18n/index.js";
 
 function createMobileDockIconButton(item, { className = "", active = false, onClick } = {}) {
   const button = document.createElement("button");
+  const label = document.createElement("span");
   button.className = ["mha-mobile-dock-item", className].filter(Boolean).join(" ");
   button.type = "button";
   button.setAttribute("aria-label", item.label);
@@ -24,6 +25,10 @@ function createMobileDockIconButton(item, { className = "", active = false, onCl
       }),
     }),
   );
+  label.className = "mha-dock-item-label";
+  label.textContent = item.label;
+  label.setAttribute("aria-hidden", "true");
+  button.append(label);
 
   return button;
 }

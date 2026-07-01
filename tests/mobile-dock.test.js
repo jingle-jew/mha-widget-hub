@@ -77,6 +77,8 @@ test("mobile dock renders a direct nav without launcher, panel, or scrim", () =>
   assert.equal(dock.children.some(child => child.className === "mha-mobile-dock-scrim"), false);
   assert.equal(dock.children[1].dataset.active, "true");
   assert.equal(dock.children[1].attributes["aria-current"], "page");
+  assert.equal(dock.children[1].children[1]?.className, "mha-dock-item-label");
+  assert.equal(dock.children[1].children[1]?.textContent, "Lights");
 }));
 
 test("mobile dock keeps page and edit callbacks without the old panel flow", () => withMockDom(() => {

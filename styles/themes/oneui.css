@@ -159,9 +159,9 @@
 @media (max-width: 767px) {
   :host([data-theme-style="oneui"]) .mha-mobile-dock {
     --mha-mobile-dock-gap: clamp(.08rem, .3vw, .2rem);
-    --mha-mobile-dock-padding: clamp(.24rem, .72vw, .4rem);
+    --mha-mobile-dock-padding: clamp(.28rem, .8vw, .46rem);
     --mha-icon-size: clamp(2.65rem, 11vw, 3.35rem);
-    min-block-size: calc((var(--mha-icon-size) * 1.12) + (var(--mha-mobile-dock-padding) * 2));
+    min-block-size: calc(var(--mha-icon-size) + 1.45rem + (var(--mha-mobile-dock-padding) * 2));
   }
 }
 
@@ -220,15 +220,54 @@
 
 @media (max-width: 767px) {
   :host([data-theme-style="oneui"]) .mha-mobile-dock-item {
-    block-size: calc(var(--mha-icon-size) + clamp(.16rem, .45vw, .24rem));
-    min-block-size: calc(var(--mha-icon-size) + clamp(.16rem, .45vw, .24rem));
+    display: grid;
+    grid-template-rows: var(--mha-icon-size) auto;
+    align-content: center;
+    justify-items: center;
+    row-gap: clamp(.08rem, .26vw, .16rem);
+    block-size: calc(var(--mha-icon-size) + 1.1rem);
+    min-block-size: calc(var(--mha-icon-size) + 1.1rem);
   }
 }
 
 @media (min-width: 768px) {
   :host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock-item {
+    display: grid;
+    grid-template-rows: var(--mha-icon-size) auto;
+    align-content: center;
+    justify-items: center;
+    row-gap: clamp(.08rem, .2vw, .14rem);
     inline-size: calc(var(--mha-icon-size) + clamp(.52rem, .95vw, .78rem));
     min-inline-size: calc(var(--mha-icon-size) + clamp(.52rem, .95vw, .78rem));
+    block-size: calc(var(--mha-icon-size) + 1rem);
+    min-block-size: calc(var(--mha-icon-size) + 1rem);
+    aspect-ratio: auto;
+  }
+
+  :host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock.mha-dock {
+    --mha-dock-empty-height: clamp(4rem, 5.8vw, 4.8rem);
+  }
+}
+
+:host([data-theme-style="oneui"]) .mha-dock-item-label {
+  font-size: .66rem;
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: -.01em;
+  color: color-mix(in srgb, var(--mha-text) 84%, transparent);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+@media (max-width: 767px) {
+  :host([data-theme-style="oneui"]) .mha-mobile-dock-item > .mha-dock-item-label {
+    display: block;
+  }
+}
+
+@media (min-width: 768px) {
+  :host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock-item > .mha-dock-item-label {
+    display: block;
   }
 }
 

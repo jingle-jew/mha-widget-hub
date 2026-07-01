@@ -12,6 +12,7 @@ import { t } from "../i18n/index.js";
 
 function createDockIconButton(item, { className = "", active = false, onClick } = {}) {
   const button = document.createElement("button");
+  const label = document.createElement("span");
   button.className = ["mha-dock-item", className].filter(Boolean).join(" ");
   button.type = "button";
   button.setAttribute("aria-label", item.label);
@@ -32,6 +33,10 @@ function createDockIconButton(item, { className = "", active = false, onClick } 
       }),
     }),
   );
+  label.className = "mha-dock-item-label";
+  label.textContent = item.label;
+  label.setAttribute("aria-hidden", "true");
+  button.append(label);
 
   return button;
 }
