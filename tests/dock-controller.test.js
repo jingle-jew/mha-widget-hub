@@ -14,6 +14,7 @@ test("dock props preserve state and callback identities", () => {
     activePageId: "home",
     isEditing: true,
     themeStyle: "material",
+    usesDock: false,
     contentBuilder: "default",
     onPageSelect,
   });
@@ -22,6 +23,7 @@ test("dock props preserve state and callback identities", () => {
   assert.equal(props.activePageId, "home");
   assert.equal(props.isEditing, true);
   assert.equal(props.themeStyle, "material");
+  assert.equal(props.usesDock, false);
   assert.equal(props.contentBuilder, "default");
   assert.equal(props.onPageSelect, onPageSelect);
 });
@@ -53,6 +55,35 @@ test("dock active-state sync updates every page button", () => {
       { active: "true", current: "page" },
     ],
   );
+});
+
+test("syncDocks removes existing dock DOM when the theme disables docks", () => {
+  const removed = [];
+  const dock = {
+    remove() {
+      removed.push("dock");
+    },
+  };
+  const mobileDock = {
+    remove() {
+      removed.push("mobile");
+    },
+  };
+  const root = {
+    querySelector(selector) {
+      if (selector === ".mha-dock") return dock;
+      if (selector === ".mha-mobile-dock") return mobileDock;
+      return null;
+    },
+    querySelectorAll() {
+      throw new Error("disabled docks should not sync active state");
+    },
+  };
+
+  const result = syncDocks(root, { usesDock: false });
+
+  assert.equal(result, true);
+  assert.deepEqual(removed, ["dock", "mobile"]);
 });
 
 test("syncDocks preserves existing dock DOM when only active page changes", () => {
