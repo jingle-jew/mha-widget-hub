@@ -1,0 +1,62 @@
+/* Layout density breakpoints */
+
+@media (max-width: 767px) {
+  :host {
+    --mha-layout-density: mobile;
+    --mha-ui-scale: .96;
+    --mha-widget-scale: .96;
+    --mha-type-scale: .96;
+    --mha-control-scale: .96;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1279px) {
+  :host {
+    --mha-layout-density: tight;
+    --mha-ui-scale: .94;
+    --mha-widget-scale: .94;
+    --mha-type-scale: .92;
+    --mha-control-scale: .94;
+  }
+
+  :host([data-theme-style="oneui"][data-dock-position="left"]),
+  :host([data-theme-style="oneui"][data-dock-position="right"]),
+  :host([data-theme-style="oneui"]:not([data-dock-position])) {
+    --mha-layout-density: side-dock-tight;
+    --mha-ui-scale: .9;
+    --mha-widget-scale: .9;
+    --mha-type-scale: .9;
+    --mha-control-scale: .92;
+  }
+}
+
+.mha-widget {
+  --mha-widget-content-inset: var(
+    --mha-widget-inner-inset,
+    clamp(
+      calc(.62rem * var(--mha-widget-scale)),
+      min(calc(6.6cqi * var(--mha-widget-scale)), calc(6.6cqb * var(--mha-widget-scale))),
+      calc(.95rem * var(--mha-widget-scale))
+    )
+  );
+  --mha-widget-inner-padding: var(--mha-widget-content-inset);
+  --mha-widget-content-gap: var(
+    --mha-widget-gap,
+    clamp(
+      calc(.2rem * var(--mha-widget-scale)),
+      min(calc(2.4cqi * var(--mha-widget-scale)), calc(2.4cqb * var(--mha-widget-scale))),
+      calc(.45rem * var(--mha-widget-scale))
+    )
+  );
+
+  --mha-control-icon-bubble-size: calc(var(--mha-control-icon-size, 2.75rem) * var(--mha-control-scale));
+
+  --mha-type-widget-label-size: calc(var(--mha-font-size-widget-label, 1rem) * var(--mha-type-scale));
+  --mha-type-widget-state-size: calc(var(--mha-font-size-widget-state, .76rem) * var(--mha-type-scale));
+  --mha-type-widget-caption-size: calc(var(--mha-font-size-widget-caption, .68rem) * var(--mha-type-scale));
+  --mha-type-widget-chip-size: calc(var(--mha-font-size-widget-chip, .76rem) * var(--mha-type-scale));
+  --mha-type-widget-value-size: calc(var(--mha-font-size-widget-value, 1.35rem) * var(--mha-type-scale));
+  --mha-type-widget-display-sm: calc(var(--mha-font-size-widget-display-sm, 1.72rem) * var(--mha-type-scale));
+  --mha-type-widget-display-md: calc(var(--mha-font-size-widget-display-md, 2.35rem) * var(--mha-type-scale));
+  --mha-type-widget-display-lg: calc(var(--mha-font-size-widget-display-lg, 3.2rem) * var(--mha-type-scale));
+}

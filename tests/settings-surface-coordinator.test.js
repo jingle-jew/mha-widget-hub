@@ -22,6 +22,9 @@ test("settings surface coordinator owns both open-state flags and panel sync", (
     _activePageId: "home",
     _dockSettingsPageId: "",
     _dockPosition: "left",
+    _isMobileLauncherLayout() {
+      return true;
+    },
     _customWallpapers: {},
     _hass: { states: {} },
     _entityVisibilityConfig: { users: [] },
@@ -108,4 +111,5 @@ test("settings surface coordinator owns both open-state flags and panel sync", (
   assert.equal(host.lastSync.root, host.shadowRoot);
   assert.equal(host.lastSync.props.all.scope, "all");
   assert.equal(host.lastSync.props.screensaver.scope, "screensaver");
+  assert.equal(host.lastSync.props.all.isMobileLayout, true);
 });

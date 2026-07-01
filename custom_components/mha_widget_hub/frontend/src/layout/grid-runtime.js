@@ -76,6 +76,7 @@ export function calculateSquareGridMetrics({
   hardMin = 24,
   maxUnit = 160,
   mobile = false,
+  fillWidth = false,
 }) {
   if (!metrics || !units || !rows) return null;
 
@@ -89,7 +90,7 @@ export function calculateSquareGridMetrics({
     - gridPaddingY
     - rowGap * (rows - 1)
   ) / rows;
-  const preferredUnit = mobile ? unitX : Math.min(unitX, unitY);
+  const preferredUnit = (mobile || fillWidth) ? unitX : Math.min(unitX, unitY);
   const unit = Math.max(hardMin, Math.min(maxUnit, preferredUnit));
   if (!Number.isFinite(unit) || unit <= 0) return null;
 
@@ -280,6 +281,7 @@ export class GridRuntime {
     const maxUnit = Number.parseFloat(
       style.getPropertyValue("--mha-square-unit-max"),
     ) || preset.maxCell || 160;
+    const fillWidth = this.getDockPosition() === "bottom" && !this.isMobileLayout();
     const square = calculateSquareGridMetrics({
       metrics,
       preset,
@@ -292,6 +294,7 @@ export class GridRuntime {
       hardMin,
       maxUnit,
       mobile: this.isMobileLayout(),
+      fillWidth,
     });
     if (!square) return false;
     if (!hasStableSquareUnit({

@@ -15,6 +15,14 @@
   --mha-widget-shell-border: transparent;
   --mha-widget-shell-border-edit: transparent;
   --mha-widget-inner-highlight: transparent;
+  --mha-shell-dock-surface:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, rgba(255,255,255,.88) 84%, var(--mha-accent) 6%),
+      color-mix(in srgb, rgba(245,248,255,.72) 88%, var(--mha-accent) 4%)
+    );
+  --mha-shell-border: color-mix(in srgb, rgba(255,255,255,.72) 84%, var(--mha-accent) 8%);
+  --mha-shell-shadow: 0 8px 22px rgba(76,92,120,.075);
 }
 
 :host([data-theme-style="oneui"][data-theme="light"]) {
@@ -52,6 +60,16 @@
   --mha-bg-blob-3: #9ce8b8;
   --mha-bg-blob-4: #ccb4ff;
   --mha-bg-blob-opacity: .24;
+  --mha-oneui-dock-active-surface:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, rgba(216,222,230,.96) 94%, var(--mha-accent) 3%),
+      color-mix(in srgb, rgba(198,206,217,.92) 94%, var(--mha-accent) 3%)
+    );
+  --mha-oneui-dock-active-border: color-mix(in srgb, rgba(255,255,255,.72) 88%, var(--mha-accent) 8%);
+  --mha-oneui-dock-active-shadow:
+    inset 0 1px 0 rgba(255,255,255,.34),
+    0 1px 2px rgba(76,92,120,.08);
 }
 
 :host([data-theme-style="oneui"][data-theme="dark"]) {
@@ -85,12 +103,35 @@
   --mha-bg-blob-3: #7bdda5;
   --mha-bg-blob-4: #b48cff;
   --mha-bg-blob-opacity: .34;
+  --mha-shell-dock-surface:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, rgba(255,255,255,.16) 88%, var(--mha-accent) 7%),
+      color-mix(in srgb, rgba(255,255,255,.09) 92%, var(--mha-accent) 4%)
+    );
+  --mha-shell-border: color-mix(in srgb, rgba(255,255,255,.18) 78%, var(--mha-accent) 6%);
+  --mha-shell-shadow: 0 10px 24px rgba(0,0,0,.18);
+  --mha-oneui-dock-active-surface:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, rgba(148,156,168,.34) 88%, var(--mha-accent) 4%),
+      color-mix(in srgb, rgba(108,118,132,.28) 90%, var(--mha-accent) 3%)
+    );
+  --mha-oneui-dock-active-border: color-mix(in srgb, rgba(255,255,255,.24) 82%, var(--mha-accent) 8%);
+  --mha-oneui-dock-active-shadow:
+    inset 0 1px 0 rgba(255,255,255,.16),
+    0 1px 2px rgba(0,0,0,.12);
 }
 
-/* 4. Background */
+/* 4. Panels */
+:host([data-theme-style="oneui"]) .mha-page-creator-sheet {
+  background: var(--mha-oneui-panel-surface, var(--mha-surface-panel));
+}
+
+/* 5. Background */
 /* Theme background is fully token-driven in OneUI. */
 
-/* 5. Exceptions strictement necessaires */
+/* 6. Exceptions strictement necessaires */
 :host([data-theme-style="oneui"][data-theme="light"]) .mha-background,
 :host([data-theme-style="oneui"][data-theme="light"]) .mha-shell,
 :host([data-theme-style="oneui"][data-theme="light"]) .mha-grid {

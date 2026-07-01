@@ -344,18 +344,13 @@ export function createRenderPipeline(host, options = {}) {
       },
     );
     const links = [...host.shadowRoot.querySelectorAll('link[rel="stylesheet"]')];
+    const dockProps = host._getDockProps();
     const { bg, shell, pageStage } = createShell({
       layoutMode,
       layout,
       logicalColumns: cols,
       gridUnits: units,
-      pages: host._pages,
-      activePageId: host._activePageId,
-      isEditing: host._isEditing,
-      onPageSelect: (id) => host._setActivePage(id),
-      onAddPage: () => host._openPageCreator(),
-      onDockSettings: () => host._openDockSettings(),
-      onSettings: () => host._openSettings(),
+      ...dockProps,
     });
     syncShellBackgroundSurface(bg);
     host.shadowRoot.append(bg, shell);

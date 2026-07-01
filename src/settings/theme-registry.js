@@ -122,6 +122,28 @@ function normalizeThemeAccents(accents = []) {
   })).filter(accent => accent.value));
 }
 
+function normalizeThemeDock(definition = null) {
+  if (!definition || typeof definition !== "object") {
+    return Object.freeze({
+      usesDock: true,
+      contentBuilder: "default",
+      css: Object.freeze([]),
+      supportedPositions: Object.freeze(["left", "right", "bottom"]),
+    });
+  }
+
+  const supportedPositions = Array.isArray(definition.supportedPositions)
+    ? freezeArray(definition.supportedPositions.map(value => String(value || "").trim()).filter(Boolean))
+    : Object.freeze(["left", "right", "bottom"]);
+
+  return Object.freeze({
+    usesDock: definition.usesDock !== false,
+    contentBuilder: String(definition.contentBuilder || "default"),
+    css: normalizeThemeCss(definition.css),
+    supportedPositions,
+  });
+}
+
 function normalizeThemeWallpaper(definition = null) {
   if (typeof definition === "string") {
     return Object.freeze({
@@ -199,6 +221,7 @@ function normalizeThemeDefinition(definition = {}) {
     accents,
     defaultAccent: String(definition.defaultAccent || accents[0]?.value || ""),
     supportsAutoAccent: Boolean(definition.supportsAutoAccent),
+    dock: normalizeThemeDock(definition.dock),
   });
 }
 
@@ -225,6 +248,12 @@ const THEMES = {
     defaultAccent: "blue",
     supportsAutoAccent: true,
     aliases: ["apple", "liquid-glass", "frosted-glass"],
+    dock: {
+      usesDock: true,
+      contentBuilder: "ios-default",
+      css: ["styles/themes/ios-dock.css"],
+      supportedPositions: ["left", "right", "bottom"],
+    },
   }),
   oneui: normalizeThemeDefinition({
     id: "oneui",
@@ -244,6 +273,12 @@ const THEMES = {
     defaultAccent: "sky",
     supportsAutoAccent: true,
     aliases: ["samsung", "one-ui"],
+    dock: {
+      usesDock: true,
+      contentBuilder: "oneui-default",
+      css: ["styles/themes/oneui-dock.css"],
+      supportedPositions: ["left", "right", "bottom"],
+    },
   }),
   material: normalizeThemeDefinition({
     id: "material",
@@ -263,6 +298,12 @@ const THEMES = {
     defaultAccent: "purple",
     supportsAutoAccent: true,
     aliases: ["material-you", "material3", "material-3"],
+    dock: {
+      usesDock: true,
+      contentBuilder: "material-default",
+      css: ["styles/themes/material-dock.css"],
+      supportedPositions: ["left", "right", "bottom"],
+    },
   }),
   alexa: normalizeThemeDefinition({
     id: "alexa",
@@ -282,6 +323,11 @@ const THEMES = {
     defaultAccent: "cyan",
     supportsAutoAccent: true,
     aliases: ["echo", "amazon-alexa", "amazon"],
+    dock: {
+      usesDock: true,
+      contentBuilder: "alexa-default",
+      supportedPositions: ["left", "right", "bottom"],
+    },
   }),
 };
 
@@ -294,6 +340,10 @@ export function getThemeDefinitions() {
 
 export function getThemeCssPaths() {
   return getThemeDefinitions().flatMap(({ css }) => [...(css || [])]);
+}
+
+export function getThemeDockCssPaths() {
+  return getThemeDefinitions().flatMap(({ dock }) => [...(dock?.css || [])]);
 }
 
 export function getThemeStyleOptions() {
@@ -310,6 +360,10 @@ export function getDefaultThemeStyle() {
 
 export function getThemeDefinition(themeStyle = getDefaultThemeStyle()) {
   return THEME_REGISTRY[themeStyle] || THEME_REGISTRY[getDefaultThemeStyle()];
+}
+
+export function getThemeDockDefinition(themeStyle = getDefaultThemeStyle()) {
+  return getThemeDefinition(themeStyle).dock || normalizeThemeDock();
 }
 
 export function getDefaultIconShape(themeStyle = getDefaultThemeStyle()) {

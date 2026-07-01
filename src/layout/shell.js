@@ -37,21 +37,17 @@ export function createShell(meta = {}) {
   pageStage.className = "mha-page-stage";
   pageStage.setAttribute("aria-label", t("settings.widgetGrid", "Widget grid"));
 
-  const dockZone = document.createElement("aside");
-  dockZone.className = "mha-dock-zone";
-  dockZone.setAttribute("aria-label", t("settings.dockArea", "Dock area"));
-
-  dockZone.append(createDock({
-    pages: meta.pages,
-    activePageId: meta.activePageId,
-    isEditing: meta.isEditing,
-    onPageSelect: meta.onPageSelect,
-    onAddPage: meta.onAddPage,
-    onDockSettings: meta.onDockSettings,
-    onSettings: meta.onSettings,
-  }));
   widgetArea.append(pageStage);
-  workspace.append(widgetArea, dockZone);
+  workspace.append(widgetArea);
+
+  if (meta.usesDock !== false) {
+    const dockZone = document.createElement("aside");
+    dockZone.className = "mha-dock-zone";
+    dockZone.setAttribute("aria-label", t("settings.dockArea", "Dock area"));
+    dockZone.append(createDock(meta));
+    workspace.append(dockZone);
+  }
+
   shell.append(statusBar, statusBarFill, workspace);
 
   return { bg, shell, pageStage };

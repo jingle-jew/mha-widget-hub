@@ -7,6 +7,8 @@ import {
   getDefaultThemeVariant,
   getThemeAccentContract,
   getThemeCssPaths,
+  getThemeDockCssPaths,
+  getThemeDockDefinition,
   getThemeDefinition,
   getThemeDefinitions,
   getThemeStyleIds,
@@ -37,6 +39,14 @@ describe("theme registry", () => {
     ]);
   });
 
+  it("exposes optional dock CSS paths separately from base theme CSS", () => {
+    assert.deepEqual(getThemeDockCssPaths(), [
+      "styles/themes/ios-dock.css",
+      "styles/themes/oneui-dock.css",
+      "styles/themes/material-dock.css",
+    ]);
+  });
+
   it("keeps the existing default theme and icon shapes", () => {
     assert.equal(getDefaultThemeStyle(), "oneui");
     assert.equal(getDefaultIconShape("ios"), "rounded-square");
@@ -48,6 +58,16 @@ describe("theme registry", () => {
   it("falls back to the default theme for unknown theme styles", () => {
     assert.equal(getThemeDefinition("unknown").id, "oneui");
     assert.equal(getDefaultIconShape("unknown"), "squircle");
+  });
+
+  it("normalizes a theme-level dock manifest contract", () => {
+    assert.deepEqual(getThemeDockDefinition("oneui"), {
+      usesDock: true,
+      contentBuilder: "oneui-default",
+      css: ["styles/themes/oneui-dock.css"],
+      supportedPositions: ["left", "right", "bottom"],
+    });
+    assert.deepEqual(getThemeDockDefinition("unknown"), getThemeDockDefinition("oneui"));
   });
 
   it("normalizes the future variant contract without changing current consumers", () => {

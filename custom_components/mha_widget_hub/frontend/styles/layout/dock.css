@@ -11,6 +11,25 @@
   --mha-icon-size: clamp(2.55rem, 5.8vw, 4.15rem);
   --mha-dock-icon-min-size: 2.6rem;
   --mha-icon-glyph-size: 82%;
+  --mha-dock-item-inline-size: max(var(--mha-dock-icon-min-size), var(--mha-icon-size));
+  --mha-dock-item-block-size: max(var(--mha-dock-icon-min-size), var(--mha-icon-size));
+  --mha-dock-item-min-inline-size: var(--mha-dock-icon-min-size);
+  --mha-dock-item-min-block-size: var(--mha-dock-icon-min-size);
+  --mha-dock-item-padding-block: 0;
+  --mha-dock-item-padding-inline: 0;
+  --mha-dock-item-gap: 0;
+  --mha-dock-item-justify-content: center;
+  --mha-dock-item-aspect-ratio: 1;
+  --mha-dock-item-overflow: visible;
+  --mha-dock-item-label-display: none;
+  --mha-dock-item-label-text-align: center;
+  --mha-dock-item-label-color: currentColor;
+  --mha-dock-item-label-opacity: 1;
+  --mha-dock-item-label-padding-inline: 0;
+  --mha-dock-item-label-font-size: .58rem;
+  --mha-dock-item-label-line-height: 1;
+  --mha-dock-item-label-font-weight: 600;
+  --mha-dock-item-label-letter-spacing: -.01em;
 
   position: absolute;
   z-index: 8;
@@ -47,16 +66,21 @@
 
 .mha-dock-item {
   appearance: none;
-  display: inline-grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: var(--mha-dock-item-justify-content);
+  gap: var(--mha-dock-item-gap);
   flex: 0 0 auto;
-  inline-size: max(var(--mha-dock-icon-min-size), var(--mha-icon-size));
-  block-size: max(var(--mha-dock-icon-min-size), var(--mha-icon-size));
-  min-inline-size: var(--mha-dock-icon-min-size);
-  min-block-size: var(--mha-dock-icon-min-size);
-  aspect-ratio: 1;
+  inline-size: var(--mha-dock-item-inline-size);
+  block-size: var(--mha-dock-item-block-size);
+  min-inline-size: var(--mha-dock-item-min-inline-size);
+  min-block-size: var(--mha-dock-item-min-block-size);
+  padding-block: var(--mha-dock-item-padding-block);
+  padding-inline: var(--mha-dock-item-padding-inline);
+  aspect-ratio: var(--mha-dock-item-aspect-ratio);
+  box-sizing: border-box;
+  overflow: var(--mha-dock-item-overflow);
   margin: 0;
-  padding: 0;
   border: 0;
   background: transparent;
   color: inherit;
@@ -70,6 +94,34 @@
   height: max(var(--mha-dock-icon-min-size), var(--mha-icon-size));
   min-inline-size: var(--mha-dock-icon-min-size);
   min-block-size: var(--mha-dock-icon-min-size);
+}
+
+.mha-dock-item-label {
+  display: var(--mha-dock-item-label-display);
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: var(--mha-dock-item-label-text-align);
+  color: var(--mha-dock-item-label-color);
+  opacity: var(--mha-dock-item-label-opacity);
+  pointer-events: none;
+  padding-inline: var(--mha-dock-item-label-padding-inline);
+  font-size: var(--mha-dock-item-label-font-size);
+  line-height: var(--mha-dock-item-label-line-height);
+  font-weight: var(--mha-dock-item-label-font-weight);
+  letter-spacing: var(--mha-dock-item-label-letter-spacing);
+}
+
+.mha-dock-spacer,
+.mha-mobile-dock-spacer {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  min-block-size: 0;
+  align-self: stretch;
+  pointer-events: none;
 }
 
 .mha-dock-item:focus-visible {
@@ -134,6 +186,11 @@
       calc(var(--mha-square-unit) - var(--mha-grid-gap)),
       var(--mha-square-unit)
     );
+    --mha-dock-item-inline-size: var(--mha-icon-size);
+    --mha-dock-item-block-size: var(--mha-icon-size);
+    --mha-dock-item-min-inline-size: var(--mha-icon-size);
+    --mha-dock-item-min-block-size: var(--mha-icon-size);
+    --mha-dock-item-aspect-ratio: 1;
 
     left: auto;
     right: max(var(--mha-safe-area-right, env(safe-area-inset-right)), clamp(0.75rem, 1.8vw, 1.25rem));
@@ -161,12 +218,6 @@
   .mha-dock::-webkit-scrollbar {
     display: none;
   }
-
-  .mha-dock-item {
-    inline-size: var(--mha-icon-size);
-    block-size: var(--mha-icon-size);
-  }
-
   :host(.is-dock-hidden) .mha-dock,
   :host([data-dock-hidden="true"]) .mha-dock {
     transform: translateY(-50%) translateX(calc(100% + var(--mha-floating-edge, 1rem) + 18px));
@@ -339,6 +390,11 @@
       calc(var(--mha-square-unit) - var(--mha-grid-gap)),
       var(--mha-square-unit)
     );
+    --mha-dock-item-inline-size: var(--mha-icon-size);
+    --mha-dock-item-block-size: var(--mha-icon-size);
+    --mha-dock-item-min-inline-size: var(--mha-icon-size);
+    --mha-dock-item-min-block-size: var(--mha-icon-size);
+    --mha-dock-item-aspect-ratio: 1;
 
     inline-size: var(--mha-dock-unit-size);
     min-inline-size: var(--mha-dock-unit-size);
@@ -355,18 +411,11 @@
     gap: var(--mha-dock-rail-gap);
     height: auto;
   }
-
-  .mha-dock-item {
-    inline-size: var(--mha-icon-size);
-    block-size: var(--mha-icon-size);
-  }
-
   .mha-dock-item > .mha-icon {
     inline-size: var(--mha-icon-size);
     block-size: var(--mha-icon-size);
   }
 }
-
 
 /* DOCK ORIENTATION FLASH GUARD
  * During orientation relayout, the dock can be briefly created before the
@@ -377,19 +426,6 @@
   visibility: hidden !important;
   pointer-events: none !important;
   transition: none !important;
-}
-
-/* MATERIAL TABLET/DESKTOP DOCK PILL
- * Material You prefers softer capsule containers.
- *
- * Scope this to tablet/desktop dock only:
- * - mobile floating dock remains unchanged;
- * - iOS and OneUI remain unchanged.
- */
-@media (min-width: 768px) {
-  :host([data-theme-style="material"]) .mha-dock {
-    border-radius: 999px;
-  }
 }
 
 /* Dock active page selection
@@ -471,184 +507,6 @@
 .mha-dock-add-page,
 .mha-mobile-dock-add-page {
   opacity: 0.88;
-}
-
-/* Page creator popup opened from the dock + button. */
-.mha-page-creator {
-  position: fixed;
-  inset: 0;
-  z-index: 140;
-  display: grid;
-  place-items: center;
-  padding: clamp(1rem, 4vw, 2rem);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 180ms ease;
-}
-
-.mha-page-creator[data-open="true"] {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.mha-page-creator-scrim {
-  position: absolute;
-  inset: 0;
-  border: 0;
-  padding: 0;
-  background: var(--mha-bg-overlay, rgba(0,0,0,.34));
-  cursor: pointer;
-}
-
-.mha-page-creator-sheet {
-  position: relative;
-  inline-size: min(32rem, calc(100vw - 2rem));
-  max-block-size: min(42rem, calc(100vh - 2rem));
-  overflow: auto;
-  display: grid;
-  gap: 1rem;
-  padding: clamp(1rem, 3vw, 1.35rem);
-  border: 1px solid var(--mha-widget-border, rgba(255,255,255,.22));
-  border-radius: clamp(1.25rem, 4vw, 2rem);
-  background: var(--mha-panel-surface, var(--mha-widget-surface, rgba(24,24,28,.72)));
-  box-shadow: var(--mha-shadow-panel, 0 24px 80px rgba(0,0,0,.35));
-  -webkit-backdrop-filter: blur(var(--mha-blur-strong, 28px)) saturate(var(--mha-surface-saturation, 1.25));
-  backdrop-filter: blur(var(--mha-blur-strong, 28px)) saturate(var(--mha-surface-saturation, 1.25));
-  color: var(--mha-text-primary, #fff);
-  transform: translateY(10px) scale(.98);
-  transition: transform 220ms cubic-bezier(.2,.8,.2,1);
-}
-
-:host([data-theme-style="oneui"]) .mha-page-creator-sheet {
-  background: var(--mha-oneui-panel-surface, var(--mha-surface-panel));
-}
-
-.mha-page-creator[data-open="true"] .mha-page-creator-sheet {
-  transform: translateY(0) scale(1);
-}
-
-.mha-page-creator-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.mha-page-creator-header h2 {
-  margin: 0;
-  font-size: clamp(1.25rem, 3vw, 1.7rem);
-  line-height: 1.1;
-}
-
-.mha-page-creator-close.mha-system-button {
-  inline-size: 2.4rem;
-  block-size: 2.4rem;
-}
-
-.mha-page-creator-hint {
-  margin: 0;
-  color: var(--mha-text-secondary, rgba(255,255,255,.72));
-  font-size: .95rem;
-}
-
-.mha-page-creator-icons {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(5.5rem, 1fr));
-  gap: .7rem;
-}
-
-.mha-page-creator-types {
-  display: grid;
-  gap: .7rem;
-}
-
-.mha-page-creator-type {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  gap: .9rem;
-  padding: .9rem 1rem;
-  border-radius: 1.15rem;
-  border: 1px solid var(--mha-widget-border, rgba(255,255,255,.2));
-  background: color-mix(in srgb, var(--mha-widget-surface, rgba(255,255,255,.14)) 74%, transparent);
-  color: var(--mha-text-primary, #fff);
-  text-align: start;
-}
-
-.mha-page-creator-type[data-selected="true"] {
-  border-color: var(--mha-accent, var(--mha-accent-primary, #5aa7ff));
-  background: color-mix(in srgb, var(--mha-accent, var(--mha-accent-primary, #5aa7ff)) 18%, var(--mha-widget-surface, rgba(255,255,255,.14)));
-}
-
-.mha-page-creator-type-copy {
-  display: grid;
-  gap: .22rem;
-  min-inline-size: 0;
-}
-
-.mha-page-creator-type-copy strong {
-  font-size: .96rem;
-}
-
-.mha-page-creator-type-copy span {
-  color: var(--mha-text-secondary, rgba(255,255,255,.72));
-  font-size: .8rem;
-  line-height: 1.35;
-}
-
-.mha-page-creator-icon {
-  min-block-size: 5.4rem;
-  border: 1px solid var(--mha-widget-border, rgba(255,255,255,.2));
-  border-radius: 1.1rem;
-  display: grid;
-  place-items: center;
-  gap: .45rem;
-  padding: .75rem .45rem;
-  background: color-mix(in srgb, var(--mha-widget-surface, rgba(255,255,255,.14)) 70%, transparent);
-  color: var(--mha-text-primary, #fff);
-  cursor: pointer;
-}
-
-.mha-page-creator-icon[data-selected="true"] {
-  border-color: var(--mha-accent, var(--mha-accent-primary, #5aa7ff));
-  background: color-mix(in srgb, var(--mha-accent, var(--mha-accent-primary, #5aa7ff)) 24%, var(--mha-widget-surface, rgba(255,255,255,.14)));
-}
-
-.mha-page-creator-icon > .mha-icon {
-  --mha-icon-size: 2.75rem;
-}
-
-.mha-page-creator-icon > span:not(.mha-icon) {
-  font-size: .78rem;
-  line-height: 1.15;
-  color: var(--mha-text-secondary, rgba(255,255,255,.72));
-}
-
-.mha-page-creator-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: .7rem;
-}
-
-.mha-page-creator-primary,
-.mha-page-creator-secondary {
-  min-block-size: 2.6rem;
-  border-radius: 999px;
-  padding: 0 1rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.mha-page-creator-primary {
-  border: 0;
-  background: var(--mha-accent, var(--mha-accent-primary, #5aa7ff));
-  color: var(--mha-accent-contrast, #fff);
-}
-
-.mha-page-creator-secondary {
-  border: 1px solid var(--mha-widget-border, rgba(255,255,255,.2));
-  background: transparent;
-  color: var(--mha-text-primary, #fff);
 }
 
 /* Desktop/tablet dock position variants.

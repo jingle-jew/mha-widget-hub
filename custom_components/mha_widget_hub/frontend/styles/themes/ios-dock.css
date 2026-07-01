@@ -1,0 +1,5 @@
+/* iOS dock theme layer.
+ * Intentionally empty for now: the current iOS dock appearance is fully driven by
+ * theme tokens and the neutral dock contract. Keep this file as the optional
+ * theme-owned dock extension point without changing visuals.
+ */

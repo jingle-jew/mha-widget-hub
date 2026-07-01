@@ -1,4 +1,4 @@
-import { getThemeCssPaths } from "../settings/theme-registry.js";
+import { getThemeCssPaths, getThemeDockCssPaths } from "../settings/theme-registry.js";
 import { WIDGET_REGISTRY } from "../widgets/widget-registry.js";
 
 const entry = (path, layer) => Object.freeze([path, layer]);
@@ -26,6 +26,7 @@ const STATIC_STYLE_MANIFEST_AFTER_THEMES = Object.freeze([
   entry("styles/core/android-edge-to-edge.css", "structure"),
   entry("styles/layout/shell.css", "structure"),
   entry("styles/layout/widget-grid.css", "structure"),
+  entry("styles/layout/layout-scale-contract.css", "structure"),
   entry("styles/layout/status-bar.css", "structure"),
   entry("styles/layout/status-bar-glass-override.css", "structure"),
   entry("styles/layout/status-bar-contract.css", "structure"),
@@ -50,12 +51,14 @@ const STATIC_STYLE_MANIFEST_AFTER_THEMES = Object.freeze([
   entry("styles/panels/panel-surface-contract.css", "component"),
   entry("styles/panels/panel-material-contract.css", "component"),
   entry("styles/panels/panel-frame-alignment.css", "component"),
+  entry("styles/panels/page-creator.css", "component"),
   entry("styles/panels/page-creator-sheet.css", "component"),
   entry("styles/panels/page-creator-bottom.css", "component"),
   entry("styles/panels/page-creator-contract.css", "component"),
   entry("styles/settings/settings-bottom.css", "component"),
   entry("styles/themes/light-text-contract.css", "theme"),
   entry("styles/widgets/widget-layout.css", "structure"),
+  entry("styles/layout/layout-density-breakpoints.css", "structure"),
   entry("styles/widgets/widget-shell.css", "structure"),
   entry("styles/widgets/widget-drag.css", "structure"),
   entry("styles/widgets/widget-shell-contract.css", "structure"),
@@ -97,6 +100,10 @@ export function getThemeStyleManifestEntries() {
   return getThemeCssPaths().map((path) => entry(path, "theme"));
 }
 
+export function getThemeDockStyleManifestEntries() {
+  return getThemeDockCssPaths().map((path) => entry(path, "theme"));
+}
+
 export function getWidgetStyleManifestEntries() {
   const orderedDefinitions = [
     ...WIDGET_CSS_ORDER.map((kind) => WIDGET_REGISTRY[kind]).filter(Boolean),
@@ -113,6 +120,7 @@ export function getStyleManifest() {
     ...STATIC_STYLE_MANIFEST_BEFORE_THEMES,
     ...getThemeStyleManifestEntries(),
     ...STATIC_STYLE_MANIFEST_AFTER_THEMES,
+    ...getThemeDockStyleManifestEntries(),
     ...getWidgetStyleManifestEntries(),
     ...STATIC_STYLE_MANIFEST_AFTER_WIDGETS,
   ]);

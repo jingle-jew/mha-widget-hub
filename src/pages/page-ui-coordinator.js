@@ -1,5 +1,6 @@
 import { buildDockStateProps } from "../layout/dock-props.js";
 import { createDockProps, syncDocks } from "../layout/dock-controller.js";
+import { getThemeDockDefinition } from "../settings/theme-registry.js";
 import {
   buildPageCreatorPanelProps,
   syncPageCreatorPanel,
@@ -45,6 +46,7 @@ export class PageUiCoordinator {
     setDockSettingsPageId = () => {},
     setSettingsPage = () => {},
     getIsEditing = () => false,
+    getThemeStyle = () => "oneui",
     isMobileLandscapeLayout = () => false,
     normalizeWidget,
     savePages = () => false,
@@ -87,6 +89,7 @@ export class PageUiCoordinator {
     this.setDockSettingsPageId = (...args) => setDockSettingsPageId(...args);
     this.setSettingsPage = (...args) => setSettingsPage(...args);
     this.getIsEditing = (...args) => getIsEditing(...args);
+    this.getThemeStyle = (...args) => getThemeStyle(...args);
     this.isMobileLandscapeLayout = (...args) => isMobileLandscapeLayout(...args);
     this.normalizeWidget = normalizeWidget;
     this.savePages = (...args) => savePages(...args);
@@ -112,12 +115,17 @@ export class PageUiCoordinator {
   }
 
   buildDockProps() {
+    const themeStyle = this.getThemeStyle();
+    const dockDefinition = getThemeDockDefinition(themeStyle);
     return this.createDockPropsFn({
       ...this.buildDockStatePropsFn({
         pages: this.getPages(),
         activePageId: this.getActivePageId(),
         isEditing: this.getIsEditing(),
       }),
+      themeStyle,
+      usesDock: dockDefinition.usesDock,
+      contentBuilder: dockDefinition.contentBuilder,
       onPageSelect: (id) => this.selectPage(id),
       onAddPage: () => this.openPageCreator(),
       onDockSettings: () => this.openDockSettings(),

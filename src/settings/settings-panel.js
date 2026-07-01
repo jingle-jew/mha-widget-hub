@@ -876,6 +876,7 @@ export function createSettingsPanel({
   activeDockPageId = "",
   selectedDockPageId = "",
   dockPosition = "left",
+  isMobileLayout = false,
   customWallpapers = {},
   onClose,
   onLanguageChange,
@@ -990,16 +991,19 @@ export function createSettingsPanel({
   body.className = "mha-settings-body";
 
   const sections = [];
+  const showDesktopOnlyDockSettings = !isMobileLayout;
 
   if (!isScreensaverScope && settingsPage === "dock") {
-    sections.push(createSection(t("settings.position", "Position"), [
-      createSelect({
-        label: t("settings.dockPosition", "Dock position"),
-        value: dockPosition,
-        options: DOCK_POSITION_OPTIONS,
-        onChange: onDockPositionChange,
-      }),
-    ]));
+    if (showDesktopOnlyDockSettings) {
+      sections.push(createSection(t("settings.position", "Position"), [
+        createSelect({
+          label: t("settings.dockPosition", "Dock position"),
+          value: dockPosition,
+          options: DOCK_POSITION_OPTIONS,
+          onChange: onDockPositionChange,
+        }),
+      ]));
+    }
     sections.push(createSection(t("settings.dockIcons", "Dock icons"), [
       createDockSettingsList({
         pages: dockPages,
@@ -1147,12 +1151,14 @@ export function createSettingsPanel({
       ] : []),
     ]));
     sections.push(createSection(t("settings.navigation", "Navigation"), [
-      createSwitch({
-        label: t("settings.hideHaSidebar", "Hide Home Assistant sidebar"),
-        description: t("settings.hideHaSidebarDescription", "Hide the native Home Assistant sidebar for a more immersive experience."),
-        checked: hideHaSidebar,
-        onChange: onHideHaSidebarChange,
-      }),
+      ...(showDesktopOnlyDockSettings ? [
+        createSwitch({
+          label: t("settings.hideHaSidebar", "Hide Home Assistant sidebar"),
+          description: t("settings.hideHaSidebarDescription", "Hide the native Home Assistant sidebar for a more immersive experience."),
+          checked: hideHaSidebar,
+          onChange: onHideHaSidebarChange,
+        }),
+      ] : []),
       createSettingsNavTile({
         icon: "apps",
         label: t("settings.dock", "Dock"),

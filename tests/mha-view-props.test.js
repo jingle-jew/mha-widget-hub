@@ -51,6 +51,7 @@ test("settings panel state derives the current scope openness and preserves stat
     activeDockPageId: "home",
     selectedDockPageId: "home",
     dockPosition: "left",
+    isMobileLayout: false,
     customWallpapers: { light: null, dark: null },
     hass: { states: {} },
     entityVisibilityConfig: { users: [] },
@@ -86,6 +87,7 @@ test("settings panel state derives the current scope openness and preserves stat
     activeDockPageId: "home",
     selectedDockPageId: "home",
     dockPosition: "left",
+    isMobileLayout: false,
     customWallpapers: { light: null, dark: null },
   });
 });

@@ -16,10 +16,4 @@
     box-shadow: var(--mha-panel-shadow, var(--mha-system-window-shadow, var(--mha-shadow-panel)));
     color: var(--mha-text-primary);
   }
-
-  :host([data-theme-style="material"]) .mha-mobile-dock-panel {
-    background: var(--mha-shell-panel-surface, var(--mha-panel-surface, var(--mha-surface-panel)));
-    border-color: transparent;
-    box-shadow: var(--mha-panel-shadow, none);
-  }
 }

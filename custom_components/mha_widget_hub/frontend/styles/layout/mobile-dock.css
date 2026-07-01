@@ -115,6 +115,10 @@
     margin-inline: auto;
   }
 
+  .mha-dock-item-label {
+    display: none;
+  }
+
   .mha-mobile-dock-item[data-active="true"]::after {
     content: "";
     position: absolute;

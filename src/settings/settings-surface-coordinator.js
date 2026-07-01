@@ -18,6 +18,7 @@ export function createSettingsSurfaceCoordinator(host) {
       activeDockPageId: host._activePageId,
       selectedDockPageId: host._dockSettingsPageId,
       dockPosition: host._dockPosition,
+      isMobileLayout: Boolean(host._isMobileLauncherLayout?.()),
       customWallpapers: host._customWallpapers,
       hass: host._hass,
       entityVisibilityConfig: host._entityVisibilityConfig,
