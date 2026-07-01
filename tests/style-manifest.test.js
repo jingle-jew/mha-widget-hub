@@ -8,6 +8,7 @@ import {
 
 test("style manifest appends theme dock styles after the core dock layers", () => {
   assert.deepEqual(getThemeDockStyleManifestEntries(), [
+    ["styles/themes/ios-dock.css", "theme"],
     ["styles/themes/oneui-dock.css", "theme"],
     ["styles/themes/material-dock.css", "theme"],
   ]);

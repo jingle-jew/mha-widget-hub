@@ -251,6 +251,7 @@ const THEMES = {
     dock: {
       usesDock: true,
       contentBuilder: "ios-default",
+      css: ["styles/themes/ios-dock.css"],
       supportedPositions: ["left", "right", "bottom"],
     },
   }),

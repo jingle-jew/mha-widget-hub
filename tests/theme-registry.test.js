@@ -41,6 +41,7 @@ describe("theme registry", () => {
 
   it("exposes optional dock CSS paths separately from base theme CSS", () => {
     assert.deepEqual(getThemeDockCssPaths(), [
+      "styles/themes/ios-dock.css",
       "styles/themes/oneui-dock.css",
       "styles/themes/material-dock.css",
     ]);
