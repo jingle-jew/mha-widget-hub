@@ -3,6 +3,8 @@ import { resolveDockItems } from "./dock-content-registry.js";
 import { createDockItemElement, invokeDockItem } from "./dock-item-renderer.js";
 
 export function createMobileDock(props = {}) {
+  if (props.usesDock === false) return document.createDocumentFragment();
+
   const {
     activePageId = "",
     onPageSelect,
