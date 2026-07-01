@@ -845,7 +845,14 @@
   }
 
   .mha-weather-widget[data-weather-size="4x2"] .mha-weather-widget-current > .mha-weather-widget-details {
-    display: none;
+    inline-size: min(100%, clamp(4.6rem, 22cqi, 6.2rem));
+    gap: clamp(.18rem, 1.2cqb, .3rem);
+  }
+
+  .mha-weather-widget[data-weather-size="4x2"] .mha-weather-widget-current > .mha-weather-widget-details .mha-weather-widget-chip {
+    min-block-size: clamp(1.22rem, 5.4cqb, 1.55rem);
+    padding-inline: clamp(.32rem, 1.3cqi, .48rem);
+    font-size: var(--mha-type-widget-caption-size, .68rem);
   }
 
   .mha-weather-widget-forecast {
@@ -877,7 +884,14 @@
   }
 
   .mha-weather-widget[data-weather-size="3x2"] .mha-weather-widget-details {
-    display: none;
+    inline-size: min(100%, clamp(4.8rem, 30cqi, 6.4rem));
+    gap: clamp(.18rem, 1.4cqb, .34rem);
+  }
+
+  .mha-weather-widget[data-weather-size="3x2"] .mha-weather-widget-details .mha-weather-widget-chip {
+    min-block-size: clamp(1.26rem, 5.8cqb, 1.6rem);
+    padding-inline: clamp(.34rem, 1.4cqi, .5rem);
+    font-size: var(--mha-type-widget-caption-size, .68rem);
   }
 }
 
