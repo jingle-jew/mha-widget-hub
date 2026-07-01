@@ -40,7 +40,7 @@ test("default dock content keeps the current page/edit/settings structure", () =
   );
 });
 
-test("dock content resolution prefers explicit items and otherwise falls back to the theme/default builder", () => {
+test("dock content resolution prefers explicit items and otherwise falls back to the theme/default manifest", () => {
   const explicitItems = [{ action: "page", pageId: "custom", symbol: "star", label: "Custom" }];
   assert.deepEqual(resolveDockItems({ items: explicitItems }), [
     {
@@ -56,8 +56,8 @@ test("dock content resolution prefers explicit items and otherwise falls back to
   ]);
 
   const fallbackItems = resolveDockItems({
-    themeStyle: "oneui",
-    contentBuilder: "unknown",
+    themeStyle: "unknown",
+    contentBuilder: "material-default",
     pages: [{ id: "home", name: "Home", icon: "home" }],
     isEditing: false,
     labels: { settings: "Settings" },
