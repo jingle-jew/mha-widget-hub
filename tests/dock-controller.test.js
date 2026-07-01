@@ -6,7 +6,9 @@ import {
   buildDockStructureSignature,
   buildDockStructureSignatureFromDom,
   buildDockStructureSignatureFromProps,
+  captureDockRenderState,
   createDockProps,
+  restoreDockRenderState,
   syncDockActiveState,
   syncDocks,
 } from "../src/layout/dock-controller.js";
@@ -128,6 +130,233 @@ test("dock structure signature from props matches the current dock item contract
     ],
     isEditing: true,
   }), "page:page:home:home|page:page:lights:light|action:settings::gear|action:add-page::plus|action:dock-settings::edit");
+});
+
+test("captureDockRenderState keeps dock signatures and mobile paging state", () => {
+  const desktopDock = {
+    querySelectorAll(selector) {
+      assert.equal(selector, DOCK_STRUCTURE_ITEM_SELECTOR);
+      return [{
+        dataset: { dockItemType: "page", dockAction: "page", pageId: "home" },
+        querySelector() {
+          return { dataset: { icon: "home" } };
+        },
+      }];
+    },
+  };
+  const mobileDock = {
+    scrollLeft: 640,
+    clientWidth: 320,
+    classList: {
+      contains(token) {
+        assert.equal(token, "is-paged");
+        return true;
+      },
+    },
+    querySelectorAll(selector) {
+      assert.equal(selector, MOBILE_DOCK_STRUCTURE_ITEM_SELECTOR);
+      return [{
+        dataset: { dockItemType: "page", dockAction: "page", pageId: "home" },
+        querySelector() {
+          return { dataset: { icon: "home" } };
+        },
+      }];
+    },
+  };
+  const root = {
+    querySelector(selector) {
+      if (selector === ".mha-dock") return desktopDock;
+      if (selector === ".mha-mobile-dock") return mobileDock;
+      return null;
+    },
+  };
+
+  assert.deepEqual(captureDockRenderState(root), {
+    dock: desktopDock,
+    dockSignature: "page:page:home:home",
+    mobileDock,
+    mobileDockSignature: "page:page:home:home",
+    mobileDockScrollLeft: 640,
+    mobileDockPageIndex: 2,
+  });
+});
+
+test("restoreDockRenderState preserves desktop and mobile dock DOM when signatures match", () => {
+  const calls = [];
+  const currentDock = {
+    querySelectorAll() {
+      return [{
+        dataset: { dockItemType: "page", dockAction: "page", pageId: "home" },
+        querySelector() {
+          return { dataset: { icon: "home" } };
+        },
+      }];
+    },
+  };
+  const currentMobileDock = {
+    scrollLeft: 640,
+    clientWidth: 320,
+    classList: {
+      contains() {
+        return true;
+      },
+    },
+    querySelectorAll() {
+      return [{
+        dataset: { dockItemType: "page", dockAction: "page", pageId: "home" },
+        querySelector() {
+          return { dataset: { icon: "home" } };
+        },
+      }];
+    },
+  };
+  const nextDock = {
+    querySelectorAll() {
+      return [{
+        dataset: { dockItemType: "page", dockAction: "page", pageId: "home" },
+        querySelector() {
+          return { dataset: { icon: "home" } };
+        },
+      }];
+    },
+    replaceWith(node) {
+      calls.push(["replaceDock", node]);
+      rootState.dock = node;
+    },
+  };
+  const nextMobileDock = {
+    scrollLeft: 0,
+    clientWidth: 320,
+    querySelectorAll() {
+      return [{
+        dataset: { dockItemType: "page", dockAction: "page", pageId: "home" },
+        querySelector() {
+          return { dataset: { icon: "home" } };
+        },
+      }];
+    },
+    replaceWith(node) {
+      calls.push(["replaceMobileDock", node]);
+      rootState.mobileDock = node;
+    },
+  };
+  const rootState = {
+    dock: nextDock,
+    mobileDock: nextMobileDock,
+  };
+  const root = {
+    querySelector(selector) {
+      if (selector === ".mha-dock") return rootState.dock;
+      if (selector === ".mha-mobile-dock") return rootState.mobileDock;
+      return null;
+    },
+  };
+
+  const result = restoreDockRenderState(root, {
+    dock: currentDock,
+    dockSignature: "page:page:home:home",
+    mobileDock: currentMobileDock,
+    mobileDockSignature: "page:page:home:home",
+    mobileDockScrollLeft: 640,
+    mobileDockPageIndex: 2,
+  }, {
+    scheduleMobileDockOverflowState() {
+      calls.push("scheduleOverflow");
+    },
+    updateDockActiveState() {
+      calls.push("updateActive");
+    },
+    requestFrame(callback) {
+      calls.push("requestFrame");
+      callback();
+      return 1;
+    },
+  });
+
+  assert.deepEqual(result, {
+    desktopPreserved: true,
+    mobilePreserved: true,
+  });
+  assert.deepEqual(calls, [
+    ["replaceDock", currentDock],
+    ["replaceMobileDock", currentMobileDock],
+    "scheduleOverflow",
+    "updateActive",
+    "requestFrame",
+  ]);
+  assert.equal(rootState.mobileDock, currentMobileDock);
+  assert.equal(currentMobileDock.scrollLeft, 640);
+});
+
+test("restoreDockRenderState skips DOM preservation when the structure changes but still restores mobile paging", () => {
+  const calls = [];
+  const currentMobileDock = {
+    scrollLeft: 320,
+    clientWidth: 320,
+    classList: {
+      contains() {
+        return true;
+      },
+    },
+    querySelectorAll() {
+      return [{
+        dataset: { dockItemType: "page", dockAction: "page", pageId: "home" },
+        querySelector() {
+          return { dataset: { icon: "home" } };
+        },
+      }];
+    },
+  };
+  const nextMobileDock = {
+    scrollLeft: 0,
+    clientWidth: 320,
+    querySelectorAll() {
+      return [{
+        dataset: { dockItemType: "page", dockAction: "page", pageId: "lights" },
+        querySelector() {
+          return { dataset: { icon: "light" } };
+        },
+      }];
+    },
+    replaceWith() {
+      throw new Error("mobile dock should not be preserved when the signature changes");
+    },
+  };
+  const root = {
+    querySelector(selector) {
+      if (selector === ".mha-mobile-dock") return nextMobileDock;
+      return null;
+    },
+  };
+
+  const result = restoreDockRenderState(root, {
+    mobileDock: currentMobileDock,
+    mobileDockSignature: "page:page:home:home",
+    mobileDockScrollLeft: 320,
+    mobileDockPageIndex: 1,
+  }, {
+    scheduleMobileDockOverflowState() {
+      calls.push("scheduleOverflow");
+    },
+    updateDockActiveState() {
+      calls.push("updateActive");
+    },
+    requestFrame(callback) {
+      calls.push("requestFrame");
+      callback();
+      return 1;
+    },
+  });
+
+  assert.deepEqual(result, {
+    desktopPreserved: false,
+    mobilePreserved: false,
+  });
+  assert.deepEqual(calls, [
+    "updateActive",
+    "requestFrame",
+  ]);
+  assert.equal(nextMobileDock.scrollLeft, 320);
 });
 
 test("syncDocks removes existing dock DOM when the theme disables docks", () => {

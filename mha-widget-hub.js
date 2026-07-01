@@ -18,6 +18,10 @@ import { createBootLifecycleCoordinator } from "./src/core/boot-lifecycle-coordi
 import {ICONS} from "./src/components/icons.js";
 import { createRenderPipeline } from "./src/layout/render-pipeline.js";
 import { createResponsiveDockCoordinator } from "./src/layout/responsive-dock-coordinator.js";
+import {
+  captureDockRenderState,
+  restoreDockRenderState,
+} from "./src/layout/dock-controller.js";
 import { createPageUiCoordinator } from "./src/pages/page-ui-coordinator.js?v=phase10";
 import { createI18nSettingsSync } from "./src/settings/i18n-settings-sync.js";
 import { createSettingsSurfaceCoordinator } from "./src/settings/settings-surface-coordinator.js";
@@ -782,67 +786,34 @@ _getPageTransitionDirection(){
   if(this._dockPosition==="right")return"left";
   return"right";
 }
-_renderPageTransition(previousPage=null,nextPage=null){
-  const prefersReducedMotion=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
-  const buildDockSignature=(dock,itemSelector)=>Array.from(
-    dock?.querySelectorAll?.(itemSelector)||[],
-  ).map((item)=>[
-    item.dataset.dockItemType||"",
-    item.dataset.dockAction||"page",
-    item.dataset.pageId||"",
-    item.querySelector?.(".mha-icon")?.dataset.icon||"",
-  ].join(":")).join("|");
-  const currentPanel=this.shadowRoot?.querySelector?.(".mha-page-panel");
-  const currentRect=currentPanel?.getBoundingClientRect?.();
-  const snapshot=currentPanel&&currentRect?.width&&currentRect?.height
-    ? currentPanel.cloneNode(true)
-    : null;
-  const currentDock=this.shadowRoot?.querySelector?.(".mha-dock");
-  const currentDockSignature=buildDockSignature(currentDock,".mha-dock-item, .mha-dock-spacer");
-  const currentMobileDock=this.shadowRoot?.querySelector?.(".mha-mobile-dock");
-  const currentMobileDockSignature=buildDockSignature(currentMobileDock,".mha-mobile-dock-item, .mha-mobile-dock-spacer");
-  const dockScrollLeft=currentMobileDock?.scrollLeft||0;
-  const dockPageIndex=currentMobileDock?.classList?.contains?.("is-paged")&&currentMobileDock?.clientWidth
-    ? Math.round(dockScrollLeft/currentMobileDock.clientWidth)
-    : -1;
-  const direction=this._getPageTransitionDirection();
+	_renderPageTransition(previousPage=null,nextPage=null){
+	  const prefersReducedMotion=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+	  const currentPanel=this.shadowRoot?.querySelector?.(".mha-page-panel");
+	  const currentRect=currentPanel?.getBoundingClientRect?.();
+	  const snapshot=currentPanel&&currentRect?.width&&currentRect?.height
+	    ? currentPanel.cloneNode(true)
+	    : null;
+	  const dockRenderState=captureDockRenderState(this.shadowRoot);
+	  const direction=this._getPageTransitionDirection();
 
-  this.shadowRoot?.querySelectorAll?.(".mha-page-panel-snapshot")?.forEach?.(node=>node.remove());
+	  this.shadowRoot?.querySelectorAll?.(".mha-page-panel-snapshot")?.forEach?.(node=>node.remove());
 
-  const restoreMobileDockScroll=()=>{
-    const dock=this.shadowRoot?.querySelector?.(".mha-mobile-dock");
-    if(!dock)return;
-    if(dockPageIndex>=0&&dock.clientWidth){
-      dock.scrollLeft=dockPageIndex*dock.clientWidth;
-      return;
-    }
-    dock.scrollLeft=dockScrollLeft;
-  };
-
-  if(snapshot){
-    snapshot.classList.add("mha-page-panel-snapshot","mha-page-panel-snapshot--leaving");
+	  if(snapshot){
+	    snapshot.classList.add("mha-page-panel-snapshot","mha-page-panel-snapshot--leaving");
     snapshot.dataset.transitionDirection=direction;
     snapshot.style.top=`${currentRect.top}px`;
     snapshot.style.left=`${currentRect.left}px`;
     snapshot.style.width=`${currentRect.width}px`;
     snapshot.style.height=`${currentRect.height}px`;
-  }
+	  }
 
-  this.render();
-  const nextDock=this.shadowRoot?.querySelector?.(".mha-dock");
-  if(currentDock&&nextDock&&currentDockSignature&&currentDockSignature===buildDockSignature(nextDock,".mha-dock-item, .mha-dock-spacer")){
-    nextDock.replaceWith(currentDock);
-  }
-  const nextMobileDock=this.shadowRoot?.querySelector?.(".mha-mobile-dock");
-  if(currentMobileDock&&nextMobileDock&&currentMobileDockSignature&&currentMobileDockSignature===buildDockSignature(nextMobileDock,".mha-mobile-dock-item, .mha-mobile-dock-spacer")){
-    nextMobileDock.replaceWith(currentMobileDock);
-    this._scheduleMobileDockOverflowState();
-  }
-  this._updateDockActiveState();
-  restoreMobileDockScroll();
-  requestAnimationFrame(()=>restoreMobileDockScroll());
+	  this.render();
+	  restoreDockRenderState(this.shadowRoot,dockRenderState,{
+	    scheduleMobileDockOverflowState:()=>this._scheduleMobileDockOverflowState(),
+	    updateDockActiveState:()=>this._updateDockActiveState(),
+	  });
 
-  if(prefersReducedMotion)return;
+	  if(prefersReducedMotion)return;
 
   const nextPanel=this.shadowRoot?.querySelector?.(".mha-page-panel");
   if(nextPanel){

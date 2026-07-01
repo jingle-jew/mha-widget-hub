@@ -36,6 +36,86 @@ export function buildDockStructureSignatureFromDom(
   );
 }
 
+export function captureDockRenderState(root) {
+  const dock = root?.querySelector?.(".mha-dock") || null;
+  const mobileDock = root?.querySelector?.(".mha-mobile-dock") || null;
+  const mobileDockScrollLeft = mobileDock?.scrollLeft || 0;
+  const mobileDockPageIndex = mobileDock?.classList?.contains?.("is-paged") && mobileDock?.clientWidth
+    ? Math.round(mobileDockScrollLeft / mobileDock.clientWidth)
+    : -1;
+
+  return {
+    dock,
+    dockSignature: buildDockStructureSignatureFromDom(dock, DOCK_STRUCTURE_ITEM_SELECTOR),
+    mobileDock,
+    mobileDockSignature: buildDockStructureSignatureFromDom(mobileDock, MOBILE_DOCK_STRUCTURE_ITEM_SELECTOR),
+    mobileDockScrollLeft,
+    mobileDockPageIndex,
+  };
+}
+
+function restoreMobileDockScroll(root, {
+  mobileDockPageIndex = -1,
+  mobileDockScrollLeft = 0,
+} = {}) {
+  const dock = root?.querySelector?.(".mha-mobile-dock");
+  if (!dock) return false;
+  if (mobileDockPageIndex >= 0 && dock.clientWidth) {
+    dock.scrollLeft = mobileDockPageIndex * dock.clientWidth;
+    return true;
+  }
+  dock.scrollLeft = mobileDockScrollLeft;
+  return true;
+}
+
+export function restoreDockRenderState(
+  root,
+  dockState = {},
+  {
+    scheduleMobileDockOverflowState = () => {},
+    updateDockActiveState = () => {},
+    requestFrame = callback => requestAnimationFrame(callback),
+  } = {},
+) {
+  if (!root) {
+    updateDockActiveState();
+    return { desktopPreserved: false, mobilePreserved: false };
+  }
+
+  const result = {
+    desktopPreserved: false,
+    mobilePreserved: false,
+  };
+
+  const nextDock = root.querySelector(".mha-dock");
+  if (
+    dockState.dock
+    && nextDock
+    && dockState.dockSignature
+    && dockState.dockSignature === buildDockStructureSignatureFromDom(nextDock, DOCK_STRUCTURE_ITEM_SELECTOR)
+  ) {
+    nextDock.replaceWith(dockState.dock);
+    result.desktopPreserved = true;
+  }
+
+  const nextMobileDock = root.querySelector(".mha-mobile-dock");
+  if (
+    dockState.mobileDock
+    && nextMobileDock
+    && dockState.mobileDockSignature
+    && dockState.mobileDockSignature === buildDockStructureSignatureFromDom(nextMobileDock, MOBILE_DOCK_STRUCTURE_ITEM_SELECTOR)
+  ) {
+    nextMobileDock.replaceWith(dockState.mobileDock);
+    scheduleMobileDockOverflowState();
+    result.mobilePreserved = true;
+  }
+
+  updateDockActiveState();
+  restoreMobileDockScroll(root, dockState);
+  requestFrame(() => restoreMobileDockScroll(root, dockState));
+  return result;
+}
+
 function removeDockNode(dock) {
   if (!dock) return false;
   if (typeof dock.remove === "function") {
