@@ -88,3 +88,10 @@
   transform: translateZ(0);
   backface-visibility: hidden;
 }
+
+@media (max-width: 767px) {
+  :host([data-theme-style="alexa"]) .mha-mobile-dock {
+    --mha-mobile-dock-padding-block: 0.36rem;
+    --mha-mobile-dock-height: calc(var(--mha-icon-size) + 1rem + (var(--mha-mobile-dock-padding-block) * 2));
+  }
+}

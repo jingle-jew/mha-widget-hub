@@ -1,6 +1,5 @@
 const DEFAULT_THEME_DOCK_ITEMS = Object.freeze([
   Object.freeze({ type: "pages" }),
-  Object.freeze({ type: "edit-actions" }),
   Object.freeze({
     type: "action",
     action: "settings",
@@ -8,6 +7,7 @@ const DEFAULT_THEME_DOCK_ITEMS = Object.freeze([
     category: "system",
     labelKey: "settings",
   }),
+  Object.freeze({ type: "edit-actions" }),
 ]);
 
 const THEME_DOCK_CONTENT = Object.freeze({
