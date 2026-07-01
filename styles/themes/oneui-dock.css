@@ -365,3 +365,13 @@
     aspect-ratio: auto;
   }
 }
+
+
+/* OneUI bottom dock: pills hug the dock shape with a small safe inset ------- */
+@media (min-width: 768px) {
+  :host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock.mha-dock {
+    --mha-dock-empty-padding-inline: clamp(.18rem, .36vw, .28rem);
+    --mha-dock-empty-padding-block: clamp(.22rem, .46vw, .34rem);
+    --mha-oneui-bottom-dock-item-gap: clamp(.14rem, .42vw, .26rem);
+  }
+}
