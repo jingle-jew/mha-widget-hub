@@ -236,6 +236,7 @@ export function createBootLifecycleCoordinator(host) {
     host._widgetDropSlotsFrame = 0;
     host._gridRuntime.destroy();
     host._appearanceCoordinator.destroy();
+    host._wallpaperController?.destroy?.();
     cancelAnimationFrame(host._iconSymbolRefreshFrame);
     host._iconSymbolRefreshFrame = 0;
     host._clearGridScrollListener();

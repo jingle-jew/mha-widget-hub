@@ -298,6 +298,42 @@ export function createRenderPipeline(host, options = {}) {
     return { panel, grid };
   }
 
+  function syncShellBackgroundSurface(bg) {
+    if (!bg?.style) return;
+
+    const wallpaperNode = bg.querySelector?.(".mha-background-wallpaper");
+    const activeWallpaper = host._activeWallpaper || null;
+    const wallpaperKind = String(activeWallpaper?.kind || host.dataset.wallpaperKind || "none");
+    const wallpaperSource = String(activeWallpaper?.source || host.dataset.wallpaperSource || "");
+    const wallpaperImageUrl = String(activeWallpaper?.renderValue || activeWallpaper?.value || "");
+    const wallpaperBackground = host.style.getPropertyValue("--mha-active-wallpaper-background").trim();
+    const hasImageWallpaper = wallpaperKind === "image" && Boolean(wallpaperImageUrl);
+    const hasCssWallpaper = wallpaperKind === "css" && Boolean(wallpaperBackground);
+
+    if (wallpaperNode) {
+      wallpaperNode.hidden = !hasImageWallpaper;
+      if (hasImageWallpaper) {
+        wallpaperNode.src = wallpaperImageUrl;
+      } else {
+        wallpaperNode.removeAttribute("src");
+      }
+    }
+
+    bg.style.removeProperty("background-image");
+    bg.style.removeProperty("background-size");
+    bg.style.removeProperty("background-position");
+    bg.style.removeProperty("background-repeat");
+    bg.style.removeProperty("background");
+
+    if (hasImageWallpaper && (wallpaperSource === "custom" || wallpaperSource === "theme")) {
+      return;
+    }
+
+    if (hasCssWallpaper && wallpaperSource === "theme") {
+      bg.style.background = wallpaperBackground;
+    }
+  }
+
   function mountRenderShell({ layoutMode, layout, cols, units }) {
     destroyDomSubtree(host.shadowRoot);
     host.shadowRoot.innerHTML = createCriticalBootStyle() + createFrontendStyleLinks(
@@ -321,6 +357,7 @@ export function createRenderPipeline(host, options = {}) {
       onDockSettings: () => host._openDockSettings(),
       onSettings: () => host._openSettings(),
     });
+    syncShellBackgroundSurface(bg);
     host.shadowRoot.append(bg, shell);
     return { links, pageStage };
   }

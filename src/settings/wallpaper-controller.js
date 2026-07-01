@@ -13,6 +13,41 @@ const WALLPAPER_TONE_LIGHT = "light";
 const WALLPAPER_TONE_THRESHOLD = 128;
 const WALLPAPER_TONE_SAMPLE_SIZE = 48;
 
+function decodeBase64Payload(value = "") {
+  if (!value) return null;
+  if (typeof globalThis.Buffer?.from === "function") {
+    return globalThis.Buffer.from(value, "base64");
+  }
+  if (typeof globalThis.atob === "function") {
+    const decoded = globalThis.atob(value);
+    return Uint8Array.from(decoded, (char) => char.charCodeAt(0));
+  }
+  return null;
+}
+
+function createRenderUrlFromWallpaperDataUrl(dataUrl, {
+  urlRef = globalThis.URL,
+} = {}) {
+  const normalized = String(dataUrl || "");
+  if (!normalized) return "";
+  if (typeof urlRef?.createObjectURL !== "function") return normalized;
+
+  const match = normalized.match(/^data:([^;,]+);base64,(.+)$/);
+  if (!match) return normalized;
+
+  const [, mime, payload] = match;
+  const bytes = decodeBase64Payload(payload);
+  if (!bytes) return normalized;
+
+  try {
+    const blob = new Blob([bytes], { type: mime || "application/octet-stream" });
+    return urlRef.createObjectURL(blob);
+  } catch (error) {
+    console.warn("[MHA] Custom wallpaper object URL could not be created.", error);
+    return normalized;
+  }
+}
+
 function classifyAverageLuminance(imageData) {
   const data = imageData?.data;
   if (!data?.length) return null;
@@ -83,6 +118,7 @@ export class WallpaperController {
     storage = localStorage,
     getTheme = () => "dark",
     getThemeState = null,
+    urlRef = globalThis.URL,
   } = {}) {
     this.host = host;
     this.storage = storage;
@@ -90,8 +126,55 @@ export class WallpaperController {
     this.getThemeState = typeof getThemeState === "function"
       ? getThemeState
       : () => ({ theme: this.getTheme(), themeStyle: "oneui" });
+    this.urlRef = urlRef;
     this.wallpapers = { light: null, dark: null };
     this.toneRequestId = 0;
+    this.customWallpaperRenderKey = "";
+    this.customWallpaperRenderUrl = "";
+    this.host._activeWallpaper = {
+      source: "fallback",
+      kind: "none",
+      value: "",
+      renderValue: "",
+      wallpaper: null,
+    };
+  }
+
+  releaseCustomWallpaperRenderUrl() {
+    if (
+      this.customWallpaperRenderUrl
+      && this.customWallpaperRenderUrl.startsWith("blob:")
+      && typeof this.urlRef?.revokeObjectURL === "function"
+    ) {
+      try {
+        this.urlRef.revokeObjectURL(this.customWallpaperRenderUrl);
+      } catch (error) {
+        console.warn("[MHA] Custom wallpaper object URL could not be revoked.", error);
+      }
+    }
+    this.customWallpaperRenderKey = "";
+    this.customWallpaperRenderUrl = "";
+  }
+
+  resolveCustomWallpaperRenderUrl(wallpaper = null) {
+    const dataUrl = String(wallpaper?.dataUrl || "");
+    if (!dataUrl) {
+      this.releaseCustomWallpaperRenderUrl();
+      return "";
+    }
+    if (this.customWallpaperRenderKey === dataUrl && this.customWallpaperRenderUrl) {
+      return this.customWallpaperRenderUrl;
+    }
+
+    this.releaseCustomWallpaperRenderUrl();
+    const renderUrl = createRenderUrlFromWallpaperDataUrl(dataUrl, { urlRef: this.urlRef });
+
+    if (renderUrl && renderUrl !== dataUrl) {
+      this.customWallpaperRenderKey = dataUrl;
+      this.customWallpaperRenderUrl = renderUrl;
+    }
+
+    return renderUrl || dataUrl;
   }
 
   resolveThemeState(themeState = this.getThemeState()) {
@@ -130,6 +213,7 @@ export class WallpaperController {
         source: "custom",
         kind: "image",
         value: customWallpaper.dataUrl,
+        renderValue: this.resolveCustomWallpaperRenderUrl(customWallpaper),
         wallpaper: customWallpaper,
       };
     }
@@ -143,6 +227,7 @@ export class WallpaperController {
         source: "theme",
         kind: "image",
         value: themeWallpaper.value,
+        renderValue: themeWallpaper.value,
         wallpaper: null,
       };
     }
@@ -152,6 +237,7 @@ export class WallpaperController {
         source: "theme",
         kind: "css",
         value: themeWallpaper.value,
+        renderValue: "",
         wallpaper: null,
       };
     }
@@ -161,6 +247,7 @@ export class WallpaperController {
         source: "theme",
         kind: "advanced",
         value: "",
+        renderValue: "",
         wallpaper: null,
       };
     }
@@ -169,6 +256,7 @@ export class WallpaperController {
       source: "fallback",
       kind: "none",
       value: "",
+      renderValue: "",
       wallpaper: null,
     };
   }
@@ -227,33 +315,37 @@ export class WallpaperController {
     const resolvedThemeState = this.resolveThemeState(themeState);
     const wallpapers = this.read(resolvedThemeState);
     const activeWallpaper = this.getActiveWallpaper(resolvedThemeState, wallpapers);
+    this.host._activeWallpaper = activeWallpaper;
     const hasCustomWallpaper = activeWallpaper.source === "custom";
     const hasThemeWallpaper = activeWallpaper.source === "theme" && activeWallpaper.kind !== "advanced";
+    const wallpaperRenderValue = String(activeWallpaper.renderValue || activeWallpaper.value || "");
 
     this.host.dataset.customWallpaper = String(hasCustomWallpaper);
     this.host.dataset.themeWallpaper = String(hasThemeWallpaper);
     this.host.dataset.wallpaperSource = activeWallpaper.source;
     this.host.dataset.wallpaperKind = activeWallpaper.kind;
 
-    if (activeWallpaper.kind === "image" && activeWallpaper.value) {
+    if (activeWallpaper.kind === "image" && wallpaperRenderValue) {
       this.host.style.setProperty(
         "--mha-active-wallpaper-image",
-        `url("${activeWallpaper.value}")`,
+        `url("${wallpaperRenderValue}")`,
       );
       this.host.style.removeProperty("--mha-active-wallpaper-background");
       if (hasCustomWallpaper) {
         this.host.style.setProperty(
           "--mha-custom-wallpaper-image",
-          `url("${activeWallpaper.value}")`,
+          `url("${wallpaperRenderValue}")`,
         );
       } else {
         this.host.style.removeProperty("--mha-custom-wallpaper-image");
+        this.releaseCustomWallpaperRenderUrl();
       }
       this.syncWallpaperTone(activeWallpaper.value);
       return wallpapers;
     }
 
     if (activeWallpaper.kind === "css" && activeWallpaper.value) {
+      this.releaseCustomWallpaperRenderUrl();
       this.host.style.setProperty(
         "--mha-active-wallpaper-background",
         activeWallpaper.value,
@@ -265,6 +357,7 @@ export class WallpaperController {
     }
 
     if (activeWallpaper.kind === "advanced") {
+      this.releaseCustomWallpaperRenderUrl();
       this.host.style.removeProperty("--mha-active-wallpaper-image");
       this.host.style.removeProperty("--mha-active-wallpaper-background");
       this.host.style.removeProperty("--mha-custom-wallpaper-image");
@@ -276,6 +369,14 @@ export class WallpaperController {
     this.host.dataset.themeWallpaper = "false";
     this.host.dataset.customWallpaper = "false";
     this.host.dataset.wallpaperKind = "none";
+    this.host._activeWallpaper = {
+      source: "fallback",
+      kind: "none",
+      value: "",
+      renderValue: "",
+      wallpaper: null,
+    };
+    this.releaseCustomWallpaperRenderUrl();
     this.host.style.removeProperty("--mha-active-wallpaper-image");
     this.host.style.removeProperty("--mha-active-wallpaper-background");
     this.host.style.removeProperty("--mha-custom-wallpaper-image");
@@ -316,6 +417,10 @@ export class WallpaperController {
   reset(mode) {
     resetWallpaper(this.storage, mode);
     return this.apply();
+  }
+
+  destroy() {
+    this.releaseCustomWallpaperRenderUrl();
   }
 }
 
