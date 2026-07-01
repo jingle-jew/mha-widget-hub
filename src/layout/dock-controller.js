@@ -19,11 +19,25 @@ function buildDockStructureSignatureFromDom(dock) {
     .join("|");
 }
 
+function removeDockNode(dock) {
+  if (!dock) return false;
+  if (typeof dock.remove === "function") {
+    dock.remove();
+    return true;
+  }
+  if (dock.parentNode && typeof dock.parentNode.removeChild === "function") {
+    dock.parentNode.removeChild(dock);
+    return true;
+  }
+  return false;
+}
+
 export function createDockProps({
   pages = [],
   activePageId = "",
   isEditing = false,
   themeStyle = "oneui",
+  usesDock = true,
   contentBuilder = "default",
   items = [],
   onPageSelect,
@@ -36,6 +50,7 @@ export function createDockProps({
     activePageId,
     isEditing,
     themeStyle,
+    usesDock,
     contentBuilder,
     items,
     onPageSelect,
@@ -56,13 +71,20 @@ export function syncDockActiveState(root, activePageId = "") {
 export function syncDocks(root, props = {}) {
   if (!root) return false;
 
-  const nextStructureSignature = buildDockStructureSignatureFromProps(props);
   const dock = root.querySelector(".mha-dock");
+  const mobileDock = root.querySelector(".mha-mobile-dock");
+
+  if (props.usesDock === false) {
+    removeDockNode(dock);
+    removeDockNode(mobileDock);
+    return true;
+  }
+
+  const nextStructureSignature = buildDockStructureSignatureFromProps(props);
   if (dock && buildDockStructureSignatureFromDom(dock) !== nextStructureSignature) {
     dock.replaceWith(createDock(props));
   }
 
-  const mobileDock = root.querySelector(".mha-mobile-dock");
   if (mobileDock && buildDockStructureSignatureFromDom(mobileDock) !== nextStructureSignature) {
     mobileDock.replaceWith(createMobileDock(props));
   }
