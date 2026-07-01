@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { setLanguage } from "../src/i18n/index.js";
 import { createSettingsPanel } from "../src/settings/settings-panel.js";
 
 function createMockNode(tagName, namespaceURI = null) {
@@ -57,6 +58,7 @@ function createMockDocument() {
 function withMockDocument(run) {
   const previousDocument = globalThis.document;
   globalThis.document = createMockDocument();
+  setLanguage("en");
   try {
     return run();
   } finally {
