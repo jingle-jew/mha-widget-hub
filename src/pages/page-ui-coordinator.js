@@ -47,6 +47,7 @@ export class PageUiCoordinator {
     setSettingsPage = () => {},
     getIsEditing = () => false,
     getThemeStyle = () => "oneui",
+    getDockPosition = () => "left",
     isMobileLandscapeLayout = () => false,
     normalizeWidget,
     savePages = () => false,
@@ -90,6 +91,7 @@ export class PageUiCoordinator {
     this.setSettingsPage = (...args) => setSettingsPage(...args);
     this.getIsEditing = (...args) => getIsEditing(...args);
     this.getThemeStyle = (...args) => getThemeStyle(...args);
+    this.getDockPosition = (...args) => getDockPosition(...args);
     this.isMobileLandscapeLayout = (...args) => isMobileLandscapeLayout(...args);
     this.normalizeWidget = normalizeWidget;
     this.savePages = (...args) => savePages(...args);
@@ -124,7 +126,7 @@ export class PageUiCoordinator {
         isEditing: this.getIsEditing(),
       }),
       themeStyle,
-      dockPosition: this.host?._dockPosition || "left",
+      dockPosition: this.getDockPosition(),
       usesDock: dockDefinition.usesDock,
       contentBuilder: dockDefinition.contentBuilder,
       onPageSelect: (id) => this.selectPage(id),
