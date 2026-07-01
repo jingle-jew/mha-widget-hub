@@ -15,6 +15,14 @@
   --mha-widget-shell-border: transparent;
   --mha-widget-shell-border-edit: transparent;
   --mha-widget-inner-highlight: transparent;
+  --mha-shell-dock-surface:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, rgba(255,255,255,.88) 84%, var(--mha-accent) 6%),
+      color-mix(in srgb, rgba(245,248,255,.72) 88%, var(--mha-accent) 4%)
+    );
+  --mha-shell-border: color-mix(in srgb, rgba(255,255,255,.72) 84%, var(--mha-accent) 8%);
+  --mha-shell-shadow: 0 8px 22px rgba(76,92,120,.075);
 }
 
 :host([data-theme-style="oneui"][data-theme="light"]) {
@@ -52,6 +60,16 @@
   --mha-bg-blob-3: #9ce8b8;
   --mha-bg-blob-4: #ccb4ff;
   --mha-bg-blob-opacity: .24;
+  --mha-oneui-dock-active-surface:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, rgba(255,255,255,.98) 92%, var(--mha-accent) 5%),
+      color-mix(in srgb, rgba(240,245,252,.92) 90%, var(--mha-accent) 4%)
+    );
+  --mha-oneui-dock-active-border: color-mix(in srgb, rgba(255,255,255,.72) 88%, var(--mha-accent) 8%);
+  --mha-oneui-dock-active-shadow:
+    inset 0 1px 0 rgba(255,255,255,.34),
+    0 1px 2px rgba(76,92,120,.08);
 }
 
 :host([data-theme-style="oneui"][data-theme="dark"]) {
@@ -85,6 +103,133 @@
   --mha-bg-blob-3: #7bdda5;
   --mha-bg-blob-4: #b48cff;
   --mha-bg-blob-opacity: .34;
+  --mha-shell-dock-surface:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, rgba(255,255,255,.16) 88%, var(--mha-accent) 7%),
+      color-mix(in srgb, rgba(255,255,255,.09) 92%, var(--mha-accent) 4%)
+    );
+  --mha-shell-border: color-mix(in srgb, rgba(255,255,255,.18) 78%, var(--mha-accent) 6%);
+  --mha-shell-shadow: 0 10px 24px rgba(0,0,0,.18);
+  --mha-oneui-dock-active-surface:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, rgba(255,255,255,.22) 82%, var(--mha-accent) 8%),
+      color-mix(in srgb, rgba(255,255,255,.12) 86%, var(--mha-accent) 5%)
+    );
+  --mha-oneui-dock-active-border: color-mix(in srgb, rgba(255,255,255,.24) 82%, var(--mha-accent) 8%);
+  --mha-oneui-dock-active-shadow:
+    inset 0 1px 0 rgba(255,255,255,.16),
+    0 1px 2px rgba(0,0,0,.12);
+}
+
+/* 4. Dock OneUI */
+:host([data-theme-style="oneui"]) .mha-dock,
+:host([data-theme-style="oneui"]) .mha-mobile-dock {
+  --mha-oneui-dock-button-inset: clamp(.04rem, .14vw, .1rem);
+  border-radius: 999px;
+}
+
+:host([data-theme-style="oneui"]) .mha-dock {
+  --mha-dock-empty-padding-block: clamp(.26rem, .72vw, .46rem);
+  --mha-dock-empty-padding-inline: clamp(.42rem, 1vw, .78rem);
+  --mha-dock-gap: clamp(.08rem, .32vw, .22rem);
+  --mha-dock-icon-min-size: clamp(2.55rem, 4.2vw, 3.05rem);
+  --mha-icon-size: clamp(2.55rem, 4.2vw, 3.05rem);
+}
+
+@media (min-width: 768px) {
+  :host([data-theme-style="oneui"]) .mha-dock {
+    --mha-dock-rail-padding-block: clamp(.34rem, .72vw, .56rem);
+    --mha-dock-rail-padding-inline: clamp(.34rem, .72vw, .56rem);
+    --mha-dock-rail-gap: clamp(.14rem, .32vw, .26rem);
+    --mha-icon-size: clamp(2.55rem, 3vw, 3rem);
+  }
+
+  :host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock.mha-dock {
+    --mha-dock-empty-width: min(100%, var(--mha-grid-matrix-width, 42rem));
+    --mha-dock-empty-height: clamp(3.2rem, 5vw, 4rem);
+    --mha-dock-empty-padding-block: clamp(.22rem, .48vw, .36rem);
+    --mha-dock-empty-padding-inline: clamp(.34rem, .68vw, .58rem);
+    --mha-dock-gap: clamp(.08rem, .28vw, .2rem);
+    --mha-icon-size: clamp(2.45rem, 2.9vw, 2.95rem);
+  }
+}
+
+@media (max-width: 767px) {
+  :host([data-theme-style="oneui"]) .mha-mobile-dock {
+    --mha-mobile-dock-gap: clamp(.08rem, .3vw, .2rem);
+    --mha-mobile-dock-padding: clamp(.24rem, .72vw, .4rem);
+    --mha-icon-size: clamp(2.65rem, 11vw, 3.35rem);
+    min-block-size: calc((var(--mha-icon-size) * 1.12) + (var(--mha-mobile-dock-padding) * 2));
+  }
+}
+
+:host([data-theme-style="oneui"]) .mha-dock-item,
+:host([data-theme-style="oneui"]) .mha-mobile-dock-item {
+  position: relative;
+  border-radius: 999px;
+  transition: none;
+}
+
+:host([data-theme-style="oneui"]) .mha-dock .mha-icon:not(.mha-system-icon),
+:host([data-theme-style="oneui"]) .mha-mobile-dock-item > .mha-icon:not(.mha-system-icon) {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  color: var(--mha-text);
+  transition: none;
+}
+
+:host([data-theme-style="oneui"]) .mha-dock-item[data-active="true"],
+:host([data-theme-style="oneui"]) .mha-mobile-dock-item[data-active="true"] {
+  transform: none;
+}
+
+:host([data-theme-style="oneui"]) .mha-dock-item[data-active="true"] > .mha-icon:not(.mha-system-icon),
+:host([data-theme-style="oneui"]) .mha-mobile-dock-item[data-active="true"] > .mha-icon:not(.mha-system-icon) {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  color: var(--mha-text);
+}
+
+:host([data-theme-style="oneui"]) .mha-dock-item[data-active="true"]::after,
+:host([data-theme-style="oneui"]) .mha-mobile-dock-item[data-active="true"]::after {
+  opacity: 0;
+}
+
+:host([data-theme-style="oneui"]) .mha-dock-item[data-active="true"]::before,
+:host([data-theme-style="oneui"]) .mha-mobile-dock-item[data-active="true"]::before {
+  content: "";
+  position: absolute;
+  inset: var(--mha-oneui-dock-button-inset);
+  border-radius: 999px;
+  background: var(--mha-oneui-dock-active-surface);
+  border: 1px solid var(--mha-oneui-dock-active-border);
+  box-shadow: var(--mha-oneui-dock-active-shadow);
+  pointer-events: none;
+  transition: none;
+}
+
+:host([data-theme-style="oneui"]) .mha-dock-item > .mha-icon:not(.mha-system-icon),
+:host([data-theme-style="oneui"]) .mha-mobile-dock-item > .mha-icon:not(.mha-system-icon) {
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 767px) {
+  :host([data-theme-style="oneui"]) .mha-mobile-dock-item {
+    block-size: calc(var(--mha-icon-size) + clamp(.16rem, .45vw, .24rem));
+    min-block-size: calc(var(--mha-icon-size) + clamp(.16rem, .45vw, .24rem));
+  }
+}
+
+@media (min-width: 768px) {
+  :host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock-item {
+    inline-size: calc(var(--mha-icon-size) + clamp(.52rem, .95vw, .78rem));
+    min-inline-size: calc(var(--mha-icon-size) + clamp(.52rem, .95vw, .78rem));
+  }
 }
 
 /* 4. Background */
