@@ -211,6 +211,50 @@ test("style finalization keeps deferred UI pending until boot completes", async 
   ]);
 });
 
+test("style finalization schedules mobile dock overflow sync when styles are ready", async () => {
+  const prototype = await loadHubPrototype();
+  const calls = [];
+  let resolveLoad = null;
+  const host = {
+    _renderId: 9,
+    _bootComplete: true,
+    _stylesReadyRenderId: 0,
+    _observeLayoutSize() {
+      calls.push("observeLayout");
+    },
+    _scheduleMobileDockOverflowState() {
+      calls.push("scheduleDockOverflow");
+    },
+    _scheduleIconSymbolRefresh() {
+      calls.push("scheduleIcons");
+    },
+  };
+  host._handleStylesReady = (detail) => prototype._handleStylesReady.call(host, detail);
+  host._handleStylesError = (detail) => prototype._handleStylesError.call(host, detail);
+  const links = [{
+    sheet: null,
+    addEventListener(type, handler) {
+      if (type === "load") resolveLoad = handler;
+    },
+  }];
+
+  const pending = prototype._awaitStylesAndFinalizeRender.call(host, {
+    links,
+    layout: "mobile",
+    renderId: 9,
+  });
+
+  resolveLoad?.();
+  await pending;
+
+  assert.equal(host._stylesReadyRenderId, 9);
+  assert.deepEqual(calls, [
+    "observeLayout",
+    "scheduleDockOverflow",
+    "scheduleIcons",
+  ]);
+});
+
 test("style finalization keeps the stylesheet fallback path intact", async () => {
   const prototype = await loadHubPrototype();
   const calls = [];

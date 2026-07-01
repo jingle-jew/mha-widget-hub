@@ -11,6 +11,7 @@ import {
 } from "../panels/panel-surface-contract.js";
 import { validateWallpaperFile } from "./wallpaper-storage.js";
 import { getThemeStyleOptions, getThemeVariantOptions } from "./theme-registry.js";
+import { getPageIconLabel, PAGE_ICON_OPTIONS } from "../pages/page-icons.js";
 import {
   NOW_BAR_NOW_ITEMS,
   getNowBarEntityOptions,
@@ -243,20 +244,6 @@ function finalizeSettingsPanel(root, header, body, onClose) {
   });
   return root;
 }
-
-
-const DOCK_ICON_OPTIONS = [
-  { name: "home", label: "Home", labelKey: "settings.dockIconLabels.home", category: "home" },
-  { name: "dashboard", label: "Dashboard", labelKey: "settings.dockIconLabels.dashboard", category: "navigation" },
-  { name: "apps", label: "Applications", labelKey: "settings.dockIconLabels.apps", category: "system" },
-  { name: "grid", label: "Grid", labelKey: "settings.dockIconLabels.grid", category: "navigation" },
-  { name: "light", label: "Lights", labelKey: "settings.dockIconLabels.light", category: "lighting" },
-  { name: "weather", label: "Weather", labelKey: "settings.dockIconLabels.weather", category: "weather" },
-  { name: "media-player", label: "Media", labelKey: "settings.dockIconLabels.media-player", category: "media_player" },
-  { name: "calendar", label: "Calendar", labelKey: "settings.dockIconLabels.calendar", category: "utility" },
-  { name: "star", label: "Favorite", labelKey: "settings.dockIconLabels.star", category: "utility" },
-  { name: "gear", label: "Settings", labelKey: "settings.dockIconLabels.gear", category: "system" },
-];
 
 const CLOCK_VARIANTS = [
   { value: "none", label: "No clock", labelKey: "settings.clockVariants.none" },
@@ -594,20 +581,21 @@ function createDockPageEditor({ page, onBack, onRename, onIconChange } = {}) {
 
   const iconGrid = document.createElement("div");
   iconGrid.className = "mha-settings-icon-grid";
-  DOCK_ICON_OPTIONS.forEach(option => {
+  PAGE_ICON_OPTIONS.forEach(option => {
+    const labelText = getPageIconLabel(option);
     const button = document.createElement("button");
     button.className = "mha-settings-icon-option";
     button.type = "button";
     button.dataset.selected = String((page?.icon || "grid") === option.name);
-    button.setAttribute("aria-label", optionLabel(option));
+    button.setAttribute("aria-label", labelText);
     button.append(createIcon({
       name: option.name,
       category: option.category,
-      label: optionLabel(option),
-      children: createIconSymbol({ name: option.name, label: optionLabel(option) }),
+      label: labelText,
+      children: createIconSymbol({ name: option.name, label: labelText }),
     }));
     const label = document.createElement("span");
-    label.textContent = optionLabel(option);
+    label.textContent = labelText;
     button.append(label);
     button.addEventListener("click", () => onIconChange?.(page.id, option.name));
     iconGrid.append(button);

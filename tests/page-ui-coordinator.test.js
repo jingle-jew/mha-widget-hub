@@ -34,6 +34,7 @@ function createHarness(overrides = {}) {
     dockSettingsPageId: "lights",
     settingsPage: "dock-detail",
     isEditing: true,
+    dockPosition: "right",
     isMobileLandscapeLayout: false,
     activeMoveWidgetId: "clock",
     pendingWidgetPlacement: { id: "pending" },
@@ -62,6 +63,7 @@ function createHarness(overrides = {}) {
     setDockSettingsPageId: (id) => { state.dockSettingsPageId = id; },
     setSettingsPage: (page) => { state.settingsPage = page; },
     getIsEditing: () => state.isEditing,
+    getDockPosition: () => state.dockPosition,
     isMobileLandscapeLayout: () => state.isMobileLandscapeLayout,
     normalizeWidget: (widget) => widget,
     savePages: () => true,
@@ -127,7 +129,7 @@ test("selecting a page closes placement state and reloads widgets", () => {
   assert.equal(calls.syncDocks, 1);
 });
 
-test("deleting a page cleans positions and reloads widgets when the active page changes", () => {
+test("deleting a selected dock-detail page returns settings to dock and cleans positions when the active page changes", () => {
   const { coordinator, state, calls } = createHarness({
     state: {
       pages: [
@@ -204,4 +206,5 @@ test("buildDockProps resolves dock content from the current theme manifest", () 
 
   assert.deepEqual(coordinator.buildDockProps().contentBuilder, "material-default");
   assert.equal(coordinator.buildDockProps().themeStyle, "material");
+  assert.equal(coordinator.buildDockProps().dockPosition, "right");
 });

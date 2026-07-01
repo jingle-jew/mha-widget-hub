@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { setLanguage } from "../src/i18n/index.js";
+import { getPageIconLabel, PAGE_ICON_OPTIONS } from "../src/pages/page-icons.js";
 import { createSettingsPanel } from "../src/settings/settings-panel.js";
 
 function createMockNode(tagName, namespaceURI = null) {
@@ -151,4 +152,22 @@ test("settings panel hides dock-only controls on mobile and keeps them on deskto
   assert.equal(hasText(mobileDock, "Dock position"), false);
   assert.equal(hasText(desktopDock, "Dock position"), true);
   assert.equal(hasText(mobileDock, "Dock icons"), true);
+}));
+
+test("dock detail reuses the shared page icon registry", () => withMockDocument(() => {
+  const dockDetail = createSettingsPanel({
+    open: true,
+    scope: "all",
+    settingsPage: "dock-detail",
+    dockPages: [{ id: "home", name: "Home", icon: "home" }],
+    selectedDockPageId: "home",
+  });
+
+  const iconButtons = dockDetail.querySelectorAll(".mha-settings-icon-option");
+
+  assert.equal(iconButtons.length, PAGE_ICON_OPTIONS.length);
+  assert.deepEqual(
+    iconButtons.map(button => button.attributes["aria-label"]),
+    PAGE_ICON_OPTIONS.map(option => getPageIconLabel(option)),
+  );
 }));
