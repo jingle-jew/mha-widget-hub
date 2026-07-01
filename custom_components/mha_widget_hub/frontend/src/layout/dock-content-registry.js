@@ -1,9 +1,14 @@
-import { getThemeDockDefinition } from "../settings/theme-registry.js";
+import { getDefaultThemeDockItems, getThemeDockItems } from "../settings/theme-dock-content.js";
 
 export const DOCK_ITEM_TYPES = Object.freeze({
   PAGE: "page",
   ACTION: "action",
   SPACER: "spacer",
+});
+
+const DOCK_MANIFEST_ITEM_TYPES = Object.freeze({
+  PAGES: "pages",
+  EDIT_ACTIONS: "edit-actions",
 });
 
 function createDefaultPageItems(pages = []) {
@@ -19,79 +24,68 @@ function createDefaultPageItems(pages = []) {
   }));
 }
 
-function createDefaultActionItems({
-  isEditing = false,
+function createEditActionItems({
   labels = {},
 } = {}) {
-  const items = [];
+  return [
+    {
+      type: DOCK_ITEM_TYPES.ACTION,
+      action: "add-page",
+      symbol: "plus",
+      category: "utility",
+      label: labels.addPage || "Add page",
+      className: "mha-dock-add-page",
+      mobileClassName: "mha-mobile-dock-add-page",
+    },
+    {
+      type: DOCK_ITEM_TYPES.ACTION,
+      action: "dock-settings",
+      symbol: "edit",
+      category: "utility",
+      label: labels.manageDock || "Manage dock",
+      className: "mha-dock-edit",
+      mobileClassName: "mha-mobile-dock-edit",
+    },
+  ];
+}
 
-  if (isEditing) {
-    items.push(
-      {
-        type: DOCK_ITEM_TYPES.ACTION,
-        action: "add-page",
-        symbol: "plus",
-        category: "utility",
-        label: labels.addPage || "Add page",
-        className: "mha-dock-add-page",
-        mobileClassName: "mha-mobile-dock-add-page",
-      },
-      {
-        type: DOCK_ITEM_TYPES.ACTION,
-        action: "dock-settings",
-        symbol: "edit",
-        category: "utility",
-        label: labels.manageDock || "Manage dock",
-        className: "mha-dock-edit",
-        mobileClassName: "mha-mobile-dock-edit",
-      },
-    );
+function resolveManifestItemLabel(item = {}, labels = {}) {
+  if (item.label) return item.label;
+  if (item.labelKey && labels[item.labelKey]) return labels[item.labelKey];
+  if (item.action === "settings") return labels.settings || "Settings";
+  if (item.action === "add-page") return labels.addPage || "Add page";
+  if (item.action === "dock-settings") return labels.manageDock || "Manage dock";
+  return item.label || item.pageId || item.action || "";
+}
+
+function buildDockItemsFromManifestItem(item = {}, state = {}) {
+  if (item.type === DOCK_MANIFEST_ITEM_TYPES.PAGES) {
+    return createDefaultPageItems(state.pages);
   }
 
-  items.push({
-    type: DOCK_ITEM_TYPES.ACTION,
-    action: "settings",
-    symbol: "gear",
-    category: "system",
-    label: labels.settings || "Settings",
-  });
+  if (item.type === DOCK_MANIFEST_ITEM_TYPES.EDIT_ACTIONS) {
+    return state.isEditing ? createEditActionItems({ labels: state.labels }) : [];
+  }
 
-  return items;
+  return [normalizeDockItem({
+    ...item,
+    label: resolveManifestItemLabel(item, state.labels || {}),
+  })].filter(Boolean);
 }
 
-export function buildDefaultDockItems({
-  pages = [],
-  isEditing = false,
-  labels = {},
-} = {}) {
-  return normalizeDockItems([
-    ...createDefaultPageItems(pages),
-    ...createDefaultActionItems({ isEditing, labels }),
-  ]);
+export function buildDockItemsFromManifest(items = [], state = {}) {
+  const manifestItems = Array.isArray(items) && items.length
+    ? items
+    : getDefaultThemeDockItems();
+  return normalizeDockItems(manifestItems.flatMap(item => buildDockItemsFromManifestItem(item, state)));
 }
 
-function buildIosDockItems(state = {}) {
-  return buildDefaultDockItems(state);
-}
-
-function buildOneUiDockItems(state = {}) {
-  return buildDefaultDockItems(state);
-}
-
-function buildMaterialDockItems(state = {}) {
-  return buildDefaultDockItems(state);
-}
-
-function buildAlexaDockItems(state = {}) {
-  return buildDefaultDockItems(state);
+export function buildDefaultDockItems(state = {}) {
+  return buildDockItemsFromManifest(getDefaultThemeDockItems(), state);
 }
 
 const DOCK_CONTENT_BUILDERS = Object.freeze({
   default: buildDefaultDockItems,
-  "ios-default": buildIosDockItems,
-  "oneui-default": buildOneUiDockItems,
-  "material-default": buildMaterialDockItems,
-  "alexa-default": buildAlexaDockItems,
 });
 
 function inferDockItemType(item = {}) {
@@ -140,16 +134,15 @@ export function getDockContentBuilder(name = "default") {
   return DOCK_CONTENT_BUILDERS[name] || DOCK_CONTENT_BUILDERS.default;
 }
 
-export function resolveDockContentBuilder(themeStyle = "oneui") {
-  const definition = getThemeDockDefinition(themeStyle);
-  return getDockContentBuilder(definition.contentBuilder);
+export function resolveDockContentBuilder() {
+  return getDockContentBuilder("default");
 }
 
 export function buildDockContent({
   themeStyle = "oneui",
   ...state
 } = {}) {
-  return normalizeDockItems(resolveDockContentBuilder(themeStyle)(state));
+  return buildDockItemsFromManifest(getThemeDockItems(themeStyle), state);
 }
 
 export function resolveDockItems({
@@ -158,9 +151,7 @@ export function resolveDockItems({
   themeStyle = "oneui",
   ...state
 } = {}) {
-  if (Array.isArray(items) && items.length) return normalizeDockItems(items);
-  const builder = contentBuilder
-    ? getDockContentBuilder(contentBuilder)
-    : resolveDockContentBuilder(themeStyle);
-  return normalizeDockItems(builder(state));
+  if (Array.isArray(items) && items.length) return buildDockItemsFromManifest(items, state);
+  if (contentBuilder) return normalizeDockItems(getDockContentBuilder(contentBuilder)(state));
+  return buildDockItemsFromManifest(getThemeDockItems(themeStyle), state);
 }
