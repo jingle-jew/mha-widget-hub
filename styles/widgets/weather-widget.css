@@ -982,3 +982,24 @@
   inline-size: 100%;
   max-inline-size: 100%;
 }
+
+
+/* 3x2: float detail pills so summary can span full width ------------------ */
+.mha-weather-widget[data-weather-size="3x2"] .mha-weather-widget-current {
+  position: relative;
+}
+
+.mha-weather-widget[data-weather-size="3x2"] .mha-weather-widget-details {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+  inline-size: min(42%, clamp(4.6rem, 30cqi, 6.4rem));
+  z-index: 1;
+}
+
+.mha-weather-widget[data-weather-size="3x2"] .mha-weather-widget-summary {
+  grid-column: 1 / -1;
+  inline-size: 100%;
+  max-inline-size: 100%;
+  padding-inline-end: 0;
+}
