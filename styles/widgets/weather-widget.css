@@ -878,7 +878,7 @@
 
   .mha-weather-widget[data-weather-size="4x2"] .mha-weather-widget-forecast {
     display: grid;
-    gap: clamp(.16rem, 1cqb, .28rem);
+    gap: clamp(.24rem, 1.45cqb, .4rem);
   }
 
   .mha-weather-widget[data-weather-size="4x2"] .mha-weather-widget-forecast-row {
