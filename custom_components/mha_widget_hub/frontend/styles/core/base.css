@@ -1,3 +1,19 @@
+/* INTERACTIVE TAP FEEDBACK RESET
+ * Android/WebView can paint a dark native tap overlay on buttons and custom
+ * button-like surfaces. Disable only that overlay and keep keyboard focus
+ * states owned by component :focus-visible rules.
+ */
+:where(
+  button,
+  [role="button"],
+  select,
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"]
+) {
+  -webkit-tap-highlight-color: transparent;
+}
+
 /* GLOBAL PAGE SCROLL LOCK FOR MHA DEV/PANEL SURFACE
  * The MHA panel itself owns the viewport. Settings/panels scroll internally.
  */
