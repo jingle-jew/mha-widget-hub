@@ -63,8 +63,8 @@
   --mha-oneui-dock-active-surface:
     linear-gradient(
       145deg,
-      color-mix(in srgb, rgba(255,255,255,.98) 92%, var(--mha-accent) 5%),
-      color-mix(in srgb, rgba(240,245,252,.92) 90%, var(--mha-accent) 4%)
+      color-mix(in srgb, rgba(216,222,230,.96) 94%, var(--mha-accent) 3%),
+      color-mix(in srgb, rgba(198,206,217,.92) 94%, var(--mha-accent) 3%)
     );
   --mha-oneui-dock-active-border: color-mix(in srgb, rgba(255,255,255,.72) 88%, var(--mha-accent) 8%);
   --mha-oneui-dock-active-shadow:
@@ -114,8 +114,8 @@
   --mha-oneui-dock-active-surface:
     linear-gradient(
       145deg,
-      color-mix(in srgb, rgba(255,255,255,.22) 82%, var(--mha-accent) 8%),
-      color-mix(in srgb, rgba(255,255,255,.12) 86%, var(--mha-accent) 5%)
+      color-mix(in srgb, rgba(148,156,168,.34) 88%, var(--mha-accent) 4%),
+      color-mix(in srgb, rgba(108,118,132,.28) 90%, var(--mha-accent) 3%)
     );
   --mha-oneui-dock-active-border: color-mix(in srgb, rgba(255,255,255,.24) 82%, var(--mha-accent) 8%);
   --mha-oneui-dock-active-shadow:
