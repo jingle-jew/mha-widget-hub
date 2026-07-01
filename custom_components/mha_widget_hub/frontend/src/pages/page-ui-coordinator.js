@@ -124,6 +124,7 @@ export class PageUiCoordinator {
         isEditing: this.getIsEditing(),
       }),
       themeStyle,
+      usesDock: dockDefinition.usesDock,
       contentBuilder: dockDefinition.contentBuilder,
       onPageSelect: (id) => this.selectPage(id),
       onAddPage: () => this.openPageCreator(),
@@ -319,8 +320,4 @@ export class PageUiCoordinator {
     this.refreshAfterActivePageChange(previousPage, nextPage);
     return true;
   }
-}
-
-export function createPageUiCoordinator(options = {}) {
-  return new PageUiCoordinator(options);
 }
