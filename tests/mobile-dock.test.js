@@ -83,16 +83,20 @@ test("mobile dock renders a direct nav without launcher, panel, or scrim", () =>
   });
 
   assert.equal(dock.tagName, "nav");
-  assert.equal(dock.className, "mha-mobile-dock");
+  assert.equal(dock.className, "mha-mobile-dock is-paged");
   assert.equal(dock.attributes["aria-label"], "Dock");
-  assert.equal(dock.children.length, 3);
+  assert.equal(dock.style.values["--mha-mobile-dock-page-count"], "1");
+  assert.equal(dock.children.length, 1);
   assert.equal(dock.children.some(child => child.className === "mha-mobile-dock-launcher"), false);
   assert.equal(dock.children.some(child => child.className === "mha-mobile-dock-panel"), false);
   assert.equal(dock.children.some(child => child.className === "mha-mobile-dock-scrim"), false);
-  assert.equal(dock.children[1].dataset.active, "true");
-  assert.equal(dock.children[1].attributes["aria-current"], "page");
-  assert.equal(dock.children[1].children[1]?.className, "mha-dock-item-label");
-  assert.equal(dock.children[1].children[1]?.textContent, "Lights");
+  assert.equal(dock.children[0].className, "mha-dock-pages");
+  assert.equal(dock.children[0].children.length, 1);
+  assert.equal(dock.children[0].children[0].className, "mha-dock-page");
+  assert.equal(dock.children[0].children[0].children[1].dataset.active, "true");
+  assert.equal(dock.children[0].children[0].children[1].attributes["aria-current"], "page");
+  assert.equal(dock.children[0].children[0].children[1].children[1]?.className, "mha-dock-item-label");
+  assert.equal(dock.children[0].children[0].children[1].children[1]?.textContent, "Lights");
 }));
 
 test("mobile dock keeps page and edit callbacks without the old panel flow", () => withMockDom(() => {
@@ -109,11 +113,12 @@ test("mobile dock keeps page and edit callbacks without the old panel flow", () 
     onSettings: () => calls.push("settings"),
   });
 
-  assert.equal(dock.children.length, 4);
-  dock.children[0].listeners.click?.();
-  dock.children[1].listeners.click?.();
-  dock.children[2].listeners.click?.();
-  dock.children[3].listeners.click?.();
+  const page = dock.children[0].children[0];
+  assert.equal(page.children.length, 4);
+  page.children[0].listeners.click?.();
+  page.children[1].listeners.click?.();
+  page.children[2].listeners.click?.();
+  page.children[3].listeners.click?.();
 
   assert.deepEqual(calls, [
     ["page", "home"],
@@ -125,7 +130,8 @@ test("mobile dock keeps page and edit callbacks without the old panel flow", () 
 
 test("mobile dock still dispatches the settings event fallback", () => withMockDom(() => {
   const dock = createMobileDock();
-  const settingsButton = dock.children[dock.children.length - 1];
+  const page = dock.children[0].children[0];
+  const settingsButton = page.children[page.children.length - 1];
   settingsButton.listeners.click?.();
 
   assert.equal(dock.lastDispatchedEvent?.type, "mha-open-settings");
@@ -143,11 +149,12 @@ test("mobile dock renders typed spacer items without breaking page and action it
     ],
   });
 
-  assert.equal(dock.children.length, 3);
-  assert.equal(dock.children[0].dataset.dockItemType, "page");
-  assert.equal(dock.children[1].className, "mha-mobile-dock-spacer mha-mobile-dock-gap");
-  assert.equal(dock.children[1].attributes["aria-hidden"], "true");
-  assert.equal(dock.children[2].dataset.dockItemType, "action");
+  const page = dock.children[0].children[0];
+  assert.equal(page.children.length, 3);
+  assert.equal(page.children[0].dataset.dockItemType, "page");
+  assert.equal(page.children[1].className, "mha-mobile-dock-spacer mha-mobile-dock-gap");
+  assert.equal(page.children[1].attributes["aria-hidden"], "true");
+  assert.equal(page.children[2].dataset.dockItemType, "action");
 }));
 
 test("mobile dock groups overflowing items into snap pages of four", () => withMockDom(() => {

@@ -30,6 +30,7 @@
   --mha-dock-item-label-line-height: 1;
   --mha-dock-item-label-font-weight: 600;
   --mha-dock-item-label-letter-spacing: -.01em;
+  --mha-dock-gap: clamp(0.35rem, 1.1vw, 0.8rem);
 
   position: absolute;
   z-index: 8;
@@ -44,7 +45,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: clamp(0.35rem, 1.1vw, 0.8rem);
+  gap: var(--mha-dock-gap);
   padding:
     var(--mha-dock-empty-padding-block)
     var(--mha-dock-empty-padding-inline);

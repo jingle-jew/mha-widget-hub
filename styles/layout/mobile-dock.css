@@ -15,14 +15,29 @@
     --mha-mobile-dock-bottom: max(var(--mha-safe-bottom, env(safe-area-inset-bottom, 0px)), clamp(.85rem, 2.8vw, 1.2rem));
     --mha-mobile-dock-gap: clamp(0.25rem, 1vw, 0.45rem);
     --mha-mobile-dock-padding: clamp(0.5rem, 1.5vw, 0.75rem);
+    --mha-mobile-dock-padding-inline: var(--mha-mobile-dock-padding);
+    --mha-mobile-dock-padding-block: var(--mha-mobile-dock-padding);
     --mha-mobile-dock-visible-icons: 4;
     --mha-mobile-dock-width: calc(100vw - (var(--mha-mobile-dock-edge) * 2));
     --mha-mobile-dock-slot-width: calc(
-      (var(--mha-mobile-dock-width) - (var(--mha-mobile-dock-padding) * 2) - (var(--mha-mobile-dock-gap) * 3))
+      (var(--mha-mobile-dock-width) - (var(--mha-mobile-dock-padding-inline) * 2) - (var(--mha-mobile-dock-gap) * 3))
       / var(--mha-mobile-dock-visible-icons)
     );
     --mha-icon-size: min(var(--mha-mobile-dock-slot-width), clamp(3rem, 14vw, 4.15rem));
     --mha-icon-glyph-size: 82%;
+    --mha-mobile-dock-height: calc((var(--mha-icon-size) * 1.5) + (var(--mha-mobile-dock-padding-block) * 2));
+    --mha-mobile-dock-item-inline-size: var(--mha-mobile-dock-slot-width);
+    --mha-mobile-dock-item-block-size: var(--mha-icon-size);
+    --mha-mobile-dock-item-min-inline-size: var(--mha-mobile-dock-item-inline-size);
+    --mha-mobile-dock-item-min-block-size: var(--mha-mobile-dock-item-block-size);
+    --mha-mobile-dock-item-padding-inline: 0;
+    --mha-mobile-dock-item-padding-block: 0;
+    --mha-mobile-dock-item-label-display: var(--mha-dock-item-label-display);
+    --mha-mobile-dock-item-label-font-size: var(--mha-dock-item-label-font-size);
+    --mha-mobile-dock-item-label-line-height: var(--mha-dock-item-label-line-height);
+    --mha-mobile-dock-item-label-font-weight: var(--mha-dock-item-label-font-weight);
+    --mha-mobile-dock-item-label-letter-spacing: var(--mha-dock-item-label-letter-spacing);
+    --mha-mobile-dock-item-label-padding-inline: var(--mha-dock-item-label-padding-inline);
 
     position: fixed;
     left: var(--mha-mobile-dock-edge);
@@ -33,7 +48,7 @@
     inline-size: var(--mha-mobile-dock-width);
     min-inline-size: 0;
     max-inline-size: var(--mha-mobile-dock-width);
-    min-block-size: calc((var(--mha-icon-size) * 1.5) + (var(--mha-mobile-dock-padding) * 2));
+    min-block-size: var(--mha-mobile-dock-height);
 
     display: grid;
     grid-auto-flow: column;
@@ -45,7 +60,8 @@
     justify-items: center;
     justify-content: center;
     gap: var(--mha-mobile-dock-gap);
-    padding: var(--mha-mobile-dock-padding);
+    padding-block: var(--mha-mobile-dock-padding-block);
+    padding-inline: var(--mha-mobile-dock-padding-inline);
 
     border: 1px solid var(--mha-shell-border, var(--mha-border-secondary));
     border-radius: clamp(1.45rem, 5vw, var(--mha-dock-radius, 2rem));
@@ -58,7 +74,7 @@
     overflow-y: hidden;
     scrollbar-width: none;
     scroll-snap-type: x mandatory;
-    scroll-padding-inline: var(--mha-mobile-dock-padding);
+    scroll-padding-inline: var(--mha-mobile-dock-padding-inline);
     overscroll-behavior-inline: contain;
     pointer-events: auto;
     transform: translateY(0);
@@ -108,12 +124,13 @@
     position: relative;
     display: grid;
     place-items: center;
-    inline-size: var(--mha-mobile-dock-slot-width);
-    block-size: var(--mha-icon-size);
-    min-inline-size: var(--mha-mobile-dock-slot-width);
-    min-block-size: var(--mha-icon-size);
+    inline-size: var(--mha-mobile-dock-item-inline-size);
+    block-size: var(--mha-mobile-dock-item-block-size);
+    min-inline-size: var(--mha-mobile-dock-item-min-inline-size);
+    min-block-size: var(--mha-mobile-dock-item-min-block-size);
     margin: 0;
-    padding: 0;
+    padding-block: var(--mha-mobile-dock-item-padding-block);
+    padding-inline: var(--mha-mobile-dock-item-padding-inline);
     border: 0;
     background: transparent;
     color: inherit;
@@ -146,8 +163,13 @@
     margin-inline: auto;
   }
 
-  .mha-dock-item-label {
-    display: none;
+  .mha-mobile-dock-item > .mha-dock-item-label {
+    display: var(--mha-mobile-dock-item-label-display);
+    font-size: var(--mha-mobile-dock-item-label-font-size);
+    line-height: var(--mha-mobile-dock-item-label-line-height);
+    font-weight: var(--mha-mobile-dock-item-label-font-weight);
+    letter-spacing: var(--mha-mobile-dock-item-label-letter-spacing);
+    padding-inline: var(--mha-mobile-dock-item-label-padding-inline);
   }
 
   .mha-mobile-dock-item[data-active="true"]::after {

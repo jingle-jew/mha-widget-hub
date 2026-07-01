@@ -12,13 +12,8 @@ function appendDockItems(container, items, renderItem) {
 }
 
 function appendPagedDockItems(dock, items, renderItem) {
-  if (items.length <= DOCK_PAGE_SIZE) {
-    appendDockItems(dock, items, renderItem);
-    return;
-  }
-
   dock.classList.add("is-paged");
-  const pageCount = Math.ceil(items.length / DOCK_PAGE_SIZE);
+  const pageCount = Math.max(1, Math.ceil(items.length / DOCK_PAGE_SIZE));
   dock.style?.setProperty?.("--mha-mobile-dock-page-count", String(pageCount));
   const pages = document.createElement("div");
   pages.className = "mha-dock-pages";

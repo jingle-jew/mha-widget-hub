@@ -280,16 +280,26 @@
   --mha-oneui-compact-dock-item-padding-block-start: .22rem;
   --mha-oneui-compact-dock-item-padding-block-end: .24rem;
   --mha-oneui-compact-dock-active-inset: .08rem;
+
+  --mha-mobile-dock-visible-icons: var(--mha-oneui-compact-dock-visible-items);
+  --mha-mobile-dock-height: var(--mha-oneui-compact-dock-height);
+  --mha-mobile-dock-padding-inline: var(--mha-oneui-compact-dock-padding-inline);
+  --mha-mobile-dock-padding-block: var(--mha-oneui-compact-dock-padding-block);
+  --mha-mobile-dock-item-block-size: var(--mha-oneui-compact-dock-item-height);
+  --mha-mobile-dock-item-min-block-size: var(--mha-oneui-compact-dock-item-height);
+  --mha-mobile-dock-item-padding-inline: var(--mha-oneui-compact-dock-item-padding-inline);
+  --mha-mobile-dock-item-padding-block: var(--mha-oneui-compact-dock-item-padding-block-start) var(--mha-oneui-compact-dock-item-padding-block-end);
+  --mha-mobile-dock-item-label-display: block;
+  --mha-mobile-dock-item-label-padding-inline: .12rem;
+  --mha-dock-gap: var(--mha-oneui-compact-dock-gap);
 }
 
 :host([data-theme-style="oneui"]) .mha-mobile-dock,
 :host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock.mha-dock {
   --mha-mobile-dock-gap: var(--mha-oneui-compact-dock-gap);
-  --mha-mobile-dock-padding: var(--mha-oneui-compact-dock-padding-block);
   --mha-dock-empty-height: var(--mha-oneui-compact-dock-height);
   --mha-dock-empty-padding-inline: var(--mha-oneui-compact-dock-padding-inline);
   --mha-dock-empty-padding-block: var(--mha-oneui-compact-dock-padding-block);
-  --mha-dock-gap: var(--mha-oneui-compact-dock-gap);
   --mha-icon-size: var(--mha-oneui-compact-dock-icon-size);
 }
 
@@ -297,10 +307,6 @@
   inline-size: var(--mha-oneui-compact-dock-width);
   min-inline-size: 0;
   max-inline-size: var(--mha-oneui-compact-dock-width);
-  min-block-size: var(--mha-oneui-compact-dock-height);
-  padding-block: var(--mha-oneui-compact-dock-padding-block);
-  padding-inline: var(--mha-oneui-compact-dock-padding-inline);
-  gap: var(--mha-oneui-compact-dock-gap);
 }
 
 :host([data-theme-style="oneui"]) .mha-mobile-dock.is-paged {
@@ -310,7 +316,7 @@
 
 :host([data-theme-style="oneui"]) .mha-mobile-dock.is-paged > .mha-dock-pages > .mha-dock-page {
   box-sizing: border-box;
-  padding-inline: var(--mha-oneui-compact-dock-padding-inline);
+  padding-inline: var(--mha-mobile-dock-padding-inline);
 }
 
 @media (min-width: 768px) {
@@ -355,7 +361,9 @@
 :host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock-item {
   display: grid;
   grid-template-rows: var(--mha-icon-size) auto;
+  place-items: initial;
   align-content: center;
+  align-items: stretch;
   justify-items: center;
   row-gap: var(--mha-oneui-compact-dock-item-row-gap);
   justify-self: stretch;
@@ -367,10 +375,10 @@
   );
   min-inline-size: 0;
   max-inline-size: none;
-  block-size: var(--mha-oneui-compact-dock-item-height);
-  min-block-size: var(--mha-oneui-compact-dock-item-height);
-  padding-block: var(--mha-oneui-compact-dock-item-padding-block-start) var(--mha-oneui-compact-dock-item-padding-block-end);
-  padding-inline: var(--mha-oneui-compact-dock-item-padding-inline);
+  block-size: var(--mha-mobile-dock-item-block-size);
+  min-block-size: var(--mha-mobile-dock-item-min-block-size);
+  padding-block: var(--mha-mobile-dock-item-padding-block);
+  padding-inline: var(--mha-mobile-dock-item-padding-inline);
   aspect-ratio: auto;
   overflow: hidden;
 }
@@ -379,6 +387,21 @@
   inline-size: 100%;
   min-inline-size: 0;
   scroll-snap-align: none;
+}
+
+:host([data-theme-style="oneui"]) .mha-mobile-dock.is-paged > .mha-dock-pages > .mha-dock-page > .mha-mobile-dock-item {
+  display: grid;
+  grid-template-rows: var(--mha-icon-size) auto;
+  place-items: initial;
+  align-content: center;
+  align-items: stretch;
+  justify-items: center;
+  row-gap: var(--mha-oneui-compact-dock-item-row-gap);
+  block-size: var(--mha-oneui-compact-dock-item-height);
+  min-block-size: var(--mha-oneui-compact-dock-item-height);
+  padding-block: var(--mha-oneui-compact-dock-item-padding-block-start) var(--mha-oneui-compact-dock-item-padding-block-end);
+  padding-inline: var(--mha-oneui-compact-dock-item-padding-inline);
+  overflow: hidden;
 }
 
 :host([data-theme-style="oneui"]) .mha-mobile-dock-item {
@@ -408,12 +431,34 @@
   inline-size: 100%;
   min-inline-size: 0;
   max-inline-size: 100%;
+  box-sizing: border-box;
   align-self: start;
   overflow: hidden;
   text-overflow: ellipsis;
   text-align: center;
   white-space: nowrap;
-  padding-inline: .12rem;
+  color: color-mix(in srgb, var(--mha-text) 84%, transparent);
+  opacity: .92;
+  font-size: clamp(.53rem, .52rem + .16vw, .58rem);
+  line-height: .98;
+  font-weight: 600;
+  letter-spacing: -.01em;
+  padding-inline: var(--mha-mobile-dock-item-label-padding-inline);
+}
+
+:host([data-theme-style="oneui"]) .mha-mobile-dock.is-paged > .mha-dock-pages > .mha-dock-page > .mha-mobile-dock-item > .mha-dock-item-label {
+  display: block;
+  visibility: visible;
+  inline-size: 100%;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  min-block-size: calc(
+    var(--mha-oneui-compact-dock-item-height) -
+    var(--mha-icon-size) -
+    var(--mha-oneui-compact-dock-item-padding-block-start) -
+    var(--mha-oneui-compact-dock-item-padding-block-end) -
+    var(--mha-oneui-compact-dock-item-row-gap)
+  );
 }
 
 @media (max-width: 430px) {
