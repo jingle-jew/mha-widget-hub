@@ -35,30 +35,46 @@
   :host([data-theme-style="oneui"][data-dock-position="left"]) .mha-dock,
   :host([data-theme-style="oneui"][data-dock-position="right"]) .mha-dock,
   :host([data-theme-style="oneui"]:not([data-dock-position])) .mha-dock {
-    --mha-dock-empty-width: clamp(9.8rem, 12vw, 10.9rem);
-    --mha-dock-rail-padding-block: clamp(.52rem, 1vw, .82rem);
-    --mha-dock-rail-padding-inline: clamp(.48rem, .82vw, .64rem);
-    --mha-dock-rail-gap: clamp(.18rem, .4vw, .32rem);
-    --mha-icon-size: clamp(2.02rem, 2.2vw, 2.4rem);
+    --mha-dock-empty-width: clamp(12.75rem, 18vw, 16rem);
+    --mha-dock-empty-height: auto;
+    --mha-dock-rail-padding-block: clamp(.45rem, .9vw, .7rem);
+    --mha-dock-rail-padding-inline: clamp(.62rem, .92vw, .85rem);
+    --mha-dock-rail-gap: clamp(.42rem, .78vw, .68rem);
+    --mha-icon-size: clamp(1.85rem, 2vw, 2.25rem);
+    --mha-dock-icon-min-size: var(--mha-icon-size);
     --mha-dock-item-inline-size: 100%;
     --mha-dock-item-block-size: auto;
     --mha-dock-item-min-inline-size: 0;
-    --mha-dock-item-min-block-size: calc(var(--mha-icon-size) + 1.02rem);
-    --mha-dock-item-padding-block: clamp(.24rem, .42vw, .32rem);
-    --mha-dock-item-padding-inline: var(--mha-control-edge-balance, clamp(.28rem, .48vw, .46rem));
-    --mha-dock-item-gap: var(--mha-control-gap, clamp(.5rem, .72vw, .78rem));
+    --mha-dock-item-min-block-size: calc(var(--mha-icon-size) + clamp(.75rem, 1.1vw, 1.05rem));
+    --mha-dock-item-padding-block: clamp(.34rem, .55vw, .48rem);
+    --mha-dock-item-padding-inline: clamp(.72rem, 1vw, 1rem);
+    --mha-dock-item-gap: clamp(.7rem, .92vw, .95rem);
     --mha-dock-item-justify-content: start;
     --mha-dock-item-aspect-ratio: auto;
     --mha-dock-item-overflow: hidden;
     --mha-dock-item-label-display: block;
     --mha-dock-item-label-text-align: left;
     --mha-dock-item-label-color: var(--mha-text);
-    --mha-dock-item-label-opacity: .84;
+    --mha-dock-item-label-opacity: .92;
     --mha-dock-item-label-padding-inline: 0;
-    --mha-dock-item-label-font-size: var(--mha-type-control-state-size, var(--mha-font-size-control-state, .76rem));
-    --mha-dock-item-label-line-height: var(--mha-type-control-line-height, 1.05);
-    --mha-dock-item-label-font-weight: var(--mha-type-control-state-weight, 650);
-    --mha-dock-item-label-letter-spacing: var(--mha-type-control-state-tracking, -.01em);
+    --mha-dock-item-label-font-size: clamp(.88rem, .82rem + .22vw, 1.05rem);
+    --mha-dock-item-label-line-height: 1.08;
+    --mha-dock-item-label-font-weight: 700;
+    --mha-dock-item-label-letter-spacing: -.03em;
+
+    box-sizing: border-box;
+    width: var(--mha-dock-empty-width);
+    min-width: var(--mha-dock-empty-width);
+    max-width: min(18rem, calc(100vw - (var(--mha-page-padding, 1rem) * 2)));
+    padding-block: var(--mha-dock-rail-padding-block);
+    padding-inline: var(--mha-dock-rail-padding-inline);
+    gap: var(--mha-dock-rail-gap);
+    overflow: visible;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
 
   :host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock.mha-dock {
@@ -171,6 +187,19 @@
     justify-content: start;
     justify-items: start;
     column-gap: var(--mha-dock-item-gap);
+    box-sizing: border-box;
+    inline-size: 100%;
+    max-inline-size: 100%;
+    border: 1px solid var(--mha-control-border, var(--mha-border-secondary));
+    background: var(--mha-control-surface, var(--mha-widget-surface, var(--mha-surface-panel)));
+    color: var(--mha-text);
+    box-shadow: var(--mha-control-shadow, var(--mha-shadow-soft, none));
+  }
+
+  :host([data-theme-style="oneui"][data-dock-position="left"]) .mha-dock-item[data-active="true"]::before,
+  :host([data-theme-style="oneui"][data-dock-position="right"]) .mha-dock-item[data-active="true"]::before,
+  :host([data-theme-style="oneui"]:not([data-dock-position])) .mha-dock-item[data-active="true"]::before {
+    inset: 0;
   }
 
   :host([data-theme-style="oneui"][data-dock-position="left"]) .mha-dock-item > .mha-icon,
@@ -185,6 +214,18 @@
   :host([data-theme-style="oneui"]:not([data-dock-position])) .mha-dock-item > .mha-dock-item-label {
     justify-self: start;
     align-self: center;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: start;
+    white-space: nowrap;
+    color: var(--mha-dock-item-label-color);
+    opacity: var(--mha-dock-item-label-opacity);
+    font-size: var(--mha-dock-item-label-font-size);
+    line-height: var(--mha-dock-item-label-line-height);
+    font-weight: var(--mha-dock-item-label-font-weight);
+    letter-spacing: var(--mha-dock-item-label-letter-spacing);
   }
 
   :host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock-item {
