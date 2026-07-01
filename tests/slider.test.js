@@ -362,7 +362,7 @@ test("mobile slider arms after the delay and dispatches input/change only when a
     input.rect = { top: 0, left: 0, width: 100, height: 24 };
     attachToHost(slider, { layout: "mobile" });
 
-    input.dispatchEvent({
+    slider.dispatchEvent({
       type: "pointerdown",
       pointerId: 2,
       button: 0,
@@ -370,13 +370,13 @@ test("mobile slider arms after the delay and dispatches input/change only when a
       clientY: 10,
     });
     armedCallback?.();
-    input.dispatchEvent({
+    slider.dispatchEvent({
       type: "pointermove",
       pointerId: 2,
       clientX: 80,
       clientY: 10,
     });
-    input.dispatchEvent({
+    slider.dispatchEvent({
       type: "pointerup",
       pointerId: 2,
       clientX: 80,

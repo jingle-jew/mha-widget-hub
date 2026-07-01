@@ -302,6 +302,7 @@ export function createSlider({
 
   const rotor = document.createElement("span");
   rotor.className = "mha-slider-rotor";
+  const mobileInteractionTarget = wrapper;
 
   const syncValue = (currentValue) => {
     const percent = getSliderPercent(currentValue, min, max);
@@ -363,9 +364,9 @@ export function createSlider({
     if (
       state === "active"
       && event?.type !== "lostpointercapture"
-      && input.hasPointerCapture?.(pointerId)
+      && mobileInteractionTarget.hasPointerCapture?.(pointerId)
     ) {
-      input.releasePointerCapture?.(pointerId);
+      mobileInteractionTarget.releasePointerCapture?.(pointerId);
     }
 
     if (emitChange && state === "active") {
@@ -380,13 +381,13 @@ export function createSlider({
     mobileSession.state = "active";
     wrapper.classList.add("is-slider-dragging");
     mobileSession.scrollContainer?.classList?.add?.("is-mobile-slider-dragging");
-    input.setPointerCapture?.(mobileSession.pointerId);
+    mobileInteractionTarget.setPointerCapture?.(mobileSession.pointerId);
     if (mobileSession.lastEvent) {
       setSliderValueFromPointer(wrapper, input, mobileSession.lastEvent, min, max);
     }
   };
 
-  input.addEventListener("pointerdown", (event) => {
+  const handleMobilePointerDown = (event) => {
     const state = getInteractionState();
     if (!canStartMobileSliderSession({
       layout: state.layout,
@@ -397,6 +398,7 @@ export function createSlider({
     })) {
       return;
     }
+    if (mobileSession?.pointerId === event.pointerId) return;
 
     clearMobileSession(null);
     mobileSession = {
@@ -408,9 +410,9 @@ export function createSlider({
       scrollContainer: wrapper.closest(".mha-widget-area"),
       armTimer: setTimeout(() => armMobileSession(), SLIDER_ARM_DELAY_MS),
     };
-  });
+  };
 
-  input.addEventListener("pointermove", (event) => {
+  const handleMobilePointerMove = (event) => {
     if (!mobileSession || event.pointerId !== mobileSession.pointerId) return;
     mobileSession.lastEvent = event;
 
@@ -429,7 +431,7 @@ export function createSlider({
     setSliderValueFromPointer(wrapper, input, event, min, max);
     event.preventDefault?.();
     event.stopPropagation?.();
-  });
+  };
 
   const finishMobilePointer = (event) => {
     if (!mobileSession || (event.pointerId !== undefined && event.pointerId !== mobileSession.pointerId)) return;
@@ -444,9 +446,13 @@ export function createSlider({
     clearMobileSession(event, { emitChange: wasActive });
   };
 
-  input.addEventListener("pointerup", finishMobilePointer);
-  input.addEventListener("pointercancel", finishMobilePointer);
-  input.addEventListener("lostpointercapture", finishMobilePointer);
+  [mobileInteractionTarget, input].forEach((target) => {
+    target.addEventListener("pointerdown", handleMobilePointerDown);
+    target.addEventListener("pointermove", handleMobilePointerMove);
+    target.addEventListener("pointerup", finishMobilePointer);
+    target.addEventListener("pointercancel", finishMobilePointer);
+    target.addEventListener("lostpointercapture", finishMobilePointer);
+  });
 
   rotor.append(oneUiTrack, input);
   wrapper.append(rotor);
@@ -456,6 +462,13 @@ export function createSlider({
     stopObservingLayout();
     wrapper.classList.remove("is-slider-dragging");
     clearMobileSession(null);
+    [mobileInteractionTarget, input].forEach((target) => {
+      target.removeEventListener?.("pointerdown", handleMobilePointerDown);
+      target.removeEventListener?.("pointermove", handleMobilePointerMove);
+      target.removeEventListener?.("pointerup", finishMobilePointer);
+      target.removeEventListener?.("pointercancel", finishMobilePointer);
+      target.removeEventListener?.("lostpointercapture", finishMobilePointer);
+    });
     delete wrapper.__mhaSliderApi;
   };
 
