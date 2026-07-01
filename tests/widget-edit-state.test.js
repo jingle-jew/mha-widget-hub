@@ -7,6 +7,18 @@ import {
   getNextEditMode,
 } from "../src/widgets/widget-edit-state.js";
 
+function createClassList(...tokens) {
+  const set = new Set(tokens);
+  return {
+    remove(...values) {
+      values.forEach((value) => set.delete(value));
+    },
+    contains(value) {
+      return set.has(value);
+    },
+  };
+}
+
 test("canToggleEditMode blocks entering edit mode in mobile landscape", () => {
   assert.equal(canToggleEditMode({ isEditing: false, isMobileLandscape: true }), false);
 });
@@ -31,6 +43,7 @@ test("clearWidgetPlacementState resets transient widget placement state", () => 
     _pendingWidgetPlacement: { id: "widget-2" },
     _widgetManagerOpen: true,
     _widgetManagerCategory: "lighting",
+    classList: createClassList("is-widget-drag-pending", "is-widget-dragging"),
   };
 
   const result = clearWidgetPlacementState(host);
@@ -40,4 +53,6 @@ test("clearWidgetPlacementState resets transient widget placement state", () => 
   assert.equal(host._pendingWidgetPlacement, null);
   assert.equal(host._widgetManagerOpen, false);
   assert.equal(host._widgetManagerCategory, "");
+  assert.equal(host.classList.contains("is-widget-drag-pending"), false);
+  assert.equal(host.classList.contains("is-widget-dragging"), false);
 });

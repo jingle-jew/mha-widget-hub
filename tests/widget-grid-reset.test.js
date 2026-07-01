@@ -10,6 +10,12 @@ test("resetWidgetGridState clears grid storage and reloads persisted state", () 
   const host = {
     _widgetPositions: { weather: { x: 1, y: 1 } },
     _activeMoveWidgetId: "weather",
+    classList: {
+      removed: [],
+      remove(...tokens) {
+        this.removed.push(...tokens);
+      },
+    },
     _pages: [],
     _activePageId: "old",
     _widgets: [],
@@ -39,6 +45,7 @@ test("resetWidgetGridState clears grid storage and reloads persisted state", () 
   assert.equal(result, host);
   assert.deepEqual(host._widgetPositions, {});
   assert.equal(host._activeMoveWidgetId, "");
+  assert.deepEqual(host.classList.removed, ["is-widget-drag-pending", "is-widget-dragging"]);
   assert.equal(host._pages, nextPages);
   assert.equal(host._activePageId, "home");
   assert.equal(host._widgets, nextWidgets);

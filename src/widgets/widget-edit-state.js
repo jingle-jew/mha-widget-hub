@@ -11,6 +11,7 @@ export function clearWidgetPlacementState(host) {
   host._pendingWidgetPlacement = null;
   host._widgetManagerOpen = false;
   host._widgetManagerCategory = "";
+  host.classList?.remove?.("is-widget-drag-pending", "is-widget-dragging");
 
   return host;
 }
