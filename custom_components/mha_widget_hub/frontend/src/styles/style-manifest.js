@@ -1,4 +1,4 @@
-import { getThemeCssPaths } from "../settings/theme-registry.js";
+import { getThemeCssPaths, getThemeDockCssPaths } from "../settings/theme-registry.js";
 import { WIDGET_REGISTRY } from "../widgets/widget-registry.js";
 
 const entry = (path, layer) => Object.freeze([path, layer]);
@@ -97,6 +97,10 @@ export function getThemeStyleManifestEntries() {
   return getThemeCssPaths().map((path) => entry(path, "theme"));
 }
 
+export function getThemeDockStyleManifestEntries() {
+  return getThemeDockCssPaths().map((path) => entry(path, "theme"));
+}
+
 export function getWidgetStyleManifestEntries() {
   const orderedDefinitions = [
     ...WIDGET_CSS_ORDER.map((kind) => WIDGET_REGISTRY[kind]).filter(Boolean),
@@ -113,6 +117,7 @@ export function getStyleManifest() {
     ...STATIC_STYLE_MANIFEST_BEFORE_THEMES,
     ...getThemeStyleManifestEntries(),
     ...STATIC_STYLE_MANIFEST_AFTER_THEMES,
+    ...getThemeDockStyleManifestEntries(),
     ...getWidgetStyleManifestEntries(),
     ...STATIC_STYLE_MANIFEST_AFTER_WIDGETS,
   ]);

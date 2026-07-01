@@ -118,3 +118,20 @@ test("mobile dock still dispatches the settings event fallback", () => withMockD
   assert.equal(dock.lastDispatchedEvent?.bubbles, true);
   assert.equal(dock.lastDispatchedEvent?.composed, true);
 }));
+
+test("mobile dock renders typed spacer items without breaking page and action items", () => withMockDom(() => {
+  const dock = createMobileDock({
+    activePageId: "home",
+    items: [
+      { type: "page", pageId: "home", symbol: "home", label: "Home" },
+      { type: "spacer", mobileClassName: "mha-mobile-dock-gap" },
+      { type: "action", action: "settings", symbol: "gear", label: "Settings" },
+    ],
+  });
+
+  assert.equal(dock.children.length, 3);
+  assert.equal(dock.children[0].dataset.dockItemType, "page");
+  assert.equal(dock.children[1].className, "mha-mobile-dock-spacer mha-mobile-dock-gap");
+  assert.equal(dock.children[1].attributes["aria-hidden"], "true");
+  assert.equal(dock.children[2].dataset.dockItemType, "action");
+}));

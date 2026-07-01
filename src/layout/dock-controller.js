@@ -1,32 +1,17 @@
 import { createDock } from "./dock.js";
 import { createMobileDock } from "./mobile-dock.js";
+import { resolveDockItems } from "./dock-content-registry.js";
 
 function buildDockStructureSignatureFromProps(props = {}) {
-  const pageItems = (Array.isArray(props.pages) && props.pages.length ? props.pages : [
-    { id: "home", icon: "home" },
-  ]).map((page, index) => ({
-    action: "page",
-    pageId: page.id,
-    icon: page.icon || (index === 0 ? "home" : "grid"),
-  }));
-
-  if (props.isEditing) {
-    pageItems.push(
-      { action: "add-page", pageId: "", icon: "plus" },
-      { action: "dock-settings", pageId: "", icon: "edit" },
-    );
-  }
-
-  pageItems.push({ action: "settings", pageId: "", icon: "gear" });
-
-  return pageItems
-    .map(item => [item.action, item.pageId || "", item.icon || ""].join(":"))
+  return resolveDockItems(props)
+    .map(item => [item.type || "", item.action || "", item.pageId || "", item.symbol || ""].join(":"))
     .join("|");
 }
 
 function buildDockStructureSignatureFromDom(dock) {
-  return Array.from(dock?.querySelectorAll?.(".mha-dock-item, .mha-mobile-dock-item") || [])
+  return Array.from(dock?.querySelectorAll?.(".mha-dock-item, .mha-mobile-dock-item, .mha-dock-spacer, .mha-mobile-dock-spacer") || [])
     .map(item => [
+      item.dataset.dockItemType || "",
       item.dataset.dockAction || "page",
       item.dataset.pageId || "",
       item.querySelector?.(".mha-icon")?.dataset.icon || "",
@@ -38,6 +23,9 @@ export function createDockProps({
   pages = [],
   activePageId = "",
   isEditing = false,
+  themeStyle = "oneui",
+  contentBuilder = "default",
+  items = [],
   onPageSelect,
   onAddPage,
   onDockSettings,
@@ -47,6 +35,9 @@ export function createDockProps({
     pages,
     activePageId,
     isEditing,
+    themeStyle,
+    contentBuilder,
+    items,
     onPageSelect,
     onAddPage,
     onDockSettings,

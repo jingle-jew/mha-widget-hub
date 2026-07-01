@@ -244,6 +244,7 @@ constructor(){
     setDockSettingsPageId:(id)=>{this._dockSettingsPageId=id;},
     setSettingsPage:(page)=>{this._settingsPage=page;},
     getIsEditing:()=>this._isEditing,
+    getThemeStyle:()=>this.dataset.themeStyle||this._themeController?.read?.()?.themeStyle||"oneui",
     isMobileLandscapeLayout:()=>this._isMobileLandscapeLayout(),
     normalizeWidget:normalizeStoredWidgetContract,
     savePages:()=>this._savePages(),

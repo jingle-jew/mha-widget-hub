@@ -194,3 +194,14 @@ test("creating a media page resets the page creator state and triggers a full re
   assert.equal(calls.syncWidgetDropSlots, 0);
   assert.equal(calls.renderRoot, 0);
 });
+
+test("buildDockProps resolves dock content from the current theme manifest", () => {
+  const { coordinator } = createHarness({
+    options: {
+      getThemeStyle: () => "material",
+    },
+  });
+
+  assert.deepEqual(coordinator.buildDockProps().contentBuilder, "material-default");
+  assert.equal(coordinator.buildDockProps().themeStyle, "material");
+});

@@ -22,18 +22,3 @@
       brightness(var(--mha-shell-brightness, var(--mha-brightness-shell, 1)))
   );
 }
-
-/* Preserve Material's opaque dock contract. */
-:host([data-theme-style="material"]) .mha-dock {
-  background: var(--mha-shell-dock-surface, var(--mha-surface-tonal));
-  border-color: transparent;
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-}
-
-/* Preserve OneUI exactly as a shell material consumer; no geometry changes. */
-:host([data-theme-style="oneui"]) .mha-dock {
-  background: var(--mha-shell-dock-surface, var(--mha-shell-surface, var(--mha-surface-shell)));
-  border-color: var(--mha-shell-border, var(--mha-border-shell, var(--mha-border-secondary)));
-  box-shadow: var(--mha-shell-shadow, var(--mha-shadow-shell, var(--mha-shadow-floating)));
-}

@@ -13,12 +13,16 @@ test("dock props preserve state and callback identities", () => {
     pages,
     activePageId: "home",
     isEditing: true,
+    themeStyle: "material",
+    contentBuilder: "default",
     onPageSelect,
   });
 
   assert.equal(props.pages, pages);
   assert.equal(props.activePageId, "home");
   assert.equal(props.isEditing, true);
+  assert.equal(props.themeStyle, "material");
+  assert.equal(props.contentBuilder, "default");
   assert.equal(props.onPageSelect, onPageSelect);
 });
 
@@ -55,21 +59,21 @@ test("syncDocks preserves existing dock DOM when only active page changes", () =
   const replaceCalls = [];
   const dockItems = [
     {
-      dataset: { dockAction: "page", pageId: "home" },
+      dataset: { dockItemType: "page", dockAction: "page", pageId: "home" },
       querySelector(selector) {
         assert.equal(selector, ".mha-icon");
         return { dataset: { icon: "home" } };
       },
     },
     {
-      dataset: { dockAction: "page", pageId: "lights" },
+      dataset: { dockItemType: "page", dockAction: "page", pageId: "lights" },
       querySelector(selector) {
         assert.equal(selector, ".mha-icon");
         return { dataset: { icon: "lightbulb" } };
       },
     },
     {
-      dataset: { dockAction: "settings" },
+      dataset: { dockItemType: "action", dockAction: "settings" },
       querySelector(selector) {
         assert.equal(selector, ".mha-icon");
         return { dataset: { icon: "gear" } };
@@ -85,7 +89,7 @@ test("syncDocks preserves existing dock DOM when only active page changes", () =
   }));
   const dock = {
     querySelectorAll(selector) {
-      assert.equal(selector, ".mha-dock-item, .mha-mobile-dock-item");
+      assert.equal(selector, ".mha-dock-item, .mha-mobile-dock-item, .mha-dock-spacer, .mha-mobile-dock-spacer");
       return dockItems;
     },
     replaceWith() {
@@ -94,7 +98,7 @@ test("syncDocks preserves existing dock DOM when only active page changes", () =
   };
   const mobileDock = {
     querySelectorAll(selector) {
-      assert.equal(selector, ".mha-dock-item, .mha-mobile-dock-item");
+      assert.equal(selector, ".mha-dock-item, .mha-mobile-dock-item, .mha-dock-spacer, .mha-mobile-dock-spacer");
       return dockItems;
     },
     replaceWith() {
