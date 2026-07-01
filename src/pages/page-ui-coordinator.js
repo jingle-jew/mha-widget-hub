@@ -321,3 +321,7 @@ export class PageUiCoordinator {
     return true;
   }
 }
+
+export function createPageUiCoordinator(options = {}) {
+  return new PageUiCoordinator(options);
+}
