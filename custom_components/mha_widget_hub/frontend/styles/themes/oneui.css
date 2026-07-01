@@ -152,7 +152,7 @@
     --mha-dock-empty-padding-block: clamp(.22rem, .48vw, .36rem);
     --mha-dock-empty-padding-inline: clamp(.34rem, .68vw, .58rem);
     --mha-dock-gap: clamp(.08rem, .28vw, .2rem);
-    --mha-icon-size: clamp(2.45rem, 2.9vw, 2.95rem);
+    --mha-icon-size: clamp(2.24rem, 2.62vw, 2.7rem);
   }
 }
 
@@ -160,7 +160,7 @@
   :host([data-theme-style="oneui"]) .mha-mobile-dock {
     --mha-mobile-dock-gap: clamp(.08rem, .3vw, .2rem);
     --mha-mobile-dock-padding: clamp(.28rem, .8vw, .46rem);
-    --mha-icon-size: clamp(2.65rem, 11vw, 3.35rem);
+    --mha-icon-size: clamp(2.42rem, 10vw, 3rem);
     min-block-size: calc(var(--mha-icon-size) + 1.45rem + (var(--mha-mobile-dock-padding) * 2));
   }
 }
@@ -250,13 +250,22 @@
 }
 
 :host([data-theme-style="oneui"]) .mha-dock-item-label {
-  font-size: .66rem;
-  line-height: 1;
+  display: block;
+  position: relative;
+  z-index: 1;
+  inline-size: 100%;
+  max-inline-size: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+  font-size: clamp(.53rem, .52rem + .16vw, .58rem);
+  line-height: .98;
   font-weight: 600;
   letter-spacing: -.01em;
   color: color-mix(in srgb, var(--mha-text) 84%, transparent);
   white-space: nowrap;
   pointer-events: none;
+  padding-inline: clamp(.08rem, .06rem + .12vw, .12rem);
 }
 
 @media (max-width: 767px) {
