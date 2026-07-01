@@ -3,3 +3,10 @@
  * theme tokens and the neutral dock contract. Keep this file as the optional
  * theme-owned dock extension point without changing visuals.
  */
+
+@media (max-width: 767px) {
+  :host([data-theme-style="ios"]) .mha-mobile-dock {
+    --mha-mobile-dock-padding: 0.36rem;
+    min-block-size: calc(var(--mha-icon-size) + 1rem + (var(--mha-mobile-dock-padding) * 2));
+  }
+}

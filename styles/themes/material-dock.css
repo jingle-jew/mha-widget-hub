@@ -12,6 +12,11 @@
 }
 
 @media (max-width: 767px) {
+  :host([data-theme-style="material"]) .mha-mobile-dock {
+    --mha-mobile-dock-padding: 0.36rem;
+    min-block-size: calc(var(--mha-icon-size) + 1rem + (var(--mha-mobile-dock-padding) * 2));
+  }
+
   :host([data-theme-style="material"]) .mha-mobile-dock-panel {
     background: var(--mha-shell-panel-surface, var(--mha-panel-surface, var(--mha-surface-panel)));
     border-color: transparent;
