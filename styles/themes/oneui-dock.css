@@ -191,7 +191,7 @@
   :host([data-theme-style="oneui"][data-dock-position="left"]),
   :host([data-theme-style="oneui"][data-dock-position="right"]),
   :host([data-theme-style="oneui"]:not([data-dock-position])) {
-    --mha-dock-zone-width: clamp(10.75rem, 15vw, 13rem);
+    --mha-dock-zone-width: clamp(12.25rem, 17vw, 15rem);
   }
 
   :host([data-theme-style="oneui"][data-dock-position="left"]) .mha-dock-zone,
