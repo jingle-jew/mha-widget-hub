@@ -328,3 +328,13 @@
     font-weight: 600;
   }
 }
+
+
+/* OneUI bottom dock: tablet/desktop items use mobile-style oval pills ------ */
+@media (min-width: 768px) {
+  :host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock-item {
+    inline-size: clamp(4.25rem, 6.8vw, 5.4rem);
+    min-inline-size: clamp(4.25rem, 6.8vw, 5.4rem);
+    aspect-ratio: auto;
+  }
+}
