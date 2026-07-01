@@ -237,8 +237,13 @@
 
 .mha-media-page[data-visual-style="liquid-glass"],
 .mha-media-page[data-visual-style="frosted-glass"] {
-  -webkit-backdrop-filter: blur(calc(var(--mha-surface-blur) * 1.2)) saturate(150%);
-  backdrop-filter: blur(calc(var(--mha-surface-blur) * 1.2)) saturate(150%);
+  /*
+   * Avoid clipping the page-wide blur to the media page bounds.
+   * On iOS glass themes this reads as a visible rectangular filter layer.
+   * The glass treatment remains on the child controls/surfaces instead.
+   */
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 .mha-media-page[data-visual-style="liquid-glass"] {
