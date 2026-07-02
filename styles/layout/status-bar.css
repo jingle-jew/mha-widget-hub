@@ -29,16 +29,6 @@
   max-inline-size: 100%;
 }
 
-@media (min-width: 768px) {
-  :host {
-    --mha-statusbar-reserved-top: calc(
-      var(--mha-floating-top, clamp(1rem, 2.4vw, 1.6rem)) +
-      var(--mha-statusbar-height-compact, clamp(2.25rem, 3.2vw, 2.85rem)) +
-      clamp(.7rem, 1.4vw, 1rem)
-    );
-  }
-}
-
 /* STATUS BAR ROW ALIGNMENT
  * Tablet/desktop:
  * - slightly thinner status bar;
@@ -48,7 +38,6 @@
  * Mobile remains hidden by its mobile rule.
  */
 :host {
-  --mha-statusbar-height-compact: clamp(2.25rem, 3.2vw, 2.85rem);
   --mha-statusbar-shadow-soft:
     0 8px 22px rgba(0,0,0,.12),
     inset 0 1px 0 rgba(255,255,255,.12);
@@ -82,63 +71,6 @@
 @media (max-width: 767px) {
   .mha-status-bar {
     display: none;
-  }
-}
-
-/* STATUS BAR SAFE FRAME ALIGNMENT
- * Rollback-safe alignment patch.
- *
- * Do not resize/center `.mha-shell`.
- * Do not change `.mha-workspace`, `.mha-widget-area`, or `.mha-grid` geometry.
- *
- * The status bar stays in the original full shell, but its visual frame uses
- * the same left/right page padding. This prevents the bar from touching the
- * screen edge while keeping the existing grid/dock math intact.
- */
-@media (min-width: 768px) {
-  .mha-status-bar {
-    left: var(--mha-page-padding) !important;
-    right: var(--mha-page-padding) !important;
-    width: auto !important;
-    inline-size: auto !important;
-    max-inline-size: none !important;
-    transform: none !important;
-  }
-}
-
-/* STATUS BAR PADDING COMPENSATION
- * Tablet/desktop only.
- *
- * Do not modify `.mha-widget-area` or `.mha-grid`.
- * They keep their internal horizontal padding for widget breathing room.
- *
- * Instead, compensate the status bar's left inset so the visible widget edge
- * produced by:
- *
- *   shell/page padding + widget-area padding-x + grid padding-x
- *
- * lines up visually with the right-side frame/dock/edit edge.
- */
-@media (min-width: 768px) {
-  :host {
-    --mha-widget-area-padding-x: clamp(0.35rem, 0.7vw, 0.75rem);
-    --mha-grid-padding-x: clamp(0.25rem, 0.55vw, 0.6rem);
-    --mha-statusbar-left-compensation: calc(
-      var(--mha-widget-area-padding-x) + var(--mha-grid-padding-x)
-    );
-    --mha-statusbar-left-inset: max(
-      0px,
-      calc(var(--mha-page-padding) - var(--mha-statusbar-left-compensation))
-    );
-  }
-
-  .mha-status-bar {
-    left: var(--mha-statusbar-left-inset) !important;
-    right: var(--mha-page-padding) !important;
-    width: auto !important;
-    inline-size: auto !important;
-    max-inline-size: none !important;
-    transform: none !important;
   }
 }
 

@@ -36,7 +36,7 @@
   :host([data-theme-style="oneui"][data-dock-position="right"]) .mha-dock,
   :host([data-theme-style="oneui"]:not([data-dock-position])) .mha-dock {
     --mha-oneui-rail-pill-base-height: calc(var(--mha-icon-size) + clamp(.75rem, 1.1vw, 1.05rem));
-    --mha-dock-empty-width: clamp(12.25rem, 17vw, 15rem);
+    --mha-dock-empty-width: var(--mha-shell-side-dock-zone-width);
     --mha-dock-empty-height: auto;
     --mha-dock-rail-padding-block: clamp(.45rem, .9vw, .7rem);
     --mha-dock-rail-padding-inline: 0;
@@ -64,9 +64,6 @@
     --mha-dock-item-label-letter-spacing: -.03em;
 
     box-sizing: border-box;
-    width: var(--mha-dock-empty-width);
-    min-width: var(--mha-dock-empty-width);
-    max-width: min(18rem, calc(100vw - (var(--mha-page-padding, 1rem) * 2)));
     padding-block: var(--mha-dock-rail-padding-block);
     padding-inline: var(--mha-dock-rail-padding-inline);
     gap: var(--mha-dock-rail-gap);
@@ -76,23 +73,9 @@
     box-shadow: none;
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
-    position: absolute;
-    inset-block-start: var(--mha-widget-area-top-gutter, calc(var(--mha-page-padding, 1rem) * 2));
-    inset-inline-start: 0;
-    inset-inline-end: auto;
-    transform: none;
-  }
-
-  :host([data-theme-style="oneui"][data-dock-position="right"]) .mha-dock {
-    inset-inline-start: auto;
-    inset-inline-end: 0;
   }
 
   :host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock.mha-dock {
-    --mha-dock-empty-width: min(
-      100%,
-      var(--mha-grid-container-width, var(--mha-grid-matrix-width, 42rem))
-    );
     --mha-dock-empty-height: clamp(4rem, 5.8vw, 4.8rem);
     --mha-dock-empty-padding-block: clamp(.22rem, .48vw, .36rem);
     --mha-dock-empty-padding-inline: clamp(.34rem, .68vw, .58rem);
@@ -181,23 +164,6 @@
 }
 
 @media (min-width: 768px) {
-  :host([data-theme-style="oneui"][data-dock-position="left"]),
-  :host([data-theme-style="oneui"][data-dock-position="right"]),
-  :host([data-theme-style="oneui"]:not([data-dock-position])) {
-    --mha-dock-zone-width: clamp(12.25rem, 17vw, 15rem);
-  }
-
-  :host([data-theme-style="oneui"][data-dock-position="left"]) .mha-dock-zone,
-  :host([data-theme-style="oneui"][data-dock-position="right"]) .mha-dock-zone,
-  :host([data-theme-style="oneui"]:not([data-dock-position])) .mha-dock-zone {
-    position: relative;
-    inline-size: 100%;
-    block-size: 100%;
-    z-index: 25;
-    place-items: start start;
-    overflow: visible;
-  }
-
   :host([data-theme-style="oneui"][data-dock-position="left"]) .mha-dock-item,
   :host([data-theme-style="oneui"][data-dock-position="right"]) .mha-dock-item,
   :host([data-theme-style="oneui"]:not([data-dock-position])) .mha-dock-item {
@@ -324,35 +290,8 @@
 }
 
 @media (min-width: 768px) {
-  :host([data-theme-style="oneui"][data-dock-position="bottom"]) {
-    --mha-dock-unit-size: var(--mha-oneui-compact-dock-height);
-    --mha-bottom-dock-clearance: 1rem;
-    --mha-bottom-dock-height: calc(
-      var(--mha-oneui-compact-dock-height) + var(--mha-bottom-dock-clearance)
-    );
-  }
-
-  :host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock-zone {
-    align-items: flex-start;
-    justify-content: center;
-    overflow: visible;
-  }
-
   :host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock.mha-dock {
     --mha-oneui-bottom-dock-item-width: 6.95rem;
-    --mha-dock-empty-width: fit-content;
-
-    align-self: start;
-    justify-self: center;
-    inline-size: fit-content;
-    width: fit-content;
-    min-inline-size: 0;
-    min-width: 0;
-    max-inline-size: calc(100% - (var(--mha-page-padding, 1rem) * 2));
-    max-width: calc(100% - (var(--mha-page-padding, 1rem) * 2));
-    block-size: var(--mha-oneui-compact-dock-height);
-    min-block-size: var(--mha-oneui-compact-dock-height);
-    max-block-size: var(--mha-oneui-compact-dock-height);
     padding-block: var(--mha-oneui-compact-dock-padding-block);
     padding-inline: var(--mha-oneui-compact-dock-padding-inline);
     gap: var(--mha-oneui-compact-dock-gap);

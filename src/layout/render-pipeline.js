@@ -7,7 +7,8 @@ import { t } from "../i18n/index.js";
 import { createMobileDock } from "./mobile-dock.js";
 import { createShell } from "./shell.js";
 import {
-  getEffectiveLayout,
+  getGridOrientation,
+  getGridPresetForLayout,
   getInternalGridColumnCountFromLogical,
   getInternalGridRowCountFromLogical,
   getLayoutMode,
@@ -15,6 +16,7 @@ import {
   normalizeWidgetForKind,
   sizeToString,
 } from "./layout-engine.js";
+import { getLayoutForWidth } from "./responsive.js";
 import { createSettingsPanel } from "../settings/settings-panel.js";
 import { createPagePanel } from "../pages/page-panel.js";
 import { syncMediaPageSettingsPanel } from "../pages/media-page-settings.js";
@@ -31,6 +33,17 @@ import {
 
 function getActivePage(host) {
   return host._getActivePage?.() || null;
+}
+
+function getShellViewportMetrics(host) {
+  if (typeof host?._getShellViewportMetrics === "function") {
+    return host._getShellViewportMetrics();
+  }
+  const rect = host?.getBoundingClientRect?.() || {};
+  return {
+    width: Math.max(0, Number(rect.width) || window.innerWidth || 0),
+    height: Math.max(0, Number(rect.height) || window.innerHeight || 0),
+  };
 }
 
 export function createRenderPipeline(host, options = {}) {
@@ -128,7 +141,7 @@ export function createRenderPipeline(host, options = {}) {
   }) {
     cancelAnimationFrame(host._widgetRenderFrame);
     const queue = [...host._widgets];
-    const batchSize = getEffectiveLayout(host) === "mobile" ? 1 : 2;
+    const batchSize = (host._getRuntimeLayout?.() || host.dataset?.layout || "desktop") === "mobile" ? 1 : 2;
 
     const renderBatch = () => {
       host._widgetRenderFrame = 0;
@@ -238,9 +251,14 @@ export function createRenderPipeline(host, options = {}) {
   }
 
   function buildRenderContext(themeState) {
-    const layoutMode = getLayoutMode(host);
-    const layout = getEffectiveLayout(host);
-    const preset = host._getRuntimeGridPreset();
+    const viewport = getShellViewportMetrics(host);
+    const layoutMode = host._getRuntimeLayoutMode?.() || getLayoutMode(host);
+    const layout = host._getRuntimeLayout?.()
+      || getLayoutForWidth(viewport.width, { layoutMode });
+    const gridOrientation = host._getGridOrientation?.()
+      || getGridOrientation(viewport);
+    const preset = host._getLogicalGridPreset?.()
+      || getGridPresetForLayout(layout, gridOrientation);
     const units = getInternalGridColumnCountFromLogical(preset.columns);
     const rows = getInternalGridRowCountFromLogical(preset.rows);
     const cols = preset.columns;
@@ -251,6 +269,7 @@ export function createRenderPipeline(host, options = {}) {
       themeState,
       layoutMode,
       layout,
+      gridOrientation,
       preset,
       units,
       rows,
@@ -282,6 +301,7 @@ export function createRenderPipeline(host, options = {}) {
     iconShape,
     layoutMode,
     layout,
+    gridOrientation,
     preset,
     units,
     rows,
@@ -294,18 +314,14 @@ export function createRenderPipeline(host, options = {}) {
     host.dataset.iconShape = iconShape;
     host.dataset.layoutMode = layoutMode;
     host.dataset.layout = layout;
+    if (gridOrientation) {
+      host.dataset.gridOrientation = gridOrientation;
+    } else {
+      delete host.dataset.gridOrientation;
+    }
     host.dataset.dockPosition = host._dockPosition;
     host.dataset.dockLabels = String(Boolean(host._showDockLabels));
-    host.dataset.gridDensity = preset.density;
-    host.dataset.gridUnits = String(units);
-    host.dataset.logicalColumns = String(cols);
-    host.dataset.gridRows = String(rows);
-    host.dataset.logicalRows = String(logicalRows);
     host.classList.toggle("is-editing", host._isEditing);
-    host.style.setProperty("--mha-runtime-grid-units", String(units));
-    host.style.setProperty("--mha-runtime-grid-rows", String(rows));
-    host.style.setProperty("--mha-runtime-logical-columns", String(cols));
-    host.style.setProperty("--mha-runtime-logical-rows", String(logicalRows));
     host.dataset.accent = accent;
     document.documentElement.dataset.accent = accent;
     document.documentElement.dataset.iconShapeSetting = iconShapeSetting;

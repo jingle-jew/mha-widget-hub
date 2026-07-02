@@ -11,6 +11,7 @@ export class WidgetLayoutStateCoordinator {
     getActivePageId = () => "home",
     getGridBounds = () => ({ units: 1, rowUnits: 1 }),
     getEffectiveLayout = () => "desktop",
+    getLogicalGridPreset = null,
     getRuntimeGridPreset = () => ({ columns: 1, rows: 1 }),
     getWidgetAreaMetrics = () => ({}),
     isMobileLayout = () => false,
@@ -27,7 +28,8 @@ export class WidgetLayoutStateCoordinator {
     this.getActivePageId = (...args) => getActivePageId(...args);
     this.getGridBounds = (...args) => getGridBounds(...args);
     this.getEffectiveLayout = (...args) => getEffectiveLayout(...args);
-    this.getRuntimeGridPreset = (...args) => getRuntimeGridPreset(...args);
+    const gridPresetReader = getLogicalGridPreset || getRuntimeGridPreset;
+    this.getLogicalGridPreset = (...args) => gridPresetReader(...args);
     this.getWidgetAreaMetrics = (...args) => getWidgetAreaMetrics(...args);
     this.isMobileLayout = (...args) => isMobileLayout(...args);
     this.recordPersistenceResult = (...args) => recordPersistenceResult(...args);
@@ -179,7 +181,7 @@ export class WidgetLayoutStateCoordinator {
   }
 
   clampWidgetSizeToGridBounds(widget, size) {
-    const bounds = this.getInternalGridBoundsFromPreset(this.getRuntimeGridPreset());
+    const bounds = this.getInternalGridBoundsFromPreset(this.getLogicalGridPreset());
     const context = this.getResponsiveLayoutContext(bounds);
     const normalizedSize = this.normalizeWidgetForKindFn({ ...widget, ...size }, context);
     const x = Number(widget?.x ?? widget?.col ?? widget?.column ?? 1) || 1;
@@ -195,7 +197,7 @@ export class WidgetLayoutStateCoordinator {
   }
 
   clampWidgetPositionToGridBounds(widget, position) {
-    const bounds = this.getInternalGridBoundsFromPreset(this.getRuntimeGridPreset());
+    const bounds = this.getInternalGridBoundsFromPreset(this.getLogicalGridPreset());
     const size = this.normalizeWidgetForKindFn(widget, this.getResponsiveLayoutContext(bounds));
     const w = Math.max(1, Number(size?.w) || 1);
     const h = Math.max(1, Number(size?.h) || 1);

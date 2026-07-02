@@ -40,7 +40,18 @@ import { createScreensaverSettingsBridge } from "./src/screensaver/screensaver-s
 import { createWidgetLayoutStateCoordinator } from "./src/widgets/widget-layout-state-coordinator.js";
 import { createWidgetResizeCoordinator } from "./src/widgets/widget-resize-coordinator.js";
 import { createWidgetSurfaceCoordinator } from "./src/widgets/widget-surface-coordinator.js";
-import {DEFAULT_WIDGETS,getActiveGridRows,getActiveGridUnits,getEffectiveLayout,getLayoutMode,getGridPreset,normalizeWidgetForKind} from "./src/layout/layout-engine.js";
+import {
+  DEFAULT_WIDGETS,
+  getActiveGridRows,
+  getActiveGridUnits,
+  getGridOrientation,
+  getGridPreset,
+  getGridPresetForLayout,
+  getLayoutMode,
+  normalizeGridOrientation,
+  normalizeWidgetForKind,
+} from "./src/layout/layout-engine.js";
+import { getLayoutForWidth } from "./src/layout/responsive.js";
 import { isPositionMapValidForWidgets } from "./src/layout/placement-geometry.js";
 import {
   doesWidgetLayoutFitGrid,
@@ -74,7 +85,9 @@ import { openDockPageSettingsForPage } from "./src/settings/dock-page-settings.j
 import { getStyleManifest } from "./src/styles/style-manifest.js";
 import { createDefaultPageConfig, isMediaPlayersPage, normalizeMediaPageConfig, PAGE_TYPES } from "./src/pages/page-types.js";
 
-const MHA_FRONTEND_ROOT_URL = new URL(".", import.meta.url);
+const MHA_FRONTEND_ROOT_URL = window.__MHA_FRONTEND_ROOT_URL__
+  ? new URL(window.__MHA_FRONTEND_ROOT_URL__)
+  : new URL(".", import.meta.url);
 const MHA_FRONTEND_VERSION = new URL(import.meta.url).searchParams.get("v");
 
 const MHA_STYLE_MANIFEST = getStyleManifest();
@@ -280,8 +293,8 @@ constructor(){
     setWidgetPositions:(positions)=>{this._widgetPositions=positions;},
     getActivePageId:()=>this._activePageId,
     getGridBounds:()=>this._getGridBounds(),
-    getEffectiveLayout:()=>getEffectiveLayout(this),
-    getRuntimeGridPreset:()=>this._getRuntimeGridPreset(),
+    getEffectiveLayout:()=>this._getRuntimeLayout(),
+    getLogicalGridPreset:()=>this._getLogicalGridPreset(),
     getWidgetAreaMetrics:()=>this._getWidgetAreaMetrics(),
     isMobileLayout:()=>this._isMobileLauncherLayout(),
     recordPersistenceResult:(success)=>this._recordPersistenceResult(success),
@@ -319,7 +332,7 @@ constructor(){
     getHass:()=>this._hass,
     getEntityVisibilityConfig:()=>this._entityVisibilityConfig,
     getGridBounds:()=>this._getGridBounds(),
-    getEffectiveLayout:()=>getEffectiveLayout(this),
+    getEffectiveLayout:()=>this._getRuntimeLayout(),
     getActiveWidgetPositions:(options)=>this._getActiveWidgetPositions(options),
     isPositionMapValidForWidgets:(positions,widgets,units,rowUnits)=>this._isPositionMapValidForWidgets(positions,widgets,units,rowUnits),
     normalizeWidgetsToGridBounds:(widgets)=>this._normalizeWidgetsToGridBounds(widgets),
@@ -372,8 +385,8 @@ constructor(){
   });
   this._gridRuntime=createGridRuntime({
     host:this,
-    getLayoutMode,
-    getEffectiveLayout,
+    getLayoutMode:()=>this._getRuntimeLayoutMode(),
+    getEffectiveLayout:()=>this._getRuntimeLayout(),
     getGridPreset,
     getDockPosition:()=>this._dockPosition,
     isMobileLayout:()=>this._isMobileLauncherLayout(),
@@ -1081,11 +1094,42 @@ _getDockBottomColumnBonus(layout,base,metrics={}){
   return this._gridRuntime.getDockBottomColumnBonus(layout,base,metrics);
 }
 
+_getShellViewportMetrics(){
+  const rect=this.getBoundingClientRect?.()||{};
+  return {
+    width:Math.max(0,Number(rect.width)||window.innerWidth||0),
+    height:Math.max(0,Number(rect.height)||window.innerHeight||0),
+  };
+}
+_getRuntimeLayoutMode(){
+  const datasetMode=this.dataset?.layoutMode;
+  if(datasetMode&&datasetMode!=="auto")return datasetMode;
+  return getLayoutMode(this);
+}
+_getGridOrientation(){
+  const publishedOrientation=this.dataset?.gridOrientation;
+  if(publishedOrientation)return normalizeGridOrientation(publishedOrientation);
+  return getGridOrientation(this._getShellViewportMetrics());
+}
+_getRuntimeLayout(){
+  const publishedLayout=this.dataset?.layout;
+  if(publishedLayout)return publishedLayout;
+  return getLayoutForWidth(
+    this._getShellViewportMetrics().width,
+    {layoutMode:this._getRuntimeLayoutMode()},
+  );
+}
 _isMobileDefaultLayout(){
-  return getEffectiveLayout(this)==="mobile";
+  return this._getRuntimeLayout()==="mobile";
+}
+_getLogicalGridPreset(){
+  return getGridPresetForLayout(
+    this._getRuntimeLayout(),
+    this._getGridOrientation(),
+  );
 }
 _getRuntimeGridPreset(){
-  return this._gridRuntime.getRuntimeGridPreset();
+  return this._getLogicalGridPreset();
 }
 _getRuntimeGridUnits(){
   return this._gridRuntime.getGridBounds().units;

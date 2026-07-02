@@ -63,7 +63,7 @@ function clampNumber(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
 
-function getAdaptiveBounds(layout, isLandscape, aspectRatio = 0) {
+function getAdaptiveBounds(layout, isLandscape) {
   /*
    * Bounds are for the small internal grid unit.
    *
@@ -78,6 +78,8 @@ function getAdaptiveBounds(layout, isLandscape, aspectRatio = 0) {
           minCell: 44,
           targetCell: 54,
           maxCell: 999,
+          presetColumns: 4,
+          presetRows: 4,
           minColumns: 4,
           maxColumns: 4,
           minRows: 2,
@@ -91,6 +93,8 @@ function getAdaptiveBounds(layout, isLandscape, aspectRatio = 0) {
           minCell: 64,
           targetCell: 82,
           maxCell: 999,
+          presetColumns: 2,
+          presetRows: 7,
           minColumns: 2,
           maxColumns: 2,
           minRows: 4,
@@ -102,28 +106,26 @@ function getAdaptiveBounds(layout, isLandscape, aspectRatio = 0) {
   }
 
   if (layout === "tablet") {
-    const isTallLandscapeTablet = isLandscape && aspectRatio > 0 && aspectRatio <= 1.4;
     return isLandscape
       ? {
           minCell: 88,
           targetCell: 104,
           maxCell: 150,
+          presetColumns: 6,
+          presetRows: 4,
           minColumns: 4,
           maxColumns: 6,
           minRows: 3,
-          maxRows: isTallLandscapeTablet ? 5 : 4,
+          maxRows: 4,
           targetFillX: 0.88,
-          /*
-           * Side-dock tablet workspaces become significantly taller relative to
-           * their width. Favor one more logical row in that measured rectangle
-           * instead of leaving unused height in `.mha-page-panel--grid`.
-           */
-          targetFillY: isTallLandscapeTablet ? 0.95 : 0.76,
+          targetFillY: 0.76,
         }
       : {
           minCell: 84,
           targetCell: 102,
           maxCell: 148,
+          presetColumns: 4,
+          presetRows: 6,
           minColumns: 3,
           maxColumns: 4,
           minRows: 4,
@@ -138,6 +140,8 @@ function getAdaptiveBounds(layout, isLandscape, aspectRatio = 0) {
         minCell: 88,
         targetCell: 106,
         maxCell: 152,
+        presetColumns: 7,
+        presetRows: 4,
         minColumns: 6,
         maxColumns: 7,
         minRows: 3,
@@ -149,6 +153,8 @@ function getAdaptiveBounds(layout, isLandscape, aspectRatio = 0) {
         minCell: 88,
         targetCell: 108,
         maxCell: 156,
+        presetColumns: 5,
+        presetRows: 5,
         minColumns: 4,
         maxColumns: 5,
         minRows: 4,
@@ -158,105 +164,49 @@ function getAdaptiveBounds(layout, isLandscape, aspectRatio = 0) {
       };
 }
 
-export function getGridPreset(host, layout = getEffectiveLayout(host), metrics = {}) {
-  const r = host?.getBoundingClientRect?.() || {};
-  const width = metrics.width || r.width || window.innerWidth || 0;
-  const height = metrics.height || r.height || window.innerHeight || 0;
-  const isLandscape = width > height;
-  const aspectRatio = height > 0 ? width / height : 0;
-  const bounds = getAdaptiveBounds(layout, isLandscape, aspectRatio);
+export function normalizeGridOrientation(orientation = "landscape") {
+  return orientation === "portrait" ? "portrait" : "landscape";
+}
 
-  /*
-   * Orientation-aware comfort matrix.
-   *
-   * The shell/widget-area rectangle is already correct. This only chooses a
-   * columns/rows pair. We prioritize:
-   * 1) comfortable widget size;
-   * 2) square cells;
-   * 3) good fill of the available widget-area.
-   *
-   * We do not fill width at any cost, because that makes 2x2 widgets feel tiny.
-   */
-  let best = null;
-  let bestFallback = null;
+export function getGridOrientation(metrics = {}, fallbackMetrics = {}) {
+  const width = Number(metrics?.width) || Number(fallbackMetrics?.width) || window.innerWidth || 0;
+  const height = Number(metrics?.height) || Number(fallbackMetrics?.height) || window.innerHeight || 0;
+  return normalizeGridOrientation(width > height ? "landscape" : "portrait");
+}
 
-  for (let rows = bounds.minRows; rows <= bounds.maxRows; rows += 1) {
-    for (let columns = bounds.minColumns; columns <= bounds.maxColumns; columns += 1) {
-      const widthCell = Math.min(width / columns, bounds.maxCell);
-      const balancedCell = Math.min(widthCell, height / rows);
-      const cell = bounds.forceWidthFill ? widthCell : balancedCell;
-      if (!Number.isFinite(cell) || cell <= 0) continue;
+export function getGridPresetBounds(layout, orientation = "landscape") {
+  return getAdaptiveBounds(layout, normalizeGridOrientation(orientation) === "landscape");
+}
 
-      const gridWidth = bounds.forceWidthFill ? width : cell * columns;
-      const gridHeight = cell * rows;
-      const fillX = width > 0 ? gridWidth / width : 1;
-      const fillY = height > 0 ? gridHeight / height : 1;
+export function getGridPresetForLayout(layout, orientation = "landscape") {
+  const normalizedOrientation = normalizeGridOrientation(orientation);
+  const bounds = getGridPresetBounds(layout, normalizedOrientation);
 
-      const underMinPenalty = cell < bounds.minCell
-        ? ((bounds.minCell - cell) / bounds.minCell)
-        : 0;
-      const targetCellPenalty = Math.abs(cell - bounds.targetCell) / bounds.targetCell;
-      const widthPenalty = Math.max(0, bounds.targetFillX - fillX);
-      const heightPenalty = Math.max(0, bounds.targetFillY - fillY);
-
-      /*
-       * Comfort beats density. Fill is important, but not enough to shrink the
-       * unit below the visual target.
-       */
-      const score =
-        Math.min(cell, bounds.maxCell) / bounds.maxCell * 5.5 +
-        fillX * 3.5 +
-        fillY * 2.0 -
-        underMinPenalty * 10 -
-        targetCellPenalty * 3.2 -
-        widthPenalty * 3.8 -
-        heightPenalty * 1.6 -
-        (columns / bounds.maxColumns) * 0.45;
-
-      const candidate = {
-        columns,
-        rows,
-        cell,
-        fillX,
-        fillY,
-        score,
-        validComfort: cell >= bounds.minCell,
-      };
-
-      if (!bestFallback || candidate.score > bestFallback.score) {
-        bestFallback = candidate;
-      }
-
-      if (!candidate.validComfort) continue;
-
-      if (!best || candidate.score > best.score) {
-        best = candidate;
-      }
-    }
-  }
-
-  const selected = best || bestFallback || {
-    columns: bounds.minColumns,
-    rows: bounds.minRows,
-    cell: bounds.minCell,
-    fillX: 1,
-    fillY: 1,
-  };
-
-  let density = "adaptive";
-  if (selected.cell < bounds.minCell * 1.08) density = "adaptive-dense";
-  else if (selected.cell > bounds.maxCell * 0.86) density = "adaptive-comfort";
+  const columns = Math.max(
+    1,
+    Number(bounds.presetColumns || bounds.maxColumns || bounds.minColumns) || 1,
+  );
+  const rows = Math.max(
+    1,
+    Number(bounds.presetRows || bounds.maxRows || bounds.minRows) || 1,
+  );
 
   return {
-    columns: selected.columns,
-    rows: selected.rows,
-    density: `${layout}-${isLandscape ? "landscape" : "portrait"}-${density}`,
+    columns,
+    rows,
+    density: `${layout}-${normalizedOrientation}-adaptive`,
     minCell: bounds.minCell,
     maxCell: bounds.maxCell,
     targetCell: bounds.targetCell,
-    fillX: selected.fillX,
-    fillY: selected.fillY,
+    fillX: bounds.targetFillX,
+    fillY: bounds.targetFillY,
   };
+}
+
+export function getGridPreset(host, layout = getEffectiveLayout(host), metrics = {}) {
+  const r = host?.getBoundingClientRect?.() || {};
+  const orientation = getGridOrientation(metrics, r);
+  return getGridPresetForLayout(layout, orientation);
 }
 
 export function getLogicalColumnCount(host, layout = getEffectiveLayout(host), metrics = {}) {

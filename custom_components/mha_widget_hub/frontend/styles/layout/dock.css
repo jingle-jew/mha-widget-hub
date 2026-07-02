@@ -174,20 +174,23 @@
 
 /* RESPONSIVE VERTICAL DOCK
  * Mobile keeps the macOS-style bottom dock.
- * Tablet/desktop use the right-side free space as a vertical floating dock.
- * This remains overlay-only and does not reserve grid space.
+ * Tablet/desktop side docks now live inside the shell-owned dock zone instead
+ * of re-anchoring themselves against the viewport.
  */
 @media (min-width: 768px) {
   .mha-dock {
-    --mha-dock-empty-width: var(--mha-dock-unit-size);
+    --mha-dock-empty-width: var(
+      --mha-shell-side-dock-rail-size,
+      var(--mha-dock-unit-size)
+    );
     --mha-dock-empty-height: auto;
     --mha-dock-empty-padding-block: var(--mha-grid-gap);
     --mha-dock-empty-padding-inline: min(var(--mha-grid-gap), 5%);
     --mha-dock-icon-min-size: clamp(2.65rem, 3vw, 3.2rem);
     --mha-icon-size: clamp(
-      calc(var(--mha-square-unit) - var(--mha-grid-gap) - var(--mha-grid-gap)),
-      calc(var(--mha-square-unit) - var(--mha-grid-gap)),
-      var(--mha-square-unit)
+      calc(var(--mha-dock-empty-width) - var(--mha-grid-gap) - var(--mha-grid-gap)),
+      calc(var(--mha-dock-empty-width) - var(--mha-grid-gap)),
+      var(--mha-dock-empty-width)
     );
     --mha-dock-item-inline-size: var(--mha-icon-size);
     --mha-dock-item-block-size: var(--mha-icon-size);
@@ -195,9 +198,11 @@
     --mha-dock-item-min-block-size: var(--mha-icon-size);
     --mha-dock-item-aspect-ratio: 1;
 
+    position: relative;
+    inset: auto;
     left: auto;
-    right: max(var(--mha-safe-area-right, env(safe-area-inset-right)), clamp(0.75rem, 1.8vw, 1.25rem));
-    top: 50%;
+    right: auto;
+    top: auto;
     bottom: auto;
 
     width: var(--mha-dock-empty-width);
@@ -205,7 +210,10 @@
     max-width: var(--mha-dock-empty-width);
     box-sizing: border-box;
     min-height: 0;
-    max-height: min(72vh, calc(100% - (var(--mha-page-padding, 1rem) * 2)));
+    max-height: max(
+      0px,
+      calc(100% - var(--mha-shell-content-top-inset, 0px))
+    );
 
     flex-direction: column;
     align-items: center;
@@ -215,7 +223,10 @@
     scrollbar-width: none;
 
     border-radius: clamp(1.45rem, 2.4vw, 2.1rem);
-    transform: translateY(-50%);
+    align-self: flex-start;
+    justify-self: stretch;
+    margin-block-start: var(--mha-shell-content-top-inset, 0px);
+    transform: none;
   }
 
   .mha-dock::-webkit-scrollbar {
@@ -223,7 +234,7 @@
   }
   :host(.is-dock-hidden) .mha-dock,
   :host([data-dock-hidden="true"]) .mha-dock {
-    transform: translateY(-50%) translateX(calc(100% + var(--mha-floating-edge, 1rem) + 18px));
+    transform: translateX(calc(100% + var(--mha-floating-edge, 1rem) + 18px));
     opacity: 0;
   }
 }
@@ -236,29 +247,6 @@
   :host(.is-dock-hidden) .mha-dock,
   :host([data-dock-hidden="true"]) .mha-dock {
     transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-/* VERTICAL DOCK TOP ALIGNMENT
- * On tablet/desktop, the vertical dock starts at the same vertical rhythm as
- * the first widget row instead of floating centered on the screen.
- */
-@media (min-width: 768px) {
-  .mha-dock {
-    --mha-dock-top: max(
-      var(--mha-statusbar-reserved-top, 0px),
-      var(--mha-page-padding, clamp(1rem, 2.6vw, 2rem))
-    );
-
-    top: var(--mha-dock-top);
-    bottom: auto;
-    transform: translateY(0);
-  }
-
-  :host(.is-dock-hidden) .mha-dock,
-  :host([data-dock-hidden="true"]) .mha-dock {
-    transform: translateX(calc(100% + var(--mha-floating-edge, 1rem) + 18px));
     opacity: 1;
   }
 }
@@ -389,9 +377,9 @@
     --mha-dock-rail-padding-inline: min(var(--mha-grid-gap), 5%);
     --mha-dock-rail-gap: var(--mha-grid-gap);
     --mha-icon-size: clamp(
-      calc(var(--mha-square-unit) - var(--mha-grid-gap) - var(--mha-grid-gap)),
-      calc(var(--mha-square-unit) - var(--mha-grid-gap)),
-      var(--mha-square-unit)
+      calc(var(--mha-dock-empty-width) - var(--mha-grid-gap) - var(--mha-grid-gap)),
+      calc(var(--mha-dock-empty-width) - var(--mha-grid-gap)),
+      var(--mha-dock-empty-width)
     );
     --mha-dock-item-inline-size: var(--mha-icon-size);
     --mha-dock-item-block-size: var(--mha-icon-size);
@@ -399,9 +387,9 @@
     --mha-dock-item-min-block-size: var(--mha-icon-size);
     --mha-dock-item-aspect-ratio: 1;
 
-    inline-size: var(--mha-dock-unit-size);
-    min-inline-size: var(--mha-dock-unit-size);
-    max-inline-size: var(--mha-dock-unit-size);
+    inline-size: var(--mha-dock-empty-width);
+    min-inline-size: var(--mha-dock-empty-width);
+    max-inline-size: var(--mha-dock-empty-width);
 
     block-size: auto;
     min-block-size: 0;
@@ -517,17 +505,6 @@
  * affected by these rules.
  */
 @media (min-width: 768px) {
-  :host([data-dock-position="left"]) .mha-dock {
-    left: max(var(--mha-safe-area-left, env(safe-area-inset-left)), clamp(0.75rem, 1.8vw, 1.25rem));
-    right: auto;
-  }
-
-  :host([data-dock-position="right"]) .mha-dock,
-  :host(:not([data-dock-position])) .mha-dock {
-    left: auto;
-    right: max(var(--mha-safe-area-right, env(safe-area-inset-right)), clamp(0.75rem, 1.8vw, 1.25rem));
-  }
-
   :host([data-dock-position="left"]) .mha-dock-item[data-active="true"]::after {
     left: auto;
     right: calc(var(--mha-dock-rail-padding-inline, .6rem) * -0.52);
@@ -547,41 +524,6 @@
     inline-size: .24rem;
     block-size: min(1.36rem, 42%);
     transform: translateY(-50%);
-  }
-
-  :host([data-dock-position="bottom"]) .mha-dock {
-    --mha-dock-empty-width: min(
-      100%,
-      var(--mha-grid-container-width, var(--mha-grid-matrix-width, 42rem))
-    );
-    --mha-dock-empty-height: var(--mha-dock-unit-size);
-    --mha-dock-empty-padding-block: min(var(--mha-grid-gap), 5%);
-    --mha-dock-empty-padding-inline: var(--mha-grid-gap);
-    --mha-icon-size: clamp(
-      calc(var(--mha-square-unit) - var(--mha-grid-gap) - var(--mha-grid-gap)),
-      calc(var(--mha-square-unit) - var(--mha-grid-gap)),
-      var(--mha-square-unit)
-    );
-
-    position: static;
-    left: auto;
-    right: auto;
-    top: auto;
-    bottom: auto;
-    width: max-content;
-    inline-size: max-content;
-    min-width: 0;
-    min-inline-size: 0;
-    max-width: min(100%, calc(100% - (var(--mha-page-padding, 1rem) * 2)));
-    max-inline-size: min(100%, calc(100% - (var(--mha-page-padding, 1rem) * 2)));
-    height: var(--mha-dock-unit-size);
-    min-height: var(--mha-dock-unit-size);
-    max-height: var(--mha-dock-unit-size);
-    box-sizing: border-box;
-    flex-direction: row;
-    overflow-x: auto;
-    overflow-y: hidden;
-    transform: none;
   }
 
   :host([data-dock-position="bottom"]) .mha-dock-pages,
@@ -606,27 +548,22 @@
   }
 }
 
-/* Dock bottom content sizing
- * Desktop/tablet bottom dock uses content width like a floating capsule,
- * while retaining a max width + horizontal scroll for many pages.
- */
-/* Dock bottom containment fix
- * Keep the desktop/tablet bottom dock inside the reserved bottom row. This
- * neutralizes the side-rail absolute anchoring and constrains horizontal width.
+/* Dock bottom containment
+ * Desktop/tablet bottom docks live entirely inside the shell-reserved row and
+ * size against the dock zone, not viewport- or panel-derived runtime widths.
  */
 @media (min-width: 768px) {
   :host([data-dock-position="bottom"]) .mha-dock-zone > .mha-dock {
-    --mha-dock-empty-width: min(
-      var(--mha-grid-container-width, var(--mha-grid-matrix-width, 44rem)),
-      calc(100% - (var(--mha-page-padding, 1rem) * 2))
+    --mha-dock-empty-height: var(
+      --mha-shell-bottom-dock-capsule-size,
+      var(--mha-dock-unit-size)
     );
-    --mha-dock-empty-height: var(--mha-dock-unit-size);
     --mha-dock-empty-padding-block: min(var(--mha-grid-gap), 5%);
     --mha-dock-empty-padding-inline: var(--mha-grid-gap);
     --mha-icon-size: clamp(
-      calc(var(--mha-square-unit) - var(--mha-grid-gap) - var(--mha-grid-gap)),
-      calc(var(--mha-square-unit) - var(--mha-grid-gap)),
-      var(--mha-square-unit)
+      calc(var(--mha-dock-empty-height) - var(--mha-grid-gap) - var(--mha-grid-gap)),
+      calc(var(--mha-dock-empty-height) - var(--mha-grid-gap)),
+      var(--mha-dock-empty-height)
     );
 
     position: relative;
@@ -639,6 +576,7 @@
     align-self: flex-start;
     justify-self: center;
     flex-direction: row;
+    margin-block-start: 0;
 
     inline-size: max-content;
     width: max-content;
@@ -646,9 +584,9 @@
     min-width: 0;
     max-inline-size: calc(100% - (var(--mha-page-padding, 1rem) * 2));
     max-width: calc(100% - (var(--mha-page-padding, 1rem) * 2));
-    block-size: var(--mha-dock-unit-size);
-    min-block-size: var(--mha-dock-unit-size);
-    max-block-size: var(--mha-dock-unit-size);
+    block-size: var(--mha-dock-empty-height);
+    min-block-size: var(--mha-dock-empty-height);
+    max-block-size: var(--mha-dock-empty-height);
     box-sizing: border-box;
 
     overflow-x: auto;

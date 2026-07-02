@@ -80,13 +80,14 @@
   --mha-safe-area-left:var(--mha-safe-left);
   --mha-floating-edge:max(18px,var(--mha-safe-bottom));
   --mha-floating-top:max(18px,var(--mha-safe-top));
-  --mha-statusbar-reserved-top:calc(var(--mha-floating-top) + var(--mha-bar-height) + var(--mha-grid-gap));
   --mha-dock-max-width:calc(100% - (var(--mha-page-padding) * 2));
   --mha-dock-bottom:var(--mha-floating-edge);
   --mha-radius-widget:var(--mha-widget-radius);
   --mha-radius-widget-inner:var(--mha-widget-inner-radius);
   --mha-radius-pill:var(--mha-control-radius);
   --mha-square-unit:72px;
+  --mha-grid-column-size:var(--mha-square-unit);
+  --mha-grid-row-size:var(--mha-square-unit);
   --mha-widget-bg:var(--mha-widget-surface);
   --mha-widget-bg-edit:var(--mha-widget-surface-edit);
   --mha-text:rgba(255,255,255,.92);
