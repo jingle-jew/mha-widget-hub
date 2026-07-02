@@ -63,7 +63,7 @@ function clampNumber(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
 
-function getAdaptiveBounds(layout, isLandscape) {
+function getAdaptiveBounds(layout, isLandscape, aspectRatio = 0) {
   /*
    * Bounds are for the small internal grid unit.
    *
@@ -102,6 +102,7 @@ function getAdaptiveBounds(layout, isLandscape) {
   }
 
   if (layout === "tablet") {
+    const isTallLandscapeTablet = isLandscape && aspectRatio > 0 && aspectRatio <= 1.4;
     return isLandscape
       ? {
           minCell: 88,
@@ -110,9 +111,14 @@ function getAdaptiveBounds(layout, isLandscape) {
           minColumns: 4,
           maxColumns: 6,
           minRows: 3,
-          maxRows: 4,
+          maxRows: isTallLandscapeTablet ? 5 : 4,
           targetFillX: 0.88,
-          targetFillY: 0.76,
+          /*
+           * Side-dock tablet workspaces become significantly taller relative to
+           * their width. Favor one more logical row in that measured rectangle
+           * instead of leaving unused height in `.mha-page-panel--grid`.
+           */
+          targetFillY: isTallLandscapeTablet ? 0.95 : 0.76,
         }
       : {
           minCell: 84,
@@ -157,7 +163,8 @@ export function getGridPreset(host, layout = getEffectiveLayout(host), metrics =
   const width = metrics.width || r.width || window.innerWidth || 0;
   const height = metrics.height || r.height || window.innerHeight || 0;
   const isLandscape = width > height;
-  const bounds = getAdaptiveBounds(layout, isLandscape);
+  const aspectRatio = height > 0 ? width / height : 0;
+  const bounds = getAdaptiveBounds(layout, isLandscape, aspectRatio);
 
   /*
    * Orientation-aware comfort matrix.

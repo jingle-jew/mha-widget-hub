@@ -36,7 +36,7 @@ test("widget-area measurement removes CSS padding", () => {
   });
 });
 
-test("dock-bottom bonus respects breakpoints and comfort width", () => {
+test("dock-position bonus stays disabled when widget-area is already reserved", () => {
   const base = {
     columns: 5,
     minCell: 88,
@@ -51,7 +51,7 @@ test("dock-bottom bonus respects breakpoints and comfort width", () => {
       metrics: { width: 720 },
       hostWidth: 1200,
     }),
-    2,
+    0,
   );
   assert.equal(
     getDockBottomColumnBonus({
@@ -190,6 +190,62 @@ test("runtime applies the existing grid dataset and CSS contract", () => {
   assert.equal(gridStyle.values.get("--mha-grid-matrix-width"), "600px");
   assert.equal(gridStyle.values.get("--mha-grid-matrix-height"), "400px");
   assert.equal(dropSlotSyncs, 1);
+});
+
+test("runtime keeps bottom dock square-unit constrained by measured height", () => {
+  const hostStyle = createStyle();
+  const gridStyle = createStyle({
+    "--mha-square-unit-hard-min": "24",
+    "--mha-square-unit-max": "160",
+  });
+  Object.assign(gridStyle, {
+    columnGap: "10px",
+    rowGap: "10px",
+    paddingLeft: "0px",
+    paddingRight: "0px",
+    paddingTop: "0px",
+    paddingBottom: "0px",
+  });
+  const areaStyle = {
+    paddingLeft: "0px",
+    paddingRight: "0px",
+    paddingTop: "0px",
+    paddingBottom: "0px",
+  };
+  const area = { clientWidth: 700, clientHeight: 320 };
+  const grid = { style: gridStyle };
+  const root = {
+    querySelector(selector) {
+      if (selector === ".mha-widget-area") return area;
+      if (selector === ".mha-grid") return grid;
+      return null;
+    },
+  };
+  const host = {
+    dataset: {},
+    style: hostStyle,
+    shadowRoot: root,
+    isConnected: true,
+    getBoundingClientRect: () => ({ width: 1133, height: 744 }),
+  };
+  const runtime = createGridRuntime({
+    host,
+    getLayoutMode: () => "tablet",
+    getEffectiveLayout: () => "tablet",
+    getDockPosition: () => "bottom",
+    getGridPreset: () => ({
+      columns: 3,
+      rows: 2,
+      density: "tablet-test",
+      maxCell: 160,
+    }),
+    getStyle: element => (element === area ? areaStyle : gridStyle),
+  });
+
+  assert.equal(runtime.syncSquareUnit(), true);
+  assert.equal(hostStyle.values.get("--mha-square-unit"), "72.5px");
+  assert.equal(gridStyle.values.get("--mha-grid-matrix-width"), "485px");
+  assert.equal(gridStyle.values.get("--mha-grid-matrix-height"), "320px");
 });
 
 test("runtime ignores unstable early desktop square units", () => {

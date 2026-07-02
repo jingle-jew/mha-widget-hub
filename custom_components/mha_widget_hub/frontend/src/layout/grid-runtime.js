@@ -5,7 +5,6 @@ import {
   normalizeWidgetForKind,
   sizeToString,
 } from "./layout-engine.js";
-import { RESPONSIVE_BREAKPOINTS } from "./responsive.js";
 
 export function measureWidgetArea(area, getStyle = getComputedStyle) {
   if (!area) return null;
@@ -34,25 +33,18 @@ export function getDockBottomColumnBonus({
   metrics = {},
   hostWidth = 0,
 }) {
-  if (dockPosition !== "bottom" || layout === "mobile") return 0;
-  if (hostWidth < RESPONSIVE_BREAKPOINTS.tablet) return 0;
-
-  const requestedBonus = layout === "desktop" ? 2 : 1;
-  const baseColumns = Math.max(1, Number(base?.columns) || 1);
-  const availableWidth = Number(metrics?.width) || hostWidth;
-  const minComfortWidth = Math.max(
-    Number(base?.minCell) || 0,
-    (Number(base?.targetCell) || 0) * 0.9,
-    1,
-  );
-  const maxComfortColumns = Math.max(
-    baseColumns,
-    Math.floor(availableWidth / minComfortWidth),
-  );
-  return Math.max(
-    0,
-    Math.min(requestedBonus, maxComfortColumns - baseColumns),
-  );
+  void dockPosition;
+  void layout;
+  void base;
+  void metrics;
+  void hostWidth;
+  /*
+   * The shell now reserves dock footprint directly in `.mha-widget-area`.
+   * Runtime grid math must trust those measured bounds instead of mutating the
+   * preset again based on dock position, otherwise side and bottom docks invert
+   * the available-height behavior.
+   */
+  return 0;
 }
 
 export function getGridBoundsFromPreset(preset = {}) {
@@ -283,7 +275,6 @@ export class GridRuntime {
     const maxUnit = Number.parseFloat(
       style.getPropertyValue("--mha-square-unit-max"),
     ) || preset.maxCell || 160;
-    const fillWidth = this.getDockPosition() === "bottom" && !this.isMobileLayout();
     const square = calculateSquareGridMetrics({
       metrics,
       preset,
@@ -296,7 +287,6 @@ export class GridRuntime {
       hardMin,
       maxUnit,
       mobile: this.isMobileLayout(),
-      fillWidth,
     });
     if (!square) return false;
     if (!hasStableSquareUnit({

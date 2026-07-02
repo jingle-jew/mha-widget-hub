@@ -51,3 +51,13 @@ test("mobile grid presets preserve the documented logical columns", () => {
     4,
   );
 });
+
+test("tablet landscape presets add height-driven rows only for tall measured workspaces", () => {
+  const sideDockPreset = getGridPreset(null, "tablet", { width: 886, height: 676 });
+  const bottomDockPreset = getGridPreset(null, "tablet", { width: 960, height: 595 });
+
+  assert.equal(sideDockPreset.columns, 6);
+  assert.equal(sideDockPreset.rows, 5);
+  assert.equal(bottomDockPreset.columns, 6);
+  assert.equal(bottomDockPreset.rows, 4);
+});
