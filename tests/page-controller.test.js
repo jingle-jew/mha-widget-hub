@@ -9,6 +9,7 @@ import {
   renamePage,
   selectPage,
 } from "../src/pages/page-controller.js";
+import { PAGE_TYPES } from "../src/pages/page-types.js";
 
 const pages = [
   { id: "home", name: "Accueil", icon: "home", widgets: [] },
@@ -44,6 +45,33 @@ test("page creation keeps the existing id and naming contract", () => {
   });
   assert.equal(result.pages.length, 4);
   assert.equal(pages.length, 3);
+});
+
+test("media page creation seeds a normal page with a responsive media widget", () => {
+  const result = addPage(pages, {
+    pageType: PAGE_TYPES.MEDIA_PLAYERS,
+    now: () => 123456789,
+  });
+
+  assert.equal(result.page.type, undefined);
+  assert.equal(result.page.icon, "media-player");
+  assert.equal(result.page.widgets.length, 1);
+  assert.deepEqual(
+    result.page.widgets[0] && {
+      kind: result.page.widgets[0].kind,
+      variant: result.page.widgets[0].variant,
+      responsiveSizeMode: result.page.widgets[0].responsiveSizeMode,
+      w: result.page.widgets[0].w,
+      h: result.page.widgets[0].h,
+    },
+    {
+      kind: "media",
+      variant: "media-page-panel",
+      responsiveSizeMode: "media-page-panel",
+      w: 4,
+      h: 6,
+    },
+  );
 });
 
 test("page movement respects list boundaries", () => {

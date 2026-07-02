@@ -86,8 +86,8 @@ test("missing pages and invalid active ids receive persisted fallbacks", () => {
 test("valid pages and active ids are read without unnecessary writes", () => {
   const storage = createStorage({
     [STORAGE_KEYS.gridPages]: JSON.stringify([
-      { id: "home", widgets: [] },
-      { id: "lights", widgets: [] },
+      { id: "home", name: "Home", icon: "home", widgets: [] },
+      { id: "lights", name: "Lights", icon: "grid", widgets: [] },
     ]),
     [STORAGE_KEYS.activePage]: "lights",
   });

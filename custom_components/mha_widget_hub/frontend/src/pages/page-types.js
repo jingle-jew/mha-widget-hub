@@ -83,6 +83,44 @@ export function isMediaPlayersPage(page = {}) {
   return normalizePageType(page?.type) === PAGE_TYPES.MEDIA_PLAYERS;
 }
 
+export function resolveMediaPageWidgetEntityId(config = {}) {
+  const enabledPlayerIds = Array.isArray(config?.enabledPlayerIds)
+    ? config.enabledPlayerIds
+    : [];
+  const selectedPlayerId = String(config?.selectedPlayerId || "").trim();
+  const defaultPlayerId = String(config?.defaultPlayerId || "").trim();
+
+  return selectedPlayerId
+    || defaultPlayerId
+    || enabledPlayerIds.find(Boolean)
+    || "";
+}
+
+export function createMediaPageWidgetSeed({
+  pageId = "media",
+  pageName = "Media Players",
+  config = {},
+} = {}) {
+  const entityId = resolveMediaPageWidgetEntityId(config);
+
+  return {
+    id: `widget-media-page-${String(pageId || "media").trim() || "media"}`,
+    kind: "media",
+    type: "media",
+    component: "media-widget",
+    category: "media",
+    variant: "media-page-panel",
+    responsiveSizeMode: "media-page-panel",
+    w: 4,
+    h: 6,
+    label: String(pageName || "Media Players"),
+    title: String(pageName || "Media Players"),
+    entityId,
+    entity_id: entityId,
+    mediaEntityId: entityId,
+  };
+}
+
 export function getPageCreatorTypeOptions() {
   return [
     Object.freeze({

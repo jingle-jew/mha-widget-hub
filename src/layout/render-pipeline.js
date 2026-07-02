@@ -12,11 +12,10 @@ import {
   getInternalGridRowCountFromLogical,
   getLayoutMode,
   getWidgetDensity,
-  normalizeWidgetSize,
+  normalizeWidgetForKind,
   sizeToString,
 } from "./layout-engine.js";
 import { createSettingsPanel } from "../settings/settings-panel.js";
-import { createMediaPage } from "../pages/media-page.js";
 import { createPagePanel } from "../pages/page-panel.js";
 import { syncMediaPageSettingsPanel } from "../pages/media-page-settings.js";
 import { isMediaPlayersPage } from "../pages/page-types.js";
@@ -61,8 +60,17 @@ export function createRenderPipeline(host, options = {}) {
     host.style.removeProperty("--mha-media-page-wallpaper-image");
   }
 
-  function createWidgetPlaceholder(widget, { units, position }) {
-    const size = normalizeWidgetSize(widget);
+  function createWidgetPlaceholder(widget, {
+    units,
+    rows,
+    layout,
+    position,
+  }) {
+    const size = normalizeWidgetForKind(widget, {
+      units,
+      rowUnits: rows,
+      layout,
+    });
     const effectiveWidgetW = Math.min(size.w, units);
     const el = document.createElement("article");
     el.className = "mha-widget mha-widget-placeholder";
@@ -83,16 +91,25 @@ export function createRenderPipeline(host, options = {}) {
     return el;
   }
 
-  function appendWidgetPlaceholders(grid, { units, positions }) {
+  function appendWidgetPlaceholders(grid, {
+    units,
+    rows,
+    layout,
+    positions,
+  }) {
     const fragment = document.createDocumentFragment();
     host._widgets.forEach((widget) => {
       const placeholder = Object.hasOwn(host, "_createWidgetPlaceholder")
         ? host._createWidgetPlaceholder(widget, {
           units,
+          rows,
+          layout,
           position: positions?.[widget.id],
         })
         : createWidgetPlaceholder(widget, {
           units,
+          rows,
+          layout,
           position: positions?.[widget.id],
         });
       fragment.append(placeholder);
@@ -101,7 +118,14 @@ export function createRenderPipeline(host, options = {}) {
     host.dataset.widgetsState = host._widgets.length ? "loading" : "ready";
   }
 
-  function startProgressiveWidgetRender({ grid, units, positions, renderId }) {
+  function startProgressiveWidgetRender({
+    grid,
+    units,
+    rows,
+    layout,
+    positions,
+    renderId,
+  }) {
     cancelAnimationFrame(host._widgetRenderFrame);
     const queue = [...host._widgets];
     const batchSize = getEffectiveLayout(host) === "mobile" ? 1 : 2;
@@ -116,6 +140,8 @@ export function createRenderPipeline(host, options = {}) {
         const placeholder = grid.querySelector(`[data-widget-placeholder-id="${widget.id}"]`);
         const el = host._createWidgetElement(widget, {
           units,
+          rows,
+          layout,
           position: positions?.[widget.id],
         });
         if (placeholder) replacements.push([placeholder, el]);
@@ -358,41 +384,23 @@ export function createRenderPipeline(host, options = {}) {
     return { links, pageStage };
   }
 
-  function mountImmediateUi({ layout, pageStage, units }) {
+  function mountImmediateUi({ layout, pageStage, units, rows }) {
     const activePage = getActivePage(host);
-    const isMediaPage = isMediaPlayersPage(activePage);
-    const positions = isMediaPage ? {} : host._getActiveWidgetPositions({ create: true });
+    const positions = host._getActiveWidgetPositions({ create: true });
     let grid = null;
     let activeSurface = null;
     if (!pageStage) return { positions, grid, activeSurface };
-    if (isMediaPage) {
-      const mediaPageProps = host._buildMediaPageProps?.() || {};
-      const mediaPage = createMediaPage(activePage, {
-        ...mediaPageProps,
-        onBackgroundArtworkChange: (artworkUrl = "", meta = {}) => {
-          syncMediaPageBackdropState({
-            artworkUrl,
-            blurBackground: meta.blurBackground,
-          });
-        },
-      });
-      const panel = createPagePanel({
-        page: activePage,
-        kind: "media",
-        content: mediaPage,
-      });
-      panel.classList.add("mha-page-panel--media");
-      pageStage.append(panel);
-      activeSurface = mediaPage;
-      host.dataset.widgetsState = "ready";
-    } else {
-      const gridPanel = createGridPanel(activePage);
-      grid = gridPanel.grid;
-      pageStage.append(gridPanel.panel);
-      if (grid.dataset) grid.dataset.pageType = activePage?.type || "grid";
-      appendWidgetPlaceholders(grid, { units, positions });
-      activeSurface = grid;
-    }
+    const gridPanel = createGridPanel(activePage);
+    grid = gridPanel.grid;
+    pageStage.append(gridPanel.panel);
+    if (grid.dataset) grid.dataset.pageType = activePage?.type || "grid";
+    appendWidgetPlaceholders(grid, {
+      units,
+      rows,
+      layout,
+      positions,
+    });
+    activeSurface = grid;
     if (layout === "mobile") {
       host.shadowRoot.append(createMobileDock(host._getDockProps()));
       host._scheduleMobileDockOverflowState?.();
@@ -404,17 +412,25 @@ export function createRenderPipeline(host, options = {}) {
     return { positions, grid, activeSurface };
   }
 
-  function schedulePrimaryWidgetRender({ grid, units, positions, renderId }) {
-    if (isMediaPlayersPage(getActivePage(host))) {
-      host._scheduleHassUpdate();
-      host._syncEditModeDom?.();
-      host._scheduleIconSymbolRefresh();
-      return;
-    }
+  function schedulePrimaryWidgetRender({
+    grid,
+    units,
+    rows,
+    layout,
+    positions,
+    renderId,
+  }) {
     host._widgetRenderFrame = requestAnimationFrame(() => {
       host._widgetRenderFrame = 0;
       if (host._renderId !== renderId) return;
-      startProgressiveWidgetRender({ grid, units, positions, renderId });
+      startProgressiveWidgetRender({
+        grid,
+        units,
+        rows,
+        layout,
+        positions,
+        renderId,
+      });
     });
   }
 
@@ -465,6 +481,8 @@ export function createRenderPipeline(host, options = {}) {
     schedulePrimaryWidgetRender({
       grid,
       units: context.units,
+      rows: context.rows,
+      layout: context.layout,
       positions,
       renderId: context.renderId,
     });

@@ -201,7 +201,7 @@ export class PageUiCoordinator {
 
     this.setPages(result.pages);
     this.setActivePageId(result.activePageId);
-    this.setWidgets([]);
+    this.setWidgets(result.page?.widgets || []);
     this.setPageCreatorOpen(false);
     this.setNewPageType(PAGE_TYPES.GRID);
     this.savePages();

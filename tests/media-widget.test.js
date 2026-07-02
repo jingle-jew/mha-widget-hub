@@ -5,6 +5,7 @@ import {
   MEDIA_TRANSITION_GRACE_MS,
   resolveMediaTransitionData,
 } from "../src/widgets/media-widget.js";
+import { normalizeWidgetForKind } from "../src/layout/layout-engine.js";
 
 function mediaData(overrides = {}) {
   return {
@@ -106,4 +107,27 @@ test("media transition cache expires when idle is not temporary", () => {
   assert.equal(expiredIdle.playing, false);
   assert.equal(expiredIdle.artworkUrl, "");
   assert.equal(expiredIdle.usingGraceCache, undefined);
+});
+
+test("media page panel resolves responsive sizes without collapsing back to 4x4", () => {
+  const widget = {
+    kind: "media",
+    variant: "media-page-panel",
+    responsiveSizeMode: "media-page-panel",
+    w: 4,
+    h: 6,
+  };
+
+  assert.deepEqual(
+    normalizeWidgetForKind(widget, { units: 4, rowUnits: 12, layout: "mobile" }),
+    { w: 4, h: 6 },
+  );
+  assert.deepEqual(
+    normalizeWidgetForKind(widget, { units: 8, rowUnits: 8, layout: "tablet" }),
+    { w: 6, h: 8 },
+  );
+  assert.deepEqual(
+    normalizeWidgetForKind(widget, { units: 12, rowUnits: 8, layout: "desktop" }),
+    { w: 9, h: 8 },
+  );
 });

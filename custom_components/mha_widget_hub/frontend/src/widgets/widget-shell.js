@@ -1,7 +1,7 @@
 import { ICONS } from "../components/icons.js";
 import {
   getWidgetDensity,
-  normalizeWidgetSize,
+  normalizeWidgetForKind,
   sizeToString,
 } from "../layout/layout-engine.js";
 import {
@@ -20,6 +20,8 @@ export function createWidgetShell(
   widget,
   {
     activeGridUnits = 2,
+    activeGridRows = 2,
+    layout = "desktop",
     isEditing = false,
     isMoveTarget = false,
     position,
@@ -37,12 +39,18 @@ export function createWidgetShell(
   const widgetRendererName = getWidgetRendererName(widget);
   const shellBehavior = getWidgetShellBehavior(widget);
   const widgetConfigType = getWidgetConfigType(widget);
-  const size = normalizeWidgetSize(widget);
+  const size = normalizeWidgetForKind(widget, {
+    units: activeGridUnits,
+    rowUnits: activeGridRows,
+    layout,
+  });
   const density = getWidgetDensity(size);
   const effectiveWidgetW = Math.min(size.w, activeGridUnits);
   const renderContext = {
     size,
     activeGridUnits,
+    activeGridRows,
+    layout,
     widgetW: effectiveWidgetW,
     widgetH: size.h,
     isEditing,

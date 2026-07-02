@@ -324,6 +324,6 @@ export function normalizeToggleButtonsWidgetSize(size = {}) {
   );
 }
 
-export function normalizeWidgetForKind(widget={}) {
-  return normalizeRegisteredWidgetSize(widget,normalizeWidgetSize);
+export function normalizeWidgetForKind(widget={}, context={}) {
+  return normalizeRegisteredWidgetSize(widget,normalizeWidgetSize,context);
 }

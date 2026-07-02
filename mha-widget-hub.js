@@ -319,6 +319,7 @@ constructor(){
     getHass:()=>this._hass,
     getEntityVisibilityConfig:()=>this._entityVisibilityConfig,
     getGridBounds:()=>this._getGridBounds(),
+    getEffectiveLayout:()=>getEffectiveLayout(this),
     getActiveWidgetPositions:(options)=>this._getActiveWidgetPositions(options),
     isPositionMapValidForWidgets:(positions,widgets,units,rowUnits)=>this._isPositionMapValidForWidgets(positions,widgets,units,rowUnits),
     normalizeWidgetsToGridBounds:(widgets)=>this._normalizeWidgetsToGridBounds(widgets),
@@ -1108,7 +1109,9 @@ _getGridBounds(){
  */
 _doesWidgetLayoutFitGrid(widgets=this._widgets){
   const bounds=this._getGridBounds();
-  return doesWidgetLayoutFitGrid(widgets,bounds.units,bounds.rowUnits);
+  return doesWidgetLayoutFitGrid(widgets,bounds.units,bounds.rowUnits,{
+    layout:this._isMobileLauncherLayout()?"mobile":"desktop",
+  });
 }
 _findFittingResize(current,requested){
   return this._widgetResizeCoordinator.findFittingResize(current,requested);
@@ -1140,8 +1143,8 @@ _clearDropState(){
 _wireDrag(el){
   return getWidgetInteractionSurfaceCoordinatorForHost(this).wireDrag(el);
 }
-_createWidgetElement(widget,{units,position}){
-  return this._widgetSurfaceCoordinator.createWidgetElement(widget,{units,position});
+_createWidgetElement(widget,{units,rows,layout,position}){
+  return this._widgetSurfaceCoordinator.createWidgetElement(widget,{units,rows,layout,position});
 }
 _createWidgetPlaceholder(widget,options){
   return getRenderPipelineForHost(this).createWidgetPlaceholder(widget,options);

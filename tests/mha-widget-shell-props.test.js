@@ -13,6 +13,8 @@ test("widget shell state derives move-target state from the active widget id", (
     entityVisibilityConfig: { users: [] },
   }), {
     activeGridUnits: 4,
+    activeGridRows: 2,
+    layout: "desktop",
     isEditing: true,
     isMoveTarget: true,
     position: { x: 2, y: 3 },

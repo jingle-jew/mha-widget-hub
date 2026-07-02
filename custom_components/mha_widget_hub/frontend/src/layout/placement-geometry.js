@@ -9,8 +9,11 @@ export function rectsOverlap(a, b) {
   );
 }
 
-export function getWidgetRectFromPosition(widget, position, units) {
-  const size = normalizeWidgetForKind(widget);
+export function getWidgetRectFromPosition(widget, position, units, {
+  rowUnits = null,
+  layout = "desktop",
+} = {}) {
+  const size = normalizeWidgetForKind(widget, { units, rowUnits, layout });
   return {
     x: Number(position?.x) || 1,
     y: Number(position?.y) || 1,
@@ -25,6 +28,7 @@ export function getWidgetsInCandidateRect(
   candidateRect,
   positions,
   units,
+  context = {},
 ) {
   return widgets.filter(widget => {
     if (widget.id === ignoredWidgetId) return false;
@@ -32,7 +36,7 @@ export function getWidgetsInCandidateRect(
     if (!position) return false;
     return rectsOverlap(
       candidateRect,
-      getWidgetRectFromPosition(widget, position, units),
+      getWidgetRectFromPosition(widget, position, units, context),
     );
   });
 }
@@ -42,6 +46,7 @@ export function doesWidgetGroupExactlyFillRect(
   targetRect,
   positions,
   units,
+  context = {},
 ) {
   if (!widgets?.length) return false;
 
@@ -53,7 +58,7 @@ export function doesWidgetGroupExactlyFillRect(
     const position = positions?.[widget.id];
     if (!position) return false;
 
-    const rect = getWidgetRectFromPosition(widget, position, units);
+    const rect = getWidgetRectFromPosition(widget, position, units, context);
     if (
       rect.x < targetRect.x
       || rect.y < targetRect.y
@@ -99,11 +104,11 @@ export function translateWidgetGroupPositions(
   return next;
 }
 
-export function getGroupBoundingRect(group, positions, units) {
+export function getGroupBoundingRect(group, positions, units, context = {}) {
   if (!group?.length) return null;
 
   const rects = group.map(widget => (
-    getWidgetRectFromPosition(widget, positions?.[widget.id], units)
+    getWidgetRectFromPosition(widget, positions?.[widget.id], units, context)
   ));
   const minX = Math.min(...rects.map(rect => rect.x));
   const minY = Math.min(...rects.map(rect => rect.y));
@@ -118,18 +123,20 @@ export function getGroupBoundingRect(group, positions, units) {
   };
 }
 
-export function isGroupInternallyValid(group, positions, units) {
+export function isGroupInternallyValid(group, positions, units, context = {}) {
   for (let index = 0; index < group.length; index += 1) {
     const a = getWidgetRectFromPosition(
       group[index],
       positions?.[group[index].id],
       units,
+      context,
     );
     for (let otherIndex = index + 1; otherIndex < group.length; otherIndex += 1) {
       const b = getWidgetRectFromPosition(
         group[otherIndex],
         positions?.[group[otherIndex].id],
         units,
+        context,
       );
       if (rectsOverlap(a, b)) return false;
     }
@@ -147,11 +154,15 @@ export function isPositionMapValidForWidgets(
   const maxRows = allowUnboundedRows
     ? Number.POSITIVE_INFINITY
     : rowUnits;
+  const context = {
+    rowUnits,
+    layout: allowUnboundedRows ? "mobile" : "desktop",
+  };
 
   for (const widget of widgets) {
     const position = positions?.[widget.id];
     if (!position) return false;
-    const rect = getWidgetRectFromPosition(widget, position, units);
+    const rect = getWidgetRectFromPosition(widget, position, units, context);
     if (
       rect.x < 1
       || rect.y < 1
@@ -162,5 +173,5 @@ export function isPositionMapValidForWidgets(
     }
   }
 
-  return isGroupInternallyValid(widgets, positions, units);
+  return isGroupInternallyValid(widgets, positions, units, context);
 }

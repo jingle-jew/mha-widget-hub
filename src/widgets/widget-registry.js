@@ -151,8 +151,8 @@ export function isWidgetKind(widget, expectedKind) {
   return resolveWidgetKind(widget) === expectedKind;
 }
 
-export function normalizeRegisteredWidgetSize(widget = {}, normalizeBottomeSize) {
-  return normalizeRegisteredWidgetSizeFromDefinition(widget, normalizeBottomeSize, {
+export function normalizeRegisteredWidgetSize(widget = {}, normalizeBottomeSize, context = {}) {
+  return normalizeRegisteredWidgetSizeFromDefinition(widget, normalizeBottomeSize, context, {
     getWidgetDefinition,
     getWidgetCreationDefaults,
   });

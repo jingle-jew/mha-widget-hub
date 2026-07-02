@@ -50,7 +50,7 @@ export class WidgetResizeCoordinator {
     while (next.h >= 1) {
       let testWidgets = originalWidgets.map(widget => (
         widget.id === current.id
-          ? { ...widget, ...next }
+          ? { ...widget, responsiveSizeMode: "", ...next }
           : widget
       ));
       testWidgets = this.normalizeWidgetsToGridBounds(testWidgets);
@@ -85,6 +85,7 @@ export class WidgetResizeCoordinator {
     const current = this.getWidgets().find(widget => widget.id === state.widgetId) || {};
     let nextSize = this.normalizeWidgetForKindFn({
       ...current,
+      responsiveSizeMode: "",
       w: state.startW + Math.round((event.clientX - state.startX) / state.metrics.columnStep),
       h: state.startH + Math.round((event.clientY - state.startY) / state.metrics.rowStep),
     });
@@ -92,7 +93,7 @@ export class WidgetResizeCoordinator {
 
     const nextWidgets = this.getWidgets().map(widget => (
       widget.id === state.widgetId
-        ? { ...widget, ...nextSize }
+        ? { ...widget, responsiveSizeMode: "", ...nextSize }
         : widget
     ));
     const normalizedWidgets = this.normalizeWidgetsToGridBounds(nextWidgets);

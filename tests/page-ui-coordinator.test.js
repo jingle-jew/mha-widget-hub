@@ -168,7 +168,7 @@ test("deleting a selected dock-detail page returns settings to dock and cleans p
   assert.equal(calls.syncWidgetDropSlots, 0);
 });
 
-test("creating a media page resets the page creator state and triggers a full render", () => {
+test("creating a media page resets the page creator state and seeds a normal grid page", () => {
   const { coordinator, state, calls } = createHarness({
     state: {
       pageCreatorOpen: true,
@@ -181,16 +181,17 @@ test("creating a media page resets the page creator state and triggers a full re
   assert.equal(state.pageCreatorOpen, false);
   assert.equal(state.newPageType, "grid");
   assert.equal(state.activePageId.startsWith("page-"), true);
-  assert.deepEqual(state.widgets, []);
-  assert.equal(state.pages.at(-1)?.type, "media-players");
+  assert.equal(state.widgets.length, 1);
+  assert.equal(state.pages.at(-1)?.type, undefined);
   assert.equal(state.pages.at(-1)?.icon, "media-player");
+  assert.equal(state.pages.at(-1)?.widgets?.[0]?.responsiveSizeMode, "media-page-panel");
   assert.equal(calls.syncDocks, 1);
   assert.equal(calls.syncPageCreator, 1);
   assert.deepEqual(calls.transitionPageRender, [{
     previousPageId: "home",
     nextPageId: state.activePageId,
     previousPageType: "grid",
-    nextPageType: "media-players",
+    nextPageType: "grid",
   }]);
   assert.equal(calls.refreshActiveGridOnly, 0);
   assert.equal(calls.syncWidgetDropSlots, 0);

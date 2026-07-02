@@ -1,7 +1,9 @@
 import {
   getInternalGridColumnCountFromLogical,
   getInternalGridRowCountFromLogical,
-  normalizeWidgetSize,
+  getWidgetDensity,
+  normalizeWidgetForKind,
+  sizeToString,
 } from "./layout-engine.js";
 import { RESPONSIVE_BREAKPOINTS } from "./responsive.js";
 
@@ -353,10 +355,20 @@ export class GridRuntime {
         `[data-widget-id="${widget.id}"]`,
       );
       if (!element) return;
-      const size = normalizeWidgetSize(widget);
+      const size = normalizeWidgetForKind(widget, {
+        units: runtime.units,
+        rowUnits: runtime.rowUnits,
+        layout: runtime.layout,
+      });
       const effectiveWidth = Math.min(size.w, runtime.units);
+      element.dataset.widgetConfiguredW = String(size.w);
       element.dataset.widgetW = String(effectiveWidth);
+      element.dataset.widgetH = String(size.h);
+      element.dataset.widgetSize = sizeToString(size);
+      element.dataset.widgetDensity = getWidgetDensity(size);
       element.style.setProperty("--mha-widget-w", String(effectiveWidth));
+      element.style.setProperty("--mha-widget-configured-w", String(size.w));
+      element.style.setProperty("--mha-widget-h", String(size.h));
     });
     this.applyPositions(positions);
     const squareUnitSynced = this.syncSquareUnit();
