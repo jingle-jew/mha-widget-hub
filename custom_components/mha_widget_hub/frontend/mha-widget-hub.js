@@ -42,10 +42,7 @@ import { createWidgetResizeCoordinator } from "./src/widgets/widget-resize-coord
 import { createWidgetSurfaceCoordinator } from "./src/widgets/widget-surface-coordinator.js";
 import {
   DEFAULT_WIDGETS,
-  getActiveGridRows,
-  getActiveGridUnits,
   getGridOrientation,
-  getGridPreset,
   getGridPresetForLayout,
   getLayoutMode,
   normalizeGridOrientation,
@@ -307,7 +304,7 @@ constructor(){
     getWidgets:()=>this._widgets,
     setWidgets:(widgets)=>{this._widgets=widgets;},
     getGridMetrics:()=>this._getGridMetrics(),
-    getActiveGridUnits:()=>getActiveGridUnits(this),
+    getActiveGridUnits:()=>this._getRuntimeGridUnits(),
     doesWidgetLayoutFitGrid:(widgets)=>this._doesWidgetLayoutFitGrid(widgets),
     normalizeWidgetsToGridBounds:(widgets)=>this._normalizeWidgetsToGridBounds(widgets),
     clampWidgetSizeToGridBounds:(widget,size)=>this._clampWidgetSizeToGridBounds(widget,size),
@@ -387,7 +384,6 @@ constructor(){
     host:this,
     getLayoutMode:()=>this._getRuntimeLayoutMode(),
     getEffectiveLayout:()=>this._getRuntimeLayout(),
-    getGridPreset,
     getDockPosition:()=>this._dockPosition,
     isMobileLayout:()=>this._isMobileLauncherLayout(),
     getWidgets:()=>this._widgets,
@@ -1089,9 +1085,6 @@ _observeLayoutSize(){
 }
 _getWidgetAreaMetrics(){
   return this._gridRuntime.getWidgetAreaMetrics();
-}
-_getDockBottomColumnBonus(layout,base,metrics={}){
-  return this._gridRuntime.getDockBottomColumnBonus(layout,base,metrics);
 }
 
 _getShellViewportMetrics(){

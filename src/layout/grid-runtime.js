@@ -165,7 +165,6 @@ export class GridRuntime {
     getRoot = () => host?.shadowRoot,
     getLayoutMode,
     getEffectiveLayout,
-    getGridPreset,
     getDockPosition = () => "left",
     isMobileLayout,
     getWidgets = () => [],
@@ -182,7 +181,6 @@ export class GridRuntime {
     this.getRoot = (...args) => getRoot(...args);
     this.getLayoutMode = (...args) => getLayoutMode(...args);
     this.getEffectiveLayout = (...args) => getEffectiveLayout(...args);
-    this.getGridPreset = (...args) => getGridPreset(...args);
     this.getDockPosition = (...args) => getDockPosition(...args);
     this.isMobileLayout = (...args) => (
       isMobileLayout
