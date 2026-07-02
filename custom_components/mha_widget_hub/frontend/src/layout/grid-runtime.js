@@ -210,6 +210,28 @@ export class GridRuntime {
     const layout = this.getEffectiveLayout(this.host);
     const metrics = this.getRuntimeMetrics() || {};
     const base = this.getGridPreset(this.host, layout, metrics);
+    if (layout === "tablet") {
+      const nominal = this.getGridPreset(this.host, layout);
+      const columns = Math.min(
+        Math.max(1, Number(base?.columns) || 1),
+        Math.max(1, Number(nominal?.columns) || 1),
+      );
+      const rows = Math.min(
+        Math.max(1, Number(base?.rows) || 1),
+        Math.max(1, Number(nominal?.rows) || 1),
+      );
+      if (
+        columns !== (Number(base?.columns) || 1)
+        || rows !== (Number(base?.rows) || 1)
+      ) {
+        return {
+          ...base,
+          columns,
+          rows,
+          density: `${nominal?.density || base?.density || "tablet"}-stable`,
+        };
+      }
+    }
     const bonus = this.getDockBottomColumnBonus(layout, base, metrics);
     if (!bonus) return base;
     return {

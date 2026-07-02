@@ -284,7 +284,74 @@ test("runtime grid preset uses page panel metrics on tablet and desktop", () => 
 
   assert.equal(preset.columns, 6);
   assert.equal(preset.rows, 5);
-  assert.deepEqual(captured.at(-1), { width: 883, height: 682 });
+  assert.deepEqual(captured[0], { width: 883, height: 682 });
+});
+
+test("tablet runtime preset does not upscale columns or rows above the nominal device preset", () => {
+  const panel = { clientWidth: 883, clientHeight: 682 };
+  const area = { clientWidth: 860, clientHeight: 676 };
+  const areaStyle = {
+    paddingLeft: "0px",
+    paddingRight: "0px",
+    paddingTop: "0px",
+    paddingBottom: "0px",
+  };
+  const panelStyle = {
+    paddingLeft: "0px",
+    paddingRight: "0px",
+    paddingTop: "0px",
+    paddingBottom: "0px",
+  };
+  const grid = {
+    closest(selector) {
+      return selector === ".mha-page-panel--grid" ? panel : null;
+    },
+  };
+  const root = {
+    querySelector(selector) {
+      if (selector === ".mha-widget-area") return area;
+      if (selector === ".mha-grid") return grid;
+      return null;
+    },
+  };
+  const calls = [];
+  const runtime = createGridRuntime({
+    host: {
+      dataset: {},
+      style: createStyle(),
+      shadowRoot: root,
+      isConnected: true,
+      getBoundingClientRect: () => ({ width: 1133, height: 744 }),
+    },
+    getLayoutMode: () => "tablet",
+    getEffectiveLayout: () => "tablet",
+    getGridPreset: (_host, _layout, metrics) => {
+      calls.push(metrics || null);
+      if (metrics && metrics.width === 883) {
+        return {
+          columns: 6,
+          rows: 5,
+          density: "tablet-landscape-adaptive-comfort",
+        };
+      }
+      return {
+        columns: 6,
+        rows: 4,
+        density: "tablet-landscape-adaptive-comfort",
+      };
+    },
+    getStyle: element => (element === panel ? panelStyle : areaStyle),
+  });
+
+  const preset = runtime.getRuntimeGridPreset();
+
+  assert.equal(preset.columns, 6);
+  assert.equal(preset.rows, 4);
+  assert.match(preset.density, /-stable$/);
+  assert.deepEqual(calls, [
+    { width: 883, height: 682 },
+    null,
+  ]);
 });
 
 test("runtime surfaces the parent grid frame on tablet/desktop", () => {
