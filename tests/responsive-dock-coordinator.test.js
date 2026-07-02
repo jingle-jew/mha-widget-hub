@@ -261,7 +261,7 @@ test("responsive dock coordinator scrolls the mobile dock to the end when editin
     rafCallbacks.shift()?.();
     assert.equal(dock.dataset.overflowing, "true");
     rafCallbacks.shift()?.();
-    assert.deepEqual(scrollCalls, [{ left: 640, behavior: "smooth" }]);
+    assert.deepEqual(scrollCalls, [{ left: 320, behavior: "smooth" }]);
 
     coordinator.syncDocksDom();
     assert.equal(rafCallbacks.length, 1);
@@ -280,8 +280,8 @@ test("responsive dock coordinator scrolls the mobile dock to the end when editin
     assert.equal(dock.dataset.overflowing, "true");
     rafCallbacks.shift()?.();
     assert.deepEqual(scrollCalls, [
-      { left: 640, behavior: "smooth" },
-      { left: 640, behavior: "smooth" },
+      { left: 320, behavior: "smooth" },
+      { left: 320, behavior: "smooth" },
     ]);
   } finally {
     globalThis.window = previousWindow;

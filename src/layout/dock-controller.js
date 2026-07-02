@@ -17,6 +17,10 @@ function serializeDockStructureItem(item = {}) {
   return [type, action, pageId, symbol].join(":");
 }
 
+function getMobileDockScrollContainer(dock) {
+  return dock?.querySelector?.(".mha-mobile-dock-track") || dock || null;
+}
+
 export function buildDockStructureSignature(items = []) {
   return (Array.isArray(items) ? items : [])
     .map(item => serializeDockStructureItem(item))
@@ -39,9 +43,10 @@ export function buildDockStructureSignatureFromDom(
 export function captureDockRenderState(root) {
   const dock = root?.querySelector?.(".mha-dock") || null;
   const mobileDock = root?.querySelector?.(".mha-mobile-dock") || null;
-  const mobileDockScrollLeft = mobileDock?.scrollLeft || 0;
-  const mobileDockPageIndex = mobileDock?.classList?.contains?.("is-paged") && mobileDock?.clientWidth
-    ? Math.round(mobileDockScrollLeft / mobileDock.clientWidth)
+  const mobileDockScrollContainer = getMobileDockScrollContainer(mobileDock);
+  const mobileDockScrollLeft = mobileDockScrollContainer?.scrollLeft || 0;
+  const mobileDockPageIndex = mobileDock?.classList?.contains?.("is-paged") && mobileDockScrollContainer?.clientWidth
+    ? Math.round(mobileDockScrollLeft / mobileDockScrollContainer.clientWidth)
     : -1;
 
   return {
@@ -59,12 +64,13 @@ function restoreMobileDockScroll(root, {
   mobileDockScrollLeft = 0,
 } = {}) {
   const dock = root?.querySelector?.(".mha-mobile-dock");
-  if (!dock) return false;
-  if (mobileDockPageIndex >= 0 && dock.clientWidth) {
-    dock.scrollLeft = mobileDockPageIndex * dock.clientWidth;
+  const scrollContainer = getMobileDockScrollContainer(dock);
+  if (!dock || !scrollContainer) return false;
+  if (mobileDockPageIndex >= 0 && scrollContainer.clientWidth) {
+    scrollContainer.scrollLeft = mobileDockPageIndex * scrollContainer.clientWidth;
     return true;
   }
-  dock.scrollLeft = mobileDockScrollLeft;
+  scrollContainer.scrollLeft = mobileDockScrollLeft;
   return true;
 }
 

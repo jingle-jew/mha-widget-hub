@@ -10,6 +10,29 @@ export function getPanelFocusIdentity(root, panel) {
   };
 }
 
+export function captureSettingsPanelsUiState(root) {
+  const panels = [...root?.querySelectorAll?.(".mha-settings-panel") || []];
+  return panels.map((panel) => ({
+    scope: panel?.dataset?.settingsScope || "",
+    page: panel?.dataset?.settingsPage || "",
+    scrollTop: panel?.querySelector?.(".mha-settings-body")?.scrollTop || 0,
+  }));
+}
+
+export function restoreSettingsPanelsUiState(root, panelStates = []) {
+  const states = Array.isArray(panelStates) ? panelStates : [];
+  states.forEach((state) => {
+    const panel = [...root?.querySelectorAll?.(".mha-settings-panel") || []]
+      .find(candidate => (
+        candidate?.dataset?.settingsScope === state.scope
+        && candidate?.dataset?.settingsPage === state.page
+      ));
+    if (!panel || panel?.dataset?.settingsPage !== state.page) return;
+    const body = panel.querySelector?.(".mha-settings-body");
+    if (body) body.scrollTop = state.scrollTop || 0;
+  });
+}
+
 export function findPanelFocusTarget(panel, identity) {
   if (!panel || !identity) return null;
   const candidates = [...panel.querySelectorAll(identity.tagName.toLowerCase())];

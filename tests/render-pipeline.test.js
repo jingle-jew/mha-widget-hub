@@ -133,6 +133,18 @@ function createMockShadowRoot() {
         }
         return descendants;
       }
+      if (selector.startsWith(".")) {
+        const className = selector.slice(1);
+        const matches = [];
+        const queue = [...this.appended];
+        while (queue.length) {
+          const node = queue.shift();
+          const classes = String(node?.className || "").split(/\s+/).filter(Boolean);
+          if (classes.includes(className)) matches.push(node);
+          if (Array.isArray(node?.appended)) queue.push(...node.appended);
+        }
+        return matches;
+      }
       return [];
     },
     append(...nodes) {
@@ -848,6 +860,53 @@ test("render datasets include the persisted dock label visibility state", async 
   assert.equal(host.dataset.themeStyle, "material");
 });
 
+test("host grid metrics prefer published runtime sizes and include the available content rect", async () => {
+  const prototype = await loadHubPrototype();
+  const previousComputedStyle = globalThis.getComputedStyle;
+  globalThis.getComputedStyle = () => ({
+    getPropertyValue(name) {
+      if (name === "--mha-grid-column-size") return "48px";
+      if (name === "--mha-grid-row-size") return "64px";
+      return "";
+    },
+    gridTemplateColumns: "48px 48px 48px",
+    gridAutoRows: "64px",
+    columnGap: "12px",
+    gap: "12px",
+  });
+
+  const host = {
+    style: {
+      getPropertyValue(name) {
+        if (name === "--mha-grid-column-size") return "72px";
+        if (name === "--mha-grid-row-size") return "84px";
+        return "";
+      },
+    },
+    shadowRoot: {
+      querySelector(selector) {
+        return selector === ".mha-grid" ? {} : null;
+      },
+    },
+    _getAvailableContentRect() {
+      return { x: 10, y: 20, width: 300, height: 400 };
+    },
+  };
+
+  try {
+    assert.deepEqual(prototype._getGridMetrics.call(host), {
+      columnStep: 84,
+      rowStep: 96,
+      columnSize: 72,
+      rowSize: 84,
+      gap: 12,
+      availableContentRect: { x: 10, y: 20, width: 300, height: 400 },
+    });
+  } finally {
+    globalThis.getComputedStyle = previousComputedStyle;
+  }
+});
+
 test("primary controls use host edit icon and widget-manager bridge callbacks", async () => {
   const prototype = await loadHubPrototype();
   const previousDocument = globalThis.document;
@@ -981,6 +1040,204 @@ test("immediate UI delegates status updates through the host bridge", async () =
     "updateStatusDom",
   ]);
   assert.equal(pageStage.appended.length, 1);
+  globalThis.document = previousDocument;
+});
+
+test("deferred UI rebuilds settings through syncSettingsDom instead of appending raw panels", async () => {
+  const prototype = await loadHubPrototype();
+  const previousDocument = globalThis.document;
+  const calls = [];
+
+  globalThis.document = {
+    ...globalThis.document,
+    createElement(tag) {
+      return createMockElement(tag);
+    },
+    createElementNS(namespace, tag) {
+      return createMockElement(tag, namespace);
+    },
+  };
+
+  const shadowRoot = createMockShadowRoot();
+  const host = {
+    isConnected: true,
+    _renderId: 17,
+    shadowRoot,
+    _screensaverCoordinator: {
+      createDomElement() {
+        const el = createMockElement("div");
+        el.className = "mha-screensaver";
+        return el;
+      },
+    },
+    _syncSettingsDom() {
+      calls.push("syncSettingsDom");
+      const panel = createMockElement("section");
+      panel.className = "mha-settings-panel";
+      shadowRoot.append(panel);
+    },
+    _getSettingsPanelsProps() {
+      throw new Error("appendDeferredUi should not build raw settings panels directly");
+    },
+    _widgetManagerOpen: false,
+    _widgetManagerCategory: "",
+    _getWidgetManagerCategories() {
+      return [];
+    },
+    _closeWidgetManager() {},
+    _showWidgetManagerCategories() {},
+    _selectWidgetManagerCategory() {},
+    _beginWidgetPlacement() {},
+    _pageUiCoordinator: {
+      buildPageCreatorProps() {
+        return {};
+      },
+    },
+    _buildMediaPageSettingsProps() {
+      return {};
+    },
+    _widgetConfigSession: null,
+    _hass: { states: {} },
+    _entityVisibilityConfig: null,
+    _closeWidgetConfig() {},
+    _saveWidgetConfig() {},
+    _syncWidgetConfigDom() {},
+    _syncEditModeDom() {
+      calls.push("syncEditModeDom");
+    },
+    _syncScreensaverVisibilityState() {
+      calls.push("syncScreensaverVisibilityState");
+    },
+    _scheduleIconSymbolRefresh() {
+      calls.push("scheduleIconSymbolRefresh");
+    },
+  };
+
+  prototype._appendDeferredUi.call(host, {
+    layout: "mobile",
+    renderId: 17,
+  });
+  await new Promise(resolve => setTimeout(resolve, 0));
+
+  assert.deepEqual(calls, [
+    "syncSettingsDom",
+    "syncEditModeDom",
+    "syncScreensaverVisibilityState",
+    "scheduleIconSymbolRefresh",
+  ]);
+  assert.equal(
+    shadowRoot.appended.filter(node => node?.className === "mha-settings-panel").length,
+    1,
+  );
+
+  globalThis.document = previousDocument;
+});
+
+test("deferred UI restores settings panel scroll state after a full rerender", async () => {
+  const prototype = await loadHubPrototype();
+  const previousDocument = globalThis.document;
+
+  globalThis.document = {
+    ...globalThis.document,
+    createElement(tag) {
+      return createMockElement(tag);
+    },
+    createElementNS(namespace, tag) {
+      return createMockElement(tag, namespace);
+    },
+  };
+
+  const shadowRoot = createMockShadowRoot();
+  const existingBody = createMockElement("div");
+  existingBody.className = "mha-settings-body";
+  existingBody.scrollTop = 210;
+  const existingPanel = createMockElement("section");
+  existingPanel.className = "mha-settings-panel";
+  existingPanel.dataset.settingsScope = "all";
+  existingPanel.dataset.settingsPage = "main";
+  existingPanel.append(existingBody);
+  shadowRoot.append(existingPanel);
+
+  const host = {
+    isConnected: true,
+    _renderId: 21,
+    shadowRoot,
+    dataset: {
+      wallpaperKind: "image",
+      wallpaperSource: "theme",
+    },
+    style: {
+      getPropertyValue() {
+        return "";
+      },
+    },
+    _activeWallpaper: {
+      kind: "image",
+      source: "theme",
+      renderValue: "",
+    },
+    _screensaverCoordinator: {
+      createDomElement() {
+        return createMockElement("div");
+      },
+    },
+    _getDockProps() {
+      return { usesDock: true };
+    },
+    _getWidgetManagerCategories() {
+      return [];
+    },
+    _closeWidgetManager() {},
+    _showWidgetManagerCategories() {},
+    _selectWidgetManagerCategory() {},
+    _beginWidgetPlacement() {},
+    _pageUiCoordinator: {
+      buildPageCreatorProps() {
+        return {};
+      },
+    },
+    _buildMediaPageSettingsProps() {
+      return {};
+    },
+    _widgetManagerOpen: false,
+    _widgetManagerCategory: "",
+    _widgetConfigSession: null,
+    _hass: { states: {} },
+    _entityVisibilityConfig: null,
+    _closeWidgetConfig() {},
+    _saveWidgetConfig() {},
+    _syncWidgetConfigDom() {},
+    _syncEditModeDom() {},
+    _syncScreensaverVisibilityState() {},
+    _scheduleIconSymbolRefresh() {},
+    _syncSettingsDom() {
+      const nextBody = createMockElement("div");
+      nextBody.className = "mha-settings-body";
+      nextBody.scrollTop = 0;
+      const nextPanel = createMockElement("section");
+      nextPanel.className = "mha-settings-panel";
+      nextPanel.dataset.settingsScope = "all";
+      nextPanel.dataset.settingsPage = "main";
+      nextPanel.append(nextBody);
+      shadowRoot.append(nextPanel);
+    },
+  };
+
+  prototype._mountRenderShell.call(host, {
+    layoutMode: "auto",
+    layout: "tablet",
+    cols: 4,
+    units: 8,
+  });
+  prototype._appendDeferredUi.call(host, {
+    layout: "tablet",
+    renderId: 21,
+  });
+  await new Promise(resolve => setTimeout(resolve, 0));
+
+  const restoredPanel = shadowRoot.appended.find(node => node?.className === "mha-settings-panel");
+  assert.equal(restoredPanel?.querySelector?.(".mha-settings-body")?.scrollTop, 210);
+
   globalThis.document = previousDocument;
 });
 

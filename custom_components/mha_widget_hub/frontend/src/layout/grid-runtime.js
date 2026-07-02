@@ -9,48 +9,49 @@ import {
   sizeToString,
 } from "./layout-engine.js";
 
-export function measureWidgetArea(area, getStyle = getComputedStyle) {
-  if (!area) return null;
+export function measureContentRect(element, getStyle = getComputedStyle) {
+  if (!element) return null;
 
-  const style = getStyle(area);
-  const rect = area.getBoundingClientRect?.() || {};
+  const style = getStyle(element);
+  const rect = element.getBoundingClientRect?.() || {};
+  const paddingLeft = Number.parseFloat(style.paddingLeft) || 0;
+  const paddingRight = Number.parseFloat(style.paddingRight) || 0;
+  const paddingTop = Number.parseFloat(style.paddingTop) || 0;
+  const paddingBottom = Number.parseFloat(style.paddingBottom) || 0;
   const width = Math.max(
     0,
-    (area.clientWidth || rect.width || 0)
-      - (Number.parseFloat(style.paddingLeft) || 0)
-      - (Number.parseFloat(style.paddingRight) || 0),
+    (element.clientWidth || rect.width || 0) - paddingLeft - paddingRight,
   );
   const height = Math.max(
     0,
-    (area.clientHeight || rect.height || 0)
-      - (Number.parseFloat(style.paddingTop) || 0)
-      - (Number.parseFloat(style.paddingBottom) || 0),
+    (element.clientHeight || rect.height || 0) - paddingTop - paddingBottom,
   );
+  if (width <= 0 || height <= 0) return null;
 
-  return width > 0 && height > 0 ? { width, height } : null;
+  const x = (Number(rect.left) || 0) + paddingLeft;
+  const y = (Number(rect.top) || 0) + paddingTop;
+  return {
+    x,
+    y,
+    width,
+    height,
+    left: x,
+    top: y,
+    right: x + width,
+    bottom: y + height,
+  };
+}
+
+export function measureWidgetArea(area, getStyle = getComputedStyle) {
+  const rect = measureContentRect(area, getStyle);
+  return rect ? { width: rect.width, height: rect.height } : null;
 }
 
 export function measureGridFrame(grid, getStyle = getComputedStyle) {
   if (!grid?.closest) return null;
   const frame = grid.closest(".mha-page-panel--grid");
-  if (!frame) return null;
-
-  const style = getStyle(frame);
-  const rect = frame.getBoundingClientRect?.() || {};
-  const width = Math.max(
-    0,
-    (frame.clientWidth || rect.width || 0)
-      - (Number.parseFloat(style.paddingLeft) || 0)
-      - (Number.parseFloat(style.paddingRight) || 0),
-  );
-  const height = Math.max(
-    0,
-    (frame.clientHeight || rect.height || 0)
-      - (Number.parseFloat(style.paddingTop) || 0)
-      - (Number.parseFloat(style.paddingBottom) || 0),
-  );
-
-  return width > 0 && height > 0 ? { width, height } : null;
+  const rect = measureContentRect(frame, getStyle);
+  return rect ? { width: rect.width, height: rect.height } : null;
 }
 
 export function getDockBottomColumnBonus({
@@ -82,6 +83,26 @@ export function getGridBoundsFromPreset(preset = {}) {
     rows,
     units: getInternalGridColumnCountFromLogical(columns),
     rowUnits: getInternalGridRowCountFromLogical(rows),
+  };
+}
+
+export function resolveGridTrackAlignment({
+  layout = "desktop",
+  containerWidth = 0,
+  trackWidth = 0,
+  defaultPaddingStart = "",
+  defaultPaddingEnd = "",
+} = {}) {
+  const width = Math.max(0, Number(containerWidth) || 0);
+  const track = Math.max(0, Number(trackWidth) || 0);
+  void layout;
+  void width;
+  void track;
+
+  return {
+    justify: "center",
+    paddingInlineStart: defaultPaddingStart,
+    paddingInlineEnd: defaultPaddingEnd,
   };
 }
 
@@ -246,15 +267,72 @@ export class GridRuntime {
     return measureWidgetArea(area, this.getStyle);
   }
 
+  getWidgetAreaRect() {
+    const area = this.getRoot()?.querySelector?.(".mha-widget-area");
+    return measureContentRect(area, this.getStyle);
+  }
+
   getGridFrameMetrics(grid = this.getRoot()?.querySelector?.(".mha-grid")) {
     return measureGridFrame(grid, this.getStyle);
   }
 
+  getGridFrameRect(grid = this.getRoot()?.querySelector?.(".mha-grid")) {
+    if (!grid?.closest) return null;
+    const frame = grid.closest(".mha-page-panel--grid");
+    return measureContentRect(frame, this.getStyle);
+  }
+
+  getAvailableContentRect(grid = this.getRoot()?.querySelector?.(".mha-grid")) {
+    const widgetAreaRect = this.getWidgetAreaRect();
+    if (this.isMobileLayout()) return widgetAreaRect;
+    return this.getGridFrameRect(grid) || widgetAreaRect;
+  }
+
+  publishAvailableContentRect(rect = this.getAvailableContentRect()) {
+    if (!this.host?.style || !this.host?.dataset || !rect) return false;
+
+    this.host.style.setProperty("--mha-available-content-x", `${rect.x}px`);
+    this.host.style.setProperty("--mha-available-content-y", `${rect.y}px`);
+    this.host.style.setProperty("--mha-available-content-width", `${rect.width}px`);
+    this.host.style.setProperty("--mha-available-content-height", `${rect.height}px`);
+    this.host.dataset.availableContentX = String(Math.round(rect.x));
+    this.host.dataset.availableContentY = String(Math.round(rect.y));
+    this.host.dataset.availableContentWidth = String(Math.round(rect.width));
+    this.host.dataset.availableContentHeight = String(Math.round(rect.height));
+    return true;
+  }
+
+  publishGridTrackAlignment({
+    layout = this.getResolvedLayout(),
+    containerWidth = 0,
+    trackWidth = 0,
+    defaultPaddingStart = "",
+    defaultPaddingEnd = "",
+  } = {}) {
+    if (!this.host?.style || !this.host?.dataset) return false;
+    const alignment = resolveGridTrackAlignment({
+      layout,
+      containerWidth,
+      trackWidth,
+      defaultPaddingStart,
+      defaultPaddingEnd,
+    });
+    this.host.style.setProperty("--mha-grid-track-justify-runtime", alignment.justify);
+    this.host.style.setProperty(
+      "--mha-grid-padding-inline-start-runtime",
+      alignment.paddingInlineStart,
+    );
+    this.host.style.setProperty(
+      "--mha-grid-padding-inline-end-runtime",
+      alignment.paddingInlineEnd,
+    );
+    this.host.dataset.gridTrackJustify = alignment.justify;
+    return true;
+  }
+
   getRuntimeMetrics(grid = this.getRoot()?.querySelector?.(".mha-grid")) {
-    if (this.isMobileLayout()) {
-      return this.getWidgetAreaMetrics();
-    }
-    return this.getGridFrameMetrics(grid) || this.getWidgetAreaMetrics();
+    const rect = this.getAvailableContentRect(grid);
+    return rect ? { width: rect.width, height: rect.height } : null;
   }
 
   getLogicalGridPreset({
@@ -270,12 +348,23 @@ export class GridRuntime {
     );
   }
 
-  getRuntimeGridPreset() {
-    return this.getLogicalGridPreset();
+  getRuntimeGridPreset({
+    orientation = this.host?.dataset?.gridOrientation,
+    availableContentRect = this.getAvailableContentRect(),
+  } = {}) {
+    const layout = this.getResolvedLayout();
+    const fallbackOrientation = getGridOrientation(
+      this.host?.getBoundingClientRect?.() || this.getRuntimeMetrics() || {},
+    );
+    return getGridPresetForLayout(
+      layout,
+      normalizeGridOrientation(orientation || fallbackOrientation),
+      availableContentRect,
+    );
   }
 
   getGridBounds() {
-    return getGridBoundsFromPreset(this.getLogicalGridPreset());
+    return getGridBoundsFromPreset(this.getRuntimeGridPreset());
   }
 
   getResponsiveSignature() {
@@ -288,7 +377,7 @@ export class GridRuntime {
     );
     const layoutMode = this.getResolvedLayoutMode();
     const layout = this.getResolvedLayout();
-    const preset = this.getLogicalGridPreset();
+    const preset = this.getRuntimeGridPreset();
     return `${width}x${height}|${orientation}|${layoutMode}|${layout}`
       + `|${this.getDockPosition()}|${preset.columns}|${preset.rows}`
       + `|${preset.density}|${metrics?.width || 0}x${metrics?.height || 0}`;
@@ -336,7 +425,7 @@ export class GridRuntime {
   syncRuntimeLayoutAttrs() {
     const layoutMode = this.getResolvedLayoutMode();
     const layout = this.getResolvedLayout();
-    const preset = this.getLogicalGridPreset();
+    const preset = this.getRuntimeGridPreset();
     const bounds = getGridBoundsFromPreset(preset);
 
     this.writeRuntimeLayoutAttrs({
@@ -345,6 +434,7 @@ export class GridRuntime {
       preset,
       bounds,
     });
+    this.publishAvailableContentRect();
     this.setResponsiveSignature(this.getResponsiveSignature());
     return { layoutMode, layout, preset, ...bounds };
   }
@@ -356,11 +446,16 @@ export class GridRuntime {
     if (!grid || !area) return false;
 
     const style = this.getStyle(grid);
+    const availableContentRect = this.getAvailableContentRect(grid);
     const frameMetrics = this.getGridFrameMetrics(grid) || this.getWidgetAreaMetrics();
-    const metrics = this.getRuntimeMetrics(grid) || frameMetrics;
+    const metrics = availableContentRect
+      ? { width: availableContentRect.width, height: availableContentRect.height }
+      : this.getRuntimeMetrics(grid) || frameMetrics;
     if (!metrics) return false;
 
-    const preset = this.getLogicalGridPreset();
+    const preset = this.getRuntimeGridPreset({
+      availableContentRect,
+    });
     const bounds = getGridBoundsFromPreset(preset);
     const columnGap = Number.parseFloat(style.columnGap || style.gap || "0")
       || 0;
@@ -408,6 +503,7 @@ export class GridRuntime {
       preset,
       bounds,
     });
+    this.publishAvailableContentRect(availableContentRect);
     this.host.style.setProperty("--mha-square-unit", `${tracks.squareUnit}px`);
     this.host.style.setProperty("--mha-grid-column-size", `${tracks.columnSize}px`);
     this.host.style.setProperty("--mha-grid-row-size", `${tracks.rowSize}px`);
@@ -451,6 +547,19 @@ export class GridRuntime {
       "--mha-grid-track-height",
       `${tracks.matrixHeight}px`,
     );
+    this.publishGridTrackAlignment({
+      layout: this.getResolvedLayout(),
+      containerWidth,
+      trackWidth: tracks.matrixWidth,
+      defaultPaddingStart: (
+        style.getPropertyValue("--mha-grid-padding-inline-start").trim()
+        || "var(--mha-grid-padding-inline-start)"
+      ),
+      defaultPaddingEnd: (
+        style.getPropertyValue("--mha-grid-padding-inline-end").trim()
+        || "var(--mha-grid-padding-inline-end)"
+      ),
+    });
     if (this.host.dataset) {
       this.host.dataset.panelFrameWidth = String(Math.round(panelFrameWidth));
       this.host.dataset.panelFrameHeight = String(Math.round(panelFrameHeight));

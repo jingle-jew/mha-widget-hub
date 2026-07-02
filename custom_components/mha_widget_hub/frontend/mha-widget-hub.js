@@ -291,7 +291,7 @@ constructor(){
     getActivePageId:()=>this._activePageId,
     getGridBounds:()=>this._getGridBounds(),
     getEffectiveLayout:()=>this._getRuntimeLayout(),
-    getLogicalGridPreset:()=>this._getLogicalGridPreset(),
+    getRuntimeGridPreset:()=>this._getRuntimeGridPreset(),
     getWidgetAreaMetrics:()=>this._getWidgetAreaMetrics(),
     isMobileLayout:()=>this._isMobileLauncherLayout(),
     recordPersistenceResult:(success)=>this._recordPersistenceResult(success),
@@ -1086,6 +1086,9 @@ _observeLayoutSize(){
 _getWidgetAreaMetrics(){
   return this._gridRuntime.getWidgetAreaMetrics();
 }
+_getAvailableContentRect(){
+  return this._gridRuntime.getAvailableContentRect();
+}
 
 _getShellViewportMetrics(){
   const rect=this.getBoundingClientRect?.()||{};
@@ -1122,7 +1125,7 @@ _getLogicalGridPreset(){
   );
 }
 _getRuntimeGridPreset(){
-  return this._getLogicalGridPreset();
+  return this._gridRuntime.getRuntimeGridPreset();
 }
 _getRuntimeGridUnits(){
   return this._gridRuntime.getGridBounds().units;
@@ -1153,7 +1156,24 @@ _doesWidgetLayoutFitGrid(widgets=this._widgets){
 _findFittingResize(current,requested){
   return this._widgetResizeCoordinator.findFittingResize(current,requested);
 }
-_getGridMetrics(){const grid=this.shadowRoot.querySelector(".mha-grid");if(!grid)return null;const st=getComputedStyle(grid);const col=parseFloat(st.gridTemplateColumns.split(" ")[0])||72;const gap=parseFloat(st.columnGap||st.gap||"0")||0;const row=parseFloat(st.gridAutoRows)||72;return{columnStep:col+gap,rowStep:row+gap}}
+_getGridMetrics(){
+  const grid=this.shadowRoot?.querySelector?.(".mha-grid");
+  if(!grid)return null;
+  const runtimeStyle=this.style;
+  const gridStyle=getComputedStyle(grid);
+  const columnSize=parseFloat(runtimeStyle?.getPropertyValue?.("--mha-grid-column-size"))||parseFloat(gridStyle.getPropertyValue("--mha-grid-column-size"))||parseFloat(gridStyle.gridTemplateColumns.split(" ")[0])||72;
+  const rowSize=parseFloat(runtimeStyle?.getPropertyValue?.("--mha-grid-row-size"))||parseFloat(gridStyle.getPropertyValue("--mha-grid-row-size"))||parseFloat(gridStyle.gridAutoRows)||72;
+  const gap=parseFloat(gridStyle.columnGap||gridStyle.gap||"0")||0;
+  const availableRect=this._getAvailableContentRect?.()||null;
+  return{
+    columnStep:columnSize+gap,
+    rowStep:rowSize+gap,
+    columnSize,
+    rowSize,
+    gap,
+    availableContentRect:availableRect,
+  }
+}
 _clampWidgetSizeToGridBounds(widget,size){
   return this._widgetLayoutStateCoordinator.clampWidgetSizeToGridBounds(widget,size);
 }

@@ -3,6 +3,12 @@ import { DOCK_POSITION, normalizeDockPosition } from "../core/mha-persistence.js
 import { syncDockActiveState } from "./dock-controller.js";
 
 export function createResponsiveDockCoordinator(host) {
+  function getMobileDockScrollContainer() {
+    const dock = host.shadowRoot?.querySelector?.(".mha-mobile-dock");
+    if (!dock) return null;
+    return dock.querySelector?.(".mha-mobile-dock-track") || dock;
+  }
+
   function scheduleMobileDockOverflowState() {
     cancelAnimationFrame(host._mobileDockOverflowFrame || 0);
     host._mobileDockOverflowFrame = requestAnimationFrame(() => {
@@ -12,13 +18,14 @@ export function createResponsiveDockCoordinator(host) {
   }
 
   function syncMobileDockOverflowState() {
+    const scrollContainer = getMobileDockScrollContainer();
     const dock = host.shadowRoot?.querySelector?.(".mha-mobile-dock");
-    if (!dock) return false;
+    if (!dock || !scrollContainer) return false;
     if (!isMobileLauncherLayout() || isMobileLandscapeLayout()) {
       dock.dataset.overflowing = "false";
       return false;
     }
-    const overflowing = dock.scrollWidth > dock.clientWidth + 1;
+    const overflowing = scrollContainer.scrollWidth > scrollContainer.clientWidth + 1;
     dock.dataset.overflowing = String(overflowing);
     return overflowing;
   }
@@ -28,19 +35,21 @@ export function createResponsiveDockCoordinator(host) {
     host._mobileDockEditScrollFrame = requestAnimationFrame(() => {
       host._mobileDockEditScrollFrame = 0;
       const dock = host.shadowRoot?.querySelector?.(".mha-mobile-dock");
-      if (!dock) return;
+      const scrollContainer = getMobileDockScrollContainer();
+      if (!dock || !scrollContainer) return;
       syncMobileDockOverflowState();
       if (!isMobileLauncherLayout() || isMobileLandscapeLayout()) return;
       if (!host._isEditing || host._activeMoveWidgetId || host._pendingWidgetPlacement) return;
-      if (dock.scrollWidth <= dock.clientWidth + 1) return;
-      if (typeof dock.scrollTo === "function") {
-        dock.scrollTo({
-          left: dock.scrollWidth,
+      if (scrollContainer.scrollWidth <= scrollContainer.clientWidth + 1) return;
+      const maxScrollLeft = Math.max(0, scrollContainer.scrollWidth - scrollContainer.clientWidth);
+      if (typeof scrollContainer.scrollTo === "function") {
+        scrollContainer.scrollTo({
+          left: maxScrollLeft,
           behavior: "smooth",
         });
         return;
       }
-      dock.scrollLeft = dock.scrollWidth - dock.clientWidth;
+      scrollContainer.scrollLeft = maxScrollLeft;
     });
   }
 

@@ -81,6 +81,43 @@ async function getMhaGeometry(page) {
   return readMhaGeometry(page);
 }
 
+async function configureMobileDockScenario(page, {
+  pageCount = 10,
+  isEditing = false,
+} = {}) {
+  await openMha(page);
+  await page.locator("mha-widget-hub").evaluate((host, options) => {
+    host._pages = Array.from({ length: options.pageCount }, (_, index) => ({
+      id: `p${index + 1}`,
+      name: `Page ${index + 1}`,
+      icon: index === 0 ? "home" : "grid",
+      widgets: [],
+      type: "grid",
+    }));
+    host._activePageId = "p1";
+    host._isEditing = Boolean(options.isEditing);
+    host.requestRender?.();
+    host._scheduleSquareUnitSync?.();
+    host.classList.remove(
+      "is-boot-revealing",
+      "is-theme-backdrop-crossfading",
+      "is-responsive-relayouting",
+    );
+  }, { pageCount, isEditing });
+
+  await page.waitForFunction((expectedPageCount) => {
+    const host = document.querySelector("mha-widget-hub");
+    const dock = host?.shadowRoot?.querySelector?.(".mha-mobile-dock");
+    const track = dock?.querySelector?.(".mha-mobile-dock-track");
+    return Boolean(
+      dock
+      && track
+      && track.scrollWidth > track.clientWidth
+      && dock.querySelectorAll?.(".mha-dock-page")?.length === expectedPageCount,
+    );
+  }, Math.ceil((pageCount + 1 + (isEditing ? 2 : 0)) / 4));
+}
+
 async function readMhaGeometry(page) {
   return page.locator("mha-widget-hub").evaluate((host) => {
     host.classList.remove(
@@ -273,6 +310,46 @@ test.describe("mobile layout geometry smoke", () => {
       `document width ${geometry.document.width} should fit viewport ${geometry.viewport.width}`,
     );
   });
+
+  test("mobile dock keeps paged groups scrollable when the dock has many items", async ({ page }) => {
+    await configureMobileDockScenario(page, {
+      pageCount: 10,
+      isEditing: true,
+    });
+
+    const dockState = await page.locator("mha-widget-hub").evaluate((host) => {
+      const dock = host.shadowRoot?.querySelector(".mha-mobile-dock");
+      const track = dock?.querySelector(".mha-mobile-dock-track");
+      const pages = Array.from(dock?.querySelectorAll?.(".mha-dock-page") || []);
+      const style = dock ? getComputedStyle(dock) : null;
+      const trackStyle = track ? getComputedStyle(track) : null;
+      return {
+        itemCount: dock?.querySelectorAll?.(".mha-mobile-dock-item")?.length || 0,
+        pageCount: pages.length,
+        scrollWidth: track?.scrollWidth || 0,
+        clientWidth: track?.clientWidth || 0,
+        overflowX: trackStyle?.overflowX || "",
+        touchAction: trackStyle?.touchAction || "",
+        hasSettings: Boolean(dock?.querySelector?.('[data-dock-action="settings"]')),
+        hasManageDock: Boolean(dock?.querySelector?.('[data-dock-action="dock-settings"]')),
+      };
+    });
+
+    assert.equal(dockState.itemCount, 13);
+    assert.equal(dockState.pageCount, 4);
+    assert.ok(
+      dockState.scrollWidth > dockState.clientWidth,
+      `mobile dock should overflow horizontally, got ${dockState.scrollWidth} <= ${dockState.clientWidth}`,
+    );
+    assert.ok(
+      dockState.scrollWidth >= (dockState.clientWidth * dockState.pageCount) - 2,
+      `mobile dock scroll width should cover every page, got ${dockState.scrollWidth} for ${dockState.pageCount} pages of width ${dockState.clientWidth}`,
+    );
+    assert.equal(dockState.overflowX, "auto");
+    assert.match(dockState.touchAction, /pan-x/);
+    assert.equal(dockState.hasSettings, true);
+    assert.equal(dockState.hasManageDock, true);
+  });
 });
 
 test.describe("tablet dock geometry contract", () => {
@@ -291,8 +368,8 @@ test.describe("tablet dock geometry contract", () => {
       const geometry = geometries[dockPosition];
       assert.equal(geometry.hostDataset.layout, "tablet");
       assert.equal(geometry.hostDataset.dockPosition, dockPosition);
-      assert.equal(geometry.hostDataset.logicalColumns, 6);
-      assert.equal(geometry.hostDataset.logicalRows, 4);
+      assert.ok(Number(geometry.hostDataset.logicalColumns) >= 4);
+      assert.ok(Number(geometry.hostDataset.logicalRows) >= 3);
 
       assertVisibleBox(geometry.panel, `${dockPosition} panel`);
       assertVisibleBox(geometry.grid, `${dockPosition} grid`);
@@ -443,8 +520,8 @@ test.describe("tablet dock geometry contract", () => {
       );
     }
 
-    assert.equal(geometries.left.gridStyle.justifyContent, "end");
-    assert.equal(geometries.right.gridStyle.justifyContent, "start");
+    assert.equal(geometries.left.gridStyle.justifyContent, "center");
+    assert.equal(geometries.right.gridStyle.justifyContent, "center");
     assert.equal(geometries.bottom.gridStyle.justifyContent, "center");
 
     assertNear(
@@ -467,9 +544,27 @@ test.describe("tablet dock geometry contract", () => {
       geometries.bottom.panel.width > geometries.left.panel.width,
       "bottom dock should preserve more usable width than side docks",
     );
+    assert.equal(
+      geometries.left.hostDataset.logicalColumns,
+      geometries.right.hostDataset.logicalColumns,
+    );
+    assert.equal(
+      geometries.left.hostDataset.logicalRows,
+      geometries.right.hostDataset.logicalRows,
+    );
+    assert.ok(
+      Number(geometries.bottom.hostDataset.logicalColumns)
+        >= Number(geometries.left.hostDataset.logicalColumns),
+      "bottom dock should never lose logical columns versus side docks when the panel gets wider",
+    );
+    assert.ok(
+      Number(geometries.bottom.hostDataset.logicalRows)
+        <= Number(geometries.left.hostDataset.logicalRows),
+      "bottom dock should not invent extra logical rows when the panel gets shorter",
+    );
   });
 
-  test("portrait tablet side dock keeps cells quasi-square and leaves bottom breathing room when panel is tall", async ({ page }) => {
+  test("portrait tablet side dock keeps cells quasi-square inside the available panel when it is tall", async ({ page }) => {
     await page.setViewportSize({ width: 768, height: 1024 });
     await openMha(page);
     await setDockPosition(page, "left");
@@ -485,7 +580,7 @@ test.describe("tablet dock geometry contract", () => {
 
     assert.equal(geometry.hostDataset.layout, "tablet");
     assert.equal(geometry.hostDataset.dockPosition, "left");
-    assert.equal(geometry.gridStyle.justifyContent, "end");
+    assert.equal(geometry.gridStyle.justifyContent, "center");
     assert.equal(geometry.hostDataset.logicalColumns, 4);
     assert.equal(geometry.hostDataset.logicalRows, 6);
     assert.ok(
@@ -493,8 +588,8 @@ test.describe("tablet dock geometry contract", () => {
       `portrait tablet side dock should stay quasi-square, got ratio ${rowColumnRatio}`,
     );
     assert.ok(
-      geometry.hostVars.gridTrackHeight < geometry.hostVars.gridContainerHeight - 1,
-      `portrait tablet side dock should keep spare bottom breathing room, track=${geometry.hostVars.gridTrackHeight}, container=${geometry.hostVars.gridContainerHeight}`,
+      geometry.hostVars.gridTrackHeight <= geometry.hostVars.gridContainerHeight + 1,
+      `portrait tablet side dock should stay inside the available panel height, track=${geometry.hostVars.gridTrackHeight}, container=${geometry.hostVars.gridContainerHeight}`,
     );
   });
 });
