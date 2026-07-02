@@ -15,13 +15,13 @@ export function createFrontendStyleLinks(styleManifest = [], assetOptions = {}) 
     .join("");
 }
 
-export function createCriticalBootStyle() {
+export function getCriticalBootCss() {
   /*
    * External theme styles can take several seconds through Home Assistant.
    * Keep a styled wallpaper visible and all application content hidden until
    * those styles and the first measured layout are ready.
    */
-  return `<style data-mha-critical-boot>
+  return `
     :host {
       display: block;
       position: relative;
@@ -61,5 +61,30 @@ export function createCriticalBootStyle() {
     :host([data-boot-state="booting"][data-wallpaper-kind="css"][data-wallpaper-source="theme"]) .mha-background {
       background: var(--mha-active-wallpaper-background) !important;
     }
-  </style>`;
+  `;
+}
+
+export function createCriticalBootStyle() {
+  return `<style data-mha-critical-boot>${getCriticalBootCss()}</style>`;
+}
+
+export function createCriticalBootStyleElement(doc = document) {
+  const style = doc.createElement("style");
+  style.setAttribute("data-mha-critical-boot", "");
+  style.textContent = getCriticalBootCss();
+  return style;
+}
+
+export function createFrontendStyleElements(
+  styleManifest = [],
+  assetOptions = {},
+  doc = document,
+) {
+  return styleManifest.map(([path, layer]) => {
+    const link = doc.createElement("link");
+    link.setAttribute("rel", "stylesheet");
+    link.setAttribute("data-mha-style-layer", layer);
+    link.setAttribute("href", resolveFrontendAssetUrl(path, assetOptions));
+    return link;
+  });
 }
