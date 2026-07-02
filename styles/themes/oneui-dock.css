@@ -25,6 +25,12 @@
 }
 
 @media (min-width: 768px) {
+  :host([data-theme-style="oneui"][data-dock-position="left"]),
+  :host([data-theme-style="oneui"][data-dock-position="right"]),
+  :host([data-theme-style="oneui"]:not([data-dock-position])) {
+    --mha-side-dock-rail-width: calc(var(--mha-shell-dock-unit-size) * 2);
+  }
+
   :host([data-theme-style="oneui"]) .mha-dock {
     --mha-dock-rail-padding-block: clamp(.34rem, .72vw, .56rem);
     --mha-dock-rail-padding-inline: clamp(.34rem, .72vw, .56rem);
@@ -35,7 +41,6 @@
   :host([data-theme-style="oneui"][data-dock-position="left"]) .mha-dock,
   :host([data-theme-style="oneui"][data-dock-position="right"]) .mha-dock,
   :host([data-theme-style="oneui"]:not([data-dock-position])) .mha-dock {
-    --mha-side-dock-rail-width: clamp(7.25rem, 10vw, 8.75rem);
     --mha-oneui-rail-pill-base-height: calc(var(--mha-icon-size) + clamp(.75rem, 1.1vw, 1.05rem));
     --mha-dock-empty-width: var(--mha-shell-side-dock-zone-width);
     --mha-dock-empty-height: auto;
