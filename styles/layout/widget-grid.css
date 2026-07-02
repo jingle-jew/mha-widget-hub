@@ -50,6 +50,7 @@
       - var(--mha-statusbar-widget-gap, 0px)
     )
   ) !important;
+  --mha-shell-content-bottom-inset: 0px !important;
   box-sizing: border-box;
   inline-size: 100%;
   block-size: 100%;
@@ -71,9 +72,15 @@
   min-block-size: 0;
   display: grid;
   place-items: start center;
+  --mha-widget-area-edge-padding: clamp(0.35rem, 0.7vw, 0.75rem);
   --mha-widget-area-top-gutter: var(--mha-shell-content-top-inset) !important;
-  padding: clamp(0.35rem, 0.7vw, 0.75rem);
+  --mha-widget-area-bottom-gutter: var(--mha-shell-content-bottom-inset, 0px) !important;
+  padding-inline: var(--mha-widget-area-edge-padding);
   padding-block-start: var(--mha-widget-area-top-gutter) !important;
+  padding-block-end: max(
+    var(--mha-widget-area-edge-padding),
+    var(--mha-widget-area-bottom-gutter)
+  ) !important;
   overflow: visible;
 }
 
@@ -320,6 +327,7 @@
   }
 
   :host([data-dock-position="left"]) .mha-workspace {
+    --mha-shell-content-bottom-inset: var(--mha-shell-content-top-inset) !important;
     grid-template-columns: var(--mha-dock-zone-width) minmax(0, 1fr);
     grid-template-rows: minmax(0, 1fr);
   }
@@ -336,6 +344,7 @@
 
   :host([data-dock-position="right"]) .mha-workspace,
   :host(:not([data-dock-position])) .mha-workspace {
+    --mha-shell-content-bottom-inset: var(--mha-shell-content-top-inset) !important;
     grid-template-columns: minmax(0, 1fr) var(--mha-dock-zone-width);
     grid-template-rows: minmax(0, 1fr);
   }

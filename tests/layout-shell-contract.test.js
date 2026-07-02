@@ -62,3 +62,27 @@ test("theme stylesheets do not override structural geometry variables", () => {
 
   assert.deepEqual(offenders, []);
 });
+
+test("side docks mirror the shell top inset with a shell-owned bottom inset", () => {
+  const source = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "layout", "widget-grid.css"),
+    "utf8",
+  );
+
+  assert.match(
+    source,
+    /--mha-shell-content-bottom-inset:\s*0px\s*!important;/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-dock-position="left"\]\) \.mha-workspace\s*\{[\s\S]*?--mha-shell-content-bottom-inset:\s*var\(--mha-shell-content-top-inset\)\s*!important;/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-dock-position="right"\]\) \.mha-workspace,\s*:host\(:not\(\[data-dock-position\]\)\) \.mha-workspace\s*\{[\s\S]*?--mha-shell-content-bottom-inset:\s*var\(--mha-shell-content-top-inset\)\s*!important;/,
+  );
+  assert.match(
+    source,
+    /padding-block-end:\s*max\(\s*var\(--mha-widget-area-edge-padding\),\s*var\(--mha-widget-area-bottom-gutter\)\s*\)\s*!important;/,
+  );
+});
