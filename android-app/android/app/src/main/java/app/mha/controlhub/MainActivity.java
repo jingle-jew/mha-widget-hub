@@ -20,6 +20,9 @@ public class MainActivity extends BridgeActivity {
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
+    // Apply window flags before BridgeActivity creates the splash/layout so
+    // the first visible frame starts edge-to-edge as well.
+    applyEdgeToEdgeWindowFlags();
     super.onCreate(savedInstanceState);
     applyEdgeToEdgeWindowFlags();
     installInsetsListener();
