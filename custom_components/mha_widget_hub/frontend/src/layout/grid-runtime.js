@@ -85,6 +85,8 @@ export function getGridBoundsFromPreset(preset = {}) {
   };
 }
 
+const MAX_DESKTOP_TRACK_ASPECT_RATIO = 1.05;
+
 export function calculateGridTrackMetrics({
   metrics,
   preset,
@@ -98,6 +100,7 @@ export function calculateGridTrackMetrics({
   maxUnit = 160,
   mobile = false,
   fillWidth = false,
+  maxTrackAspectRatio = MAX_DESKTOP_TRACK_ASPECT_RATIO,
 }) {
   if (!metrics || !units || !rows) return null;
 
@@ -130,16 +133,39 @@ export function calculateGridTrackMetrics({
     };
   }
 
-  const columnSize = Math.max(1, unitX);
-  const rowSize = Math.max(1, unitY);
+  /*
+   * Tablet/desktop keep the shell-owned panel/container rectangle, but tracks
+   * should stay square or close to square. Any excess space remains in the
+   * panel as breathing room instead of stretching widgets vertically or
+   * horizontally.
+   */
+  const safeAspectRatio = Math.max(1, Number(maxTrackAspectRatio) || 1);
+  const minUnit = Math.max(1, Math.min(unitX, unitY));
+  const maxAllowedUnit = minUnit * safeAspectRatio;
+  const columnSize = Math.max(
+    1,
+    unitX <= unitY ? unitX : Math.min(unitX, maxAllowedUnit),
+  );
+  const rowSize = Math.max(
+    1,
+    unitY <= unitX ? unitY : Math.min(unitY, maxAllowedUnit),
+  );
   if (!Number.isFinite(columnSize) || !Number.isFinite(rowSize)) return null;
 
   return {
     columnSize,
     rowSize,
     squareUnit: Math.min(columnSize, rowSize),
-    matrixWidth: metrics.width,
-    matrixHeight: metrics.height,
+    matrixWidth: (
+      columnSize * units
+      + columnGap * (units - 1)
+      + gridPaddingX
+    ),
+    matrixHeight: (
+      rowSize * rows
+      + rowGap * (rows - 1)
+      + gridPaddingY
+    ),
   };
 }
 

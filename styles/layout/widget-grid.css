@@ -142,6 +142,7 @@
   --mha-grid-padding-block-start: clamp(0.25rem, 0.55vw, 0.6rem);
   --mha-grid-padding-block-end: clamp(0.25rem, 0.55vw, 0.6rem);
   --mha-grid-track-justify: center;
+  --mha-grid-track-align-block: start;
 
   box-sizing: border-box;
   inline-size: 100%;
@@ -164,7 +165,7 @@
   grid-template-rows: repeat(var(--mha-active-grid-rows), var(--mha-grid-row-size));
   grid-auto-rows: var(--mha-grid-row-size);
   grid-auto-flow: row dense;
-  align-content: start;
+  align-content: var(--mha-grid-track-align-block);
   justify-content: var(--mha-grid-track-justify);
   align-self: stretch;
   justify-self: stretch;
