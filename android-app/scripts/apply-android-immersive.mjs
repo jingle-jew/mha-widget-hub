@@ -32,6 +32,7 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.getcapacitor.BridgeActivity;
+import com.getcapacitor.WebViewListener;
 
 public class MainActivity extends BridgeActivity {
   private Insets lastPublishedInsets = Insets.NONE;
@@ -43,6 +44,7 @@ public class MainActivity extends BridgeActivity {
     hideNativeChrome();
     applyEdgeToEdgeWindowFlags();
     installInsetsListener();
+    installWebViewNavigationInsetsSync();
     schedulePostResumeEdgeToEdgeSync();
     republishSafeAreaInsets(true);
   }
@@ -110,6 +112,30 @@ public class MainActivity extends BridgeActivity {
     decorView.post(() -> {
       applyEdgeToEdgeWindowFlags();
       ViewCompat.requestApplyInsets(decorView);
+      republishSafeAreaInsets(true);
+    });
+  }
+
+  private void installWebViewNavigationInsetsSync() {
+    if (getBridge() == null) return;
+
+    getBridge().addWebViewListener(new WebViewListener() {
+      @Override
+      public void onPageCommitVisible(WebView view, String url) {
+        super.onPageCommitVisible(view, url);
+        resyncEdgeToEdgeForCurrentPage(view);
+      }
+    });
+  }
+
+  private void resyncEdgeToEdgeForCurrentPage(WebView view) {
+    if (view == null) return;
+
+    view.post(() -> {
+      hideNativeChrome();
+      applyEdgeToEdgeWindowFlags();
+      view.requestApplyInsets();
+      ViewCompat.requestApplyInsets(getWindow().getDecorView());
       republishSafeAreaInsets(true);
     });
   }
