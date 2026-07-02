@@ -32,15 +32,11 @@
 
 @media (max-width: 767px) {
   :host(.mha-android-edge-to-edge) .mha-widget-area {
-    --mha-widget-area-top-gutter: 0px !important;
-    padding-block-start: 0 !important;
-    padding-block-end: calc(clamp(0.35rem, 0.7vw, 0.75rem) + var(--mha-safe-bottom, 0px));
-  }
-
-  :host(.mha-android-edge-to-edge) .mha-page-panel--grid {
-    padding-block-start: max(
+    --mha-widget-area-top-gutter: max(
       var(--mha-page-padding),
       var(--mha-safe-top, 0px)
     ) !important;
+    padding-block-start: var(--mha-widget-area-top-gutter) !important;
+    padding-block-end: calc(clamp(0.35rem, 0.7vw, 0.75rem) + var(--mha-safe-bottom, 0px));
   }
 }
