@@ -17,10 +17,13 @@ import {
   sizeToString,
 } from "./layout-engine.js";
 import { getLayoutForWidth } from "./responsive.js";
-import { createSettingsPanel } from "../settings/settings-panel.js";
 import { createPagePanel } from "../pages/page-panel.js";
 import { syncMediaPageSettingsPanel } from "../pages/media-page-settings.js";
 import { isMediaPlayersPage } from "../pages/page-types.js";
+import {
+  captureSettingsPanelsUiState,
+  restoreSettingsPanelsUiState,
+} from "../settings/settings-panel-orchestrator.js";
 import { getPrimaryEditIconName, setFloatingControlButtonIcon } from "../ui/floating-control-icons.js";
 import {
   buildWidgetConfigPanelProps,
@@ -220,9 +223,10 @@ export function createRenderPipeline(host, options = {}) {
         host.shadowRoot.append(createMobileDock(host._getDockProps()));
       }
 
-      const settingsPanels = host._getSettingsPanelsProps();
       host.shadowRoot.append(host._screensaverCoordinator.createDomElement());
-      host.shadowRoot.append(createSettingsPanel(settingsPanels.all));
+      host._syncSettingsDom?.();
+      restoreSettingsPanelsUiState(host.shadowRoot, host._settingsPanelsUiState);
+      host._settingsPanelsUiState = null;
       host.shadowRoot.append(createWidgetManagerPanel(buildWidgetManagerPanelProps({
         open: host._widgetManagerOpen,
         activeCategory: host._widgetManagerCategory,
@@ -242,7 +246,6 @@ export function createRenderPipeline(host, options = {}) {
         onSave: () => host._saveWidgetConfig(),
         onRerender: () => host._syncWidgetConfigDom(),
       })));
-      host.shadowRoot.append(createSettingsPanel(settingsPanels.screensaver));
       syncWidgetSurfaceOpenState(host.shadowRoot);
       host._syncEditModeDom();
       host._syncScreensaverVisibilityState();
@@ -392,6 +395,7 @@ export function createRenderPipeline(host, options = {}) {
 
   function mountRenderShell({ layoutMode, layout, cols, units }) {
     const persistentBackground = host.shadowRoot?.querySelector?.(".mha-background") || null;
+    host._settingsPanelsUiState = captureSettingsPanelsUiState(host.shadowRoot);
     if (persistentBackground) {
       const removableChildren = [
         ...host.shadowRoot.childNodes || [],

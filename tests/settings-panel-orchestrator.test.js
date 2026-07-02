@@ -2,9 +2,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  captureSettingsPanelsUiState,
   findPanelFocusTarget,
   getPanelFocusIdentity,
   replaceSettingsPanelPreservingUiState,
+  restoreSettingsPanelsUiState,
 } from "../src/settings/settings-panel-orchestrator.js";
 
 function createPanel({ scope = "all", page = "main", withBody = true } = {}) {
@@ -91,4 +93,32 @@ test("replaced settings view restores its body scroll position", () => {
   assert.equal(result, next);
   assert.equal(existing.replacedWith, next);
   assert.equal(next.body.scrollTop, 240);
+});
+
+test("settings panel ui state capture and restore preserves body scroll by scope and page", () => {
+  const allPanel = createPanel({ scope: "all", page: "main" });
+  const screensaverPanel = createPanel({ scope: "screensaver", page: "screensaver" });
+  allPanel.body.scrollTop = 180;
+  screensaverPanel.body.scrollTop = 64;
+
+  const root = {
+    querySelectorAll(selector) {
+      assert.equal(selector, ".mha-settings-panel");
+      return [allPanel, screensaverPanel];
+    },
+    querySelector(selector) {
+      if (selector === '.mha-settings-panel[data-settings-scope="all"]') return allPanel;
+      if (selector === '.mha-settings-panel[data-settings-scope="screensaver"]') return screensaverPanel;
+      return null;
+    },
+  };
+
+  const state = captureSettingsPanelsUiState(root);
+  allPanel.body.scrollTop = 0;
+  screensaverPanel.body.scrollTop = 0;
+
+  restoreSettingsPanelsUiState(root, state);
+
+  assert.equal(allPanel.body.scrollTop, 180);
+  assert.equal(screensaverPanel.body.scrollTop, 64);
 });
