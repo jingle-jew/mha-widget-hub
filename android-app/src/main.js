@@ -1,19 +1,10 @@
 import "./styles.css";
 import { Capacitor } from "@capacitor/core";
-import { StatusBar } from "@capacitor/status-bar";
 
-async function applyImmersiveMode() {
+async function waitForLauncherFrameBeforeNavigation() {
   if (!Capacitor.isNativePlatform()) return;
-
-  try {
-    await StatusBar.setOverlaysWebView({ overlay: true });
-    await StatusBar.hide();
-  } catch (error) {
-    console.warn("[mha-android] Unable to apply immersive status bar mode.", error);
-  }
+  await new Promise((resolve) => requestAnimationFrame(() => resolve()));
 }
-
-applyImmersiveMode();
 
 const themeMeta = document.querySelector('meta[name="theme-color"]');
 const lightSchemeQuery = window.matchMedia?.("(prefers-color-scheme: light)");
@@ -25,11 +16,6 @@ function syncAndroidShellThemeColor() {
 
 syncAndroidShellThemeColor();
 lightSchemeQuery?.addEventListener?.("change", syncAndroidShellThemeColor);
-
-document.addEventListener("visibilitychange", () => {
-  if (!document.hidden) applyImmersiveMode();
-});
-window.addEventListener("focus", applyImmersiveMode);
 
 const STORAGE_KEYS = {
   haUrl: "mha_android_ha_url",
@@ -68,9 +54,15 @@ function loadSettings() {
   panelPathInput.value = localStorage.getItem(STORAGE_KEYS.panelPath) || "/mha-widget-hub";
 }
 
-function openMha() {
+let isOpeningMha = false;
+
+async function openMha() {
+  if (isOpeningMha) return;
+  isOpeningMha = true;
+
   saveSettings();
   const targetUrl = buildTargetUrl();
+  await waitForLauncherFrameBeforeNavigation();
 
   // Important: Home Assistant blocks being displayed inside an iframe/webview
   // sub-frame with response headers such as CSP/X-Frame-Options. Navigate the
@@ -80,7 +72,7 @@ function openMha() {
 
 form?.addEventListener("submit", (event) => {
   event.preventDefault();
-  openMha();
+  void openMha();
 });
 
 resetButton?.addEventListener("click", () => {
@@ -95,5 +87,5 @@ loadSettings();
 // Once configured, behave like a launcher app: opening the Android icon should
 // jump straight to MHA instead of asking the family to understand Home Assistant.
 if (haUrlInput.value) {
-  openMha();
+  void openMha();
 }

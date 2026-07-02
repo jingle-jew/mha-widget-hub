@@ -1,11 +1,13 @@
 package app.mha.controlhub;
 
-import android.os.Bundle;
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Color;
+import android.os.Bundle;
+import android.view.View;
 import android.view.Window;
-import android.webkit.WebView;
 import android.view.WindowManager;
+import android.webkit.WebView;
 
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -20,29 +22,51 @@ public class MainActivity extends BridgeActivity {
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
+    applyEdgeToEdgeWindowFlags();
     super.onCreate(savedInstanceState);
-    configureEdgeToEdge();
+    hideNativeChrome();
+    applyEdgeToEdgeWindowFlags();
     installInsetsListener();
-    republishSafeAreaInsets();
+    schedulePostResumeEdgeToEdgeSync();
+    republishSafeAreaInsets(true);
   }
 
   @Override
   public void onWindowFocusChanged(boolean hasFocus) {
     super.onWindowFocusChanged(hasFocus);
     if (hasFocus) {
-      syncSystemBarAppearance();
-      republishSafeAreaInsets();
+      hideNativeChrome();
+      applyEdgeToEdgeWindowFlags();
+      schedulePostResumeEdgeToEdgeSync();
+      republishSafeAreaInsets(true);
     }
   }
 
   @Override
-  protected void onResume() {
+  public void onResume() {
     super.onResume();
-    syncSystemBarAppearance();
-    republishSafeAreaInsets();
+    hideNativeChrome();
+    applyEdgeToEdgeWindowFlags();
+    schedulePostResumeEdgeToEdgeSync();
+    republishSafeAreaInsets(true);
   }
 
-  private void configureEdgeToEdge() {
+  @Override
+  protected void onNewIntent(Intent intent) {
+    super.onNewIntent(intent);
+    hideNativeChrome();
+    applyEdgeToEdgeWindowFlags();
+    schedulePostResumeEdgeToEdgeSync();
+    republishSafeAreaInsets(true);
+  }
+
+  private void hideNativeChrome() {
+    if (getSupportActionBar() != null) {
+      getSupportActionBar().hide();
+    }
+  }
+
+  private void applyEdgeToEdgeWindowFlags() {
     Window window = getWindow();
     WindowCompat.setDecorFitsSystemWindows(window, false);
     window.setStatusBarColor(Color.TRANSPARENT);
@@ -65,6 +89,15 @@ public class MainActivity extends BridgeActivity {
     syncSystemBarAppearance();
   }
 
+  private void schedulePostResumeEdgeToEdgeSync() {
+    View decorView = getWindow().getDecorView();
+    decorView.post(() -> {
+      applyEdgeToEdgeWindowFlags();
+      ViewCompat.requestApplyInsets(decorView);
+      republishSafeAreaInsets(true);
+    });
+  }
+
   private void installInsetsListener() {
     ViewCompat.setOnApplyWindowInsetsListener(
       getWindow().getDecorView(),
@@ -72,7 +105,7 @@ public class MainActivity extends BridgeActivity {
         Insets safeInsets = windowInsets.getInsets(
           WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout()
         );
-        publishSafeAreaInsets(safeInsets);
+        publishSafeAreaInsets(safeInsets, false);
         return windowInsets;
       }
     );
@@ -94,18 +127,18 @@ public class MainActivity extends BridgeActivity {
     controller.setAppearanceLightNavigationBars(useDarkSystemBarIcons);
   }
 
-  private void republishSafeAreaInsets() {
+  private void republishSafeAreaInsets(boolean force) {
     WindowInsetsCompat rootInsets = ViewCompat.getRootWindowInsets(getWindow().getDecorView());
     if (rootInsets == null) return;
     Insets safeInsets = rootInsets.getInsets(
       WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout()
     );
-    publishSafeAreaInsets(safeInsets);
+    publishSafeAreaInsets(safeInsets, force);
   }
 
-  private void publishSafeAreaInsets(Insets insets) {
+  private void publishSafeAreaInsets(Insets insets, boolean force) {
     if (insets == null) return;
-    if (insets.equals(lastPublishedInsets)) return;
+    if (!force && insets.equals(lastPublishedInsets)) return;
     lastPublishedInsets = insets;
 
     WebView webView = getBridge() != null ? getBridge().getWebView() : null;
