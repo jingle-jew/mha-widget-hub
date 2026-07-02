@@ -443,10 +443,30 @@ _markReadyAfterPaint(renderId=this._renderId){
 _tryCompleteBoot(){
   return getBootLifecycleCoordinatorForHost(this).tryCompleteBoot();
 }
+_syncAndroidEdgeToEdgeState({relayout=false}={}){
+  const root=document.documentElement;
+  const enabled=Boolean(
+    window.__MHA_ANDROID_EDGE_TO_EDGE__
+    || root?.dataset?.mhaAndroidEdgeToEdge==="true"
+  );
+  this.classList.toggle("mha-android-edge-to-edge",enabled);
+  if(relayout&&enabled&&this.isConnected){
+    requestAnimationFrame(()=>this._handleViewportChange());
+  }
+  return enabled;
+}
 connectedCallback(){
+  if(!this._androidInsetsListener){
+    this._androidInsetsListener=()=>this._syncAndroidEdgeToEdgeState({relayout:true});
+  }
+  window.addEventListener("mha:android-insets-changed",this._androidInsetsListener);
+  this._syncAndroidEdgeToEdgeState();
   return getBootLifecycleCoordinatorForHost(this).connectedCallback();
 }
 disconnectedCallback(){
+  if(this._androidInsetsListener){
+    window.removeEventListener("mha:android-insets-changed",this._androidInsetsListener);
+  }
   return getBootLifecycleCoordinatorForHost(this).disconnectedCallback();
 }
 requestRender(){this.render()}
