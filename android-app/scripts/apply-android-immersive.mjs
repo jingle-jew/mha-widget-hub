@@ -40,6 +40,7 @@ public class MainActivity extends BridgeActivity {
   protected void onCreate(Bundle savedInstanceState) {
     applyEdgeToEdgeWindowFlags();
     super.onCreate(savedInstanceState);
+    hideNativeChrome();
     applyEdgeToEdgeWindowFlags();
     installInsetsListener();
     schedulePostResumeEdgeToEdgeSync();
@@ -50,6 +51,7 @@ public class MainActivity extends BridgeActivity {
   public void onWindowFocusChanged(boolean hasFocus) {
     super.onWindowFocusChanged(hasFocus);
     if (hasFocus) {
+      hideNativeChrome();
       applyEdgeToEdgeWindowFlags();
       schedulePostResumeEdgeToEdgeSync();
       republishSafeAreaInsets(true);
@@ -59,6 +61,7 @@ public class MainActivity extends BridgeActivity {
   @Override
   public void onResume() {
     super.onResume();
+    hideNativeChrome();
     applyEdgeToEdgeWindowFlags();
     schedulePostResumeEdgeToEdgeSync();
     republishSafeAreaInsets(true);
@@ -67,9 +70,16 @@ public class MainActivity extends BridgeActivity {
   @Override
   protected void onNewIntent(Intent intent) {
     super.onNewIntent(intent);
+    hideNativeChrome();
     applyEdgeToEdgeWindowFlags();
     schedulePostResumeEdgeToEdgeSync();
     republishSafeAreaInsets(true);
+  }
+
+  private void hideNativeChrome() {
+    if (getSupportActionBar() != null) {
+      getSupportActionBar().hide();
+    }
   }
 
   private void applyEdgeToEdgeWindowFlags() {
