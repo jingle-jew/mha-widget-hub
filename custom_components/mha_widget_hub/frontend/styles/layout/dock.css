@@ -658,6 +658,17 @@
   }
 }
 
+/* Dock labels setting
+ * OneUI intentionally keeps labels visible as part of its premium/default
+ * navigation identity. Other themes obey the user toggle.
+ */
+:host([data-dock-labels="false"]:not([data-theme-style="oneui"])) .mha-dock-item-label,
+:host([data-dock-labels="false"]:not([data-theme-style="oneui"])) .mha-mobile-dock-item > .mha-dock-item-label,
+:host(:not([data-dock-labels]):not([data-theme-style="oneui"])) .mha-dock-item-label,
+:host(:not([data-dock-labels]):not([data-theme-style="oneui"])) .mha-mobile-dock-item > .mha-dock-item-label {
+  display: none;
+}
+
 :host([data-dock-labels="true"]:not([data-theme-style="oneui"])) {
   --mha-dock-item-label-display: block;
   --mha-dock-item-label-padding-inline: .12rem;
