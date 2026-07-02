@@ -81,6 +81,43 @@ async function getMhaGeometry(page) {
   return readMhaGeometry(page);
 }
 
+async function configureMobileDockScenario(page, {
+  pageCount = 10,
+  isEditing = false,
+} = {}) {
+  await openMha(page);
+  await page.locator("mha-widget-hub").evaluate((host, options) => {
+    host._pages = Array.from({ length: options.pageCount }, (_, index) => ({
+      id: `p${index + 1}`,
+      name: `Page ${index + 1}`,
+      icon: index === 0 ? "home" : "grid",
+      widgets: [],
+      type: "grid",
+    }));
+    host._activePageId = "p1";
+    host._isEditing = Boolean(options.isEditing);
+    host.requestRender?.();
+    host._scheduleSquareUnitSync?.();
+    host.classList.remove(
+      "is-boot-revealing",
+      "is-theme-backdrop-crossfading",
+      "is-responsive-relayouting",
+    );
+  }, { pageCount, isEditing });
+
+  await page.waitForFunction((expectedPageCount) => {
+    const host = document.querySelector("mha-widget-hub");
+    const dock = host?.shadowRoot?.querySelector?.(".mha-mobile-dock");
+    const track = dock?.querySelector?.(".mha-mobile-dock-track");
+    return Boolean(
+      dock
+      && track
+      && track.scrollWidth > track.clientWidth
+      && dock.querySelectorAll?.(".mha-dock-page")?.length === expectedPageCount,
+    );
+  }, Math.ceil((pageCount + 1 + (isEditing ? 2 : 0)) / 4));
+}
+
 async function readMhaGeometry(page) {
   return page.locator("mha-widget-hub").evaluate((host) => {
     host.classList.remove(
@@ -272,6 +309,46 @@ test.describe("mobile layout geometry smoke", () => {
       geometry.document.width <= geometry.viewport.width + 1,
       `document width ${geometry.document.width} should fit viewport ${geometry.viewport.width}`,
     );
+  });
+
+  test("mobile dock keeps paged groups scrollable when the dock has many items", async ({ page }) => {
+    await configureMobileDockScenario(page, {
+      pageCount: 10,
+      isEditing: true,
+    });
+
+    const dockState = await page.locator("mha-widget-hub").evaluate((host) => {
+      const dock = host.shadowRoot?.querySelector(".mha-mobile-dock");
+      const track = dock?.querySelector(".mha-mobile-dock-track");
+      const pages = Array.from(dock?.querySelectorAll?.(".mha-dock-page") || []);
+      const style = dock ? getComputedStyle(dock) : null;
+      const trackStyle = track ? getComputedStyle(track) : null;
+      return {
+        itemCount: dock?.querySelectorAll?.(".mha-mobile-dock-item")?.length || 0,
+        pageCount: pages.length,
+        scrollWidth: track?.scrollWidth || 0,
+        clientWidth: track?.clientWidth || 0,
+        overflowX: trackStyle?.overflowX || "",
+        touchAction: trackStyle?.touchAction || "",
+        hasSettings: Boolean(dock?.querySelector?.('[data-dock-action="settings"]')),
+        hasManageDock: Boolean(dock?.querySelector?.('[data-dock-action="dock-settings"]')),
+      };
+    });
+
+    assert.equal(dockState.itemCount, 13);
+    assert.equal(dockState.pageCount, 4);
+    assert.ok(
+      dockState.scrollWidth > dockState.clientWidth,
+      `mobile dock should overflow horizontally, got ${dockState.scrollWidth} <= ${dockState.clientWidth}`,
+    );
+    assert.ok(
+      dockState.scrollWidth >= (dockState.clientWidth * dockState.pageCount) - 2,
+      `mobile dock scroll width should cover every page, got ${dockState.scrollWidth} for ${dockState.pageCount} pages of width ${dockState.clientWidth}`,
+    );
+    assert.equal(dockState.overflowX, "auto");
+    assert.match(dockState.touchAction, /pan-x/);
+    assert.equal(dockState.hasSettings, true);
+    assert.equal(dockState.hasManageDock, true);
   });
 });
 
