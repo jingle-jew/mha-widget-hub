@@ -28,19 +28,4 @@
   .mha-grid {
     transform: none !important;
   }
-
-  :host([data-dock-position="right"]) .mha-grid,
-  :host(:not([data-dock-position])) .mha-grid {
-    --mha-grid-padding-inline-start: 0px;
-    --mha-grid-track-justify: start;
-  }
-
-  :host([data-dock-position="left"]) .mha-grid {
-    --mha-grid-padding-inline-end: 0px;
-    --mha-grid-track-justify: end;
-  }
-
-  :host([data-dock-position="bottom"]) .mha-grid {
-    --mha-grid-track-justify: center;
-  }
 }

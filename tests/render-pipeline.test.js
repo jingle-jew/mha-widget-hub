@@ -860,6 +860,53 @@ test("render datasets include the persisted dock label visibility state", async 
   assert.equal(host.dataset.themeStyle, "material");
 });
 
+test("host grid metrics prefer published runtime sizes and include the available content rect", async () => {
+  const prototype = await loadHubPrototype();
+  const previousComputedStyle = globalThis.getComputedStyle;
+  globalThis.getComputedStyle = () => ({
+    getPropertyValue(name) {
+      if (name === "--mha-grid-column-size") return "48px";
+      if (name === "--mha-grid-row-size") return "64px";
+      return "";
+    },
+    gridTemplateColumns: "48px 48px 48px",
+    gridAutoRows: "64px",
+    columnGap: "12px",
+    gap: "12px",
+  });
+
+  const host = {
+    style: {
+      getPropertyValue(name) {
+        if (name === "--mha-grid-column-size") return "72px";
+        if (name === "--mha-grid-row-size") return "84px";
+        return "";
+      },
+    },
+    shadowRoot: {
+      querySelector(selector) {
+        return selector === ".mha-grid" ? {} : null;
+      },
+    },
+    _getAvailableContentRect() {
+      return { x: 10, y: 20, width: 300, height: 400 };
+    },
+  };
+
+  try {
+    assert.deepEqual(prototype._getGridMetrics.call(host), {
+      columnStep: 84,
+      rowStep: 96,
+      columnSize: 72,
+      rowSize: 84,
+      gap: 12,
+      availableContentRect: { x: 10, y: 20, width: 300, height: 400 },
+    });
+  } finally {
+    globalThis.getComputedStyle = previousComputedStyle;
+  }
+});
+
 test("primary controls use host edit icon and widget-manager bridge callbacks", async () => {
   const prototype = await loadHubPrototype();
   const previousDocument = globalThis.document;

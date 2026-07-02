@@ -139,9 +139,11 @@
   --mha-square-unit-max: clamp(4.5rem, 8.5vw, 8.75rem);
   --mha-grid-padding-inline-start: clamp(0.25rem, 0.55vw, 0.6rem);
   --mha-grid-padding-inline-end: clamp(0.25rem, 0.55vw, 0.6rem);
+  --mha-grid-padding-inline-start-runtime: var(--mha-grid-padding-inline-start);
+  --mha-grid-padding-inline-end-runtime: var(--mha-grid-padding-inline-end);
   --mha-grid-padding-block-start: clamp(0.25rem, 0.55vw, 0.6rem);
   --mha-grid-padding-block-end: clamp(0.25rem, 0.55vw, 0.6rem);
-  --mha-grid-track-justify: center;
+  --mha-grid-track-justify: var(--mha-grid-track-justify-runtime, center);
   --mha-grid-track-align-block: start;
 
   box-sizing: border-box;
@@ -154,8 +156,8 @@
   margin: 0 !important;
   padding-block-start: var(--mha-grid-padding-block-start) !important;
   padding-block-end: var(--mha-grid-padding-block-end) !important;
-  padding-inline-start: var(--mha-grid-padding-inline-start) !important;
-  padding-inline-end: var(--mha-grid-padding-inline-end) !important;
+  padding-inline-start: var(--mha-grid-padding-inline-start-runtime) !important;
+  padding-inline-end: var(--mha-grid-padding-inline-end-runtime) !important;
   scroll-padding: 0 !important;
   overflow: visible !important;
 
@@ -300,7 +302,10 @@
       + var(--mha-shell-statusbar-bottom-gap)
     );
     --mha-shell-dock-unit-size: clamp(4.75rem, 7vw, 6.25rem);
-    --mha-shell-side-dock-zone-base: var(--mha-shell-dock-unit-size);
+    --mha-shell-side-dock-zone-base: var(
+      --mha-side-dock-rail-width,
+      var(--mha-shell-dock-unit-size)
+    );
     --mha-shell-side-dock-zone-width: var(--mha-shell-side-dock-zone-base);
     --mha-shell-side-dock-rail-size: var(--mha-shell-side-dock-zone-width);
     --mha-shell-bottom-dock-capsule-size: var(--mha-shell-dock-unit-size);
@@ -316,15 +321,6 @@
     --mha-dock-unit-size: var(--mha-shell-side-dock-rail-size);
     --mha-bottom-dock-clearance: var(--mha-shell-bottom-dock-clearance);
     --mha-bottom-dock-height: var(--mha-shell-bottom-dock-height);
-  }
-
-  :host([data-theme-style="oneui"][data-dock-position="left"]),
-  :host([data-theme-style="oneui"][data-dock-position="right"]),
-  :host([data-theme-style="oneui"]:not([data-dock-position])) {
-    --mha-shell-side-dock-zone-width: calc(
-      var(--mha-shell-side-dock-zone-base) * 2
-    );
-    --mha-shell-side-dock-rail-size: var(--mha-shell-side-dock-zone-width);
   }
 
   :host([data-dock-position="left"]) .mha-workspace {

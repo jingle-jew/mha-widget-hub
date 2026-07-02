@@ -28,8 +28,12 @@ export class WidgetLayoutStateCoordinator {
     this.getActivePageId = (...args) => getActivePageId(...args);
     this.getGridBounds = (...args) => getGridBounds(...args);
     this.getEffectiveLayout = (...args) => getEffectiveLayout(...args);
-    const gridPresetReader = getLogicalGridPreset || getRuntimeGridPreset;
-    this.getLogicalGridPreset = (...args) => gridPresetReader(...args);
+    this.getLogicalGridPreset = getLogicalGridPreset
+      ? (...args) => getLogicalGridPreset(...args)
+      : (...args) => getRuntimeGridPreset(...args);
+    this.getRuntimeGridPreset = getRuntimeGridPreset
+      ? (...args) => getRuntimeGridPreset(...args)
+      : (...args) => this.getLogicalGridPreset(...args);
     this.getWidgetAreaMetrics = (...args) => getWidgetAreaMetrics(...args);
     this.isMobileLayout = (...args) => isMobileLayout(...args);
     this.recordPersistenceResult = (...args) => recordPersistenceResult(...args);
@@ -180,8 +184,12 @@ export class WidgetLayoutStateCoordinator {
     });
   }
 
+  getActiveGridPreset() {
+    return this.getRuntimeGridPreset();
+  }
+
   clampWidgetSizeToGridBounds(widget, size) {
-    const bounds = this.getInternalGridBoundsFromPreset(this.getLogicalGridPreset());
+    const bounds = this.getInternalGridBoundsFromPreset(this.getActiveGridPreset());
     const context = this.getResponsiveLayoutContext(bounds);
     const normalizedSize = this.normalizeWidgetForKindFn({ ...widget, ...size }, context);
     const x = Number(widget?.x ?? widget?.col ?? widget?.column ?? 1) || 1;
@@ -197,7 +205,7 @@ export class WidgetLayoutStateCoordinator {
   }
 
   clampWidgetPositionToGridBounds(widget, position) {
-    const bounds = this.getInternalGridBoundsFromPreset(this.getLogicalGridPreset());
+    const bounds = this.getInternalGridBoundsFromPreset(this.getActiveGridPreset());
     const size = this.normalizeWidgetForKindFn(widget, this.getResponsiveLayoutContext(bounds));
     const w = Math.max(1, Number(size?.w) || 1);
     const h = Math.max(1, Number(size?.h) || 1);

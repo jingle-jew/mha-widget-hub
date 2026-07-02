@@ -1,4 +1,5 @@
 import { normalizeRegisteredWidgetSize } from "../widgets/widget-registry.js";
+import { resolveGridDensity } from "./grid-density-solver.js";
 import { getLayoutForWidth } from "./responsive.js";
 
 export const WIDGET_UNIT=Object.freeze({unitsPerLogicalColumn:2});
@@ -59,10 +60,6 @@ export function getLayoutMode(host){const explicit=host?.dataset?.layout||docume
 export function getEffectiveLayout(host){const mode=getLayoutMode(host);if(mode!=="auto")return mode;const width=host?.getBoundingClientRect?.().width||window.innerWidth||0;return getLayoutForWidth(width)}
 function cssPx(host,name,fallback){const value=host?Number.parseFloat(getComputedStyle(host).getPropertyValue(name)):NaN;return Number.isFinite(value)&&value>0?value:fallback}
 
-function clampNumber(value, min, max) {
-  return Math.max(min, Math.min(max, value));
-}
-
 function getAdaptiveBounds(layout, isLandscape) {
   /*
    * Bounds are for the small internal grid unit.
@@ -108,59 +105,63 @@ function getAdaptiveBounds(layout, isLandscape) {
   if (layout === "tablet") {
     return isLandscape
       ? {
-          minCell: 88,
-          targetCell: 104,
-          maxCell: 150,
+          minCell: 52,
+          targetCell: 60,
+          maxCell: 88,
           presetColumns: 6,
           presetRows: 4,
           minColumns: 4,
-          maxColumns: 6,
+          maxColumns: 8,
           minRows: 3,
-          maxRows: 4,
+          maxRows: 5,
           targetFillX: 0.88,
           targetFillY: 0.76,
+          preferencePenaltyFactor: 0.06,
         }
       : {
-          minCell: 84,
-          targetCell: 102,
-          maxCell: 148,
+          minCell: 52,
+          targetCell: 60,
+          maxCell: 88,
           presetColumns: 4,
           presetRows: 6,
           minColumns: 3,
-          maxColumns: 4,
+          maxColumns: 6,
           minRows: 4,
-          maxRows: 6,
+          maxRows: 8,
           targetFillX: 0.82,
           targetFillY: 0.88,
+          preferencePenaltyFactor: 0.06,
         };
   }
 
   return isLandscape
     ? {
-        minCell: 88,
-        targetCell: 106,
-        maxCell: 152,
+        minCell: 52,
+        targetCell: 62,
+        maxCell: 90,
         presetColumns: 7,
         presetRows: 4,
         minColumns: 6,
-        maxColumns: 7,
+        maxColumns: 10,
         minRows: 3,
-        maxRows: 4,
+        maxRows: 6,
         targetFillX: 0.9,
         targetFillY: 0.72,
+        preferencePenaltyFactor: 0.06,
       }
     : {
-        minCell: 88,
-        targetCell: 108,
-        maxCell: 156,
+        minCell: 52,
+        targetCell: 62,
+        maxCell: 92,
         presetColumns: 5,
         presetRows: 5,
         minColumns: 4,
-        maxColumns: 5,
+        maxColumns: 8,
         minRows: 4,
-        maxRows: 5,
+        maxRows: 7,
         targetFillX: 0.84,
         targetFillY: 0.82,
+        preferencePenaltyFactor: 0.06,
       };
 }
 
@@ -178,35 +179,39 @@ export function getGridPresetBounds(layout, orientation = "landscape") {
   return getAdaptiveBounds(layout, normalizeGridOrientation(orientation) === "landscape");
 }
 
-export function getGridPresetForLayout(layout, orientation = "landscape") {
+export function getGridPresetForLayout(
+  layout,
+  orientation = "landscape",
+  availableContentRect = null,
+) {
   const normalizedOrientation = normalizeGridOrientation(orientation);
   const bounds = getGridPresetBounds(layout, normalizedOrientation);
-
-  const columns = Math.max(
-    1,
-    Number(bounds.presetColumns || bounds.maxColumns || bounds.minColumns) || 1,
-  );
-  const rows = Math.max(
-    1,
-    Number(bounds.presetRows || bounds.maxRows || bounds.minRows) || 1,
-  );
-
-  return {
-    columns,
-    rows,
-    density: `${layout}-${normalizedOrientation}-adaptive`,
-    minCell: bounds.minCell,
-    maxCell: bounds.maxCell,
-    targetCell: bounds.targetCell,
-    fillX: bounds.targetFillX,
-    fillY: bounds.targetFillY,
-  };
+  return resolveGridDensity({
+    layout,
+    orientation: normalizedOrientation,
+    availableContentRect,
+    constraints: {
+      minCell: bounds.minCell,
+      targetCell: bounds.targetCell,
+      maxCell: bounds.maxCell,
+      minColumns: bounds.minColumns,
+      maxColumns: bounds.maxColumns,
+      minRows: bounds.minRows,
+      maxRows: bounds.maxRows,
+      preferredColumns: bounds.presetColumns,
+      preferredRows: bounds.presetRows,
+      fillX: bounds.targetFillX,
+      fillY: bounds.targetFillY,
+      forceWidthFill: bounds.forceWidthFill,
+      preferencePenaltyFactor: bounds.preferencePenaltyFactor,
+    },
+  });
 }
 
 export function getGridPreset(host, layout = getEffectiveLayout(host), metrics = {}) {
   const r = host?.getBoundingClientRect?.() || {};
   const orientation = getGridOrientation(metrics, r);
-  return getGridPresetForLayout(layout, orientation);
+  return getGridPresetForLayout(layout, orientation, metrics);
 }
 
 export function getLogicalColumnCount(host, layout = getEffectiveLayout(host), metrics = {}) {

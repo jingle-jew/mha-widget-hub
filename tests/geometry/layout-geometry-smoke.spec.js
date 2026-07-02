@@ -368,8 +368,8 @@ test.describe("tablet dock geometry contract", () => {
       const geometry = geometries[dockPosition];
       assert.equal(geometry.hostDataset.layout, "tablet");
       assert.equal(geometry.hostDataset.dockPosition, dockPosition);
-      assert.equal(geometry.hostDataset.logicalColumns, 6);
-      assert.equal(geometry.hostDataset.logicalRows, 4);
+      assert.ok(Number(geometry.hostDataset.logicalColumns) >= 4);
+      assert.ok(Number(geometry.hostDataset.logicalRows) >= 3);
 
       assertVisibleBox(geometry.panel, `${dockPosition} panel`);
       assertVisibleBox(geometry.grid, `${dockPosition} grid`);
@@ -520,8 +520,8 @@ test.describe("tablet dock geometry contract", () => {
       );
     }
 
-    assert.equal(geometries.left.gridStyle.justifyContent, "end");
-    assert.equal(geometries.right.gridStyle.justifyContent, "start");
+    assert.equal(geometries.left.gridStyle.justifyContent, "center");
+    assert.equal(geometries.right.gridStyle.justifyContent, "center");
     assert.equal(geometries.bottom.gridStyle.justifyContent, "center");
 
     assertNear(
@@ -544,9 +544,27 @@ test.describe("tablet dock geometry contract", () => {
       geometries.bottom.panel.width > geometries.left.panel.width,
       "bottom dock should preserve more usable width than side docks",
     );
+    assert.equal(
+      geometries.left.hostDataset.logicalColumns,
+      geometries.right.hostDataset.logicalColumns,
+    );
+    assert.equal(
+      geometries.left.hostDataset.logicalRows,
+      geometries.right.hostDataset.logicalRows,
+    );
+    assert.ok(
+      Number(geometries.bottom.hostDataset.logicalColumns)
+        > Number(geometries.left.hostDataset.logicalColumns),
+      "bottom dock should unlock more logical columns than side docks when the panel gets wider",
+    );
+    assert.ok(
+      Number(geometries.bottom.hostDataset.logicalRows)
+        <= Number(geometries.left.hostDataset.logicalRows),
+      "bottom dock should not invent extra logical rows when the panel gets shorter",
+    );
   });
 
-  test("portrait tablet side dock keeps cells quasi-square and leaves bottom breathing room when panel is tall", async ({ page }) => {
+  test("portrait tablet side dock keeps cells quasi-square inside the available panel when it is tall", async ({ page }) => {
     await page.setViewportSize({ width: 768, height: 1024 });
     await openMha(page);
     await setDockPosition(page, "left");
@@ -562,7 +580,7 @@ test.describe("tablet dock geometry contract", () => {
 
     assert.equal(geometry.hostDataset.layout, "tablet");
     assert.equal(geometry.hostDataset.dockPosition, "left");
-    assert.equal(geometry.gridStyle.justifyContent, "end");
+    assert.equal(geometry.gridStyle.justifyContent, "center");
     assert.equal(geometry.hostDataset.logicalColumns, 4);
     assert.equal(geometry.hostDataset.logicalRows, 6);
     assert.ok(
@@ -570,8 +588,8 @@ test.describe("tablet dock geometry contract", () => {
       `portrait tablet side dock should stay quasi-square, got ratio ${rowColumnRatio}`,
     );
     assert.ok(
-      geometry.hostVars.gridTrackHeight < geometry.hostVars.gridContainerHeight - 1,
-      `portrait tablet side dock should keep spare bottom breathing room, track=${geometry.hostVars.gridTrackHeight}, container=${geometry.hostVars.gridContainerHeight}`,
+      geometry.hostVars.gridTrackHeight <= geometry.hostVars.gridContainerHeight + 1,
+      `portrait tablet side dock should stay inside the available panel height, track=${geometry.hostVars.gridTrackHeight}, container=${geometry.hostVars.gridContainerHeight}`,
     );
   });
 });

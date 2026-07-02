@@ -6,6 +6,10 @@ import path from "node:path";
 const REPO_ROOT = process.cwd();
 const THEME_ROOT = path.join(REPO_ROOT, "styles", "themes");
 const GEOMETRY_VARS = [
+  "--mha-available-content-x",
+  "--mha-available-content-y",
+  "--mha-available-content-width",
+  "--mha-available-content-height",
   "--mha-panel-frame-width",
   "--mha-panel-frame-height",
   "--mha-grid-container-width",
@@ -85,4 +89,14 @@ test("side docks mirror the shell top inset with a shell-owned bottom inset", ()
     source,
     /padding-block-end:\s*max\(\s*var\(--mha-widget-area-edge-padding\),\s*var\(--mha-widget-area-bottom-gutter\)\s*\)\s*!important;/,
   );
+});
+
+test("frame alignment stylesheet no longer pilots grid alignment directly from dock position", () => {
+  const source = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "layout", "frame-alignment.css"),
+    "utf8",
+  );
+
+  assert.doesNotMatch(source, /data-dock-position=.*mha-grid/);
+  assert.doesNotMatch(source, /--mha-grid-track-justify:\s*(start|end|center)/);
 });

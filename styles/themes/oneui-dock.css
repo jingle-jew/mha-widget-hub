@@ -35,6 +35,7 @@
   :host([data-theme-style="oneui"][data-dock-position="left"]) .mha-dock,
   :host([data-theme-style="oneui"][data-dock-position="right"]) .mha-dock,
   :host([data-theme-style="oneui"]:not([data-dock-position])) .mha-dock {
+    --mha-side-dock-rail-width: clamp(7.25rem, 10vw, 8.75rem);
     --mha-oneui-rail-pill-base-height: calc(var(--mha-icon-size) + clamp(.75rem, 1.1vw, 1.05rem));
     --mha-dock-empty-width: var(--mha-shell-side-dock-zone-width);
     --mha-dock-empty-height: auto;

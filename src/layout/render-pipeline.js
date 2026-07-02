@@ -260,7 +260,8 @@ export function createRenderPipeline(host, options = {}) {
       || getLayoutForWidth(viewport.width, { layoutMode });
     const gridOrientation = host._getGridOrientation?.()
       || getGridOrientation(viewport);
-    const preset = host._getLogicalGridPreset?.()
+    const preset = host._getRuntimeGridPreset?.()
+      || host._getLogicalGridPreset?.()
       || getGridPresetForLayout(layout, gridOrientation);
     const units = getInternalGridColumnCountFromLogical(preset.columns);
     const rows = getInternalGridRowCountFromLogical(preset.rows);
