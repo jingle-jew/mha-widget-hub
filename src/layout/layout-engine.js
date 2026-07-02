@@ -1,8 +1,9 @@
 import { normalizeRegisteredWidgetSize } from "../widgets/widget-registry.js";
+import { resolveGridDensityProfileConstraints } from "./grid-density-profiles.js";
 import { resolveGridDensity } from "./grid-density-solver.js";
 import { getLayoutForWidth } from "./responsive.js";
 
-export const WIDGET_UNIT=Object.freeze({unitsPerLogicalColumn:2});
+export const WIDGET_UNIT=Object.freeze({unitsPerLogicalColumn:1});
 
 /*
  * Public widget-size contract
@@ -13,16 +14,20 @@ export const WIDGET_UNIT=Object.freeze({unitsPerLogicalColumn:2});
  * - 2x4 = two standard squares tall
  * - 4x4 = large square, 2 by 2 standard widget cells
  *
- * Internally, the CSS grid keeps twice as many small square units so widgets can
- * still be placed and resized with the familiar 2x2 / 4x2 / 4x4 names.
- * In other words:
- *   1 logical grid cell = 2 internal grid units × 2 internal grid units.
+ * The grid now speaks the same unit contract as widgets:
+ * - a 2x2 widget spans 2 grid columns × 2 grid rows
+ * - a 4x2 widget spans 4 grid columns × 2 grid rows
+ * - a 1x1 widget spans 1 grid column × 1 grid row
+ *
+ * Legacy helper names still exist during the migration, but they now resolve
+ * to the same direct widget-grid units instead of translating through a
+ * smaller internal matrix.
  */
-export const USER_WIDGET_SIZE_UNIT=2;
+export const USER_WIDGET_SIZE_UNIT=1;
 export function widgetSpanToLogicalCellCount(span=USER_WIDGET_SIZE_UNIT){
   const value=Number(span);
   if(!Number.isFinite(value)||value<=0)return 1;
-  return Math.max(1,Math.ceil(value/USER_WIDGET_SIZE_UNIT));
+  return Math.max(1,Math.round(value));
 }
 export function widgetSizeToLogicalSize({w=USER_WIDGET_SIZE_UNIT,h=USER_WIDGET_SIZE_UNIT}={}){
   return {
@@ -34,15 +39,15 @@ export function logicalSizeToWidgetSize({w=1,h=1}={}){
   const logicalW=Math.max(1,Math.round(Number(w)||1));
   const logicalH=Math.max(1,Math.round(Number(h)||1));
   return {
-    w:logicalW*USER_WIDGET_SIZE_UNIT,
-    h:logicalH*USER_WIDGET_SIZE_UNIT,
+    w:logicalW,
+    h:logicalH,
   };
 }
 export function getInternalGridColumnCountFromLogical(logicalColumns=1){
-  return Math.max(1,Math.round(Number(logicalColumns)||1))*USER_WIDGET_SIZE_UNIT;
+  return Math.max(1,Math.round(Number(logicalColumns)||1));
 }
 export function getInternalGridRowCountFromLogical(logicalRows=1){
-  return Math.max(1,Math.round(Number(logicalRows)||1))*USER_WIDGET_SIZE_UNIT;
+  return Math.max(1,Math.round(Number(logicalRows)||1));
 }
 /*
  * Home defaults
@@ -53,7 +58,7 @@ export function getInternalGridRowCountFromLogical(logicalRows=1){
  * seed demo/default widgets that can leave stale position maps behind.
  */
 export const DEFAULT_WIDGETS=Object.freeze([]);
-export function normalizeWidgetSize({w=2,h=1}={}){w=Math.round(Number(w));h=Math.round(Number(h));if(!Number.isFinite(w))w=2;if(!Number.isFinite(h))h=1;w=Math.max(1,Math.min(6,w));h=Math.max(1,Math.min(6,h));if(w===1&&h===1)w=2;if(w>4&&h>4){if(w>=h)h=4;else w=4}return{w,h}}
+export function normalizeWidgetSize({w=2,h=1}={}){w=Math.round(Number(w));h=Math.round(Number(h));if(!Number.isFinite(w))w=2;if(!Number.isFinite(h))h=1;w=Math.max(1,Math.min(6,w));h=Math.max(1,Math.min(6,h));if(w>4&&h>4){if(w>=h)h=4;else w=4}return{w,h}}
 export function getWidgetDensity({w=2,h=1}={}){({w,h}=normalizeWidgetSize({w,h}));if(h<=1&&w<=2)return"micro";if(h<=1)return"compact";if(h===2)return"standard";if(h===3&&w>=6)return"panel";if(h===3)return"rich";if(h>=4&&w>=6)return"panel";if(h>=4)return"immersive";return"standard"}
 export const sizeToString=({w,h})=>`${w}x${h}`;
 export function getLayoutMode(host){const explicit=host?.dataset?.layout||document.documentElement.dataset.layout;const mode=host?.dataset?.layoutMode||document.documentElement.dataset.layoutMode||explicit||"auto";return mode==="wallpanel"?"tablet":(["auto","mobile","tablet","desktop"].includes(mode)?mode:"auto")}
@@ -71,31 +76,31 @@ function getAdaptiveBounds(layout, isLandscape) {
   if (layout === "mobile") {
     return isLandscape
       ? {
-          // Mobile launcher landscape: 4 logical columns × 2 = 8 widget units.
+          // Mobile launcher landscape exposes direct widget-grid units.
           minCell: 44,
           targetCell: 54,
           maxCell: 999,
-          presetColumns: 4,
-          presetRows: 4,
-          minColumns: 4,
-          maxColumns: 4,
-          minRows: 2,
-          maxRows: 4,
+          presetColumns: 8,
+          presetRows: 8,
+          minColumns: 8,
+          maxColumns: 8,
+          minRows: 4,
+          maxRows: 8,
           targetFillX: 1,
           targetFillY: 0.72,
           forceWidthFill: true,
         }
       : {
-          // Mobile launcher portrait: 2 logical columns × 2 = 4 widget units.
+          // Mobile launcher portrait exposes direct widget-grid units.
           minCell: 64,
           targetCell: 82,
           maxCell: 999,
-          presetColumns: 2,
-          presetRows: 7,
-          minColumns: 2,
-          maxColumns: 2,
-          minRows: 4,
-          maxRows: 7,
+          presetColumns: 4,
+          presetRows: 14,
+          minColumns: 4,
+          maxColumns: 4,
+          minRows: 8,
+          maxRows: 14,
           targetFillX: 1,
           targetFillY: 0.86,
           forceWidthFill: true,
@@ -108,12 +113,12 @@ function getAdaptiveBounds(layout, isLandscape) {
           minCell: 52,
           targetCell: 60,
           maxCell: 88,
-          presetColumns: 6,
-          presetRows: 4,
-          minColumns: 4,
-          maxColumns: 8,
-          minRows: 3,
-          maxRows: 5,
+          presetColumns: 12,
+          presetRows: 8,
+          minColumns: 8,
+          maxColumns: 16,
+          minRows: 6,
+          maxRows: 10,
           targetFillX: 0.88,
           targetFillY: 0.76,
           preferencePenaltyFactor: 0.06,
@@ -122,12 +127,12 @@ function getAdaptiveBounds(layout, isLandscape) {
           minCell: 52,
           targetCell: 60,
           maxCell: 88,
-          presetColumns: 4,
-          presetRows: 6,
-          minColumns: 3,
-          maxColumns: 6,
-          minRows: 4,
-          maxRows: 8,
+          presetColumns: 8,
+          presetRows: 12,
+          minColumns: 6,
+          maxColumns: 12,
+          minRows: 8,
+          maxRows: 16,
           targetFillX: 0.82,
           targetFillY: 0.88,
           preferencePenaltyFactor: 0.06,
@@ -139,12 +144,12 @@ function getAdaptiveBounds(layout, isLandscape) {
         minCell: 52,
         targetCell: 62,
         maxCell: 90,
-        presetColumns: 7,
-        presetRows: 4,
-        minColumns: 6,
-        maxColumns: 10,
-        minRows: 3,
-        maxRows: 6,
+        presetColumns: 14,
+        presetRows: 8,
+        minColumns: 12,
+        maxColumns: 20,
+        minRows: 6,
+        maxRows: 12,
         targetFillX: 0.9,
         targetFillY: 0.72,
         preferencePenaltyFactor: 0.06,
@@ -153,12 +158,12 @@ function getAdaptiveBounds(layout, isLandscape) {
         minCell: 52,
         targetCell: 62,
         maxCell: 92,
-        presetColumns: 5,
-        presetRows: 5,
-        minColumns: 4,
-        maxColumns: 8,
-        minRows: 4,
-        maxRows: 7,
+        presetColumns: 10,
+        presetRows: 10,
+        minColumns: 8,
+        maxColumns: 16,
+        minRows: 8,
+        maxRows: 14,
         targetFillX: 0.84,
         targetFillY: 0.82,
         preferencePenaltyFactor: 0.06,
@@ -186,24 +191,30 @@ export function getGridPresetForLayout(
 ) {
   const normalizedOrientation = normalizeGridOrientation(orientation);
   const bounds = getGridPresetBounds(layout, normalizedOrientation);
+  const profiledConstraints = resolveGridDensityProfileConstraints(
+    layout,
+    normalizedOrientation,
+    availableContentRect,
+  );
+  const activeConstraints = profiledConstraints || bounds;
   return resolveGridDensity({
     layout,
     orientation: normalizedOrientation,
     availableContentRect,
     constraints: {
-      minCell: bounds.minCell,
-      targetCell: bounds.targetCell,
-      maxCell: bounds.maxCell,
-      minColumns: bounds.minColumns,
-      maxColumns: bounds.maxColumns,
-      minRows: bounds.minRows,
-      maxRows: bounds.maxRows,
-      preferredColumns: bounds.presetColumns,
-      preferredRows: bounds.presetRows,
-      fillX: bounds.targetFillX,
-      fillY: bounds.targetFillY,
-      forceWidthFill: bounds.forceWidthFill,
-      preferencePenaltyFactor: bounds.preferencePenaltyFactor,
+      minCell: activeConstraints.minCell,
+      targetCell: activeConstraints.targetCell,
+      maxCell: activeConstraints.maxCell,
+      minColumns: activeConstraints.minColumns,
+      maxColumns: activeConstraints.maxColumns,
+      minRows: activeConstraints.minRows,
+      maxRows: activeConstraints.maxRows,
+      preferredColumns: activeConstraints.preferredColumns ?? activeConstraints.presetColumns,
+      preferredRows: activeConstraints.preferredRows ?? activeConstraints.presetRows,
+      fillX: activeConstraints.fillX ?? activeConstraints.targetFillX,
+      fillY: activeConstraints.fillY ?? activeConstraints.targetFillY,
+      forceWidthFill: activeConstraints.forceWidthFill,
+      preferencePenaltyFactor: activeConstraints.preferencePenaltyFactor,
     },
   });
 }

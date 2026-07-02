@@ -1,5 +1,6 @@
-const DEFAULT_LOGICAL_UNIT_SCALE = 2;
+const DEFAULT_LOGICAL_UNIT_SCALE = 1;
 const DEFAULT_PREFERENCE_PENALTY_FACTOR = 0.06;
+const DEFAULT_UNUSED_SPACE_PENALTY_FACTOR = 0.35;
 
 function clampNumber(value, min, max) {
   return Math.max(min, Math.min(max, value));
@@ -63,6 +64,123 @@ function resolveAxisCount({
   return bestCandidate?.count || fallbackCount;
 }
 
+function scoreMatrixCandidate({
+  availableWidth = 0,
+  availableHeight = 0,
+  columns = 1,
+  rows = 1,
+  preferredColumns = 1,
+  preferredRows = 1,
+  logicalUnitScale = DEFAULT_LOGICAL_UNIT_SCALE,
+  minCell = 1,
+  targetCell = 1,
+  maxCell = targetCell,
+  fillX = 1,
+  fillY = 1,
+  preferencePenaltyFactor = DEFAULT_PREFERENCE_PENALTY_FACTOR,
+  unusedSpacePenaltyFactor = DEFAULT_UNUSED_SPACE_PENALTY_FACTOR,
+} = {}) {
+  const units = columns * logicalUnitScale;
+  const rowUnits = rows * logicalUnitScale;
+  const width = Math.max(0, Number(availableWidth) || 0);
+  const height = Math.max(0, Number(availableHeight) || 0);
+  if (width <= 0 || height <= 0 || units <= 0 || rowUnits <= 0) return null;
+
+  const unitX = width / units;
+  const unitY = height / rowUnits;
+  const squareUnit = Math.min(unitX, unitY);
+  if (!Number.isFinite(squareUnit) || squareUnit <= 0) return null;
+
+  const trackWidth = squareUnit * units;
+  const trackHeight = squareUnit * rowUnits;
+  const unusedWidth = Math.max(0, width - trackWidth);
+  const unusedHeight = Math.max(0, height - trackHeight);
+  const unusedWidthRatio = width > 0 ? unusedWidth / width : 0;
+  const unusedHeightRatio = height > 0 ? unusedHeight / height : 0;
+  const widthFill = width > 0 ? trackWidth / width : 0;
+  const heightFill = height > 0 ? trackHeight / height : 0;
+
+  const targetPenalty = (Math.abs(squareUnit - targetCell) / targetCell) * 3.2;
+  const belowMinPenalty = squareUnit < minCell
+    ? 8 + (((minCell - squareUnit) / minCell) * 16)
+    : 0;
+  const aboveMaxPenalty = squareUnit > maxCell
+    ? (((squareUnit - maxCell) / maxCell) * 4.5)
+    : 0;
+  const fillPenalty = (
+    Math.abs(widthFill - fillX)
+    + Math.abs(heightFill - fillY)
+  ) * 0.2;
+  const preferencePenalty = (
+    (Math.abs(columns - preferredColumns) + Math.abs(rows - preferredRows))
+    * Math.max(0, Number(preferencePenaltyFactor) || 0)
+  );
+  const unusedSpacePenalty = (
+    (unusedWidthRatio * 0.8)
+    + (unusedHeightRatio * 1.15)
+  ) * Math.max(0, Number(unusedSpacePenaltyFactor) || 0);
+
+  return {
+    columns,
+    rows,
+    score: (
+      targetPenalty
+      + belowMinPenalty
+      + aboveMaxPenalty
+      + fillPenalty
+      + preferencePenalty
+      + unusedSpacePenalty
+    ),
+  };
+}
+
+function resolveMatrixDensity({
+  availableRect,
+  minColumns,
+  maxColumns,
+  minRows,
+  maxRows,
+  preferredColumns,
+  preferredRows,
+  logicalUnitScale,
+  minCell,
+  targetCell,
+  maxCell,
+  fillX,
+  fillY,
+  preferencePenaltyFactor,
+  unusedSpacePenaltyFactor,
+}) {
+  let bestCandidate = null;
+
+  for (let columns = minColumns; columns <= maxColumns; columns += 1) {
+    for (let rows = minRows; rows <= maxRows; rows += 1) {
+      const candidate = scoreMatrixCandidate({
+        availableWidth: availableRect.width,
+        availableHeight: availableRect.height,
+        columns,
+        rows,
+        preferredColumns,
+        preferredRows,
+        logicalUnitScale,
+        minCell,
+        targetCell,
+        maxCell,
+        fillX,
+        fillY,
+        preferencePenaltyFactor,
+        unusedSpacePenaltyFactor,
+      });
+      if (!candidate) continue;
+      if (!bestCandidate || candidate.score < bestCandidate.score) {
+        bestCandidate = candidate;
+      }
+    }
+  }
+
+  return bestCandidate;
+}
+
 export function resolveGridDensity({
   layout = "desktop",
   orientation = "landscape",
@@ -92,6 +210,10 @@ export function resolveGridDensity({
     0,
     Number(constraints.preferencePenaltyFactor) || DEFAULT_PREFERENCE_PENALTY_FACTOR,
   );
+  const unusedSpacePenaltyFactor = Math.max(
+    0,
+    Number(constraints.unusedSpacePenaltyFactor) || DEFAULT_UNUSED_SPACE_PENALTY_FACTOR,
+  );
   const availableRect = normalizeAvailableContentRect(availableContentRect);
 
   const fallbackResult = {
@@ -111,8 +233,35 @@ export function resolveGridDensity({
     preferredRows,
     forceWidthFill,
     preferencePenaltyFactor,
+    unusedSpacePenaltyFactor,
   };
   if (!availableRect) return fallbackResult;
+  if (!forceWidthFill) {
+    const matrixResult = resolveMatrixDensity({
+      availableRect,
+      minColumns,
+      maxColumns,
+      minRows,
+      maxRows,
+      preferredColumns,
+      preferredRows,
+      logicalUnitScale,
+      minCell,
+      targetCell,
+      maxCell,
+      fillX,
+      fillY,
+      preferencePenaltyFactor,
+      unusedSpacePenaltyFactor,
+    });
+    if (matrixResult) {
+      return {
+        ...fallbackResult,
+        columns: matrixResult.columns,
+        rows: matrixResult.rows,
+      };
+    }
+  }
   return {
     ...fallbackResult,
     columns: resolveAxisCount({

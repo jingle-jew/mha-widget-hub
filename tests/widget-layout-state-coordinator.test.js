@@ -38,7 +38,7 @@ function createHarness(overrides = {}) {
     activePageId: "living-room",
     effectiveLayout: "tablet",
     bounds: { units: 4, rowUnits: 6 },
-    runtimeGridPreset: { columns: 2, rows: 3 },
+    runtimeGridPreset: { columns: 4, rows: 6 },
     mobile: false,
     ...overrides.state,
   };
@@ -191,7 +191,7 @@ test("applyPositionsToDom clamps projected width to the active grid units", () =
 test("layout normalization clamps widget size and position to runtime bounds", () => {
   const { coordinator } = createHarness({
     state: {
-      runtimeGridPreset: { columns: 2, rows: 2 },
+      runtimeGridPreset: { columns: 4, rows: 4 },
     },
   });
 

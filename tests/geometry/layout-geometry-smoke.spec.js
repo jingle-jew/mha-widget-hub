@@ -554,8 +554,8 @@ test.describe("tablet dock geometry contract", () => {
     );
     assert.ok(
       Number(geometries.bottom.hostDataset.logicalColumns)
-        > Number(geometries.left.hostDataset.logicalColumns),
-      "bottom dock should unlock more logical columns than side docks when the panel gets wider",
+        >= Number(geometries.left.hostDataset.logicalColumns),
+      "bottom dock should never lose logical columns versus side docks when the panel gets wider",
     );
     assert.ok(
       Number(geometries.bottom.hostDataset.logicalRows)

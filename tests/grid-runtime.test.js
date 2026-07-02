@@ -173,14 +173,14 @@ test("dock-position bonus stays disabled when widget-area is already reserved", 
   );
 });
 
-test("grid bounds preserve the logical-to-internal conversion", () => {
+test("grid bounds preserve the direct widget-grid contract", () => {
   assert.deepEqual(
     getGridBoundsFromPreset({ columns: 7, rows: 4 }),
     {
       columns: 7,
       rows: 4,
-      units: 14,
-      rowUnits: 8,
+      units: 7,
+      rowUnits: 4,
     },
   );
 });
@@ -351,10 +351,10 @@ test("runtime applies the existing grid dataset and CSS contract", () => {
     layoutMode: "desktop",
     layout: "desktop",
     gridDensity: "desktop-landscape-adaptive",
-    gridUnits: "20",
-    logicalColumns: "10",
+    gridUnits: "14",
+    logicalColumns: "14",
     gridRows: "10",
-    logicalRows: "5",
+    logicalRows: "10",
     availableContentX: "0",
     availableContentY: "0",
     availableContentWidth: "1400",
@@ -364,12 +364,12 @@ test("runtime applies the existing grid dataset and CSS contract", () => {
     panelFrameHeight: "800",
     gridContainerWidth: "1400",
     gridContainerHeight: "800",
-    gridTrackWidth: "1400",
-    gridTrackHeight: "735",
+    gridTrackWidth: "1176",
+    gridTrackHeight: "800",
   });
-  assert.equal(hostStyle.values.get("--mha-square-unit"), "70px");
-  assert.equal(hostStyle.values.get("--mha-grid-column-size"), "70px");
-  assert.equal(hostStyle.values.get("--mha-grid-row-size"), "73.5px");
+  assert.equal(hostStyle.values.get("--mha-square-unit"), "80px");
+  assert.equal(hostStyle.values.get("--mha-grid-column-size"), "84px");
+  assert.equal(hostStyle.values.get("--mha-grid-row-size"), "80px");
   assert.equal(hostStyle.values.get("--mha-available-content-x"), "0px");
   assert.equal(hostStyle.values.get("--mha-available-content-y"), "0px");
   assert.equal(hostStyle.values.get("--mha-available-content-width"), "1400px");
@@ -379,8 +379,8 @@ test("runtime applies the existing grid dataset and CSS contract", () => {
   assert.equal(hostStyle.values.get("--mha-panel-frame-height"), "800px");
   assert.equal(hostStyle.values.get("--mha-grid-container-width"), "1400px");
   assert.equal(hostStyle.values.get("--mha-grid-container-height"), "800px");
-  assert.equal(hostStyle.values.get("--mha-grid-track-width"), "1400px");
-  assert.equal(hostStyle.values.get("--mha-grid-track-height"), "735px");
+  assert.equal(hostStyle.values.get("--mha-grid-track-width"), "1176px");
+  assert.equal(hostStyle.values.get("--mha-grid-track-height"), "800px");
   assert.equal(gridStyle.values.get("--mha-grid-container-width"), undefined);
   assert.equal(gridStyle.values.get("--mha-grid-container-height"), undefined);
   assert.equal(gridStyle.values.get("--mha-grid-track-width"), undefined);
@@ -726,15 +726,15 @@ test("runtime surfaces the parent grid frame on tablet/desktop", () => {
   });
 
   assert.equal(runtime.syncSquareUnit(), true);
-  assert.equal(hostStyle.values.get("--mha-square-unit"), "73.58333333333333px");
-  assert.equal(hostStyle.values.get("--mha-grid-column-size"), "73.58333333333333px");
-  assert.equal(hostStyle.values.get("--mha-grid-row-size"), "77.2625px");
+  assert.equal(hostStyle.values.get("--mha-square-unit"), "88.3px");
+  assert.equal(hostStyle.values.get("--mha-grid-column-size"), "88.3px");
+  assert.equal(hostStyle.values.get("--mha-grid-row-size"), "92.715px");
   assert.equal(hostStyle.values.get("--mha-panel-frame-width"), "883px");
   assert.equal(hostStyle.values.get("--mha-panel-frame-height"), "682px");
   assert.equal(hostStyle.values.get("--mha-grid-container-width"), "883px");
   assert.equal(hostStyle.values.get("--mha-grid-container-height"), "682px");
   assert.equal(hostStyle.values.get("--mha-grid-track-width"), "883px");
-  assert.equal(hostStyle.values.get("--mha-grid-track-height"), "618.1px");
+  assert.equal(hostStyle.values.get("--mha-grid-track-height"), "556.29px");
   assert.equal(gridStyle.values.get("--mha-grid-container-width"), undefined);
   assert.equal(gridStyle.values.get("--mha-grid-container-height"), undefined);
   assert.equal(gridStyle.values.get("--mha-grid-track-width"), undefined);
@@ -804,15 +804,15 @@ test("runtime keeps bottom dock square-unit constrained by measured height", () 
   });
 
   assert.equal(runtime.syncSquareUnit(), true);
-  assert.equal(hostStyle.values.get("--mha-square-unit"), "62.5px");
-  assert.equal(hostStyle.values.get("--mha-grid-column-size"), "62.5px");
-  assert.equal(hostStyle.values.get("--mha-grid-row-size"), "65.625px");
+  assert.equal(hostStyle.values.get("--mha-square-unit"), "77px");
+  assert.equal(hostStyle.values.get("--mha-grid-column-size"), "77px");
+  assert.equal(hostStyle.values.get("--mha-grid-row-size"), "78.33333333333333px");
   assert.equal(hostStyle.values.get("--mha-panel-frame-width"), "860px");
   assert.equal(hostStyle.values.get("--mha-panel-frame-height"), "520px");
   assert.equal(hostStyle.values.get("--mha-grid-container-width"), "860px");
   assert.equal(hostStyle.values.get("--mha-grid-container-height"), "520px");
   assert.equal(hostStyle.values.get("--mha-grid-track-width"), "860px");
-  assert.equal(hostStyle.values.get("--mha-grid-track-height"), "443.75px");
+  assert.equal(hostStyle.values.get("--mha-grid-track-height"), "520px");
   assert.equal(hostStyle.values.get("--mha-grid-track-justify-runtime"), "center");
   assert.equal(gridStyle.values.get("--mha-grid-container-width"), undefined);
   assert.equal(gridStyle.values.get("--mha-grid-container-height"), undefined);
