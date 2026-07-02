@@ -1,7 +1,7 @@
 import { destroyDomSubtree } from "../core/dom-lifecycle.js";
 import {
-  createCriticalBootStyle,
-  createFrontendStyleLinks,
+  createCriticalBootStyleElement,
+  createFrontendStyleElements,
 } from "../core/mha-frontend-assets.js";
 import { t } from "../i18n/index.js";
 import { createMobileDock } from "./mobile-dock.js";
@@ -352,41 +352,69 @@ export function createRenderPipeline(host, options = {}) {
     const wallpaperBackground = host.style.getPropertyValue("--mha-active-wallpaper-background").trim();
     const hasImageWallpaper = wallpaperKind === "image" && Boolean(wallpaperImageUrl);
     const hasCssWallpaper = wallpaperKind === "css" && Boolean(wallpaperBackground);
+    const shouldUseImageWallpaper = hasImageWallpaper && (
+      wallpaperSource === "custom" || wallpaperSource === "theme"
+    );
+    const shouldUseCssWallpaper = hasCssWallpaper && wallpaperSource === "theme";
 
     if (wallpaperNode) {
       wallpaperNode.hidden = !hasImageWallpaper;
-      if (hasImageWallpaper) {
-        wallpaperNode.src = wallpaperImageUrl;
-      } else {
+      if (shouldUseImageWallpaper) {
+        const currentSrc = String(
+          wallpaperNode.getAttribute?.("src")
+            || wallpaperNode.src
+            || "",
+        );
+        if (currentSrc !== wallpaperImageUrl) {
+          wallpaperNode.src = wallpaperImageUrl;
+        }
+      } else if (wallpaperNode.getAttribute?.("src") || wallpaperNode.src) {
         wallpaperNode.removeAttribute("src");
       }
     }
 
-    bg.style.removeProperty("background-image");
-    bg.style.removeProperty("background-size");
-    bg.style.removeProperty("background-position");
-    bg.style.removeProperty("background-repeat");
-    bg.style.removeProperty("background");
+    if (!shouldUseCssWallpaper) {
+      bg.style.removeProperty("background-image");
+      bg.style.removeProperty("background-size");
+      bg.style.removeProperty("background-position");
+      bg.style.removeProperty("background-repeat");
+      bg.style.removeProperty("background");
+    }
 
-    if (hasImageWallpaper && (wallpaperSource === "custom" || wallpaperSource === "theme")) {
+    if (shouldUseImageWallpaper) {
       return;
     }
 
-    if (hasCssWallpaper && wallpaperSource === "theme") {
+    if (shouldUseCssWallpaper && bg.style.background !== wallpaperBackground) {
       bg.style.background = wallpaperBackground;
     }
   }
 
   function mountRenderShell({ layoutMode, layout, cols, units }) {
-    destroyDomSubtree(host.shadowRoot);
-    host.shadowRoot.innerHTML = createCriticalBootStyle() + createFrontendStyleLinks(
+    const persistentBackground = host.shadowRoot?.querySelector?.(".mha-background") || null;
+    if (persistentBackground) {
+      const removableChildren = [
+        ...host.shadowRoot.childNodes || [],
+      ].filter(node => node !== persistentBackground);
+      removableChildren.forEach((node) => {
+        destroyDomSubtree(node);
+        node.remove?.();
+      });
+    } else {
+      destroyDomSubtree(host.shadowRoot);
+      host.shadowRoot.innerHTML = "";
+    }
+
+    const criticalBootStyle = createCriticalBootStyleElement(host.ownerDocument || document);
+    const links = createFrontendStyleElements(
       styleManifest,
       {
         frontendRootUrl,
         frontendVersion,
       },
+      host.ownerDocument || document,
     );
-    const links = [...host.shadowRoot.querySelectorAll('link[rel="stylesheet"]')];
+    host.shadowRoot.append(criticalBootStyle, ...links);
     const dockProps = host._getDockProps();
     const { bg, shell, pageStage } = createShell({
       layoutMode,
@@ -395,8 +423,10 @@ export function createRenderPipeline(host, options = {}) {
       gridUnits: units,
       ...dockProps,
     });
-    syncShellBackgroundSurface(bg);
-    host.shadowRoot.append(bg, shell);
+    const background = persistentBackground || bg;
+    syncShellBackgroundSurface(background);
+    if (!persistentBackground) host.shadowRoot.append(background);
+    host.shadowRoot.append(shell);
     return { links, pageStage };
   }
 

@@ -29,7 +29,7 @@ function createMockStyle() {
 }
 
 function createMockElement(tag = "div", namespace = null) {
-  return {
+  const element = {
     tag,
     namespace,
     className: "",
@@ -42,28 +42,134 @@ function createMockElement(tag = "div", namespace = null) {
     dataset: {},
     attributes: {},
     appended: [],
+    parentNode: null,
     style: createMockStyle(),
     classList: createMockClassList(),
     append(...nodes) {
-      this.appended.push(...nodes);
+      nodes.forEach((node) => {
+        if (!node) return;
+        node.parentNode = this;
+        this.appended.push(node);
+      });
     },
     appendChild(node) {
+      node.parentNode = this;
       this.appended.push(node);
       return node;
     },
     replaceChildren(...nodes) {
-      this.appended = [...nodes];
+      this.appended.forEach((node) => {
+        if (node) node.parentNode = null;
+      });
+      this.appended = [];
+      this.append(...nodes);
     },
     setAttribute(name, value) {
       this.attributes[name] = value;
     },
+    getAttribute(name) {
+      return this.attributes[name];
+    },
+    removeAttribute(name) {
+      delete this.attributes[name];
+      if (name === "src") delete this.src;
+    },
     addEventListener() {},
     removeEventListener() {},
-    querySelector() {
+    querySelector(selector) {
+      if (!selector.startsWith(".")) return null;
+      const className = selector.slice(1);
+      const queue = [...this.appended];
+      while (queue.length) {
+        const node = queue.shift();
+        const classes = String(node?.className || "").split(/\s+/).filter(Boolean);
+        if (classes.includes(className)) return node;
+        if (Array.isArray(node?.appended)) queue.push(...node.appended);
+      }
       return null;
     },
-    remove() {},
+    remove() {
+      if (!Array.isArray(this.parentNode?.appended)) return;
+      const index = this.parentNode.appended.indexOf(this);
+      if (index >= 0) this.parentNode.appended.splice(index, 1);
+      if (Array.isArray(this.parentNode?.childNodes)) {
+        const childIndex = this.parentNode.childNodes.indexOf(this);
+        if (childIndex >= 0) this.parentNode.childNodes.splice(childIndex, 1);
+      }
+      this.parentNode = null;
+    },
   };
+  return element;
+}
+
+function createMockShadowRoot() {
+  let markup = "";
+  const root = {
+    appended: [],
+    childNodes: [],
+    querySelector(selector) {
+      if (!selector.startsWith(".")) return null;
+      const className = selector.slice(1);
+      const queue = [...this.appended];
+      while (queue.length) {
+        const node = queue.shift();
+        const classes = String(node?.className || "").split(/\s+/).filter(Boolean);
+        if (classes.includes(className)) return node;
+        if (Array.isArray(node?.appended)) queue.push(...node.appended);
+      }
+      return null;
+    },
+    querySelectorAll(selector) {
+      if (selector === 'link[rel="stylesheet"]') {
+        return this.appended.filter(node => node?.tag === "link" && node?.attributes?.rel === "stylesheet");
+      }
+      if (selector === "*") {
+        const descendants = [];
+        const queue = [...this.appended];
+        while (queue.length) {
+          const node = queue.shift();
+          descendants.push(node);
+          if (Array.isArray(node?.appended)) queue.push(...node.appended);
+        }
+        return descendants;
+      }
+      return [];
+    },
+    append(...nodes) {
+      nodes.forEach((node) => {
+        if (!node) return;
+        node.parentNode = this;
+        this.appended.push(node);
+        this.childNodes.push(node);
+      });
+    },
+    removeChild(node) {
+      const index = this.appended.indexOf(node);
+      if (index >= 0) this.appended.splice(index, 1);
+      const childIndex = this.childNodes.indexOf(node);
+      if (childIndex >= 0) this.childNodes.splice(childIndex, 1);
+      node.parentNode = null;
+      return node;
+    },
+    get innerHTML() {
+      return markup;
+    },
+    set innerHTML(value) {
+      markup = value;
+      this.appended = [];
+      this.childNodes = [];
+      const linkCount = (String(value).match(/<link /g) || []).length;
+      for (let index = 0; index < linkCount; index += 1) {
+        const link = createMockElement("link");
+        link.setAttribute("rel", "stylesheet");
+        link.sheet = {};
+        link.parentNode = this;
+        this.appended.push(link);
+        this.childNodes.push(link);
+      }
+    },
+  };
+  return root;
 }
 
 async function loadHubPrototype() {
@@ -253,6 +359,292 @@ test("style finalization schedules mobile dock overflow sync when styles are rea
     "scheduleDockOverflow",
     "scheduleIcons",
   ]);
+});
+
+test("mountRenderShell preserves the existing background node across rerenders", async () => {
+  const prototype = await loadHubPrototype();
+  const previousDocument = globalThis.document;
+
+  globalThis.document = {
+    ...globalThis.document,
+    createElement(tag) {
+      return createMockElement(tag);
+    },
+    createElementNS(namespace, tag) {
+      return createMockElement(tag, namespace);
+    },
+  };
+
+  const shadowRoot = createMockShadowRoot();
+  const preservedBackground = createMockElement("div");
+  let backgroundRemoveCalls = 0;
+  preservedBackground.className = "mha-background";
+  const originalRemove = preservedBackground.remove.bind(preservedBackground);
+  preservedBackground.remove = () => {
+    backgroundRemoveCalls += 1;
+    originalRemove();
+  };
+  const wallpaper = createMockElement("img");
+  wallpaper.className = "mha-background-wallpaper";
+  preservedBackground.append(wallpaper);
+  shadowRoot.append(preservedBackground);
+
+  const host = {
+    shadowRoot,
+    dataset: {
+      wallpaperKind: "image",
+      wallpaperSource: "theme",
+    },
+    style: {
+      getPropertyValue(name) {
+        return name === "--mha-active-wallpaper-background" ? "" : "";
+      },
+    },
+    _activeWallpaper: {
+      kind: "image",
+      source: "theme",
+      renderValue: "/wallpapers/animated.webp",
+    },
+    _getDockProps() {
+      return { usesDock: true };
+    },
+  };
+
+  const first = prototype._mountRenderShell.call(host, {
+    layoutMode: "auto",
+    layout: "tablet",
+    cols: 4,
+    units: 8,
+  });
+  const firstBackground = shadowRoot.querySelector(".mha-background");
+
+  const second = prototype._mountRenderShell.call(host, {
+    layoutMode: "auto",
+    layout: "tablet",
+    cols: 4,
+    units: 8,
+  });
+  const secondBackground = shadowRoot.querySelector(".mha-background");
+
+  assert.equal(first.pageStage?.className, "mha-page-stage");
+  assert.equal(second.pageStage?.className, "mha-page-stage");
+  assert.equal(firstBackground, preservedBackground);
+  assert.equal(secondBackground, preservedBackground);
+  assert.equal(shadowRoot.appended.filter(node => node?.className === "mha-background").length, 1);
+  assert.equal(wallpaper.src, "/wallpapers/animated.webp");
+  assert.equal(backgroundRemoveCalls, 0);
+
+  globalThis.document = previousDocument;
+});
+
+test("mountRenderShell does not reassign the same wallpaper src on rerender", async () => {
+  const prototype = await loadHubPrototype();
+  const previousDocument = globalThis.document;
+  let srcAssignments = 0;
+
+  globalThis.document = {
+    ...globalThis.document,
+    createElement(tag) {
+      const element = createMockElement(tag);
+      if (tag === "img") {
+        Object.defineProperty(element, "src", {
+          get() {
+            return this._src || "";
+          },
+          set(value) {
+            this._src = value;
+            this.attributes.src = value;
+            srcAssignments += 1;
+          },
+          configurable: true,
+        });
+      }
+      return element;
+    },
+    createElementNS(namespace, tag) {
+      return createMockElement(tag, namespace);
+    },
+  };
+
+  const shadowRoot = createMockShadowRoot();
+  const host = {
+    shadowRoot,
+    dataset: {
+      wallpaperKind: "image",
+      wallpaperSource: "theme",
+    },
+    style: {
+      getPropertyValue() {
+        return "";
+      },
+    },
+    _activeWallpaper: {
+      kind: "image",
+      source: "theme",
+      renderValue: "/wallpapers/animated.webp",
+    },
+    _getDockProps() {
+      return { usesDock: true };
+    },
+  };
+
+  prototype._mountRenderShell.call(host, {
+    layoutMode: "auto",
+    layout: "tablet",
+    cols: 4,
+    units: 8,
+  });
+  prototype._mountRenderShell.call(host, {
+    layoutMode: "auto",
+    layout: "tablet",
+    cols: 4,
+    units: 8,
+  });
+
+  assert.equal(srcAssignments, 1);
+
+  globalThis.document = previousDocument;
+});
+
+test("mountRenderShell reuses the background node while updating wallpaper src changes", async () => {
+  const prototype = await loadHubPrototype();
+  const previousDocument = globalThis.document;
+  let srcAssignments = 0;
+
+  globalThis.document = {
+    ...globalThis.document,
+    createElement(tag) {
+      const element = createMockElement(tag);
+      if (tag === "img") {
+        Object.defineProperty(element, "src", {
+          get() {
+            return this._src || "";
+          },
+          set(value) {
+            this._src = value;
+            this.attributes.src = value;
+            srcAssignments += 1;
+          },
+          configurable: true,
+        });
+      }
+      return element;
+    },
+    createElementNS(namespace, tag) {
+      return createMockElement(tag, namespace);
+    },
+  };
+
+  const shadowRoot = createMockShadowRoot();
+  const host = {
+    shadowRoot,
+    dataset: {
+      wallpaperKind: "image",
+      wallpaperSource: "theme",
+    },
+    style: {
+      getPropertyValue() {
+        return "";
+      },
+    },
+    _activeWallpaper: {
+      kind: "image",
+      source: "theme",
+      renderValue: "/wallpapers/animated-a.webp",
+    },
+    _getDockProps() {
+      return { usesDock: true };
+    },
+  };
+
+  prototype._mountRenderShell.call(host, {
+    layoutMode: "auto",
+    layout: "tablet",
+    cols: 4,
+    units: 8,
+  });
+  const firstBackground = shadowRoot.querySelector(".mha-background");
+
+  host._activeWallpaper = {
+    kind: "image",
+    source: "theme",
+    renderValue: "/wallpapers/animated-b.webp",
+  };
+  prototype._mountRenderShell.call(host, {
+    layoutMode: "auto",
+    layout: "tablet",
+    cols: 4,
+    units: 8,
+  });
+  const secondBackground = shadowRoot.querySelector(".mha-background");
+  const wallpaper = secondBackground.querySelector(".mha-background-wallpaper");
+
+  assert.equal(firstBackground, secondBackground);
+  assert.equal(wallpaper.src, "/wallpapers/animated-b.webp");
+  assert.equal(srcAssignments, 2);
+
+  globalThis.document = previousDocument;
+});
+
+test("mountRenderShell keeps a persistent background while updating css wallpaper styles", async () => {
+  const prototype = await loadHubPrototype();
+  const previousDocument = globalThis.document;
+
+  globalThis.document = {
+    ...globalThis.document,
+    createElement(tag) {
+      return createMockElement(tag);
+    },
+    createElementNS(namespace, tag) {
+      return createMockElement(tag, namespace);
+    },
+  };
+
+  const shadowRoot = createMockShadowRoot();
+  let activeBackground = "linear-gradient(red, blue)";
+  const host = {
+    shadowRoot,
+    dataset: {
+      wallpaperKind: "css",
+      wallpaperSource: "theme",
+    },
+    style: {
+      getPropertyValue(name) {
+        return name === "--mha-active-wallpaper-background" ? activeBackground : "";
+      },
+    },
+    _activeWallpaper: {
+      kind: "css",
+      source: "theme",
+      renderValue: "",
+    },
+    _getDockProps() {
+      return { usesDock: true };
+    },
+  };
+
+  prototype._mountRenderShell.call(host, {
+    layoutMode: "auto",
+    layout: "tablet",
+    cols: 4,
+    units: 8,
+  });
+  const firstBackground = shadowRoot.querySelector(".mha-background");
+  assert.equal(firstBackground.style.background, "linear-gradient(red, blue)");
+
+  activeBackground = "linear-gradient(green, black)";
+  prototype._mountRenderShell.call(host, {
+    layoutMode: "auto",
+    layout: "tablet",
+    cols: 4,
+    units: 8,
+  });
+  const secondBackground = shadowRoot.querySelector(".mha-background");
+
+  assert.equal(firstBackground, secondBackground);
+  assert.equal(secondBackground.style.background, "linear-gradient(green, black)");
+
+  globalThis.document = previousDocument;
 });
 
 test("style finalization keeps the stylesheet fallback path intact", async () => {

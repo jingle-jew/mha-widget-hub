@@ -151,6 +151,8 @@ async function readMhaGeometry(page) {
         gridContainerHeight: pxNumber(hostStyle?.getPropertyValue?.("--mha-grid-container-height")),
         gridTrackWidth: pxNumber(hostStyle?.getPropertyValue?.("--mha-grid-track-width")),
         gridTrackHeight: pxNumber(hostStyle?.getPropertyValue?.("--mha-grid-track-height")),
+        gridColumnSize: pxNumber(hostStyle?.getPropertyValue?.("--mha-grid-column-size")),
+        gridRowSize: pxNumber(hostStyle?.getPropertyValue?.("--mha-grid-row-size")),
       },
       gridVars: {
         panelFrameWidth: pxNumber(gridStyle?.getPropertyValue?.("--mha-panel-frame-width")),
@@ -159,6 +161,8 @@ async function readMhaGeometry(page) {
         gridContainerHeight: pxNumber(gridStyle?.getPropertyValue?.("--mha-grid-container-height")),
         gridTrackWidth: pxNumber(gridStyle?.getPropertyValue?.("--mha-grid-track-width")),
         gridTrackHeight: pxNumber(gridStyle?.getPropertyValue?.("--mha-grid-track-height")),
+        gridColumnSize: pxNumber(gridStyle?.getPropertyValue?.("--mha-grid-column-size")),
+        gridRowSize: pxNumber(gridStyle?.getPropertyValue?.("--mha-grid-row-size")),
       },
       gridStyle: {
         justifyContent: gridStyle?.justifyContent || "",
@@ -418,6 +422,17 @@ test.describe("tablet dock geometry contract", () => {
         geometry.gridVars.gridTrackHeight <= geometry.gridVars.gridContainerHeight + 1,
         `${dockPosition} grid tracks should fit within the container height`,
       );
+      const rowColumnRatio = Math.max(
+        geometry.hostVars.gridColumnSize,
+        geometry.hostVars.gridRowSize,
+      ) / Math.min(
+        geometry.hostVars.gridColumnSize,
+        geometry.hostVars.gridRowSize,
+      );
+      assert.ok(
+        rowColumnRatio <= 1.051,
+        `${dockPosition} grid cells should stay quasi-square, got ratio ${rowColumnRatio}`,
+      );
       assert.ok(
         geometry.panel.y >= geometry.statusBar.bottom - 1,
         `${dockPosition} panel should stay below the status bar`,
@@ -451,6 +466,35 @@ test.describe("tablet dock geometry contract", () => {
     assert.ok(
       geometries.bottom.panel.width > geometries.left.panel.width,
       "bottom dock should preserve more usable width than side docks",
+    );
+  });
+
+  test("portrait tablet side dock keeps cells quasi-square and leaves bottom breathing room when panel is tall", async ({ page }) => {
+    await page.setViewportSize({ width: 768, height: 1024 });
+    await openMha(page);
+    await setDockPosition(page, "left");
+    const geometry = await readMhaGeometry(page);
+
+    const rowColumnRatio = Math.max(
+      geometry.hostVars.gridColumnSize,
+      geometry.hostVars.gridRowSize,
+    ) / Math.min(
+      geometry.hostVars.gridColumnSize,
+      geometry.hostVars.gridRowSize,
+    );
+
+    assert.equal(geometry.hostDataset.layout, "tablet");
+    assert.equal(geometry.hostDataset.dockPosition, "left");
+    assert.equal(geometry.gridStyle.justifyContent, "end");
+    assert.equal(geometry.hostDataset.logicalColumns, 4);
+    assert.equal(geometry.hostDataset.logicalRows, 6);
+    assert.ok(
+      rowColumnRatio <= 1.051,
+      `portrait tablet side dock should stay quasi-square, got ratio ${rowColumnRatio}`,
+    );
+    assert.ok(
+      geometry.hostVars.gridTrackHeight < geometry.hostVars.gridContainerHeight - 1,
+      `portrait tablet side dock should keep spare bottom breathing room, track=${geometry.hostVars.gridTrackHeight}, container=${geometry.hostVars.gridContainerHeight}`,
     );
   });
 });
