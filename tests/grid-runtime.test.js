@@ -5,6 +5,7 @@ import {
   createGridRuntime,
   getDockBottomColumnBonus,
   getGridBoundsFromPreset,
+  measureGridFrame,
   measureWidgetArea,
 } from "../src/layout/grid-runtime.js";
 
@@ -33,6 +34,26 @@ test("widget-area measurement removes CSS padding", () => {
   assert.deepEqual(measureWidgetArea(area, () => style), {
     width: 750,
     height: 475,
+  });
+});
+
+test("grid-frame measurement follows the actual page panel bounds", () => {
+  const frame = { clientWidth: 883, clientHeight: 682 };
+  const style = {
+    paddingLeft: "0px",
+    paddingRight: "0px",
+    paddingTop: "0px",
+    paddingBottom: "0px",
+  };
+  const grid = {
+    closest(selector) {
+      return selector === ".mha-page-panel--grid" ? frame : null;
+    },
+  };
+
+  assert.deepEqual(measureGridFrame(grid, () => style), {
+    width: 883,
+    height: 682,
   });
 });
 
@@ -192,6 +213,77 @@ test("runtime applies the existing grid dataset and CSS contract", () => {
   assert.equal(dropSlotSyncs, 1);
 });
 
+test("runtime surfaces the parent grid frame on tablet/desktop", () => {
+  const hostStyle = createStyle();
+  const gridStyle = createStyle({
+    "--mha-square-unit-hard-min": "24",
+    "--mha-square-unit-max": "160",
+  });
+  Object.assign(gridStyle, {
+    columnGap: "0px",
+    rowGap: "0px",
+    paddingLeft: "0px",
+    paddingRight: "0px",
+    paddingTop: "0px",
+    paddingBottom: "0px",
+  });
+  const areaStyle = {
+    paddingLeft: "0px",
+    paddingRight: "0px",
+    paddingTop: "0px",
+    paddingBottom: "0px",
+  };
+  const panelStyle = {
+    paddingLeft: "0px",
+    paddingRight: "0px",
+    paddingTop: "0px",
+    paddingBottom: "0px",
+  };
+  const area = { clientWidth: 860, clientHeight: 676 };
+  const panel = { clientWidth: 883, clientHeight: 682 };
+  const grid = {
+    style: gridStyle,
+    closest(selector) {
+      return selector === ".mha-page-panel--grid" ? panel : null;
+    },
+  };
+  const root = {
+    querySelector(selector) {
+      if (selector === ".mha-widget-area") return area;
+      if (selector === ".mha-grid") return grid;
+      return null;
+    },
+  };
+  const host = {
+    dataset: {},
+    style: hostStyle,
+    shadowRoot: root,
+    isConnected: true,
+    getBoundingClientRect: () => ({ width: 1133, height: 744 }),
+  };
+  const runtime = createGridRuntime({
+    host,
+    getLayoutMode: () => "tablet",
+    getEffectiveLayout: () => "tablet",
+    getGridPreset: () => ({
+      columns: 3,
+      rows: 2,
+      density: "tablet-test",
+      maxCell: 160,
+    }),
+    getStyle: element => {
+      if (element === area) return areaStyle;
+      if (element === panel) return panelStyle;
+      return gridStyle;
+    },
+  });
+
+  assert.equal(runtime.syncSquareUnit(), true);
+  assert.equal(hostStyle.values.get("--mha-square-unit"), "143.33333333333334px");
+  assert.equal(gridStyle.values.get("--mha-grid-matrix-width"), "883px");
+  assert.equal(gridStyle.values.get("--mha-grid-matrix-height"), "682px");
+});
+
 test("runtime keeps bottom dock square-unit constrained by measured height", () => {
   const hostStyle = createStyle();
   const gridStyle = createStyle({
@@ -212,8 +304,20 @@ test("runtime keeps bottom dock square-unit constrained by measured height", () 
     paddingTop: "0px",
     paddingBottom: "0px",
   };
+  const panelStyle = {
+    paddingLeft: "0px",
+    paddingRight: "0px",
+    paddingTop: "0px",
+    paddingBottom: "0px",
+  };
   const area = { clientWidth: 700, clientHeight: 320 };
-  const grid = { style: gridStyle };
+  const panel = { clientWidth: 700, clientHeight: 320 };
+  const grid = {
+    style: gridStyle,
+    closest(selector) {
+      return selector === ".mha-page-panel--grid" ? panel : null;
+    },
+  };
   const root = {
     querySelector(selector) {
       if (selector === ".mha-widget-area") return area;
@@ -239,12 +343,16 @@ test("runtime keeps bottom dock square-unit constrained by measured height", () 
       density: "tablet-test",
       maxCell: 160,
     }),
-    getStyle: element => (element === area ? areaStyle : gridStyle),
+    getStyle: element => {
+      if (element === area) return areaStyle;
+      if (element === panel) return panelStyle;
+      return gridStyle;
+    },
   });
 
   assert.equal(runtime.syncSquareUnit(), true);
   assert.equal(hostStyle.values.get("--mha-square-unit"), "72.5px");
-  assert.equal(gridStyle.values.get("--mha-grid-matrix-width"), "485px");
+  assert.equal(gridStyle.values.get("--mha-grid-matrix-width"), "700px");
   assert.equal(gridStyle.values.get("--mha-grid-matrix-height"), "320px");
 });
 

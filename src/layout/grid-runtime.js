@@ -26,6 +26,28 @@ export function measureWidgetArea(area, getStyle = getComputedStyle) {
   return width > 0 && height > 0 ? { width, height } : null;
 }
 
+export function measureGridFrame(grid, getStyle = getComputedStyle) {
+  if (!grid?.closest) return null;
+  const frame = grid.closest(".mha-page-panel--grid");
+  if (!frame) return null;
+
+  const style = getStyle(frame);
+  const width = Math.max(
+    0,
+    frame.clientWidth
+      - (Number.parseFloat(style.paddingLeft) || 0)
+      - (Number.parseFloat(style.paddingRight) || 0),
+  );
+  const height = Math.max(
+    0,
+    frame.clientHeight
+      - (Number.parseFloat(style.paddingTop) || 0)
+      - (Number.parseFloat(style.paddingBottom) || 0),
+  );
+
+  return width > 0 && height > 0 ? { width, height } : null;
+}
+
 export function getDockBottomColumnBonus({
   dockPosition,
   layout,
@@ -160,6 +182,10 @@ export class GridRuntime {
     return measureWidgetArea(area, this.getStyle);
   }
 
+  getGridFrameMetrics(grid = this.getRoot()?.querySelector?.(".mha-grid")) {
+    return measureGridFrame(grid, this.getStyle);
+  }
+
   getDockBottomColumnBonus(layout, base, metrics = {}) {
     const hostWidth = this.host?.getBoundingClientRect?.().width
       || this.getViewportWidth()
@@ -254,6 +280,7 @@ export class GridRuntime {
 
     const style = this.getStyle(grid);
     const metrics = this.getWidgetAreaMetrics();
+    const frameMetrics = this.getGridFrameMetrics(grid) || metrics;
     if (!metrics) return false;
 
     const preset = this.getRuntimeGridPreset();
@@ -325,13 +352,19 @@ export class GridRuntime {
     );
     this.host.style.setProperty("--mha-square-unit", `${square.unit}px`);
     grid.style.setProperty("--mha-square-unit", `${square.unit}px`);
+    const renderedWidth = this.isMobileLayout()
+      ? square.matrixWidth
+      : frameMetrics?.width || square.matrixWidth;
+    const renderedHeight = this.isMobileLayout()
+      ? square.matrixHeight
+      : frameMetrics?.height || square.matrixHeight;
     grid.style.setProperty(
       "--mha-grid-matrix-width",
-      `${square.matrixWidth}px`,
+      `${renderedWidth}px`,
     );
     grid.style.setProperty(
       "--mha-grid-matrix-height",
-      `${square.matrixHeight}px`,
+      `${renderedHeight}px`,
     );
     this.syncDropSlots();
     return true;
@@ -417,7 +450,8 @@ export class GridRuntime {
     ) {
       return false;
     }
-    const area = this.getRoot()?.querySelector?.(".mha-widget-area");
+    const area = this.getRoot()?.querySelector?.(".mha-page-panel--grid")
+      || this.getRoot()?.querySelector?.(".mha-widget-area");
     if (!area) return false;
 
     this.resizeObserver = new this.ResizeObserverClass(entries => {
