@@ -130,17 +130,27 @@ export function createResponsiveDockCoordinator(host) {
     host.classList.remove("is-dock-hidden", "is-mobile-floating-controls-hidden");
     if (!grid) return;
 
-    const scrollContainer = grid.closest(".mha-widget-area");
+    const widgetArea = grid.closest(".mha-widget-area");
     const isMobileLayout = () => host.dataset.layout === "mobile";
     const isLandscape = () => window.matchMedia?.("(orientation: landscape)")?.matches;
 
-    if (!scrollContainer || !isMobileLayout()) return;
+    if (!widgetArea || !isMobileLayout()) return;
     if (isLandscape()) {
       host.classList.add("is-mobile-floating-controls-hidden");
       return;
     }
 
-    let previousScrollTop = scrollContainer.scrollTop;
+    const scrollContainers = [host, widgetArea]
+      .filter((container, index, containers) => (
+        container?.addEventListener
+        && containers.indexOf(container) === index
+      ));
+    const getScrollTop = () => Math.max(
+      0,
+      ...scrollContainers.map(container => Number(container?.scrollTop || 0)),
+    );
+
+    let previousScrollTop = getScrollTop();
     syncStatusBarFillScrollState(previousScrollTop > 4);
     const threshold = 10;
     const onScroll = () => {
@@ -150,11 +160,11 @@ export function createResponsiveDockCoordinator(host) {
           isMobileLayout() && isLandscape(),
         );
         syncStatusBarFillScrollState(false);
-        previousScrollTop = scrollContainer.scrollTop;
+        previousScrollTop = getScrollTop();
         return;
       }
 
-      const currentScrollTop = scrollContainer.scrollTop;
+      const currentScrollTop = getScrollTop();
       syncStatusBarFillScrollState(currentScrollTop > 4);
       if (currentScrollTop <= 4) {
         host.classList.remove("is-mobile-floating-controls-hidden");
@@ -169,8 +179,10 @@ export function createResponsiveDockCoordinator(host) {
       if (Math.abs(delta) > threshold) previousScrollTop = currentScrollTop;
     };
 
-    scrollContainer.addEventListener("scroll", onScroll, { passive: true });
-    host._gridScrollCleanup = () => scrollContainer.removeEventListener("scroll", onScroll);
+    scrollContainers.forEach(container => container.addEventListener("scroll", onScroll, { passive: true }));
+    host._gridScrollCleanup = () => scrollContainers.forEach(
+      container => container.removeEventListener("scroll", onScroll),
+    );
   }
 
   return {
