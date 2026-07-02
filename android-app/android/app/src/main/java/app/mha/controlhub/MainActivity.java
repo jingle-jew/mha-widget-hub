@@ -42,6 +42,12 @@ public class MainActivity extends BridgeActivity {
     republishSafeAreaInsets();
   }
 
+  @Override
+  protected void onNewIntent(android.content.Intent intent) {
+    super.onNewIntent(intent);
+    applyEdgeToEdgeWindowFlags();
+  }
+
   private void applyEdgeToEdgeWindowFlags() {
     Window window = getWindow();
     WindowCompat.setDecorFitsSystemWindows(window, false);
@@ -63,6 +69,7 @@ public class MainActivity extends BridgeActivity {
     WebView webView = getBridge() != null ? getBridge().getWebView() : null;
     if (webView != null) webView.setBackgroundColor(Color.TRANSPARENT);
     syncSystemBarAppearance();
+    hideStatusBar();
   }
 
   private void installInsetsListener() {
@@ -92,6 +99,20 @@ public class MainActivity extends BridgeActivity {
         != Configuration.UI_MODE_NIGHT_YES;
     controller.setAppearanceLightStatusBars(useDarkSystemBarIcons);
     controller.setAppearanceLightNavigationBars(useDarkSystemBarIcons);
+  }
+
+  private void hideStatusBar() {
+    Window window = getWindow();
+    WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(
+      window,
+      window.getDecorView()
+    );
+    if (controller == null) return;
+
+    controller.setSystemBarsBehavior(
+      WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+    );
+    controller.hide(WindowInsetsCompat.Type.statusBars());
   }
 
   private void republishSafeAreaInsets() {
