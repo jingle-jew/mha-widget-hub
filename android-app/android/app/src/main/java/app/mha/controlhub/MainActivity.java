@@ -21,7 +21,7 @@ public class MainActivity extends BridgeActivity {
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    configureEdgeToEdge();
+    applyEdgeToEdgeWindowFlags();
     installInsetsListener();
     republishSafeAreaInsets();
   }
@@ -30,7 +30,7 @@ public class MainActivity extends BridgeActivity {
   public void onWindowFocusChanged(boolean hasFocus) {
     super.onWindowFocusChanged(hasFocus);
     if (hasFocus) {
-      syncSystemBarAppearance();
+      applyEdgeToEdgeWindowFlags();
       republishSafeAreaInsets();
     }
   }
@@ -38,11 +38,11 @@ public class MainActivity extends BridgeActivity {
   @Override
   protected void onResume() {
     super.onResume();
-    syncSystemBarAppearance();
+    applyEdgeToEdgeWindowFlags();
     republishSafeAreaInsets();
   }
 
-  private void configureEdgeToEdge() {
+  private void applyEdgeToEdgeWindowFlags() {
     Window window = getWindow();
     WindowCompat.setDecorFitsSystemWindows(window, false);
     window.setStatusBarColor(Color.TRANSPARENT);
