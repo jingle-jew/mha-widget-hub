@@ -89,7 +89,10 @@
   }
 
   :host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock.mha-dock {
-    --mha-dock-empty-width: min(100%, var(--mha-grid-matrix-width, 42rem));
+    --mha-dock-empty-width: min(
+      100%,
+      var(--mha-grid-container-width, var(--mha-grid-matrix-width, 42rem))
+    );
     --mha-dock-empty-height: clamp(4rem, 5.8vw, 4.8rem);
     --mha-dock-empty-padding-block: clamp(.22rem, .48vw, .36rem);
     --mha-dock-empty-padding-inline: clamp(.34rem, .68vw, .58rem);

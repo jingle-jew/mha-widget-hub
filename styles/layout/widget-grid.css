@@ -118,8 +118,14 @@
   --mha-statusbar-reserved-top: 0px !important;
 
   box-sizing: border-box;
-  inline-size: min(100%, var(--mha-grid-matrix-width, 100%));
-  block-size: min(100%, var(--mha-grid-matrix-height, 100%));
+  inline-size: min(
+    100%,
+    var(--mha-grid-container-width, var(--mha-panel-frame-width, 100%))
+  );
+  block-size: min(
+    100%,
+    var(--mha-grid-container-height, var(--mha-panel-frame-height, 100%))
+  );
   max-inline-size: 100%;
   max-block-size: 100%;
   margin: 0 !important;
@@ -135,8 +141,8 @@
   grid-auto-flow: row dense;
   align-content: start;
   justify-content: center;
-  align-self: start;
-  justify-self: center;
+  align-self: stretch;
+  justify-self: stretch;
 
   scrollbar-width: none;
   -ms-overflow-style: none;

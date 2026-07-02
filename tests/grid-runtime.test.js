@@ -167,7 +167,7 @@ test("runtime applies the existing grid dataset and CSS contract", () => {
     paddingBottom: "0px",
   };
   const area = { clientWidth: 600, clientHeight: 400 };
-  const grid = { style: gridStyle };
+  const grid = { style: gridStyle, dataset: {} };
   const root = {
     querySelector(selector) {
       if (selector === ".mha-widget-area") return area;
@@ -206,11 +206,85 @@ test("runtime applies the existing grid dataset and CSS contract", () => {
     logicalColumns: "3",
     gridRows: "4",
     logicalRows: "2",
+    panelFrameWidth: "600",
+    panelFrameHeight: "400",
+    gridContainerWidth: "600",
+    gridContainerHeight: "400",
+    gridTrackWidth: "600",
+    gridTrackHeight: "400",
   });
   assert.equal(hostStyle.values.get("--mha-square-unit"), "100px");
+  assert.equal(hostStyle.values.get("--mha-panel-frame-width"), "600px");
+  assert.equal(hostStyle.values.get("--mha-panel-frame-height"), "400px");
+  assert.equal(hostStyle.values.get("--mha-grid-container-width"), "600px");
+  assert.equal(hostStyle.values.get("--mha-grid-container-height"), "400px");
+  assert.equal(hostStyle.values.get("--mha-grid-track-width"), "600px");
+  assert.equal(hostStyle.values.get("--mha-grid-track-height"), "400px");
+  assert.equal(gridStyle.values.get("--mha-grid-container-width"), "600px");
+  assert.equal(gridStyle.values.get("--mha-grid-container-height"), "400px");
   assert.equal(gridStyle.values.get("--mha-grid-matrix-width"), "600px");
   assert.equal(gridStyle.values.get("--mha-grid-matrix-height"), "400px");
+  assert.equal(grid.dataset.panelFrameWidth, "600");
+  assert.equal(grid.dataset.panelFrameHeight, "400");
+  assert.equal(grid.dataset.gridContainerWidth, "600");
+  assert.equal(grid.dataset.gridTrackWidth, "600");
   assert.equal(dropSlotSyncs, 1);
+});
+
+test("runtime grid preset uses page panel metrics on tablet and desktop", () => {
+  const panel = { clientWidth: 883, clientHeight: 682 };
+  const area = { clientWidth: 860, clientHeight: 676 };
+  const areaStyle = {
+    paddingLeft: "0px",
+    paddingRight: "0px",
+    paddingTop: "0px",
+    paddingBottom: "0px",
+  };
+  const panelStyle = {
+    paddingLeft: "0px",
+    paddingRight: "0px",
+    paddingTop: "0px",
+    paddingBottom: "0px",
+  };
+  const grid = {
+    closest(selector) {
+      return selector === ".mha-page-panel--grid" ? panel : null;
+    },
+  };
+  const root = {
+    querySelector(selector) {
+      if (selector === ".mha-widget-area") return area;
+      if (selector === ".mha-grid") return grid;
+      return null;
+    },
+  };
+  const captured = [];
+  const runtime = createGridRuntime({
+    host: {
+      dataset: {},
+      style: createStyle(),
+      shadowRoot: root,
+      isConnected: true,
+      getBoundingClientRect: () => ({ width: 1133, height: 744 }),
+    },
+    getLayoutMode: () => "tablet",
+    getEffectiveLayout: () => "tablet",
+    getGridPreset: (_host, _layout, metrics) => {
+      captured.push(metrics);
+      return {
+        columns: 6,
+        rows: 5,
+        density: "tablet-test",
+      };
+    },
+    getStyle: element => (element === panel ? panelStyle : areaStyle),
+  });
+
+  const preset = runtime.getRuntimeGridPreset();
+
+  assert.equal(preset.columns, 6);
+  assert.equal(preset.rows, 5);
+  assert.deepEqual(captured.at(-1), { width: 883, height: 682 });
 });
 
 test("runtime surfaces the parent grid frame on tablet/desktop", () => {
@@ -243,6 +317,7 @@ test("runtime surfaces the parent grid frame on tablet/desktop", () => {
   const panel = { clientWidth: 883, clientHeight: 682 };
   const grid = {
     style: gridStyle,
+    dataset: {},
     closest(selector) {
       return selector === ".mha-page-panel--grid" ? panel : null;
     },
@@ -279,9 +354,21 @@ test("runtime surfaces the parent grid frame on tablet/desktop", () => {
   });
 
   assert.equal(runtime.syncSquareUnit(), true);
-  assert.equal(hostStyle.values.get("--mha-square-unit"), "143.33333333333334px");
+  assert.equal(hostStyle.values.get("--mha-square-unit"), "147.16666666666666px");
+  assert.equal(hostStyle.values.get("--mha-panel-frame-width"), "883px");
+  assert.equal(hostStyle.values.get("--mha-panel-frame-height"), "682px");
+  assert.equal(hostStyle.values.get("--mha-grid-container-width"), "883px");
+  assert.equal(hostStyle.values.get("--mha-grid-container-height"), "682px");
+  assert.equal(hostStyle.values.get("--mha-grid-track-width"), "883px");
+  assert.equal(hostStyle.values.get("--mha-grid-track-height"), "588.6666666666666px");
+  assert.equal(gridStyle.values.get("--mha-grid-container-width"), "883px");
+  assert.equal(gridStyle.values.get("--mha-grid-container-height"), "682px");
   assert.equal(gridStyle.values.get("--mha-grid-matrix-width"), "883px");
-  assert.equal(gridStyle.values.get("--mha-grid-matrix-height"), "682px");
+  assert.equal(gridStyle.values.get("--mha-grid-matrix-height"), "588.6666666666666px");
+  assert.equal(grid.dataset.panelFrameWidth, "883");
+  assert.equal(grid.dataset.panelFrameHeight, "682");
+  assert.equal(grid.dataset.gridContainerWidth, "883");
+  assert.equal(grid.dataset.gridTrackWidth, "883");
 });
 
 test("runtime keeps bottom dock square-unit constrained by measured height", () => {
@@ -314,6 +401,7 @@ test("runtime keeps bottom dock square-unit constrained by measured height", () 
   const panel = { clientWidth: 700, clientHeight: 320 };
   const grid = {
     style: gridStyle,
+    dataset: {},
     closest(selector) {
       return selector === ".mha-page-panel--grid" ? panel : null;
     },
@@ -352,8 +440,20 @@ test("runtime keeps bottom dock square-unit constrained by measured height", () 
 
   assert.equal(runtime.syncSquareUnit(), true);
   assert.equal(hostStyle.values.get("--mha-square-unit"), "72.5px");
-  assert.equal(gridStyle.values.get("--mha-grid-matrix-width"), "700px");
+  assert.equal(hostStyle.values.get("--mha-panel-frame-width"), "700px");
+  assert.equal(hostStyle.values.get("--mha-panel-frame-height"), "320px");
+  assert.equal(hostStyle.values.get("--mha-grid-container-width"), "700px");
+  assert.equal(hostStyle.values.get("--mha-grid-container-height"), "320px");
+  assert.equal(hostStyle.values.get("--mha-grid-track-width"), "485px");
+  assert.equal(hostStyle.values.get("--mha-grid-track-height"), "320px");
+  assert.equal(gridStyle.values.get("--mha-grid-container-width"), "700px");
+  assert.equal(gridStyle.values.get("--mha-grid-container-height"), "320px");
+  assert.equal(gridStyle.values.get("--mha-grid-matrix-width"), "485px");
   assert.equal(gridStyle.values.get("--mha-grid-matrix-height"), "320px");
+  assert.equal(grid.dataset.panelFrameWidth, "700");
+  assert.equal(grid.dataset.panelFrameHeight, "320");
+  assert.equal(grid.dataset.gridContainerWidth, "700");
+  assert.equal(grid.dataset.gridTrackWidth, "485");
 });
 
 test("runtime ignores unstable early desktop square units", () => {

@@ -186,6 +186,13 @@ export class GridRuntime {
     return measureGridFrame(grid, this.getStyle);
   }
 
+  getRuntimeMetrics(grid = this.getRoot()?.querySelector?.(".mha-grid")) {
+    if (this.isMobileLayout()) {
+      return this.getWidgetAreaMetrics();
+    }
+    return this.getGridFrameMetrics(grid) || this.getWidgetAreaMetrics();
+  }
+
   getDockBottomColumnBonus(layout, base, metrics = {}) {
     const hostWidth = this.host?.getBoundingClientRect?.().width
       || this.getViewportWidth()
@@ -201,7 +208,7 @@ export class GridRuntime {
 
   getRuntimeGridPreset() {
     const layout = this.getEffectiveLayout(this.host);
-    const metrics = this.getWidgetAreaMetrics() || {};
+    const metrics = this.getRuntimeMetrics() || {};
     const base = this.getGridPreset(this.host, layout, metrics);
     const bonus = this.getDockBottomColumnBonus(layout, base, metrics);
     if (!bonus) return base;
@@ -227,7 +234,7 @@ export class GridRuntime {
     const orientation = width > height ? "landscape" : "portrait";
     const layoutMode = this.getLayoutMode(this.host);
     const layout = this.getEffectiveLayout(this.host);
-    const metrics = this.getWidgetAreaMetrics();
+    const metrics = this.getRuntimeMetrics();
     const preset = this.getRuntimeGridPreset();
     return `${width}x${height}|${orientation}|${layoutMode}|${layout}`
       + `|${this.getDockPosition()}|${preset.columns}|${preset.rows}`
@@ -279,8 +286,8 @@ export class GridRuntime {
     if (!grid || !area) return false;
 
     const style = this.getStyle(grid);
-    const metrics = this.getWidgetAreaMetrics();
-    const frameMetrics = this.getGridFrameMetrics(grid) || metrics;
+    const frameMetrics = this.getGridFrameMetrics(grid) || this.getWidgetAreaMetrics();
+    const metrics = this.getRuntimeMetrics(grid) || frameMetrics;
     if (!metrics) return false;
 
     const preset = this.getRuntimeGridPreset();
@@ -352,20 +359,94 @@ export class GridRuntime {
     );
     this.host.style.setProperty("--mha-square-unit", `${square.unit}px`);
     grid.style.setProperty("--mha-square-unit", `${square.unit}px`);
-    const renderedWidth = this.isMobileLayout()
+    const panelFrameWidth = frameMetrics?.width || square.matrixWidth;
+    const panelFrameHeight = frameMetrics?.height || square.matrixHeight;
+    const containerWidth = this.isMobileLayout()
       ? square.matrixWidth
-      : frameMetrics?.width || square.matrixWidth;
-    const renderedHeight = this.isMobileLayout()
+      : panelFrameWidth;
+    const containerHeight = this.isMobileLayout()
       ? square.matrixHeight
-      : frameMetrics?.height || square.matrixHeight;
+      : panelFrameHeight;
+    this.host.style.setProperty(
+      "--mha-panel-frame-width",
+      `${panelFrameWidth}px`,
+    );
+    this.host.style.setProperty(
+      "--mha-panel-frame-height",
+      `${panelFrameHeight}px`,
+    );
+    this.host.style.setProperty(
+      "--mha-grid-container-width",
+      `${containerWidth}px`,
+    );
+    this.host.style.setProperty(
+      "--mha-grid-container-height",
+      `${containerHeight}px`,
+    );
+    this.host.style.setProperty(
+      "--mha-grid-track-width",
+      `${square.matrixWidth}px`,
+    );
+    this.host.style.setProperty(
+      "--mha-grid-track-height",
+      `${square.matrixHeight}px`,
+    );
+    this.host.style.setProperty(
+      "--mha-grid-matrix-width",
+      `${square.matrixWidth}px`,
+    );
+    this.host.style.setProperty(
+      "--mha-grid-matrix-height",
+      `${square.matrixHeight}px`,
+    );
+    grid.style.setProperty(
+      "--mha-panel-frame-width",
+      `${panelFrameWidth}px`,
+    );
+    grid.style.setProperty(
+      "--mha-panel-frame-height",
+      `${panelFrameHeight}px`,
+    );
+    grid.style.setProperty(
+      "--mha-grid-container-width",
+      `${containerWidth}px`,
+    );
+    grid.style.setProperty(
+      "--mha-grid-container-height",
+      `${containerHeight}px`,
+    );
     grid.style.setProperty(
       "--mha-grid-matrix-width",
-      `${renderedWidth}px`,
+      `${square.matrixWidth}px`,
     );
     grid.style.setProperty(
       "--mha-grid-matrix-height",
-      `${renderedHeight}px`,
+      `${square.matrixHeight}px`,
     );
+    grid.style.setProperty(
+      "--mha-grid-track-width",
+      `${square.matrixWidth}px`,
+    );
+    grid.style.setProperty(
+      "--mha-grid-track-height",
+      `${square.matrixHeight}px`,
+    );
+    if (this.host.dataset) {
+      this.host.dataset.panelFrameWidth = String(Math.round(panelFrameWidth));
+      this.host.dataset.panelFrameHeight = String(Math.round(panelFrameHeight));
+      this.host.dataset.gridContainerWidth = String(Math.round(containerWidth));
+      this.host.dataset.gridContainerHeight = String(Math.round(containerHeight));
+      this.host.dataset.gridTrackWidth = String(Math.round(square.matrixWidth));
+      this.host.dataset.gridTrackHeight = String(Math.round(square.matrixHeight));
+    }
+    if (grid.dataset) {
+      grid.dataset.panelFrameWidth = String(Math.round(panelFrameWidth));
+      grid.dataset.panelFrameHeight = String(Math.round(panelFrameHeight));
+      grid.dataset.gridContainerWidth = String(Math.round(containerWidth));
+      grid.dataset.gridContainerHeight = String(Math.round(containerHeight));
+      grid.dataset.gridTrackWidth = String(Math.round(square.matrixWidth));
+      grid.dataset.gridTrackHeight = String(Math.round(square.matrixHeight));
+    }
     this.syncDropSlots();
     return true;
   }

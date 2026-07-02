@@ -550,7 +550,10 @@
   }
 
   :host([data-dock-position="bottom"]) .mha-dock {
-    --mha-dock-empty-width: min(100%, var(--mha-grid-matrix-width, 42rem));
+    --mha-dock-empty-width: min(
+      100%,
+      var(--mha-grid-container-width, var(--mha-grid-matrix-width, 42rem))
+    );
     --mha-dock-empty-height: var(--mha-dock-unit-size);
     --mha-dock-empty-padding-block: min(var(--mha-grid-gap), 5%);
     --mha-dock-empty-padding-inline: var(--mha-grid-gap);
@@ -613,7 +616,10 @@
  */
 @media (min-width: 768px) {
   :host([data-dock-position="bottom"]) .mha-dock-zone > .mha-dock {
-    --mha-dock-empty-width: min(var(--mha-grid-matrix-width, 44rem), calc(100% - (var(--mha-page-padding, 1rem) * 2)));
+    --mha-dock-empty-width: min(
+      var(--mha-grid-container-width, var(--mha-grid-matrix-width, 44rem)),
+      calc(100% - (var(--mha-page-padding, 1rem) * 2))
+    );
     --mha-dock-empty-height: var(--mha-dock-unit-size);
     --mha-dock-empty-padding-block: min(var(--mha-grid-gap), 5%);
     --mha-dock-empty-padding-inline: var(--mha-grid-gap);
