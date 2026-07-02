@@ -1,11 +1,13 @@
 package app.mha.controlhub;
 
-import android.os.Bundle;
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Color;
+import android.os.Bundle;
+import android.view.View;
 import android.view.Window;
-import android.webkit.WebView;
 import android.view.WindowManager;
+import android.webkit.WebView;
 
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -20,13 +22,12 @@ public class MainActivity extends BridgeActivity {
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
-    // Apply window flags before BridgeActivity creates the splash/layout so
-    // the first visible frame starts edge-to-edge as well.
     applyEdgeToEdgeWindowFlags();
     super.onCreate(savedInstanceState);
     applyEdgeToEdgeWindowFlags();
     installInsetsListener();
-    republishSafeAreaInsets();
+    schedulePostResumeEdgeToEdgeSync();
+    republishSafeAreaInsets(true);
   }
 
   @Override
@@ -34,7 +35,8 @@ public class MainActivity extends BridgeActivity {
     super.onWindowFocusChanged(hasFocus);
     if (hasFocus) {
       applyEdgeToEdgeWindowFlags();
-      republishSafeAreaInsets();
+      schedulePostResumeEdgeToEdgeSync();
+      republishSafeAreaInsets(true);
     }
   }
 
@@ -42,13 +44,16 @@ public class MainActivity extends BridgeActivity {
   protected void onResume() {
     super.onResume();
     applyEdgeToEdgeWindowFlags();
-    republishSafeAreaInsets();
+    schedulePostResumeEdgeToEdgeSync();
+    republishSafeAreaInsets(true);
   }
 
   @Override
-  protected void onNewIntent(android.content.Intent intent) {
+  protected void onNewIntent(Intent intent) {
     super.onNewIntent(intent);
     applyEdgeToEdgeWindowFlags();
+    schedulePostResumeEdgeToEdgeSync();
+    republishSafeAreaInsets(true);
   }
 
   private void applyEdgeToEdgeWindowFlags() {
@@ -72,7 +77,15 @@ public class MainActivity extends BridgeActivity {
     WebView webView = getBridge() != null ? getBridge().getWebView() : null;
     if (webView != null) webView.setBackgroundColor(Color.TRANSPARENT);
     syncSystemBarAppearance();
-    hideStatusBar();
+  }
+
+  private void schedulePostResumeEdgeToEdgeSync() {
+    View decorView = getWindow().getDecorView();
+    decorView.post(() -> {
+      applyEdgeToEdgeWindowFlags();
+      ViewCompat.requestApplyInsets(decorView);
+      republishSafeAreaInsets(true);
+    });
   }
 
   private void installInsetsListener() {
@@ -82,7 +95,7 @@ public class MainActivity extends BridgeActivity {
         Insets safeInsets = windowInsets.getInsets(
           WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout()
         );
-        publishSafeAreaInsets(safeInsets);
+        publishSafeAreaInsets(safeInsets, false);
         return windowInsets;
       }
     );
@@ -104,32 +117,18 @@ public class MainActivity extends BridgeActivity {
     controller.setAppearanceLightNavigationBars(useDarkSystemBarIcons);
   }
 
-  private void hideStatusBar() {
-    Window window = getWindow();
-    WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(
-      window,
-      window.getDecorView()
-    );
-    if (controller == null) return;
-
-    controller.setSystemBarsBehavior(
-      WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-    );
-    controller.hide(WindowInsetsCompat.Type.statusBars());
-  }
-
-  private void republishSafeAreaInsets() {
+  private void republishSafeAreaInsets(boolean force) {
     WindowInsetsCompat rootInsets = ViewCompat.getRootWindowInsets(getWindow().getDecorView());
     if (rootInsets == null) return;
     Insets safeInsets = rootInsets.getInsets(
       WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout()
     );
-    publishSafeAreaInsets(safeInsets);
+    publishSafeAreaInsets(safeInsets, force);
   }
 
-  private void publishSafeAreaInsets(Insets insets) {
+  private void publishSafeAreaInsets(Insets insets, boolean force) {
     if (insets == null) return;
-    if (insets.equals(lastPublishedInsets)) return;
+    if (!force && insets.equals(lastPublishedInsets)) return;
     lastPublishedInsets = insets;
 
     WebView webView = getBridge() != null ? getBridge().getWebView() : null;
