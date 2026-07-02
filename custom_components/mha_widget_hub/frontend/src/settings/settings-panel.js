@@ -849,6 +849,7 @@ export function createSettingsPanel({
   iconShape = "auto",
   effectiveIconShape = "",
   hideHaSidebar = false,
+  showDockLabels = false,
   screensaverEnabled = false,
   screensaverDelay = 30000,
   screensaverPreview = false,
@@ -877,6 +878,7 @@ export function createSettingsPanel({
   onAccentPaletteExpandedChange,
   onIconShapeChange,
   onHideHaSidebarChange,
+  onShowDockLabelsChange,
   onScreensaverEnabledChange,
   onScreensaverDelayChange,
   onScreensaverPreviewChange,
@@ -980,6 +982,7 @@ export function createSettingsPanel({
 
   const sections = [];
   const showDesktopOnlyDockSettings = !isMobileLayout;
+  const supportsDockLabelToggle = themeStyle !== "oneui";
 
   if (!isScreensaverScope && settingsPage === "dock") {
     if (showDesktopOnlyDockSettings) {
@@ -989,6 +992,15 @@ export function createSettingsPanel({
           value: dockPosition,
           options: DOCK_POSITION_OPTIONS,
           onChange: onDockPositionChange,
+        }),
+      ]));
+    }
+    if (supportsDockLabelToggle) {
+      sections.push(createSection(t("settings.appearance", "Appearance"), [
+        createSwitch({
+          label: t("settings.showDockLabels", "Show dock labels"),
+          checked: showDockLabels,
+          onChange: onShowDockLabelsChange,
         }),
       ]));
     }

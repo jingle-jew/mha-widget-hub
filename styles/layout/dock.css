@@ -658,6 +658,53 @@
   }
 }
 
+:host([data-dock-labels="true"]:not([data-theme-style="oneui"])) {
+  --mha-dock-item-label-display: block;
+  --mha-dock-item-label-padding-inline: .12rem;
+}
+
+@media (min-width: 768px) {
+  :host([data-dock-labels="true"]:not([data-theme-style="oneui"])) .mha-dock {
+    --mha-dock-item-block-size: auto;
+    --mha-dock-item-min-block-size: calc(var(--mha-icon-size) + 1.05rem);
+    --mha-dock-item-padding-block: .18rem;
+    --mha-dock-item-overflow: hidden;
+  }
+
+  :host([data-dock-labels="true"]:not([data-theme-style="oneui"])) .mha-dock-item {
+    display: grid;
+    grid-template-rows: var(--mha-icon-size) auto;
+    align-content: center;
+    align-items: stretch;
+    justify-items: center;
+    row-gap: .18rem;
+  }
+
+  :host([data-dock-labels="true"]:not([data-theme-style="oneui"])) .mha-dock-item > .mha-icon {
+    align-self: end;
+    margin-inline: auto;
+  }
+
+  :host([data-dock-labels="true"]:not([data-theme-style="oneui"])) .mha-dock-item > .mha-dock-item-label {
+    inline-size: 100%;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    align-self: start;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  :host([data-dock-labels="true"][data-dock-position="bottom"]:not([data-theme-style="oneui"])) .mha-dock,
+  :host([data-dock-labels="true"][data-dock-position="bottom"]:not([data-theme-style="oneui"])) .mha-dock-zone > .mha-dock {
+    --mha-dock-empty-height: calc(var(--mha-icon-size) + 1.18rem + (var(--mha-dock-empty-padding-block) * 2));
+    block-size: auto;
+    min-block-size: var(--mha-dock-empty-height);
+    max-block-size: none;
+  }
+}
+
 /* Force dock glyph size at the symbol level so first paint does not rely on inherited fallback timing. */
 .mha-dock .mha-icon > .mha-icon-symbol {
   --mha-icon-symbol-size: 82%;

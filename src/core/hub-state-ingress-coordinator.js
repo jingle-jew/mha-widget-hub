@@ -2,6 +2,7 @@ import { createDeviceInsightsPublisher } from "../device-insights/device-insight
 import { readJson } from "./storage.js";
 import {
   POSITIONS,
+  getStoredDockLabels,
   getStoredDockPosition,
   getStoredHideHaSidebar,
   getStoredLanguageSetting,
@@ -117,6 +118,7 @@ export function createHubStateIngressCoordinator(host, {
     });
     host._dockPosition = getStoredDockPosition();
     host._hideHaSidebar = getStoredHideHaSidebar();
+    host._showDockLabels = getStoredDockLabels();
     host._language = getStoredLanguageSetting();
     host._configureI18n();
     host._applyHaSidebarMode(host._hideHaSidebar);

@@ -50,6 +50,7 @@ export function createHubRuntimeDefaults() {
     _mediaPageSettingsOpen: false,
     _dockPosition: "left",
     _hideHaSidebar: false,
+    _showDockLabels: false,
     _language: "auto",
     _customWallpapers: { light: null, dark: null },
     _pages: [],

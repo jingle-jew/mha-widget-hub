@@ -269,6 +269,7 @@ export function createRenderPipeline(host, options = {}) {
     host.dataset.layoutMode = layoutMode;
     host.dataset.layout = layout;
     host.dataset.dockPosition = host._dockPosition;
+    host.dataset.dockLabels = String(Boolean(host._showDockLabels));
     host.dataset.gridDensity = preset.density;
     host.dataset.gridUnits = String(units);
     host.dataset.logicalColumns = String(cols);

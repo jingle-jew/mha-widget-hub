@@ -8,6 +8,7 @@ import {
 } from "./src/core/mha-frontend-assets.js?v=phase1";
 import {
   ACTIVE_PAGE,
+  DOCK_LABELS,
   HIDE_HA_SIDEBAR,
   PAGES,
   POSITIONS,
@@ -68,6 +69,7 @@ import {
   toggleScreensaverPreviewState,
 } from "./src/screensaver/screensaver-preview-actions.js";
 import { applyHideHaSidebarSetting } from "./src/settings/ha-sidebar-setting.js";
+import { applyDockLabelsSetting } from "./src/settings/dock-labels-setting.js";
 import { openDockPageSettingsForPage } from "./src/settings/dock-page-settings.js";
 import { getStyleManifest } from "./src/styles/style-manifest.js";
 import { createDefaultPageConfig, isMediaPlayersPage, normalizeMediaPageConfig, PAGE_TYPES } from "./src/pages/page-types.js";
@@ -610,6 +612,12 @@ _applyHaSidebarMode(enabled=false){
 _applyHideHaSidebarFromSettings(enabled=false){
   return applyHideHaSidebarSetting(this,enabled,{
     storageKey:HIDE_HA_SIDEBAR,
+    writeStorageValueRef:writeStorageValue,
+  });
+}
+_applyDockLabelsFromSettings(enabled=false){
+  return applyDockLabelsSetting(this,enabled,{
+    storageKey:DOCK_LABELS,
     writeStorageValueRef:writeStorageValue,
   });
 }
