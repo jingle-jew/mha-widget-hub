@@ -25,6 +25,7 @@ export class WidgetSurfaceCoordinator {
     getHass = () => null,
     getEntityVisibilityConfig = () => null,
     getGridBounds = () => ({ units: 1, rowUnits: 1 }),
+    getEffectiveLayout = () => "desktop",
     getActiveWidgetPositions = () => null,
     isPositionMapValidForWidgets = () => false,
     normalizeWidgetsToGridBounds = (widgets) => widgets,
@@ -65,6 +66,7 @@ export class WidgetSurfaceCoordinator {
     this.getHass = (...args) => getHass(...args);
     this.getEntityVisibilityConfig = (...args) => getEntityVisibilityConfig(...args);
     this.getGridBounds = (...args) => getGridBounds(...args);
+    this.getEffectiveLayout = (...args) => getEffectiveLayout(...args);
     this.getActiveWidgetPositions = (...args) => getActiveWidgetPositions(...args);
     this.isPositionMapValidForWidgets = (...args) => isPositionMapValidForWidgets(...args);
     this.normalizeWidgetsToGridBounds = (...args) => normalizeWidgetsToGridBounds(...args);
@@ -93,11 +95,19 @@ export class WidgetSurfaceCoordinator {
     this.updateClockWidgetsFn = (...args) => updateClockWidgetsFn(...args);
   }
 
-  buildWidgetShellProps(widget, { units, position, widgetId = widget?.id || "" } = {}) {
+  buildWidgetShellProps(widget, {
+    units,
+    rows,
+    layout = this.getEffectiveLayout(),
+    position,
+    widgetId = widget?.id || "",
+  } = {}) {
     return {
       ...this.buildWidgetShellStateFn({
         widgetId,
         activeGridUnits: units,
+        activeGridRows: rows,
+        layout,
         isEditing: this.getIsEditing(),
         activeMoveWidgetId: this.getActiveMoveWidgetId(),
         position,
@@ -113,10 +123,20 @@ export class WidgetSurfaceCoordinator {
     };
   }
 
-  createWidgetElement(widget, { units, position } = {}) {
+  createWidgetElement(widget, {
+    units,
+    rows = this.getGridBounds().rowUnits,
+    layout = this.getEffectiveLayout(),
+    position,
+  } = {}) {
     const element = this.createWidgetShellFn(
       widget,
-      this.buildWidgetShellProps(widget, { units, position }),
+      this.buildWidgetShellProps(widget, {
+        units,
+        rows,
+        layout,
+        position,
+      }),
     );
     this.wireDrag(element, widget);
     return element;
@@ -136,11 +156,14 @@ export class WidgetSurfaceCoordinator {
       node.remove();
     });
 
-    const { units } = this.getGridBounds();
+    const { units, rowUnits } = this.getGridBounds();
+    const layout = this.getEffectiveLayout();
     const positions = this.getActiveWidgetPositions({ create: true });
     this.getWidgets().forEach((widget) => {
       grid.append(this.createWidgetElement(widget, {
         units,
+        rows: rowUnits,
+        layout,
         position: positions?.[widget.id],
       }));
     });
@@ -158,6 +181,7 @@ export class WidgetSurfaceCoordinator {
     const widget = this.normalizeStoredWidgetFn({ ...this.getPendingWidgetPlacement() });
     const positions = this.getActiveWidgetPositions({ create: true });
     const { units, rowUnits } = this.getGridBounds();
+    const layout = this.getEffectiveLayout();
     const nextPositions = {
       ...positions,
       [widget.id]: { x: Number(x) || 1, y: Number(y) || 1 },
@@ -179,6 +203,8 @@ export class WidgetSurfaceCoordinator {
     if (grid) {
       grid.append(this.createWidgetElement(widget, {
         units,
+        rows: rowUnits,
+        layout,
         position: nextPositions[widget.id],
       }));
       this.applyWidgetPositionsToDom(nextPositions);
@@ -253,10 +279,13 @@ export class WidgetSurfaceCoordinator {
       return false;
     }
 
-    const { units } = this.getGridBounds();
+    const { units, rowUnits } = this.getGridBounds();
+    const layout = this.getEffectiveLayout();
     const positions = this.getActiveWidgetPositions({ create: true });
     const next = this.createWidgetElement(widget, {
       units,
+      rows: rowUnits,
+      layout,
       position: positions?.[id],
     });
 
@@ -291,4 +320,3 @@ export class WidgetSurfaceCoordinator {
 export function createWidgetSurfaceCoordinator(options = {}) {
   return new WidgetSurfaceCoordinator(options);
 }
-

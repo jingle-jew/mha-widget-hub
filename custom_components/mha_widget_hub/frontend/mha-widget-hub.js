@@ -8,6 +8,7 @@ import {
 } from "./src/core/mha-frontend-assets.js?v=phase1";
 import {
   ACTIVE_PAGE,
+  DOCK_LABELS,
   HIDE_HA_SIDEBAR,
   PAGES,
   POSITIONS,
@@ -39,7 +40,15 @@ import { createScreensaverSettingsBridge } from "./src/screensaver/screensaver-s
 import { createWidgetLayoutStateCoordinator } from "./src/widgets/widget-layout-state-coordinator.js";
 import { createWidgetResizeCoordinator } from "./src/widgets/widget-resize-coordinator.js";
 import { createWidgetSurfaceCoordinator } from "./src/widgets/widget-surface-coordinator.js";
-import {DEFAULT_WIDGETS,getActiveGridRows,getActiveGridUnits,getEffectiveLayout,getLayoutMode,getGridPreset,normalizeWidgetForKind} from "./src/layout/layout-engine.js";
+import {
+  DEFAULT_WIDGETS,
+  getGridOrientation,
+  getGridPresetForLayout,
+  getLayoutMode,
+  normalizeGridOrientation,
+  normalizeWidgetForKind,
+} from "./src/layout/layout-engine.js";
+import { getLayoutForWidth } from "./src/layout/responsive.js";
 import { isPositionMapValidForWidgets } from "./src/layout/placement-geometry.js";
 import {
   doesWidgetLayoutFitGrid,
@@ -68,11 +77,14 @@ import {
   toggleScreensaverPreviewState,
 } from "./src/screensaver/screensaver-preview-actions.js";
 import { applyHideHaSidebarSetting } from "./src/settings/ha-sidebar-setting.js";
+import { applyDockLabelsSetting } from "./src/settings/dock-labels-setting.js";
 import { openDockPageSettingsForPage } from "./src/settings/dock-page-settings.js";
 import { getStyleManifest } from "./src/styles/style-manifest.js";
 import { createDefaultPageConfig, isMediaPlayersPage, normalizeMediaPageConfig, PAGE_TYPES } from "./src/pages/page-types.js";
 
-const MHA_FRONTEND_ROOT_URL = new URL(".", import.meta.url);
+const MHA_FRONTEND_ROOT_URL = window.__MHA_FRONTEND_ROOT_URL__
+  ? new URL(window.__MHA_FRONTEND_ROOT_URL__)
+  : new URL(".", import.meta.url);
 const MHA_FRONTEND_VERSION = new URL(import.meta.url).searchParams.get("v");
 
 const MHA_STYLE_MANIFEST = getStyleManifest();
@@ -278,8 +290,8 @@ constructor(){
     setWidgetPositions:(positions)=>{this._widgetPositions=positions;},
     getActivePageId:()=>this._activePageId,
     getGridBounds:()=>this._getGridBounds(),
-    getEffectiveLayout:()=>getEffectiveLayout(this),
-    getRuntimeGridPreset:()=>this._getRuntimeGridPreset(),
+    getEffectiveLayout:()=>this._getRuntimeLayout(),
+    getLogicalGridPreset:()=>this._getLogicalGridPreset(),
     getWidgetAreaMetrics:()=>this._getWidgetAreaMetrics(),
     isMobileLayout:()=>this._isMobileLauncherLayout(),
     recordPersistenceResult:(success)=>this._recordPersistenceResult(success),
@@ -292,7 +304,7 @@ constructor(){
     getWidgets:()=>this._widgets,
     setWidgets:(widgets)=>{this._widgets=widgets;},
     getGridMetrics:()=>this._getGridMetrics(),
-    getActiveGridUnits:()=>getActiveGridUnits(this),
+    getActiveGridUnits:()=>this._getRuntimeGridUnits(),
     doesWidgetLayoutFitGrid:(widgets)=>this._doesWidgetLayoutFitGrid(widgets),
     normalizeWidgetsToGridBounds:(widgets)=>this._normalizeWidgetsToGridBounds(widgets),
     clampWidgetSizeToGridBounds:(widget,size)=>this._clampWidgetSizeToGridBounds(widget,size),
@@ -317,6 +329,7 @@ constructor(){
     getHass:()=>this._hass,
     getEntityVisibilityConfig:()=>this._entityVisibilityConfig,
     getGridBounds:()=>this._getGridBounds(),
+    getEffectiveLayout:()=>this._getRuntimeLayout(),
     getActiveWidgetPositions:(options)=>this._getActiveWidgetPositions(options),
     isPositionMapValidForWidgets:(positions,widgets,units,rowUnits)=>this._isPositionMapValidForWidgets(positions,widgets,units,rowUnits),
     normalizeWidgetsToGridBounds:(widgets)=>this._normalizeWidgetsToGridBounds(widgets),
@@ -369,9 +382,8 @@ constructor(){
   });
   this._gridRuntime=createGridRuntime({
     host:this,
-    getLayoutMode,
-    getEffectiveLayout,
-    getGridPreset,
+    getLayoutMode:()=>this._getRuntimeLayoutMode(),
+    getEffectiveLayout:()=>this._getRuntimeLayout(),
     getDockPosition:()=>this._dockPosition,
     isMobileLayout:()=>this._isMobileLauncherLayout(),
     getWidgets:()=>this._widgets,
@@ -610,6 +622,12 @@ _applyHaSidebarMode(enabled=false){
 _applyHideHaSidebarFromSettings(enabled=false){
   return applyHideHaSidebarSetting(this,enabled,{
     storageKey:HIDE_HA_SIDEBAR,
+    writeStorageValueRef:writeStorageValue,
+  });
+}
+_applyDockLabelsFromSettings(enabled=false){
+  return applyDockLabelsSetting(this,enabled,{
+    storageKey:DOCK_LABELS,
     writeStorageValueRef:writeStorageValue,
   });
 }
@@ -1068,15 +1086,43 @@ _observeLayoutSize(){
 _getWidgetAreaMetrics(){
   return this._gridRuntime.getWidgetAreaMetrics();
 }
-_getDockBottomColumnBonus(layout,base,metrics={}){
-  return this._gridRuntime.getDockBottomColumnBonus(layout,base,metrics);
-}
 
+_getShellViewportMetrics(){
+  const rect=this.getBoundingClientRect?.()||{};
+  return {
+    width:Math.max(0,Number(rect.width)||window.innerWidth||0),
+    height:Math.max(0,Number(rect.height)||window.innerHeight||0),
+  };
+}
+_getRuntimeLayoutMode(){
+  const datasetMode=this.dataset?.layoutMode;
+  if(datasetMode&&datasetMode!=="auto")return datasetMode;
+  return getLayoutMode(this);
+}
+_getGridOrientation(){
+  const publishedOrientation=this.dataset?.gridOrientation;
+  if(publishedOrientation)return normalizeGridOrientation(publishedOrientation);
+  return getGridOrientation(this._getShellViewportMetrics());
+}
+_getRuntimeLayout(){
+  const publishedLayout=this.dataset?.layout;
+  if(publishedLayout)return publishedLayout;
+  return getLayoutForWidth(
+    this._getShellViewportMetrics().width,
+    {layoutMode:this._getRuntimeLayoutMode()},
+  );
+}
 _isMobileDefaultLayout(){
-  return getEffectiveLayout(this)==="mobile";
+  return this._getRuntimeLayout()==="mobile";
+}
+_getLogicalGridPreset(){
+  return getGridPresetForLayout(
+    this._getRuntimeLayout(),
+    this._getGridOrientation(),
+  );
 }
 _getRuntimeGridPreset(){
-  return this._gridRuntime.getRuntimeGridPreset();
+  return this._getLogicalGridPreset();
 }
 _getRuntimeGridUnits(){
   return this._gridRuntime.getGridBounds().units;
@@ -1100,7 +1146,9 @@ _getGridBounds(){
  */
 _doesWidgetLayoutFitGrid(widgets=this._widgets){
   const bounds=this._getGridBounds();
-  return doesWidgetLayoutFitGrid(widgets,bounds.units,bounds.rowUnits);
+  return doesWidgetLayoutFitGrid(widgets,bounds.units,bounds.rowUnits,{
+    layout:this._isMobileLauncherLayout()?"mobile":"desktop",
+  });
 }
 _findFittingResize(current,requested){
   return this._widgetResizeCoordinator.findFittingResize(current,requested);
@@ -1132,8 +1180,8 @@ _clearDropState(){
 _wireDrag(el){
   return getWidgetInteractionSurfaceCoordinatorForHost(this).wireDrag(el);
 }
-_createWidgetElement(widget,{units,position}){
-  return this._widgetSurfaceCoordinator.createWidgetElement(widget,{units,position});
+_createWidgetElement(widget,{units,rows,layout,position}){
+  return this._widgetSurfaceCoordinator.createWidgetElement(widget,{units,rows,layout,position});
 }
 _createWidgetPlaceholder(widget,options){
   return getRenderPipelineForHost(this).createWidgetPlaceholder(widget,options);

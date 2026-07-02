@@ -10,7 +10,7 @@ export function packWidgets(
   widgets,
   units,
   rowUnits,
-  { allowUnboundedRows = false } = {},
+  { allowUnboundedRows = false, layout = allowUnboundedRows ? "mobile" : "desktop" } = {},
 ) {
   const maxRows = allowUnboundedRows
     ? Number.POSITIVE_INFINITY
@@ -40,7 +40,7 @@ export function packWidgets(
   };
 
   for (const widget of widgets) {
-    const size = normalizeWidgetForKind(widget);
+    const size = normalizeWidgetForKind(widget, { units, rowUnits, layout });
     const width = Math.min(units, size.w);
     const height = size.h;
     let placed = null;
@@ -68,6 +68,7 @@ export function findWidgetAtCandidatePosition(
   candidateRect,
   positions,
   units,
+  context = {},
 ) {
   return widgets.find(widget => {
     if (widget.id === ignoredWidgetId) return false;
@@ -75,23 +76,23 @@ export function findWidgetAtCandidatePosition(
     if (!position) return false;
     return rectsOverlap(
       candidateRect,
-      getWidgetRectFromPosition(widget, position, units),
+      getWidgetRectFromPosition(widget, position, units, context),
     );
   }) || null;
 }
 
-export function hasNoWidgetOverlaps(widgets, positions, units) {
+export function hasNoWidgetOverlaps(widgets, positions, units, context = {}) {
   for (let index = 0; index < widgets.length; index += 1) {
     const widget = widgets[index];
     const position = positions?.[widget.id];
     if (!position) continue;
-    const rect = getWidgetRectFromPosition(widget, position, units);
+    const rect = getWidgetRectFromPosition(widget, position, units, context);
 
     for (let otherIndex = index + 1; otherIndex < widgets.length; otherIndex += 1) {
       const other = widgets[otherIndex];
       const otherPosition = positions?.[other.id];
       if (!otherPosition) continue;
-      const otherRect = getWidgetRectFromPosition(other, otherPosition, units);
+      const otherRect = getWidgetRectFromPosition(other, otherPosition, units, context);
       if (rectsOverlap(rect, otherRect)) return false;
     }
   }
@@ -104,12 +105,13 @@ export function getAdjacentWidgetGroupInDirection(
   direction,
   positions,
   units,
+  context = {},
 ) {
   const widget = widgets.find(item => item.id === widgetId);
   const position = positions?.[widgetId];
   if (!widget || !position) return [];
 
-  const activeRect = getWidgetRectFromPosition(widget, position, units);
+  const activeRect = getWidgetRectFromPosition(widget, position, units, context);
   const isInForwardHalfPlane = rect => {
     if (direction === "right") return rect.x >= activeRect.x + activeRect.w;
     if (direction === "left") return rect.x + rect.w <= activeRect.x;
@@ -132,7 +134,7 @@ export function getAdjacentWidgetGroupInDirection(
     .filter(other => other.id !== widgetId && positions?.[other.id])
     .map(other => ({
       widget: other,
-      rect: getWidgetRectFromPosition(other, positions[other.id], units),
+      rect: getWidgetRectFromPosition(other, positions[other.id], units, context),
     }))
     .filter(item => isInForwardHalfPlane(item.rect) && overlapsBand(item.rect));
 
@@ -148,7 +150,7 @@ export function getAdjacentWidgetGroupInDirection(
   const nearestEdge = Math.min(...candidates.map(edgeValue));
   const seed = candidates.filter(item => edgeValue(item) === nearestEdge);
   const group = new Map(seed.map(item => [item.widget.id, item.widget]));
-  let bounds = getGroupBoundingRect([...group.values()], positions, units);
+  let bounds = getGroupBoundingRect([...group.values()], positions, units, context);
 
   let changed = true;
   while (changed) {
@@ -187,14 +189,15 @@ export function getBandParticipantsForTranslatedSwap(
   group,
   positions,
   units,
+  context = {},
 ) {
   const ids = new Set([widgetId, ...group.map(widget => widget.id)]);
   const active = widgets.find(widget => widget.id === widgetId);
   const activePosition = positions?.[widgetId];
   if (!active || !activePosition) return [];
 
-  const activeRect = getWidgetRectFromPosition(active, activePosition, units);
-  const groupRect = getGroupBoundingRect(group, positions, units);
+  const activeRect = getWidgetRectFromPosition(active, activePosition, units, context);
+  const groupRect = getGroupBoundingRect(group, positions, units, context);
   if (!groupRect) return [];
 
   const band = {
@@ -210,7 +213,7 @@ export function getBandParticipantsForTranslatedSwap(
     .filter(widget => ids.has(widget.id))
     .map(widget => ({
       widget,
-      rect: getWidgetRectFromPosition(widget, positions[widget.id], units),
+      rect: getWidgetRectFromPosition(widget, positions[widget.id], units, context),
     }))
     .filter(item => rectsOverlap(item.rect, band));
 }
@@ -223,14 +226,16 @@ export function packTranslatedSwapBand(
   positions,
   units,
   rowUnits,
-  { allowUnboundedRows = false } = {},
+  { allowUnboundedRows = false, layout = allowUnboundedRows ? "mobile" : "desktop" } = {},
 ) {
+  const context = { rowUnits, layout };
   const participants = getBandParticipantsForTranslatedSwap(
     widgets,
     widgetId,
     group,
     positions,
     units,
+    context,
   );
   if (!participants.length) return null;
 
@@ -238,7 +243,7 @@ export function packTranslatedSwapBand(
   if (!activeItem) return null;
 
   const activeRect = activeItem.rect;
-  const groupRect = getGroupBoundingRect(group, positions, units);
+  const groupRect = getGroupBoundingRect(group, positions, units, context);
   if (!groupRect) return null;
 
   const groupItems = participants.filter(item => item.widget.id !== widgetId);
@@ -306,17 +311,18 @@ export function getDirectNeighborInDirection(
   direction,
   positions,
   units,
+  context = {},
 ) {
   const widget = widgets.find(item => item.id === widgetId);
   const position = positions?.[widgetId];
   if (!widget || !position) return null;
 
-  const activeRect = getWidgetRectFromPosition(widget, position, units);
+  const activeRect = getWidgetRectFromPosition(widget, position, units, context);
   const candidates = widgets
     .filter(other => other.id !== widgetId && positions?.[other.id])
     .map(other => ({
       widget: other,
-      rect: getWidgetRectFromPosition(other, positions[other.id], units),
+      rect: getWidgetRectFromPosition(other, positions[other.id], units, context),
     }))
     .filter(item => {
       if (direction === "right") {
@@ -375,11 +381,12 @@ export function getAvailableDropSlotsForCandidate(
   currentPosition,
   units,
   rowUnits,
-  { allowUnboundedRows = false } = {},
+  { allowUnboundedRows = false, layout = allowUnboundedRows ? "mobile" : "desktop" } = {},
 ) {
   if (!candidateWidget) return [];
 
-  const size = normalizeWidgetForKind(candidateWidget);
+  const context = { rowUnits, layout };
+  const size = normalizeWidgetForKind(candidateWidget, { units, rowUnits, layout });
   const width = Math.min(units, Number(size.w) || 1);
   const height = Math.max(1, Number(size.h) || 1);
   const ignoredWidgetId = candidateWidget.id;
@@ -388,7 +395,7 @@ export function getAvailableDropSlotsForCandidate(
     if (widget.id === ignoredWidgetId) return max;
     const position = positions?.[widget.id];
     if (!position) return max;
-    const rect = getWidgetRectFromPosition(widget, position, units);
+    const rect = getWidgetRectFromPosition(widget, position, units, context);
     return Math.max(max, rect.y + rect.h - 1);
   }, 0);
   const maxRow = allowUnboundedRows
@@ -428,14 +435,23 @@ export function getAvailableDropSlotsForCandidate(
   return slots;
 }
 
-export function doesWidgetLayoutFitGrid(widgets, columns, rows) {
+export function doesWidgetLayoutFitGrid(
+  widgets,
+  columns,
+  rows,
+  { layout = "desktop" } = {},
+) {
   const occupied = Array.from(
     { length: rows },
     () => Array(columns).fill(false),
   );
 
   for (const rawWidget of widgets) {
-    const widget = normalizeWidgetForKind(rawWidget);
+    const widget = normalizeWidgetForKind(rawWidget, {
+      units: columns,
+      rowUnits: rows,
+      layout,
+    });
     const width = Math.max(1, Math.min(columns, Number(widget.w) || 1));
     const height = Math.max(1, Math.min(rows, Number(widget.h) || 1));
     let placed = false;

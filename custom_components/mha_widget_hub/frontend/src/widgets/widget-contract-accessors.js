@@ -92,6 +92,7 @@ export function getWidgetConfigTypeFromDefinition(widget = {}, { getWidgetDefini
 export function normalizeRegisteredWidgetSizeFromDefinition(
   widget = {},
   normalizeWidgetSize,
+  context = {},
   {
     getWidgetDefinition,
     getWidgetCreationDefaults,
@@ -102,5 +103,6 @@ export function normalizeRegisteredWidgetSizeFromDefinition(
   return normalizeRegisteredWidgetSizeWithDefinition(widget, normalizeWidgetSize, {
     definition,
     defaults,
+    context,
   });
 }

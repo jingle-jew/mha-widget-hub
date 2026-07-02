@@ -2,18 +2,92 @@ import assert from "node:assert/strict";
 import { test } from "@playwright/test";
 
 const DEV_URL = "http://127.0.0.1:4173/dev.html";
+const VIEWPORT_EPSILON = 2;
 
-async function getMhaGeometry(page) {
+async function openMha(page) {
   await page.goto(DEV_URL);
   await page.locator("mha-widget-hub").waitFor({ state: "attached" });
+  await page.waitForFunction(() => Boolean(customElements.get("mha-widget-hub")));
+  await page.locator("mha-widget-hub").evaluate((host) => {
+    host.requestRender?.();
+    host._scheduleSquareUnitSync?.();
+    host.classList.remove(
+      "is-boot-revealing",
+      "is-theme-backdrop-crossfading",
+      "is-responsive-relayouting",
+    );
+  });
 
   await page.waitForFunction(() => {
     const host = document.querySelector("mha-widget-hub");
-    const root = host?.shadowRoot || host;
-    return Boolean(root?.querySelector?.(".mha-shell"));
+    const root = host?.shadowRoot;
+    const shell = root?.querySelector?.(".mha-shell");
+    const panel = root?.querySelector?.(".mha-page-panel--grid");
+    const grid = root?.querySelector?.(".mha-grid");
+    const mobileDock = root?.querySelector?.(".mha-mobile-dock");
+    const panelBox = panel?.getBoundingClientRect?.();
+    const gridBox = grid?.getBoundingClientRect?.();
+    return Boolean(
+      shell
+      && (grid || mobileDock)
+      && !host?.classList?.contains?.("is-boot-revealing")
+      && (!panel || panelBox?.height > 0)
+      && (!grid || gridBox?.height > 0),
+    );
   });
+}
 
+async function setDockPosition(page, dockPosition) {
+  await page.locator("mha-widget-hub").evaluate((host, nextDockPosition) => {
+    host._dockPosition = nextDockPosition;
+    host.dataset.dockPosition = nextDockPosition;
+    host.setAttribute("data-dock-position", nextDockPosition);
+    globalThis.localStorage?.setItem?.("mha-dock-position", nextDockPosition);
+    host.requestRender?.();
+    host._scheduleSquareUnitSync?.();
+    host.classList.remove(
+      "is-boot-revealing",
+      "is-theme-backdrop-crossfading",
+      "is-responsive-relayouting",
+    );
+  }, dockPosition);
+
+  await page.waitForFunction((nextDockPosition) => {
+    const host = document.querySelector("mha-widget-hub");
+    const root = host?.shadowRoot || host;
+    const panel = root?.querySelector?.(".mha-page-panel--grid");
+    const grid = root?.querySelector?.(".mha-grid");
+    const panelBox = panel?.getBoundingClientRect?.();
+    const gridBox = grid?.getBoundingClientRect?.();
+    const panelFrameWidth = Number(host?.dataset?.panelFrameWidth || 0);
+    const panelFrameHeight = Number(host?.dataset?.panelFrameHeight || 0);
+    return (
+      host?.dataset?.dockPosition === nextDockPosition
+      && host?.dataset?.panelFrameWidth
+      && host?.dataset?.gridContainerWidth
+      && !host?.classList?.contains?.("is-responsive-relayouting")
+      && panel
+      && grid
+      && panelBox?.height > 0
+      && gridBox?.height > 0
+      && Math.abs(panelFrameWidth - panelBox.width) <= 2
+      && Math.abs(panelFrameHeight - panelBox.height) <= 2
+    );
+  }, dockPosition);
+}
+
+async function getMhaGeometry(page) {
+  await openMha(page);
+  return readMhaGeometry(page);
+}
+
+async function readMhaGeometry(page) {
   return page.locator("mha-widget-hub").evaluate((host) => {
+    host.classList.remove(
+      "is-boot-revealing",
+      "is-theme-backdrop-crossfading",
+      "is-responsive-relayouting",
+    );
     const toBox = (element) => {
       const box = element?.getBoundingClientRect?.();
       if (!box) return null;
@@ -28,6 +102,18 @@ async function getMhaGeometry(page) {
     };
 
     const root = host.shadowRoot || host;
+    const panel = root?.querySelector(".mha-page-panel--grid");
+    const grid = root?.querySelector(".mha-grid");
+    const desktopDock = root?.querySelector(".mha-dock");
+    const mobileDock = root?.querySelector(".mha-mobile-dock");
+    const dock = (
+      mobileDock?.getBoundingClientRect?.().width > 0
+        ? mobileDock
+        : desktopDock
+    ) || mobileDock || desktopDock;
+    const pxNumber = (value) => Number.parseFloat(String(value || "").trim()) || 0;
+    const hostStyle = getComputedStyle(host);
+    const gridStyle = grid ? getComputedStyle(grid) : null;
 
     return {
       viewport: {
@@ -41,11 +127,51 @@ async function getMhaGeometry(page) {
       host: toBox(host),
       shell: toBox(root?.querySelector(".mha-shell")),
       workspace: toBox(root?.querySelector(".mha-workspace")),
-      grid: toBox(root?.querySelector(".mha-grid")),
+      statusBar: toBox(root?.querySelector(".mha-status-bar")),
+      panel: toBox(panel),
+      grid: toBox(grid),
       dockZone: toBox(root?.querySelector(".mha-dock-zone")),
-      dock: toBox(root?.querySelector(".mha-dock")),
+      dock: toBox(dock),
+      hostDataset: {
+        layout: host?.dataset?.layout || "",
+        dockPosition: host?.dataset?.dockPosition || "",
+        logicalColumns: Number(host?.dataset?.logicalColumns || 0),
+        logicalRows: Number(host?.dataset?.logicalRows || 0),
+        panelFrameWidth: Number(host?.dataset?.panelFrameWidth || 0),
+        panelFrameHeight: Number(host?.dataset?.panelFrameHeight || 0),
+        gridContainerWidth: Number(host?.dataset?.gridContainerWidth || 0),
+        gridContainerHeight: Number(host?.dataset?.gridContainerHeight || 0),
+        gridTrackWidth: Number(host?.dataset?.gridTrackWidth || 0),
+        gridTrackHeight: Number(host?.dataset?.gridTrackHeight || 0),
+      },
+      hostVars: {
+        panelFrameWidth: pxNumber(hostStyle?.getPropertyValue?.("--mha-panel-frame-width")),
+        panelFrameHeight: pxNumber(hostStyle?.getPropertyValue?.("--mha-panel-frame-height")),
+        gridContainerWidth: pxNumber(hostStyle?.getPropertyValue?.("--mha-grid-container-width")),
+        gridContainerHeight: pxNumber(hostStyle?.getPropertyValue?.("--mha-grid-container-height")),
+        gridTrackWidth: pxNumber(hostStyle?.getPropertyValue?.("--mha-grid-track-width")),
+        gridTrackHeight: pxNumber(hostStyle?.getPropertyValue?.("--mha-grid-track-height")),
+      },
+      gridVars: {
+        panelFrameWidth: pxNumber(gridStyle?.getPropertyValue?.("--mha-panel-frame-width")),
+        panelFrameHeight: pxNumber(gridStyle?.getPropertyValue?.("--mha-panel-frame-height")),
+        gridContainerWidth: pxNumber(gridStyle?.getPropertyValue?.("--mha-grid-container-width")),
+        gridContainerHeight: pxNumber(gridStyle?.getPropertyValue?.("--mha-grid-container-height")),
+        gridTrackWidth: pxNumber(gridStyle?.getPropertyValue?.("--mha-grid-track-width")),
+        gridTrackHeight: pxNumber(gridStyle?.getPropertyValue?.("--mha-grid-track-height")),
+      },
+      gridStyle: {
+        justifyContent: gridStyle?.justifyContent || "",
+      },
     };
   });
+}
+
+function assertNear(actual, expected, tolerance, message) {
+  assert.ok(
+    Math.abs(actual - expected) <= tolerance,
+    `${message}: expected ${expected} ±${tolerance}, got ${actual}`,
+  );
 }
 
 function assertVisibleBox(box, name) {
@@ -58,15 +184,45 @@ function assertHorizontalBox(box, viewport, name) {
   assert.ok(box, `${name} should exist`);
   assert.ok(box.width > 0, `${name} should have width`);
   assert.ok(box.x >= 0, `${name} should not start before viewport left`);
-  assert.ok(box.right <= viewport.width + 1, `${name} should not overflow viewport right`);
+  assert.ok(
+    box.right <= viewport.width + VIEWPORT_EPSILON,
+    `${name} should not overflow viewport right`,
+  );
 }
 
 function assertInsideViewport(box, viewport, name) {
   assertVisibleBox(box, name);
   assert.ok(box.x >= 0, `${name} should not start before viewport left`);
   assert.ok(box.y >= 0, `${name} should not start before viewport top`);
-  assert.ok(box.right <= viewport.width + 1, `${name} should not overflow viewport right`);
-  assert.ok(box.bottom <= viewport.height + 1, `${name} should not overflow viewport bottom`);
+  assert.ok(
+    box.right <= viewport.width + VIEWPORT_EPSILON,
+    `${name} should not overflow viewport right`,
+  );
+  assert.ok(
+    box.bottom <= viewport.height + VIEWPORT_EPSILON,
+    `${name} should not overflow viewport bottom`,
+  );
+}
+
+function assertBoxWithin(box, bounds, tolerance, name) {
+  assertVisibleBox(box, name);
+  assertVisibleBox(bounds, `${name} bounds`);
+  assert.ok(
+    box.x >= bounds.x - tolerance,
+    `${name} should stay inside bounds on the left`,
+  );
+  assert.ok(
+    box.y >= bounds.y - tolerance,
+    `${name} should stay inside bounds on the top`,
+  );
+  assert.ok(
+    box.right <= bounds.right + tolerance,
+    `${name} should stay inside bounds on the right`,
+  );
+  assert.ok(
+    box.bottom <= bounds.bottom + tolerance,
+    `${name} should stay inside bounds on the bottom`,
+  );
 }
 
 test.describe("layout geometry smoke", () => {
@@ -111,6 +267,190 @@ test.describe("mobile layout geometry smoke", () => {
     assert.ok(
       geometry.document.width <= geometry.viewport.width + 1,
       `document width ${geometry.document.width} should fit viewport ${geometry.viewport.width}`,
+    );
+  });
+});
+
+test.describe("tablet dock geometry contract", () => {
+  test.use({ viewport: { width: 1133, height: 744 } });
+
+  test("panel, grid container, and logical matrix stay coherent across dock positions", async ({ page }) => {
+    await openMha(page);
+
+    const geometries = {};
+    for (const dockPosition of ["left", "right", "bottom"]) {
+      await setDockPosition(page, dockPosition);
+      geometries[dockPosition] = await readMhaGeometry(page);
+    }
+
+    for (const dockPosition of ["left", "right", "bottom"]) {
+      const geometry = geometries[dockPosition];
+      assert.equal(geometry.hostDataset.layout, "tablet");
+      assert.equal(geometry.hostDataset.dockPosition, dockPosition);
+      assert.equal(geometry.hostDataset.logicalColumns, 6);
+      assert.equal(geometry.hostDataset.logicalRows, 4);
+
+      assertVisibleBox(geometry.panel, `${dockPosition} panel`);
+      assertVisibleBox(geometry.grid, `${dockPosition} grid`);
+      assertVisibleBox(geometry.statusBar, `${dockPosition} status bar`);
+      assertVisibleBox(geometry.dockZone, `${dockPosition} dock zone`);
+      assertVisibleBox(geometry.dock, `${dockPosition} dock`);
+      assertBoxWithin(
+        geometry.dock,
+        geometry.dockZone,
+        2,
+        `${dockPosition} dock`,
+      );
+      assertNear(
+        geometry.grid.width,
+        geometry.panel.width,
+        1,
+        `${dockPosition} grid width should match panel width`,
+      );
+      assertNear(
+        geometry.grid.height,
+        geometry.panel.height,
+        1,
+        `${dockPosition} grid height should match panel height`,
+      );
+
+      assertNear(
+        geometry.hostDataset.panelFrameWidth,
+        geometry.panel.width,
+        1,
+        `${dockPosition} host panel-frame width dataset should match panel box`,
+      );
+      assertNear(
+        geometry.hostDataset.panelFrameHeight,
+        geometry.panel.height,
+        1,
+        `${dockPosition} host panel-frame height dataset should match panel box`,
+      );
+      assertNear(
+        geometry.hostDataset.gridContainerWidth,
+        geometry.panel.width,
+        1,
+        `${dockPosition} host grid-container width dataset should match panel box`,
+      );
+      assertNear(
+        geometry.hostDataset.gridContainerHeight,
+        geometry.panel.height,
+        1,
+        `${dockPosition} host grid-container height dataset should match panel box`,
+      );
+      assertNear(
+        geometry.hostVars.panelFrameWidth,
+        geometry.panel.width,
+        1,
+        `${dockPosition} host panel-frame width var should match panel box`,
+      );
+      assertNear(
+        geometry.hostVars.panelFrameHeight,
+        geometry.panel.height,
+        1,
+        `${dockPosition} host panel-frame height var should match panel box`,
+      );
+      assertNear(
+        geometry.hostVars.gridContainerWidth,
+        geometry.panel.width,
+        1,
+        `${dockPosition} host grid-container width var should match panel box`,
+      );
+      assertNear(
+        geometry.hostVars.gridContainerHeight,
+        geometry.panel.height,
+        1,
+        `${dockPosition} host grid-container height var should match panel box`,
+      );
+      assertNear(
+        geometry.gridVars.panelFrameWidth,
+        geometry.panel.width,
+        1,
+        `${dockPosition} grid panel-frame width var should match panel box`,
+      );
+      assertNear(
+        geometry.gridVars.panelFrameHeight,
+        geometry.panel.height,
+        1,
+        `${dockPosition} grid panel-frame height var should match panel box`,
+      );
+      assertNear(
+        geometry.gridVars.gridContainerWidth,
+        geometry.panel.width,
+        1,
+        `${dockPosition} grid grid-container width var should match panel box`,
+      );
+      assertNear(
+        geometry.gridVars.gridContainerHeight,
+        geometry.panel.height,
+        1,
+        `${dockPosition} grid grid-container height var should match panel box`,
+      );
+      assertNear(
+        geometry.hostVars.panelFrameWidth,
+        geometry.gridVars.panelFrameWidth,
+        1,
+        `${dockPosition} host and grid panel-frame vars should agree`,
+      );
+      assertNear(
+        geometry.hostVars.gridTrackWidth,
+        geometry.gridVars.gridTrackWidth,
+        1,
+        `${dockPosition} host and grid track-width vars should agree`,
+      );
+      assertNear(
+        geometry.gridVars.gridContainerWidth,
+        geometry.panel.width,
+        1,
+        `${dockPosition} grid grid-container width var should match panel box`,
+      );
+      assertNear(
+        geometry.gridVars.gridContainerHeight,
+        geometry.panel.height,
+        1,
+        `${dockPosition} grid grid-container height var should match panel box`,
+      );
+      assert.ok(
+        geometry.gridVars.gridTrackWidth <= geometry.gridVars.gridContainerWidth + 1,
+        `${dockPosition} grid tracks should fit within the container width`,
+      );
+      assert.ok(
+        geometry.gridVars.gridTrackHeight <= geometry.gridVars.gridContainerHeight + 1,
+        `${dockPosition} grid tracks should fit within the container height`,
+      );
+      assert.ok(
+        geometry.panel.y >= geometry.statusBar.bottom - 1,
+        `${dockPosition} panel should stay below the status bar`,
+      );
+      assert.ok(
+        geometry.dock.y >= geometry.statusBar.bottom - 1,
+        `${dockPosition} dock should stay below the status bar`,
+      );
+    }
+
+    assert.equal(geometries.left.gridStyle.justifyContent, "end");
+    assert.equal(geometries.right.gridStyle.justifyContent, "start");
+    assert.equal(geometries.bottom.gridStyle.justifyContent, "center");
+
+    assertNear(
+      geometries.left.panel.height,
+      geometries.right.panel.height,
+      1,
+      "side docks should preserve the same panel height",
+    );
+    assert.ok(
+      geometries.bottom.panel.height < geometries.left.panel.height,
+      "bottom dock should reduce the usable panel height",
+    );
+    assertNear(
+      geometries.left.panel.width,
+      geometries.right.panel.width,
+      1,
+      "side docks should preserve the same panel width",
+    );
+    assert.ok(
+      geometries.bottom.panel.width > geometries.left.panel.width,
+      "bottom dock should preserve more usable width than side docks",
     );
   });
 });

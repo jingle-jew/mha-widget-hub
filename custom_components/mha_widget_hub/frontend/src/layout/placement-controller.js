@@ -71,6 +71,10 @@ export class PlacementController {
     rowUnits,
   ) {
     const widgets = this.getWidgets();
+    const context = {
+      rowUnits,
+      layout: this.isMobileLayout() ? "mobile" : "desktop",
+    };
     const active = widgets.find(widget => widget.id === widgetId);
     const activePosition = positions?.[widgetId];
     if (!active || !activePosition) return false;
@@ -79,6 +83,7 @@ export class PlacementController {
       active,
       activePosition,
       units,
+      context,
     );
     const neighbor = getDirectNeighborInDirection(
       widgets,
@@ -86,6 +91,7 @@ export class PlacementController {
       direction,
       positions,
       units,
+      context,
     );
     if (!neighbor) return false;
 
@@ -148,23 +154,28 @@ export class PlacementController {
     rowUnits,
   ) {
     const widgets = this.getWidgets();
+    const context = {
+      rowUnits,
+      layout: this.isMobileLayout() ? "mobile" : "desktop",
+    };
     const widget = widgets.find(item => item.id === widgetId);
     const current = positions?.[widgetId];
     if (!widget || !current) return false;
 
-    const activeRect = getWidgetRectFromPosition(widget, current, units);
+    const activeRect = getWidgetRectFromPosition(widget, current, units, context);
     const group = getAdjacentWidgetGroupInDirection(
       widgets,
       widgetId,
       direction,
       positions,
       units,
+      context,
     );
-    if (!group.length || !isGroupInternallyValid(group, positions, units)) {
+    if (!group.length || !isGroupInternallyValid(group, positions, units, context)) {
       return false;
     }
 
-    const groupRect = getGroupBoundingRect(group, positions, units);
+    const groupRect = getGroupBoundingRect(group, positions, units, context);
     if (!groupRect) return false;
 
     const isAxisAdjacent = (
@@ -199,7 +210,10 @@ export class PlacementController {
       positions,
       units,
       rowUnits,
-      { allowUnboundedRows: this.isMobileLayout() },
+      {
+        allowUnboundedRows: this.isMobileLayout(),
+        layout: context.layout,
+      },
     );
     if (!packedPositions) return false;
 
@@ -248,7 +262,15 @@ export class PlacementController {
     if (!delta) return false;
 
     const { units, rowUnits } = this.getGridBounds();
-    const size = normalizeWidgetForKind(widget);
+    const context = {
+      rowUnits,
+      layout: this.isMobileLayout() ? "mobile" : "desktop",
+    };
+    const size = normalizeWidgetForKind(widget, {
+      units,
+      rowUnits,
+      layout: context.layout,
+    });
     const width = Math.min(units, size.w);
     const height = size.h;
     const currentRect = {
@@ -294,6 +316,7 @@ export class PlacementController {
         candidateRect,
         positions,
         units,
+        context,
       );
       if (
         !occupants.length
@@ -302,6 +325,7 @@ export class PlacementController {
           candidateRect,
           positions,
           units,
+          context,
         )
       ) {
         return false;
@@ -320,7 +344,7 @@ export class PlacementController {
         currentRect,
         nextPositions,
       );
-      if (!hasNoWidgetOverlaps(widgets, nextPositions, units)) return false;
+      if (!hasNoWidgetOverlaps(widgets, nextPositions, units, context)) return false;
 
       this.savePositions(nextPositions);
       this.applyPositions(nextPositions);
@@ -346,6 +370,7 @@ export class PlacementController {
       unitRect,
       positions,
       units,
+      context,
     );
 
     if (!unitOccupants.length) {
@@ -359,6 +384,7 @@ export class PlacementController {
         unitRect,
         positions,
         units,
+        context,
       )
       && tryGroupSwap(unitCandidate)
     ) {

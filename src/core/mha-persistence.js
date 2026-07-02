@@ -10,6 +10,7 @@ export const {
   activePage: ACTIVE_PAGE,
   dockPosition: DOCK_POSITION,
   hideHaSidebar: HIDE_HA_SIDEBAR,
+  dockLabels: DOCK_LABELS,
   language: LANGUAGE,
 } = STORAGE_KEYS;
 
@@ -27,6 +28,10 @@ export function getStoredDockPosition(storage = localStorage) {
 
 export function getStoredHideHaSidebar(storage = localStorage) {
   return readBoolean(HIDE_HA_SIDEBAR, false, storage);
+}
+
+export function getStoredDockLabels(storage = localStorage) {
+  return readBoolean(DOCK_LABELS, false, storage);
 }
 
 export function normalizeLanguageSetting(value = "auto") {

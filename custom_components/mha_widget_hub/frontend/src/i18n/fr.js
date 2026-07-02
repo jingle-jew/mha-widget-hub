@@ -40,6 +40,7 @@ export const fr = Object.freeze({
     dock: "Dock",
     dockDescription: "Réorganise les pages du dock et change leurs icônes.",
     dockPosition: "Position du dock",
+    showDockLabels: "Afficher les labels du dock",
     dockIcons: "Icônes du dock",
     accent: "Accent",
     accentAuto: "Automatique depuis le fond d’écran",

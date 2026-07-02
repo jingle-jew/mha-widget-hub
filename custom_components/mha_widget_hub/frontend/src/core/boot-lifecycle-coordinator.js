@@ -150,8 +150,18 @@ export function createBootLifecycleCoordinator(host) {
     cancelAnimationFrame(host._readyRaf);
     host._readyRaf = requestAnimationFrame(() => requestAnimationFrame(() => {
       if (host._renderId !== renderId || !host.isConnected) return;
+      const retryLayoutSync = () => {
+        host._readyRaf = requestAnimationFrame(() => {
+          if (host._renderId !== renderId || !host.isConnected) return;
+          markReadyAfterPaint(renderId);
+        });
+      };
       try {
-        host._syncGridRuntimeMetrics();
+        const runtime = host._syncGridRuntimeMetrics();
+        if (runtime?.squareUnitSynced === false) {
+          retryLayoutSync();
+          return;
+        }
       } catch (error) {
         console.warn("[MHA] Initial layout sync failed; continuing with the rendered shell.", error);
         finishBoot({ fallback: true, reason: "initial layout synchronization failed" });

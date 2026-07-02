@@ -129,7 +129,7 @@ test("updateResize mutates datasets, CSS vars, and badge text for the active poi
 
   coordinator.updateResize(event);
 
-  assert.deepEqual(state.widgets, [{ id: "clock", kind: "clock", w: 4, h: 4 }]);
+  assert.deepEqual(state.widgets, [{ id: "clock", kind: "clock", w: 4, h: 4, responsiveSizeMode: "" }]);
   assert.deepEqual(element.dataset, {
     widgetConfiguredW: "4",
     widgetW: "3",

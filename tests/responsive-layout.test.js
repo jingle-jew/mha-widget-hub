@@ -51,3 +51,34 @@ test("mobile grid presets preserve the documented logical columns", () => {
     4,
   );
 });
+
+test("tablet landscape presets keep their nominal logical matrix across measured panel sizes", () => {
+  const hostLikePreset = getGridPreset(null, "tablet", { width: 1133, height: 744 });
+  const sideDockPreset = getGridPreset(null, "tablet", { width: 886, height: 676 });
+  const bottomDockPreset = getGridPreset(null, "tablet", { width: 960, height: 595 });
+
+  assert.deepEqual(
+    {
+      columns: hostLikePreset.columns,
+      rows: hostLikePreset.rows,
+    },
+    { columns: 6, rows: 4 },
+  );
+  assert.deepEqual(
+    {
+      columns: sideDockPreset.columns,
+      rows: sideDockPreset.rows,
+    },
+    { columns: 6, rows: 4 },
+  );
+  assert.deepEqual(
+    {
+      columns: bottomDockPreset.columns,
+      rows: bottomDockPreset.rows,
+    },
+    { columns: 6, rows: 4 },
+  );
+  assert.equal(hostLikePreset.density, "tablet-landscape-adaptive");
+  assert.equal(sideDockPreset.density, "tablet-landscape-adaptive");
+  assert.equal(bottomDockPreset.density, "tablet-landscape-adaptive");
+});

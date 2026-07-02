@@ -9,9 +9,9 @@
 
 @media (min-width: 768px) {
   .mha-status-bar {
-    /* .mha-status-bar is absolutely positioned inside .mha-shell.
-     * The left edge now lines up with the shell frame, while the right edge
-     * needs the same outside breathing room as the dock/edit controls.
+    /* Final tablet/desktop status-bar alignment lives here.
+     * status-bar.css owns sizing/material; frame-alignment.css owns the
+     * shared outer frame edges.
      */
     left: 0 !important;
     right: var(--mha-page-padding) !important;
@@ -29,33 +29,18 @@
     transform: none !important;
   }
 
-  :host([data-dock-position="right"]) .mha-widget-area,
-  :host(:not([data-dock-position])) .mha-widget-area {
-    justify-items: start;
-  }
-
   :host([data-dock-position="right"]) .mha-grid,
   :host(:not([data-dock-position])) .mha-grid {
-    padding-left: 0 !important;
-    padding-inline-start: 0 !important;
-    justify-self: start;
-  }
-
-  :host([data-dock-position="left"]) .mha-widget-area {
-    justify-items: end;
+    --mha-grid-padding-inline-start: 0px;
+    --mha-grid-track-justify: start;
   }
 
   :host([data-dock-position="left"]) .mha-grid {
-    padding-right: 0 !important;
-    padding-inline-end: 0 !important;
-    justify-self: end;
-  }
-
-  :host([data-dock-position="bottom"]) .mha-widget-area {
-    justify-items: center;
+    --mha-grid-padding-inline-end: 0px;
+    --mha-grid-track-justify: end;
   }
 
   :host([data-dock-position="bottom"]) .mha-grid {
-    justify-self: center;
+    --mha-grid-track-justify: center;
   }
 }

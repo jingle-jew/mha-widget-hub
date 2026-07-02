@@ -135,6 +135,7 @@ test("storage keys keep the existing browser persistence contract", () => {
     activePage: "mha-active-page",
     dockPosition: "mha-dock-position",
     hideHaSidebar: "mha-hide-ha-sidebar",
+    dockLabels: "mha-dock-labels",
     language: "mha-language",
     schemaVersion: "mha-storage-schema-version",
     schemaMigrationBackup: "mha-storage-backup-before-v1",

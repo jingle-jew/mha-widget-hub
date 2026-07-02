@@ -385,6 +385,23 @@ function mediaVariantKey({ widgetW = 2, widgetH = 2 } = {}) {
   return "2x2";
 }
 
+function resolveMediaPagePanelSize({
+  context = {},
+  fallbackSize = {},
+} = {}) {
+  const layout = context?.layout === "mobile" ? "mobile" : "desktop";
+  if (layout === "mobile") {
+    return { w: 4, h: 6 };
+  }
+
+  const units = Math.max(4, Number(context?.units) || Number(fallbackSize?.w) || 4);
+  const rowUnits = Math.max(6, Number(context?.rowUnits) || Number(fallbackSize?.h) || 6);
+  return {
+    w: Math.min(units, Math.max(4, Math.round(units * 0.75))),
+    h: rowUnits,
+  };
+}
+
 export function createMediaWidgetContent(widget = {}, {
   widgetW = Number(widget?.w) || 2,
   widgetH = Number(widget?.h) || 2,
@@ -554,7 +571,13 @@ export const MEDIA_WIDGET_DEFINITION = Object.freeze({
   variantAliases: ["media-compact", "media-wide", "media-panel"],
   defaultVariant: "media-compact",
   defaultSize: freezeSize(2, 2),
-  normalizeSize: (size) => {
+  normalizeSize: (size, { widget, rawSize, context } = {}) => {
+    if (widget?.responsiveSizeMode === "media-page-panel") {
+      return resolveMediaPagePanelSize({
+        context,
+        fallbackSize: rawSize || size,
+      });
+    }
     if (size.w >= 4 && size.h >= 4) return { w: 4, h: 4 };
     if (size.w >= 4 || size.h >= 3) return { w: 4, h: 2 };
     return { w: 2, h: 2 };

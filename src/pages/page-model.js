@@ -1,4 +1,5 @@
 import {
+  createMediaPageWidgetSeed,
   createDefaultPageConfig,
   getDefaultPageIcon,
   getDefaultPageName,
@@ -11,6 +12,12 @@ function identity(value) {
   return value;
 }
 
+function isMediaWidgetCandidate(widget = {}) {
+  return ["media", "media-widget"].includes(widget?.kind)
+    || ["media", "media-widget"].includes(widget?.type)
+    || widget?.component === "media-widget";
+}
+
 export function normalizePage(
   page = {},
   index = 0,
@@ -18,21 +25,39 @@ export function normalizePage(
 ) {
   const fallbackId = `page-${index + 1}`;
   const id = String(page.id || fallbackId).trim() || fallbackId;
-  const type = normalizePageType(page.type || PAGE_TYPES.GRID);
+  const normalizedType = normalizePageType(page.type || PAGE_TYPES.GRID);
+  const isLegacyMediaPage = normalizedType === PAGE_TYPES.MEDIA_PLAYERS;
+  const type = isLegacyMediaPage ? PAGE_TYPES.GRID : normalizedType;
+  const defaultType = isLegacyMediaPage ? PAGE_TYPES.MEDIA_PLAYERS : type;
+  const defaultName = String(
+    page.name
+    || page.label
+    || getDefaultPageName(defaultType, index),
+  );
+  const sourceWidgets = Array.isArray(page.widgets)
+    ? page.widgets
+    : [];
+  const widgets = isLegacyMediaPage && !sourceWidgets.some(isMediaWidgetCandidate)
+    ? [
+      createMediaPageWidgetSeed({
+        pageId: id,
+        pageName: defaultName,
+        config: page.config || {},
+      }),
+      ...sourceWidgets,
+    ]
+    : sourceWidgets;
   const normalized = {
     id,
-    name: String(
-      page.name
-      || page.label
-      || getDefaultPageName(type, index),
+    name: defaultName,
+    icon: String(
+      page.icon
+      || (index === 0 && type === PAGE_TYPES.GRID ? "home" : getDefaultPageIcon(defaultType)),
     ),
-    icon: String(page.icon || (index === 0 && type === PAGE_TYPES.GRID ? "home" : getDefaultPageIcon(type))),
-    widgets: Array.isArray(page.widgets)
-      ? page.widgets.map(normalizeWidget)
-      : [],
+    widgets: widgets.map(normalizeWidget),
   };
 
-  if (type !== PAGE_TYPES.GRID || page.type || page.config) {
+  if (!isLegacyMediaPage && (type !== PAGE_TYPES.GRID || page.type || page.config)) {
     normalized.type = type;
     normalized.config = normalizePageConfig(type, page.config || {});
   }
@@ -62,8 +87,9 @@ export function normalizePages(
     }
 
     usedIds.add(id);
-    if (id !== baseId) repaired = true;
-    return id === baseId ? normalized : { ...normalized, id };
+    const nextPage = id === baseId ? normalized : { ...normalized, id };
+    if (id !== baseId || JSON.stringify(page) !== JSON.stringify(nextPage)) repaired = true;
+    return nextPage;
   }).filter(page => page.id);
 
   return { pages, repaired };
@@ -100,9 +126,13 @@ export function createDefaultPages({ normalizeWidget = identity } = {}) {
       id: "media",
       name: "Media Players",
       icon: "media-player",
-      type: PAGE_TYPES.MEDIA_PLAYERS,
-      config: createDefaultPageConfig(PAGE_TYPES.MEDIA_PLAYERS),
-      widgets: [],
+      widgets: [
+        createMediaPageWidgetSeed({
+          pageId: "media",
+          pageName: "Media Players",
+          config: createDefaultPageConfig(PAGE_TYPES.MEDIA_PLAYERS),
+        }),
+      ],
     },
   ].map((page, index) => normalizePage(page, index, { normalizeWidget }));
 }

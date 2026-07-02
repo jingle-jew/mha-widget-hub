@@ -424,6 +424,38 @@ test("render helpers preserve widgetsState transitions from pending to loading t
   globalThis.cancelAnimationFrame = previousCancelAnimationFrame;
 });
 
+test("render datasets include the persisted dock label visibility state", async () => {
+  const prototype = await loadHubPrototype();
+  const host = {
+    _dockPosition: "bottom",
+    _isEditing: false,
+    _showDockLabels: true,
+    dataset: {},
+    style: createMockStyle(),
+    classList: {
+      toggle() {},
+    },
+  };
+
+  prototype._applyRenderDatasetsAndRuntimeVars.call(host, {
+    themeStyle: "material",
+    iconShapeSetting: "auto",
+    iconShape: "circle",
+    layoutMode: "default",
+    layout: "tablet",
+    preset: { density: "comfortable" },
+    units: 4,
+    rows: 8,
+    cols: 4,
+    logicalRows: 4,
+    accent: "sky",
+  });
+
+  assert.equal(host.dataset.dockLabels, "true");
+  assert.equal(host.dataset.dockPosition, "bottom");
+  assert.equal(host.dataset.themeStyle, "material");
+});
+
 test("primary controls use host edit icon and widget-manager bridge callbacks", async () => {
   const prototype = await loadHubPrototype();
   const previousDocument = globalThis.document;

@@ -32,9 +32,24 @@
   align-self: start;
 }
 
+.mha-statusbar-fill {
+  position: absolute;
+  inset: 0 auto auto 0;
+  inline-size: 100%;
+  block-size: 0;
+  pointer-events: none;
+}
+
 .mha-workspace {
   grid-row: 2;
   grid-column: 1;
+  --mha-shell-content-top-inset: max(
+    0px,
+    calc(
+      var(--mha-statusbar-reserved-top, 0px)
+      - var(--mha-statusbar-widget-gap, 0px)
+    )
+  ) !important;
   box-sizing: border-box;
   inline-size: 100%;
   block-size: 100%;
@@ -56,7 +71,7 @@
   min-block-size: 0;
   display: grid;
   place-items: start center;
-  --mha-widget-area-top-gutter: calc(var(--mha-page-padding) * 2) !important;
+  --mha-widget-area-top-gutter: var(--mha-shell-content-top-inset) !important;
   padding: clamp(0.35rem, 0.7vw, 0.75rem);
   padding-block-start: var(--mha-widget-area-top-gutter) !important;
   overflow: visible;
@@ -85,7 +100,7 @@
 
 .mha-page-panel--grid {
   display: grid;
-  place-items: start center;
+  place-items: stretch;
 }
 
 .mha-page-panel--media {
@@ -115,28 +130,37 @@
   --mha-active-grid-rows: var(--mha-runtime-grid-rows, 8);
   --mha-square-unit-hard-min: clamp(1.5rem, 3vw, 2.5rem);
   --mha-square-unit-max: clamp(4.5rem, 8.5vw, 8.75rem);
-  --mha-statusbar-reserved-top: 0px !important;
+  --mha-grid-padding-inline-start: clamp(0.25rem, 0.55vw, 0.6rem);
+  --mha-grid-padding-inline-end: clamp(0.25rem, 0.55vw, 0.6rem);
+  --mha-grid-padding-block-start: clamp(0.25rem, 0.55vw, 0.6rem);
+  --mha-grid-padding-block-end: clamp(0.25rem, 0.55vw, 0.6rem);
+  --mha-grid-track-justify: center;
 
   box-sizing: border-box;
-  inline-size: min(100%, var(--mha-grid-matrix-width, 100%));
-  block-size: min(100%, var(--mha-grid-matrix-height, 100%));
+  inline-size: 100%;
+  block-size: 100%;
+  min-inline-size: 0;
+  min-block-size: 0;
   max-inline-size: 100%;
   max-block-size: 100%;
   margin: 0 !important;
-  padding: clamp(0.25rem, 0.55vw, 0.6rem) !important;
+  padding-block-start: var(--mha-grid-padding-block-start) !important;
+  padding-block-end: var(--mha-grid-padding-block-end) !important;
+  padding-inline-start: var(--mha-grid-padding-inline-start) !important;
+  padding-inline-end: var(--mha-grid-padding-inline-end) !important;
   scroll-padding: 0 !important;
   overflow: visible !important;
 
   display: grid;
   gap: var(--mha-grid-gap);
-  grid-template-columns: repeat(var(--mha-active-grid-units), var(--mha-square-unit));
-  grid-template-rows: repeat(var(--mha-active-grid-rows), var(--mha-square-unit));
-  grid-auto-rows: var(--mha-square-unit);
+  grid-template-columns: repeat(var(--mha-active-grid-units), var(--mha-grid-column-size));
+  grid-template-rows: repeat(var(--mha-active-grid-rows), var(--mha-grid-row-size));
+  grid-auto-rows: var(--mha-grid-row-size);
   grid-auto-flow: row dense;
   align-content: start;
-  justify-content: center;
-  align-self: start;
-  justify-self: center;
+  justify-content: var(--mha-grid-track-justify);
+  align-self: stretch;
+  justify-self: stretch;
 
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -216,7 +240,10 @@
   inline-size: 100%;
   width: 100%;
   block-size: auto;
-  min-block-size: var(--mha-grid-matrix-height, 100%);
+  min-block-size: var(
+    --mha-grid-track-height,
+    100%
+  );
   max-block-size: none;
   max-inline-size: 100%;
   justify-self: stretch;
@@ -243,41 +270,53 @@
   overscroll-behavior-y: none;
 }
 
-/* GRID FRAME LEFT NUDGE
- * Tablet/desktop only.
- *
- * Status bar alignment is now correct. The visible widget grid still needs a
- * tiny optical nudge left to match the shared frame. Keep all internal padding
- * and grid math intact; move the grid as a whole by a few pixels only.
- */
-@media (min-width: 768px) {
-  :host {
-    --mha-grid-frame-nudge-x: clamp(4px, 0.45vw, 7px);
-  }
-
-  .mha-grid {
-    transform: translateX(calc(-1 * var(--mha-grid-frame-nudge-x)));
-  }
-
-  :host([data-media-page-active="true"]) .mha-grid {
-    transform: none;
-  }
-}
 /* Desktop/tablet dock position
  * Mobile keeps its dedicated bottom dock. On tablet/desktop, the dock can
  * reserve space on the left, right, or bottom and the widget grid follows.
  */
 @media (min-width: 768px) {
   :host {
-    --mha-dock-unit-size: var(--mha-square-unit);
-    --mha-dock-zone-width: var(--mha-dock-unit-size);
-    --mha-bottom-dock-clearance: max(
+    /*
+     * Shell-owned dock reservations.
+     *
+     * The shell must not reserve dock space from a metric produced by the grid
+     * runtime (`--mha-square-unit`). These values define the reserved geometry
+     * first; the dock component can then consume them visually.
+     */
+    --mha-shell-statusbar-height: clamp(2.25rem, 3.2vw, 2.85rem);
+    --mha-statusbar-height-compact: var(--mha-shell-statusbar-height);
+    --mha-shell-statusbar-bottom-gap: clamp(.7rem, 1.4vw, 1rem);
+    --mha-statusbar-reserved-top: calc(
+      var(--mha-floating-top, clamp(1rem, 2.4vw, 1.6rem))
+      + var(--mha-shell-statusbar-height)
+      + var(--mha-shell-statusbar-bottom-gap)
+    );
+    --mha-shell-dock-unit-size: clamp(4.75rem, 7vw, 6.25rem);
+    --mha-shell-side-dock-zone-base: var(--mha-shell-dock-unit-size);
+    --mha-shell-side-dock-zone-width: var(--mha-shell-side-dock-zone-base);
+    --mha-shell-side-dock-rail-size: var(--mha-shell-side-dock-zone-width);
+    --mha-shell-bottom-dock-capsule-size: var(--mha-shell-dock-unit-size);
+    --mha-shell-bottom-dock-clearance: max(
       var(--mha-safe-bottom, 0px),
       var(--mha-grid-gap)
     );
-    --mha-bottom-dock-height: calc(
-      var(--mha-dock-unit-size) + var(--mha-bottom-dock-clearance)
+    --mha-shell-bottom-dock-height: calc(
+      var(--mha-shell-bottom-dock-capsule-size)
+      + var(--mha-shell-bottom-dock-clearance)
     );
+    --mha-dock-zone-width: var(--mha-shell-side-dock-zone-width);
+    --mha-dock-unit-size: var(--mha-shell-side-dock-rail-size);
+    --mha-bottom-dock-clearance: var(--mha-shell-bottom-dock-clearance);
+    --mha-bottom-dock-height: var(--mha-shell-bottom-dock-height);
+  }
+
+  :host([data-theme-style="oneui"][data-dock-position="left"]),
+  :host([data-theme-style="oneui"][data-dock-position="right"]),
+  :host([data-theme-style="oneui"]:not([data-dock-position])) {
+    --mha-shell-side-dock-zone-width: calc(
+      var(--mha-shell-side-dock-zone-base) * 2
+    );
+    --mha-shell-side-dock-rail-size: var(--mha-shell-side-dock-zone-width);
   }
 
   :host([data-dock-position="left"]) .mha-workspace {

@@ -70,6 +70,7 @@ export function normalizeRegisteredWidgetSizeWithDefinition(
   {
     definition,
     defaults,
+    context = {},
   } = {},
 ) {
   const rawSize = {
@@ -78,5 +79,13 @@ export function normalizeRegisteredWidgetSizeWithDefinition(
     h: widget.h ?? defaults.defaultSize.h,
   };
   const size = normalizeWidgetSize(rawSize);
-  return definition?.normalizeSize ? definition.normalizeSize(size) : size;
+  return definition?.normalizeSize
+    ? definition.normalizeSize(size, {
+      widget,
+      definition,
+      defaults,
+      rawSize,
+      context,
+    })
+    : size;
 }

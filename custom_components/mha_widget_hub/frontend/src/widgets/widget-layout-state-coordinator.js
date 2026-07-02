@@ -11,6 +11,7 @@ export class WidgetLayoutStateCoordinator {
     getActivePageId = () => "home",
     getGridBounds = () => ({ units: 1, rowUnits: 1 }),
     getEffectiveLayout = () => "desktop",
+    getLogicalGridPreset = null,
     getRuntimeGridPreset = () => ({ columns: 1, rows: 1 }),
     getWidgetAreaMetrics = () => ({}),
     isMobileLayout = () => false,
@@ -27,7 +28,8 @@ export class WidgetLayoutStateCoordinator {
     this.getActivePageId = (...args) => getActivePageId(...args);
     this.getGridBounds = (...args) => getGridBounds(...args);
     this.getEffectiveLayout = (...args) => getEffectiveLayout(...args);
-    this.getRuntimeGridPreset = (...args) => getRuntimeGridPreset(...args);
+    const gridPresetReader = getLogicalGridPreset || getRuntimeGridPreset;
+    this.getLogicalGridPreset = (...args) => gridPresetReader(...args);
     this.getWidgetAreaMetrics = (...args) => getWidgetAreaMetrics(...args);
     this.isMobileLayout = (...args) => isMobileLayout(...args);
     this.recordPersistenceResult = (...args) => recordPersistenceResult(...args);
@@ -43,6 +45,14 @@ export class WidgetLayoutStateCoordinator {
   getPositionKey() {
     const bounds = this.getGridBounds();
     return `${this.getActivePageId() || "home"}:${this.getEffectiveLayout()}:${bounds.units}x${bounds.rowUnits}`;
+  }
+
+  getResponsiveLayoutContext(bounds = this.getGridBounds()) {
+    return {
+      units: bounds.units,
+      rowUnits: bounds.rowUnits,
+      layout: this.isMobileLayout() ? "mobile" : "desktop",
+    };
   }
 
   isPositionMapValidForWidgets(positions, widgets, units, rowUnits) {
@@ -115,14 +125,15 @@ export class WidgetLayoutStateCoordinator {
     if (!positions) return;
 
     const root = this.getRoot();
-    const { units } = this.getGridBounds();
+    const bounds = this.getGridBounds();
+    const context = this.getResponsiveLayoutContext(bounds);
     this.getWidgets().forEach((widget) => {
       const position = positions[widget.id];
       const element = root?.querySelector?.(`[data-widget-id="${widget.id}"]`);
       if (!position || !element) return;
 
-      const size = this.normalizeWidgetForKindFn(widget);
-      element.style.gridColumn = `${position.x} / span ${Math.min(units, size.w)}`;
+      const size = this.normalizeWidgetForKindFn(widget, context);
+      element.style.gridColumn = `${position.x} / span ${Math.min(bounds.units, size.w)}`;
       element.style.gridRow = `${position.y} / span ${size.h}`;
     });
   }
@@ -145,6 +156,7 @@ export class WidgetLayoutStateCoordinator {
     const { units, rowUnits } = this.getGridBounds();
     return this.packWidgetsFn(this.getWidgets(), units, rowUnits, {
       allowUnboundedRows: this.isMobileLayout(),
+      layout: this.isMobileLayout() ? "mobile" : "desktop",
     });
   }
 
@@ -169,23 +181,26 @@ export class WidgetLayoutStateCoordinator {
   }
 
   clampWidgetSizeToGridBounds(widget, size) {
-    const bounds = this.getInternalGridBoundsFromPreset(this.getRuntimeGridPreset());
+    const bounds = this.getInternalGridBoundsFromPreset(this.getLogicalGridPreset());
+    const context = this.getResponsiveLayoutContext(bounds);
+    const normalizedSize = this.normalizeWidgetForKindFn({ ...widget, ...size }, context);
     const x = Number(widget?.x ?? widget?.col ?? widget?.column ?? 1) || 1;
     const y = Number(widget?.y ?? widget?.row ?? widget?.rowIndex ?? 1) || 1;
     const maxW = Math.max(1, bounds.units - x + 1);
     const maxH = Math.max(1, bounds.rowUnits - y + 1);
 
     return {
-      ...size,
-      w: Math.max(1, Math.min(Number(size?.w) || 1, maxW)),
-      h: Math.max(1, Math.min(Number(size?.h) || 1, maxH)),
+      ...normalizedSize,
+      w: Math.max(1, Math.min(Number(normalizedSize?.w) || 1, maxW)),
+      h: Math.max(1, Math.min(Number(normalizedSize?.h) || 1, maxH)),
     };
   }
 
   clampWidgetPositionToGridBounds(widget, position) {
-    const bounds = this.getInternalGridBoundsFromPreset(this.getRuntimeGridPreset());
-    const w = Math.max(1, Number(widget?.w) || 1);
-    const h = Math.max(1, Number(widget?.h) || 1);
+    const bounds = this.getInternalGridBoundsFromPreset(this.getLogicalGridPreset());
+    const size = this.normalizeWidgetForKindFn(widget, this.getResponsiveLayoutContext(bounds));
+    const w = Math.max(1, Number(size?.w) || 1);
+    const h = Math.max(1, Number(size?.h) || 1);
     const maxX = Math.max(1, bounds.units - w + 1);
     const maxY = Math.max(1, bounds.rowUnits - h + 1);
 

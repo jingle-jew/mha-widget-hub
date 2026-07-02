@@ -44,6 +44,10 @@ if (!document.getElementById(BOOT_STYLE_ID)) {
 }
 
 const appUrl = new URL("./mha-widget-hub.js", import.meta.url);
+const frontendRootUrl = new URL("./", import.meta.url).href;
+window.__MHA_FRONTEND_ROOT_URL__ = frontendRootUrl.endsWith("/")
+  ? frontendRootUrl
+  : `${frontendRootUrl}/`;
 const frontendVersion = new URL(import.meta.url).searchParams.get("v");
 if (frontendVersion) appUrl.searchParams.set("v", frontendVersion);
 
