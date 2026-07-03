@@ -59,13 +59,31 @@ function getDistance(a, b) {
 }
 
 function getElementFromPoint(host, point) {
+  const globalDocument = globalThis.document;
   return host?.shadowRoot?.elementFromPoint?.(point.x, point.y)
-    || document.elementFromPoint?.(point.x, point.y)
+    || globalDocument?.elementFromPoint?.(point.x, point.y)
     || null;
 }
 
 function getWidgetScrollArea(host) {
-  return host?.shadowRoot?.querySelector?.(".mha-widget-area") || null;
+  const widgetArea = host?.shadowRoot?.querySelector?.(".mha-widget-area") || null;
+  const candidates = [widgetArea, host]
+    .filter((element, index, list) => (
+      element
+      && typeof element?.scrollBy === "function"
+      && typeof element?.getBoundingClientRect === "function"
+      && list.indexOf(element) === index
+    ));
+
+  for (const candidate of candidates) {
+    const maxScrollTop = Math.max(
+      0,
+      Number(candidate?.scrollHeight || 0) - Number(candidate?.clientHeight || 0),
+    );
+    if (maxScrollTop > 0) return candidate;
+  }
+
+  return candidates[0] || null;
 }
 
 function getEdgeSnapDirection(scrollArea, point) {
