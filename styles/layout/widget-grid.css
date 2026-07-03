@@ -344,6 +344,15 @@
 
 :host([data-layout-variant="mobile-landscape"]) {
   --mha-mobile-grid-gutter: clamp(0.75rem, 2.4vw, 1rem);
+  --mha-shell-dock-unit-size: clamp(4rem, 16vw, 4.85rem);
+  --mha-shell-side-dock-zone-base: var(
+    --mha-side-dock-rail-width,
+    var(--mha-shell-dock-unit-size)
+  );
+  --mha-shell-side-dock-zone-width: var(--mha-shell-side-dock-zone-base);
+  --mha-shell-side-dock-rail-size: var(--mha-shell-side-dock-zone-width);
+  --mha-dock-zone-width: var(--mha-shell-side-dock-zone-width);
+  --mha-dock-unit-size: var(--mha-shell-side-dock-rail-size);
   overflow-x: hidden;
   overflow-y: hidden;
 }
@@ -352,8 +361,22 @@
   row-gap: 0 !important;
 }
 
+:host([data-layout-variant="mobile-landscape"]) .mha-workspace {
+  --mha-shell-content-bottom-inset: 0px !important;
+  grid-template-columns: var(--mha-dock-zone-width) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+}
+
+:host([data-layout-variant="mobile-landscape"]) .mha-dock-zone {
+  display: grid;
+  grid-column: 1;
+  grid-row: 1;
+}
+
 :host([data-layout-variant="mobile-landscape"]) .mha-widget-area {
   --mha-widget-area-edge-padding: var(--mha-mobile-grid-gutter) !important;
+  grid-column: 2;
+  grid-row: 1;
 }
 
 /* Desktop/tablet dock position

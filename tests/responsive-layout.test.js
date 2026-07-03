@@ -79,6 +79,21 @@ test("responsive state formalizes mobile landscape as a distinct variant", () =>
   assert.equal(state.settingsCapabilities.showsStatusBarOptions, false);
 });
 
+test("responsive state keeps mobile landscape active even below the tablet width breakpoint", () => {
+  const state = computeResponsiveState({
+    layoutMode: "auto",
+    viewportMetrics: { width: 740, height: 360 },
+    dockPosition: "bottom",
+    statusBarMode: "top-bar",
+  });
+
+  assert.equal(state.layout, "mobile");
+  assert.equal(state.layoutVariant, "mobile-landscape");
+  assert.equal(state.dockFamily, "side");
+  assert.equal(state.dockPosition, "left");
+  assert.equal(state.statusBarVisible, false);
+});
+
 test("responsive state keeps tablet landscape intact when the viewport is not phone-short", () => {
   const state = computeResponsiveState({
     layoutMode: "auto",

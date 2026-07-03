@@ -209,6 +209,14 @@ test("mobile shell keeps the background viewport-anchored while widget content o
     /:host\(\[data-layout-variant="mobile-landscape"\]\) \.mha-shell\s*\{[\s\S]*row-gap:\s*0\s*!important;/,
   );
   assert.match(
+    gridSource,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\) \.mha-workspace\s*\{[\s\S]*grid-template-columns:\s*var\(--mha-dock-zone-width\) minmax\(0, 1fr\);/,
+  );
+  assert.match(
+    gridSource,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\) \.mha-dock-zone\s*\{[\s\S]*display:\s*grid;[\s\S]*grid-column:\s*1;/,
+  );
+  assert.match(
     backgroundSource,
     /:host\(\[data-layout-variant="mobile-landscape"\]\) \.mha-background\s*\{[\s\S]*position:\s*fixed;[\s\S]*inset:\s*-20%;/,
   );
@@ -225,6 +233,10 @@ test("floating controls and settings sheet consume responsive variants instead o
   );
   const settingsBottomSource = fs.readFileSync(
     path.join(REPO_ROOT, "styles", "settings", "settings-bottom.css"),
+    "utf8",
+  );
+  const dockSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "layout", "dock.css"),
     "utf8",
   );
 
@@ -247,5 +259,9 @@ test("floating controls and settings sheet consume responsive variants instead o
   assert.match(
     settingsBottomSource,
     /\.mha-settings-panel\[data-mobile-layout="true"\] \.mha-settings-sheet\s*\{[\s\S]*position:\s*fixed;[\s\S]*bottom:\s*0;/,
+  );
+  assert.match(
+    dockSource,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\) \.mha-dock\s*\{[\s\S]*display:\s*flex;[\s\S]*flex-direction:\s*column;/,
   );
 });
