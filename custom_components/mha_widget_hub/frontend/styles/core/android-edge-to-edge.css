@@ -14,10 +14,7 @@
   z-index: 6;
   pointer-events: none;
   opacity: 0;
-  background: var(
-    --mha-statusbar-surface-semantic,
-    var(--mha-statusbar-surface, var(--mha-shell-surface, var(--mha-surface-glass)))
-  );
+  background: transparent;
   -webkit-backdrop-filter: blur(calc(var(--mha-shell-blur, var(--mha-blur-primary)) * .82)) saturate(var(--mha-surface-saturation));
   backdrop-filter: blur(calc(var(--mha-shell-blur, var(--mha-blur-primary)) * .82)) saturate(var(--mha-surface-saturation));
   -webkit-mask-image: linear-gradient(
