@@ -59,13 +59,12 @@
   }
 }
 
-@media (orientation: landscape) {
-  :host([data-layout="mobile"]) .mha-main-edit-button,
-  :host([data-layout="mobile"]) .mha-add-widget-button {
-    opacity: 0;
-    transform: translateY(calc(100% + 1rem)) scale(.96);
-    pointer-events: none;
-  }
+:host([data-layout-variant="mobile-landscape"]) .mha-main-edit-button,
+:host([data-layout-variant="mobile-landscape"]) .mha-add-widget-button,
+:host([data-layout-variant="mobile-landscape"]) .mha-mobile-dock-launcher {
+  opacity: 0;
+  transform: translateY(calc(100% + 1rem)) scale(.96);
+  pointer-events: none;
 }
 
 @media (min-width: 768px) {
@@ -293,14 +292,12 @@
   }
 }
 
-@media (orientation: portrait) {
-  :host([data-layout="mobile"].is-mobile-floating-controls-hidden) .mha-main-edit-button,
-  :host([data-layout="mobile"].is-mobile-floating-controls-hidden) .mha-mobile-dock-launcher,
-  :host([data-layout="mobile"].is-mobile-floating-controls-hidden) .mha-add-widget-button {
-    opacity: 0;
-    transform: translateY(calc(100% + 1rem)) scale(.96);
-    pointer-events: none;
-  }
+:host([data-layout="mobile"]:not([data-layout-variant="mobile-landscape"]).is-mobile-floating-controls-hidden) .mha-main-edit-button,
+:host([data-layout="mobile"]:not([data-layout-variant="mobile-landscape"]).is-mobile-floating-controls-hidden) .mha-mobile-dock-launcher,
+:host([data-layout="mobile"]:not([data-layout-variant="mobile-landscape"]).is-mobile-floating-controls-hidden) .mha-add-widget-button {
+  opacity: 0;
+  transform: translateY(calc(100% + 1rem)) scale(.96);
+  pointer-events: none;
 }
 
 
@@ -318,20 +315,18 @@
  * While editing, the primary edit/X button and the add-widget + button must
  * remain visible during scroll so the user can always exit edit mode or add.
  */
-@media (orientation: portrait) {
-  :host([data-layout="mobile"].is-editing.is-mobile-floating-controls-hidden) .mha-primary-edit-button,
-  :host([data-layout="mobile"].is-editing.is-mobile-floating-controls-hidden) .mha-add-widget-button {
-    opacity: 1;
-    pointer-events: auto;
-  }
+:host([data-layout="mobile"]:not([data-layout-variant="mobile-landscape"]).is-editing.is-mobile-floating-controls-hidden) .mha-primary-edit-button,
+:host([data-layout="mobile"]:not([data-layout-variant="mobile-landscape"]).is-editing.is-mobile-floating-controls-hidden) .mha-add-widget-button {
+  opacity: 1;
+  pointer-events: auto;
+}
 
-  :host([data-layout="mobile"].is-editing.is-mobile-floating-controls-hidden) .mha-primary-edit-button {
-    transform: none;
-  }
+:host([data-layout="mobile"]:not([data-layout-variant="mobile-landscape"]).is-editing.is-mobile-floating-controls-hidden) .mha-primary-edit-button {
+  transform: none;
+}
 
-  :host([data-layout="mobile"].is-editing.is-mobile-floating-controls-hidden) .mha-add-widget-button {
-    transform: translateY(calc(-1 * (var(--mha-floating-button-size) + clamp(.55rem, 1.6vw, .85rem))));
-  }
+:host([data-layout="mobile"]:not([data-layout-variant="mobile-landscape"]).is-editing.is-mobile-floating-controls-hidden) .mha-add-widget-button {
+  transform: translateY(calc(-1 * (var(--mha-floating-button-size) + clamp(.55rem, 1.6vw, .85rem))));
 }
 
 /* TOUCH EDIT ENTRY

@@ -198,6 +198,23 @@ test("creating a media page resets the page creator state and seeds a normal gri
   assert.equal(calls.renderRoot, 0);
 });
 
+test("page creator stays unavailable in mobile landscape", () => {
+  const { coordinator, state, calls } = createHarness({
+    state: {
+      isMobileLandscapeLayout: true,
+      pageCreatorOpen: false,
+      newPageType: "media-players",
+    },
+  });
+
+  assert.equal(coordinator.openPageCreator(), false);
+  assert.equal(state.pageCreatorOpen, false);
+  assert.equal(coordinator.createPageFromCreator(), false);
+  assert.equal(state.pages.length, 2);
+  assert.equal(calls.syncPageCreator, 0);
+  assert.equal(calls.syncDocks, 0);
+});
+
 test("buildDockProps resolves dock content from the current theme manifest", () => {
   const { coordinator } = createHarness({
     options: {

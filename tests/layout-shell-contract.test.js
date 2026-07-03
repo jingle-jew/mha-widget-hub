@@ -213,3 +213,39 @@ test("mobile shell keeps the background viewport-anchored while widget content o
     /:host\(\[data-layout-variant="mobile-landscape"\]\) \.mha-background\s*\{[\s\S]*position:\s*fixed;[\s\S]*inset:\s*-20%;/,
   );
 });
+
+test("floating controls and settings sheet consume responsive variants instead of raw orientation for mobile landscape", () => {
+  const floatingControlsSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "layout", "floating-controls.css"),
+    "utf8",
+  );
+  const settingsPanelSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "settings", "settings-panel.css"),
+    "utf8",
+  );
+  const settingsBottomSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "settings", "settings-bottom.css"),
+    "utf8",
+  );
+
+  assert.match(
+    floatingControlsSource,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\) \.mha-main-edit-button,\s*:host\(\[data-layout-variant="mobile-landscape"\]\) \.mha-add-widget-button,\s*:host\(\[data-layout-variant="mobile-landscape"\]\) \.mha-mobile-dock-launcher/,
+  );
+  assert.match(
+    floatingControlsSource,
+    /:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\.is-mobile-floating-controls-hidden\) \.mha-main-edit-button/,
+  );
+  assert.match(
+    settingsPanelSource,
+    /\.mha-settings-panel\[data-mobile-layout="true"\] \.mha-settings-sheet\s*\{[\s\S]*transform:\s*translateY\(18px\) scale\(\.98\);/,
+  );
+  assert.match(
+    settingsPanelSource,
+    /\.mha-settings-panel\[data-mobile-landscape="true"\] \.mha-settings-accent-swatches\s*\{[\s\S]*grid-template-columns:\s*repeat\(10, minmax\(0, 1fr\)\);/,
+  );
+  assert.match(
+    settingsBottomSource,
+    /\.mha-settings-panel\[data-mobile-layout="true"\] \.mha-settings-sheet\s*\{[\s\S]*position:\s*fixed;[\s\S]*bottom:\s*0;/,
+  );
+});

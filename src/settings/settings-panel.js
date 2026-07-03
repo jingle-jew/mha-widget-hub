@@ -833,6 +833,8 @@ export function updateSettingsPanel(existing, next) {
 
   existing.dataset.open = next.dataset.open;
   existing.dataset.iconShape = next.dataset.iconShape;
+  existing.dataset.mobileLayout = next.dataset.mobileLayout || "false";
+  existing.dataset.mobileLandscape = next.dataset.mobileLandscape || "false";
   existing.hidden = next.hidden;
   existing.setAttribute("aria-hidden", next.getAttribute("aria-hidden") || "false");
 
@@ -991,6 +993,7 @@ export function createSettingsPanel({
 
   const body = document.createElement("div");
   body.className = "mha-settings-body";
+  root.dataset.mobileLayout = String(isMobileLayout);
   root.dataset.mobileLandscape = String(isMobileLandscape);
 
   const sections = [];
