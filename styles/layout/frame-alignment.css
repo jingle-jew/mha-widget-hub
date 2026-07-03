@@ -8,7 +8,7 @@
  */
 
 @media (min-width: 768px) {
-  .mha-status-bar {
+  :host(:not([data-status-bar-mode="top-bar"])) .mha-status-bar {
     /* Final tablet/desktop status-bar alignment lives here.
      * status-bar.css owns sizing/material; frame-alignment.css owns the
      * shared outer frame edges.

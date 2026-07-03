@@ -549,6 +549,21 @@ test.describe("tablet dock geometry contract", () => {
       geometries.right.hostDataset.logicalColumns,
     );
     assert.equal(
+      Number(geometries.left.hostDataset.logicalColumns),
+      10,
+      "1133x744 left dock should keep the narrower panel at 10 columns",
+    );
+    assert.equal(
+      Number(geometries.right.hostDataset.logicalColumns),
+      10,
+      "1133x744 right dock should keep the narrower panel at 10 columns",
+    );
+    assert.equal(
+      Number(geometries.bottom.hostDataset.logicalColumns),
+      11,
+      "1133x744 bottom dock should unlock 11 columns on the wider panel",
+    );
+    assert.equal(
       geometries.left.hostDataset.logicalRows,
       geometries.right.hostDataset.logicalRows,
     );

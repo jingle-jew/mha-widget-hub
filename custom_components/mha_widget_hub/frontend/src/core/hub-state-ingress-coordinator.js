@@ -6,6 +6,7 @@ import {
   getStoredDockPosition,
   getStoredHideHaSidebar,
   getStoredLanguageSetting,
+  getStoredStatusBarMode,
 } from "./mha-persistence.js";
 import {
   getHubActivePage,
@@ -119,6 +120,7 @@ export function createHubStateIngressCoordinator(host, {
     host._dockPosition = getStoredDockPosition();
     host._hideHaSidebar = getStoredHideHaSidebar();
     host._showDockLabels = getStoredDockLabels();
+    host._statusBarMode = getStoredStatusBarMode();
     host._language = getStoredLanguageSetting();
     host._configureI18n();
     host._applyHaSidebarMode(host._hideHaSidebar);

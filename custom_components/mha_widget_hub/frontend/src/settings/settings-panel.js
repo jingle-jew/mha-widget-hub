@@ -39,6 +39,12 @@ const LANGUAGE_OPTIONS = [
   { value: "es", label: "Español", labelKey: "settings.languageOptions.es" },
 ];
 
+const STATUS_BAR_MODE_OPTIONS = [
+  { value: "pill", label: "Pill", labelKey: "settings.statusBarModes.pill" },
+  { value: "top-bar", label: "Top bar", labelKey: "settings.statusBarModes.top-bar" },
+  { value: "hidden", label: "Hidden", labelKey: "settings.statusBarModes.hidden" },
+];
+
 const STYLE_OPTIONS = getThemeStyleOptions();
 
 const DOCK_POSITION_OPTIONS = [
@@ -850,6 +856,7 @@ export function createSettingsPanel({
   effectiveIconShape = "",
   hideHaSidebar = false,
   showDockLabels = false,
+  statusBarMode = "top-bar",
   screensaverEnabled = false,
   screensaverDelay = 30000,
   screensaverPreview = false,
@@ -879,6 +886,7 @@ export function createSettingsPanel({
   onIconShapeChange,
   onHideHaSidebarChange,
   onShowDockLabelsChange,
+  onStatusBarModeChange,
   onScreensaverEnabledChange,
   onScreensaverDelayChange,
   onScreensaverPreviewChange,
@@ -1157,6 +1165,12 @@ export function createSettingsPanel({
           description: t("settings.hideHaSidebarDescription", "Hide the native Home Assistant sidebar for a more immersive experience."),
           checked: hideHaSidebar,
           onChange: onHideHaSidebarChange,
+        }),
+        createSelect({
+          label: t("settings.statusBar", "Status bar"),
+          value: statusBarMode,
+          options: STATUS_BAR_MODE_OPTIONS,
+          onChange: onStatusBarModeChange,
         }),
       ] : []),
       createSettingsNavTile({

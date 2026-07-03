@@ -35,6 +35,44 @@
   mix-blend-mode: var(--mha-statusbar-highlight-blend-mode, screen);
 }
 
+:host([data-status-bar-mode="top-bar"]) .mha-status-bar {
+  background: var(
+    --mha-statusbar-top-bar-surface,
+    var(--mha-shell-status-surface, var(--mha-shell-surface, var(--mha-surface-shell)))
+  );
+  border-color: var(
+    --mha-statusbar-top-bar-border-color,
+    var(--mha-shell-border, var(--mha-border-shell, var(--mha-border-secondary)))
+  );
+  box-shadow: var(
+    --mha-statusbar-top-bar-shadow,
+    var(--mha-statusbar-shadow, var(--mha-shell-shadow, var(--mha-shadow-shell, none)))
+  ) !important;
+  -webkit-backdrop-filter: var(
+    --mha-statusbar-top-bar-filter,
+    var(--mha-statusbar-filter, var(--mha-shell-filter))
+  );
+  backdrop-filter: var(
+    --mha-statusbar-top-bar-filter,
+    var(--mha-statusbar-filter, var(--mha-shell-filter))
+  );
+}
+
+:host([data-status-bar-mode="top-bar"]) .mha-status-bar::after {
+  opacity: var(
+    --mha-statusbar-top-bar-highlight-opacity,
+    var(--mha-statusbar-highlight-opacity, var(--mha-shell-highlight-opacity, 0))
+  );
+  background: var(
+    --mha-statusbar-top-bar-highlight,
+    var(--mha-statusbar-highlight, var(--mha-shell-highlight, none))
+  );
+  mix-blend-mode: var(
+    --mha-statusbar-top-bar-highlight-blend-mode,
+    var(--mha-statusbar-highlight-blend-mode, screen)
+  );
+}
+
 /* iOS follows the mapped shell/status surface. Fine tuning stays token-based. */
 :host([data-theme-style="ios"][data-theme]) .mha-status-bar {
   background: var(--mha-shell-status-surface, var(--mha-shell-surface, var(--mha-surface-shell)));
@@ -76,4 +114,45 @@
 :host([data-theme-style="oneui"]) .mha-status-bar::after {
   opacity: 0;
   background: none;
+}
+
+/* Keep the variant token hook last so theme-specific rules can still be
+ * refined per mode without hardcoding selectors in the settings layer.
+ */
+:host([data-status-bar-mode="top-bar"]) .mha-status-bar {
+  background: var(
+    --mha-statusbar-top-bar-surface,
+    var(--mha-shell-status-surface, var(--mha-shell-surface, var(--mha-surface-shell)))
+  );
+  border-color: var(
+    --mha-statusbar-top-bar-border-color,
+    var(--mha-shell-border, var(--mha-border-shell, var(--mha-border-secondary)))
+  );
+  box-shadow: var(
+    --mha-statusbar-top-bar-shadow,
+    var(--mha-statusbar-shadow, var(--mha-shell-shadow, var(--mha-shadow-shell, none)))
+  ) !important;
+  -webkit-backdrop-filter: var(
+    --mha-statusbar-top-bar-filter,
+    var(--mha-statusbar-filter, var(--mha-shell-filter))
+  );
+  backdrop-filter: var(
+    --mha-statusbar-top-bar-filter,
+    var(--mha-statusbar-filter, var(--mha-shell-filter))
+  );
+}
+
+:host([data-status-bar-mode="top-bar"]) .mha-status-bar::after {
+  opacity: var(
+    --mha-statusbar-top-bar-highlight-opacity,
+    var(--mha-statusbar-highlight-opacity, var(--mha-shell-highlight-opacity, 0))
+  );
+  background: var(
+    --mha-statusbar-top-bar-highlight,
+    var(--mha-statusbar-highlight, var(--mha-shell-highlight, none))
+  );
+  mix-blend-mode: var(
+    --mha-statusbar-top-bar-highlight-blend-mode,
+    var(--mha-statusbar-highlight-blend-mode, screen)
+  );
 }

@@ -36,6 +36,11 @@
     background var(--mha-theme-crossfade-duration, 2000ms) var(--mha-theme-crossfade-easing, ease);
 }
 
+:host(.mha-android-edge-to-edge[data-status-bar-mode="top-bar"]) .mha-statusbar-fill,
+:host(.mha-android-edge-to-edge[data-status-bar-mode="hidden"]) .mha-statusbar-fill {
+  display: none !important;
+}
+
 :host(.mha-android-edge-to-edge.mha-is-scrolled) .mha-statusbar-fill,
 :host(.mha-android-edge-to-edge.is-settings-open) .mha-statusbar-fill {
   opacity: 1;

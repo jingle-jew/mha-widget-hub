@@ -160,6 +160,8 @@ test("settings panel hides dock-only controls on mobile and keeps them on deskto
 
   assert.equal(hasText(mobileMain, "Hide Home Assistant sidebar"), false);
   assert.equal(hasText(desktopMain, "Hide Home Assistant sidebar"), true);
+  assert.equal(hasText(mobileMain, "Status bar"), false);
+  assert.equal(hasText(desktopMain, "Status bar"), true);
   assert.equal(hasText(mobileDock, "Dock position"), false);
   assert.equal(hasText(desktopDock, "Dock position"), true);
   assert.equal(hasText(mobileDock, "Show dock labels"), true);

@@ -12,6 +12,7 @@ import {
   HIDE_HA_SIDEBAR,
   PAGES,
   POSITIONS,
+  STATUS_BAR_MODE,
   clearGridStorage,
 } from "./src/core/mha-persistence.js?v=phase1";
 import {destroyDomSubtree} from "./src/core/dom-lifecycle.js";
@@ -78,6 +79,7 @@ import {
 } from "./src/screensaver/screensaver-preview-actions.js";
 import { applyHideHaSidebarSetting } from "./src/settings/ha-sidebar-setting.js";
 import { applyDockLabelsSetting } from "./src/settings/dock-labels-setting.js";
+import { applyStatusBarModeSetting } from "./src/settings/status-bar-mode-setting.js";
 import { openDockPageSettingsForPage } from "./src/settings/dock-page-settings.js";
 import { getStyleManifest } from "./src/styles/style-manifest.js";
 import { createDefaultPageConfig, isMediaPlayersPage, normalizeMediaPageConfig, PAGE_TYPES } from "./src/pages/page-types.js";
@@ -648,6 +650,12 @@ _applyHideHaSidebarFromSettings(enabled=false){
 _applyDockLabelsFromSettings(enabled=false){
   return applyDockLabelsSetting(this,enabled,{
     storageKey:DOCK_LABELS,
+    writeStorageValueRef:writeStorageValue,
+  });
+}
+_applyStatusBarModeFromSettings(mode="pill"){
+  return applyStatusBarModeSetting(this,mode,{
+    storageKey:STATUS_BAR_MODE,
     writeStorageValueRef:writeStorageValue,
   });
 }

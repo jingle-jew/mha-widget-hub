@@ -55,35 +55,57 @@ test("mobile grid presets expose direct widget-grid columns", () => {
   );
 });
 
-test("tablet landscape presets adapt their direct widget-grid matrix to the measured panel rect", () => {
+test("tablet landscape presets adapt their direct widget-grid matrix to the measured panel rect and dock family", () => {
   const hostLikePreset = getGridPreset(null, "tablet", { width: 1133, height: 744 });
-  const sideDockPreset = getGridPreset(null, "tablet", { width: 886, height: 676 });
-  const bottomDockPreset = getGridPreset(null, "tablet", { width: 960, height: 595 });
+  const sideDockPreset = getGridPreset(null, "tablet", {
+    width: 822,
+    height: 693,
+    dockPosition: "left",
+  });
+  const bottomDockPreset = getGridPreset(null, "tablet", {
+    width: 1093,
+    height: 565,
+    dockPosition: "bottom",
+  });
+  const largeBottomDockPreset = getGridPreset(null, "tablet", {
+    width: 1330,
+    height: 821,
+    dockPosition: "bottom",
+  });
 
   assert.deepEqual(
     {
       columns: hostLikePreset.columns,
       rows: hostLikePreset.rows,
     },
-    { columns: 10, rows: 6 },
+    { columns: 11, rows: 10 },
   );
   assert.deepEqual(
     {
       columns: sideDockPreset.columns,
       rows: sideDockPreset.rows,
     },
-    { columns: 10, rows: 6 },
+    { columns: 10, rows: 8 },
   );
   assert.deepEqual(
     {
       columns: bottomDockPreset.columns,
       rows: bottomDockPreset.rows,
     },
-    { columns: 10, rows: 6 },
+    { columns: 11, rows: 6 },
+  );
+  assert.deepEqual(
+    {
+      columns: largeBottomDockPreset.columns,
+      rows: largeBottomDockPreset.rows,
+    },
+    { columns: 12, rows: 8 },
   );
   assert.equal(hostLikePreset.density, "tablet-landscape-adaptive");
   assert.equal(sideDockPreset.density, "tablet-landscape-adaptive");
   assert.equal(bottomDockPreset.density, "tablet-landscape-adaptive");
+  assert.equal(largeBottomDockPreset.density, "tablet-landscape-adaptive");
+  assert.ok(hostLikePreset.columns >= sideDockPreset.columns);
   assert.ok(bottomDockPreset.columns >= sideDockPreset.columns);
   assert.ok(bottomDockPreset.rows <= sideDockPreset.rows);
 });
@@ -111,7 +133,7 @@ test("grid preset can adapt inside the documented bounds when the available rect
 
   assert.deepEqual(
     { columns: roomyTablet.columns, rows: roomyTablet.rows },
-    { columns: 10, rows: 6 },
+    { columns: 11, rows: 10 },
   );
   assert.deepEqual(
     { columns: constrainedTablet.columns, rows: constrainedTablet.rows },
@@ -123,21 +145,34 @@ test("grid preset can adapt inside the documented bounds when the available rect
   assert.equal(constrainedTablet.maxRows, 6);
 });
 
-test("tablet density profiles split width and height bands before the solver runs", () => {
-  const side = resolveGridDensityProfileConstraints(
-    "tablet",
-    "landscape",
-    { width: 886, height: 676 },
+test("tablet landscape preset prefers one more row when a side panel would otherwise leave a large vertical gap", () => {
+  const compactSidePanel = getGridPreset(null, "tablet", {
+    width: 822,
+    height: 693,
+    dockPosition: "left",
+  });
+
+  assert.deepEqual(
+    { columns: compactSidePanel.columns, rows: compactSidePanel.rows },
+    { columns: 10, rows: 8 },
   );
-  const bottom = resolveGridDensityProfileConstraints(
+});
+
+test("tablet density profiles split width/height by dock family before the solver runs", () => {
+  const compactSide = resolveGridDensityProfileConstraints(
     "tablet",
     "landscape",
-    { width: 960, height: 595 },
+    { width: 822, height: 693, dockPosition: "left" },
   );
-  const roomy = resolveGridDensityProfileConstraints(
+  const mediumSide = resolveGridDensityProfileConstraints(
     "tablet",
     "landscape",
-    { width: 1133, height: 744 },
+    { width: 975, height: 753, dockPosition: "left" },
+  );
+  const mediumBottom = resolveGridDensityProfileConstraints(
+    "tablet",
+    "landscape",
+    { width: 975, height: 753, dockPosition: "bottom" },
   );
   const largeTablet = resolveGridDensityProfileConstraints(
     "tablet",
@@ -152,56 +187,80 @@ test("tablet density profiles split width and height bands before the solver run
 
   assert.deepEqual(
     {
-      preferredColumns: side.preferredColumns,
-      minColumns: side.minColumns,
-      maxColumns: side.maxColumns,
-      preferredRows: side.preferredRows,
-      minRows: side.minRows,
-      maxRows: side.maxRows,
+      preferredColumns: compactSide.preferredColumns,
+      minColumns: compactSide.minColumns,
+      maxColumns: compactSide.maxColumns,
+      preferredRows: compactSide.preferredRows,
+      minRows: compactSide.minRows,
+      maxRows: compactSide.maxRows,
+      estimatedColumnGap: compactSide.estimatedColumnGap,
+      estimatedRowGap: compactSide.estimatedRowGap,
+      estimatedPaddingX: compactSide.estimatedPaddingX,
+      estimatedPaddingY: compactSide.estimatedPaddingY,
+      minCellWidthAbsolute: compactSide.minCellWidthAbsolute,
+      minCellHeightAbsolute: compactSide.minCellHeightAbsolute,
+      minCellHeightComfort: compactSide.minCellHeightComfort,
     },
     {
       preferredColumns: 10,
       minColumns: 10,
       maxColumns: 10,
-      preferredRows: 6,
+      preferredRows: 7,
       minRows: 6,
-      maxRows: 6,
+      maxRows: 8,
+      estimatedColumnGap: 12,
+      estimatedRowGap: 12,
+      estimatedPaddingX: 14,
+      estimatedPaddingY: 14,
+      minCellWidthAbsolute: 82,
+      minCellHeightAbsolute: 82,
+      minCellHeightComfort: 70,
     },
   );
   assert.deepEqual(
     {
-      preferredColumns: bottom.preferredColumns,
-      minColumns: bottom.minColumns,
-      maxColumns: bottom.maxColumns,
-      preferredRows: bottom.preferredRows,
-      minRows: bottom.minRows,
-      maxRows: bottom.maxRows,
+      preferredColumns: mediumSide.preferredColumns,
+      minColumns: mediumSide.minColumns,
+      maxColumns: mediumSide.maxColumns,
+      preferredRows: mediumSide.preferredRows,
+      minRows: mediumSide.minRows,
+      maxRows: mediumSide.maxRows,
+      minCellWidthAbsolute: mediumSide.minCellWidthAbsolute,
+      minCellHeightAbsolute: mediumSide.minCellHeightAbsolute,
+      minCellHeightComfort: mediumSide.minCellHeightComfort,
     },
     {
       preferredColumns: 10,
       minColumns: 10,
       maxColumns: 10,
-      preferredRows: 6,
-      minRows: 6,
-      maxRows: 6,
+      preferredRows: 8,
+      minRows: 7,
+      maxRows: 10,
+      minCellWidthAbsolute: 82,
+      minCellHeightAbsolute: 82,
+      minCellHeightComfort: 79,
     },
   );
   assert.deepEqual(
     {
-      preferredColumns: roomy.preferredColumns,
-      minColumns: roomy.minColumns,
-      maxColumns: roomy.maxColumns,
-      preferredRows: roomy.preferredRows,
-      minRows: roomy.minRows,
-      maxRows: roomy.maxRows,
+      preferredColumns: mediumBottom.preferredColumns,
+      minColumns: mediumBottom.minColumns,
+      maxColumns: mediumBottom.maxColumns,
+      preferredRows: mediumBottom.preferredRows,
+      minRows: mediumBottom.minRows,
+      maxRows: mediumBottom.maxRows,
+      minCellWidthAbsolute: mediumBottom.minCellWidthAbsolute,
+      minCellHeightAbsolute: mediumBottom.minCellHeightAbsolute,
     },
     {
-      preferredColumns: 10,
+      preferredColumns: 11,
       minColumns: 10,
-      maxColumns: 10,
-      preferredRows: 6,
-      minRows: 6,
-      maxRows: 6,
+      maxColumns: 11,
+      preferredRows: 8,
+      minRows: 7,
+      maxRows: 10,
+      minCellWidthAbsolute: 82,
+      minCellHeightAbsolute: 82,
     },
   );
   assert.deepEqual(
@@ -217,9 +276,9 @@ test("tablet density profiles split width and height bands before the solver run
       preferredColumns: 14,
       minColumns: 12,
       maxColumns: 14,
-      preferredRows: 8,
-      minRows: 6,
-      maxRows: 8,
+      preferredRows: 10,
+      minRows: 8,
+      maxRows: 12,
     },
   );
   assert.deepEqual(
@@ -314,6 +373,134 @@ test("matrix solver can trade columns and rows together to stay near the target 
   assert.equal(shorterRect.columns, 10);
   assert.equal(tallerRect.rows, 8);
   assert.equal(shorterRect.rows, 7);
+});
+
+test("matrix solver accounts for estimated track overhead before adding another side-dock row", () => {
+  const constraints = {
+    minCell: 70,
+    targetCell: 75,
+    maxCell: 80,
+    minColumns: 10,
+    maxColumns: 10,
+    minRows: 7,
+    maxRows: 10,
+    preferredColumns: 10,
+    preferredRows: 8,
+    fillX: 0.88,
+    fillY: 0.76,
+    preferencePenaltyFactor: 0.06,
+    unusedSpacePenaltyFactor: 0.9,
+  };
+
+  const optimistic = resolveGridDensity({
+    layout: "tablet",
+    orientation: "landscape",
+    constraints,
+    availableContentRect: { width: 975, height: 753, dockPosition: "left" },
+  });
+  const corrected = resolveGridDensity({
+    layout: "tablet",
+    orientation: "landscape",
+    constraints: {
+      ...constraints,
+      estimatedColumnGap: 12,
+      estimatedRowGap: 12,
+      estimatedPaddingX: 14,
+      estimatedPaddingY: 14,
+    },
+    availableContentRect: { width: 975, height: 753, dockPosition: "left" },
+  });
+
+  assert.equal(optimistic.columns, 10);
+  assert.equal(optimistic.rows, 10);
+  assert.equal(corrected.columns, 10);
+  assert.equal(corrected.rows, 9);
+});
+
+test("matrix solver rejects side-dock candidates that fall under the absolute 82px track envelope", () => {
+  const constraints = {
+    minCell: 70,
+    targetCell: 75,
+    maxCell: 80,
+    minColumns: 10,
+    maxColumns: 10,
+    minRows: 8,
+    maxRows: 10,
+    preferredColumns: 10,
+    preferredRows: 8,
+    fillX: 0.88,
+    fillY: 0.76,
+    preferencePenaltyFactor: 0.06,
+    unusedSpacePenaltyFactor: 0.9,
+    estimatedColumnGap: 12,
+    estimatedRowGap: 12,
+    estimatedPaddingX: 14,
+    estimatedPaddingY: 14,
+    minCellWidthAbsolute: 82,
+    minCellHeightAbsolute: 82,
+    minCellWidthComfort: 82,
+    minCellHeightComfort: 79,
+    idealCellWidth: 90,
+    idealCellHeight: 86,
+    idealCellRatio: 1,
+    minCellRatioComfort: 0.92,
+    maxCellRatioComfort: 1.12,
+    minCellRatioAbsolute: 0.82,
+    maxCellRatioAbsolute: 1.2,
+    idealPenaltyFactor: 0.48,
+    comfortPenaltyFactor: 0.72,
+    ratioPenaltyFactor: 0.35,
+    densityPenaltyFactor: 0.6,
+  };
+
+  const dense11 = resolveGridDensity({
+    layout: "tablet",
+    orientation: "landscape",
+    constraints,
+    availableContentRect: { width: 975, height: 753, dockPosition: "left" },
+  });
+  const dense13 = resolveGridDensity({
+    layout: "tablet",
+    orientation: "landscape",
+    constraints: {
+      ...constraints,
+      minRows: 9,
+      maxRows: 12,
+      preferredRows: 10,
+    },
+    availableContentRect: { width: 1121, height: 937, dockPosition: "left" },
+  });
+
+  assert.deepEqual(
+    { columns: dense11.columns, rows: dense11.rows },
+    { columns: 10, rows: 8 },
+  );
+  assert.deepEqual(
+    { columns: dense13.columns, rows: dense13.rows },
+    { columns: 10, rows: 9 },
+  );
+});
+
+test("tablet bottom dock also rejects candidates that would fall under the absolute 82px track envelope", () => {
+  const mediumBottom = getGridPreset(null, "tablet", {
+    width: 1140,
+    height: 633,
+    dockPosition: "bottom",
+  });
+  const largeBottom = getGridPreset(null, "tablet", {
+    width: 1330,
+    height: 821,
+    dockPosition: "bottom",
+  });
+
+  assert.deepEqual(
+    { columns: mediumBottom.columns, rows: mediumBottom.rows },
+    { columns: 11, rows: 6 },
+  );
+  assert.deepEqual(
+    { columns: largeBottom.columns, rows: largeBottom.rows },
+    { columns: 12, rows: 8 },
+  );
 });
 
 test("matrix solver only adds columns on wider tablet rects when the cell size stays comfortable", () => {

@@ -67,7 +67,7 @@ test("theme stylesheets do not override structural geometry variables", () => {
   assert.deepEqual(offenders, []);
 });
 
-test("side docks mirror the shell top inset with a shell-owned bottom inset", () => {
+test("side docks do not keep a mirrored bottom inset once the shell top reserve is applied", () => {
   const source = fs.readFileSync(
     path.join(REPO_ROOT, "styles", "layout", "widget-grid.css"),
     "utf8",
@@ -79,11 +79,11 @@ test("side docks mirror the shell top inset with a shell-owned bottom inset", ()
   );
   assert.match(
     source,
-    /:host\(\[data-dock-position="left"\]\) \.mha-workspace\s*\{[\s\S]*?--mha-shell-content-bottom-inset:\s*var\(--mha-shell-content-top-inset\)\s*!important;/,
+    /:host\(\[data-dock-position="left"\]\) \.mha-workspace\s*\{[\s\S]*?--mha-shell-content-bottom-inset:\s*0px\s*!important;/,
   );
   assert.match(
     source,
-    /:host\(\[data-dock-position="right"\]\) \.mha-workspace,\s*:host\(:not\(\[data-dock-position\]\)\) \.mha-workspace\s*\{[\s\S]*?--mha-shell-content-bottom-inset:\s*var\(--mha-shell-content-top-inset\)\s*!important;/,
+    /:host\(\[data-dock-position="right"\]\) \.mha-workspace,\s*:host\(:not\(\[data-dock-position\]\)\) \.mha-workspace\s*\{[\s\S]*?--mha-shell-content-bottom-inset:\s*0px\s*!important;/,
   );
   assert.match(
     source,
@@ -99,4 +99,89 @@ test("frame alignment stylesheet no longer pilots grid alignment directly from d
 
   assert.doesNotMatch(source, /data-dock-position=.*mha-grid/);
   assert.doesNotMatch(source, /--mha-grid-track-justify:\s*(start|end|center)/);
+});
+
+test("status bar mode remains a shell-owned layout input instead of a settings-only style toggle", () => {
+  const gridSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "layout", "widget-grid.css"),
+    "utf8",
+  );
+  const statusSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "layout", "status-bar.css"),
+    "utf8",
+  );
+
+  assert.match(
+    gridSource,
+    /\[data-status-bar-mode="top-bar"\][\s\S]*--mha-statusbar-reserved-top:/,
+  );
+  assert.match(
+    gridSource,
+    /\[data-status-bar-mode="hidden"\][\s\S]*--mha-statusbar-reserved-top:\s*0px;/,
+  );
+  assert.match(
+    gridSource,
+    /\.mha-shell\s*\{[\s\S]*--mha-statusbar-widget-gap:\s*var\(--mha-page-padding\)\s*!important;/,
+  );
+  assert.doesNotMatch(
+    gridSource,
+    /\[data-status-bar-mode="top-bar"\][\s\S]*--mha-statusbar-widget-gap:\s*0px\s*!important;/,
+  );
+  assert.doesNotMatch(
+    gridSource,
+    /\[data-status-bar-mode="hidden"\][\s\S]*--mha-statusbar-widget-gap:\s*0px\s*!important;/,
+  );
+  assert.match(
+    statusSource,
+    /\[data-status-bar-mode="hidden"\]\)\s+\.mha-status-bar,\s*:host\(\[data-status-bar-mode="hidden"\]\)\s+\.mha-statusbar-fill\s*\{[\s\S]*display:\s*none\s*!important;/,
+  );
+  const mobileGridSection = gridSource.match(/@media\s*\(max-width:\s*767px\)\s*\{[\s\S]*?\n\}/)?.[0] || "";
+  const mobileStatusSection = statusSource.match(/@media\s*\(max-width:\s*767px\)\s*\{[\s\S]*?\n\}/)?.[0] || "";
+  assert.doesNotMatch(
+    mobileGridSection,
+    /\[data-status-bar-mode="top-bar"\][\s\S]*--mha-statusbar-reserved-top:/,
+  );
+  assert.doesNotMatch(
+    mobileStatusSection,
+    /\[data-status-bar-mode="top-bar"\]\)\s+\.mha-status-bar\s*\{[\s\S]*display:\s*flex;/,
+  );
+});
+
+test("mobile shell keeps the background viewport-anchored while widget content owns scrolling", () => {
+  const gridSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "layout", "widget-grid.css"),
+    "utf8",
+  );
+  const backgroundSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "core", "background.css"),
+    "utf8",
+  );
+
+  const mobileGridSection = gridSource.match(/@media\s*\(max-width:\s*767px\)\s*\{[\s\S]*?\n\}/)?.[0] || "";
+  const mobileBackgroundSection = backgroundSource.match(/@media\s*\(max-width:\s*767px\)\s*\{[\s\S]*?\n\}/)?.[0] || "";
+
+  assert.match(
+    mobileGridSection,
+    /:host\s*\{[\s\S]*overflow-y:\s*hidden;/,
+  );
+  assert.match(
+    mobileGridSection,
+    /\.mha-shell\s*\{[\s\S]*block-size:\s*100dvh;[\s\S]*padding-inline:\s*0;[\s\S]*overflow:\s*hidden;/,
+  );
+  assert.match(
+    mobileGridSection,
+    /\.mha-workspace\s*\{[\s\S]*--mha-shell-content-bottom-inset:\s*calc\(/,
+  );
+  assert.match(
+    mobileGridSection,
+    /\.mha-widget-area\s*\{[\s\S]*--mha-widget-area-edge-padding:\s*var\(--mha-mobile-grid-gutter\)\s*!important;[\s\S]*block-size:\s*100%;/,
+  );
+  assert.match(
+    gridSource,
+    /:host\(\[data-layout="mobile"\]\) \.mha-page-panel--grid > \.mha-grid\s*\{[\s\S]*--mha-grid-padding-inline-start-runtime:\s*0px;[\s\S]*--mha-grid-padding-inline-end-runtime:\s*0px;/,
+  );
+  assert.match(
+    mobileBackgroundSection,
+    /\.mha-background\s*\{[\s\S]*position:\s*fixed;[\s\S]*inset:\s*-20%;/,
+  );
 });

@@ -16,6 +16,7 @@ import {
   getStoredDockPosition,
   getStoredHideHaSidebar,
   getStoredLanguageSetting,
+  getStoredStatusBarMode,
   normalizeDockPosition,
   normalizeLanguageSetting,
 } from "../src/core/mha-persistence.js";
@@ -68,6 +69,7 @@ test("persistence helpers normalize dock and language settings safely", () => {
   const storage = createStorage({
     "mha-dock-position": "sideways",
     "mha-hide-ha-sidebar": "true",
+    "mha-status-bar-mode": "unsupported",
     "mha-language": "de",
   });
 
@@ -75,9 +77,16 @@ test("persistence helpers normalize dock and language settings safely", () => {
   assert.equal(normalizeDockPosition("sideways"), "left");
   assert.equal(getStoredDockPosition(storage), "left");
   assert.equal(getStoredHideHaSidebar(storage), true);
+  assert.equal(getStoredStatusBarMode(storage), "pill");
   assert.equal(normalizeLanguageSetting("fr"), "fr");
   assert.equal(normalizeLanguageSetting("de"), "auto");
   assert.equal(getStoredLanguageSetting(storage), "auto");
+});
+
+test("status bar persistence falls back to top bar when no value is stored", () => {
+  const storage = createStorage();
+
+  assert.equal(getStoredStatusBarMode(storage), "top-bar");
 });
 
 test("grid reset helper clears only the persisted grid-related keys", () => {
