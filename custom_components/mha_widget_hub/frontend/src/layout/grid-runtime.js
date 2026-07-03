@@ -478,6 +478,14 @@ export class GridRuntime {
     return rect ? { width: rect.width, height: rect.height } : null;
   }
 
+  getPresetContentRect(rect = this.getAvailableContentRect()) {
+    if (!rect) return null;
+    return {
+      ...rect,
+      dockPosition: rect.dockPosition || this.getDockPosition(),
+    };
+  }
+
   getLogicalGridPreset({
     orientation = this.host?.dataset?.gridOrientation,
   } = {}) {
@@ -499,10 +507,11 @@ export class GridRuntime {
     const fallbackOrientation = getGridOrientation(
       this.host?.getBoundingClientRect?.() || this.getRuntimeMetrics() || {},
     );
+    const presetRect = this.getPresetContentRect(availableContentRect);
     return getGridPresetForLayout(
       layout,
       normalizeGridOrientation(orientation || fallbackOrientation),
-      availableContentRect,
+      presetRect,
     );
   }
 

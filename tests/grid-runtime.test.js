@@ -454,8 +454,8 @@ test("runtime logical preset ignores measured panel metrics on tablet and deskto
 });
 
 test("runtime runtime preset delegates to the preset engine with the available rect", () => {
-  const panel = { clientWidth: 883, clientHeight: 682 };
-  const area = { clientWidth: 860, clientHeight: 676 };
+  const panel = { clientWidth: 822, clientHeight: 693 };
+  const area = { clientWidth: 799, clientHeight: 687 };
   const areaStyle = {
     paddingLeft: "0px",
     paddingRight: "0px",
@@ -497,11 +497,15 @@ test("runtime runtime preset delegates to the preset engine with the available r
 
   assert.deepEqual(
     preset,
-    getGridPresetForLayout("tablet", "landscape", { width: 883, height: 682 }),
+    getGridPresetForLayout("tablet", "landscape", {
+      width: 822,
+      height: 693,
+      dockPosition: "left",
+    }),
   );
 });
 
-test("runtime can unlock 11 landscape tablet columns for a wide bottom-dock panel without changing side-dock panels", () => {
+test("runtime keeps side-dock tablets at the mini reference density while bottom dock can stay wider", () => {
   const areaStyle = {
     paddingLeft: "0px",
     paddingRight: "0px",
@@ -545,11 +549,25 @@ test("runtime can unlock 11 landscape tablet columns for a wide bottom-dock pane
     });
   };
 
-  const sideRuntime = createRuntime({
-    panelWidth: 883,
-    panelHeight: 682,
-    areaWidth: 860,
-    areaHeight: 676,
+  const miniSideRuntime = createRuntime({
+    panelWidth: 822,
+    panelHeight: 693,
+    areaWidth: 799,
+    areaHeight: 687,
+    dockPosition: "left",
+  });
+  const mediumSideRuntime = createRuntime({
+    panelWidth: 975,
+    panelHeight: 753,
+    areaWidth: 952,
+    areaHeight: 747,
+    dockPosition: "left",
+  });
+  const largeSideRuntime = createRuntime({
+    panelWidth: 1121,
+    panelHeight: 937,
+    areaWidth: 1098,
+    areaHeight: 931,
     dockPosition: "left",
   });
   const bottomRuntime = createRuntime({
@@ -559,18 +577,46 @@ test("runtime can unlock 11 landscape tablet columns for a wide bottom-dock pane
     areaHeight: 559,
     dockPosition: "bottom",
   });
+  const tallBottomRuntime = createRuntime({
+    panelWidth: 1140,
+    panelHeight: 633,
+    areaWidth: 1117,
+    areaHeight: 627,
+    dockPosition: "bottom",
+  });
 
   assert.deepEqual(
     {
-      columns: sideRuntime.getRuntimeGridPreset().columns,
-      rows: sideRuntime.getRuntimeGridPreset().rows,
+      columns: miniSideRuntime.getRuntimeGridPreset().columns,
+      rows: miniSideRuntime.getRuntimeGridPreset().rows,
     },
     { columns: 10, rows: 8 },
   );
   assert.deepEqual(
     {
+      columns: mediumSideRuntime.getRuntimeGridPreset().columns,
+      rows: mediumSideRuntime.getRuntimeGridPreset().rows,
+    },
+    { columns: 10, rows: 8 },
+  );
+  assert.deepEqual(
+    {
+      columns: largeSideRuntime.getRuntimeGridPreset().columns,
+      rows: largeSideRuntime.getRuntimeGridPreset().rows,
+    },
+    { columns: 10, rows: 9 },
+  );
+  assert.deepEqual(
+    {
       columns: bottomRuntime.getRuntimeGridPreset().columns,
       rows: bottomRuntime.getRuntimeGridPreset().rows,
+    },
+    { columns: 11, rows: 6 },
+  );
+  assert.deepEqual(
+    {
+      columns: tallBottomRuntime.getRuntimeGridPreset().columns,
+      rows: tallBottomRuntime.getRuntimeGridPreset().rows,
     },
     { columns: 11, rows: 6 },
   );
@@ -692,9 +738,9 @@ test("available content rect resolves from the widget area on mobile", () => {
   });
 });
 
-test("runtime preset sizing stays invariant across dock positions for the same panel frame", () => {
-  const panel = { clientWidth: 883, clientHeight: 682 };
-  const area = { clientWidth: 860, clientHeight: 676 };
+test("runtime preset sizing uses dock position as part of the tablet density context", () => {
+  const panel = { clientWidth: 975, clientHeight: 753 };
+  const area = { clientWidth: 952, clientHeight: 747 };
   const areaStyle = {
     paddingLeft: "0px",
     paddingRight: "0px",
@@ -741,8 +787,18 @@ test("runtime preset sizing stays invariant across dock positions for the same p
   });
 
   assert.deepEqual(
-    createRuntime("left").getRuntimeGridPreset(),
-    createRuntime("bottom").getRuntimeGridPreset(),
+    {
+      columns: createRuntime("left").getRuntimeGridPreset().columns,
+      rows: createRuntime("left").getRuntimeGridPreset().rows,
+    },
+    { columns: 10, rows: 8 },
+  );
+  assert.deepEqual(
+    {
+      columns: createRuntime("bottom").getRuntimeGridPreset().columns,
+      rows: createRuntime("bottom").getRuntimeGridPreset().rows,
+    },
+    { columns: 10, rows: 7 },
   );
 });
 
@@ -955,11 +1011,11 @@ test("runtime debug metrics reflect status-bar and dock vertical reserves withou
 
   assert.equal(leftHidden.host.dataset.gridDebugStatusBarReservedHeight, "0");
   assert.equal(leftHidden.host.dataset.gridDebugDockReservedHeight, "0");
-  assert.equal(leftHidden.host.dataset.gridDebugSelectedRowCount, "10");
+  assert.equal(leftHidden.host.dataset.gridDebugSelectedRowCount, "8");
 
   assert.equal(rightTopBar.host.dataset.gridDebugStatusBarReservedHeight, "44");
   assert.equal(rightTopBar.host.dataset.gridDebugDockReservedHeight, "0");
-  assert.equal(rightTopBar.host.dataset.gridDebugSelectedRowCount, "8");
+  assert.equal(rightTopBar.host.dataset.gridDebugSelectedRowCount, "7");
 
   assert.equal(leftPill.host.dataset.gridDebugStatusBarReservedHeight, "62");
   assert.equal(leftPill.host.dataset.gridDebugDockReservedHeight, "0");
@@ -968,6 +1024,14 @@ test("runtime debug metrics reflect status-bar and dock vertical reserves withou
   assert.equal(bottomDock.host.dataset.gridDebugStatusBarReservedHeight, "62");
   assert.equal(bottomDock.host.dataset.gridDebugDockReservedHeight, "96");
   assert.equal(bottomDock.host.dataset.gridDebugSelectedRowCount, "6");
+  assert.ok(
+    Number(leftHidden.host.dataset.gridDebugSelectedRowCount)
+      >= Number(rightTopBar.host.dataset.gridDebugSelectedRowCount),
+  );
+  assert.ok(
+    Number(leftHidden.host.dataset.gridDebugSelectedRowCount)
+      >= Number(leftPill.host.dataset.gridDebugSelectedRowCount),
+  );
 });
 
 test("runtime keeps bottom dock square-unit constrained by measured height", () => {
