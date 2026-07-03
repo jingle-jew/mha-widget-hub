@@ -199,23 +199,28 @@
 @media (max-width: 767px) {
   :host {
     --mha-statusbar-reserved-top: 0px;
-    --mha-mobile-grid-gutter: var(--mha-page-padding, clamp(1rem, 2.6vw, 2rem));
+    --mha-mobile-grid-gutter: clamp(0.75rem, 3.2vw, 0.9rem);
     overflow-x: hidden;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    touch-action: pan-y;
-    overscroll-behavior-y: auto;
+    overflow-y: hidden;
+    touch-action: none;
+    overscroll-behavior-y: none;
   }
 
   .mha-shell {
-    block-size: auto;
+    block-size: 100dvh;
     min-block-size: 100dvh;
+    padding-inline: 0;
     row-gap: 0 !important;
-    overflow: visible;
+    overflow: hidden;
   }
 
   .mha-workspace {
-    block-size: auto;
+    --mha-shell-content-bottom-inset: calc(
+      max(var(--mha-dock-button-size, 52px), 3.6rem)
+      + (var(--mha-page-padding) * 2.5)
+      + var(--mha-safe-bottom, 0px)
+    ) !important;
+    block-size: 100%;
     min-block-size: 0;
     grid-template-columns: minmax(0, 1fr);
   }
@@ -225,8 +230,9 @@
   }
 
   .mha-widget-area {
+    --mha-widget-area-edge-padding: var(--mha-mobile-grid-gutter) !important;
     --mha-widget-area-top-gutter: 0px !important;
-    block-size: auto;
+    block-size: 100%;
     min-block-size: 0;
     padding-block-start: 0 !important;
   }
@@ -275,6 +281,8 @@
 }
 
 :host([data-layout="mobile"]) .mha-page-panel--grid > .mha-grid {
+  --mha-grid-padding-inline-start-runtime: 0px;
+  --mha-grid-padding-inline-end-runtime: 0px;
   inline-size: 100%;
   width: 100%;
   block-size: auto;
@@ -291,7 +299,7 @@
 
 :host([data-layout="mobile"]) .mha-page-stage {
   justify-items: stretch;
-  block-size: auto;
+  block-size: 100%;
   min-block-size: 100%;
 }
 

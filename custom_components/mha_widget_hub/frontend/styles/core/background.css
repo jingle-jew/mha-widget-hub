@@ -261,6 +261,13 @@
   }
 }
 
+@media (max-width: 767px) {
+  .mha-background {
+    position: fixed;
+    inset: -20%;
+  }
+}
+
 :host([data-media-page-active="true"][data-media-page-wallpaper="true"]) .mha-background-media,
 :host([data-media-page-active="true"][data-media-page-wallpaper="true"]) .mha-background-media-overlay {
   display:block;

@@ -146,3 +146,42 @@ test("status bar mode remains a shell-owned layout input instead of a settings-o
     /\[data-status-bar-mode="top-bar"\]\)\s+\.mha-status-bar\s*\{[\s\S]*display:\s*flex;/,
   );
 });
+
+test("mobile shell keeps the background viewport-anchored while widget content owns scrolling", () => {
+  const gridSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "layout", "widget-grid.css"),
+    "utf8",
+  );
+  const backgroundSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "core", "background.css"),
+    "utf8",
+  );
+
+  const mobileGridSection = gridSource.match(/@media\s*\(max-width:\s*767px\)\s*\{[\s\S]*?\n\}/)?.[0] || "";
+  const mobileBackgroundSection = backgroundSource.match(/@media\s*\(max-width:\s*767px\)\s*\{[\s\S]*?\n\}/)?.[0] || "";
+
+  assert.match(
+    mobileGridSection,
+    /:host\s*\{[\s\S]*overflow-y:\s*hidden;/,
+  );
+  assert.match(
+    mobileGridSection,
+    /\.mha-shell\s*\{[\s\S]*block-size:\s*100dvh;[\s\S]*padding-inline:\s*0;[\s\S]*overflow:\s*hidden;/,
+  );
+  assert.match(
+    mobileGridSection,
+    /\.mha-workspace\s*\{[\s\S]*--mha-shell-content-bottom-inset:\s*calc\(/,
+  );
+  assert.match(
+    mobileGridSection,
+    /\.mha-widget-area\s*\{[\s\S]*--mha-widget-area-edge-padding:\s*var\(--mha-mobile-grid-gutter\)\s*!important;[\s\S]*block-size:\s*100%;/,
+  );
+  assert.match(
+    gridSource,
+    /:host\(\[data-layout="mobile"\]\) \.mha-page-panel--grid > \.mha-grid\s*\{[\s\S]*--mha-grid-padding-inline-start-runtime:\s*0px;[\s\S]*--mha-grid-padding-inline-end-runtime:\s*0px;/,
+  );
+  assert.match(
+    mobileBackgroundSection,
+    /\.mha-background\s*\{[\s\S]*position:\s*fixed;[\s\S]*inset:\s*-20%;/,
+  );
+});
