@@ -5,8 +5,10 @@ import {
   RESPONSIVE_BREAKPOINTS,
 } from "../src/layout/responsive.js";
 import {
+  computeResponsiveState,
   getGridPreset,
   getGridPresetForLayout,
+  getLayoutMode,
   logicalSizeToWidgetSize,
   normalizeWidgetSize,
   widgetSizeToLogicalSize,
@@ -31,6 +33,79 @@ test("manual layout modes override width-based layout selection", () => {
   assert.equal(getLayoutForWidth(390, { layoutMode: "desktop" }), "desktop");
   assert.equal(getLayoutForWidth(1600, { layoutMode: "tablet" }), "tablet");
   assert.equal(getLayoutForWidth(1600, { layoutMode: "auto" }), "desktop");
+});
+
+test("requested layout mode ignores the published resolved layout dataset", () => {
+  const previousDocument = globalThis.document;
+  globalThis.document = {
+    documentElement: {
+      dataset: {
+        layoutMode: "auto",
+        layout: "desktop",
+      },
+    },
+  };
+
+  try {
+    assert.equal(
+      getLayoutMode({
+        dataset: {
+          layout: "mobile",
+        },
+      }),
+      "auto",
+    );
+  } finally {
+    globalThis.document = previousDocument;
+  }
+});
+
+test("responsive state formalizes mobile landscape as a distinct variant", () => {
+  const state = computeResponsiveState({
+    layoutMode: "auto",
+    viewportMetrics: { width: 844, height: 390 },
+    dockPosition: "bottom",
+    statusBarMode: "top-bar",
+  });
+
+  assert.equal(state.layout, "mobile");
+  assert.equal(state.layoutVariant, "mobile-landscape");
+  assert.equal(state.dockFamily, "side");
+  assert.equal(state.dockPosition, "left");
+  assert.equal(state.statusBarVisible, false);
+  assert.equal(state.gridPreset.columns, 8);
+  assert.equal(state.scrollModel, "widget-area");
+  assert.equal(state.settingsCapabilities.supportsDockPosition, false);
+  assert.equal(state.settingsCapabilities.showsStatusBarOptions, false);
+});
+
+test("responsive state keeps mobile landscape active even below the tablet width breakpoint", () => {
+  const state = computeResponsiveState({
+    layoutMode: "auto",
+    viewportMetrics: { width: 740, height: 360 },
+    dockPosition: "bottom",
+    statusBarMode: "top-bar",
+  });
+
+  assert.equal(state.layout, "mobile");
+  assert.equal(state.layoutVariant, "mobile-landscape");
+  assert.equal(state.dockFamily, "side");
+  assert.equal(state.dockPosition, "left");
+  assert.equal(state.statusBarVisible, false);
+});
+
+test("responsive state keeps tablet landscape intact when the viewport is not phone-short", () => {
+  const state = computeResponsiveState({
+    layoutMode: "auto",
+    viewportMetrics: { width: 1024, height: 600 },
+    dockPosition: "left",
+    statusBarMode: "top-bar",
+  });
+
+  assert.equal(state.layout, "tablet");
+  assert.equal(state.layoutVariant, "tablet-landscape");
+  assert.equal(state.dockFamily, "side");
+  assert.equal(state.statusBarVisible, true);
 });
 
 test("widget and logical sizes convert consistently", () => {

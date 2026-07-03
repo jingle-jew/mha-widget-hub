@@ -367,6 +367,76 @@
   }
 }
 
+:host([data-layout-variant="mobile-landscape"]) .mha-dock {
+  --mha-dock-empty-width: var(
+    --mha-shell-side-dock-rail-size,
+    var(--mha-dock-unit-size, clamp(4rem, 16vw, 4.85rem))
+  );
+  --mha-dock-empty-height: auto;
+  --mha-dock-empty-padding-block: var(--mha-grid-gap);
+  --mha-dock-empty-padding-inline: min(var(--mha-grid-gap), 5%);
+  --mha-dock-icon-min-size: clamp(2.35rem, 9vw, 2.9rem);
+  --mha-icon-size: clamp(
+    calc(var(--mha-dock-empty-width) - var(--mha-grid-gap) - var(--mha-grid-gap)),
+    calc(var(--mha-dock-empty-width) - var(--mha-grid-gap)),
+    var(--mha-dock-empty-width)
+  );
+  --mha-dock-item-inline-size: var(--mha-icon-size);
+  --mha-dock-item-block-size: var(--mha-icon-size);
+  --mha-dock-item-min-inline-size: var(--mha-icon-size);
+  --mha-dock-item-min-block-size: var(--mha-icon-size);
+  --mha-dock-item-aspect-ratio: 1;
+
+  position: relative;
+  inset: auto;
+  left: auto;
+  right: auto;
+  top: auto;
+  bottom: auto;
+  display: flex;
+
+  width: var(--mha-dock-empty-width);
+  min-width: var(--mha-dock-empty-width);
+  max-width: var(--mha-dock-empty-width);
+  min-height: 0;
+  max-height: max(
+    0px,
+    calc(100% - var(--mha-shell-content-top-inset, 0px))
+  );
+
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--mha-grid-gap);
+  overflow: auto;
+  scrollbar-width: none;
+
+  border-radius: clamp(1.35rem, 4vw, 2rem);
+  align-self: flex-start;
+  justify-self: stretch;
+  margin-block-start: var(--mha-shell-content-top-inset, 0px);
+  transform: none;
+}
+
+:host([data-layout-variant="mobile-landscape"]) .mha-dock::-webkit-scrollbar {
+  display: none;
+}
+
+:host([data-layout-variant="mobile-landscape"]) .mha-dock-pages,
+:host([data-layout-variant="mobile-landscape"]) .mha-dock-page {
+  display: contents;
+}
+
+:host([data-layout-variant="mobile-landscape"]) .mha-dock-item[data-active="true"]::after {
+  left: auto;
+  right: calc(var(--mha-dock-empty-padding-inline, .6rem) * -0.52);
+  top: 50%;
+  bottom: auto;
+  inline-size: .24rem;
+  block-size: min(1.2rem, 42%);
+  transform: translateY(-50%);
+}
+
 /* ADAPTIVE SETTINGS-ONLY DOCK RAIL
  * Tablet/desktop dock adapts to the number of icons inside it.
  * With one icon, the rail collapses to a compact floating capsule.

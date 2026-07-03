@@ -144,7 +144,7 @@ export function createRenderPipeline(host, options = {}) {
   }) {
     cancelAnimationFrame(host._widgetRenderFrame);
     const queue = [...host._widgets];
-    const batchSize = (host._getRuntimeLayout?.() || host.dataset?.layout || "desktop") === "mobile" ? 1 : 2;
+    const batchSize = layout === "mobile" ? 1 : 2;
 
     const renderBatch = () => {
       host._widgetRenderFrame = 0;
@@ -255,10 +255,13 @@ export function createRenderPipeline(host, options = {}) {
 
   function buildRenderContext(themeState) {
     const viewport = getShellViewportMetrics(host);
-    const layoutMode = host._getRuntimeLayoutMode?.() || getLayoutMode(host);
-    const layout = host._getRuntimeLayout?.()
+    const responsiveState = host._getResponsiveState?.({ viewportMetrics: viewport }) || {};
+    const layoutMode = responsiveState.layoutMode || host._getRuntimeLayoutMode?.() || getLayoutMode(host);
+    const layout = responsiveState.layout
+      || host._getRuntimeLayout?.()
       || getLayoutForWidth(viewport.width, { layoutMode });
-    const gridOrientation = host._getGridOrientation?.()
+    const gridOrientation = responsiveState.orientation
+      || host._getGridOrientation?.()
       || getGridOrientation(viewport);
     const preset = host._getRuntimeGridPreset?.()
       || host._getLogicalGridPreset?.()
@@ -271,8 +274,11 @@ export function createRenderPipeline(host, options = {}) {
     return {
       renderId: host._renderId + 1,
       themeState,
+      responsiveState,
       layoutMode,
       layout,
+      layoutVariant: responsiveState.layoutVariant || `${layout}-${gridOrientation}`,
+      dockFamily: responsiveState.dockFamily || (layout === "mobile" ? "bottom" : "side"),
       gridOrientation,
       preset,
       units,
@@ -284,6 +290,7 @@ export function createRenderPipeline(host, options = {}) {
       iconShape,
       accent,
       statusBarMode: host._statusBarMode || "pill",
+      statusBarVisible: responsiveState.statusBarVisible ?? (layout !== "mobile"),
     };
   }
 
@@ -306,6 +313,8 @@ export function createRenderPipeline(host, options = {}) {
     iconShape,
     layoutMode,
     layout,
+    layoutVariant,
+    dockFamily,
     gridOrientation,
     preset,
     units,
@@ -314,20 +323,27 @@ export function createRenderPipeline(host, options = {}) {
     logicalRows,
     accent,
     statusBarMode,
+    statusBarVisible,
   }) {
     host.dataset.themeStyle = themeStyle;
     host.dataset.iconShapeSetting = iconShapeSetting;
     host.dataset.iconShape = iconShape;
     host.dataset.layoutMode = layoutMode;
     host.dataset.layout = layout;
+    host.dataset.layoutFamily = layout;
+    host.dataset.layoutVariant = layoutVariant;
+    host.dataset.dockFamily = dockFamily;
     if (gridOrientation) {
       host.dataset.gridOrientation = gridOrientation;
     } else {
       delete host.dataset.gridOrientation;
     }
-    host.dataset.dockPosition = host._dockPosition;
+    host.dataset.dockPosition = layoutVariant === "mobile-landscape"
+      ? "left"
+      : host._dockPosition;
     host.dataset.dockLabels = String(Boolean(host._showDockLabels));
     host.dataset.statusBarMode = statusBarMode || "pill";
+    host.dataset.statusBarVisible = String(Boolean(statusBarVisible));
     host.classList.toggle("is-editing", host._isEditing);
     host.dataset.accent = accent;
     document.documentElement.dataset.accent = accent;

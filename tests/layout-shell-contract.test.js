@@ -135,6 +135,10 @@ test("status bar mode remains a shell-owned layout input instead of a settings-o
     statusSource,
     /\[data-status-bar-mode="hidden"\]\)\s+\.mha-status-bar,\s*:host\(\[data-status-bar-mode="hidden"\]\)\s+\.mha-statusbar-fill\s*\{[\s\S]*display:\s*none\s*!important;/,
   );
+  assert.match(
+    statusSource,
+    /\[data-status-bar-visible="false"\]\)\s+\.mha-status-bar,\s*:host\(\[data-status-bar-visible="false"\]\)\s+\.mha-statusbar-fill\s*\{[\s\S]*display:\s*none\s*!important;/,
+  );
   const mobileGridSection = gridSource.match(/@media\s*\(max-width:\s*767px\)\s*\{[\s\S]*?\n\}/)?.[0] || "";
   const mobileStatusSection = statusSource.match(/@media\s*\(max-width:\s*767px\)\s*\{[\s\S]*?\n\}/)?.[0] || "";
   assert.doesNotMatch(
@@ -170,18 +174,94 @@ test("mobile shell keeps the background viewport-anchored while widget content o
   );
   assert.match(
     mobileGridSection,
-    /\.mha-workspace\s*\{[\s\S]*--mha-shell-content-bottom-inset:\s*calc\(/,
+    /\.mha-workspace\s*\{[\s\S]*--mha-shell-content-bottom-inset:\s*var\(--mha-mobile-dock-footprint\)\s*!important;/,
   );
   assert.match(
     mobileGridSection,
     /\.mha-widget-area\s*\{[\s\S]*--mha-widget-area-edge-padding:\s*var\(--mha-mobile-grid-gutter\)\s*!important;[\s\S]*block-size:\s*100%;/,
   );
   assert.match(
+    mobileGridSection,
+    /\.mha-widget-area\s*\{[\s\S]*--mha-widget-area-top-gutter:\s*var\(--mha-mobile-content-top-space\)\s*!important;[\s\S]*padding-block-start:\s*var\(--mha-widget-area-top-gutter\)\s*!important;/,
+  );
+  assert.match(
     gridSource,
     /:host\(\[data-layout="mobile"\]\) \.mha-page-panel--grid > \.mha-grid\s*\{[\s\S]*--mha-grid-padding-inline-start-runtime:\s*0px;[\s\S]*--mha-grid-padding-inline-end-runtime:\s*0px;/,
   );
   assert.match(
+    gridSource,
+    /:host\(\[data-layout="mobile"\]\) \.mha-page-panel--grid > \.mha-grid\s*\{[\s\S]*--mha-grid-padding-block-start:\s*0px;[\s\S]*--mha-grid-padding-block-end:\s*0px;/,
+  );
+  assert.doesNotMatch(
+    gridSource,
+    /:host\(\[data-layout="mobile"\]\) \.mha-page-panel--grid\s*\{[\s\S]*padding-block-start:\s*var\(--mha-page-padding\);/,
+  );
+  assert.match(
     mobileBackgroundSection,
     /\.mha-background\s*\{[\s\S]*position:\s*fixed;[\s\S]*inset:\s*-20%;/,
+  );
+  assert.match(
+    gridSource,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\)\s*\{[\s\S]*--mha-mobile-grid-gutter:\s*clamp\(/,
+  );
+  assert.match(
+    gridSource,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\) \.mha-shell\s*\{[\s\S]*row-gap:\s*0\s*!important;/,
+  );
+  assert.match(
+    gridSource,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\) \.mha-workspace\s*\{[\s\S]*grid-template-columns:\s*var\(--mha-dock-zone-width\) minmax\(0, 1fr\);/,
+  );
+  assert.match(
+    gridSource,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\) \.mha-dock-zone\s*\{[\s\S]*display:\s*grid;[\s\S]*grid-column:\s*1;/,
+  );
+  assert.match(
+    backgroundSource,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\) \.mha-background\s*\{[\s\S]*position:\s*fixed;[\s\S]*inset:\s*-20%;/,
+  );
+});
+
+test("floating controls and settings sheet consume responsive variants instead of raw orientation for mobile landscape", () => {
+  const floatingControlsSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "layout", "floating-controls.css"),
+    "utf8",
+  );
+  const settingsPanelSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "settings", "settings-panel.css"),
+    "utf8",
+  );
+  const settingsBottomSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "settings", "settings-bottom.css"),
+    "utf8",
+  );
+  const dockSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "layout", "dock.css"),
+    "utf8",
+  );
+
+  assert.match(
+    floatingControlsSource,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\) \.mha-main-edit-button,\s*:host\(\[data-layout-variant="mobile-landscape"\]\) \.mha-add-widget-button,\s*:host\(\[data-layout-variant="mobile-landscape"\]\) \.mha-mobile-dock-launcher/,
+  );
+  assert.match(
+    floatingControlsSource,
+    /:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\.is-mobile-floating-controls-hidden\) \.mha-main-edit-button/,
+  );
+  assert.match(
+    settingsPanelSource,
+    /\.mha-settings-panel\[data-mobile-layout="true"\] \.mha-settings-sheet\s*\{[\s\S]*transform:\s*translateY\(18px\) scale\(\.98\);/,
+  );
+  assert.match(
+    settingsPanelSource,
+    /\.mha-settings-panel\[data-mobile-landscape="true"\] \.mha-settings-accent-swatches\s*\{[\s\S]*grid-template-columns:\s*repeat\(10, minmax\(0, 1fr\)\);/,
+  );
+  assert.match(
+    settingsBottomSource,
+    /\.mha-settings-panel\[data-mobile-layout="true"\] \.mha-settings-sheet\s*\{[\s\S]*position:\s*fixed;[\s\S]*bottom:\s*0;/,
+  );
+  assert.match(
+    dockSource,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\) \.mha-dock\s*\{[\s\S]*display:\s*flex;[\s\S]*flex-direction:\s*column;/,
   );
 });

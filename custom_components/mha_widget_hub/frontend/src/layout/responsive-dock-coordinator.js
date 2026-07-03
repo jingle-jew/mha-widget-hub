@@ -3,6 +3,13 @@ import { DOCK_POSITION, normalizeDockPosition } from "../core/mha-persistence.js
 import { syncDockActiveState } from "./dock-controller.js";
 
 export function createResponsiveDockCoordinator(host) {
+  function getResponsiveState({ publish = false } = {}) {
+    if (typeof host._syncResponsiveState === "function") {
+      return host._syncResponsiveState({ publish });
+    }
+    return host._responsiveState || null;
+  }
+
   function getMobileDockScrollContainer() {
     const dock = host.shadowRoot?.querySelector?.(".mha-mobile-dock");
     if (!dock) return null;
@@ -69,14 +76,17 @@ export function createResponsiveDockCoordinator(host) {
   }
 
   function isMobileLauncherLayout() {
-    return host._getRuntimeLayout?.() === "mobile"
-      || host._layout === "mobile"
-      || host.dataset.layout === "mobile";
+    return getResponsiveState()?.layout === "mobile"
+      || host._getRuntimeLayout?.() === "mobile";
   }
 
   function isMobileLandscapeLayout() {
+    const responsiveState = getResponsiveState();
+    if (responsiveState?.layoutVariant) {
+      return responsiveState.layoutVariant === "mobile-landscape";
+    }
     return isMobileLauncherLayout()
-      && window.matchMedia?.("(orientation: landscape)")?.matches;
+      && host._getGridOrientation?.() === "landscape";
   }
 
   function updateDockActiveState() {
@@ -102,16 +112,33 @@ export function createResponsiveDockCoordinator(host) {
   }
 
   function handleViewportChange() {
+    const previousResponsiveState = host._responsiveState;
     host._isResponsiveRelayouting = true;
     host.classList.add("is-responsive-relayouting");
     clearTimeout(host._relayoutTimer);
     cancelAnimationFrame(host._viewportRaf);
     host._viewportRaf = requestAnimationFrame(() => {
-      host._syncGridRuntimeMetrics();
-      host._observeLayoutSize();
-      wireDockAutoHide(host.shadowRoot?.querySelector?.(".mha-grid"));
-      host._syncEditModeDom();
-      host._syncWidgetDropSlots();
+      const nextResponsiveState = getResponsiveState({ publish: true });
+      const requiresStructuralRelayout = Boolean(
+        previousResponsiveState
+        && nextResponsiveState
+        && (
+          previousResponsiveState.layout !== nextResponsiveState.layout
+          || previousResponsiveState.layoutVariant !== nextResponsiveState.layoutVariant
+          || previousResponsiveState.dockFamily !== nextResponsiveState.dockFamily
+          || previousResponsiveState.statusBarVisible !== nextResponsiveState.statusBarVisible
+        )
+      );
+
+      if (requiresStructuralRelayout && typeof host.render === "function") {
+        host.render();
+      } else {
+        host._syncGridRuntimeMetrics();
+        host._observeLayoutSize();
+        wireDockAutoHide(host.shadowRoot?.querySelector?.(".mha-grid"));
+        host._syncEditModeDom();
+        host._syncWidgetDropSlots();
+      }
       host._relayoutTimer = setTimeout(() => {
         host._isResponsiveRelayouting = false;
         host.classList.remove("is-responsive-relayouting");
@@ -131,8 +158,8 @@ export function createResponsiveDockCoordinator(host) {
     if (!grid) return;
 
     const widgetArea = grid.closest(".mha-widget-area");
-    const isMobileLayout = () => host.dataset.layout === "mobile";
-    const isLandscape = () => window.matchMedia?.("(orientation: landscape)")?.matches;
+    const isMobileLayout = () => isMobileLauncherLayout();
+    const isLandscape = () => isMobileLandscapeLayout();
 
     if (!widgetArea || !isMobileLayout()) return;
     if (isLandscape()) {

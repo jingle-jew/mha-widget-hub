@@ -67,6 +67,9 @@ test("responsive dock coordinator persists dock position and relayouts viewport"
         return null;
       },
     },
+    _getRuntimeLayout() {
+      return "desktop";
+    },
     setAttribute(name, value) {
       calls.push(["setAttribute", name, value]);
     },
@@ -126,7 +129,12 @@ test("responsive dock coordinator hides floating controls in mobile landscape", 
   };
 
   const host = {
-    dataset: { layout: "mobile" },
+    _getRuntimeLayout() {
+      return "mobile";
+    },
+    _getGridOrientation() {
+      return "landscape";
+    },
     classList: createClassList(),
     _gridScrollCleanup: null,
   };
@@ -152,6 +160,82 @@ test("responsive dock coordinator hides floating controls in mobile landscape", 
   }
 });
 
+test("responsive dock coordinator rerenders when the layout variant changes", () => {
+  const previousWindow = globalThis.window;
+  const previousRaf = globalThis.requestAnimationFrame;
+  const previousCancelRaf = globalThis.cancelAnimationFrame;
+  const rafCallbacks = [];
+  globalThis.window = {
+    matchMedia() {
+      return { matches: false };
+    },
+  };
+  globalThis.requestAnimationFrame = (callback) => {
+    rafCallbacks.push(callback);
+    return rafCallbacks.length;
+  };
+  globalThis.cancelAnimationFrame = () => {};
+
+  const calls = [];
+  const host = {
+    _relayoutTimer: 0,
+    _viewportRaf: 0,
+    _responsiveState: {
+      layout: "mobile",
+      layoutVariant: "mobile-portrait",
+      dockFamily: "bottom",
+      statusBarVisible: false,
+    },
+    classList: createClassList(),
+    shadowRoot: {
+      querySelector() {
+        return null;
+      },
+    },
+    _syncResponsiveState() {
+      const next = {
+        layout: "mobile",
+        layoutVariant: "mobile-landscape",
+        dockFamily: "side",
+        statusBarVisible: false,
+      };
+      this._responsiveState = next;
+      calls.push("syncResponsiveState");
+      return next;
+    },
+    render() {
+      calls.push("render");
+    },
+    _syncGridRuntimeMetrics() {
+      calls.push("syncGridRuntimeMetrics");
+    },
+    _observeLayoutSize() {
+      calls.push("observeLayoutSize");
+    },
+    _syncEditModeDom() {
+      calls.push("syncEditModeDom");
+    },
+    _syncWidgetDropSlots() {
+      calls.push("syncWidgetDropSlots");
+    },
+  };
+
+  try {
+    const coordinator = createResponsiveDockCoordinator(host);
+    coordinator.handleViewportChange();
+    rafCallbacks.shift()?.();
+
+    assert.deepEqual(calls, [
+      "syncResponsiveState",
+      "render",
+    ]);
+  } finally {
+    globalThis.window = previousWindow;
+    globalThis.requestAnimationFrame = previousRaf;
+    globalThis.cancelAnimationFrame = previousCancelRaf;
+  }
+});
+
 test("responsive dock coordinator toggles floating controls on portrait scroll direction", () => {
   const previousWindow = globalThis.window;
   globalThis.window = {
@@ -161,7 +245,12 @@ test("responsive dock coordinator toggles floating controls on portrait scroll d
   };
 
   const host = {
-    dataset: { layout: "mobile" },
+    _getRuntimeLayout() {
+      return "mobile";
+    },
+    _getGridOrientation() {
+      return "portrait";
+    },
     classList: createClassList(),
     _gridScrollCleanup: null,
   };
@@ -243,7 +332,12 @@ test("responsive dock coordinator scrolls the mobile dock to the end when editin
         return dock;
       },
     },
-    dataset: { layout: "mobile" },
+    _getRuntimeLayout() {
+      return "mobile";
+    },
+    _getGridOrientation() {
+      return "portrait";
+    },
     classList: createClassList(),
   };
 
@@ -328,7 +422,12 @@ test("responsive dock coordinator skips auto-scroll outside mobile or without ov
         return dock;
       },
     },
-    dataset: { layout: "tablet" },
+    _getRuntimeLayout() {
+      return "tablet";
+    },
+    _getGridOrientation() {
+      return "portrait";
+    },
     classList: createClassList(),
   };
 
@@ -339,7 +438,8 @@ test("responsive dock coordinator skips auto-scroll outside mobile or without ov
     rafCallbacks.shift()?.();
     assert.equal(dock.dataset.overflowing, "false");
 
-    host.dataset.layout = "mobile";
+    host._getRuntimeLayout = () => "mobile";
+    host._getGridOrientation = () => "landscape";
     coordinator.syncMobileDockEditScroll();
     assert.equal(rafCallbacks.length, 0);
     coordinator.syncMobileDockOverflowState();
@@ -379,7 +479,12 @@ test("responsive dock coordinator schedules initial mobile dock overflow measure
         return dock;
       },
     },
-    dataset: { layout: "mobile" },
+    _getRuntimeLayout() {
+      return "mobile";
+    },
+    _getGridOrientation() {
+      return "portrait";
+    },
     classList: createClassList(),
   };
 
@@ -416,7 +521,12 @@ test("responsive dock coordinator marks the mobile dock as non-overflowing or ov
         return dock;
       },
     },
-    dataset: { layout: "mobile" },
+    _getRuntimeLayout() {
+      return "mobile";
+    },
+    _getGridOrientation() {
+      return "portrait";
+    },
     classList: createClassList(),
   };
 

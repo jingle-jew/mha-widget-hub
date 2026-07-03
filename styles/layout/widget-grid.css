@@ -200,6 +200,30 @@
   :host {
     --mha-statusbar-reserved-top: 0px;
     --mha-mobile-grid-gutter: clamp(0.75rem, 3.2vw, 0.9rem);
+    --mha-mobile-content-top-space: var(--mha-page-padding);
+    --mha-mobile-dock-edge: var(--mha-mobile-grid-gutter);
+    --mha-mobile-dock-bottom: max(
+      var(--mha-safe-bottom, env(safe-area-inset-bottom, 0px)),
+      clamp(.85rem, 2.8vw, 1.2rem)
+    );
+    --mha-mobile-dock-gap: clamp(0.25rem, 1vw, 0.45rem);
+    --mha-mobile-dock-padding-inline: clamp(0.5rem, 1.5vw, 0.75rem);
+    --mha-mobile-dock-padding-block: clamp(0.5rem, 1.5vw, 0.75rem);
+    --mha-mobile-dock-width: calc(100vw - (var(--mha-mobile-dock-edge) * 2));
+    --mha-mobile-dock-slot-width: calc(
+      (var(--mha-mobile-dock-width) - (var(--mha-mobile-dock-padding-inline) * 2) - (var(--mha-mobile-dock-gap) * 3))
+      / 4
+    );
+    --mha-mobile-dock-icon-size: min(
+      var(--mha-mobile-dock-slot-width),
+      clamp(3rem, 14vw, 4.15rem)
+    );
+    --mha-mobile-dock-height: calc(
+      (var(--mha-mobile-dock-icon-size) * 1.5) + (var(--mha-mobile-dock-padding-block) * 2)
+    );
+    --mha-mobile-dock-footprint: calc(
+      var(--mha-mobile-dock-height) + var(--mha-mobile-dock-bottom)
+    );
     overflow-x: hidden;
     overflow-y: hidden;
     touch-action: none;
@@ -215,11 +239,7 @@
   }
 
   .mha-workspace {
-    --mha-shell-content-bottom-inset: calc(
-      max(var(--mha-dock-button-size, 52px), 3.6rem)
-      + (var(--mha-page-padding) * 2.5)
-      + var(--mha-safe-bottom, 0px)
-    ) !important;
+    --mha-shell-content-bottom-inset: var(--mha-mobile-dock-footprint) !important;
     block-size: 100%;
     min-block-size: 0;
     grid-template-columns: minmax(0, 1fr);
@@ -231,18 +251,14 @@
 
   .mha-widget-area {
     --mha-widget-area-edge-padding: var(--mha-mobile-grid-gutter) !important;
-    --mha-widget-area-top-gutter: 0px !important;
+    --mha-widget-area-top-gutter: var(--mha-mobile-content-top-space) !important;
     block-size: 100%;
     min-block-size: 0;
-    padding-block-start: 0 !important;
+    padding-block-start: var(--mha-widget-area-top-gutter) !important;
   }
 
   :host(.mha-android-edge-to-edge) .mha-widget-area {
-    --mha-widget-area-top-gutter: max(
-      var(--mha-page-padding),
-      var(--mha-safe-top, 0px)
-    ) !important;
-    padding-block-start: var(--mha-widget-area-top-gutter) !important;
+    --mha-widget-area-top-gutter: max(var(--mha-mobile-content-top-space), var(--mha-safe-top, 0px)) !important;
   }
 
   :host([data-status-bar-mode="hidden"]) {
@@ -283,6 +299,8 @@
 :host([data-layout="mobile"]) .mha-page-panel--grid > .mha-grid {
   --mha-grid-padding-inline-start-runtime: 0px;
   --mha-grid-padding-inline-end-runtime: 0px;
+  --mha-grid-padding-block-start: 0px;
+  --mha-grid-padding-block-end: 0px;
   inline-size: 100%;
   width: 100%;
   block-size: auto;
@@ -307,7 +325,6 @@
   block-size: auto;
   min-block-size: 100%;
   overflow: visible;
-  padding-block-start: var(--mha-page-padding);
 }
 
 :host([data-layout="mobile"][data-media-page-active="true"]) {
@@ -319,6 +336,47 @@
   padding-inline: 0;
   overflow-y: hidden;
   overscroll-behavior-y: none;
+}
+
+:host([data-status-bar-visible="false"]) {
+  --mha-statusbar-reserved-top: 0px;
+}
+
+:host([data-layout-variant="mobile-landscape"]) {
+  --mha-mobile-grid-gutter: clamp(0.75rem, 2.4vw, 1rem);
+  --mha-shell-dock-unit-size: clamp(4rem, 16vw, 4.85rem);
+  --mha-shell-side-dock-zone-base: var(
+    --mha-side-dock-rail-width,
+    var(--mha-shell-dock-unit-size)
+  );
+  --mha-shell-side-dock-zone-width: var(--mha-shell-side-dock-zone-base);
+  --mha-shell-side-dock-rail-size: var(--mha-shell-side-dock-zone-width);
+  --mha-dock-zone-width: var(--mha-shell-side-dock-zone-width);
+  --mha-dock-unit-size: var(--mha-shell-side-dock-rail-size);
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+:host([data-layout-variant="mobile-landscape"]) .mha-shell {
+  row-gap: 0 !important;
+}
+
+:host([data-layout-variant="mobile-landscape"]) .mha-workspace {
+  --mha-shell-content-bottom-inset: 0px !important;
+  grid-template-columns: var(--mha-dock-zone-width) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+}
+
+:host([data-layout-variant="mobile-landscape"]) .mha-dock-zone {
+  display: grid;
+  grid-column: 1;
+  grid-row: 1;
+}
+
+:host([data-layout-variant="mobile-landscape"]) .mha-widget-area {
+  --mha-widget-area-edge-padding: var(--mha-mobile-grid-gutter) !important;
+  grid-column: 2;
+  grid-row: 1;
 }
 
 /* Desktop/tablet dock position

@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { setLanguage } from "../src/i18n/index.js";
 import { getPageIconLabel, PAGE_ICON_OPTIONS } from "../src/pages/page-icons.js";
-import { createSettingsPanel } from "../src/settings/settings-panel.js";
+import { createSettingsPanel, updateSettingsPanel } from "../src/settings/settings-panel.js";
 
 function createMockNode(tagName, namespaceURI = null) {
   return {
@@ -168,6 +168,66 @@ test("settings panel hides dock-only controls on mobile and keeps them on deskto
   assert.equal(hasText(desktopDock, "Show dock labels"), true);
   assert.equal(hasText(oneUiDock, "Show dock labels"), false);
   assert.equal(hasText(mobileDock, "Dock icons"), true);
+}));
+
+test("settings panel keeps mobile-landscape navigation options filtered even with a side dock layout", () => withMockDocument(() => {
+  const mobileLandscapeMain = createSettingsPanel({
+    open: true,
+    scope: "all",
+    settingsPage: "main",
+    isMobileLayout: true,
+    isMobileLandscape: true,
+    supportsDockPosition: false,
+    supportsSidebarToggle: false,
+    showsStatusBarOptions: false,
+  });
+
+  const mobileLandscapeDock = createSettingsPanel({
+    open: true,
+    scope: "all",
+    settingsPage: "dock",
+    isMobileLayout: true,
+    isMobileLandscape: true,
+    supportsDockPosition: false,
+    supportsSidebarToggle: false,
+    showsStatusBarOptions: false,
+    themeStyle: "ios",
+    dockPages: [{ id: "home", name: "Home", icon: "home" }],
+  });
+
+  assert.equal(mobileLandscapeMain.dataset.mobileLandscape, "true");
+  assert.equal(hasText(mobileLandscapeMain, "Hide Home Assistant sidebar"), false);
+  assert.equal(hasText(mobileLandscapeMain, "Status bar"), false);
+  assert.equal(hasText(mobileLandscapeDock, "Dock position"), false);
+  assert.equal(hasText(mobileLandscapeDock, "Dock icons"), true);
+}));
+
+test("settings panel updates its mobile landscape dataset in place across viewport transitions", () => withMockDocument(() => {
+  const portraitPanel = createSettingsPanel({
+    open: true,
+    scope: "all",
+    settingsPage: "main",
+    isMobileLayout: true,
+    isMobileLandscape: false,
+    supportsDockPosition: false,
+    supportsSidebarToggle: false,
+    showsStatusBarOptions: false,
+  });
+
+  const landscapePanel = createSettingsPanel({
+    open: true,
+    scope: "all",
+    settingsPage: "main",
+    isMobileLayout: true,
+    isMobileLandscape: true,
+    supportsDockPosition: false,
+    supportsSidebarToggle: false,
+    showsStatusBarOptions: false,
+  });
+
+  assert.equal(updateSettingsPanel(portraitPanel, landscapePanel), true);
+  assert.equal(portraitPanel.dataset.mobileLayout, "true");
+  assert.equal(portraitPanel.dataset.mobileLandscape, "true");
 }));
 
 test("dock detail reuses the shared page icon registry", () => withMockDocument(() => {

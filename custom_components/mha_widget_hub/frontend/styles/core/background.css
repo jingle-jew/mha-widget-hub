@@ -268,6 +268,11 @@
   }
 }
 
+:host([data-layout-variant="mobile-landscape"]) .mha-background {
+  position: fixed;
+  inset: -20%;
+}
+
 :host([data-media-page-active="true"][data-media-page-wallpaper="true"]) .mha-background-media,
 :host([data-media-page-active="true"][data-media-page-wallpaper="true"]) .mha-background-media-overlay {
   display:block;

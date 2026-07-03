@@ -134,6 +134,32 @@ test("grid-frame measurement falls back to bounding rect when client height is z
   });
 });
 
+test("runtime grid preset ignores stale published orientation datasets", () => {
+  const host = {
+    dataset: {
+      gridOrientation: "portrait",
+    },
+    style: createStyle(),
+    shadowRoot: null,
+    getBoundingClientRect() {
+      return { width: 844, height: 390 };
+    },
+  };
+  const runtime = createGridRuntime({
+    host,
+    getLayoutMode: () => "mobile",
+    getEffectiveLayout: () => "mobile",
+    getGridOrientation: () => "landscape",
+  });
+
+  const preset = runtime.getRuntimeGridPreset({
+    availableContentRect: { width: 844, height: 390 },
+  });
+
+  assert.equal(preset.columns, 8);
+  assert.equal(preset.rows, 5);
+});
+
 test("dock-position bonus stays disabled when widget-area is already reserved", () => {
   const base = {
     columns: 5,

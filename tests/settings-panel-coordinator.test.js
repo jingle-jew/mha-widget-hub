@@ -31,6 +31,10 @@ test("settings coordinator builds both scopes and preserves callback routing", (
     screensaverSettingsOpen: false,
     settingsPage: "dock",
     isMobileLayout: true,
+    isMobileLandscape: true,
+    supportsDockPosition: false,
+    supportsSidebarToggle: false,
+    showsStatusBarOptions: false,
     themeState: {
       themeSetting: "dark",
       themeStyle: "oneui",
@@ -66,6 +70,8 @@ test("settings coordinator builds both scopes and preserves callback routing", (
   assert.equal(props.screensaver.onClose, onCloseScreensaver);
   assert.equal(props.screensaver.onThemeChange, onThemeChange);
   assert.equal(props.all.isMobileLayout, true);
+  assert.equal(props.all.isMobileLandscape, true);
+  assert.equal(props.all.supportsDockPosition, false);
   assert.equal(props.screensaver.isMobileLayout, true);
 });
 

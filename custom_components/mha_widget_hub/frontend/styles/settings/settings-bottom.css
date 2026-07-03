@@ -29,3 +29,21 @@
     transform-origin: bottom center;
   }
 }
+
+.mha-settings-panel[data-mobile-layout="true"] .mha-settings-sheet {
+  --mha-mobile-sheet-top-gap: max(var(--mha-page-padding, clamp(.65rem, 2.5vw, 1rem)), var(--mha-safe-top, 0px));
+  --mha-mobile-sheet-max-height: min(85vh, calc(100vh - var(--mha-mobile-sheet-top-gap)));
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  top: auto;
+  width: auto;
+  height: auto;
+  max-width: none;
+  max-height: var(--mha-mobile-sheet-max-height);
+  overflow: hidden;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  transform-origin: bottom center;
+}
