@@ -401,20 +401,26 @@
   min-height: 0;
   max-height: max(
     0px,
-    calc(100% - var(--mha-shell-content-top-inset, 0px))
+    calc(
+      100%
+      - var(--mha-mobile-landscape-dock-top-offset, 0px)
+      - var(--mha-mobile-landscape-dock-bottom-offset, 0px)
+    )
   );
 
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: var(--mha-grid-gap);
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
   scrollbar-width: none;
 
   border-radius: clamp(1.35rem, 4vw, 2rem);
-  align-self: flex-start;
+  align-self: start;
   justify-self: stretch;
-  margin-block-start: var(--mha-shell-content-top-inset, 0px);
+  margin-block-start: var(--mha-mobile-landscape-dock-top-offset, 0px);
   transform: none;
 }
 

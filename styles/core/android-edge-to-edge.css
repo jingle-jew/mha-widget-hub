@@ -14,9 +14,21 @@
   z-index: 6;
   pointer-events: none;
   opacity: 0;
-  background: transparent;
-  -webkit-backdrop-filter: blur(calc(var(--mha-shell-blur, var(--mha-blur-primary)) * .82)) saturate(var(--mha-surface-saturation));
-  backdrop-filter: blur(calc(var(--mha-shell-blur, var(--mha-blur-primary)) * .82)) saturate(var(--mha-surface-saturation));
+  background: var(
+    --mha-statusbar-top-bar-surface,
+    var(
+      --mha-statusbar-surface,
+      var(--mha-shell-status-surface, var(--mha-shell-surface, var(--mha-surface-shell)))
+    )
+  );
+  -webkit-backdrop-filter: var(
+    --mha-statusbar-top-bar-filter,
+    var(--mha-statusbar-filter, var(--mha-shell-filter, var(--mha-glass-surface-filter)))
+  );
+  backdrop-filter: var(
+    --mha-statusbar-top-bar-filter,
+    var(--mha-statusbar-filter, var(--mha-shell-filter, var(--mha-glass-surface-filter)))
+  );
   -webkit-mask-image: linear-gradient(
     to bottom,
     rgba(0, 0, 0, 1) 0%,
@@ -39,6 +51,10 @@
 :host(.mha-android-edge-to-edge[data-status-bar-mode="top-bar"]) .mha-statusbar-fill,
 :host(.mha-android-edge-to-edge[data-status-bar-mode="hidden"]) .mha-statusbar-fill {
   display: none !important;
+}
+
+:host(.mha-android-edge-to-edge[data-layout="mobile"]:not([data-layout-variant="mobile-landscape"])) .mha-statusbar-fill {
+  opacity: 1;
 }
 
 :host(.mha-android-edge-to-edge.mha-is-scrolled) .mha-statusbar-fill,
