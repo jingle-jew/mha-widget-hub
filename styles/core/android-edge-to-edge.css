@@ -45,9 +45,3 @@
 :host(.mha-android-edge-to-edge.is-settings-open) .mha-statusbar-fill {
   opacity: 1;
 }
-
-@media (max-width: 767px) {
-  :host(.mha-android-edge-to-edge) .mha-widget-area {
-    padding-block-end: calc(clamp(0.35rem, 0.7vw, 0.75rem) + var(--mha-safe-bottom, 0px));
-  }
-}

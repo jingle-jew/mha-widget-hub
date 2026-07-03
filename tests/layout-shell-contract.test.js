@@ -170,15 +170,27 @@ test("mobile shell keeps the background viewport-anchored while widget content o
   );
   assert.match(
     mobileGridSection,
-    /\.mha-workspace\s*\{[\s\S]*--mha-shell-content-bottom-inset:\s*calc\(/,
+    /\.mha-workspace\s*\{[\s\S]*--mha-shell-content-bottom-inset:\s*var\(--mha-mobile-dock-footprint\)\s*!important;/,
   );
   assert.match(
     mobileGridSection,
     /\.mha-widget-area\s*\{[\s\S]*--mha-widget-area-edge-padding:\s*var\(--mha-mobile-grid-gutter\)\s*!important;[\s\S]*block-size:\s*100%;/,
   );
   assert.match(
+    mobileGridSection,
+    /\.mha-widget-area\s*\{[\s\S]*--mha-widget-area-top-gutter:\s*var\(--mha-mobile-content-top-space\)\s*!important;[\s\S]*padding-block-start:\s*var\(--mha-widget-area-top-gutter\)\s*!important;/,
+  );
+  assert.match(
     gridSource,
     /:host\(\[data-layout="mobile"\]\) \.mha-page-panel--grid > \.mha-grid\s*\{[\s\S]*--mha-grid-padding-inline-start-runtime:\s*0px;[\s\S]*--mha-grid-padding-inline-end-runtime:\s*0px;/,
+  );
+  assert.match(
+    gridSource,
+    /:host\(\[data-layout="mobile"\]\) \.mha-page-panel--grid > \.mha-grid\s*\{[\s\S]*--mha-grid-padding-block-start:\s*0px;[\s\S]*--mha-grid-padding-block-end:\s*0px;/,
+  );
+  assert.doesNotMatch(
+    gridSource,
+    /:host\(\[data-layout="mobile"\]\) \.mha-page-panel--grid\s*\{[\s\S]*padding-block-start:\s*var\(--mha-page-padding\);/,
   );
   assert.match(
     mobileBackgroundSection,
