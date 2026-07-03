@@ -149,7 +149,7 @@ export function createWidgetConfigPopup({
   primaryAction.onclick = () => onSave?.();
   actions.append(cancel, primaryAction);
 
-  return applyPanelSurfaceContract(createPanelShell({
+  const root = applyPanelSurfaceContract(createPanelShell({
     open: Boolean(session),
     rootClassName: "mha-widget-config-popup mha-page-creator",
     scrimClassName: "mha-widget-config-scrim mha-page-creator-scrim",
@@ -166,4 +166,6 @@ export function createWidgetConfigPopup({
     surfaceRole: PANEL_SURFACE_ROLES.POPUP,
     mobilePresentation: PANEL_MOBILE_PRESENTATIONS.SHEET,
   });
+  root.hidden = !session;
+  return root;
 }

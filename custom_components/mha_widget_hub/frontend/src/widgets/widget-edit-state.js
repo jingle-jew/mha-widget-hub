@@ -1,5 +1,5 @@
 export function canToggleEditMode({ isEditing = false, isMobileLandscape = false } = {}) {
-  return Boolean(isEditing) || !Boolean(isMobileLandscape);
+  return true;
 }
 
 export function getNextEditMode(editing = false) {

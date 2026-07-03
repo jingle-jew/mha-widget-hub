@@ -19,8 +19,8 @@ function createClassList(...tokens) {
   };
 }
 
-test("canToggleEditMode blocks entering edit mode in mobile landscape", () => {
-  assert.equal(canToggleEditMode({ isEditing: false, isMobileLandscape: true }), false);
+test("canToggleEditMode allows entering edit mode in mobile landscape", () => {
+  assert.equal(canToggleEditMode({ isEditing: false, isMobileLandscape: true }), true);
 });
 
 test("canToggleEditMode allows leaving edit mode in mobile landscape", () => {

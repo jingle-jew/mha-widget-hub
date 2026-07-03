@@ -53,6 +53,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+  touch-action: pan-y;
 }
 
 .mha-page-creator-header h2 {

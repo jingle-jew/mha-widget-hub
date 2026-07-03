@@ -71,6 +71,7 @@
   gap: 1rem;
   padding: clamp(1rem, 2.2vw, 1.35rem);
   border-bottom: 1px solid var(--mha-border-subtle);
+  touch-action: pan-y;
 }
 
 .mha-settings-title-block {
@@ -235,10 +236,15 @@
 
 @media (max-width: 767px) {
   .mha-settings-sheet {
-    inset-inline: clamp(.65rem, 2.5vw, 1rem);
-    inset-block: auto clamp(.65rem, 2.5vw, 1rem);
+    --mha-mobile-sheet-top-gap: max(var(--mha-statusbar-reserved-top, 0px), var(--mha-safe-top, 0px));
+    --mha-mobile-sheet-height: calc(100dvh - var(--mha-mobile-sheet-top-gap));
+    inset-inline: 0;
+    inset-block-start: var(--mha-mobile-sheet-top-gap);
+    inset-block-end: 0;
     inline-size: auto;
-    max-block-size: min(82vh, 42rem);
+    block-size: var(--mha-mobile-sheet-height);
+    max-block-size: var(--mha-mobile-sheet-height);
+    border-radius: 0;
     transform: translateY(18px) scale(.98);
     transform-origin: bottom center;
   }
@@ -249,10 +255,15 @@
 }
 
 .mha-settings-panel[data-mobile-layout="true"] .mha-settings-sheet {
-  inset-inline: clamp(.65rem, 2.5vw, 1rem);
-  inset-block: auto clamp(.65rem, 2.5vw, 1rem);
+  --mha-mobile-sheet-top-gap: max(var(--mha-statusbar-reserved-top, 0px), var(--mha-safe-top, 0px));
+  --mha-mobile-sheet-height: calc(100dvh - var(--mha-mobile-sheet-top-gap));
+  inset-inline: 0;
+  inset-block-start: var(--mha-mobile-sheet-top-gap);
+  inset-block-end: 0;
   inline-size: auto;
-  max-block-size: min(82vh, 42rem);
+  block-size: var(--mha-mobile-sheet-height);
+  max-block-size: var(--mha-mobile-sheet-height);
+  border-radius: 0;
   transform: translateY(18px) scale(.98);
   transform-origin: bottom center;
 }

@@ -213,7 +213,7 @@ export class PageUiCoordinator {
   }
 
   openPageCreator() {
-    if (!this.getIsEditing() || this.isMobileLandscapeLayout()) return false;
+    if (!this.getIsEditing()) return false;
     this.setPageCreatorOpen(true);
     this.setNewPageType(this.getNewPageType() || PAGE_TYPES.GRID);
     this.syncPageCreator();
@@ -239,7 +239,7 @@ export class PageUiCoordinator {
   }
 
   createPageFromCreator() {
-    if (!this.getIsEditing() || this.isMobileLandscapeLayout()) return false;
+    if (!this.getIsEditing()) return false;
     const pageType = this.getNewPageType() || PAGE_TYPES.GRID;
     return this.addPage({
       pageType,

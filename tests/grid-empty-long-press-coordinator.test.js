@@ -75,7 +75,7 @@ test("canStartGridEmptyLongPress allows an empty grid press in mobile and tablet
   assert.equal(canStartGridEmptyLongPress({ host: tabletHost, grid, event, target }), true);
 });
 
-test("canStartGridEmptyLongPress rejects widget, button, dock, panel, editing, and mobile landscape starts", () => {
+test("canStartGridEmptyLongPress rejects widget, button, dock, panel, and editing starts", () => {
   const grid = { contains: () => true };
   const host = {
     _isEditing: false,
@@ -88,17 +88,27 @@ test("canStartGridEmptyLongPress rejects widget, button, dock, panel, editing, a
 
   assert.equal(canStartGridEmptyLongPress({ host, grid, event, target: createTarget({ blocked: true }) }), false);
   assert.equal(canStartGridEmptyLongPress({ host: { ...host, _isEditing: true }, grid, event, target: grid }), false);
-  assert.equal(canStartGridEmptyLongPress({
-    host: {
-      ...host,
-      _isMobileLandscapeLayout() {
-        return true;
-      },
+});
+
+test("canStartGridEmptyLongPress stays available in mobile landscape", () => {
+  const grid = {
+    contains(node) {
+      return node === this;
     },
-    grid,
-    event,
-    target: grid,
-  }), false);
+    closest() {
+      return null;
+    },
+  };
+  const host = {
+    _isEditing: false,
+    dataset: { layout: "mobile" },
+    _isMobileLandscapeLayout() {
+      return true;
+    },
+  };
+  const event = { button: 0, isPrimary: true, pointerType: "touch" };
+
+  assert.equal(canStartGridEmptyLongPress({ host, grid, event, target: grid }), true);
 });
 
 test("grid empty long press triggers edit mode on empty grid for touch, mouse, and pen", () => {
