@@ -397,7 +397,7 @@ export function createRenderPipeline(host, options = {}) {
     }
   }
 
-  function mountRenderShell({ layoutMode, layout, cols, units, statusBarMode = "pill" }) {
+  function mountRenderShell({ layoutMode, layout, cols, units, statusBarMode = "top-bar" }) {
     const persistentBackground = host.shadowRoot?.querySelector?.(".mha-background") || null;
     host._settingsPanelsUiState = captureSettingsPanelsUiState(host.shadowRoot);
     if (persistentBackground) {

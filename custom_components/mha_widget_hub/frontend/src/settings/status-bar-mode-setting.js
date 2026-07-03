@@ -2,7 +2,7 @@ import { normalizeStatusBarMode } from "../core/status-bar-mode.js";
 
 export function applyStatusBarModeSetting(
   host,
-  mode = "pill",
+  mode = "top-bar",
   {
     storageKey,
     writeStorageValueRef,

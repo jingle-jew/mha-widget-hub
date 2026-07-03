@@ -856,7 +856,7 @@ export function createSettingsPanel({
   effectiveIconShape = "",
   hideHaSidebar = false,
   showDockLabels = false,
-  statusBarMode = "pill",
+  statusBarMode = "top-bar",
   screensaverEnabled = false,
   screensaverDelay = 30000,
   screensaverPreview = false,

@@ -121,7 +121,15 @@ test("status bar mode remains a shell-owned layout input instead of a settings-o
   );
   assert.match(
     gridSource,
-    /\[data-status-bar-mode="top-bar"\]\)\s+\.mha-shell,\s*:host\(\[data-status-bar-mode="hidden"\]\)\s+\.mha-shell\s*\{[\s\S]*--mha-statusbar-widget-gap:\s*0px\s*!important;/,
+    /\.mha-shell\s*\{[\s\S]*--mha-statusbar-widget-gap:\s*var\(--mha-page-padding\)\s*!important;/,
+  );
+  assert.doesNotMatch(
+    gridSource,
+    /\[data-status-bar-mode="top-bar"\][\s\S]*--mha-statusbar-widget-gap:\s*0px\s*!important;/,
+  );
+  assert.doesNotMatch(
+    gridSource,
+    /\[data-status-bar-mode="hidden"\][\s\S]*--mha-statusbar-widget-gap:\s*0px\s*!important;/,
   );
   assert.match(
     statusSource,

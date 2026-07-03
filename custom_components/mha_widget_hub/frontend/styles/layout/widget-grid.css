@@ -25,11 +25,6 @@
   overflow: hidden;
 }
 
-:host([data-status-bar-mode="top-bar"]) .mha-shell,
-:host([data-status-bar-mode="hidden"]) .mha-shell {
-  --mha-statusbar-widget-gap: 0px !important;
-}
-
 .mha-shell > :first-child {
   grid-row: 1;
   grid-column: 1;

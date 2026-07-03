@@ -13,7 +13,7 @@ export function buildSettingsCoordinatorProps({
   language = "auto",
   hideHaSidebar = false,
   showDockLabels = false,
-  statusBarMode = "pill",
+  statusBarMode = "top-bar",
   accentPaletteExpanded = false,
   settingsPage = "main",
   dockPages = [],

@@ -5,7 +5,7 @@ export function createStatusBar({
   layout = "mobile",
   logicalColumns = 1,
   gridUnits = 2,
-  statusBarMode = "pill",
+  statusBarMode = "top-bar",
 } = {}) {
   const el = document.createElement("header");
   el.className = "mha-status-bar";

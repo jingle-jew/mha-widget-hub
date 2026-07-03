@@ -38,7 +38,7 @@ export function getStoredDockLabels(storage = localStorage) {
 
 export function getStoredStatusBarMode(storage = localStorage) {
   return normalizeStatusBarMode(
-    storage.getItem(STATUS_BAR_MODE) || "pill",
+    storage.getItem(STATUS_BAR_MODE) || "top-bar",
   );
 }
 

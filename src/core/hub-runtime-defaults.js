@@ -51,7 +51,7 @@ export function createHubRuntimeDefaults() {
     _dockPosition: "left",
     _hideHaSidebar: false,
     _showDockLabels: false,
-    _statusBarMode: "pill",
+    _statusBarMode: "top-bar",
     _language: "auto",
     _customWallpapers: { light: null, dark: null },
     _pages: [],

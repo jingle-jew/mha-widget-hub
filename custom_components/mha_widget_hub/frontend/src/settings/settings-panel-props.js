@@ -13,7 +13,7 @@ export function buildSettingsPanelState({
   language = "auto",
   hideHaSidebar = false,
   showDockLabels = false,
-  statusBarMode = "pill",
+  statusBarMode = "top-bar",
   accentPaletteExpanded = false,
   settingsPage = "main",
   dockPages = [],
