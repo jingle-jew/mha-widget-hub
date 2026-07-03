@@ -215,6 +215,7 @@ export function getGridPresetForLayout(
       fillY: activeConstraints.fillY ?? activeConstraints.targetFillY,
       forceWidthFill: activeConstraints.forceWidthFill,
       preferencePenaltyFactor: activeConstraints.preferencePenaltyFactor,
+      unusedSpacePenaltyFactor: activeConstraints.unusedSpacePenaltyFactor,
     },
   });
 }

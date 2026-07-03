@@ -28,6 +28,7 @@ export const GRID_DENSITY_PROFILES = Object.freeze({
         fillX: 0.88,
         fillY: 0.76,
         preferencePenaltyFactor: 0.06,
+        unusedSpacePenaltyFactor: 0.9,
       }),
       /*
        * Tablet landscape needs one intermediate band:
@@ -71,17 +72,31 @@ export const GRID_DENSITY_PROFILES = Object.freeze({
       heightBands: Object.freeze([
         Object.freeze({
           min: 0,
-          max: 759,
+          max: 599,
           preferredRows: 6,
           minRows: 6,
           maxRows: 6,
         }),
         Object.freeze({
-          min: 760,
-          max: Number.POSITIVE_INFINITY,
-          preferredRows: 8,
+          min: 600,
+          max: 699,
+          preferredRows: 7,
           minRows: 6,
           maxRows: 8,
+        }),
+        Object.freeze({
+          min: 700,
+          max: 839,
+          preferredRows: 8,
+          minRows: 7,
+          maxRows: 10,
+        }),
+        Object.freeze({
+          min: 840,
+          max: Number.POSITIVE_INFINITY,
+          preferredRows: 10,
+          minRows: 8,
+          maxRows: 12,
         }),
       ]),
     }),

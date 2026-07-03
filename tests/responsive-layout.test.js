@@ -65,14 +65,14 @@ test("tablet landscape presets adapt their direct widget-grid matrix to the meas
       columns: hostLikePreset.columns,
       rows: hostLikePreset.rows,
     },
-    { columns: 11, rows: 6 },
+    { columns: 11, rows: 10 },
   );
   assert.deepEqual(
     {
       columns: sideDockPreset.columns,
       rows: sideDockPreset.rows,
     },
-    { columns: 10, rows: 6 },
+    { columns: 10, rows: 8 },
   );
   assert.deepEqual(
     {
@@ -111,7 +111,7 @@ test("grid preset can adapt inside the documented bounds when the available rect
 
   assert.deepEqual(
     { columns: roomyTablet.columns, rows: roomyTablet.rows },
-    { columns: 11, rows: 6 },
+    { columns: 11, rows: 10 },
   );
   assert.deepEqual(
     { columns: constrainedTablet.columns, rows: constrainedTablet.rows },
@@ -121,6 +121,15 @@ test("grid preset can adapt inside the documented bounds when the available rect
   assert.equal(constrainedTablet.maxColumns, 10);
   assert.equal(constrainedTablet.minRows, 6);
   assert.equal(constrainedTablet.maxRows, 6);
+});
+
+test("tablet landscape preset prefers one more row when a side panel would otherwise leave a large vertical gap", () => {
+  const compactSidePanel = getGridPreset(null, "tablet", { width: 822, height: 693 });
+
+  assert.deepEqual(
+    { columns: compactSidePanel.columns, rows: compactSidePanel.rows },
+    { columns: 10, rows: 8 },
+  );
 });
 
 test("tablet density profiles split width and height bands before the solver runs", () => {
@@ -163,9 +172,9 @@ test("tablet density profiles split width and height bands before the solver run
       preferredColumns: 10,
       minColumns: 10,
       maxColumns: 10,
-      preferredRows: 6,
+      preferredRows: 7,
       minRows: 6,
-      maxRows: 6,
+      maxRows: 8,
     },
   );
   assert.deepEqual(
@@ -199,9 +208,9 @@ test("tablet density profiles split width and height bands before the solver run
       preferredColumns: 11,
       minColumns: 10,
       maxColumns: 11,
-      preferredRows: 6,
-      minRows: 6,
-      maxRows: 6,
+      preferredRows: 8,
+      minRows: 7,
+      maxRows: 10,
     },
   );
   assert.deepEqual(
@@ -217,9 +226,9 @@ test("tablet density profiles split width and height bands before the solver run
       preferredColumns: 14,
       minColumns: 12,
       maxColumns: 14,
-      preferredRows: 8,
-      minRows: 6,
-      maxRows: 8,
+      preferredRows: 10,
+      minRows: 8,
+      maxRows: 12,
     },
   );
   assert.deepEqual(

@@ -54,6 +54,32 @@ export function measureGridFrame(grid, getStyle = getComputedStyle) {
   return rect ? { width: rect.width, height: rect.height } : null;
 }
 
+function parseCssPixelValue(style, propertyName, fallback = 0) {
+  if (!style?.getPropertyValue) return fallback;
+  const value = Number.parseFloat(style.getPropertyValue(propertyName));
+  return Number.isFinite(value) ? value : fallback;
+}
+
+function roundDebugMetric(value, precision = 1) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return 0;
+  const factor = 10 ** precision;
+  return Math.round(numeric * factor) / factor;
+}
+
+function formatGridDebugMetrics(metrics = {}) {
+  return [
+    `viewportH: ${metrics.viewportHeight ?? 0}px`,
+    `shellH: ${metrics.shellHeight ?? 0}px`,
+    `statusReserveH: ${metrics.statusBarReservedHeight ?? 0}px`,
+    `dockReserveH: ${metrics.dockReservedHeight ?? 0}px`,
+    `availableH: ${metrics.gridAvailableHeight ?? 0}px`,
+    `rows: ${metrics.selectedRowCount ?? 0}`,
+    `rowUnitH: ${metrics.rowUnitHeight ?? 0}px`,
+    `leftoverH: ${metrics.leftoverHeight ?? 0}px`,
+  ].join("\n");
+}
+
 export function getDockBottomColumnBonus({
   dockPosition,
   layout,
@@ -270,6 +296,123 @@ export class GridRuntime {
   getWidgetAreaRect() {
     const area = this.getRoot()?.querySelector?.(".mha-widget-area");
     return measureContentRect(area, this.getStyle);
+  }
+
+  getShellRect() {
+    const shell = this.getRoot()?.querySelector?.(".mha-shell");
+    return measureContentRect(shell, this.getStyle);
+  }
+
+  isGridDebugEnabled() {
+    if (this.host?.dataset?.gridDebug === "true") return true;
+    try {
+      return localStorage.getItem("mha-debug-grid-layout") === "true";
+    } catch (_error) {
+      return false;
+    }
+  }
+
+  collectGridDebugMetrics({
+    metrics,
+    frameMetrics,
+    availableContentRect,
+    bounds,
+    tracks,
+    containerHeight = 0,
+  } = {}) {
+    const root = this.getRoot();
+    const shell = root?.querySelector?.(".mha-shell") || null;
+    const workspace = root?.querySelector?.(".mha-workspace") || null;
+    const widgetArea = root?.querySelector?.(".mha-widget-area") || null;
+    const dockZone = root?.querySelector?.(".mha-dock-zone") || null;
+    const shellRect = shell ? measureContentRect(shell, this.getStyle) : null;
+    const workspaceRect = workspace ? measureContentRect(workspace, this.getStyle) : null;
+    const widgetAreaRect = widgetArea ? measureContentRect(widgetArea, this.getStyle) : null;
+    const dockZoneRect = dockZone ? measureContentRect(dockZone, this.getStyle) : null;
+    const workspaceStyle = workspace ? this.getStyle(workspace) : null;
+    const widgetAreaStyle = widgetArea ? this.getStyle(widgetArea) : null;
+    const statusBarReservedHeight = Math.max(
+      0,
+      parseCssPixelValue(workspaceStyle, "--mha-shell-content-top-inset"),
+      Number.parseFloat(widgetAreaStyle?.paddingTop || "0") || 0,
+    );
+    const bottomInsetHeight = Math.max(
+      0,
+      parseCssPixelValue(workspaceStyle, "--mha-shell-content-bottom-inset"),
+    );
+    const dockReservedHeight = this.getDockPosition() === "bottom"
+      ? Math.max(0, dockZoneRect?.height || 0)
+      : bottomInsetHeight;
+    const gridAvailableHeight = Math.max(
+      0,
+      Number(availableContentRect?.height) || Number(metrics?.height) || 0,
+    );
+    const trackHeight = Math.max(0, Number(tracks?.matrixHeight) || 0);
+    const selectedRowCount = Math.max(0, Number(bounds?.rows) || 0);
+    const rowUnitHeight = Math.max(0, Number(tracks?.rowSize) || 0);
+    const leftoverHeight = Math.max(
+      0,
+      (Number(containerHeight) || gridAvailableHeight) - trackHeight,
+    );
+
+    return {
+      viewportHeight: roundDebugMetric(this.host?.getBoundingClientRect?.().height || 0),
+      shellHeight: roundDebugMetric(shellRect?.height || 0),
+      workspaceHeight: roundDebugMetric(workspaceRect?.height || 0),
+      widgetAreaHeight: roundDebugMetric(widgetAreaRect?.height || 0),
+      frameHeight: roundDebugMetric(frameMetrics?.height || 0),
+      statusBarReservedHeight: roundDebugMetric(statusBarReservedHeight),
+      dockReservedHeight: roundDebugMetric(dockReservedHeight),
+      gridAvailableHeight: roundDebugMetric(gridAvailableHeight),
+      gridTrackHeight: roundDebugMetric(trackHeight),
+      selectedRowCount,
+      rowUnitHeight: roundDebugMetric(rowUnitHeight),
+      leftoverHeight: roundDebugMetric(leftoverHeight),
+    };
+  }
+
+  publishGridDebugMetrics(metrics = {}) {
+    if (!this.host?.dataset || !this.host?.style) return false;
+
+    Object.entries(metrics).forEach(([key, value]) => {
+      const cssName = `--mha-grid-debug-${key.replace(/[A-Z]/g, letter => `-${letter.toLowerCase()}`)}`;
+      this.host.style.setProperty(cssName, String(value));
+      this.host.dataset[`gridDebug${key.charAt(0).toUpperCase()}${key.slice(1)}`] = String(value);
+    });
+    return true;
+  }
+
+  syncGridDebugOverlay(metrics = {}) {
+    const root = this.getRoot();
+    if (!root?.querySelector) return false;
+
+    const existing = root.querySelector(".mha-grid-debug-overlay");
+    if (!this.isGridDebugEnabled()) {
+      existing?.remove?.();
+      return false;
+    }
+
+    const overlay = existing || document.createElement("pre");
+    overlay.className = "mha-grid-debug-overlay";
+    overlay.textContent = formatGridDebugMetrics(metrics);
+    overlay.setAttribute("aria-hidden", "true");
+    overlay.style.position = "absolute";
+    overlay.style.inset = "auto 12px 12px auto";
+    overlay.style.zIndex = "60";
+    overlay.style.margin = "0";
+    overlay.style.padding = "10px 12px";
+    overlay.style.borderRadius = "12px";
+    overlay.style.background = "rgba(10, 14, 24, 0.82)";
+    overlay.style.color = "#f5f7ff";
+    overlay.style.font = "12px/1.45 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace";
+    overlay.style.whiteSpace = "pre";
+    overlay.style.pointerEvents = "none";
+    overlay.style.boxShadow = "0 10px 30px rgba(0,0,0,0.24)";
+    if (!existing && typeof root.append === "function") {
+      root.append(overlay);
+    }
+    console.debug("[MHA grid-runtime]", metrics);
+    return true;
   }
 
   getGridFrameMetrics(grid = this.getRoot()?.querySelector?.(".mha-grid")) {
@@ -568,6 +711,16 @@ export class GridRuntime {
       this.host.dataset.gridTrackWidth = String(Math.round(tracks.matrixWidth));
       this.host.dataset.gridTrackHeight = String(Math.round(tracks.matrixHeight));
     }
+    const debugMetrics = this.collectGridDebugMetrics({
+      metrics,
+      frameMetrics,
+      availableContentRect,
+      bounds,
+      tracks,
+      containerHeight,
+    });
+    this.publishGridDebugMetrics(debugMetrics);
+    this.syncGridDebugOverlay(debugMetrics);
     this.syncDropSlots();
     return true;
   }

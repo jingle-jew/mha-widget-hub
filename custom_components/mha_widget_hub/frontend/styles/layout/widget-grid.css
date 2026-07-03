@@ -374,7 +374,7 @@
   }
 
   :host([data-dock-position="left"]) .mha-workspace {
-    --mha-shell-content-bottom-inset: var(--mha-shell-content-top-inset) !important;
+    --mha-shell-content-bottom-inset: 0px !important;
     grid-template-columns: var(--mha-dock-zone-width) minmax(0, 1fr);
     grid-template-rows: minmax(0, 1fr);
   }
@@ -391,7 +391,7 @@
 
   :host([data-dock-position="right"]) .mha-workspace,
   :host(:not([data-dock-position])) .mha-workspace {
-    --mha-shell-content-bottom-inset: var(--mha-shell-content-top-inset) !important;
+    --mha-shell-content-bottom-inset: 0px !important;
     grid-template-columns: minmax(0, 1fr) var(--mha-dock-zone-width);
     grid-template-rows: minmax(0, 1fr);
   }

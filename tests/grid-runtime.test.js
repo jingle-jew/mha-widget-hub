@@ -347,26 +347,32 @@ test("runtime applies the existing grid dataset and CSS contract", () => {
   });
 
   assert.equal(runtime.syncSquareUnit(), true);
-  assert.deepEqual(host.dataset, {
-    layoutMode: "desktop",
-    layout: "desktop",
-    gridDensity: "desktop-landscape-adaptive",
-    gridUnits: "14",
-    logicalColumns: "14",
-    gridRows: "10",
-    logicalRows: "10",
-    availableContentX: "0",
-    availableContentY: "0",
-    availableContentWidth: "1400",
-    availableContentHeight: "800",
-    gridTrackJustify: "center",
-    panelFrameWidth: "1400",
-    panelFrameHeight: "800",
-    gridContainerWidth: "1400",
-    gridContainerHeight: "800",
-    gridTrackWidth: "1176",
-    gridTrackHeight: "800",
-  });
+  assert.equal(host.dataset.layoutMode, "desktop");
+  assert.equal(host.dataset.layout, "desktop");
+  assert.equal(host.dataset.gridDensity, "desktop-landscape-adaptive");
+  assert.equal(host.dataset.gridUnits, "14");
+  assert.equal(host.dataset.logicalColumns, "14");
+  assert.equal(host.dataset.gridRows, "10");
+  assert.equal(host.dataset.logicalRows, "10");
+  assert.equal(host.dataset.availableContentX, "0");
+  assert.equal(host.dataset.availableContentY, "0");
+  assert.equal(host.dataset.availableContentWidth, "1400");
+  assert.equal(host.dataset.availableContentHeight, "800");
+  assert.equal(host.dataset.gridTrackJustify, "center");
+  assert.equal(host.dataset.panelFrameWidth, "1400");
+  assert.equal(host.dataset.panelFrameHeight, "800");
+  assert.equal(host.dataset.gridContainerWidth, "1400");
+  assert.equal(host.dataset.gridContainerHeight, "800");
+  assert.equal(host.dataset.gridTrackWidth, "1176");
+  assert.equal(host.dataset.gridTrackHeight, "800");
+  assert.equal(host.dataset.gridDebugViewportHeight, "800");
+  assert.equal(host.dataset.gridDebugShellHeight, "0");
+  assert.equal(host.dataset.gridDebugStatusBarReservedHeight, "0");
+  assert.equal(host.dataset.gridDebugDockReservedHeight, "0");
+  assert.equal(host.dataset.gridDebugGridAvailableHeight, "800");
+  assert.equal(host.dataset.gridDebugSelectedRowCount, "10");
+  assert.equal(host.dataset.gridDebugRowUnitHeight, "80");
+  assert.equal(host.dataset.gridDebugLeftoverHeight, "0");
   assert.equal(hostStyle.values.get("--mha-square-unit"), "80px");
   assert.equal(hostStyle.values.get("--mha-grid-column-size"), "84px");
   assert.equal(hostStyle.values.get("--mha-grid-row-size"), "80px");
@@ -559,7 +565,7 @@ test("runtime can unlock 11 landscape tablet columns for a wide bottom-dock pane
       columns: sideRuntime.getRuntimeGridPreset().columns,
       rows: sideRuntime.getRuntimeGridPreset().rows,
     },
-    { columns: 10, rows: 6 },
+    { columns: 10, rows: 8 },
   );
   assert.deepEqual(
     {
@@ -801,20 +807,167 @@ test("runtime surfaces the parent grid frame on tablet/desktop", () => {
   });
 
   assert.equal(runtime.syncSquareUnit(), true);
-  assert.equal(hostStyle.values.get("--mha-square-unit"), "88.3px");
+  assert.equal(hostStyle.values.get("--mha-square-unit"), "85.25px");
   assert.equal(hostStyle.values.get("--mha-grid-column-size"), "88.3px");
-  assert.equal(hostStyle.values.get("--mha-grid-row-size"), "92.715px");
+  assert.equal(hostStyle.values.get("--mha-grid-row-size"), "85.25px");
   assert.equal(hostStyle.values.get("--mha-panel-frame-width"), "883px");
   assert.equal(hostStyle.values.get("--mha-panel-frame-height"), "682px");
   assert.equal(hostStyle.values.get("--mha-grid-container-width"), "883px");
   assert.equal(hostStyle.values.get("--mha-grid-container-height"), "682px");
   assert.equal(hostStyle.values.get("--mha-grid-track-width"), "883px");
-  assert.equal(hostStyle.values.get("--mha-grid-track-height"), "556.29px");
+  assert.equal(hostStyle.values.get("--mha-grid-track-height"), "682px");
   assert.equal(gridStyle.values.get("--mha-grid-container-width"), undefined);
   assert.equal(gridStyle.values.get("--mha-grid-container-height"), undefined);
   assert.equal(gridStyle.values.get("--mha-grid-track-width"), undefined);
   assert.equal(gridStyle.values.get("--mha-grid-track-height"), undefined);
   assert.deepEqual(grid.dataset, {});
+});
+
+test("runtime debug metrics reflect status-bar and dock vertical reserves without phantom side-dock padding", () => {
+  const gridStyle = createStyle({
+    "--mha-square-unit-hard-min": "24",
+    "--mha-square-unit-max": "160",
+  });
+  Object.assign(gridStyle, {
+    columnGap: "0px",
+    rowGap: "0px",
+    paddingLeft: "0px",
+    paddingRight: "0px",
+    paddingTop: "0px",
+    paddingBottom: "0px",
+  });
+  const shellStyle = {
+    paddingLeft: "0px",
+    paddingRight: "0px",
+    paddingTop: "0px",
+    paddingBottom: "0px",
+  };
+  const panelStyle = {
+    paddingLeft: "0px",
+    paddingRight: "0px",
+    paddingTop: "0px",
+    paddingBottom: "0px",
+  };
+
+  const createRuntimeForDebug = ({
+    dockPosition,
+    panelWidth,
+    panelHeight,
+    hostHeight,
+    topReserve,
+    bottomInset = 0,
+    dockZoneHeight = 0,
+  }) => {
+    const shell = { clientWidth: panelWidth, clientHeight: hostHeight };
+    const workspace = { clientWidth: panelWidth, clientHeight: hostHeight };
+    const widgetArea = {
+      clientWidth: panelWidth,
+      clientHeight: panelHeight + topReserve + bottomInset,
+    };
+    const dockZone = { clientWidth: 96, clientHeight: dockZoneHeight };
+    const panel = { clientWidth: panelWidth, clientHeight: panelHeight };
+    const widgetAreaStyle = {
+      paddingLeft: "0px",
+      paddingRight: "0px",
+      paddingTop: `${topReserve}px`,
+      paddingBottom: `${bottomInset}px`,
+    };
+    const workspaceStyle = createStyle({
+      "--mha-shell-content-top-inset": `${topReserve}px`,
+      "--mha-shell-content-bottom-inset": `${bottomInset}px`,
+    });
+    Object.assign(workspaceStyle, shellStyle);
+    const grid = {
+      style: gridStyle,
+      dataset: {},
+      closest(selector) {
+        return selector === ".mha-page-panel--grid" ? panel : null;
+      },
+    };
+    const root = {
+      querySelector(selector) {
+        if (selector === ".mha-shell") return shell;
+        if (selector === ".mha-workspace") return workspace;
+        if (selector === ".mha-widget-area") return widgetArea;
+        if (selector === ".mha-dock-zone") return dockZone;
+        if (selector === ".mha-grid") return grid;
+        return null;
+      },
+    };
+    const host = {
+      dataset: {},
+      style: createStyle(),
+      shadowRoot: root,
+      isConnected: true,
+      getBoundingClientRect: () => ({ width: panelWidth, height: hostHeight }),
+    };
+    const runtime = createGridRuntime({
+      host,
+      getLayoutMode: () => "tablet",
+      getEffectiveLayout: () => "tablet",
+      getDockPosition: () => dockPosition,
+      getStyle: element => {
+        if (element === shell) return shellStyle;
+        if (element === workspace) return workspaceStyle;
+        if (element === widgetArea) return widgetAreaStyle;
+        if (element === panel) return panelStyle;
+        if (element === dockZone) return shellStyle;
+        return gridStyle;
+      },
+    });
+    return { host, runtime };
+  };
+
+  const leftHidden = createRuntimeForDebug({
+    dockPosition: "left",
+    panelWidth: 883,
+    panelHeight: 744,
+    hostHeight: 744,
+    topReserve: 0,
+  });
+  const rightTopBar = createRuntimeForDebug({
+    dockPosition: "right",
+    panelWidth: 883,
+    panelHeight: 620,
+    hostHeight: 744,
+    topReserve: 44,
+  });
+  const leftPill = createRuntimeForDebug({
+    dockPosition: "left",
+    panelWidth: 883,
+    panelHeight: 682,
+    hostHeight: 744,
+    topReserve: 62,
+  });
+  const bottomDock = createRuntimeForDebug({
+    dockPosition: "bottom",
+    panelWidth: 1093,
+    panelHeight: 565,
+    hostHeight: 744,
+    topReserve: 62,
+    dockZoneHeight: 96,
+  });
+
+  assert.equal(leftHidden.runtime.syncSquareUnit(), true);
+  assert.equal(rightTopBar.runtime.syncSquareUnit(), true);
+  assert.equal(leftPill.runtime.syncSquareUnit(), true);
+  assert.equal(bottomDock.runtime.syncSquareUnit(), true);
+
+  assert.equal(leftHidden.host.dataset.gridDebugStatusBarReservedHeight, "0");
+  assert.equal(leftHidden.host.dataset.gridDebugDockReservedHeight, "0");
+  assert.equal(leftHidden.host.dataset.gridDebugSelectedRowCount, "10");
+
+  assert.equal(rightTopBar.host.dataset.gridDebugStatusBarReservedHeight, "44");
+  assert.equal(rightTopBar.host.dataset.gridDebugDockReservedHeight, "0");
+  assert.equal(rightTopBar.host.dataset.gridDebugSelectedRowCount, "8");
+
+  assert.equal(leftPill.host.dataset.gridDebugStatusBarReservedHeight, "62");
+  assert.equal(leftPill.host.dataset.gridDebugDockReservedHeight, "0");
+  assert.equal(leftPill.host.dataset.gridDebugSelectedRowCount, "8");
+
+  assert.equal(bottomDock.host.dataset.gridDebugStatusBarReservedHeight, "62");
+  assert.equal(bottomDock.host.dataset.gridDebugDockReservedHeight, "96");
+  assert.equal(bottomDock.host.dataset.gridDebugSelectedRowCount, "6");
 });
 
 test("runtime keeps bottom dock square-unit constrained by measured height", () => {

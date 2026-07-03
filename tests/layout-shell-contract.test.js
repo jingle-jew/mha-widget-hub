@@ -67,7 +67,7 @@ test("theme stylesheets do not override structural geometry variables", () => {
   assert.deepEqual(offenders, []);
 });
 
-test("side docks mirror the shell top inset with a shell-owned bottom inset", () => {
+test("side docks do not keep a mirrored bottom inset once the shell top reserve is applied", () => {
   const source = fs.readFileSync(
     path.join(REPO_ROOT, "styles", "layout", "widget-grid.css"),
     "utf8",
@@ -79,11 +79,11 @@ test("side docks mirror the shell top inset with a shell-owned bottom inset", ()
   );
   assert.match(
     source,
-    /:host\(\[data-dock-position="left"\]\) \.mha-workspace\s*\{[\s\S]*?--mha-shell-content-bottom-inset:\s*var\(--mha-shell-content-top-inset\)\s*!important;/,
+    /:host\(\[data-dock-position="left"\]\) \.mha-workspace\s*\{[\s\S]*?--mha-shell-content-bottom-inset:\s*0px\s*!important;/,
   );
   assert.match(
     source,
-    /:host\(\[data-dock-position="right"\]\) \.mha-workspace,\s*:host\(:not\(\[data-dock-position\]\)\) \.mha-workspace\s*\{[\s\S]*?--mha-shell-content-bottom-inset:\s*var\(--mha-shell-content-top-inset\)\s*!important;/,
+    /:host\(\[data-dock-position="right"\]\) \.mha-workspace,\s*:host\(:not\(\[data-dock-position\]\)\) \.mha-workspace\s*\{[\s\S]*?--mha-shell-content-bottom-inset:\s*0px\s*!important;/,
   );
   assert.match(
     source,
