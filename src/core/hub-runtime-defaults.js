@@ -38,6 +38,7 @@ export function createHubRuntimeDefaults() {
     _dockSettingsPageId: "",
     _screensaverSettingsOpen: false,
     _lastResponsiveSignature: "",
+    _responsiveState: null,
     _responsiveRelayoutTimer: null,
     _widgetManagerOpen: false,
     _widgetManagerCategory: "",

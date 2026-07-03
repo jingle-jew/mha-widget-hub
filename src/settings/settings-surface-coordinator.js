@@ -7,6 +7,8 @@ export function createSettingsSurfaceCoordinator(host) {
   function getProps() {
     const themeState = host._themeController.read();
     const screensaverState = host._screensaverController.read();
+    const responsiveState = host._getResponsiveState?.() || {};
+    const settingsCapabilities = responsiveState.settingsCapabilities || {};
     return buildSettingsCoordinatorProps({
       settingsOpen: host._settingsOpen,
       screensaverSettingsOpen: host._screensaverSettingsOpen,
@@ -20,7 +22,7 @@ export function createSettingsSurfaceCoordinator(host) {
       activeDockPageId: host._activePageId,
       selectedDockPageId: host._dockSettingsPageId,
       dockPosition: host._dockPosition,
-      isMobileLayout: Boolean(host._isMobileLauncherLayout?.()),
+      isMobileLayout: Boolean(responsiveState.isMobileLayout ?? host._isMobileLauncherLayout?.()),
       customWallpapers: host._customWallpapers,
       hass: host._hass,
       entityVisibilityConfig: host._entityVisibilityConfig,
@@ -28,7 +30,7 @@ export function createSettingsSurfaceCoordinator(host) {
       screensaverState,
       hostIconShape: host.dataset.iconShape,
       documentIconShape: document.documentElement.dataset.iconShape,
-      supportsScreensaver: !host._isMobileLauncherLayout?.(),
+      supportsScreensaver: settingsCapabilities.supportsScreensaver ?? !host._isMobileLauncherLayout?.(),
       callbacks: {
         onClose: () => host._closeSettings(),
         onCloseScreensaver: () => host._closeScreensaverSettings(),
