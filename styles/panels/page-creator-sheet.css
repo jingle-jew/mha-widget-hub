@@ -1,14 +1,14 @@
 @media (max-width: 767px) {
   .mha-page-creator[data-mobile-presentation="sheet"] .mha-page-creator-sheet {
-    --mha-mobile-sheet-top-gap: max(var(--mha-page-padding, clamp(.65rem, 2.5vw, 1rem)), var(--mha-safe-top, 0px));
+    --mha-mobile-sheet-top-gap: max(var(--mha-statusbar-reserved-top, 0px), var(--mha-safe-top, 0px));
+    --mha-mobile-sheet-height: calc(100dvh - var(--mha-mobile-sheet-top-gap));
     inset-inline: 0;
-    inset-block-start: auto;
+    inset-block-start: var(--mha-mobile-sheet-top-gap);
     inset-block-end: 0;
     inline-size: auto;
-    block-size: auto;
+    block-size: var(--mha-mobile-sheet-height);
     max-inline-size: none;
-    max-block-size: var(--mha-mobile-sheet-max-height);
-    border-end-start-radius: 0;
-    border-end-end-radius: 0;
+    max-block-size: var(--mha-mobile-sheet-height);
+    border-radius: 0;
   }
 }

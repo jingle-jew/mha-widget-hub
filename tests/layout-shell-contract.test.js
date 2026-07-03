@@ -235,6 +235,14 @@ test("floating controls and settings sheet consume responsive variants instead o
     path.join(REPO_ROOT, "styles", "settings", "settings-bottom.css"),
     "utf8",
   );
+  const panelSurfaceSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "panels", "panel-surface-contract.css"),
+    "utf8",
+  );
+  const pageCreatorSheetSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "panels", "page-creator-sheet.css"),
+    "utf8",
+  );
   const widgetManagerSource = fs.readFileSync(
     path.join(REPO_ROOT, "styles", "widget-manager", "widget-manager.css"),
     "utf8",
@@ -258,11 +266,23 @@ test("floating controls and settings sheet consume responsive variants instead o
   );
   assert.match(
     settingsPanelSource,
+    /\.mha-settings-panel\[data-mobile-layout="true"\] \.mha-settings-sheet\s*\{[\s\S]*inset-inline:\s*0;[\s\S]*inset-block-start:\s*var\(--mha-mobile-sheet-top-gap\);[\s\S]*inset-block-end:\s*0;[\s\S]*block-size:\s*var\(--mha-mobile-sheet-height\);/,
+  );
+  assert.match(
+    settingsPanelSource,
     /\.mha-settings-panel\[data-mobile-landscape="true"\] \.mha-settings-accent-swatches\s*\{[\s\S]*grid-template-columns:\s*repeat\(10, minmax\(0, 1fr\)\);/,
   );
   assert.match(
     settingsBottomSource,
-    /\.mha-settings-panel\[data-mobile-layout="true"\] \.mha-settings-sheet\s*\{[\s\S]*position:\s*fixed;[\s\S]*bottom:\s*0;/,
+    /\.mha-settings-panel\[data-mobile-layout="true"\] \.mha-settings-sheet\s*\{[\s\S]*position:\s*fixed;[\s\S]*bottom:\s*0;[\s\S]*top:\s*var\(--mha-mobile-sheet-top-gap\);[\s\S]*height:\s*var\(--mha-mobile-sheet-height\);/,
+  );
+  assert.match(
+    panelSurfaceSource,
+    /\[data-mobile-presentation="sheet"\] > \[role="dialog"\]\s*\{[\s\S]*inset-block-start:\s*var\(--mha-mobile-sheet-top-gap\);[\s\S]*inset-block-end:\s*0;[\s\S]*block-size:\s*var\(--mha-mobile-sheet-height\);[\s\S]*border-radius:\s*0;/,
+  );
+  assert.match(
+    pageCreatorSheetSource,
+    /\.mha-page-creator\[data-mobile-presentation="sheet"\] \.mha-page-creator-sheet\s*\{[\s\S]*inset-block-start:\s*var\(--mha-mobile-sheet-top-gap\);[\s\S]*inset-block-end:\s*0;[\s\S]*block-size:\s*var\(--mha-mobile-sheet-height\);/,
   );
   assert.doesNotMatch(
     widgetManagerSource,
