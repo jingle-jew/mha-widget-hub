@@ -92,7 +92,11 @@ test("settings panel state derives the current scope openness and preserves stat
     selectedDockPageId: "home",
     dockPosition: "left",
     isMobileLayout: false,
+    isMobileLandscape: false,
     customWallpapers: { light: null, dark: null },
+    supportsDockPosition: true,
+    supportsSidebarToggle: true,
+    showsStatusBarOptions: true,
   });
 });
 
