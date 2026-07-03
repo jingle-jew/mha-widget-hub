@@ -100,3 +100,41 @@ test("frame alignment stylesheet no longer pilots grid alignment directly from d
   assert.doesNotMatch(source, /data-dock-position=.*mha-grid/);
   assert.doesNotMatch(source, /--mha-grid-track-justify:\s*(start|end|center)/);
 });
+
+test("status bar mode remains a shell-owned layout input instead of a settings-only style toggle", () => {
+  const gridSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "layout", "widget-grid.css"),
+    "utf8",
+  );
+  const statusSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "layout", "status-bar.css"),
+    "utf8",
+  );
+
+  assert.match(
+    gridSource,
+    /\[data-status-bar-mode="top-bar"\][\s\S]*--mha-statusbar-reserved-top:/,
+  );
+  assert.match(
+    gridSource,
+    /\[data-status-bar-mode="hidden"\][\s\S]*--mha-statusbar-reserved-top:\s*0px;/,
+  );
+  assert.match(
+    gridSource,
+    /\[data-status-bar-mode="top-bar"\]\)\s+\.mha-shell,\s*:host\(\[data-status-bar-mode="hidden"\]\)\s+\.mha-shell\s*\{[\s\S]*--mha-statusbar-widget-gap:\s*0px\s*!important;/,
+  );
+  assert.match(
+    statusSource,
+    /\[data-status-bar-mode="hidden"\]\)\s+\.mha-status-bar,\s*:host\(\[data-status-bar-mode="hidden"\]\)\s+\.mha-statusbar-fill\s*\{[\s\S]*display:\s*none\s*!important;/,
+  );
+  const mobileGridSection = gridSource.match(/@media\s*\(max-width:\s*767px\)\s*\{[\s\S]*?\n\}/)?.[0] || "";
+  const mobileStatusSection = statusSource.match(/@media\s*\(max-width:\s*767px\)\s*\{[\s\S]*?\n\}/)?.[0] || "";
+  assert.doesNotMatch(
+    mobileGridSection,
+    /\[data-status-bar-mode="top-bar"\][\s\S]*--mha-statusbar-reserved-top:/,
+  );
+  assert.doesNotMatch(
+    mobileStatusSection,
+    /\[data-status-bar-mode="top-bar"\]\)\s+\.mha-status-bar\s*\{[\s\S]*display:\s*flex;/,
+  );
+});

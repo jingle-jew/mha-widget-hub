@@ -39,6 +39,7 @@ export const en = Object.freeze({
     wallpaperDescription: "Choose a separate image for light and dark themes.",
     dock: "Dock",
     dockDescription: "Reorder dock pages and change their icons.",
+    statusBar: "Status bar",
     dockPosition: "Dock position",
     showDockLabels: "Show dock labels",
     dockIcons: "Dock icons",
@@ -102,6 +103,11 @@ export const en = Object.freeze({
     dockArea: "Dock area",
     hideHaSidebar: "Hide Home Assistant sidebar",
     hideHaSidebarDescription: "Hide the native Home Assistant sidebar for a more immersive experience.",
+    statusBarModes: Object.freeze({
+      pill: "Pill",
+      "top-bar": "Top bar",
+      hidden: "Hidden",
+    }),
     screensaverClock: "Screensaver clock",
     configureScreensaver: "Configure screensaver",
     nowBarPreview: Object.freeze({

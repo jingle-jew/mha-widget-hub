@@ -1,2 +1,47 @@
-export function createStatusBar({layoutMode="auto",layout="mobile",logicalColumns=1,gridUnits=2}={}){const el=document.createElement("header");el.className="mha-status-bar";const label=layoutMode==="auto"?`auto → ${layout}`:layout;el.innerHTML=`<div class="mha-status-brand"><span class="mha-dot"></span><strong>MHA</strong><span>Grid foundation</span></div><div class="mha-status-meta"><span>${label}</span><span>${logicalColumns} cols · ${gridUnits} units</span><span data-status-date>—</span><strong data-status-time>—</strong></div>`;return el}
-export function updateStatusTime(root){const time=root.querySelector("[data-status-time]");const date=root.querySelector("[data-status-date]");if(!time||!date)return;const now=new Date();time.textContent=new Intl.DateTimeFormat("fr-CA",{hour:"2-digit",minute:"2-digit"}).format(now);date.textContent=new Intl.DateTimeFormat("fr-CA",{weekday:"short",month:"short",day:"numeric"}).format(now)}
+import { normalizeStatusBarMode } from "../core/status-bar-mode.js";
+
+export function createStatusBar({
+  layoutMode = "auto",
+  layout = "mobile",
+  logicalColumns = 1,
+  gridUnits = 2,
+  statusBarMode = "pill",
+} = {}) {
+  const el = document.createElement("header");
+  el.className = "mha-status-bar";
+  el.dataset.statusBarMode = normalizeStatusBarMode(statusBarMode);
+
+  const label = layoutMode === "auto" ? `auto → ${layout}` : layout;
+  el.innerHTML = `
+    <div class="mha-status-brand">
+      <span class="mha-dot"></span>
+      <strong>MHA</strong>
+      <span>Grid foundation</span>
+    </div>
+    <div class="mha-status-meta">
+      <span>${label}</span>
+      <span>${logicalColumns} cols · ${gridUnits} units</span>
+      <span data-status-date>—</span>
+      <strong data-status-time>—</strong>
+    </div>
+  `;
+
+  return el;
+}
+
+export function updateStatusTime(root) {
+  const time = root.querySelector("[data-status-time]");
+  const date = root.querySelector("[data-status-date]");
+  if (!time || !date) return;
+
+  const now = new Date();
+  time.textContent = new Intl.DateTimeFormat("fr-CA", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(now);
+  date.textContent = new Intl.DateTimeFormat("fr-CA", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  }).format(now);
+}

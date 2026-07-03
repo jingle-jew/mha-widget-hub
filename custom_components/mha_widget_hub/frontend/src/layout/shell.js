@@ -24,6 +24,9 @@ export function createShell(meta = {}) {
   const statusBarFill = document.createElement("div");
   statusBarFill.className = "mha-statusbar-fill";
   statusBarFill.setAttribute("aria-hidden", "true");
+  if (meta.statusBarMode) {
+    statusBarFill.dataset.statusBarMode = meta.statusBarMode;
+  }
 
   const workspace = document.createElement("section");
   workspace.className = "mha-workspace";

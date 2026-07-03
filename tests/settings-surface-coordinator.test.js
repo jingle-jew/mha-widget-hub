@@ -17,6 +17,7 @@ test("settings surface coordinator owns both open-state flags and panel sync", (
     _language: "fr",
     _hideHaSidebar: false,
     _showDockLabels: true,
+    _statusBarMode: "top-bar",
     _accentPaletteExpanded: true,
     _settingsPage: "dock",
     _pages: [{ id: "home" }],
@@ -77,6 +78,7 @@ test("settings surface coordinator owns both open-state flags and panel sync", (
     _applyIconShapeFromSettings() {},
     _applyHideHaSidebarFromSettings() {},
     _applyDockLabelsFromSettings() {},
+    _applyStatusBarModeFromSettings() {},
     _applyScreensaverEnabledFromSettings() {},
     _applyScreensaverDelayFromSettings() {},
     _applyScreensaverPreviewFromSettings() {},
@@ -115,4 +117,5 @@ test("settings surface coordinator owns both open-state flags and panel sync", (
   assert.equal(host.lastSync.props.screensaver.scope, "screensaver");
   assert.equal(host.lastSync.props.all.isMobileLayout, true);
   assert.equal(host.lastSync.props.all.showDockLabels, true);
+  assert.equal(host.lastSync.props.all.statusBarMode, "top-bar");
 });

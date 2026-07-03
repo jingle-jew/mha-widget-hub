@@ -834,6 +834,7 @@ test("render datasets include the persisted dock label visibility state", async 
     _dockPosition: "bottom",
     _isEditing: false,
     _showDockLabels: true,
+    _statusBarMode: "hidden",
     dataset: {},
     style: createMockStyle(),
     classList: {
@@ -853,10 +854,12 @@ test("render datasets include the persisted dock label visibility state", async 
     cols: 4,
     logicalRows: 4,
     accent: "sky",
+    statusBarMode: "hidden",
   });
 
   assert.equal(host.dataset.dockLabels, "true");
   assert.equal(host.dataset.dockPosition, "bottom");
+  assert.equal(host.dataset.statusBarMode, "hidden");
   assert.equal(host.dataset.themeStyle, "material");
 });
 

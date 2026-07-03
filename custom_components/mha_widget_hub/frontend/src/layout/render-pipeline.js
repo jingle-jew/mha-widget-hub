@@ -283,6 +283,7 @@ export function createRenderPipeline(host, options = {}) {
       iconShapeSetting,
       iconShape,
       accent,
+      statusBarMode: host._statusBarMode || "pill",
     };
   }
 
@@ -312,6 +313,7 @@ export function createRenderPipeline(host, options = {}) {
     cols,
     logicalRows,
     accent,
+    statusBarMode,
   }) {
     host.dataset.themeStyle = themeStyle;
     host.dataset.iconShapeSetting = iconShapeSetting;
@@ -325,6 +327,7 @@ export function createRenderPipeline(host, options = {}) {
     }
     host.dataset.dockPosition = host._dockPosition;
     host.dataset.dockLabels = String(Boolean(host._showDockLabels));
+    host.dataset.statusBarMode = statusBarMode || "pill";
     host.classList.toggle("is-editing", host._isEditing);
     host.dataset.accent = accent;
     document.documentElement.dataset.accent = accent;
@@ -394,7 +397,7 @@ export function createRenderPipeline(host, options = {}) {
     }
   }
 
-  function mountRenderShell({ layoutMode, layout, cols, units }) {
+  function mountRenderShell({ layoutMode, layout, cols, units, statusBarMode = "pill" }) {
     const persistentBackground = host.shadowRoot?.querySelector?.(".mha-background") || null;
     host._settingsPanelsUiState = captureSettingsPanelsUiState(host.shadowRoot);
     if (persistentBackground) {
@@ -426,6 +429,7 @@ export function createRenderPipeline(host, options = {}) {
       layout,
       logicalColumns: cols,
       gridUnits: units,
+      statusBarMode,
       ...dockProps,
     });
     const background = persistentBackground || bg;

@@ -11,6 +11,7 @@ test("hub state ingress coordinator initializes persisted shell state", () => {
         "mha-dock-position": "right",
         "mha-hide-ha-sidebar": "true",
         "mha-dock-labels": "true",
+        "mha-status-bar-mode": "top-bar",
         "mha-language": "fr",
         "mha-grid-pages": JSON.stringify([
           { id: "home", name: "Home", icon: "home", widgets: [{ id: "clock", kind: "clock" }] },
@@ -81,6 +82,7 @@ test("hub state ingress coordinator initializes persisted shell state", () => {
   assert.equal(host._dockPosition, "right");
   assert.equal(host._hideHaSidebar, true);
   assert.equal(host._showDockLabels, true);
+  assert.equal(host._statusBarMode, "top-bar");
   assert.equal(host._language, "fr");
   assert.equal(host._activePageId, "home");
   assert.equal(host._widgets[0]?.id, "clock");

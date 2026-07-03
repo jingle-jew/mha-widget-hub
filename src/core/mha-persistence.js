@@ -1,5 +1,6 @@
 import { readBoolean } from "./storage.js";
 import { STORAGE_KEYS } from "./storage-keys.js";
+import { normalizeStatusBarMode } from "./status-bar-mode.js";
 
 export const {
   gridOrder: ORDER,
@@ -11,6 +12,7 @@ export const {
   dockPosition: DOCK_POSITION,
   hideHaSidebar: HIDE_HA_SIDEBAR,
   dockLabels: DOCK_LABELS,
+  statusBarMode: STATUS_BAR_MODE,
   language: LANGUAGE,
 } = STORAGE_KEYS;
 
@@ -32,6 +34,12 @@ export function getStoredHideHaSidebar(storage = localStorage) {
 
 export function getStoredDockLabels(storage = localStorage) {
   return readBoolean(DOCK_LABELS, false, storage);
+}
+
+export function getStoredStatusBarMode(storage = localStorage) {
+  return normalizeStatusBarMode(
+    storage.getItem(STATUS_BAR_MODE) || "pill",
+  );
 }
 
 export function normalizeLanguageSetting(value = "auto") {

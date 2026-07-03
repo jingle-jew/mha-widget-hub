@@ -74,6 +74,39 @@
   }
 }
 
+:host([data-status-bar-mode="hidden"]) .mha-status-bar,
+:host([data-status-bar-mode="hidden"]) .mha-statusbar-fill {
+  display: none !important;
+}
+
+:host([data-status-bar-mode="top-bar"]) .mha-statusbar-fill {
+  display: none !important;
+}
+
+:host([data-status-bar-mode="top-bar"]) .mha-status-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 12;
+  width: auto;
+  inline-size: auto;
+  min-height: calc(
+    var(--mha-statusbar-top-bar-height, var(--mha-statusbar-height-compact, var(--mha-bar-height)))
+    + var(--mha-safe-top, 0px)
+  );
+  height: auto;
+  padding-block-start: var(--mha-safe-top, 0px);
+  padding-block-end: var(--mha-statusbar-top-bar-padding-block-end, 0px);
+  padding-inline-start: max(var(--mha-page-padding), var(--mha-safe-left, 0px));
+  padding-inline-end: max(var(--mha-page-padding), var(--mha-safe-right, 0px));
+  border-radius: var(--mha-statusbar-top-bar-radius, 0px);
+  border-top: 0;
+  border-inline-start: 0;
+  border-inline-end: 0;
+  transform: none;
+}
+
 /* STATUS BAR NO SHADOW
  * Keep the status bar surface/border/blur, but remove its floating shadow.
  * This is intentionally separate from grid positioning.
