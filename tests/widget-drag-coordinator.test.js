@@ -292,6 +292,26 @@ test("canStartWidgetDrag stays available on tablet layouts", () => {
   }), true);
 });
 
+test("canStartWidgetDrag stays available in mobile landscape while editing", () => {
+  const host = {
+    _isEditing: true,
+    dataset: { layout: "mobile" },
+    _isMobileLandscapeLayout() {
+      return true;
+    },
+    _isResizeHandleEvent() {
+      return false;
+    },
+  };
+
+  assert.equal(canStartWidgetDrag({
+    host,
+    element: {},
+    widgetId: "clock",
+    event: { button: 0, target: { closest() { return null; } } },
+  }), true);
+});
+
 test("widget drag cleanup on pointercancel clears pending and armed classes", () => {
   const widget = createWidgetElement();
   const host = {

@@ -176,3 +176,87 @@ test("widget interaction coordinator hides the mobile and tablet edit pencil unt
     globalThis.document = previousDocument;
   }
 });
+
+test("widget interaction coordinator keeps edit surfaces open in mobile landscape while editing", () => {
+  const previousDocument = globalThis.document;
+  globalThis.document = {
+    createElement() {
+      return {
+        dataset: {},
+        setAttribute() {},
+        append() {},
+        appendChild() {},
+        classList: { add() {} },
+        style: {},
+      };
+    },
+    createElementNS() {
+      return {
+        dataset: {},
+        setAttribute() {},
+        append() {},
+        appendChild() {},
+        classList: { add() {} },
+        style: {},
+      };
+    },
+  };
+
+  const editButton = {
+    hidden: false,
+    dataset: {},
+    setAttribute() {},
+    append() {},
+    replaceChildren() {},
+  };
+  const addButton = { hidden: true };
+  const widgetConfigSession = {
+    configType: "button",
+    mode: "edit",
+  };
+  const host = {
+    _isEditing: true,
+    _widgets: [],
+    _activeMoveWidgetId: "clock",
+    _pendingWidgetPlacement: { id: "pending" },
+    _widgetManagerOpen: true,
+    _widgetManagerCategory: "utilities",
+    _widgetConfigSession: widgetConfigSession,
+    _pageCreatorOpen: true,
+    dataset: { layout: "mobile" },
+    shadowRoot: {
+      querySelector(selector) {
+        if (selector === ".mha-primary-edit-button") return editButton;
+        if (selector === ".mha-add-widget-button") return addButton;
+        return null;
+      },
+      querySelectorAll() {
+        return [];
+      },
+    },
+    _isMobileLandscapeLayout() {
+      return true;
+    },
+    classList: { toggle() {}, remove() {} },
+    _syncPageCreatorDom() {},
+    _syncWidgetConfigDom() {},
+    _canAddWidgetToActivePage() {
+      return true;
+    },
+  };
+
+  try {
+    const coordinator = createWidgetInteractionSurfaceCoordinator(host);
+    coordinator.syncEditModeDom();
+
+    assert.equal(addButton.hidden, false);
+    assert.equal(host._activeMoveWidgetId, "clock");
+    assert.deepEqual(host._pendingWidgetPlacement, { id: "pending" });
+    assert.equal(host._widgetManagerOpen, true);
+    assert.equal(host._widgetManagerCategory, "utilities");
+    assert.equal(host._widgetConfigSession, widgetConfigSession);
+    assert.equal(host._pageCreatorOpen, true);
+  } finally {
+    globalThis.document = previousDocument;
+  }
+});

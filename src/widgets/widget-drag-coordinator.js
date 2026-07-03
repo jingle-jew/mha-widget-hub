@@ -152,7 +152,6 @@ function commitHoveredDropSlot(host, session) {
 
 export function canStartWidgetDrag({ host, element, event, widgetId = "" } = {}) {
   if (!host?._isEditing) return false;
-  if (host?._isMobileLandscapeLayout?.()) return false;
   if (!element || !widgetId) return false;
   if (!isPrimaryPointer(event)) return false;
   if (host?._isResizeHandleEvent?.(event)) return false;

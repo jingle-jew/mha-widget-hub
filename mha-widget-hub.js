@@ -798,7 +798,6 @@ _syncScreensaverDom({force=false}={}){
 toggleEditMode(){
   if(!canToggleEditMode({
     isEditing:this._isEditing,
-    isMobileLandscape:this._isMobileLandscapeLayout(),
   }))return;
   const wasEditing=this._isEditing;
   this._isEditing=getNextEditMode(this._isEditing);

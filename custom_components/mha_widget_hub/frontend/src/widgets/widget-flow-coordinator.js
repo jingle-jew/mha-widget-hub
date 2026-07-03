@@ -61,7 +61,7 @@ export function createWidgetFlowCoordinator({
   }
 
   function openWidgetManager() {
-    if (!getIsEditing() || isMobileLandscapeLayout()) return;
+    if (!getIsEditing()) return;
     setPendingWidgetPlacement(null);
     setActiveMoveWidgetId("");
     setWidgetManagerOpen(true);
@@ -116,7 +116,7 @@ export function createWidgetFlowCoordinator({
   }
 
   function beginWidgetPlacement(item) {
-    if (!getIsEditing() || isMobileLandscapeLayout()) return;
+    if (!getIsEditing()) return;
     const widget = createWidgetFromCatalogItem(item);
     const placementFlow = getWidgetPlacementFlow(widget);
     if (placementFlow === "direct") {
@@ -178,7 +178,7 @@ export function createWidgetFlowCoordinator({
   }
 
   function openWidgetConfig(id) {
-    if (!getIsEditing() || isMobileLandscapeLayout()) return;
+    if (!getIsEditing()) return;
     const widget = getWidgets().find((item) => item.id === id);
     if (!supportsWidgetConfiguration(widget)) return;
     if (widget?.kind === "scenes") {
@@ -197,7 +197,6 @@ export function createWidgetFlowCoordinator({
   }
 
   function openScenesButtonConfig(id, buttonIndex) {
-    if (isMobileLandscapeLayout()) return;
     const widget = getWidgets().find((item) => item.id === id);
     if (!widget || widget.kind !== "scenes") return;
     const resolvedButtonIndex = Number.isInteger(buttonIndex)

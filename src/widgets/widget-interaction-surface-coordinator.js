@@ -15,13 +15,12 @@ export function createWidgetInteractionSurfaceCoordinator(host) {
   }
 
   function syncEditModeDom() {
-    if (!host._isEditing || host._isMobileLandscapeLayout()) {
+    if (!host._isEditing) {
       const hadWidgetConfig = Boolean(host._widgetConfigSession);
       const preserveScenesSlotConfig = Boolean(
         host._widgetConfigSession
         && host._widgetConfigSession.configType === "scenes"
         && Number.isInteger(host._widgetConfigSession.buttonIndex)
-        && !host._isMobileLandscapeLayout()
       );
       host._activeMoveWidgetId = "";
       host._pendingWidgetPlacement = null;
@@ -50,7 +49,7 @@ export function createWidgetInteractionSurfaceCoordinator(host) {
       });
     }
     const add = host.shadowRoot.querySelector(".mha-add-widget-button");
-    if (add) add.hidden = !host._isEditing || host._isMobileLandscapeLayout() || host._canAddWidgetToActivePage?.() === false;
+    if (add) add.hidden = !host._isEditing || host._canAddWidgetToActivePage?.() === false;
     host.shadowRoot?.querySelectorAll?.(".mha-widget")?.forEach((element) => {
       element.draggable = false;
       element.removeAttribute("draggable");
