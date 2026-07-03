@@ -256,12 +256,10 @@
     transition: none !important;
   }
 
-  @media (orientation: landscape) {
-    :host([data-layout="mobile"]) .mha-mobile-dock {
-      opacity: 0 !important;
-      visibility: hidden !important;
-      pointer-events: none !important;
-    }
+  :host([data-layout-variant="mobile-landscape"]) .mha-mobile-dock {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
   }
 
   @media (prefers-reduced-motion: reduce) {

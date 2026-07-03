@@ -74,6 +74,11 @@
   }
 }
 
+:host([data-status-bar-visible="false"]) .mha-status-bar,
+:host([data-status-bar-visible="false"]) .mha-statusbar-fill {
+  display: none !important;
+}
+
 :host([data-status-bar-mode="hidden"]) .mha-status-bar,
 :host([data-status-bar-mode="hidden"]) .mha-statusbar-fill {
   display: none !important;

@@ -238,6 +238,7 @@ export class GridRuntime {
     getRoot = () => host?.shadowRoot,
     getLayoutMode,
     getEffectiveLayout,
+    getGridOrientation: resolveGridOrientation = (...args) => getGridOrientation(...args),
     getDockPosition = () => "left",
     isMobileLayout,
     getWidgets = () => [],
@@ -254,6 +255,7 @@ export class GridRuntime {
     this.getRoot = (...args) => getRoot(...args);
     this.getLayoutMode = (...args) => getLayoutMode(...args);
     this.getEffectiveLayout = (...args) => getEffectiveLayout(...args);
+    this.getGridOrientation = (...args) => resolveGridOrientation(...args);
     this.getDockPosition = (...args) => getDockPosition(...args);
     this.isMobileLayout = (...args) => (
       isMobileLayout
@@ -277,15 +279,20 @@ export class GridRuntime {
   }
 
   getResolvedLayoutMode() {
-    const datasetMode = this.host?.dataset?.layoutMode;
-    if (datasetMode && datasetMode !== "auto") return datasetMode;
     return this.getLayoutMode(this.host);
   }
 
   getResolvedLayout() {
-    const datasetLayout = this.host?.dataset?.layout;
-    if (datasetLayout) return datasetLayout;
     return this.getEffectiveLayout(this.host);
+  }
+
+  getResolvedGridOrientation({
+    metrics = this.getRuntimeMetrics(),
+    fallbackMetrics = this.host?.getBoundingClientRect?.() || {},
+  } = {}) {
+    const responsiveOrientation = this.host?._responsiveState?.orientation;
+    if (responsiveOrientation) return normalizeGridOrientation(responsiveOrientation);
+    return normalizeGridOrientation(this.getGridOrientation(metrics || {}, fallbackMetrics));
   }
 
   getWidgetAreaMetrics() {
@@ -487,12 +494,13 @@ export class GridRuntime {
   }
 
   getLogicalGridPreset({
-    orientation = this.host?.dataset?.gridOrientation,
+    orientation = null,
   } = {}) {
     const layout = this.getResolvedLayout();
-    const fallbackOrientation = getGridOrientation(
-      this.host?.getBoundingClientRect?.() || this.getRuntimeMetrics() || {},
-    );
+    const fallbackOrientation = this.getResolvedGridOrientation({
+      metrics: this.getRuntimeMetrics(),
+      fallbackMetrics: this.host?.getBoundingClientRect?.() || {},
+    });
     return getGridPresetForLayout(
       layout,
       normalizeGridOrientation(orientation || fallbackOrientation),
@@ -500,13 +508,14 @@ export class GridRuntime {
   }
 
   getRuntimeGridPreset({
-    orientation = this.host?.dataset?.gridOrientation,
+    orientation = null,
     availableContentRect = this.getAvailableContentRect(),
   } = {}) {
     const layout = this.getResolvedLayout();
-    const fallbackOrientation = getGridOrientation(
-      this.host?.getBoundingClientRect?.() || this.getRuntimeMetrics() || {},
-    );
+    const fallbackOrientation = this.getResolvedGridOrientation({
+      metrics: this.getRuntimeMetrics(),
+      fallbackMetrics: this.host?.getBoundingClientRect?.() || {},
+    });
     const presetRect = this.getPresetContentRect(availableContentRect);
     return getGridPresetForLayout(
       layout,
@@ -524,9 +533,10 @@ export class GridRuntime {
     const rect = this.host?.getBoundingClientRect?.() || {};
     const width = Math.round(metrics?.width || rect.width || 0);
     const height = Math.round(metrics?.height || rect.height || 0);
-    const orientation = normalizeGridOrientation(
-      this.host?.dataset?.gridOrientation || (width > height ? "landscape" : "portrait"),
-    );
+    const orientation = this.getResolvedGridOrientation({
+      metrics,
+      fallbackMetrics: rect,
+    });
     const layoutMode = this.getResolvedLayoutMode();
     const layout = this.getResolvedLayout();
     const preset = this.getRuntimeGridPreset();

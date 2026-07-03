@@ -42,14 +42,12 @@ import { createWidgetLayoutStateCoordinator } from "./src/widgets/widget-layout-
 import { createWidgetResizeCoordinator } from "./src/widgets/widget-resize-coordinator.js";
 import { createWidgetSurfaceCoordinator } from "./src/widgets/widget-surface-coordinator.js";
 import {
+  computeResponsiveState,
   DEFAULT_WIDGETS,
-  getGridOrientation,
   getGridPresetForLayout,
-  getLayoutMode,
   normalizeGridOrientation,
   normalizeWidgetForKind,
 } from "./src/layout/layout-engine.js";
-import { getLayoutForWidth } from "./src/layout/responsive.js";
 import { isPositionMapValidForWidgets } from "./src/layout/placement-geometry.js";
 import {
   doesWidgetLayoutFitGrid,
@@ -386,6 +384,7 @@ constructor(){
     host:this,
     getLayoutMode:()=>this._getRuntimeLayoutMode(),
     getEffectiveLayout:()=>this._getRuntimeLayout(),
+    getGridOrientation:()=>this._getGridOrientation(),
     getDockPosition:()=>this._dockPosition,
     isMobileLayout:()=>this._isMobileLauncherLayout(),
     getWidgets:()=>this._widgets,
@@ -1125,31 +1124,47 @@ _getShellViewportMetrics(){
     height:Math.max(0,Number(rect.height)||window.innerHeight||0),
   };
 }
+_syncResponsiveState({publish=false,viewportMetrics=null,availableContentRect=null}={}){
+  const responsiveState=computeResponsiveState({
+    host:this,
+    viewportMetrics:viewportMetrics||this._getShellViewportMetrics(),
+    availableContentRect,
+    dockPosition:this._dockPosition,
+    statusBarMode:this._statusBarMode,
+  });
+  this._responsiveState=responsiveState;
+  if(publish){
+    this.dataset.layoutMode=responsiveState.layoutMode;
+    this.dataset.layout=responsiveState.layout;
+    this.dataset.layoutFamily=responsiveState.layoutFamily;
+    this.dataset.layoutVariant=responsiveState.layoutVariant;
+    this.dataset.gridOrientation=responsiveState.orientation;
+    this.dataset.dockFamily=responsiveState.dockFamily;
+    this.dataset.dockPosition=responsiveState.dockPosition;
+    this.dataset.statusBarVisible=String(responsiveState.statusBarVisible);
+  }
+  return responsiveState;
+}
+_getResponsiveState(options={}){
+  return this._syncResponsiveState(options);
+}
 _getRuntimeLayoutMode(){
-  const datasetMode=this.dataset?.layoutMode;
-  if(datasetMode&&datasetMode!=="auto")return datasetMode;
-  return getLayoutMode(this);
+  return this._getResponsiveState().layoutMode;
 }
 _getGridOrientation(){
-  const publishedOrientation=this.dataset?.gridOrientation;
-  if(publishedOrientation)return normalizeGridOrientation(publishedOrientation);
-  return getGridOrientation(this._getShellViewportMetrics());
+  return normalizeGridOrientation(this._getResponsiveState().orientation);
 }
 _getRuntimeLayout(){
-  const publishedLayout=this.dataset?.layout;
-  if(publishedLayout)return publishedLayout;
-  return getLayoutForWidth(
-    this._getShellViewportMetrics().width,
-    {layoutMode:this._getRuntimeLayoutMode()},
-  );
+  return this._getResponsiveState().layout;
 }
 _isMobileDefaultLayout(){
   return this._getRuntimeLayout()==="mobile";
 }
 _getLogicalGridPreset(){
+  const responsiveState=this._getResponsiveState();
   return getGridPresetForLayout(
-    this._getRuntimeLayout(),
-    this._getGridOrientation(),
+    responsiveState.layout,
+    responsiveState.orientation,
   );
 }
 _getRuntimeGridPreset(){

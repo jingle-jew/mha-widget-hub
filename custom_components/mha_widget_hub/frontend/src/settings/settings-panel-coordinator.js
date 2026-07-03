@@ -21,6 +21,7 @@ export function buildSettingsCoordinatorProps({
   selectedDockPageId = "",
   dockPosition = "left",
   isMobileLayout = false,
+  isMobileLandscape = false,
   customWallpapers = {},
   hass = null,
   entityVisibilityConfig = null,
@@ -29,6 +30,9 @@ export function buildSettingsCoordinatorProps({
   hostIconShape = "",
   documentIconShape = "",
   supportsScreensaver = true,
+  supportsDockPosition = true,
+  supportsSidebarToggle = true,
+  showsStatusBarOptions = true,
   callbacks = {},
 } = {}) {
   const effectiveIconShape = resolveEffectiveIconShape({
@@ -53,6 +57,7 @@ export function buildSettingsCoordinatorProps({
       selectedDockPageId,
       dockPosition,
       isMobileLayout,
+      isMobileLandscape,
       customWallpapers,
       hass,
       entityVisibilityConfig,
@@ -60,6 +65,9 @@ export function buildSettingsCoordinatorProps({
       screensaverState,
       effectiveIconShape,
       supportsScreensaver,
+      supportsDockPosition,
+      supportsSidebarToggle,
+      showsStatusBarOptions,
     }),
     ...callbacks,
     onClose: scope === "screensaver"
