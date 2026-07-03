@@ -69,7 +69,7 @@ export function createPageCreatorPanel({
   });
   actions.append(cancel, create);
 
-  return applyPanelSurfaceContract(createPanelShell({
+  const root = applyPanelSurfaceContract(createPanelShell({
     open,
     rootClassName: "mha-page-creator",
     scrimClassName: "mha-page-creator-scrim",
@@ -86,12 +86,16 @@ export function createPageCreatorPanel({
     surfaceRole: PANEL_SURFACE_ROLES.POPUP,
     mobilePresentation: PANEL_MOBILE_PRESENTATIONS.SHEET,
   });
+  root.hidden = !open;
+  return root;
 }
 
 export function syncPageCreatorPanel(root, props) {
   root?.querySelectorAll?.("section.mha-page-creator:not(.mha-widget-config-popup)")
     ?.forEach((panel) => panel.remove());
-  root?.append?.(createPageCreatorPanel(props));
+  const panel = createPageCreatorPanel(props);
+  root?.append?.(panel);
+  return panel;
 }
 
 export function updatePageCreatorTypeSelection(root, selectedPageType) {

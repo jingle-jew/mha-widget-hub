@@ -14,6 +14,35 @@ const OPEN_WIDGET_SURFACE_SELECTOR = [
   '.mha-widget-config-popup[data-open="true"]:not([hidden])',
 ].join(",");
 
+export function applyWidgetSurfaceHostLayoutState(root, panel) {
+  const host = root?.host;
+  if (!host || !panel?.dataset) return panel;
+
+  const layout = String(host.dataset?.layout || host._layout || "");
+  const layoutVariant = String(host.dataset?.layoutVariant || "");
+  const isMobileLandscape = layoutVariant === "mobile-landscape"
+    || host._isMobileLandscapeLayout?.() === true;
+
+  panel.dataset.layout = layout;
+  panel.dataset.mobileLayout = String(layout === "mobile");
+  panel.dataset.mobileLandscape = String(isMobileLandscape);
+
+  if (layoutVariant) panel.dataset.layoutVariant = layoutVariant;
+  else delete panel.dataset.layoutVariant;
+
+  const surfaceRole = String(panel.dataset.surfaceRole || "");
+  const resolvedSurfaceRole = layout === "mobile" && surfaceRole === "panel"
+    ? "popup"
+    : surfaceRole;
+  if (resolvedSurfaceRole) {
+    panel.dataset.surfaceRole = resolvedSurfaceRole;
+    const dialog = panel.querySelector?.("[role='dialog']");
+    if (dialog?.dataset) dialog.dataset.surfaceRole = resolvedSurfaceRole;
+  }
+
+  return panel;
+}
+
 export function syncWidgetSurfaceOpenState(root) {
   const host = root?.host;
   if (!host) return;
@@ -51,7 +80,7 @@ export function createWidgetManagerPanel(props = {}) {
 export function syncWidgetManagerPanel(root, props = {}) {
   const existing = root?.querySelector?.(".mha-widget-manager-panel");
   if (existing) existing.remove();
-  root?.append?.(createWidgetManagerPanel(props));
+  root?.append?.(applyWidgetSurfaceHostLayoutState(root, createWidgetManagerPanel(props)));
   syncWidgetSurfaceOpenState(root);
 }
 
@@ -84,7 +113,7 @@ export function createWidgetConfigPanel(props = {}) {
 export function syncWidgetConfigPanel(root, props = {}) {
   const existing = root?.querySelector?.(".mha-widget-config-popup");
   if (existing) existing.remove();
-  root?.append?.(createWidgetConfigPanel(props));
+  root?.append?.(applyWidgetSurfaceHostLayoutState(root, createWidgetConfigPanel(props)));
   syncWidgetSurfaceOpenState(root);
 }
 
@@ -112,6 +141,7 @@ export function createPageCreatorPanel(props = {}) {
 
 export function syncPageCreatorPanel(root, props = {}) {
   const result = syncPageCreatorDomPanel(root, buildPageCreatorPanelProps(props));
+  applyWidgetSurfaceHostLayoutState(root, result);
   syncWidgetSurfaceOpenState(root);
   return result;
 }

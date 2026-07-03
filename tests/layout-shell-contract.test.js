@@ -235,6 +235,10 @@ test("floating controls and settings sheet consume responsive variants instead o
     path.join(REPO_ROOT, "styles", "settings", "settings-bottom.css"),
     "utf8",
   );
+  const widgetManagerSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "widget-manager", "widget-manager.css"),
+    "utf8",
+  );
   const dockSource = fs.readFileSync(
     path.join(REPO_ROOT, "styles", "layout", "dock.css"),
     "utf8",
@@ -259,6 +263,10 @@ test("floating controls and settings sheet consume responsive variants instead o
   assert.match(
     settingsBottomSource,
     /\.mha-settings-panel\[data-mobile-layout="true"\] \.mha-settings-sheet\s*\{[\s\S]*position:\s*fixed;[\s\S]*bottom:\s*0;/,
+  );
+  assert.doesNotMatch(
+    widgetManagerSource,
+    /@media\s*\(orientation:\s*landscape\)\s*\{[\s\S]*:host\(\[data-layout="mobile"\]\) \.mha-widget-manager-panel\s*\{[\s\S]*display:\s*none\s*!important;/,
   );
   assert.match(
     dockSource,

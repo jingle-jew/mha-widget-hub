@@ -612,13 +612,6 @@
   }
 }
 
-@media (orientation: landscape) {
-  :host([data-layout="mobile"]) .mha-widget-manager-panel {
-    display: none !important;
-  }
-}
-
-
 /* iOS panels consume the same material tokens as widget shells. */
 :host([data-theme-style="ios"][data-ios-glass="liquid"][data-theme]) .mha-widget-manager-sheet.mha-settings-sheet {
   background: var(--mha-primary-surface);

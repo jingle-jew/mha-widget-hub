@@ -26,6 +26,7 @@ import {
 } from "../settings/settings-panel-orchestrator.js";
 import { getPrimaryEditIconName, setFloatingControlButtonIcon } from "../ui/floating-control-icons.js";
 import {
+  applyWidgetSurfaceHostLayoutState,
   buildWidgetConfigPanelProps,
   buildWidgetManagerPanelProps,
   createPageCreatorPanel,
@@ -227,7 +228,7 @@ export function createRenderPipeline(host, options = {}) {
       host._syncSettingsDom?.();
       restoreSettingsPanelsUiState(host.shadowRoot, host._settingsPanelsUiState);
       host._settingsPanelsUiState = null;
-      host.shadowRoot.append(createWidgetManagerPanel(buildWidgetManagerPanelProps({
+      host.shadowRoot.append(applyWidgetSurfaceHostLayoutState(host.shadowRoot, createWidgetManagerPanel(buildWidgetManagerPanelProps({
         open: host._widgetManagerOpen,
         activeCategory: host._widgetManagerCategory,
         categories: host._getWidgetManagerCategories?.() || [],
@@ -235,17 +236,23 @@ export function createRenderPipeline(host, options = {}) {
         onBack: () => host._showWidgetManagerCategories(),
         onSelectCategory: (id) => host._selectWidgetManagerCategory(id),
         onSelectWidget: (item) => host._beginWidgetPlacement(item),
-      })));
-      host.shadowRoot.append(createPageCreatorPanel(host._pageUiCoordinator.buildPageCreatorProps()));
+      }))));
+      host.shadowRoot.append(applyWidgetSurfaceHostLayoutState(
+        host.shadowRoot,
+        createPageCreatorPanel(host._pageUiCoordinator.buildPageCreatorProps()),
+      ));
       syncMediaPageSettingsPanel(host.shadowRoot, host._buildMediaPageSettingsProps?.() || {});
-      host.shadowRoot.append(createWidgetConfigPanel(buildWidgetConfigPanelProps({
-        session: host._widgetConfigSession,
-        hass: host._hass,
-        visibilityConfig: host._entityVisibilityConfig,
-        onCancel: () => host._closeWidgetConfig(),
-        onSave: () => host._saveWidgetConfig(),
-        onRerender: () => host._syncWidgetConfigDom(),
-      })));
+      host.shadowRoot.append(applyWidgetSurfaceHostLayoutState(
+        host.shadowRoot,
+        createWidgetConfigPanel(buildWidgetConfigPanelProps({
+          session: host._widgetConfigSession,
+          hass: host._hass,
+          visibilityConfig: host._entityVisibilityConfig,
+          onCancel: () => host._closeWidgetConfig(),
+          onSave: () => host._saveWidgetConfig(),
+          onRerender: () => host._syncWidgetConfigDom(),
+        })),
+      ));
       syncWidgetSurfaceOpenState(host.shadowRoot);
       host._syncEditModeDom();
       host._syncScreensaverVisibilityState();
