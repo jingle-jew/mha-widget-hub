@@ -29,13 +29,29 @@ export const GRID_DENSITY_PROFILES = Object.freeze({
         fillY: 0.76,
         preferencePenaltyFactor: 0.06,
       }),
+      /*
+       * Tablet landscape needs one intermediate band:
+       * - side-dock panels around ~880px should stay capped at 10 columns;
+       * - wider bottom-dock panels around ~1090px can safely unlock 11.
+       *
+       * The solver works from the panel frame before runtime track gaps/padding
+       * are applied, so this band keeps the 10->11 step aligned with the real
+       * shell geometry without opening the 12-column band too early.
+       */
       widthBands: Object.freeze([
         Object.freeze({
           min: 0,
-          max: 1199,
+          max: 899,
           preferredColumns: 10,
           minColumns: 10,
           maxColumns: 10,
+        }),
+        Object.freeze({
+          min: 900,
+          max: 1199,
+          preferredColumns: 11,
+          minColumns: 10,
+          maxColumns: 11,
         }),
         Object.freeze({
           min: 1200,

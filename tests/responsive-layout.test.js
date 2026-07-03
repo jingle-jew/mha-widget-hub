@@ -57,15 +57,15 @@ test("mobile grid presets expose direct widget-grid columns", () => {
 
 test("tablet landscape presets adapt their direct widget-grid matrix to the measured panel rect", () => {
   const hostLikePreset = getGridPreset(null, "tablet", { width: 1133, height: 744 });
-  const sideDockPreset = getGridPreset(null, "tablet", { width: 886, height: 676 });
-  const bottomDockPreset = getGridPreset(null, "tablet", { width: 960, height: 595 });
+  const sideDockPreset = getGridPreset(null, "tablet", { width: 883, height: 682 });
+  const bottomDockPreset = getGridPreset(null, "tablet", { width: 1093, height: 565 });
 
   assert.deepEqual(
     {
       columns: hostLikePreset.columns,
       rows: hostLikePreset.rows,
     },
-    { columns: 10, rows: 6 },
+    { columns: 11, rows: 6 },
   );
   assert.deepEqual(
     {
@@ -79,7 +79,7 @@ test("tablet landscape presets adapt their direct widget-grid matrix to the meas
       columns: bottomDockPreset.columns,
       rows: bottomDockPreset.rows,
     },
-    { columns: 10, rows: 6 },
+    { columns: 11, rows: 6 },
   );
   assert.equal(hostLikePreset.density, "tablet-landscape-adaptive");
   assert.equal(sideDockPreset.density, "tablet-landscape-adaptive");
@@ -111,7 +111,7 @@ test("grid preset can adapt inside the documented bounds when the available rect
 
   assert.deepEqual(
     { columns: roomyTablet.columns, rows: roomyTablet.rows },
-    { columns: 10, rows: 6 },
+    { columns: 11, rows: 6 },
   );
   assert.deepEqual(
     { columns: constrainedTablet.columns, rows: constrainedTablet.rows },
@@ -127,12 +127,12 @@ test("tablet density profiles split width and height bands before the solver run
   const side = resolveGridDensityProfileConstraints(
     "tablet",
     "landscape",
-    { width: 886, height: 676 },
+    { width: 883, height: 682 },
   );
   const bottom = resolveGridDensityProfileConstraints(
     "tablet",
     "landscape",
-    { width: 960, height: 595 },
+    { width: 1093, height: 565 },
   );
   const roomy = resolveGridDensityProfileConstraints(
     "tablet",
@@ -178,9 +178,9 @@ test("tablet density profiles split width and height bands before the solver run
       maxRows: bottom.maxRows,
     },
     {
-      preferredColumns: 10,
+      preferredColumns: 11,
       minColumns: 10,
-      maxColumns: 10,
+      maxColumns: 11,
       preferredRows: 6,
       minRows: 6,
       maxRows: 6,
@@ -196,9 +196,9 @@ test("tablet density profiles split width and height bands before the solver run
       maxRows: roomy.maxRows,
     },
     {
-      preferredColumns: 10,
+      preferredColumns: 11,
       minColumns: 10,
-      maxColumns: 10,
+      maxColumns: 11,
       preferredRows: 6,
       minRows: 6,
       maxRows: 6,

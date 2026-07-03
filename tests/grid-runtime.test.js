@@ -495,6 +495,81 @@ test("runtime runtime preset delegates to the preset engine with the available r
   );
 });
 
+test("runtime can unlock 11 landscape tablet columns for a wide bottom-dock panel without changing side-dock panels", () => {
+  const areaStyle = {
+    paddingLeft: "0px",
+    paddingRight: "0px",
+    paddingTop: "0px",
+    paddingBottom: "0px",
+  };
+  const panelStyle = {
+    paddingLeft: "0px",
+    paddingRight: "0px",
+    paddingTop: "0px",
+    paddingBottom: "0px",
+  };
+
+  const createRuntime = ({ panelWidth, panelHeight, areaWidth, areaHeight, dockPosition }) => {
+    const panel = { clientWidth: panelWidth, clientHeight: panelHeight };
+    const area = { clientWidth: areaWidth, clientHeight: areaHeight };
+    const grid = {
+      closest(selector) {
+        return selector === ".mha-page-panel--grid" ? panel : null;
+      },
+    };
+    const root = {
+      querySelector(selector) {
+        if (selector === ".mha-widget-area") return area;
+        if (selector === ".mha-grid") return grid;
+        return null;
+      },
+    };
+    return createGridRuntime({
+      host: {
+        dataset: {},
+        style: createStyle(),
+        shadowRoot: root,
+        isConnected: true,
+        getBoundingClientRect: () => ({ width: 1133, height: 744 }),
+      },
+      getLayoutMode: () => "tablet",
+      getEffectiveLayout: () => "tablet",
+      getDockPosition: () => dockPosition,
+      getStyle: element => (element === panel ? panelStyle : areaStyle),
+    });
+  };
+
+  const sideRuntime = createRuntime({
+    panelWidth: 883,
+    panelHeight: 682,
+    areaWidth: 860,
+    areaHeight: 676,
+    dockPosition: "left",
+  });
+  const bottomRuntime = createRuntime({
+    panelWidth: 1093,
+    panelHeight: 565,
+    areaWidth: 1070,
+    areaHeight: 559,
+    dockPosition: "bottom",
+  });
+
+  assert.deepEqual(
+    {
+      columns: sideRuntime.getRuntimeGridPreset().columns,
+      rows: sideRuntime.getRuntimeGridPreset().rows,
+    },
+    { columns: 10, rows: 6 },
+  );
+  assert.deepEqual(
+    {
+      columns: bottomRuntime.getRuntimeGridPreset().columns,
+      rows: bottomRuntime.getRuntimeGridPreset().rows,
+    },
+    { columns: 11, rows: 6 },
+  );
+});
+
 test("available content rect resolves from the panel frame on tablet and desktop", () => {
   const panel = {
     clientWidth: 883,
