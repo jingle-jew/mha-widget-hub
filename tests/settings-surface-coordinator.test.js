@@ -27,6 +27,18 @@ test("settings surface coordinator owns both open-state flags and panel sync", (
     _isMobileLauncherLayout() {
       return true;
     },
+    _getResponsiveState() {
+      return {
+        isMobileLayout: true,
+        settingsCapabilities: {
+          supportsScreensaver: false,
+          supportsDockPosition: false,
+          supportsSidebarToggle: false,
+          showsStatusBarOptions: false,
+          isMobileLandscape: true,
+        },
+      };
+    },
     _customWallpapers: {},
     _hass: { states: {} },
     _entityVisibilityConfig: { users: [] },
@@ -116,6 +128,9 @@ test("settings surface coordinator owns both open-state flags and panel sync", (
   assert.equal(host.lastSync.props.all.scope, "all");
   assert.equal(host.lastSync.props.screensaver.scope, "screensaver");
   assert.equal(host.lastSync.props.all.isMobileLayout, true);
+  assert.equal(host.lastSync.props.all.isMobileLandscape, true);
+  assert.equal(host.lastSync.props.all.supportsDockPosition, false);
+  assert.equal(host.lastSync.props.all.showsStatusBarOptions, false);
   assert.equal(host.lastSync.props.all.showDockLabels, true);
   assert.equal(host.lastSync.props.all.statusBarMode, "top-bar");
 });

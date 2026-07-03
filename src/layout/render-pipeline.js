@@ -338,7 +338,9 @@ export function createRenderPipeline(host, options = {}) {
     } else {
       delete host.dataset.gridOrientation;
     }
-    host.dataset.dockPosition = host._dockPosition;
+    host.dataset.dockPosition = layoutVariant === "mobile-landscape"
+      ? "left"
+      : host._dockPosition;
     host.dataset.dockLabels = String(Boolean(host._showDockLabels));
     host.dataset.statusBarMode = statusBarMode || "pill";
     host.dataset.statusBarVisible = String(Boolean(statusBarVisible));

@@ -338,6 +338,24 @@
   overscroll-behavior-y: none;
 }
 
+:host([data-status-bar-visible="false"]) {
+  --mha-statusbar-reserved-top: 0px;
+}
+
+:host([data-layout-variant="mobile-landscape"]) {
+  --mha-mobile-grid-gutter: clamp(0.75rem, 2.4vw, 1rem);
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+:host([data-layout-variant="mobile-landscape"]) .mha-shell {
+  row-gap: 0 !important;
+}
+
+:host([data-layout-variant="mobile-landscape"]) .mha-widget-area {
+  --mha-widget-area-edge-padding: var(--mha-mobile-grid-gutter) !important;
+}
+
 /* Desktop/tablet dock position
  * Mobile keeps its dedicated bottom dock. On tablet/desktop, the dock can
  * reserve space on the left, right, or bottom and the widget grid follows.

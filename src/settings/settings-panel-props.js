@@ -21,6 +21,7 @@ export function buildSettingsPanelState({
   selectedDockPageId = "",
   dockPosition = "left",
   isMobileLayout = false,
+  isMobileLandscape = false,
   customWallpapers = {},
   hass = null,
   entityVisibilityConfig = null,
@@ -28,6 +29,9 @@ export function buildSettingsPanelState({
   screensaverState = {},
   effectiveIconShape = "",
   supportsScreensaver = true,
+  supportsDockPosition = true,
+  supportsSidebarToggle = true,
+  showsStatusBarOptions = true,
 } = {}) {
   return {
     open: scope === "screensaver" ? screensaverSettingsOpen : settingsOpen,
@@ -61,6 +65,10 @@ export function buildSettingsPanelState({
     selectedDockPageId,
     dockPosition,
     isMobileLayout,
+    isMobileLandscape,
     customWallpapers,
+    supportsDockPosition,
+    supportsSidebarToggle,
+    showsStatusBarOptions,
   };
 }

@@ -873,7 +873,11 @@ export function createSettingsPanel({
   selectedDockPageId = "",
   dockPosition = "left",
   isMobileLayout = false,
+  isMobileLandscape = false,
   customWallpapers = {},
+  supportsDockPosition,
+  supportsSidebarToggle,
+  showsStatusBarOptions,
   onClose,
   onLanguageChange,
   onThemeChange,
@@ -987,13 +991,16 @@ export function createSettingsPanel({
 
   const body = document.createElement("div");
   body.className = "mha-settings-body";
+  root.dataset.mobileLandscape = String(isMobileLandscape);
 
   const sections = [];
-  const showDesktopOnlyDockSettings = !isMobileLayout;
+  const showDockPositionSettings = supportsDockPosition ?? !isMobileLayout;
+  const showSidebarToggle = supportsSidebarToggle ?? !isMobileLayout;
+  const showStatusBarSettings = showsStatusBarOptions ?? !isMobileLayout;
   const supportsDockLabelToggle = themeStyle !== "oneui";
 
   if (!isScreensaverScope && settingsPage === "dock") {
-    if (showDesktopOnlyDockSettings) {
+    if (showDockPositionSettings) {
       sections.push(createSection(t("settings.position", "Position"), [
         createSelect({
           label: t("settings.dockPosition", "Dock position"),
@@ -1159,13 +1166,15 @@ export function createSettingsPanel({
       ] : []),
     ]));
     sections.push(createSection(t("settings.navigation", "Navigation"), [
-      ...(showDesktopOnlyDockSettings ? [
+      ...(showSidebarToggle ? [
         createSwitch({
           label: t("settings.hideHaSidebar", "Hide Home Assistant sidebar"),
           description: t("settings.hideHaSidebarDescription", "Hide the native Home Assistant sidebar for a more immersive experience."),
           checked: hideHaSidebar,
           onChange: onHideHaSidebarChange,
         }),
+      ] : []),
+      ...(showStatusBarSettings ? [
         createSelect({
           label: t("settings.statusBar", "Status bar"),
           value: statusBarMode,

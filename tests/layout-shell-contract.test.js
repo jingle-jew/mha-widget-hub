@@ -135,6 +135,10 @@ test("status bar mode remains a shell-owned layout input instead of a settings-o
     statusSource,
     /\[data-status-bar-mode="hidden"\]\)\s+\.mha-status-bar,\s*:host\(\[data-status-bar-mode="hidden"\]\)\s+\.mha-statusbar-fill\s*\{[\s\S]*display:\s*none\s*!important;/,
   );
+  assert.match(
+    statusSource,
+    /\[data-status-bar-visible="false"\]\)\s+\.mha-status-bar,\s*:host\(\[data-status-bar-visible="false"\]\)\s+\.mha-statusbar-fill\s*\{[\s\S]*display:\s*none\s*!important;/,
+  );
   const mobileGridSection = gridSource.match(/@media\s*\(max-width:\s*767px\)\s*\{[\s\S]*?\n\}/)?.[0] || "";
   const mobileStatusSection = statusSource.match(/@media\s*\(max-width:\s*767px\)\s*\{[\s\S]*?\n\}/)?.[0] || "";
   assert.doesNotMatch(
@@ -195,5 +199,17 @@ test("mobile shell keeps the background viewport-anchored while widget content o
   assert.match(
     mobileBackgroundSection,
     /\.mha-background\s*\{[\s\S]*position:\s*fixed;[\s\S]*inset:\s*-20%;/,
+  );
+  assert.match(
+    gridSource,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\)\s*\{[\s\S]*--mha-mobile-grid-gutter:\s*clamp\(/,
+  );
+  assert.match(
+    gridSource,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\) \.mha-shell\s*\{[\s\S]*row-gap:\s*0\s*!important;/,
+  );
+  assert.match(
+    backgroundSource,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\) \.mha-background\s*\{[\s\S]*position:\s*fixed;[\s\S]*inset:\s*-20%;/,
   );
 });

@@ -218,15 +218,16 @@ export function computeResponsiveState({
   const layoutVariant = getLayoutVariant(layout, orientation);
   const isMobileLayout = layout === "mobile";
   const isMobileLandscape = layoutVariant === "mobile-landscape";
+  const effectiveDockPosition = isMobileLandscape ? "left" : dockPosition;
   const dockFamily = isMobileLandscape
     ? "side"
     : (isMobileLayout
       ? "bottom"
-      : (dockPosition === "bottom" ? "bottom" : "side"));
+      : (effectiveDockPosition === "bottom" ? "bottom" : "side"));
   const statusBarVisible = statusBarMode !== "hidden" && !isMobileLayout;
   const scrollModel = isMobileLandscape ? "widget-area" : (isMobileLayout ? "viewport" : "widget-area");
   const presetRect = availableContentRect
-    ? { ...availableContentRect, dockPosition }
+    ? { ...availableContentRect, dockPosition: effectiveDockPosition }
     : null;
 
   return {
@@ -238,13 +239,16 @@ export function computeResponsiveState({
     isMobileLayout,
     isMobileLandscape,
     dockFamily,
-    dockPosition,
+    dockPosition: effectiveDockPosition,
+    requestedDockPosition: dockPosition,
     statusBarVisible,
     scrollModel,
     gridPreset: getGridPresetForLayout(layout, orientation, presetRect),
     settingsCapabilities: {
       supportsScreensaver: !isMobileLayout,
-      supportsDockPosition: !isMobileLayout || isMobileLandscape,
+      supportsDockPosition: !isMobileLayout,
+      supportsSidebarToggle: !isMobileLayout,
+      supportsSideDock: !isMobileLayout || isMobileLandscape,
       showsStatusBarOptions: !isMobileLayout,
       isMobileLandscape,
     },

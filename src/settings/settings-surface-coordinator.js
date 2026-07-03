@@ -23,6 +23,7 @@ export function createSettingsSurfaceCoordinator(host) {
       selectedDockPageId: host._dockSettingsPageId,
       dockPosition: host._dockPosition,
       isMobileLayout: Boolean(responsiveState.isMobileLayout ?? host._isMobileLauncherLayout?.()),
+      isMobileLandscape: Boolean(settingsCapabilities.isMobileLandscape),
       customWallpapers: host._customWallpapers,
       hass: host._hass,
       entityVisibilityConfig: host._entityVisibilityConfig,
@@ -31,6 +32,9 @@ export function createSettingsSurfaceCoordinator(host) {
       hostIconShape: host.dataset.iconShape,
       documentIconShape: document.documentElement.dataset.iconShape,
       supportsScreensaver: settingsCapabilities.supportsScreensaver ?? !host._isMobileLauncherLayout?.(),
+      supportsDockPosition: settingsCapabilities.supportsDockPosition ?? !(responsiveState.isMobileLayout ?? host._isMobileLauncherLayout?.()),
+      supportsSidebarToggle: settingsCapabilities.supportsSidebarToggle ?? !(responsiveState.isMobileLayout ?? host._isMobileLauncherLayout?.()),
+      showsStatusBarOptions: settingsCapabilities.showsStatusBarOptions ?? !(responsiveState.isMobileLayout ?? host._isMobileLauncherLayout?.()),
       callbacks: {
         onClose: () => host._closeSettings(),
         onCloseScreensaver: () => host._closeScreensaverSettings(),

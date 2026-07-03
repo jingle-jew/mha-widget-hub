@@ -1140,6 +1140,7 @@ _syncResponsiveState({publish=false,viewportMetrics=null,availableContentRect=nu
     this.dataset.layoutVariant=responsiveState.layoutVariant;
     this.dataset.gridOrientation=responsiveState.orientation;
     this.dataset.dockFamily=responsiveState.dockFamily;
+    this.dataset.dockPosition=responsiveState.dockPosition;
     this.dataset.statusBarVisible=String(responsiveState.statusBarVisible);
   }
   return responsiveState;

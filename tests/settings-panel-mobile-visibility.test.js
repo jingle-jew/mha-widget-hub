@@ -170,6 +170,38 @@ test("settings panel hides dock-only controls on mobile and keeps them on deskto
   assert.equal(hasText(mobileDock, "Dock icons"), true);
 }));
 
+test("settings panel keeps mobile-landscape navigation options filtered even with a side dock layout", () => withMockDocument(() => {
+  const mobileLandscapeMain = createSettingsPanel({
+    open: true,
+    scope: "all",
+    settingsPage: "main",
+    isMobileLayout: true,
+    isMobileLandscape: true,
+    supportsDockPosition: false,
+    supportsSidebarToggle: false,
+    showsStatusBarOptions: false,
+  });
+
+  const mobileLandscapeDock = createSettingsPanel({
+    open: true,
+    scope: "all",
+    settingsPage: "dock",
+    isMobileLayout: true,
+    isMobileLandscape: true,
+    supportsDockPosition: false,
+    supportsSidebarToggle: false,
+    showsStatusBarOptions: false,
+    themeStyle: "ios",
+    dockPages: [{ id: "home", name: "Home", icon: "home" }],
+  });
+
+  assert.equal(mobileLandscapeMain.dataset.mobileLandscape, "true");
+  assert.equal(hasText(mobileLandscapeMain, "Hide Home Assistant sidebar"), false);
+  assert.equal(hasText(mobileLandscapeMain, "Status bar"), false);
+  assert.equal(hasText(mobileLandscapeDock, "Dock position"), false);
+  assert.equal(hasText(mobileLandscapeDock, "Dock icons"), true);
+}));
+
 test("dock detail reuses the shared page icon registry", () => withMockDocument(() => {
   const dockDetail = createSettingsPanel({
     open: true,
