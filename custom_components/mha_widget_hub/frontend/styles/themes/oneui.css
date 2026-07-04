@@ -57,16 +57,16 @@
       color-mix(in srgb, var(--mha-accent) 10%, rgba(255,255,255,.88)),
       color-mix(in srgb, var(--mha-accent) 6%, rgba(246,248,255,.78))
     );
-  --mha-bg-base-1: #fbf8f5;
-  --mha-bg-base-2: #eef3ff;
-  --mha-bg-radial-1: rgba(101,168,255,.22);
-  --mha-bg-radial-2: rgba(255,135,183,.16);
-  --mha-bg-radial-3: rgba(123,221,165,.14);
-  --mha-bg-blob-1: #8bbdff;
-  --mha-bg-blob-2: #ffabc9;
-  --mha-bg-blob-3: #9ce8b8;
-  --mha-bg-blob-4: #ccb4ff;
-  --mha-bg-blob-opacity: .24;
+  --mha-bg-base-1: color-mix(in srgb, var(--mha-accent) 16%, #fbf8f5);
+  --mha-bg-base-2: color-mix(in srgb, var(--mha-accent) 24%, #eef3ff);
+  --mha-bg-radial-1: color-mix(in srgb, var(--mha-bg-blob-1) 32%, transparent);
+  --mha-bg-radial-2: color-mix(in srgb, var(--mha-bg-blob-2) 24%, transparent);
+  --mha-bg-radial-3: color-mix(in srgb, var(--mha-bg-blob-3) 18%, transparent);
+  --mha-bg-blob-1: #73b1ff;
+  --mha-bg-blob-2: #7f9fff;
+  --mha-bg-blob-3: #c77dff;
+  --mha-bg-blob-4: #ff93bf;
+  --mha-bg-blob-opacity: .31;
   --mha-oneui-dock-active-surface:
     linear-gradient(
       145deg,
@@ -118,15 +118,15 @@
       color-mix(in srgb, var(--mha-accent) 14%, rgba(24,22,31,.84)),
       color-mix(in srgb, var(--mha-accent) 8%, rgba(14,15,22,.76))
     );
-  --mha-bg-base-1: #07070d;
-  --mha-bg-base-2: #16131f;
-  --mha-bg-radial-1: rgba(101,168,255,.30);
-  --mha-bg-radial-2: rgba(255,135,183,.24);
-  --mha-bg-radial-3: rgba(123,221,165,.18);
+  --mha-bg-base-1: color-mix(in srgb, var(--mha-accent) 18%, #07070d);
+  --mha-bg-base-2: color-mix(in srgb, var(--mha-accent) 26%, #16131f);
+  --mha-bg-radial-1: color-mix(in srgb, var(--mha-bg-blob-1) 40%, transparent);
+  --mha-bg-radial-2: color-mix(in srgb, var(--mha-bg-blob-2) 28%, transparent);
+  --mha-bg-radial-3: color-mix(in srgb, var(--mha-bg-blob-3) 20%, transparent);
   --mha-bg-blob-1: #65a8ff;
-  --mha-bg-blob-2: #ff87b7;
-  --mha-bg-blob-3: #7bdda5;
-  --mha-bg-blob-4: #b48cff;
+  --mha-bg-blob-2: #8b72ff;
+  --mha-bg-blob-3: #c77dff;
+  --mha-bg-blob-4: #ff87b7;
   --mha-bg-blob-opacity: .34;
   --mha-shell-dock-surface:
     linear-gradient(

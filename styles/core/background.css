@@ -123,16 +123,16 @@
 :host([data-theme-style="oneui"]) .mha-background span {
   display: block;
   visibility: visible;
-  opacity: calc(var(--mha-bg-blob-opacity) * 1.38);
-  filter: blur(calc(var(--mha-bg-blob-blur) * .92));
+  opacity: calc(var(--mha-bg-blob-opacity) * 1.56);
+  filter: blur(calc(var(--mha-bg-blob-blur) * 1.12));
   will-change: transform, opacity;
   transform-origin: center;
   animation: mha-oneui-orbit-a 24s cubic-bezier(.45, 0, .2, 1) infinite;
 }
 
 :host([data-theme-style="oneui"]) .mha-background span:nth-child(1) {
-  left: 34%;
-  top: 28%;
+  left: 10%;
+  top: 6%;
   inline-size: min(42vw, 32rem);
   block-size: min(42vw, 32rem);
   animation-name: mha-oneui-orbit-a;
@@ -140,20 +140,9 @@
 }
 
 :host([data-theme-style="oneui"]) .mha-background span:nth-child(2) {
-  left: 49%;
-  top: 24%;
-  right: auto;
-  inline-size: min(38vw, 30rem);
-  block-size: min(38vw, 30rem);
-  animation-name: mha-oneui-orbit-b;
-  animation-duration: 30s;
-  animation-delay: -9s;
-}
-
-:host([data-theme-style="oneui"]) .mha-background span:nth-child(3) {
-  left: 38%;
+  left: 56%;
   top: 50%;
-  bottom: auto;
+  right: auto;
   inline-size: min(44vw, 34rem);
   block-size: min(44vw, 34rem);
   animation-name: mha-oneui-cross-a;
@@ -161,9 +150,20 @@
   animation-delay: -15s;
 }
 
+:host([data-theme-style="oneui"]) .mha-background span:nth-child(3) {
+  left: 58%;
+  top: 8%;
+  bottom: auto;
+  inline-size: min(38vw, 30rem);
+  block-size: min(38vw, 30rem);
+  animation-name: mha-oneui-orbit-b;
+  animation-duration: 30s;
+  animation-delay: -9s;
+}
+
 :host([data-theme-style="oneui"]) .mha-background span:nth-child(4) {
-  left: 55%;
-  top: 47%;
+  left: 14%;
+  top: 52%;
   right: auto;
   bottom: auto;
   inline-size: min(36vw, 28rem);
@@ -184,73 +184,73 @@
 
 @keyframes mha-oneui-orbit-a {
   0% {
-    transform: translate3d(-18%, -10%, 0) scale(1);
+    transform: translate3d(-14%, -10%, 0) scale(1);
     opacity: calc(var(--mha-bg-blob-opacity) * 1.18);
   }
   25% {
-    transform: translate3d(18%, 6%, 0) scale(1.12);
+    transform: translate3d(18%, 8%, 0) scale(1.11);
   }
   50% {
-    transform: translate3d(7%, 21%, 0) scale(.98);
+    transform: translate3d(9%, 18%, 0) scale(.98);
     opacity: calc(var(--mha-bg-blob-opacity) * 1.48);
   }
   75% {
-    transform: translate3d(-22%, 9%, 0) scale(1.08);
+    transform: translate3d(-18%, 12%, 0) scale(1.08);
   }
   100% {
-    transform: translate3d(-18%, -10%, 0) scale(1);
+    transform: translate3d(-14%, -10%, 0) scale(1);
     opacity: calc(var(--mha-bg-blob-opacity) * 1.18);
   }
 }
 
 @keyframes mha-oneui-orbit-b {
   0% {
-    transform: translate3d(16%, 12%, 0) scale(1.04);
+    transform: translate3d(14%, 12%, 0) scale(1.04);
   }
   25% {
-    transform: translate3d(-14%, 18%, 0) scale(.96);
+    transform: translate3d(-16%, 18%, 0) scale(.96);
   }
   50% {
-    transform: translate3d(-24%, -8%, 0) scale(1.14);
+    transform: translate3d(-20%, -10%, 0) scale(1.14);
     opacity: calc(var(--mha-bg-blob-opacity) * 1.55);
   }
   75% {
-    transform: translate3d(10%, -18%, 0) scale(1.02);
+    transform: translate3d(14%, -16%, 0) scale(1.02);
   }
   100% {
-    transform: translate3d(16%, 12%, 0) scale(1.04);
+    transform: translate3d(14%, 12%, 0) scale(1.04);
   }
 }
 
 @keyframes mha-oneui-cross-a {
   0% {
-    transform: translate3d(-22%, 16%, 0) scale(.98);
+    transform: translate3d(-16%, 12%, 0) scale(.98);
   }
   33% {
-    transform: translate3d(18%, -18%, 0) scale(1.13);
+    transform: translate3d(18%, -16%, 0) scale(1.13);
     opacity: calc(var(--mha-bg-blob-opacity) * 1.5);
   }
   66% {
-    transform: translate3d(24%, 14%, 0) scale(1.02);
+    transform: translate3d(18%, 14%, 0) scale(1.02);
   }
   100% {
-    transform: translate3d(-22%, 16%, 0) scale(.98);
+    transform: translate3d(-16%, 12%, 0) scale(.98);
   }
 }
 
 @keyframes mha-oneui-cross-b {
   0% {
-    transform: translate3d(18%, -16%, 0) scale(1.06);
+    transform: translate3d(16%, -12%, 0) scale(1.06);
   }
   33% {
-    transform: translate3d(-20%, -4%, 0) scale(.98);
+    transform: translate3d(-18%, -4%, 0) scale(.98);
   }
   66% {
-    transform: translate3d(-12%, 20%, 0) scale(1.16);
+    transform: translate3d(-12%, 18%, 0) scale(1.16);
     opacity: calc(var(--mha-bg-blob-opacity) * 1.44);
   }
   100% {
-    transform: translate3d(18%, -16%, 0) scale(1.06);
+    transform: translate3d(16%, -12%, 0) scale(1.06);
   }
 }
 

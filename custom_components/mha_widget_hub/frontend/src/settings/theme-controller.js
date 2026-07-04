@@ -1,4 +1,4 @@
-import { normalizeAccent, supportsAutoAccent } from "./accent-palettes.js";
+import { deriveOneUiBlobPalette, normalizeAccent, supportsAutoAccent } from "./accent-palettes.js";
 import { getDefaultIconShape, getThemeStyleIds, normalizeThemeVariantSelection } from "./theme-registry.js";
 
 export const THEME_STYLES = Object.freeze(new Set(getThemeStyleIds()));
@@ -173,6 +173,28 @@ function setAttribute(target, name, value) {
   );
 }
 
+function syncOneUiBlobPalette(host, state) {
+  if (!host?.style) return;
+
+  if (state.themeStyle !== "oneui") {
+    host.style.removeProperty("--mha-bg-blob-1");
+    host.style.removeProperty("--mha-bg-blob-2");
+    host.style.removeProperty("--mha-bg-blob-3");
+    host.style.removeProperty("--mha-bg-blob-4");
+    return;
+  }
+
+  const accentColor = state.accentMode === "auto"
+    ? host.style.getPropertyValue?.("--mha-accent-auto") || ""
+    : "";
+  const palette = deriveOneUiBlobPalette(state.accent, accentColor);
+
+  host.style.setProperty("--mha-bg-blob-1", palette.blob1);
+  host.style.setProperty("--mha-bg-blob-2", palette.blob2);
+  host.style.setProperty("--mha-bg-blob-3", palette.blob3);
+  host.style.setProperty("--mha-bg-blob-4", palette.blob4);
+}
+
 export function syncThemeAttributes(host) {
   const state = readThemeState(host);
   const root = document.documentElement;
@@ -196,6 +218,8 @@ export function syncThemeAttributes(host) {
   setAttribute(root, "accentMode", state.accentMode);
   setAttribute(root, "iconShapeSetting", state.iconShapeSetting);
   setAttribute(root, "iconShape", state.iconShape);
+
+  syncOneUiBlobPalette(host, state);
 
   return state;
 }
