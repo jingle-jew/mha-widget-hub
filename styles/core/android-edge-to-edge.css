@@ -7,29 +7,12 @@
 }
 
 :host(.mha-android-edge-to-edge) .mha-statusbar-fill {
-  --mha-statusbar-fill-bleed: clamp(.65rem, 2.4vh, 1rem);
-  --mha-statusbar-fill-surface-base: var(
-    --mha-statusbar-top-bar-surface,
-    var(
-      --mha-statusbar-surface,
-      var(--mha-shell-status-surface, var(--mha-shell-surface, var(--mha-surface-shell)))
-    )
-  );
-  --mha-statusbar-fill-surface-strong: color-mix(
-    in srgb,
-    var(--mha-statusbar-fill-surface-base) 18%,
-    transparent
-  );
-  --mha-statusbar-fill-surface-soft: color-mix(
-    in srgb,
-    var(--mha-statusbar-fill-surface-base) 10%,
-    transparent
-  );
+  --mha-statusbar-fill-bleed: clamp(.42rem, 1.7vh, .72rem);
   position: fixed;
   inset-block-start: 0;
   inset-inline: 0;
-  /* Extend the blur slightly below the native inset so Android reads as a
-   * transparent blur ramp instead of a flat gray veil.
+  /* Keep this fill theme-agnostic so Android always reads as the same premium
+   * transparent blur ramp instead of inheriting each shell surface.
    */
   block-size: calc(var(--mha-safe-top, 0px) + var(--mha-statusbar-fill-bleed));
   z-index: 6;
@@ -37,30 +20,24 @@
   opacity: 0;
   background: linear-gradient(
     to bottom,
-    var(--mha-statusbar-fill-surface-strong) 0%,
-    var(--mha-statusbar-fill-surface-soft) 48%,
+    rgba(255, 255, 255, .04) 0%,
+    rgba(255, 255, 255, .015) 42%,
     transparent 100%
   );
-  -webkit-backdrop-filter: var(
-    --mha-statusbar-top-bar-filter,
-    var(--mha-statusbar-filter, var(--mha-shell-filter, var(--mha-glass-surface-filter)))
-  );
-  backdrop-filter: var(
-    --mha-statusbar-top-bar-filter,
-    var(--mha-statusbar-filter, var(--mha-shell-filter, var(--mha-glass-surface-filter)))
-  );
+  -webkit-backdrop-filter: blur(14px) saturate(135%);
+  backdrop-filter: blur(14px) saturate(135%);
   -webkit-mask-image: linear-gradient(
     to bottom,
-    rgba(0, 0, 0, 1) 0%,
-    rgba(0, 0, 0, 1) calc(100% - var(--mha-statusbar-fill-bleed)),
-    rgba(0, 0, 0, .52) calc(100% - (var(--mha-statusbar-fill-bleed) * .36)),
+    rgba(0, 0, 0, .96) 0%,
+    rgba(0, 0, 0, .88) calc(100% - (var(--mha-statusbar-fill-bleed) * .7)),
+    rgba(0, 0, 0, .28) calc(100% - (var(--mha-statusbar-fill-bleed) * .2)),
     rgba(0, 0, 0, 0) 100%
   );
   mask-image: linear-gradient(
     to bottom,
-    rgba(0, 0, 0, 1) 0%,
-    rgba(0, 0, 0, 1) calc(100% - var(--mha-statusbar-fill-bleed)),
-    rgba(0, 0, 0, .52) calc(100% - (var(--mha-statusbar-fill-bleed) * .36)),
+    rgba(0, 0, 0, .96) 0%,
+    rgba(0, 0, 0, .88) calc(100% - (var(--mha-statusbar-fill-bleed) * .7)),
+    rgba(0, 0, 0, .28) calc(100% - (var(--mha-statusbar-fill-bleed) * .2)),
     rgba(0, 0, 0, 0) 100%
   );
   transition:

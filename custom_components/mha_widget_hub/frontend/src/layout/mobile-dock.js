@@ -122,6 +122,13 @@ function attachPagedDockDragBehavior(dock) {
   };
 }
 
+function appendStaticDockItems(dock, items, renderItem) {
+  dock.classList.remove("is-paged");
+  dock.style?.removeProperty?.("--mha-mobile-dock-page-count");
+  appendDockItems(dock, items, renderItem);
+  return dock;
+}
+
 export function createMobileDock(props = {}) {
   if (props.usesDock === false) return document.createDocumentFragment();
 
@@ -145,28 +152,29 @@ export function createMobileDock(props = {}) {
     },
   });
 
-  const scrollTrack = appendPagedDockItems(
-    dock,
-    items,
-    item => createDockItemElement(item, {
-      itemClassName: "mha-mobile-dock-item",
-      spacerClassName: "mha-mobile-dock-spacer",
-      resolvedClassName: item.mobileClassName || item.className || "",
-      activePageId,
-      onInvoke: currentItem => invokeDockItem(currentItem, {
-        onPageSelect,
-        onAddPage,
-        onDockSettings,
-        onSettings,
-        onSettingsFallback: () => {
-          dock.dispatchEvent(new CustomEvent("mha-open-settings", {
-            bubbles: true,
-            composed: true,
-          }));
-        },
-      }),
+  const renderItem = item => createDockItemElement(item, {
+    itemClassName: "mha-mobile-dock-item",
+    spacerClassName: "mha-mobile-dock-spacer",
+    resolvedClassName: item.mobileClassName || item.className || "",
+    activePageId,
+    onInvoke: currentItem => invokeDockItem(currentItem, {
+      onPageSelect,
+      onAddPage,
+      onDockSettings,
+      onSettings,
+      onSettingsFallback: () => {
+        dock.dispatchEvent(new CustomEvent("mha-open-settings", {
+          bubbles: true,
+          composed: true,
+        }));
+      },
     }),
-  );
-  attachPagedDockDragBehavior(scrollTrack || dock);
+  });
+  const scrollTrack = items.length > DOCK_PAGE_SIZE
+    ? appendPagedDockItems(dock, items, renderItem)
+    : appendStaticDockItems(dock, items, renderItem);
+  if (items.length > DOCK_PAGE_SIZE) {
+    attachPagedDockDragBehavior(scrollTrack || dock);
+  }
   return dock;
 }

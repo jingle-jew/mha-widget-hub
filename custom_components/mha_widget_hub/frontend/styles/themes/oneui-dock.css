@@ -91,7 +91,8 @@
 
   :host([data-theme-style="oneui"][data-layout-variant="mobile-landscape"]) .mha-dock {
     border-radius: 0;
-    padding-block: max(
+    padding-block-start: 0;
+    padding-block-end: max(
       var(--mha-dock-rail-padding-block, 0px),
       var(--mha-mobile-grid-gutter, 0px)
     );
@@ -103,7 +104,8 @@
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior-y: contain;
-    scroll-padding-block: max(
+    scroll-padding-block-start: 0;
+    scroll-padding-block-end: max(
       var(--mha-dock-rail-padding-block, 0px),
       var(--mha-mobile-grid-gutter, 0px)
     );

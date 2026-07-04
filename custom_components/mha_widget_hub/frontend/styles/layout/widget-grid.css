@@ -338,14 +338,6 @@
   margin-block-end: 0;
 }
 
-:host([data-layout="mobile"]:not([data-layout-variant="mobile-landscape"])) .mha-page-stage::after {
-  content: "";
-  display: block;
-  inline-size: 100%;
-  block-size: var(--mha-widget-area-bottom-gutter, 0px);
-  pointer-events: none;
-}
-
 :host([data-layout="mobile"]) .mha-page-panel--grid {
   block-size: auto;
   min-block-size: 100%;
