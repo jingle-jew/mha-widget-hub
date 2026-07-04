@@ -7,7 +7,7 @@
 }
 
 :host(.mha-android-edge-to-edge) .mha-statusbar-fill {
-  --mha-statusbar-fill-bleed: clamp(.42rem, 1.7vh, .72rem);
+  --mha-statusbar-fill-bleed: clamp(.58rem, 2.1vh, .96rem);
   position: fixed;
   inset-block-start: 0;
   inset-inline: 0;
@@ -18,26 +18,39 @@
   z-index: 6;
   pointer-events: none;
   opacity: 0;
-  background: linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, .04) 0%,
-    rgba(255, 255, 255, .015) 42%,
-    transparent 100%
-  );
+  overflow: hidden;
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(12, 14, 18, .16) 0%,
+      rgba(12, 14, 18, .10) calc(var(--mha-safe-top, 0px) * .72 + .18rem),
+      rgba(12, 14, 18, .04) calc(100% - (var(--mha-statusbar-fill-bleed) * .82)),
+      transparent 100%
+    ),
+    linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, .035) 0%,
+      rgba(255, 255, 255, .014) 44%,
+      transparent 100%
+    );
   -webkit-backdrop-filter: blur(14px) saturate(135%);
   backdrop-filter: blur(14px) saturate(135%);
   -webkit-mask-image: linear-gradient(
     to bottom,
-    rgba(0, 0, 0, .96) 0%,
-    rgba(0, 0, 0, .88) calc(100% - (var(--mha-statusbar-fill-bleed) * .7)),
-    rgba(0, 0, 0, .28) calc(100% - (var(--mha-statusbar-fill-bleed) * .2)),
+    rgba(0, 0, 0, .92) 0%,
+    rgba(0, 0, 0, .9) calc(var(--mha-safe-top, 0px) * .62),
+    rgba(0, 0, 0, .84) calc(100% - (var(--mha-statusbar-fill-bleed) * 1.12)),
+    rgba(0, 0, 0, .54) calc(100% - (var(--mha-statusbar-fill-bleed) * .56)),
+    rgba(0, 0, 0, .18) calc(100% - (var(--mha-statusbar-fill-bleed) * .14)),
     rgba(0, 0, 0, 0) 100%
   );
   mask-image: linear-gradient(
     to bottom,
-    rgba(0, 0, 0, .96) 0%,
-    rgba(0, 0, 0, .88) calc(100% - (var(--mha-statusbar-fill-bleed) * .7)),
-    rgba(0, 0, 0, .28) calc(100% - (var(--mha-statusbar-fill-bleed) * .2)),
+    rgba(0, 0, 0, .92) 0%,
+    rgba(0, 0, 0, .9) calc(var(--mha-safe-top, 0px) * .62),
+    rgba(0, 0, 0, .84) calc(100% - (var(--mha-statusbar-fill-bleed) * 1.12)),
+    rgba(0, 0, 0, .54) calc(100% - (var(--mha-statusbar-fill-bleed) * .56)),
+    rgba(0, 0, 0, .18) calc(100% - (var(--mha-statusbar-fill-bleed) * .14)),
     rgba(0, 0, 0, 0) 100%
   );
   transition:
