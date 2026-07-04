@@ -200,8 +200,8 @@
   :host {
     --mha-statusbar-reserved-top: 0px;
     --mha-mobile-grid-gutter: clamp(0.75rem, 3.2vw, 0.9rem);
-    --mha-mobile-content-top-space: var(--mha-page-padding);
-    --mha-mobile-widget-top-gutter: var(--mha-mobile-content-top-space);
+    --mha-mobile-content-top-space-base: var(--mha-page-padding);
+    --mha-mobile-content-top-space: var(--mha-mobile-content-top-space-base);
     --mha-mobile-dock-edge: var(--mha-mobile-grid-gutter);
     --mha-mobile-dock-bottom: max(
       var(--mha-safe-bottom, env(safe-area-inset-bottom, 0px)),
@@ -225,10 +225,8 @@
     --mha-mobile-dock-footprint: calc(
       var(--mha-mobile-dock-height) + var(--mha-mobile-dock-bottom)
     );
-    --mha-mobile-grid-bottom-space: calc(
-      var(--mha-mobile-dock-footprint) + var(--mha-mobile-grid-gutter)
-    );
-    --mha-mobile-landscape-dock-top-offset: var(--mha-mobile-widget-top-gutter);
+    --mha-mobile-grid-bottom-space: calc(var(--mha-mobile-dock-footprint) + var(--mha-mobile-grid-gutter));
+    --mha-mobile-landscape-dock-top-offset: var(--mha-mobile-content-top-space);
     --mha-mobile-landscape-dock-bottom-offset: max(
       var(--mha-safe-bottom, 0px),
       var(--mha-mobile-grid-gutter)
@@ -248,7 +246,7 @@
   }
 
   .mha-workspace {
-    --mha-shell-content-bottom-inset: var(--mha-mobile-grid-bottom-space) !important;
+    --mha-shell-content-bottom-inset: var(--mha-mobile-dock-footprint) !important;
     block-size: 100%;
     min-block-size: 0;
     grid-template-columns: minmax(0, 1fr);
@@ -260,15 +258,16 @@
 
   .mha-widget-area {
     --mha-widget-area-edge-padding: var(--mha-mobile-grid-gutter) !important;
-    --mha-widget-area-top-gutter: var(--mha-mobile-widget-top-gutter) !important;
+    --mha-widget-area-top-gutter: var(--mha-mobile-content-top-space) !important;
+    --mha-widget-area-bottom-gutter: var(--mha-mobile-grid-bottom-space) !important;
     block-size: 100%;
     min-block-size: 0;
     padding-block-start: var(--mha-widget-area-top-gutter) !important;
   }
 
   :host(.mha-android-edge-to-edge) {
-    --mha-mobile-widget-top-gutter: calc(
-      var(--mha-safe-top, 0px) + var(--mha-mobile-content-top-space)
+    --mha-mobile-content-top-space: calc(
+      var(--mha-safe-top, 0px) + var(--mha-mobile-content-top-space-base)
     );
   }
 
@@ -387,6 +386,7 @@
 :host([data-layout-variant="mobile-landscape"]) .mha-widget-area {
   --mha-widget-area-edge-padding: var(--mha-mobile-grid-gutter) !important;
   --mha-widget-area-top-gutter: var(--mha-mobile-landscape-dock-top-offset) !important;
+  --mha-widget-area-bottom-gutter: var(--mha-mobile-grid-gutter) !important;
   grid-column: 2;
   grid-row: 1;
 }
