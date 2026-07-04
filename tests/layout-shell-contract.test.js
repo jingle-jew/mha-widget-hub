@@ -266,7 +266,7 @@ test("floating controls and settings sheet consume responsive variants instead o
   );
   assert.match(
     settingsPanelSource,
-    /\.mha-settings-panel\[data-mobile-layout="true"\] \.mha-settings-sheet\s*\{[\s\S]*inset-inline:\s*0;[\s\S]*inset-block-start:\s*var\(--mha-mobile-sheet-top-gap\);[\s\S]*inset-block-end:\s*0;[\s\S]*block-size:\s*var\(--mha-mobile-sheet-height\);/,
+    /\.mha-settings-panel\[data-mobile-layout="true"\] \.mha-settings-sheet\s*\{[\s\S]*inset-inline:\s*0;[\s\S]*inset-block-start:\s*auto;[\s\S]*inset-block-end:\s*0;[\s\S]*block-size:\s*auto;[\s\S]*max-block-size:\s*var\(--mha-mobile-sheet-max-height\);/,
   );
   assert.match(
     settingsPanelSource,
@@ -274,15 +274,15 @@ test("floating controls and settings sheet consume responsive variants instead o
   );
   assert.match(
     settingsBottomSource,
-    /\.mha-settings-panel\[data-mobile-layout="true"\] \.mha-settings-sheet\s*\{[\s\S]*position:\s*fixed;[\s\S]*bottom:\s*0;[\s\S]*top:\s*var\(--mha-mobile-sheet-top-gap\);[\s\S]*height:\s*var\(--mha-mobile-sheet-height\);/,
+    /\.mha-settings-panel\[data-mobile-layout="true"\] \.mha-settings-sheet\s*\{[\s\S]*position:\s*fixed;[\s\S]*bottom:\s*0;[\s\S]*top:\s*auto;[\s\S]*height:\s*auto;[\s\S]*max-height:\s*var\(--mha-mobile-sheet-max-height\);/,
   );
   assert.match(
     panelSurfaceSource,
-    /\[data-mobile-presentation="sheet"\] > \[role="dialog"\]\s*\{[\s\S]*inset-block-start:\s*var\(--mha-mobile-sheet-top-gap\);[\s\S]*inset-block-end:\s*0;[\s\S]*block-size:\s*var\(--mha-mobile-sheet-height\);[\s\S]*border-radius:\s*0;/,
+    /\[data-mobile-presentation="sheet"\] > \[role="dialog"\]\s*\{[\s\S]*inset-block-start:\s*auto;[\s\S]*inset-block-end:\s*0;[\s\S]*block-size:\s*auto;[\s\S]*max-block-size:\s*var\(--mha-mobile-sheet-max-height\);[\s\S]*border-start-start-radius:\s*var\(--mha-mobile-sheet-top-radius\);/,
   );
   assert.match(
     pageCreatorSheetSource,
-    /\.mha-page-creator\[data-mobile-presentation="sheet"\] \.mha-page-creator-sheet\s*\{[\s\S]*inset-block-start:\s*var\(--mha-mobile-sheet-top-gap\);[\s\S]*inset-block-end:\s*0;[\s\S]*block-size:\s*var\(--mha-mobile-sheet-height\);/,
+    /\.mha-page-creator\[data-mobile-presentation="sheet"\] \.mha-page-creator-sheet\s*\{[\s\S]*inset-block-start:\s*auto;[\s\S]*inset-block-end:\s*0;[\s\S]*block-size:\s*auto;[\s\S]*max-block-size:\s*var\(--mha-mobile-sheet-max-height\);/,
   );
   assert.doesNotMatch(
     widgetManagerSource,
