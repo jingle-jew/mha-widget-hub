@@ -517,10 +517,10 @@ export function deriveOneUiBlobPalette(
   const baseHsl = rgbToHslForAccent(baseRgb);
   const satBoost = baseHsl.s < 0.18 ? 0.18 : 0.08;
   const paletteSpecs = [
-    { hueShift: -0.10, saturationShift: satBoost + 0.06, lightnessShift: 0.14 },
-    { hueShift: -0.04, saturationShift: satBoost * 0.7, lightnessShift: 0.08 },
-    { hueShift: 0.05, saturationShift: satBoost * 0.8, lightnessShift: 0.02 },
-    { hueShift: 0.11, saturationShift: satBoost + 0.04, lightnessShift: -0.06 },
+    { hueShift: -0.16, saturationShift: satBoost + 0.08, lightnessShift: 0.16 },
+    { hueShift: -0.03, saturationShift: satBoost * 0.55, lightnessShift: -0.01 },
+    { hueShift: 0.09, saturationShift: satBoost * 0.78, lightnessShift: 0.07 },
+    { hueShift: 0.19, saturationShift: satBoost + 0.05, lightnessShift: -0.10 },
   ];
 
   const colors = paletteSpecs.map(({ hueShift, saturationShift, lightnessShift }) => {
@@ -534,8 +534,8 @@ export function deriveOneUiBlobPalette(
 
   return {
     blob1: colors[0],
-    blob2: colors[1],
-    blob3: colors[2],
-    blob4: colors[3],
+    blob2: colors[2],
+    blob3: colors[3],
+    blob4: colors[1],
   };
 }
