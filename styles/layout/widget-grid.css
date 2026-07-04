@@ -225,7 +225,7 @@
     --mha-mobile-dock-footprint: calc(
       var(--mha-mobile-dock-height) + var(--mha-mobile-dock-bottom)
     );
-    --mha-mobile-grid-bottom-space: calc(var(--mha-mobile-dock-footprint) + var(--mha-mobile-grid-gutter));
+    --mha-mobile-grid-bottom-space: calc(var(--mha-mobile-grid-gutter) * 1.35);
     --mha-mobile-landscape-dock-top-offset: var(--mha-mobile-content-top-space);
     --mha-mobile-landscape-dock-bottom-offset: max(
       var(--mha-safe-bottom, 0px),
@@ -323,6 +323,10 @@
   justify-self: stretch;
   margin-inline: 0;
   touch-action: pan-y;
+}
+
+:host([data-layout="mobile"]:not([data-layout-variant="mobile-landscape"])) .mha-page-panel--grid > .mha-grid {
+  margin-block-end: calc(var(--mha-mobile-grid-gutter) * 0.85);
 }
 
 :host([data-layout="mobile"]) .mha-page-stage {

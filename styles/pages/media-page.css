@@ -45,6 +45,18 @@
   isolation: isolate;
 }
 
+.mha-media-page-transport {
+  display: grid;
+  grid-row: 3 / span 2;
+  align-self: end;
+  gap: clamp(.7cqi, 1.1cqi, 1.5cqi);
+}
+
+.mha-media-page-transport .mha-media-page-progress-shell,
+.mha-media-page-transport .mha-media-page-controls {
+  grid-row: auto;
+}
+
 .mha-media-page-background {
   display: none;
 }
@@ -284,6 +296,56 @@
   --mha-media-page-artwork-radius: clamp(3cqi, 3.8cqi, 4.8cqi);
 }
 
+.mha-media-page[data-visual-style="oneui"] .mha-media-page-info {
+  justify-items: center;
+  text-align: center;
+}
+
+.mha-media-page[data-visual-style="oneui"] .mha-media-page-meta {
+  justify-content: center;
+}
+
+.mha-media-page[data-visual-style="oneui"] .mha-media-page-status {
+  text-align: center;
+}
+
+.mha-media-page[data-visual-style="oneui"] .mha-media-page-transport {
+  padding: clamp(.9rem, 2cqi, 1.25rem);
+  border-radius: clamp(1.35rem, 3cqi, 1.85rem);
+  background:
+    linear-gradient(
+      160deg,
+      color-mix(in srgb, var(--mha-accent) 34%, var(--mha-oneui-panel-surface, var(--mha-media-page-surface))),
+      color-mix(in srgb, var(--mha-accent) 18%, rgba(18,18,18,.92))
+    );
+  border: 1px solid color-mix(in srgb, var(--mha-accent) 26%, rgba(255,255,255,.14));
+  box-shadow: 0 16px 42px rgba(0,0,0,.18);
+}
+
+.mha-media-page[data-visual-style="oneui"] .mha-media-page-progress-track {
+  background: color-mix(in srgb, rgba(255,255,255,.26) 84%, transparent);
+}
+
+.mha-media-page[data-visual-style="oneui"] .mha-media-page-progress-fill {
+  background: rgba(255,255,255,.96);
+}
+
+.mha-media-page[data-visual-style="oneui"] .mha-media-page-control-group--playback {
+  padding: clamp(.38rem, .8cqi, .55rem);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--mha-accent) 18%, rgba(255,255,255,.08));
+}
+
+.mha-media-page[data-visual-style="oneui"] .mha-media-page-action {
+  background: color-mix(in srgb, rgba(255,255,255,.16) 88%, transparent);
+  border-color: rgba(255,255,255,.08);
+}
+
+.mha-media-page[data-visual-style="oneui"] .mha-media-page-action[data-primary="true"] {
+  background: rgba(255,255,255,.98);
+  color: rgba(18,18,18,.96);
+}
+
 .mha-media-page[data-visual-style="material-you"] {
   --mha-media-page-artwork-radius: clamp(3.4cqi, 4.2cqi, 5.2cqi);
   --mha-media-page-progress-height: clamp(.42rem, .56cqi, .66rem);
@@ -384,6 +446,26 @@
   .mha-media-page-action[data-primary="true"] .mha-icon-symbol {
     inline-size: clamp(.82rem, 2.8svw, 1rem);
     block-size: clamp(.82rem, 2.8svw, 1rem);
+  }
+
+  .mha-media-page[data-visual-style="oneui"] .mha-media-page-artwork {
+    inline-size: min(100%, 24rem);
+    border-radius: clamp(1.75rem, 5svw, 2.4rem);
+  }
+
+  .mha-media-page[data-visual-style="oneui"] .mha-media-page-title {
+    text-align: center;
+  }
+
+  .mha-media-page[data-visual-style="oneui"] .mha-media-page-subtitle,
+  .mha-media-page[data-visual-style="oneui"] .mha-media-page-status {
+    text-align: center;
+  }
+
+  .mha-media-page[data-visual-style="oneui"] .mha-media-page-transport {
+    gap: .7rem;
+    padding: .9rem .95rem 1rem;
+    border-radius: 1.6rem;
   }
 }
 

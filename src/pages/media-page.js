@@ -1,21 +1,15 @@
-import { buildMediaDisplayModel, buildMediaPlayerServiceCall, getMediaArtworkUrl, getMediaStateLabel } from "../ha/media.js";
+import {
+  buildMediaDisplayModel,
+  buildMediaPlayerServiceCall,
+  formatMediaDuration,
+  getMediaArtworkUrl,
+  getMediaStateLabel,
+  resolveMediaProgress,
+} from "../ha/media.js";
 import { runMediaPlayerAction } from "../ha/actions.js";
 import { getEntitiesForDomain } from "../ha/entity-filters.js";
 import { t } from "../i18n/index.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
-
-function clamp(value, min, max) {
-  return Math.min(max, Math.max(min, value));
-}
-
-function formatDuration(totalSeconds) {
-  const seconds = Math.max(0, Math.floor(Number(totalSeconds) || 0));
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const remainder = seconds % 60;
-  if (hours > 0) return `${hours}:${String(minutes).padStart(2, "0")}:${String(remainder).padStart(2, "0")}`;
-  return `${minutes}:${String(remainder).padStart(2, "0")}`;
-}
 
 function resolveEnabledPlayerIds(config = {}, availablePlayers = []) {
   const ids = Array.isArray(config.enabledPlayerIds) ? config.enabledPlayerIds.filter(Boolean) : [];
@@ -27,31 +21,6 @@ function resolveSelectedPlayer(config = {}, players = []) {
   if (config.selectedPlayerId && ids.has(config.selectedPlayerId)) return config.selectedPlayerId;
   if (config.defaultPlayerId && ids.has(config.defaultPlayerId)) return config.defaultPlayerId;
   return players[0]?.entity_id || "";
-}
-
-function resolveMediaProgress(entityState) {
-  const attributes = entityState?.attributes || {};
-  const duration = Number(attributes.media_duration);
-  const position = Number(attributes.media_position);
-  if (!Number.isFinite(duration) || duration <= 0 || !Number.isFinite(position) || position < 0) {
-    return { available: false, current: 0, duration: 0, ratio: 0 };
-  }
-
-  let current = position;
-  if (entityState?.state === "playing" && attributes.media_position_updated_at) {
-    const updatedAt = Date.parse(attributes.media_position_updated_at);
-    if (Number.isFinite(updatedAt)) {
-      current += (Date.now() - updatedAt) / 1000;
-    }
-  }
-
-  current = clamp(current, 0, duration);
-  return {
-    available: true,
-    current,
-    duration,
-    ratio: duration > 0 ? clamp(current / duration, 0, 1) : 0,
-  };
 }
 
 function createPlayerSelect(players = [], selectedPlayerId = "", onChange = () => {}) {
@@ -268,8 +237,8 @@ export function createMediaPage(page = {}, {
     const progressLabels = document.createElement("div");
     progressLabels.className = "mha-media-page-progress-labels";
     progressLabels.append(
-      createMetaChip(view.progress.available ? formatDuration(view.progress.current) : "--:--"),
-      createMetaChip(view.progress.available ? formatDuration(view.progress.duration) : "--:--"),
+      createMetaChip(view.progress.available ? formatMediaDuration(view.progress.current) : "--:--"),
+      createMetaChip(view.progress.available ? formatMediaDuration(view.progress.duration) : "--:--"),
     );
     progress.append(progressTrack, progressLabels);
 
@@ -334,7 +303,12 @@ export function createMediaPage(page = {}, {
     );
 
     controls.append(playback, volume);
-    root.replaceChildren(background, hero, progress, controls);
+
+    const transport = document.createElement("div");
+    transport.className = "mha-media-page-transport";
+    transport.append(progress, controls);
+
+    root.replaceChildren(background, hero, transport);
   };
 
   const refresh = () => {

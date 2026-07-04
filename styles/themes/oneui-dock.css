@@ -115,7 +115,11 @@
 :host([data-theme-style="oneui"]) .mha-dock-item,
 :host([data-theme-style="oneui"]) .mha-mobile-dock-item {
   position: relative;
+  border: 1px solid var(--mha-oneui-dock-item-border);
   border-radius: 999px;
+  background: var(--mha-oneui-dock-item-surface);
+  box-shadow: var(--mha-oneui-dock-item-shadow);
+  color: var(--mha-text);
   transition: none;
 }
 
@@ -173,7 +177,7 @@
   line-height: .98;
   font-weight: 600;
   letter-spacing: -.01em;
-  color: color-mix(in srgb, var(--mha-text) 84%, transparent);
+  color: var(--mha-oneui-dock-item-label-color, color-mix(in srgb, var(--mha-text) 84%, transparent));
   pointer-events: none;
 }
 
@@ -204,10 +208,10 @@
     box-sizing: border-box;
     inline-size: 100%;
     max-inline-size: 100%;
-    border: 1px solid var(--mha-control-border, var(--mha-border-secondary));
-    background: var(--mha-control-surface, var(--mha-widget-surface, var(--mha-surface-panel)));
+    border: 1px solid var(--mha-oneui-dock-item-border);
+    background: var(--mha-oneui-dock-item-surface);
     color: var(--mha-text);
-    box-shadow: var(--mha-control-shadow, var(--mha-shadow-soft, none));
+    box-shadow: var(--mha-oneui-dock-item-shadow);
   }
 
   :host([data-theme-style="oneui"][data-dock-position="left"]) .mha-dock-item[data-active="true"]::before,
@@ -408,7 +412,7 @@
   text-overflow: ellipsis;
   text-align: center;
   white-space: nowrap;
-  color: color-mix(in srgb, var(--mha-text) 84%, transparent);
+  color: var(--mha-oneui-dock-item-label-color, color-mix(in srgb, var(--mha-text) 84%, transparent));
   opacity: .92;
   font-size: clamp(.53rem, .52rem + .16vw, .58rem);
   line-height: .98;

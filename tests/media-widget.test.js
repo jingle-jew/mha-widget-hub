@@ -115,12 +115,12 @@ test("media page panel resolves responsive sizes without collapsing back to 4x4"
     variant: "media-page-panel",
     responsiveSizeMode: "media-page-panel",
     w: 4,
-    h: 6,
+    h: 8,
   };
 
   assert.deepEqual(
     normalizeWidgetForKind(widget, { units: 4, rowUnits: 12, layout: "mobile" }),
-    { w: 4, h: 6 },
+    { w: 4, h: 8 },
   );
   assert.deepEqual(
     normalizeWidgetForKind(widget, { units: 8, rowUnits: 8, layout: "tablet" }),
@@ -128,6 +128,6 @@ test("media page panel resolves responsive sizes without collapsing back to 4x4"
   );
   assert.deepEqual(
     normalizeWidgetForKind(widget, { units: 12, rowUnits: 8, layout: "desktop" }),
-    { w: 9, h: 8 },
+    { w: 6, h: 8 },
   );
 });

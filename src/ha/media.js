@@ -26,6 +26,10 @@ function cleanText(value = "") {
   return String(value || "").trim();
 }
 
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
 export function getMediaStateLabel(state = "") {
   const normalized = normalizeEntityStateValue(state);
   return MEDIA_STATE_LABEL_KEYS[normalized] ? t(MEDIA_STATE_LABEL_KEYS[normalized]) : normalized;
@@ -50,6 +54,40 @@ export function getMediaArtworkUrl(entityState, widget = {}) {
       || widget.mediaImageUrl
       || "",
   );
+}
+
+export function formatMediaDuration(totalSeconds) {
+  const seconds = Math.max(0, Math.floor(Number(totalSeconds) || 0));
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const remainder = seconds % 60;
+  if (hours > 0) return `${hours}:${String(minutes).padStart(2, "0")}:${String(remainder).padStart(2, "0")}`;
+  return `${minutes}:${String(remainder).padStart(2, "0")}`;
+}
+
+export function resolveMediaProgress(entityState) {
+  const attributes = entityState?.attributes || {};
+  const duration = Number(attributes.media_duration);
+  const position = Number(attributes.media_position);
+  if (!Number.isFinite(duration) || duration <= 0 || !Number.isFinite(position) || position < 0) {
+    return { available: false, current: 0, duration: 0, ratio: 0 };
+  }
+
+  let current = position;
+  if (entityState?.state === "playing" && attributes.media_position_updated_at) {
+    const updatedAt = Date.parse(attributes.media_position_updated_at);
+    if (Number.isFinite(updatedAt)) {
+      current += (Date.now() - updatedAt) / 1000;
+    }
+  }
+
+  current = clamp(current, 0, duration);
+  return {
+    available: true,
+    current,
+    duration,
+    ratio: duration > 0 ? clamp(current / duration, 0, 1) : 0,
+  };
 }
 
 export function buildMediaDisplayModel(entityState, widget = {}, fallback = {}) {

@@ -638,6 +638,7 @@ _applyDockPositionFromSettings(position="left"){
   return getResponsiveDockCoordinatorForHost(this).applyDockPositionFromSettings(position);
 }
 _applyHaSidebarMode(enabled=false){
+  this.dataset.haSidebarHidden = String(Boolean(enabled));
   return applyHaSidebarMode(enabled);
 }
 _applyHideHaSidebarFromSettings(enabled=false){

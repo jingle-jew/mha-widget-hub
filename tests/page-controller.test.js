@@ -69,7 +69,7 @@ test("media page creation seeds a normal page with a responsive media widget", (
       variant: "media-page-panel",
       responsiveSizeMode: "media-page-panel",
       w: 4,
-      h: 6,
+      h: 8,
     },
   );
 });
