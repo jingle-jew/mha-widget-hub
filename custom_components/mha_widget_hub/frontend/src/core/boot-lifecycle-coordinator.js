@@ -249,6 +249,10 @@ export function createBootLifecycleCoordinator(host) {
     host._wallpaperController?.destroy?.();
     cancelAnimationFrame(host._iconSymbolRefreshFrame);
     host._iconSymbolRefreshFrame = 0;
+    cancelAnimationFrame(host._haSidebarReservedWidthFrame);
+    host._haSidebarReservedWidthFrame = 0;
+    clearTimeout(host._haSidebarReservedWidthTimeout);
+    host._haSidebarReservedWidthTimeout = 0;
     host._clearGridScrollListener();
     ACTIVITY_EVENT_TYPES.forEach((type) => window.removeEventListener(type, host._activityListener));
     host._screensaverController.destroy();

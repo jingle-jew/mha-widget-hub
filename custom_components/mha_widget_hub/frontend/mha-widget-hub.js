@@ -60,7 +60,9 @@ import { createScreensaverController } from "./src/screensaver/screensaver-contr
 import { createScreensaverCoordinator } from "./src/screensaver/screensaver-coordinator.js?v=phase9";
 import {
   applyHaSidebarMode,
+  scheduleHaSidebarReservedWidthSync,
   resolveHaSidebarReservedWidth,
+  syncHaSidebarReservedWidth,
 } from "./src/core/ha-sidebar-mode.js";
 import { applyHubRuntimeDefaults } from "./src/core/hub-runtime-defaults.js";
 import { scheduleIconSymbolRefresh } from "./src/core/icon-symbol-refresh-scheduler.js";
@@ -640,17 +642,27 @@ _syncScreensaverSettingsDom(){
 _applyDockPositionFromSettings(position="left"){
   return getResponsiveDockCoordinatorForHost(this).applyDockPositionFromSettings(position);
 }
+_syncHaSidebarReservedWidth(enabled=false){
+  return syncHaSidebarReservedWidth(this,{
+    enabled,
+    documentRef:this.ownerDocument || document,
+    windowRef:window,
+  });
+}
+_scheduleHaSidebarReservedWidthSync(enabled=false){
+  return scheduleHaSidebarReservedWidthSync(this,{
+    enabled,
+    documentRef:this.ownerDocument || document,
+    windowRef:window,
+  });
+}
 _applyHaSidebarMode(enabled=false){
-  this.dataset.haSidebarHidden = String(Boolean(enabled));
-  this.style.setProperty(
-    "--mha-ha-sidebar-reserved-inline-start",
-    `${resolveHaSidebarReservedWidth({
-      enabled,
-      documentRef: this.ownerDocument || document,
-      windowRef: window,
-    })}px`,
-  );
-  return applyHaSidebarMode(enabled);
+  const shouldHide=Boolean(enabled);
+  this.dataset.haSidebarHidden = String(shouldHide);
+  const result=applyHaSidebarMode(shouldHide);
+  this._syncHaSidebarReservedWidth(shouldHide);
+  this._scheduleHaSidebarReservedWidthSync(shouldHide);
+  return result;
 }
 _applyHideHaSidebarFromSettings(enabled=false){
   return applyHideHaSidebarSetting(this,enabled,{

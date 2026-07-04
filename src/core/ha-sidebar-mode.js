@@ -44,6 +44,62 @@ export function resolveHaSidebarReservedWidth({
   return width > 0 ? Math.round(width) : 0;
 }
 
+export function syncHaSidebarReservedWidth(
+  host,
+  {
+    enabled = false,
+    documentRef = document,
+    windowRef = window,
+  } = {},
+) {
+  const width = resolveHaSidebarReservedWidth({
+    enabled,
+    documentRef,
+    windowRef,
+  });
+  host?.style?.setProperty?.("--mha-ha-sidebar-reserved-inline-start", `${width}px`);
+  return width;
+}
+
+export function scheduleHaSidebarReservedWidthSync(
+  host,
+  {
+    enabled = false,
+    documentRef = document,
+    windowRef = window,
+    requestAnimationFrameRef = requestAnimationFrame,
+    cancelAnimationFrameRef = cancelAnimationFrame,
+    setTimeoutRef = setTimeout,
+    clearTimeoutRef = clearTimeout,
+    timeoutMs = 180,
+  } = {},
+) {
+  if (!host) return 0;
+
+  cancelAnimationFrameRef(host._haSidebarReservedWidthFrame || 0);
+  clearTimeoutRef(host._haSidebarReservedWidthTimeout || 0);
+
+  const sync = () => syncHaSidebarReservedWidth(host, {
+    enabled,
+    documentRef,
+    windowRef,
+  });
+
+  host._haSidebarReservedWidthFrame = requestAnimationFrameRef(() => {
+    host._haSidebarReservedWidthFrame = requestAnimationFrameRef(() => {
+      host._haSidebarReservedWidthFrame = 0;
+      sync();
+    });
+  });
+
+  host._haSidebarReservedWidthTimeout = setTimeoutRef(() => {
+    host._haSidebarReservedWidthTimeout = 0;
+    sync();
+  }, timeoutMs);
+
+  return host._haSidebarReservedWidthFrame;
+}
+
 export function applyHaSidebarMode(
   enabled = false,
   {
