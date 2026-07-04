@@ -1,18 +1,22 @@
 @media (max-width: 767px) {
   .mha-page-creator .mha-page-creator-sheet {
     --mha-mobile-sheet-top-gap: max(var(--mha-statusbar-reserved-top, 0px), var(--mha-safe-top, 0px));
-    --mha-mobile-sheet-height: calc(100dvh - var(--mha-mobile-sheet-top-gap));
+    --mha-mobile-sheet-max-height: calc(100dvh - var(--mha-mobile-sheet-top-gap));
+    --mha-mobile-sheet-top-radius: var(--mha-radius-widget, var(--mha-widget-radius, 1.75rem));
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
-    top: var(--mha-mobile-sheet-top-gap);
+    top: auto;
     width: auto;
-    height: var(--mha-mobile-sheet-height);
+    height: auto;
     max-width: none;
-    max-height: var(--mha-mobile-sheet-height);
+    max-height: var(--mha-mobile-sheet-max-height);
     overflow: hidden;
-    border-radius: 0;
+    border-start-start-radius: var(--mha-mobile-sheet-top-radius);
+    border-start-end-radius: var(--mha-mobile-sheet-top-radius);
+    border-end-start-radius: 0;
+    border-end-end-radius: 0;
     transform-origin: bottom center;
   }
 

@@ -292,6 +292,120 @@ test("responsive dock coordinator toggles floating controls on portrait scroll d
   }
 });
 
+test("responsive dock coordinator scrolls the mobile landscape dock to the bottom on edit entry", () => {
+  const previousWindow = globalThis.window;
+  const previousRaf = globalThis.requestAnimationFrame;
+  const previousCancelRaf = globalThis.cancelAnimationFrame;
+  const rafCallbacks = [];
+
+  globalThis.window = {
+    matchMedia() {
+      return { matches: false };
+    },
+  };
+  globalThis.requestAnimationFrame = (callback) => {
+    rafCallbacks.push(callback);
+    return rafCallbacks.length;
+  };
+  globalThis.cancelAnimationFrame = () => {};
+
+  const dock = {
+    scrollHeight: 480,
+    clientHeight: 180,
+    scrollToCalls: [],
+    scrollTo(options) {
+      this.scrollToCalls.push(options);
+    },
+  };
+
+  const host = {
+    _isEditing: true,
+    _wasMobileDockEditing: false,
+    _activeMoveWidgetId: "",
+    _pendingWidgetPlacement: null,
+    _responsiveState: {
+      layout: "mobile",
+      layoutVariant: "mobile-landscape",
+      dockFamily: "side",
+    },
+    classList: createClassList(),
+    shadowRoot: {
+      querySelector(selector) {
+        return selector === ".mha-dock" ? dock : null;
+      },
+    },
+  };
+
+  try {
+    const coordinator = createResponsiveDockCoordinator(host);
+    assert.equal(coordinator.syncMobileDockEditScroll(), true);
+    rafCallbacks.shift()?.();
+
+    assert.deepEqual(dock.scrollToCalls, [{
+      top: 300,
+      behavior: "smooth",
+    }]);
+  } finally {
+    globalThis.window = previousWindow;
+    globalThis.requestAnimationFrame = previousRaf;
+    globalThis.cancelAnimationFrame = previousCancelRaf;
+  }
+});
+
+test("responsive dock coordinator scrolls the side dock to the bottom on edit entry", () => {
+  const previousWindow = globalThis.window;
+  const previousRaf = globalThis.requestAnimationFrame;
+  const previousCancelRaf = globalThis.cancelAnimationFrame;
+  const rafCallbacks = [];
+
+  globalThis.window = {
+    matchMedia() {
+      return { matches: false };
+    },
+  };
+  globalThis.requestAnimationFrame = (callback) => {
+    rafCallbacks.push(callback);
+    return rafCallbacks.length;
+  };
+  globalThis.cancelAnimationFrame = () => {};
+
+  const dock = {
+    scrollHeight: 640,
+    clientHeight: 240,
+    scrollTop: 0,
+  };
+
+  const host = {
+    _isEditing: true,
+    _wasMobileDockEditing: false,
+    _activeMoveWidgetId: "",
+    _pendingWidgetPlacement: null,
+    _responsiveState: {
+      layout: "desktop",
+      layoutVariant: "desktop-landscape",
+      dockFamily: "side",
+    },
+    classList: createClassList(),
+    shadowRoot: {
+      querySelector(selector) {
+        return selector === ".mha-dock" ? dock : null;
+      },
+    },
+  };
+
+  try {
+    const coordinator = createResponsiveDockCoordinator(host);
+    assert.equal(coordinator.syncMobileDockEditScroll(), true);
+    rafCallbacks.shift()?.();
+
+    assert.equal(dock.scrollTop, 400);
+  } finally {
+    globalThis.window = previousWindow;
+    globalThis.requestAnimationFrame = previousRaf;
+    globalThis.cancelAnimationFrame = previousCancelRaf;
+  }
+});
+
 test("responsive dock coordinator scrolls the mobile dock to the end when editing starts", () => {
   const previousWindow = globalThis.window;
   const previousRaf = globalThis.requestAnimationFrame;
@@ -404,6 +518,8 @@ test("responsive dock coordinator skips auto-scroll outside mobile or without ov
     dataset: {},
     scrollWidth: 320,
     clientWidth: 320,
+    scrollHeight: 240,
+    clientHeight: 240,
     scrollLeft: 0,
     scrollTo() {
       throw new Error("should not auto-scroll without overflow");
@@ -434,9 +550,10 @@ test("responsive dock coordinator skips auto-scroll outside mobile or without ov
   try {
     const coordinator = createResponsiveDockCoordinator(host);
     coordinator.syncDocksDom();
-    assert.equal(rafCallbacks.length, 1);
+    assert.equal(rafCallbacks.length, 2);
     rafCallbacks.shift()?.();
     assert.equal(dock.dataset.overflowing, "false");
+    rafCallbacks.shift()?.();
 
     host._getRuntimeLayout = () => "mobile";
     host._getGridOrientation = () => "landscape";
