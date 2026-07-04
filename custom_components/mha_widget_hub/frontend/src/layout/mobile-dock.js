@@ -123,7 +123,7 @@ function attachPagedDockDragBehavior(dock) {
 }
 
 function appendStaticDockItems(dock, items, renderItem) {
-  dock.classList.remove("is-paged");
+  dock.classList?.remove?.("is-paged");
   dock.style?.removeProperty?.("--mha-mobile-dock-page-count");
   appendDockItems(dock, items, renderItem);
   return dock;
