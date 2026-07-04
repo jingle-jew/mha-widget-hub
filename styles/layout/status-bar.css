@@ -88,6 +88,18 @@
   display: none !important;
 }
 
+/* Android edge-to-edge keeps the native status-bar fill active on mobile even
+ * though the in-app status bar itself is hidden there.
+ */
+:host(.mha-android-edge-to-edge[data-layout="mobile"]) .mha-statusbar-fill {
+  display: block !important;
+}
+
+:host(.mha-android-edge-to-edge[data-layout="mobile"][data-status-bar-mode="hidden"]) .mha-statusbar-fill,
+:host(.mha-android-edge-to-edge[data-layout="mobile"][data-status-bar-mode="top-bar"]) .mha-statusbar-fill {
+  display: none !important;
+}
+
 :host([data-status-bar-mode="top-bar"]) .mha-status-bar {
   position: fixed;
   top: 0;
