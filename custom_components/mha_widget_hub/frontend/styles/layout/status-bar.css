@@ -95,8 +95,7 @@
   display: block !important;
 }
 
-:host(.mha-android-edge-to-edge[data-layout="mobile"][data-status-bar-mode="hidden"]) .mha-statusbar-fill,
-:host(.mha-android-edge-to-edge[data-layout="mobile"][data-status-bar-mode="top-bar"]) .mha-statusbar-fill {
+:host(.mha-android-edge-to-edge[data-layout="mobile"][data-status-bar-mode="hidden"]) .mha-statusbar-fill {
   display: none !important;
 }
 
