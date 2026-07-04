@@ -326,7 +326,7 @@
 }
 
 :host([data-layout="mobile"]:not([data-layout-variant="mobile-landscape"])) .mha-page-panel--grid > .mha-grid {
-  margin-block-end: calc(var(--mha-mobile-grid-gutter) * 0.85);
+  margin-block-end: var(--mha-mobile-grid-bottom-space) !important;
 }
 
 :host([data-layout="mobile"]) .mha-page-stage {

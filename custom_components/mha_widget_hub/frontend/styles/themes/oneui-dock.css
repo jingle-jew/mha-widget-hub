@@ -309,6 +309,14 @@
   max-inline-size: var(--mha-oneui-compact-dock-width);
 }
 
+:host([data-layout="mobile"]:not([data-layout-variant="mobile-landscape"])[data-theme-style="oneui"]) .mha-mobile-dock {
+  background: var(
+    --mha-oneui-mobile-dock-surface,
+    var(--mha-shell-dock-surface, var(--mha-shell-surface, var(--mha-surface-shell)))
+  );
+  border: 0;
+}
+
 :host([data-theme-style="oneui"]) .mha-mobile-dock.is-paged {
   padding-inline: 0;
   scroll-padding-inline: 0;
@@ -396,6 +404,12 @@
 :host([data-theme-style="oneui"]) .mha-mobile-dock-item > .mha-icon,
 :host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock-item > .mha-icon {
   align-self: end;
+}
+
+:host([data-theme-style="oneui"]) .mha-mobile-dock-item > .mha-icon:not(.mha-system-icon),
+:host([data-theme-style="oneui"]) .mha-mobile-dock-item[data-active="true"] > .mha-icon:not(.mha-system-icon) {
+  color: var(--mha-oneui-dock-item-label-color, color-mix(in srgb, var(--mha-text) 84%, transparent));
+  --mha-icon-color: var(--mha-oneui-dock-item-label-color, color-mix(in srgb, var(--mha-text) 84%, transparent));
 }
 
 :host([data-theme-style="oneui"]) .mha-mobile-dock-item > .mha-dock-item-label,

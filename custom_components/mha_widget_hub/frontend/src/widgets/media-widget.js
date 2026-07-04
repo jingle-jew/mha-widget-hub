@@ -426,6 +426,16 @@ function resolveMediaPagePanelSize({
   context = {},
   fallbackSize = {},
 } = {}) {
+  const isMobileLandscape = context?.layoutVariant === "mobile-landscape"
+    || (context?.layout === "mobile" && (Number(context?.units) || 0) >= 8);
+
+  if (isMobileLandscape) {
+    return {
+      w: Math.max(8, Number(fallbackSize?.w) || 8),
+      h: 4,
+    };
+  }
+
   const layout = context?.layout === "mobile" ? "mobile" : "desktop";
   if (layout === "mobile") {
     return {
