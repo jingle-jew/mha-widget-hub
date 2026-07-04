@@ -7,19 +7,39 @@
 }
 
 :host(.mha-android-edge-to-edge) .mha-statusbar-fill {
-  position: fixed;
-  inset-block-start: 0;
-  inset-inline: 0;
-  block-size: var(--mha-safe-top, 0px);
-  z-index: 6;
-  pointer-events: none;
-  opacity: 0;
-  background: var(
+  --mha-statusbar-fill-bleed: clamp(.65rem, 2.4vh, 1rem);
+  --mha-statusbar-fill-surface-base: var(
     --mha-statusbar-top-bar-surface,
     var(
       --mha-statusbar-surface,
       var(--mha-shell-status-surface, var(--mha-shell-surface, var(--mha-surface-shell)))
     )
+  );
+  --mha-statusbar-fill-surface-strong: color-mix(
+    in srgb,
+    var(--mha-statusbar-fill-surface-base) 18%,
+    transparent
+  );
+  --mha-statusbar-fill-surface-soft: color-mix(
+    in srgb,
+    var(--mha-statusbar-fill-surface-base) 10%,
+    transparent
+  );
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline: 0;
+  /* Extend the blur slightly below the native inset so Android reads as a
+   * transparent blur ramp instead of a flat gray veil.
+   */
+  block-size: calc(var(--mha-safe-top, 0px) + var(--mha-statusbar-fill-bleed));
+  z-index: 6;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(
+    to bottom,
+    var(--mha-statusbar-fill-surface-strong) 0%,
+    var(--mha-statusbar-fill-surface-soft) 48%,
+    transparent 100%
   );
   -webkit-backdrop-filter: var(
     --mha-statusbar-top-bar-filter,
@@ -32,15 +52,15 @@
   -webkit-mask-image: linear-gradient(
     to bottom,
     rgba(0, 0, 0, 1) 0%,
-    rgba(0, 0, 0, .94) 38%,
-    rgba(0, 0, 0, .56) 72%,
+    rgba(0, 0, 0, 1) calc(100% - var(--mha-statusbar-fill-bleed)),
+    rgba(0, 0, 0, .52) calc(100% - (var(--mha-statusbar-fill-bleed) * .36)),
     rgba(0, 0, 0, 0) 100%
   );
   mask-image: linear-gradient(
     to bottom,
     rgba(0, 0, 0, 1) 0%,
-    rgba(0, 0, 0, .94) 38%,
-    rgba(0, 0, 0, .56) 72%,
+    rgba(0, 0, 0, 1) calc(100% - var(--mha-statusbar-fill-bleed)),
+    rgba(0, 0, 0, .52) calc(100% - (var(--mha-statusbar-fill-bleed) * .36)),
     rgba(0, 0, 0, 0) 100%
   );
   transition:
