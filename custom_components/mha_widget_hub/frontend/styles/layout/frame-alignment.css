@@ -13,7 +13,10 @@
      * status-bar.css owns sizing/material; frame-alignment.css owns the
      * shared outer frame edges.
      */
-    left: 0 !important;
+    left: calc(
+      var(--mha-page-padding)
+      + var(--mha-ha-sidebar-reserved-inline-start, 0px)
+    ) !important;
     right: var(--mha-page-padding) !important;
     width: auto !important;
     inline-size: auto !important;

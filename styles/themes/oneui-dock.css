@@ -115,10 +115,10 @@
 :host([data-theme-style="oneui"]) .mha-dock-item,
 :host([data-theme-style="oneui"]) .mha-mobile-dock-item {
   position: relative;
-  border: 1px solid var(--mha-oneui-dock-item-border);
   border-radius: 999px;
-  background: var(--mha-oneui-dock-item-surface);
-  box-shadow: var(--mha-oneui-dock-item-shadow);
+  border: 0;
+  background: transparent;
+  box-shadow: none;
   color: var(--mha-text);
   transition: none;
 }
@@ -157,8 +157,6 @@
   inset: var(--mha-oneui-dock-button-inset);
   border-radius: 999px;
   background: var(--mha-oneui-dock-active-surface);
-  border: 1px solid var(--mha-oneui-dock-active-border);
-  box-shadow: var(--mha-oneui-dock-active-shadow);
   pointer-events: none;
   transition: none;
 }
@@ -208,10 +206,10 @@
     box-sizing: border-box;
     inline-size: 100%;
     max-inline-size: 100%;
-    border: 1px solid var(--mha-oneui-dock-item-border);
-    background: var(--mha-oneui-dock-item-surface);
+    border: 0;
+    background: transparent;
     color: var(--mha-text);
-    box-shadow: var(--mha-oneui-dock-item-shadow);
+    box-shadow: none;
   }
 
   :host([data-theme-style="oneui"][data-dock-position="left"]) .mha-dock-item[data-active="true"]::before,
