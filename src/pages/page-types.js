@@ -112,7 +112,7 @@ export function createMediaPageWidgetSeed({
     variant: "media-page-panel",
     responsiveSizeMode: "media-page-panel",
     w: 4,
-    h: 6,
+    h: 8,
     label: String(pageName || "Media Players"),
     title: String(pageName || "Media Players"),
     entityId,

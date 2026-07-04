@@ -8,10 +8,13 @@ import {
 import {
   buildMediaDisplayModel,
   buildMediaPlayerServiceCall,
+  formatMediaDuration,
   getMediaArtworkUrl,
+  resolveMediaProgress,
 } from "../ha/media.js";
 import { runMediaPlayerAction } from "../ha/actions.js";
 import { t } from "../i18n/index.js";
+import { createIconSymbol } from "../ui/icon-symbol.js";
 
 export const MEDIA_WIDGET_KIND = "media";
 export const MEDIA_TRANSITION_GRACE_MS = 1200;
@@ -134,6 +137,7 @@ function getMediaData(widget = {}, hass, cache = null, now = getMediaTimestamp()
     volumeLabel,
     volumePercent,
     artworkUrl: getMediaArtworkUrl(entity, widget),
+    progress: resolveMediaProgress(entity),
     hasLiveMetadata: hasLiveMediaMetadata(entity, widget),
     canPrevious: Boolean(buildMediaPlayerServiceCall(entity, "previous")),
     canPlayPause: Boolean(buildMediaPlayerServiceCall(entity, "playPause")),
@@ -228,6 +232,16 @@ function createMetaDetails(data) {
   details.className = "mha-media-widget-meta-details";
   details.append(createText("mha-media-widget-source", data.app));
   return details;
+}
+
+function createSourceBadge(data) {
+  const badge = document.createElement("div");
+  badge.className = "mha-media-widget-source-badge";
+  badge.append(
+    createIconSymbol({ name: "speaker", label: data.app }),
+    createText("mha-media-widget-source-badge-label", data.app),
+  );
+  return badge;
 }
 
 function createControlButton(label, symbol, {
@@ -358,12 +372,35 @@ function createControls(data, { mode = "playback", interactive = true, onAction 
   return controls;
 }
 
-function createProgress() {
+function setProgressState(progress, data) {
+  if (!progress) return;
+  const width = data.progress?.available
+    ? `${Math.max(0, Math.min(100, data.progress.ratio * 100))}%`
+    : "54%";
+  progress.style.setProperty("--mha-media-progress-fill-width", width);
+}
+
+function createProgress(data, { includeLabels = false } = {}) {
   const progress = document.createElement("div");
   progress.className = "mha-media-widget-progress";
   progress.setAttribute("aria-hidden", "true");
   progress.append(createText("mha-media-widget-progress-fill"));
-  return progress;
+  setProgressState(progress, data);
+
+  if (!includeLabels) return progress;
+
+  const shell = document.createElement("div");
+  shell.className = "mha-media-widget-progress-shell";
+
+  const labels = document.createElement("div");
+  labels.className = "mha-media-widget-progress-labels";
+  labels.append(
+    createText("mha-media-widget-progress-current", data.progress?.available ? formatMediaDuration(data.progress.current) : "--:--"),
+    createText("mha-media-widget-progress-duration", data.progress?.available ? formatMediaDuration(data.progress.duration) : "--:--"),
+  );
+
+  shell.append(progress, labels);
+  return shell;
 }
 
 function createMetaRows(data) {
@@ -391,14 +428,16 @@ function resolveMediaPagePanelSize({
 } = {}) {
   const layout = context?.layout === "mobile" ? "mobile" : "desktop";
   if (layout === "mobile") {
-    return { w: 4, h: 6 };
+    return {
+      w: 4,
+      h: Math.max(8, Number(fallbackSize?.h) || 8),
+    };
   }
 
-  const units = Math.max(4, Number(context?.units) || Number(fallbackSize?.w) || 4);
-  const rowUnits = Math.max(6, Number(context?.rowUnits) || Number(fallbackSize?.h) || 6);
+  const units = Math.max(4, Number(context?.units) || Number(fallbackSize?.w) || 6);
   return {
-    w: Math.min(units, Math.max(4, Math.round(units * 0.75))),
-    h: rowUnits,
+    w: Math.min(6, units),
+    h: Math.max(8, Number(fallbackSize?.h) || 8),
   };
 }
 
@@ -452,10 +491,18 @@ export function createMediaWidgetContent(widget = {}, {
     root.querySelector(".mha-media-widget-artist").textContent = nextData.subtitle;
     const sourceNode = root.querySelector(".mha-media-widget-source");
     if (sourceNode) sourceNode.textContent = nextData.app;
+    const sourceBadgeNode = root.querySelector(".mha-media-widget-source-badge-label");
+    if (sourceBadgeNode) sourceBadgeNode.textContent = nextData.app;
     const artworkNode = root.querySelector(".mha-media-widget-artwork");
     artworkNode?.setAttribute("data-playing", String(nextData.playing));
     if (artworkNode) setArtworkImage(artworkNode, nextData.artworkUrl);
     setBackgroundImage(root, nextData.artworkUrl);
+    const progressNode = root.querySelector(".mha-media-widget-progress");
+    setProgressState(progressNode, nextData);
+    const currentNode = root.querySelector(".mha-media-widget-progress-current");
+    if (currentNode) currentNode.textContent = nextData.progress?.available ? formatMediaDuration(nextData.progress.current) : "--:--";
+    const durationNode = root.querySelector(".mha-media-widget-progress-duration");
+    if (durationNode) durationNode.textContent = nextData.progress?.available ? formatMediaDuration(nextData.progress.duration) : "--:--";
     renderControls(controls, nextData, {
       mode: context.controlsMode,
       interactive,
@@ -485,22 +532,29 @@ export function createMediaWidgetContent(widget = {}, {
     interactive,
     onAction,
   });
-  const progress = createProgress();
+  const progress = createProgress(data, {
+    includeLabels: variantKey === "4x2" || widget?.responsiveSizeMode === "media-page-panel",
+  });
   root.append(background);
   setBackgroundImage(root, data.artworkUrl);
 
   if (variantKey === "2x2") {
-    root.append(artwork, text, controls);
+    root.append(artwork, createSourceBadge(data), text, controls);
   } else if (variantKey === "4x2") {
     const info = document.createElement("div");
     info.className = "mha-media-widget-info";
-    info.append(text, progress, controls);
+    info.append(createSourceBadge(data), text, progress, controls);
     root.append(artwork, info);
   } else {
     const info = document.createElement("div");
     info.className = "mha-media-widget-info";
     info.append(text, metaDetails);
-    root.append(artwork, info, progress, controls);
+
+    const transport = document.createElement("div");
+    transport.className = "mha-media-widget-transport";
+    transport.append(createMetaRows(data), progress, controls);
+
+    root.append(artwork, info, transport);
   }
 
   if (!interactive) {

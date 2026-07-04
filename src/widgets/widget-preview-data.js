@@ -26,7 +26,10 @@ export const WIDGET_PREVIEW_DATA = freeze({
     state: "playing",
     title: "Now Playing",
     artist: "MHA Preview",
+    app: "Phone speaker",
     volume: 0.68,
+    duration: 236,
+    position: 66,
   }),
   scenes: freeze({
     evening: freeze({ entityId: "scene.preview_evening", name: "Evening" }),
@@ -88,7 +91,10 @@ export const PREVIEW_HASS_STATES = freeze({
       friendly_name: WIDGET_PREVIEW_DATA.media.name,
       media_title: WIDGET_PREVIEW_DATA.media.title,
       media_artist: WIDGET_PREVIEW_DATA.media.artist,
+      app_name: WIDGET_PREVIEW_DATA.media.app,
       volume_level: WIDGET_PREVIEW_DATA.media.volume,
+      media_duration: WIDGET_PREVIEW_DATA.media.duration,
+      media_position: WIDGET_PREVIEW_DATA.media.position,
     }),
   }),
   [WIDGET_PREVIEW_DATA.scenes.evening.entityId]: freeze({
