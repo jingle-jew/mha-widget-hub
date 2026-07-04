@@ -9,6 +9,7 @@ import {
 test("page creator state exposes typed page options with one selected entry", () => {
   const state = buildPageCreatorState({
     open: true,
+    themeStyle: "oneui",
     selectedPageType: "media-players",
   });
 
@@ -16,6 +17,18 @@ test("page creator state exposes typed page options with one selected entry", ()
   assert.equal(state.selectedPageType, "media-players");
   assert.equal(state.pageTypeOptions.some((option) => option.value === "media-players" && option.selected), true);
   assert.equal(state.pageTypeOptions.some((option) => option.label && option.description), true);
+});
+
+test("page creator hides the media page option outside oneui", () => {
+  const state = buildPageCreatorState({
+    open: true,
+    themeStyle: "ios",
+    selectedPageType: "media-players",
+  });
+
+  assert.equal(state.selectedPageType, "grid");
+  assert.equal(state.pageTypeOptions.some((option) => option.value === "media-players"), false);
+  assert.equal(state.pageTypeOptions[0]?.selected, true);
 });
 
 test("widget config popup state preserves the current session payload", () => {

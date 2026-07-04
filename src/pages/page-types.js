@@ -83,6 +83,22 @@ export function isMediaPlayersPage(page = {}) {
   return normalizePageType(page?.type) === PAGE_TYPES.MEDIA_PLAYERS;
 }
 
+export function hasMediaPagePanelWidget(page = {}) {
+  return Boolean((page?.widgets || []).some(widget => (
+    widget?.responsiveSizeMode === "media-page-panel"
+    || widget?.variant === "media-page-panel"
+  )));
+}
+
+export function isOneUiMediaPageTheme(themeStyle = "") {
+  return String(themeStyle || "").trim().toLowerCase() === "oneui";
+}
+
+export function isMediaPageExperienceActive(page = {}, themeStyle = "") {
+  return isOneUiMediaPageTheme(themeStyle)
+    && (isMediaPlayersPage(page) || hasMediaPagePanelWidget(page));
+}
+
 export function resolveMediaPageWidgetEntityId(config = {}) {
   const enabledPlayerIds = Array.isArray(config?.enabledPlayerIds)
     ? config.enabledPlayerIds
@@ -121,21 +137,26 @@ export function createMediaPageWidgetSeed({
   };
 }
 
-export function getPageCreatorTypeOptions() {
-  return [
+export function getPageCreatorTypeOptions({ themeStyle = "oneui" } = {}) {
+  const options = [
     Object.freeze({
       value: PAGE_TYPES.GRID,
       icon: "grid",
       label: t("settings.pageTypeLabels.grid", "Grid"),
       description: t("settings.pageTypeDescriptions.grid", "A standard page with MHA widgets."),
     }),
-    Object.freeze({
+  ];
+
+  if (isOneUiMediaPageTheme(themeStyle)) {
+    options.push(Object.freeze({
       value: PAGE_TYPES.MEDIA_PLAYERS,
       icon: "media-player",
       label: t("settings.pageTypeLabels.media-players", "Media"),
       description: t("settings.pageTypeDescriptions.media-players", "A dedicated page for media players."),
-    }),
-  ];
+    }));
+  }
+
+  return options;
 }
 
 export function getMediaPageVisualStyleOptions() {

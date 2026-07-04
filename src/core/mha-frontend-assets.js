@@ -35,7 +35,37 @@ export function getCriticalBootCss() {
         radial-gradient(circle at 52% 90%, rgba(56,209,255,.22), transparent 36%),
         linear-gradient(135deg, #171b30 0%, #242844 100%);
     }
+    :host([data-boot-state="booting"])::before {
+      content: "MHA Widget Hub\\ALoading interface";
+      position: absolute;
+      inset: 50% auto auto 50%;
+      z-index: 1;
+      transform: translate(-50%, -50%);
+      display: grid;
+      gap: .45rem;
+      inline-size: min(16rem, calc(100% - 2rem));
+      padding: 1rem 1.15rem;
+      border-radius: 1.25rem;
+      background: color-mix(in srgb, var(--mha-surface-primary, rgba(18,22,38,.78)) 88%, transparent);
+      border: 1px solid color-mix(in srgb, var(--mha-text-primary, rgba(255,255,255,.92)) 14%, transparent);
+      color: var(--mha-text-primary, rgba(255,255,255,.92));
+      text-align: center;
+      white-space: pre-wrap;
+      line-height: 1.3;
+      font-size: .92rem;
+      font-weight: 650;
+      letter-spacing: .01em;
+      backdrop-filter: blur(14px) saturate(135%);
+      -webkit-backdrop-filter: blur(14px) saturate(135%);
+      box-shadow: 0 18px 48px rgba(0,0,0,.18);
+      animation: mha-boot-pulse 1.45s ease-in-out infinite alternate;
+    }
     :host([data-boot-state="booting"]) > :not(style):not(link):not(.mha-background) {
+      opacity: 0 !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+    }
+    :host([data-render-state="stabilizing"][data-boot-state="ready"]) > :not(style):not(link):not(.mha-background):not(.mha-page-panel-snapshot) {
       opacity: 0 !important;
       visibility: hidden !important;
       pointer-events: none !important;
@@ -60,6 +90,16 @@ export function getCriticalBootCss() {
     }
     :host([data-boot-state="booting"][data-wallpaper-kind="css"][data-wallpaper-source="theme"]) .mha-background {
       background: var(--mha-active-wallpaper-background) !important;
+    }
+    @keyframes mha-boot-pulse {
+      from {
+        opacity: .72;
+        transform: translate(-50%, -50%) scale(.985);
+      }
+      to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+      }
     }
   `;
 }

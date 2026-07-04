@@ -168,6 +168,13 @@ export function supportsAutoAccent(themeStyle = "oneui") {
 
 function hexToRgb(hex = "") {
   const normalized = String(hex).replace("#", "").trim();
+  if (/^[0-9a-f]{3}$/i.test(normalized)) {
+    return {
+      r: Number.parseInt(normalized[0] + normalized[0], 16),
+      g: Number.parseInt(normalized[1] + normalized[1], 16),
+      b: Number.parseInt(normalized[2] + normalized[2], 16),
+    };
+  }
   if (!/^[0-9a-f]{6}$/i.test(normalized)) return null;
   const value = Number.parseInt(normalized, 16);
   return {
@@ -233,6 +240,74 @@ function rgbToHslForAccent({ r, g, b }) {
   else hue = ((rr - gg) / delta) + 4;
 
   return { h: hue / 6, s: saturation, l: lightness };
+}
+
+function hslToRgb({ h = 0, s = 0, l = 0 }) {
+  const hue = ((h % 1) + 1) % 1;
+  const saturation = Math.max(0, Math.min(1, s));
+  const lightness = Math.max(0, Math.min(1, l));
+
+  if (saturation === 0) {
+    const value = Math.round(lightness * 255);
+    return { r: value, g: value, b: value };
+  }
+
+  const hueToChannel = (p, q, t) => {
+    let channel = t;
+    if (channel < 0) channel += 1;
+    if (channel > 1) channel -= 1;
+    if (channel < 1 / 6) return p + (q - p) * 6 * channel;
+    if (channel < 1 / 2) return q;
+    if (channel < 2 / 3) return p + (q - p) * ((2 / 3) - channel) * 6;
+    return p;
+  };
+
+  const q = lightness < 0.5
+    ? lightness * (1 + saturation)
+    : lightness + saturation - (lightness * saturation);
+  const p = (2 * lightness) - q;
+
+  return {
+    r: Math.round(hueToChannel(p, q, hue + (1 / 3)) * 255),
+    g: Math.round(hueToChannel(p, q, hue) * 255),
+    b: Math.round(hueToChannel(p, q, hue - (1 / 3)) * 255),
+  };
+}
+
+function rgbToCss({ r, g, b }) {
+  return `rgb(${Math.round(r)} ${Math.round(g)} ${Math.round(b)})`;
+}
+
+function parseCssColorToRgb(value = "") {
+  const input = String(value || "").trim();
+  if (!input) return null;
+
+  const hex = hexToRgb(input);
+  if (hex) return hex;
+
+  const rgbMatch = input.match(/^rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)/i);
+  if (rgbMatch) {
+    return {
+      r: Math.max(0, Math.min(255, Number(rgbMatch[1]))),
+      g: Math.max(0, Math.min(255, Number(rgbMatch[2]))),
+      b: Math.max(0, Math.min(255, Number(rgbMatch[3]))),
+    };
+  }
+
+  const hslMatch = input.match(/^hsla?\(\s*([\d.+-]+)(deg|turn|rad)?[\s,]+([\d.]+)%[\s,]+([\d.]+)%/i);
+  if (hslMatch) {
+    let hue = Number(hslMatch[1]);
+    const unit = hslMatch[2] || "deg";
+    if (unit === "turn") hue *= 360;
+    if (unit === "rad") hue = hue * (180 / Math.PI);
+    return hslToRgb({
+      h: (((hue / 360) % 1) + 1) % 1,
+      s: Number(hslMatch[3]) / 100,
+      l: Number(hslMatch[4]) / 100,
+    });
+  }
+
+  return null;
 }
 
 function hueDistance(a, b) {
@@ -420,4 +495,47 @@ export function normalizeAccent(themeStyle = "oneui", accent = "") {
   const exists = options.some((item) => item.value === accent);
   if (exists) return accent;
   return getDefaultAccent(themeStyle);
+}
+
+export function deriveOneUiBlobPalette(
+  accent = getDefaultAccent("oneui"),
+  accentColor = "",
+) {
+  const normalizedAccent = normalizeAccent("oneui", accent);
+  const baseRgb = parseCssColorToRgb(accentColor)
+    || hexToRgb(ACCENT_REFERENCE_COLORS.oneui[normalizedAccent] || "");
+
+  if (!baseRgb) {
+    return {
+      blob1: "rgb(75 163 255)",
+      blob2: "rgb(111 124 255)",
+      blob3: "rgb(199 125 255)",
+      blob4: "rgb(255 106 162)",
+    };
+  }
+
+  const baseHsl = rgbToHslForAccent(baseRgb);
+  const satBoost = baseHsl.s < 0.18 ? 0.18 : 0.08;
+  const paletteSpecs = [
+    { hueShift: -0.16, saturationShift: satBoost + 0.08, lightnessShift: 0.16 },
+    { hueShift: -0.03, saturationShift: satBoost * 0.55, lightnessShift: -0.01 },
+    { hueShift: 0.09, saturationShift: satBoost * 0.78, lightnessShift: 0.07 },
+    { hueShift: 0.19, saturationShift: satBoost + 0.05, lightnessShift: -0.10 },
+  ];
+
+  const colors = paletteSpecs.map(({ hueShift, saturationShift, lightnessShift }) => {
+    const color = hslToRgb({
+      h: baseHsl.h + hueShift,
+      s: Math.max(0.18, Math.min(0.92, baseHsl.s + saturationShift)),
+      l: Math.max(0.28, Math.min(0.8, baseHsl.l + lightnessShift)),
+    });
+    return rgbToCss(color);
+  });
+
+  return {
+    blob1: colors[0],
+    blob2: colors[2],
+    blob3: colors[3],
+    blob4: colors[1],
+  };
 }

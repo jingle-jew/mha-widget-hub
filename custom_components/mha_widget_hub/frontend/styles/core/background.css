@@ -112,7 +112,7 @@
 
 /* ONEUI-ONLY ORBITING BLOBS
  * Theme behavior:
- * - OneUI: blobs concentrate near the center, orbit slowly, and cross paths.
+ * - OneUI: blobs orbit around the screen center with quadrant-specific apogees.
  * - iOS: decorative blobs stay visible but stable.
  * - Material: blobs stay disabled by the solid Material background contract.
  */
@@ -123,54 +123,18 @@
 :host([data-theme-style="oneui"]) .mha-background span {
   display: block;
   visibility: visible;
-  opacity: calc(var(--mha-bg-blob-opacity) * 1.38);
-  filter: blur(calc(var(--mha-bg-blob-blur) * .92));
+  opacity: calc(var(--mha-bg-blob-opacity) * 1.56);
+  filter: blur(calc(var(--mha-bg-blob-blur) * 1.32));
   will-change: transform, opacity;
   transform-origin: center;
-  animation: mha-oneui-orbit-a 24s cubic-bezier(.45, 0, .2, 1) infinite;
-}
-
-:host([data-theme-style="oneui"]) .mha-background span:nth-child(1) {
-  left: 34%;
-  top: 28%;
-  inline-size: min(42vw, 32rem);
-  block-size: min(42vw, 32rem);
-  animation-name: mha-oneui-orbit-a;
-  animation-duration: 26s;
-}
-
-:host([data-theme-style="oneui"]) .mha-background span:nth-child(2) {
-  left: 49%;
-  top: 24%;
-  right: auto;
-  inline-size: min(38vw, 30rem);
-  block-size: min(38vw, 30rem);
-  animation-name: mha-oneui-orbit-b;
-  animation-duration: 30s;
-  animation-delay: -9s;
-}
-
-:host([data-theme-style="oneui"]) .mha-background span:nth-child(3) {
-  left: 38%;
+  left: 50%;
   top: 50%;
-  bottom: auto;
-  inline-size: min(44vw, 34rem);
-  block-size: min(44vw, 34rem);
-  animation-name: mha-oneui-cross-a;
-  animation-duration: 34s;
-  animation-delay: -15s;
-}
-
-:host([data-theme-style="oneui"]) .mha-background span:nth-child(4) {
-  left: 55%;
-  top: 47%;
   right: auto;
   bottom: auto;
-  inline-size: min(36vw, 28rem);
-  block-size: min(36vw, 28rem);
-  animation-name: mha-oneui-cross-b;
-  animation-duration: 32s;
-  animation-delay: -21s;
+  --mha-orbit-angle: 0deg;
+  --mha-orbit-breathe: 1;
+  --mha-orbit-scale: 1;
+  animation: none;
 }
 
 /* Keep Material absolutely solid, even though OneUI rules above restore spans. */
@@ -182,75 +146,163 @@
   filter: none !important;
 }
 
-@keyframes mha-oneui-orbit-a {
+:host([data-theme-style="oneui"]) .mha-background span:nth-child(1) {
+  inline-size: min(42vw, 32rem);
+  block-size: min(42vw, 32rem);
+  animation: mha-oneui-orbit-q1 16s linear infinite;
+  animation-delay: -2s;
+}
+
+:host([data-theme-style="oneui"]) .mha-background span:nth-child(2) {
+  inline-size: min(44vw, 34rem);
+  block-size: min(44vw, 34rem);
+  animation: mha-oneui-orbit-q2 30s linear infinite;
+  animation-delay: -4s;
+}
+
+:host([data-theme-style="oneui"]) .mha-background span:nth-child(3) {
+  inline-size: min(38vw, 30rem);
+  block-size: min(38vw, 30rem);
+  animation: mha-oneui-orbit-q3 16s linear infinite;
+  animation-delay: -10s;
+}
+
+:host([data-theme-style="oneui"]) .mha-background span:nth-child(4) {
+  inline-size: min(36vw, 28rem);
+  block-size: min(36vw, 28rem);
+  animation: mha-oneui-orbit-q4 30s linear infinite;
+  animation-delay: -19s;
+}
+
+@keyframes mha-oneui-orbit-q1 {
   0% {
-    transform: translate3d(-18%, -10%, 0) scale(1);
+    transform: translate3d(-50%, -50%, 0) translate3d(4vw, -47vh, 0) scale(.98);
     opacity: calc(var(--mha-bg-blob-opacity) * 1.18);
   }
+  12.5% {
+    transform: translate3d(-50%, -50%, 0) translate3d(20vw, -34vh, 0) scale(1.05);
+  }
   25% {
-    transform: translate3d(18%, 6%, 0) scale(1.12);
+    transform: translate3d(-50%, -50%, 0) translate3d(28vw, -14vh, 0) scale(1.12);
+  }
+  37.5% {
+    transform: translate3d(-50%, -50%, 0) translate3d(24vw, 6vh, 0) scale(1.08);
   }
   50% {
-    transform: translate3d(7%, 21%, 0) scale(.98);
+    transform: translate3d(-50%, -50%, 0) translate3d(8vw, 22vh, 0) scale(.97);
+    opacity: calc(var(--mha-bg-blob-opacity) * 1.46);
+  }
+  62.5% {
+    transform: translate3d(-50%, -50%, 0) translate3d(-10vw, 24vh, 0) scale(1.03);
+  }
+  75% {
+    transform: translate3d(-50%, -50%, 0) translate3d(-24vw, 10vh, 0) scale(1.09);
+  }
+  87.5% {
+    transform: translate3d(-50%, -50%, 0) translate3d(-18vw, -20vh, 0) scale(1.02);
+  }
+  100% {
+    transform: translate3d(-50%, -50%, 0) translate3d(4vw, -47vh, 0) scale(.98);
+    opacity: calc(var(--mha-bg-blob-opacity) * 1.18);
+  }
+}
+
+@keyframes mha-oneui-orbit-q2 {
+  0% {
+    transform: translate3d(-50%, -50%, 0) translate3d(48vw, 2vh, 0) scale(1.03);
+    opacity: calc(var(--mha-bg-blob-opacity) * 1.16);
+  }
+  12.5% {
+    transform: translate3d(-50%, -50%, 0) translate3d(38vw, 22vh, 0) scale(1.01);
+  }
+  25% {
+    transform: translate3d(-50%, -50%, 0) translate3d(18vw, 34vh, 0) scale(1.04);
+  }
+  37.5% {
+    transform: translate3d(-50%, -50%, 0) translate3d(-6vw, 40vh, 0) scale(1.07);
+  }
+  50% {
+    transform: translate3d(-50%, -50%, 0) translate3d(-32vw, 26vh, 0) scale(1.05);
+    opacity: calc(var(--mha-bg-blob-opacity) * 1.42);
+  }
+  62.5% {
+    transform: translate3d(-50%, -50%, 0) translate3d(-44vw, -4vh, 0) scale(1.02);
+  }
+  75% {
+    transform: translate3d(-50%, -50%, 0) translate3d(-20vw, -30vh, 0) scale(.99);
+  }
+  87.5% {
+    transform: translate3d(-50%, -50%, 0) translate3d(20vw, -26vh, 0) scale(1.01);
+  }
+  100% {
+    transform: translate3d(-50%, -50%, 0) translate3d(48vw, 2vh, 0) scale(1.03);
+    opacity: calc(var(--mha-bg-blob-opacity) * 1.16);
+  }
+}
+
+@keyframes mha-oneui-orbit-q3 {
+  0% {
+    transform: translate3d(-50%, -50%, 0) translate3d(-6vw, 43vh, 0) scale(1);
+    opacity: calc(var(--mha-bg-blob-opacity) * 1.18);
+  }
+  12.5% {
+    transform: translate3d(-50%, -50%, 0) translate3d(-22vw, 28vh, 0) scale(1.04);
+  }
+  25% {
+    transform: translate3d(-50%, -50%, 0) translate3d(-30vw, 8vh, 0) scale(1.11);
+  }
+  37.5% {
+    transform: translate3d(-50%, -50%, 0) translate3d(-24vw, -12vh, 0) scale(1.06);
+  }
+  50% {
+    transform: translate3d(-50%, -50%, 0) translate3d(-8vw, -24vh, 0) scale(.96);
     opacity: calc(var(--mha-bg-blob-opacity) * 1.48);
   }
+  62.5% {
+    transform: translate3d(-50%, -50%, 0) translate3d(12vw, -22vh, 0) scale(1.02);
+  }
   75% {
-    transform: translate3d(-22%, 9%, 0) scale(1.08);
+    transform: translate3d(-50%, -50%, 0) translate3d(24vw, -8vh, 0) scale(1.08);
+  }
+  87.5% {
+    transform: translate3d(-50%, -50%, 0) translate3d(18vw, 24vh, 0) scale(1.03);
   }
   100% {
-    transform: translate3d(-18%, -10%, 0) scale(1);
+    transform: translate3d(-50%, -50%, 0) translate3d(-6vw, 43vh, 0) scale(1);
     opacity: calc(var(--mha-bg-blob-opacity) * 1.18);
   }
 }
 
-@keyframes mha-oneui-orbit-b {
+@keyframes mha-oneui-orbit-q4 {
   0% {
-    transform: translate3d(16%, 12%, 0) scale(1.04);
+    transform: translate3d(-50%, -50%, 0) translate3d(-48vw, -2vh, 0) scale(1.04);
+    opacity: calc(var(--mha-bg-blob-opacity) * 1.16);
+  }
+  12.5% {
+    transform: translate3d(-50%, -50%, 0) translate3d(-38vw, -24vh, 0) scale(1.01);
   }
   25% {
-    transform: translate3d(-14%, 18%, 0) scale(.96);
+    transform: translate3d(-50%, -50%, 0) translate3d(-18vw, -36vh, 0) scale(.99);
+  }
+  37.5% {
+    transform: translate3d(-50%, -50%, 0) translate3d(8vw, -40vh, 0) scale(1.03);
   }
   50% {
-    transform: translate3d(-24%, -8%, 0) scale(1.14);
-    opacity: calc(var(--mha-bg-blob-opacity) * 1.55);
+    transform: translate3d(-50%, -50%, 0) translate3d(34vw, -24vh, 0) scale(1.06);
+    opacity: calc(var(--mha-bg-blob-opacity) * 1.4);
+  }
+  62.5% {
+    transform: translate3d(-50%, -50%, 0) translate3d(44vw, 6vh, 0) scale(1.04);
   }
   75% {
-    transform: translate3d(10%, -18%, 0) scale(1.02);
+    transform: translate3d(-50%, -50%, 0) translate3d(18vw, 30vh, 0) scale(1.01);
+  }
+  87.5% {
+    transform: translate3d(-50%, -50%, 0) translate3d(-20vw, 26vh, 0) scale(1.02);
   }
   100% {
-    transform: translate3d(16%, 12%, 0) scale(1.04);
-  }
-}
-
-@keyframes mha-oneui-cross-a {
-  0% {
-    transform: translate3d(-22%, 16%, 0) scale(.98);
-  }
-  33% {
-    transform: translate3d(18%, -18%, 0) scale(1.13);
-    opacity: calc(var(--mha-bg-blob-opacity) * 1.5);
-  }
-  66% {
-    transform: translate3d(24%, 14%, 0) scale(1.02);
-  }
-  100% {
-    transform: translate3d(-22%, 16%, 0) scale(.98);
-  }
-}
-
-@keyframes mha-oneui-cross-b {
-  0% {
-    transform: translate3d(18%, -16%, 0) scale(1.06);
-  }
-  33% {
-    transform: translate3d(-20%, -4%, 0) scale(.98);
-  }
-  66% {
-    transform: translate3d(-12%, 20%, 0) scale(1.16);
-    opacity: calc(var(--mha-bg-blob-opacity) * 1.44);
-  }
-  100% {
-    transform: translate3d(18%, -16%, 0) scale(1.06);
+    transform: translate3d(-50%, -50%, 0) translate3d(-48vw, -2vh, 0) scale(1.04);
+    opacity: calc(var(--mha-bg-blob-opacity) * 1.16);
   }
 }
 

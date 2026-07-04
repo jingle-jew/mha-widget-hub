@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   createMediaTransitionCache,
+  MEDIA_WIDGET_CONTENT_RENDERER,
   MEDIA_TRANSITION_GRACE_MS,
   resolveMediaTransitionData,
 } from "../src/widgets/media-widget.js";
@@ -109,7 +110,7 @@ test("media transition cache expires when idle is not temporary", () => {
   assert.equal(expiredIdle.usingGraceCache, undefined);
 });
 
-test("media page panel resolves responsive sizes without collapsing back to 4x4", () => {
+test("media page panel keeps oneui responsive sizes and downgrades outside oneui", () => {
   const widget = {
     kind: "media",
     variant: "media-page-panel",
@@ -120,23 +121,108 @@ test("media page panel resolves responsive sizes without collapsing back to 4x4"
 
   assert.deepEqual(
     normalizeWidgetForKind(widget, { units: 4, rowUnits: 12, layout: "mobile" }),
-    { w: 4, h: 8 },
+    { w: 4, h: 4 },
+  );
+  assert.deepEqual(
+    normalizeWidgetForKind(widget, {
+      units: 8,
+      rowUnits: 8,
+      layout: "tablet",
+      themeStyle: "ios",
+      viewportHeight: 900,
+    }),
+    { w: 4, h: 4 },
   );
   assert.deepEqual(
     normalizeWidgetForKind(widget, {
       units: 8,
       rowUnits: 4,
       layout: "mobile",
+      themeStyle: "oneui",
       layoutVariant: "mobile-landscape",
     }),
     { w: 8, h: 4 },
   );
   assert.deepEqual(
-    normalizeWidgetForKind(widget, { units: 8, rowUnits: 8, layout: "tablet" }),
+    normalizeWidgetForKind(widget, {
+      units: 8,
+      rowUnits: 8,
+      layout: "tablet",
+      themeStyle: "oneui",
+      viewportHeight: 900,
+    }),
     { w: 6, h: 8 },
   );
   assert.deepEqual(
-    normalizeWidgetForKind(widget, { units: 12, rowUnits: 8, layout: "desktop" }),
+    normalizeWidgetForKind(widget, {
+      units: 12,
+      rowUnits: 8,
+      layout: "desktop",
+      themeStyle: "oneui",
+      viewportHeight: 900,
+    }),
     { w: 6, h: 8 },
   );
+  assert.deepEqual(
+    normalizeWidgetForKind(widget, {
+      units: 8,
+      rowUnits: 8,
+      layout: "tablet",
+      themeStyle: "oneui",
+      viewportHeight: 760,
+    }),
+    { w: 8, h: 6 },
+  );
+  assert.deepEqual(
+    normalizeWidgetForKind(widget, {
+      units: 12,
+      rowUnits: 8,
+      layout: "desktop",
+      themeStyle: "oneui",
+      viewportHeight: 760,
+    }),
+    { w: 8, h: 6 },
+  );
+});
+
+test("media page panel shell falls back to the standard 4x4 media variant outside oneui", () => {
+  const shell = { dataset: {} };
+  const originalDocument = globalThis.document;
+
+  globalThis.document = {
+    documentElement: {
+      dataset: {
+        themeStyle: "ios",
+      },
+    },
+  };
+
+  MEDIA_WIDGET_CONTENT_RENDERER.decorateShell({
+    shell,
+    widget: {
+      variant: "media-page-panel",
+      responsiveSizeMode: "media-page-panel",
+    },
+  });
+
+  assert.equal(shell.dataset.mediaVariant, "media-panel");
+
+  globalThis.document = {
+    documentElement: {
+      dataset: {
+        themeStyle: "oneui",
+      },
+    },
+  };
+
+  MEDIA_WIDGET_CONTENT_RENDERER.decorateShell({
+    shell,
+    widget: {
+      variant: "media-page-panel",
+      responsiveSizeMode: "media-page-panel",
+    },
+  });
+
+  assert.equal(shell.dataset.mediaVariant, "media-page-panel");
+  globalThis.document = originalDocument;
 });

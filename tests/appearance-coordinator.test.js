@@ -38,6 +38,9 @@ function createHost() {
         return classSet.has(token);
       },
     },
+    _pageUiCoordinator: {
+      syncPageCreator() {},
+    },
   };
 }
 
@@ -232,6 +235,23 @@ test("appearance refresh is triggered after theme sync", async () => {
   ]);
   assert.deepEqual(harness.calls.slice(3), [
     "refreshActiveGridOnly",
+    "scheduleIconSymbolRefresh",
+  ]);
+});
+
+test("appearance refresh resyncs the page creator with the new theme style", () => {
+  const harness = createHarness();
+  harness.host._pageUiCoordinator = {
+    syncPageCreator() {
+      harness.calls.push("syncPageCreator");
+    },
+  };
+
+  assert.equal(harness.coordinator.refreshAppearanceDom(), true);
+  assert.deepEqual(harness.calls, [
+    "syncDocksDom",
+    "refreshActiveGridOnly",
+    "syncPageCreator",
     "scheduleIconSymbolRefresh",
   ]);
 });

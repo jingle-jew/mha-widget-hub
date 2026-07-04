@@ -151,6 +151,26 @@ test("status bar mode remains a shell-owned layout input instead of a settings-o
   );
 });
 
+test("status bar clearance stays consistent across top-bar and media-page layouts", () => {
+  const gridSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "layout", "widget-grid.css"),
+    "utf8",
+  );
+
+  assert.match(
+    gridSource,
+    /--mha-shell-statusbar-bottom-gap:\s*var\(--mha-page-padding\);/,
+  );
+  assert.match(
+    gridSource,
+    /\[data-status-bar-mode="top-bar"\][\s\S]*--mha-statusbar-reserved-top:\s*calc\([\s\S]*var\(--mha-statusbar-top-bar-height\)[\s\S]*var\(--mha-shell-statusbar-bottom-gap\)[\s\S]*\);/,
+  );
+  assert.match(
+    gridSource,
+    /\[data-status-bar-visible="true"\]:not\(\[data-status-bar-mode="hidden"\]\)\[data-media-page-active="true"\]\)\s+\.mha-widget-area\s*\{[\s\S]*--mha-widget-area-top-gutter:\s*var\(--mha-statusbar-reserved-top,\s*var\(--mha-page-padding\)\)\s*!important;/,
+  );
+});
+
 test("mobile shell keeps the background viewport-anchored while widget content owns scrolling", () => {
   const gridSource = fs.readFileSync(
     path.join(REPO_ROOT, "styles", "layout", "widget-grid.css"),

@@ -19,7 +19,7 @@ import {
 import { getLayoutForWidth } from "./responsive.js";
 import { createPagePanel } from "../pages/page-panel.js";
 import { syncMediaPageSettingsPanel } from "../pages/media-page-settings.js";
-import { isMediaPlayersPage } from "../pages/page-types.js";
+import { isMediaPageExperienceActive } from "../pages/page-types.js";
 import {
   captureSettingsPanelsUiState,
   restoreSettingsPanelsUiState,
@@ -34,6 +34,8 @@ import {
   createWidgetManagerPanel,
   syncWidgetSurfaceOpenState,
 } from "../widgets/widget-placement-orchestrator.js";
+
+const STYLE_SETTLE_TIMEOUT_MS = 900;
 
 function getActivePage(host) {
   return host._getActivePage?.() || null;
@@ -50,6 +52,10 @@ function getShellViewportMetrics(host) {
   };
 }
 
+function setHostRenderState(host, state = "ready") {
+  if (host?.dataset) host.dataset.renderState = state;
+}
+
 export function createRenderPipeline(host, options = {}) {
   const {
     frontendRootUrl,
@@ -61,8 +67,12 @@ export function createRenderPipeline(host, options = {}) {
     activePage = getActivePage(host),
     artworkUrl = "",
     blurBackground = activePage?.config?.blurBackground !== false,
+    themeStyle = host?.dataset?.themeStyle || "",
   } = {}) {
-    const isMediaPage = isMediaPlayersPage(activePage);
+    const isMediaPage = isMediaPageExperienceActive(
+      activePage,
+      themeStyle,
+    );
     host.dataset.activePageType = activePage?.type || "grid";
     host.dataset.mediaPageActive = String(isMediaPage);
     host.dataset.mediaPageBackgroundBlur = String(isMediaPage && blurBackground);
@@ -304,7 +314,7 @@ export function createRenderPipeline(host, options = {}) {
   function prepareRenderCycle({ renderId, themeState }) {
     host._applyCustomWallpaperState(themeState);
     host._applyHaSidebarMode(host._hideHaSidebar);
-    syncMediaPageBackdropState();
+    syncMediaPageBackdropState({ themeStyle: themeState?.themeStyle || "" });
     host._renderId = renderId;
     cancelAnimationFrame(host._widgetRenderFrame);
     cancelAnimationFrame(host._secondaryUiFrame);
@@ -312,6 +322,7 @@ export function createRenderPipeline(host, options = {}) {
     host._clearTouchEditLongPress?.();
     host._stylesReadyRenderId = 0;
     host.dataset.widgetsState = "pending";
+    setHostRenderState(host, host._bootComplete ? "stabilizing" : "booting");
   }
 
   function applyRenderDatasetsAndRuntimeVars({
@@ -520,6 +531,7 @@ export function createRenderPipeline(host, options = {}) {
     host._scheduleIconSymbolRefresh();
     if (host._bootComplete) {
       appendDeferredUi({ layout, renderId });
+      setHostRenderState(host, "ready");
       return;
     }
     host._pendingDeferredUi = { layout, renderId };
@@ -530,23 +542,54 @@ export function createRenderPipeline(host, options = {}) {
     console.warn("[MHA] Styles did not finish loading; revealing the shell.", error);
     if (host._bootComplete) {
       appendDeferredUi({ layout, renderId });
+      setHostRenderState(host, "ready");
       return;
     }
     host._pendingDeferredUi = { layout, renderId };
     host._finishBoot({ fallback: true, reason: "stylesheet initialization failed" });
   }
 
-  function awaitStylesAndFinalizeRender({ links, layout, renderId }) {
-    return Promise.all(links.map((link) => (
-      link.sheet
-        ? Promise.resolve()
-        : new Promise((resolve) => {
-          link.addEventListener("load", resolve, { once: true });
-          link.addEventListener("error", resolve, { once: true });
-        })
-    )))
-      .then(() => handleStylesReady({ layout, renderId }))
-      .catch((error) => handleStylesError({ layout, renderId, error }));
+  function awaitStylesAndFinalizeRender({
+    links,
+    layout,
+    renderId,
+    styleSettleTimeoutMs = STYLE_SETTLE_TIMEOUT_MS,
+    setTimeoutRef = setTimeout,
+    clearTimeoutRef = clearTimeout,
+  }) {
+    return new Promise((resolve) => {
+      let settled = false;
+      let settleTimer = 0;
+
+      const settleWith = (handler, detail) => {
+        if (settled) return;
+        settled = true;
+        clearTimeoutRef(settleTimer);
+        Promise.resolve(handler(detail)).finally(resolve);
+      };
+
+      const settleReady = () => settleWith(handleStylesReady, { layout, renderId });
+      const settleError = (error) => settleWith(handleStylesError, { layout, renderId, error });
+
+      try {
+        const waitForLinks = Promise.all((links || []).map((link) => (
+          link.sheet
+            ? Promise.resolve()
+            : new Promise((linkResolve) => {
+              link.addEventListener("load", linkResolve, { once: true });
+              link.addEventListener("error", linkResolve, { once: true });
+            })
+        )));
+
+        settleTimer = setTimeoutRef(() => {
+          settleError(new Error("stylesheet initialization timed out"));
+        }, styleSettleTimeoutMs);
+
+        waitForLinks.then(settleReady).catch(settleError);
+      } catch (error) {
+        settleError(error);
+      }
+    });
   }
 
   function render() {

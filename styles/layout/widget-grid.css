@@ -102,7 +102,7 @@
   min-inline-size: 0;
   min-block-size: 0;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .mha-page-panel--grid {
@@ -188,7 +188,7 @@
   padding-block-end: 0;
 }
 
-:host([data-status-bar-mode="top-bar"][data-media-page-active="true"]) .mha-widget-area {
+:host([data-status-bar-visible="true"]:not([data-status-bar-mode="hidden"])[data-media-page-active="true"]) .mha-widget-area {
   --mha-widget-area-top-gutter: var(--mha-statusbar-reserved-top, var(--mha-page-padding)) !important;
 }
 
@@ -348,15 +348,8 @@
   overflow: visible;
 }
 
-:host([data-layout="mobile"][data-media-page-active="true"]) {
-  overflow-y: hidden;
-  overscroll-behavior-y: none;
-}
-
 :host([data-layout="mobile"][data-media-page-active="true"]) .mha-widget-area {
   padding-inline: 0;
-  overflow-y: hidden;
-  overscroll-behavior-y: none;
 }
 
 :host([data-status-bar-visible="false"]) {
@@ -439,7 +432,7 @@
     --mha-shell-statusbar-height: clamp(2.25rem, 3.2vw, 2.85rem);
     --mha-statusbar-height-compact: var(--mha-shell-statusbar-height);
     --mha-statusbar-top-bar-height: var(--mha-shell-statusbar-height);
-    --mha-shell-statusbar-bottom-gap: clamp(.7rem, 1.4vw, 1rem);
+    --mha-shell-statusbar-bottom-gap: var(--mha-page-padding);
     --mha-statusbar-reserved-top: calc(
       var(--mha-floating-top, clamp(1rem, 2.4vw, 1.6rem))
       + var(--mha-shell-statusbar-height)
@@ -471,6 +464,7 @@
     --mha-statusbar-reserved-top: calc(
       var(--mha-safe-top, 0px)
       + var(--mha-statusbar-top-bar-height)
+      + var(--mha-shell-statusbar-bottom-gap)
     );
   }
 

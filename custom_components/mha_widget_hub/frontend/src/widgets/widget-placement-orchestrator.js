@@ -119,6 +119,7 @@ export function syncWidgetConfigPanel(root, props = {}) {
 
 export function buildPageCreatorPanelProps({
   open = false,
+  themeStyle = "oneui",
   selectedPageType = "grid",
   onClose = () => {},
   onSelectPageType = () => {},
@@ -127,6 +128,7 @@ export function buildPageCreatorPanelProps({
   return {
     ...buildPageCreatorState({
       open,
+      themeStyle,
       selectedPageType,
     }),
     onClose,

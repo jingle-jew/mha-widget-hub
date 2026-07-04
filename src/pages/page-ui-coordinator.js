@@ -21,7 +21,9 @@ import {
 import {
   createDefaultPageConfig,
   getDefaultPageIcon,
+  isMediaPageExperienceActive,
   isMediaPlayersPage,
+  isOneUiMediaPageTheme,
   PAGE_TYPES,
 } from "./page-types.js";
 
@@ -143,6 +145,7 @@ export class PageUiCoordinator {
   buildPageCreatorProps() {
     return this.buildPageCreatorPanelPropsFn({
       open: this.getPageCreatorOpen(),
+      themeStyle: this.getThemeStyle(),
       selectedPageType: this.getNewPageType() || PAGE_TYPES.GRID,
       onClose: () => this.closePageCreator(),
       onSelectPageType: (type) => this.setPageCreatorType(type),
@@ -154,12 +157,21 @@ export class PageUiCoordinator {
     this.syncPageCreatorPanelFn(this.getRoot(), this.buildPageCreatorProps());
   }
 
+  pageNeedsFullRender(page = null) {
+    return isMediaPageExperienceActive(page, this.getThemeStyle());
+  }
+
   shouldUseFullRenderForPageTransition(previousPage, nextPage) {
-    return isMediaPlayersPage(previousPage) || isMediaPlayersPage(nextPage);
+    return this.pageNeedsFullRender(previousPage) || this.pageNeedsFullRender(nextPage);
   }
 
   refreshAfterActivePageChange(previousPage, nextPage) {
-    if (previousPage?.id && nextPage?.id && previousPage.id !== nextPage.id) {
+    if (
+      previousPage?.id
+      && nextPage?.id
+      && previousPage.id !== nextPage.id
+      && this.shouldUseFullRenderForPageTransition(previousPage, nextPage)
+    ) {
       this.transitionPageRender(previousPage, nextPage);
       return true;
     }
@@ -232,7 +244,9 @@ export class PageUiCoordinator {
   }
 
   setPageCreatorType(type = PAGE_TYPES.GRID) {
-    const nextType = type || PAGE_TYPES.GRID;
+    const nextType = !isOneUiMediaPageTheme(this.getThemeStyle()) && type === PAGE_TYPES.MEDIA_PLAYERS
+      ? PAGE_TYPES.GRID
+      : (type || PAGE_TYPES.GRID);
     this.setNewPageType(nextType);
     this.updatePageCreatorTypeSelectionFn(this.getRoot(), nextType);
     return true;
@@ -240,7 +254,9 @@ export class PageUiCoordinator {
 
   createPageFromCreator() {
     if (!this.getIsEditing()) return false;
-    const pageType = this.getNewPageType() || PAGE_TYPES.GRID;
+    const pageType = !isOneUiMediaPageTheme(this.getThemeStyle())
+      ? PAGE_TYPES.GRID
+      : (this.getNewPageType() || PAGE_TYPES.GRID);
     return this.addPage({
       pageType,
       icon: getDefaultPageIcon(pageType),
