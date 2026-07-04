@@ -38,15 +38,21 @@
  * Mobile remains hidden by its mobile rule.
  */
 :host {
+  --mha-ha-sidebar-reserved-inline-start: 0px;
   --mha-statusbar-shadow-soft:
     0 8px 22px rgba(0,0,0,.12),
     inset 0 1px 0 rgba(255,255,255,.12);
 }
 
+:host([data-ha-sidebar-hidden="false"][data-layout="tablet"]),
+:host([data-ha-sidebar-hidden="false"][data-layout="desktop"]) {
+  --mha-ha-sidebar-reserved-inline-start: 256px;
+}
+
 @media (min-width: 768px) {
   .mha-status-bar {
     top: var(--mha-floating-top);
-    left: var(--mha-page-padding);
+    left: calc(var(--mha-page-padding) + var(--mha-ha-sidebar-reserved-inline-start, 0px));
     right: max(var(--mha-safe-area-right, env(safe-area-inset-right)), clamp(0.75rem, 1.8vw, 1.25rem));
     width: auto;
     height: var(--mha-statusbar-height-compact);
@@ -114,7 +120,7 @@
   height: auto;
   padding-block-start: var(--mha-safe-top, 0px);
   padding-block-end: var(--mha-statusbar-top-bar-padding-block-end, 0px);
-  padding-inline-start: max(var(--mha-page-padding), var(--mha-safe-left, 0px));
+  padding-inline-start: max(calc(var(--mha-page-padding) + var(--mha-ha-sidebar-reserved-inline-start, 0px)), var(--mha-safe-left, 0px));
   padding-inline-end: max(var(--mha-page-padding), var(--mha-safe-right, 0px));
   border-radius: var(--mha-statusbar-top-bar-radius, 0px);
   border-top: 0;
