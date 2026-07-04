@@ -88,6 +88,26 @@
     --mha-dock-gap: clamp(.08rem, .28vw, .2rem);
     --mha-icon-size: clamp(2.24rem, 2.62vw, 2.7rem);
   }
+
+  :host([data-theme-style="oneui"][data-layout-variant="mobile-landscape"]) .mha-dock {
+    border-radius: 0;
+    padding-block: max(
+      var(--mha-dock-rail-padding-block, 0px),
+      var(--mha-mobile-grid-gutter, 0px)
+    );
+    max-block-size: calc(
+      100%
+      - var(--mha-mobile-landscape-dock-top-offset, 0px)
+      - var(--mha-mobile-landscape-dock-bottom-offset, 0px)
+    );
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    scroll-padding-block: max(
+      var(--mha-dock-rail-padding-block, 0px),
+      var(--mha-mobile-grid-gutter, 0px)
+    );
+  }
 }
 
 :host([data-theme-style="oneui"]) .mha-dock-item,
