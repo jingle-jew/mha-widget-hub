@@ -977,6 +977,132 @@
   color: rgba(255,255,255,.96);
 }
 
+:host([data-layout="mobile"]:not([data-layout-variant="mobile-landscape"])[data-theme-style="oneui"]) .mha-widget[data-widget-kind="media"][data-media-variant="media-page-panel"] {
+  overflow: visible;
+}
+
+:host([data-layout="mobile"]:not([data-layout-variant="mobile-landscape"])[data-theme-style="oneui"]) .mha-widget[data-widget-kind="media"][data-media-variant="media-page-panel"] > .mha-media-widget[data-media-size="4x4"] {
+  overflow: visible;
+}
+
+:host([data-layout="mobile"]:not([data-layout-variant="mobile-landscape"])[data-theme-style="oneui"]) .mha-widget[data-widget-kind="media"][data-media-variant="media-page-panel"] .mha-media-widget-transport {
+  position: relative;
+}
+
+:host([data-layout="mobile"]:not([data-layout-variant="mobile-landscape"])[data-theme-style="oneui"]) .mha-widget[data-widget-kind="media"][data-media-variant="media-page-panel"] .mha-media-widget-transport::after {
+  content: "";
+  position: absolute;
+  inset-inline: clamp(1rem, 5cqi, 1.7rem);
+  inset-block-end: calc(clamp(1.15rem, 6cqb, 1.7rem) * -1);
+  block-size: clamp(3.8rem, 18cqb, 5.6rem);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--mha-accent) 58%, transparent);
+  filter: blur(clamp(1.3rem, 6cqb, 1.95rem));
+  opacity: .58;
+  pointer-events: none;
+  z-index: -1;
+}
+
+:host([data-layout-variant="mobile-landscape"][data-theme-style="oneui"]) .mha-widget[data-widget-kind="media"][data-media-variant="media-page-panel"] > .mha-media-widget[data-media-size="4x4"] {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  align-content: stretch;
+  align-items: stretch;
+  justify-items: stretch;
+  gap: clamp(.8rem, 2.2vw, 1rem);
+  --mha-media-padding: clamp(.8rem, 2.4vw, 1rem);
+  --mha-media-gap: clamp(.56rem, 1.8vw, .82rem);
+  --mha-media-control-gap: clamp(.95rem, 2.8vw, 1.35rem);
+}
+
+:host([data-layout-variant="mobile-landscape"][data-theme-style="oneui"]) .mha-widget[data-widget-kind="media"][data-media-variant="media-page-panel"] .mha-media-widget-artwork {
+  grid-column: 1;
+  grid-row: 1;
+  inline-size: min(100%, clamp(8.8rem, 26vw, 12.4rem));
+  justify-self: start;
+  align-self: start;
+}
+
+:host([data-layout-variant="mobile-landscape"][data-theme-style="oneui"]) .mha-widget[data-widget-kind="media"][data-media-variant="media-page-panel"] .mha-media-widget-info {
+  grid-column: 1;
+  grid-row: 2;
+  inline-size: 100%;
+  justify-items: start;
+  text-align: start;
+  align-self: end;
+  gap: clamp(.26rem, 1vw, .42rem);
+}
+
+:host([data-layout-variant="mobile-landscape"][data-theme-style="oneui"]) .mha-widget[data-widget-kind="media"][data-media-variant="media-page-panel"] .mha-media-widget-text {
+  justify-items: start;
+  text-align: start;
+}
+
+:host([data-layout-variant="mobile-landscape"][data-theme-style="oneui"]) .mha-widget[data-widget-kind="media"][data-media-variant="media-page-panel"] .mha-media-widget-title {
+  font-size: clamp(1.18rem, 3.2vw, 1.52rem);
+}
+
+:host([data-layout-variant="mobile-landscape"][data-theme-style="oneui"]) .mha-widget[data-widget-kind="media"][data-media-variant="media-page-panel"] .mha-media-widget-artist {
+  font-size: clamp(.82rem, 2vw, .98rem);
+}
+
+:host([data-layout-variant="mobile-landscape"][data-theme-style="oneui"]) .mha-widget[data-widget-kind="media"][data-media-variant="media-page-panel"] .mha-media-widget-meta-details {
+  display: grid;
+}
+
+:host([data-layout-variant="mobile-landscape"][data-theme-style="oneui"]) .mha-widget[data-widget-kind="media"][data-media-variant="media-page-panel"] .mha-media-widget-source {
+  font-weight: 520;
+  color: rgba(255,255,255,.78);
+}
+
+:host([data-layout-variant="mobile-landscape"][data-theme-style="oneui"]) .mha-widget[data-widget-kind="media"][data-media-variant="media-page-panel"] .mha-media-widget-transport {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  inline-size: 100%;
+  block-size: 100%;
+  align-self: stretch;
+  margin-block-start: 0;
+  display: grid;
+  align-content: stretch;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: clamp(.78rem, 2vw, .98rem);
+}
+
+:host([data-layout-variant="mobile-landscape"][data-theme-style="oneui"]) .mha-widget[data-widget-kind="media"][data-media-variant="media-page-panel"] .mha-media-widget-meta-rows {
+  justify-content: start;
+}
+
+:host([data-layout-variant="mobile-landscape"][data-theme-style="oneui"]) .mha-widget[data-widget-kind="media"][data-media-variant="media-page-panel"] .mha-media-widget-chip {
+  flex: 0 1 auto;
+}
+
+:host([data-layout-variant="mobile-landscape"][data-theme-style="oneui"]) .mha-widget[data-widget-kind="media"][data-media-variant="media-page-panel"] .mha-media-widget-progress-shell {
+  align-self: start;
+}
+
+:host([data-layout-variant="mobile-landscape"][data-theme-style="oneui"]) .mha-widget[data-widget-kind="media"][data-media-variant="media-page-panel"] .mha-media-widget-controls-shell {
+  align-self: end;
+  margin-block-start: auto;
+  gap: clamp(.9rem, 2.6vw, 1.15rem);
+}
+
+:host([data-layout-variant="mobile-landscape"][data-theme-style="oneui"]) .mha-widget[data-widget-kind="media"][data-media-variant="media-page-panel"] .mha-media-widget-controls {
+  inline-size: 100%;
+  grid-template-columns: minmax(0, 1fr) max-content minmax(0, 1fr);
+}
+
+:host([data-layout-variant="mobile-landscape"][data-theme-style="oneui"]) .mha-widget[data-widget-kind="media"][data-media-variant="media-page-panel"] .mha-media-widget-controls > :first-child {
+  justify-self: start;
+}
+
+:host([data-layout-variant="mobile-landscape"][data-theme-style="oneui"]) .mha-widget[data-widget-kind="media"][data-media-variant="media-page-panel"] .mha-media-widget-controls > :nth-child(2) {
+  justify-self: center;
+}
+
+:host([data-layout-variant="mobile-landscape"][data-theme-style="oneui"]) .mha-widget[data-widget-kind="media"][data-media-variant="media-page-panel"] .mha-media-widget-controls > :last-child {
+  justify-self: end;
+}
+
 :host([data-layout="desktop"][data-theme-style="oneui"]) .mha-media-widget[data-media-size="4x4"] .mha-media-widget-artwork {
   inline-size: 100%;
   max-inline-size: none;

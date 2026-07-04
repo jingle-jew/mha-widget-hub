@@ -172,3 +172,9 @@
   background: transparent;
   color: var(--mha-text-primary, #fff);
 }
+
+@media (max-width: 767px) {
+  .mha-page-creator[data-mobile-presentation="sheet"] .mha-page-creator-sheet {
+    padding-block-end: calc(clamp(1rem, 3vw, 1.35rem) + var(--mha-mobile-sheet-bottom-comfort, 0px));
+  }
+}

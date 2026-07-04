@@ -108,7 +108,7 @@
 :host([data-status-bar-mode="top-bar"]) .mha-status-bar {
   position: fixed;
   top: 0;
-  left: 0;
+  left: max(var(--mha-ha-sidebar-reserved-inline-start, 0px), var(--mha-safe-left, 0px));
   right: 0;
   z-index: 12;
   width: auto;
@@ -120,7 +120,7 @@
   height: auto;
   padding-block-start: var(--mha-safe-top, 0px);
   padding-block-end: var(--mha-statusbar-top-bar-padding-block-end, 0px);
-  padding-inline-start: max(calc(var(--mha-page-padding) + var(--mha-ha-sidebar-reserved-inline-start, 0px)), var(--mha-safe-left, 0px));
+  padding-inline-start: var(--mha-page-padding);
   padding-inline-end: max(var(--mha-page-padding), var(--mha-safe-right, 0px));
   border-radius: var(--mha-statusbar-top-bar-radius, 0px);
   border-top: 0;

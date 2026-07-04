@@ -16,6 +16,10 @@ export function createResponsiveDockCoordinator(host) {
     return dock.querySelector?.(".mha-mobile-dock-track") || dock;
   }
 
+  function getStandardDockScrollContainer() {
+    return host.shadowRoot?.querySelector?.(".mha-dock") || null;
+  }
+
   function scheduleMobileDockOverflowState() {
     cancelAnimationFrame(host._mobileDockOverflowFrame || 0);
     host._mobileDockOverflowFrame = requestAnimationFrame(() => {
@@ -35,6 +39,19 @@ export function createResponsiveDockCoordinator(host) {
     const overflowing = scrollContainer.scrollWidth > scrollContainer.clientWidth + 1;
     dock.dataset.overflowing = String(overflowing);
     return overflowing;
+  }
+
+  function isVerticalDockAutoScrollLayout() {
+    const responsiveState = getResponsiveState();
+    if (responsiveState?.dockFamily) {
+      return responsiveState.dockFamily === "side"
+        && (
+          responsiveState.layout !== "mobile"
+          || responsiveState.layoutVariant === "mobile-landscape"
+        );
+    }
+
+    return isMobileLandscapeLayout() || !isMobileLauncherLayout();
   }
 
   function scheduleMobileDockEditScroll() {
@@ -60,15 +77,45 @@ export function createResponsiveDockCoordinator(host) {
     });
   }
 
+  function scheduleStandardDockEditScroll() {
+    cancelAnimationFrame(host._standardDockEditScrollFrame || 0);
+    host._standardDockEditScrollFrame = requestAnimationFrame(() => {
+      host._standardDockEditScrollFrame = 0;
+      const dock = getStandardDockScrollContainer();
+      if (!dock) return;
+      if (!isVerticalDockAutoScrollLayout()) return;
+      if (!host._isEditing || host._activeMoveWidgetId || host._pendingWidgetPlacement) return;
+      if (dock.scrollHeight <= dock.clientHeight + 1) return;
+      const maxScrollTop = Math.max(0, dock.scrollHeight - dock.clientHeight);
+      if (typeof dock.scrollTo === "function") {
+        dock.scrollTo({
+          top: maxScrollTop,
+          behavior: "smooth",
+        });
+        return;
+      }
+      dock.scrollTop = maxScrollTop;
+    });
+  }
+
   function syncMobileDockEditScroll() {
     const isEditing = Boolean(host._isEditing);
     const enteredEditMode = !host._wasMobileDockEditing && isEditing;
     host._wasMobileDockEditing = isEditing;
     if (!enteredEditMode) return false;
-    if (!isMobileLauncherLayout() || isMobileLandscapeLayout()) return false;
     if (host._activeMoveWidgetId || host._pendingWidgetPlacement) return false;
-    scheduleMobileDockEditScroll();
-    return true;
+
+    if (isMobileLauncherLayout() && !isMobileLandscapeLayout()) {
+      scheduleMobileDockEditScroll();
+      return true;
+    }
+
+    if (isVerticalDockAutoScrollLayout()) {
+      scheduleStandardDockEditScroll();
+      return true;
+    }
+
+    return false;
   }
 
   function syncStatusBarFillScrollState(scrolled = false) {

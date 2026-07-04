@@ -58,7 +58,10 @@ import { createGridRuntime } from "./src/layout/grid-runtime.js";
 import {normalizeClockVariant,updateScreensaverClock} from "./src/screensaver/screensaver.js";
 import { createScreensaverController } from "./src/screensaver/screensaver-controller.js";
 import { createScreensaverCoordinator } from "./src/screensaver/screensaver-coordinator.js?v=phase9";
-import { applyHaSidebarMode } from "./src/core/ha-sidebar-mode.js";
+import {
+  applyHaSidebarMode,
+  resolveHaSidebarReservedWidth,
+} from "./src/core/ha-sidebar-mode.js";
 import { applyHubRuntimeDefaults } from "./src/core/hub-runtime-defaults.js";
 import { scheduleIconSymbolRefresh } from "./src/core/icon-symbol-refresh-scheduler.js";
 import { upgradePredefinedProperty } from "./src/core/custom-element-property.js";
@@ -639,6 +642,14 @@ _applyDockPositionFromSettings(position="left"){
 }
 _applyHaSidebarMode(enabled=false){
   this.dataset.haSidebarHidden = String(Boolean(enabled));
+  this.style.setProperty(
+    "--mha-ha-sidebar-reserved-inline-start",
+    `${resolveHaSidebarReservedWidth({
+      enabled,
+      documentRef: this.ownerDocument || document,
+      windowRef: window,
+    })}px`,
+  );
   return applyHaSidebarMode(enabled);
 }
 _applyHideHaSidebarFromSettings(enabled=false){

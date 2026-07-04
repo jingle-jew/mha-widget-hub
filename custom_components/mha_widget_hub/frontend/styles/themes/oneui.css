@@ -18,8 +18,8 @@
   --mha-shell-dock-surface:
     linear-gradient(
       145deg,
-      color-mix(in srgb, rgba(255,255,255,.88) 84%, var(--mha-accent) 6%),
-      color-mix(in srgb, rgba(245,248,255,.72) 88%, var(--mha-accent) 4%)
+      color-mix(in srgb, rgba(255,255,255,.94) 90%, var(--mha-accent) 5%),
+      color-mix(in srgb, rgba(245,248,255,.86) 92%, var(--mha-accent) 3%)
     );
   --mha-shell-border: color-mix(in srgb, rgba(255,255,255,.72) 84%, var(--mha-accent) 8%);
   --mha-shell-shadow: 0 8px 22px rgba(76,92,120,.075);
@@ -42,6 +42,13 @@
   --mha-dock-surface: linear-gradient(145deg, rgba(255,255,255,.80), rgba(255,246,238,.62));
   --mha-dock-slot-surface: linear-gradient(145deg, rgba(255,255,255,.88), rgba(236,244,255,.70));
   --mha-statusbar-surface: linear-gradient(145deg, rgba(255,255,255,.80), rgba(255,246,238,.62));
+  --mha-oneui-mobile-dock-surface:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, rgba(250,251,255,.98) 94%, var(--mha-accent) 3%),
+      color-mix(in srgb, rgba(240,244,250,.94) 96%, var(--mha-accent) 2%)
+    );
+  --mha-oneui-mobile-dock-border: color-mix(in srgb, rgba(255,255,255,.84) 86%, var(--mha-accent) 6%);
   --mha-control-surface: rgba(255,255,255,.58);
   --mha-control-surface-edit: rgba(255,255,255,.74);
   --mha-oneui-panel-surface:
@@ -96,6 +103,13 @@
   --mha-dock-surface: linear-gradient(145deg, rgba(255,240,226,.22), rgba(255,255,255,.13));
   --mha-dock-slot-surface: linear-gradient(145deg, rgba(101,168,255,.22), rgba(255,135,183,.12));
   --mha-statusbar-surface: linear-gradient(145deg, rgba(255,240,226,.20), rgba(255,255,255,.115));
+  --mha-oneui-mobile-dock-surface:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, rgba(34,38,48,.92) 92%, var(--mha-accent) 5%),
+      color-mix(in srgb, rgba(24,28,36,.88) 94%, var(--mha-accent) 3%)
+    );
+  --mha-oneui-mobile-dock-border: color-mix(in srgb, rgba(255,255,255,.24) 78%, var(--mha-accent) 6%);
   --mha-control-surface: rgba(255,240,226,.16);
   --mha-control-surface-edit: rgba(255,240,226,.24);
   --mha-oneui-panel-surface:
@@ -117,8 +131,8 @@
   --mha-shell-dock-surface:
     linear-gradient(
       145deg,
-      color-mix(in srgb, rgba(255,255,255,.16) 88%, var(--mha-accent) 7%),
-      color-mix(in srgb, rgba(255,255,255,.09) 92%, var(--mha-accent) 4%)
+      color-mix(in srgb, rgba(255,255,255,.28) 90%, var(--mha-accent) 6%),
+      color-mix(in srgb, rgba(255,255,255,.18) 92%, var(--mha-accent) 3%)
     );
   --mha-shell-border: color-mix(in srgb, rgba(255,255,255,.18) 78%, var(--mha-accent) 6%);
   --mha-shell-shadow: 0 10px 24px rgba(0,0,0,.18);
