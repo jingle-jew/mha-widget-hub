@@ -119,13 +119,9 @@ test("selecting a page closes placement state and reloads widgets", () => {
   assert.equal(state.widgetManagerOpen, false);
   assert.equal(state.widgetManagerCategory, "");
   assert.deepEqual(calls.writeActivePage, ["lights"]);
-  assert.deepEqual(calls.transitionPageRender, [{
-    previousPageId: "home",
-    nextPageId: "lights",
-    previousPageType: "grid",
-    nextPageType: "grid",
-  }]);
-  assert.equal(calls.refreshActiveGridOnly, 0);
+  assert.deepEqual(calls.transitionPageRender, []);
+  assert.equal(calls.refreshActiveGridOnly, 1);
+  assert.equal(calls.syncWidgetDropSlots, 1);
   assert.equal(calls.syncDocks, 1);
 });
 
@@ -158,14 +154,9 @@ test("deleting a selected dock-detail page returns settings to dock and cleans p
   assert.deepEqual(calls.writeWidgetPositions, [{
     "home:desktop:8x6": { clock: { x: 1, y: 1 } },
   }]);
-  assert.deepEqual(calls.transitionPageRender, [{
-    previousPageId: "lights",
-    nextPageId: "home",
-    previousPageType: "grid",
-    nextPageType: "grid",
-  }]);
-  assert.equal(calls.refreshActiveGridOnly, 0);
-  assert.equal(calls.syncWidgetDropSlots, 0);
+  assert.deepEqual(calls.transitionPageRender, []);
+  assert.equal(calls.refreshActiveGridOnly, 1);
+  assert.equal(calls.syncWidgetDropSlots, 1);
 });
 
 test("creating a media page resets the page creator state and seeds a normal grid page", () => {

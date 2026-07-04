@@ -373,6 +373,44 @@ test("style finalization schedules mobile dock overflow sync when styles are rea
   ]);
 });
 
+test("style finalization times out stalled stylesheets and falls back cleanly", async () => {
+  const prototype = await loadHubPrototype();
+  const calls = [];
+  const host = {
+    _renderId: 21,
+    _bootComplete: false,
+    _pendingDeferredUi: null,
+    dataset: {},
+    _handleStylesReady(detail) {
+      calls.push(["handleStylesReady", detail]);
+    },
+    _handleStylesError(detail) {
+      calls.push(["handleStylesError", detail.reason || detail.error?.message || ""]);
+    },
+    _finishBoot(detail) {
+      calls.push(["finishBoot", detail]);
+    },
+  };
+  host._handleStylesReady = (detail) => prototype._handleStylesReady.call(host, detail);
+  host._handleStylesError = (detail) => prototype._handleStylesError.call(host, detail);
+
+  await prototype._awaitStylesAndFinalizeRender.call(host, {
+    links: [{
+      sheet: null,
+      addEventListener() {},
+    }],
+    layout: "desktop",
+    renderId: 21,
+    styleSettleTimeoutMs: 0,
+  });
+
+  assert.deepEqual(host._pendingDeferredUi, { layout: "desktop", renderId: 21 });
+  assert.deepEqual(calls, [[
+    "finishBoot",
+    { fallback: true, reason: "stylesheet initialization failed" },
+  ]]);
+});
+
 test("mountRenderShell preserves the existing background node across rerenders", async () => {
   const prototype = await loadHubPrototype();
   const previousDocument = globalThis.document;

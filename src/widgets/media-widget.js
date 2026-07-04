@@ -426,13 +426,38 @@ function resolveMediaPagePanelSize({
   context = {},
   fallbackSize = {},
 } = {}) {
+  const themeStyle = String(
+    context?.themeStyle
+    || globalThis?.document?.documentElement?.dataset?.themeStyle
+    || "",
+  ).trim().toLowerCase();
+  const viewportHeight = Math.max(
+    0,
+    Number(context?.viewportHeight)
+    || Number(context?.availableContentRect?.height)
+    || Number(context?.panelFrameHeight)
+    || Number(globalThis?.window?.innerHeight)
+    || 0,
+  );
   const isMobileLandscape = context?.layoutVariant === "mobile-landscape"
     || (context?.layout === "mobile" && (Number(context?.units) || 0) >= 8);
+  const isLowHeightOneUiPanel = themeStyle === "oneui"
+    && context?.layout !== "mobile"
+    && !isMobileLandscape
+    && viewportHeight > 0
+    && viewportHeight <= 780;
 
   if (isMobileLandscape) {
     return {
       w: Math.max(8, Number(fallbackSize?.w) || 8),
       h: 4,
+    };
+  }
+
+  if (isLowHeightOneUiPanel) {
+    return {
+      w: Math.max(8, Number(fallbackSize?.w) || 8),
+      h: 6,
     };
   }
 

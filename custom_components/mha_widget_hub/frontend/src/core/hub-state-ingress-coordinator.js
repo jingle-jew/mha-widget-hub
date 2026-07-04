@@ -107,6 +107,7 @@ export function createHubStateIngressCoordinator(host, {
     host._initialized = true;
     host.attachShadow({ mode: "open" });
     host.dataset.bootState = "booting";
+    host.dataset.renderState = "booting";
     host.dataset.dataState = host._hass ? "ready" : "loading";
     host.dataset.widgetsState = "pending";
     host.dataset.ready = "false";

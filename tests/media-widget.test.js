@@ -127,16 +127,49 @@ test("media page panel resolves responsive sizes without collapsing back to 4x4"
       units: 8,
       rowUnits: 4,
       layout: "mobile",
+      themeStyle: "oneui",
       layoutVariant: "mobile-landscape",
     }),
     { w: 8, h: 4 },
   );
   assert.deepEqual(
-    normalizeWidgetForKind(widget, { units: 8, rowUnits: 8, layout: "tablet" }),
+    normalizeWidgetForKind(widget, {
+      units: 8,
+      rowUnits: 8,
+      layout: "tablet",
+      themeStyle: "oneui",
+      viewportHeight: 900,
+    }),
     { w: 6, h: 8 },
   );
   assert.deepEqual(
-    normalizeWidgetForKind(widget, { units: 12, rowUnits: 8, layout: "desktop" }),
+    normalizeWidgetForKind(widget, {
+      units: 12,
+      rowUnits: 8,
+      layout: "desktop",
+      themeStyle: "oneui",
+      viewportHeight: 900,
+    }),
     { w: 6, h: 8 },
+  );
+  assert.deepEqual(
+    normalizeWidgetForKind(widget, {
+      units: 8,
+      rowUnits: 8,
+      layout: "tablet",
+      themeStyle: "oneui",
+      viewportHeight: 760,
+    }),
+    { w: 8, h: 6 },
+  );
+  assert.deepEqual(
+    normalizeWidgetForKind(widget, {
+      units: 12,
+      rowUnits: 8,
+      layout: "desktop",
+      themeStyle: "oneui",
+      viewportHeight: 760,
+    }),
+    { w: 8, h: 6 },
   );
 });

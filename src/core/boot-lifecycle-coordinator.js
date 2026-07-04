@@ -104,6 +104,8 @@ export function createBootLifecycleCoordinator(host) {
     }
     host.dataset.bootState = "ready";
     host.setAttribute("data-boot-state", "ready");
+    host.dataset.renderState = "ready";
+    host.setAttribute("data-render-state", "ready");
     host.dataset.ready = "true";
     host.setAttribute("data-ready", "true");
     host.classList.add("is-boot-revealing");

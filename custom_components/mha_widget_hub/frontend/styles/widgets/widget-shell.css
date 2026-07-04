@@ -110,6 +110,8 @@
 .mha-widget[data-widget-w="4"] { grid-column: span 4; }
 .mha-widget[data-widget-w="5"] { grid-column: span 5; }
 .mha-widget[data-widget-w="6"] { grid-column: span 6; }
+.mha-widget[data-widget-w="7"] { grid-column: span 7; }
+.mha-widget[data-widget-w="8"] { grid-column: span 8; }
 
 .mha-widget[data-widget-h="1"] { grid-row: span 1; }
 .mha-widget[data-widget-h="2"] { grid-row: span 2; }
@@ -117,6 +119,8 @@
 .mha-widget[data-widget-h="4"] { grid-row: span 4; }
 .mha-widget[data-widget-h="5"] { grid-row: span 5; }
 .mha-widget[data-widget-h="6"] { grid-row: span 6; }
+.mha-widget[data-widget-h="7"] { grid-row: span 7; }
+.mha-widget[data-widget-h="8"] { grid-row: span 8; }
 
 /* ==========================================================================
    3. Edit mode

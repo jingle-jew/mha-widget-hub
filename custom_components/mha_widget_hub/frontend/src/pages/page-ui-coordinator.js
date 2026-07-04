@@ -21,6 +21,7 @@ import {
 import {
   createDefaultPageConfig,
   getDefaultPageIcon,
+  hasMediaPagePanelWidget,
   isMediaPlayersPage,
   PAGE_TYPES,
 } from "./page-types.js";
@@ -154,12 +155,21 @@ export class PageUiCoordinator {
     this.syncPageCreatorPanelFn(this.getRoot(), this.buildPageCreatorProps());
   }
 
+  pageNeedsFullRender(page = null) {
+    return isMediaPlayersPage(page) || hasMediaPagePanelWidget(page);
+  }
+
   shouldUseFullRenderForPageTransition(previousPage, nextPage) {
-    return isMediaPlayersPage(previousPage) || isMediaPlayersPage(nextPage);
+    return this.pageNeedsFullRender(previousPage) || this.pageNeedsFullRender(nextPage);
   }
 
   refreshAfterActivePageChange(previousPage, nextPage) {
-    if (previousPage?.id && nextPage?.id && previousPage.id !== nextPage.id) {
+    if (
+      previousPage?.id
+      && nextPage?.id
+      && previousPage.id !== nextPage.id
+      && this.shouldUseFullRenderForPageTransition(previousPage, nextPage)
+    ) {
       this.transitionPageRender(previousPage, nextPage);
       return true;
     }
