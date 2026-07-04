@@ -19,7 +19,7 @@ import {
 import { getLayoutForWidth } from "./responsive.js";
 import { createPagePanel } from "../pages/page-panel.js";
 import { syncMediaPageSettingsPanel } from "../pages/media-page-settings.js";
-import { hasMediaPagePanelWidget, isMediaPlayersPage } from "../pages/page-types.js";
+import { isMediaPageExperienceActive } from "../pages/page-types.js";
 import {
   captureSettingsPanelsUiState,
   restoreSettingsPanelsUiState,
@@ -67,8 +67,12 @@ export function createRenderPipeline(host, options = {}) {
     activePage = getActivePage(host),
     artworkUrl = "",
     blurBackground = activePage?.config?.blurBackground !== false,
+    themeStyle = host?.dataset?.themeStyle || "",
   } = {}) {
-    const isMediaPage = isMediaPlayersPage(activePage) || hasMediaPagePanelWidget(activePage);
+    const isMediaPage = isMediaPageExperienceActive(
+      activePage,
+      themeStyle,
+    );
     host.dataset.activePageType = activePage?.type || "grid";
     host.dataset.mediaPageActive = String(isMediaPage);
     host.dataset.mediaPageBackgroundBlur = String(isMediaPage && blurBackground);
@@ -310,7 +314,7 @@ export function createRenderPipeline(host, options = {}) {
   function prepareRenderCycle({ renderId, themeState }) {
     host._applyCustomWallpaperState(themeState);
     host._applyHaSidebarMode(host._hideHaSidebar);
-    syncMediaPageBackdropState();
+    syncMediaPageBackdropState({ themeStyle: themeState?.themeStyle || "" });
     host._renderId = renderId;
     cancelAnimationFrame(host._widgetRenderFrame);
     cancelAnimationFrame(host._secondaryUiFrame);

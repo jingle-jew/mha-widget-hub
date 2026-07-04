@@ -166,6 +166,7 @@ export class AppearanceCoordinator {
     if (!this.isConnected() || !this.getRoot()) return false;
     this.syncDocksDom();
     this.refreshActiveGridOnly();
+    this.host?._pageUiCoordinator?.syncPageCreator?.();
     this.scheduleIconSymbolRefresh();
     return true;
   }
@@ -284,4 +285,3 @@ export class AppearanceCoordinator {
 export function createAppearanceCoordinator(options = {}) {
   return new AppearanceCoordinator(options);
 }
-

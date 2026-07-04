@@ -422,15 +422,37 @@ function mediaVariantKey({ widgetW = 2, widgetH = 2 } = {}) {
   return "2x2";
 }
 
-function resolveMediaPagePanelSize({
-  context = {},
-  fallbackSize = {},
-} = {}) {
-  const themeStyle = String(
+function resolveMediaThemeStyle(context = {}) {
+  return String(
     context?.themeStyle
     || globalThis?.document?.documentElement?.dataset?.themeStyle
     || "",
   ).trim().toLowerCase();
+}
+
+function isOneUiMediaPagePanelWidget(widget = {}, themeStyle = "") {
+  return widget?.responsiveSizeMode === "media-page-panel" && themeStyle === "oneui";
+}
+
+function resolveEffectiveMediaVariant(widget = {}, themeStyle = "") {
+  if (widget?.responsiveSizeMode === "media-page-panel" && themeStyle !== "oneui") {
+    return "media-panel";
+  }
+  return widget?.variant || "media-compact";
+}
+
+function resolveMediaPagePanelSize({
+  context = {},
+  fallbackSize = {},
+} = {}) {
+  const themeStyle = resolveMediaThemeStyle(context);
+  if (themeStyle !== "oneui") {
+    return {
+      w: 4,
+      h: 4,
+    };
+  }
+
   const viewportHeight = Math.max(
     0,
     Number(context?.viewportHeight)
@@ -482,6 +504,8 @@ export function createMediaWidgetContent(widget = {}, {
   hass,
   interactive = true,
 } = {}) {
+  const themeStyle = resolveMediaThemeStyle();
+  const useOneUiMediaPagePanel = isOneUiMediaPagePanelWidget(widget, themeStyle);
   const transitionCache = createMediaTransitionCache();
   let graceTimer = null;
   const data = getMediaData(widget, hass, transitionCache);
@@ -568,7 +592,7 @@ export function createMediaWidgetContent(widget = {}, {
     onAction,
   });
   const progress = createProgress(data, {
-    includeLabels: variantKey === "4x2" || widget?.responsiveSizeMode === "media-page-panel",
+    includeLabels: variantKey === "4x2" || useOneUiMediaPagePanel,
   });
   root.append(background);
   setBackgroundImage(root, data.artworkUrl);
@@ -620,7 +644,10 @@ export function createMediaWidgetContent(widget = {}, {
 
 export const MEDIA_WIDGET_CONTENT_RENDERER = Object.freeze({
   decorateShell: ({ shell, widget }) => {
-    shell.dataset.mediaVariant = widget.variant || "media-compact";
+    shell.dataset.mediaVariant = resolveEffectiveMediaVariant(
+      widget,
+      resolveMediaThemeStyle(),
+    );
   },
   render: ({ widget, widgetW, widgetH, hass, interactive }) => createMediaWidgetContent(widget, {
     widgetW,

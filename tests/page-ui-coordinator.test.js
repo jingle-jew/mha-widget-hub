@@ -206,6 +206,22 @@ test("page creator stays available in mobile landscape while editing", () => {
   assert.equal(calls.syncDocks, 1);
 });
 
+test("media page creation falls back to a normal grid page outside oneui", () => {
+  const { coordinator, state } = createHarness({
+    state: {
+      pageCreatorOpen: true,
+      newPageType: "media-players",
+    },
+    options: {
+      getThemeStyle: () => "ios",
+    },
+  });
+
+  assert.equal(coordinator.createPageFromCreator(), true);
+  assert.equal(state.pages.at(-1)?.icon, "grid");
+  assert.deepEqual(state.pages.at(-1)?.widgets, []);
+});
+
 test("buildDockProps resolves dock content from the current theme manifest", () => {
   const { coordinator } = createHarness({
     options: {
