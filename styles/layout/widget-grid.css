@@ -331,6 +331,10 @@
   min-block-size: 100%;
 }
 
+:host([data-layout="mobile"]:not([data-layout-variant="mobile-landscape"])) .mha-page-stage {
+  margin-block-end: var(--mha-widget-area-bottom-gutter, 0px);
+}
+
 :host([data-layout="mobile"]) .mha-page-panel--grid {
   block-size: auto;
   min-block-size: 100%;
@@ -354,6 +358,13 @@
 
 :host([data-layout-variant="mobile-landscape"]) {
   --mha-mobile-grid-gutter: clamp(0.75rem, 2.4vw, 1rem);
+  --mha-mobile-content-top-space-base: var(--mha-page-padding);
+  --mha-mobile-content-top-space: var(--mha-mobile-content-top-space-base);
+  --mha-mobile-landscape-dock-top-offset: var(--mha-mobile-content-top-space);
+  --mha-mobile-landscape-dock-bottom-offset: max(
+    var(--mha-safe-bottom, 0px),
+    var(--mha-mobile-grid-gutter)
+  );
   --mha-shell-dock-unit-size: clamp(4rem, 16vw, 4.85rem);
   --mha-shell-side-dock-zone-base: var(
     --mha-side-dock-rail-width,
@@ -365,6 +376,12 @@
   --mha-dock-unit-size: var(--mha-shell-side-dock-rail-size);
   overflow-x: hidden;
   overflow-y: hidden;
+}
+
+:host(.mha-android-edge-to-edge[data-layout-variant="mobile-landscape"]) {
+  --mha-mobile-content-top-space: calc(
+    var(--mha-safe-top, 0px) + var(--mha-mobile-content-top-space-base)
+  );
 }
 
 :host([data-layout-variant="mobile-landscape"]) .mha-shell {
