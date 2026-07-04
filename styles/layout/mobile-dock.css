@@ -118,15 +118,15 @@
 
   .mha-mobile-dock.is-paged > .mha-mobile-dock-track > .mha-dock-pages {
     display: flex;
-    inline-size: calc(var(--mha-mobile-dock-width) * var(--mha-mobile-dock-page-count, 1));
-    min-inline-size: calc(var(--mha-mobile-dock-width) * var(--mha-mobile-dock-page-count, 1));
+    inline-size: calc(100% * var(--mha-mobile-dock-page-count, 1));
+    min-inline-size: calc(100% * var(--mha-mobile-dock-page-count, 1));
     block-size: 100%;
   }
 
   .mha-mobile-dock.is-paged > .mha-mobile-dock-track > .mha-dock-pages > .mha-dock-page {
-    flex: 0 0 var(--mha-mobile-dock-width);
-    inline-size: var(--mha-mobile-dock-width);
-    min-inline-size: var(--mha-mobile-dock-width);
+    flex: 0 0 calc(100% / var(--mha-mobile-dock-page-count, 1));
+    inline-size: calc(100% / var(--mha-mobile-dock-page-count, 1));
+    min-inline-size: calc(100% / var(--mha-mobile-dock-page-count, 1));
     block-size: 100%;
     box-sizing: border-box;
     display: grid;

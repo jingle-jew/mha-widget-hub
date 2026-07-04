@@ -70,6 +70,17 @@
   --mha-oneui-dock-active-shadow:
     inset 0 1px 0 rgba(255,255,255,.34),
     0 1px 2px rgba(76,92,120,.08);
+  --mha-oneui-dock-item-surface:
+    linear-gradient(
+      145deg,
+      rgba(228,232,238,.9),
+      rgba(206,212,221,.82)
+    );
+  --mha-oneui-dock-item-border: rgba(255,255,255,.58);
+  --mha-oneui-dock-item-shadow:
+    inset 0 1px 0 rgba(255,255,255,.34),
+    0 1px 2px rgba(76,92,120,.06);
+  --mha-oneui-dock-item-label-color: rgba(66,72,82,.92);
 }
 
 :host([data-theme-style="oneui"][data-theme="dark"]) {
@@ -121,6 +132,17 @@
   --mha-oneui-dock-active-shadow:
     inset 0 1px 0 rgba(255,255,255,.16),
     0 1px 2px rgba(0,0,0,.12);
+  --mha-oneui-dock-item-surface:
+    linear-gradient(
+      145deg,
+      rgba(124,132,145,.32),
+      rgba(88,96,110,.28)
+    );
+  --mha-oneui-dock-item-border: rgba(255,255,255,.18);
+  --mha-oneui-dock-item-shadow:
+    inset 0 1px 0 rgba(255,255,255,.1),
+    0 1px 2px rgba(0,0,0,.1);
+  --mha-oneui-dock-item-label-color: rgba(255,255,255,.9);
 }
 
 /* 4. Panels */

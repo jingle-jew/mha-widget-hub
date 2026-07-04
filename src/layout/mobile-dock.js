@@ -138,6 +138,7 @@ export function createMobileDock(props = {}) {
     onAddPage,
     onDockSettings,
     onSettings,
+    themeStyle = "",
   } = props;
   const dock = document.createElement("nav");
   dock.className = "mha-mobile-dock";
@@ -170,7 +171,8 @@ export function createMobileDock(props = {}) {
       },
     }),
   });
-  const scrollTrack = items.length > DOCK_PAGE_SIZE
+  const shouldUsePagedStructure = items.length > DOCK_PAGE_SIZE || themeStyle === "oneui";
+  const scrollTrack = shouldUsePagedStructure
     ? appendPagedDockItems(dock, items, renderItem)
     : appendStaticDockItems(dock, items, renderItem);
   if (items.length > DOCK_PAGE_SIZE) {
