@@ -1,0 +1,94 @@
+/* iOS organic wallpaper prototype
+ *
+ * Pure CSS wallpaper layers inspired by translucent iOS-style sheets.
+ * The palette is derived from the active MHA accent so Liquid/Frosted can keep
+ * the same wallpaper vocabulary without shipping image assets.
+ */
+
+:host([data-theme-style="ios"]) {
+  --mha-ios-wallpaper-accent: var(--mha-accent, #7f94ef);
+  --mha-ios-wallpaper-warm: color-mix(in srgb, var(--mha-ios-wallpaper-accent) 38%, #ff5f2e 62%);
+  --mha-ios-wallpaper-hot: color-mix(in srgb, var(--mha-ios-wallpaper-accent) 30%, #ff2f75 70%);
+  --mha-ios-wallpaper-deep: color-mix(in srgb, var(--mha-ios-wallpaper-accent) 64%, #160726 36%);
+  --mha-ios-wallpaper-cool: color-mix(in srgb, var(--mha-ios-wallpaper-accent) 68%, #48d8ff 32%);
+}
+
+:host([data-theme-style="ios"][data-theme="light"]) {
+  --mha-ios-wallpaper-base-a: color-mix(in srgb, #f7f5fb 82%, var(--mha-ios-wallpaper-accent) 18%);
+  --mha-ios-wallpaper-base-b: color-mix(in srgb, #dbeaff 74%, var(--mha-ios-wallpaper-cool) 26%);
+  --mha-ios-wallpaper-sheet-opacity: .62;
+  --mha-ios-wallpaper-vignette-opacity: .18;
+}
+
+:host([data-theme-style="ios"][data-theme="dark"]) {
+  --mha-ios-wallpaper-base-a: color-mix(in srgb, #050712 78%, var(--mha-ios-wallpaper-deep) 22%);
+  --mha-ios-wallpaper-base-b: color-mix(in srgb, #170821 76%, var(--mha-ios-wallpaper-accent) 24%);
+  --mha-ios-wallpaper-sheet-opacity: .72;
+  --mha-ios-wallpaper-vignette-opacity: .42;
+}
+
+:host([data-theme-style="ios"]) .mha-background {
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 12% 16%, color-mix(in srgb, var(--mha-ios-wallpaper-cool) 28%, transparent), transparent 34%),
+    radial-gradient(ellipse at 82% 18%, color-mix(in srgb, var(--mha-ios-wallpaper-hot) 26%, transparent), transparent 38%),
+    linear-gradient(145deg, var(--mha-ios-wallpaper-base-a) 0%, var(--mha-ios-wallpaper-base-b) 100%);
+}
+
+:host([data-theme-style="ios"]) .mha-background::before,
+:host([data-theme-style="ios"]) .mha-background::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  will-change: transform;
+}
+
+:host([data-theme-style="ios"]) .mha-background::before {
+  inline-size: 88vmax;
+  block-size: 76vmax;
+  inset-block-start: -24vmax;
+  inset-inline-end: -18vmax;
+  opacity: var(--mha-ios-wallpaper-sheet-opacity);
+  border-radius: 44% 56% 58% 42% / 38% 46% 54% 62%;
+  transform: rotate(-18deg);
+  filter: blur(.35px) saturate(118%);
+  background:
+    radial-gradient(ellipse at 16% 8%, color-mix(in srgb, #fff 18%, transparent), transparent 34%),
+    radial-gradient(ellipse at 54% 42%, color-mix(in srgb, var(--mha-ios-wallpaper-warm) 92%, transparent), transparent 62%),
+    linear-gradient(145deg,
+      color-mix(in srgb, var(--mha-ios-wallpaper-warm) 86%, #ffec6e 14%) 0%,
+      color-mix(in srgb, var(--mha-ios-wallpaper-hot) 84%, var(--mha-ios-wallpaper-accent) 16%) 58%,
+      color-mix(in srgb, var(--mha-ios-wallpaper-deep) 88%, #000 12%) 100%);
+}
+
+:host([data-theme-style="ios"]) .mha-background::after {
+  inline-size: 72vmax;
+  block-size: 58vmax;
+  inset-block-end: -28vmax;
+  inset-inline-start: -12vmax;
+  opacity: calc(var(--mha-ios-wallpaper-sheet-opacity) * .82);
+  border-radius: 58% 42% 48% 52% / 48% 56% 44% 52%;
+  transform: rotate(16deg);
+  filter: blur(.45px) saturate(122%);
+  background:
+    radial-gradient(ellipse at 72% 18%, color-mix(in srgb, #fff 14%, transparent), transparent 36%),
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--mha-ios-wallpaper-hot) 82%, var(--mha-ios-wallpaper-accent) 18%) 0%,
+      color-mix(in srgb, var(--mha-ios-wallpaper-accent) 78%, #5210a8 22%) 62%,
+      color-mix(in srgb, var(--mha-ios-wallpaper-deep) 82%, #000 18%) 100%);
+}
+
+:host([data-theme-style="ios"][data-theme="light"]) .mha-background::before,
+:host([data-theme-style="ios"][data-theme="light"]) .mha-background::after {
+  mix-blend-mode: multiply;
+}
+
+:host([data-theme-style="ios"][data-theme="dark"]) .mha-background::before,
+:host([data-theme-style="ios"][data-theme="dark"]) .mha-background::after {
+  mix-blend-mode: screen;
+}
+
+:host([data-theme-style="ios"]) .mha-background span {
+  opacity: calc(var(--mha-bg-blob-opacity, .24) * .58);
+  filter: blur(calc(var(--mha-bg-blob-blur) * 1.45)) saturate(118%);
+}
