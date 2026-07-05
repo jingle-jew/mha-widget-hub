@@ -716,3 +716,10 @@
     inline-size: min(100%, calc(var(--mha-slider-control-height) * 1.38));
   }
 }
+
+@media (max-width: 767px) {
+  :host([data-layout="mobile"]:not([data-layout-variant="mobile-landscape"])[data-theme-style="oneui"]) .mha-widget[data-widget-kind="slider"] .mha-slider[data-orientation="vertical"] .mha-slider-rotor {
+    inline-size: var(--mha-slider-available-block, 100cqb);
+    width: var(--mha-slider-available-block, 100cqb);
+  }
+}
