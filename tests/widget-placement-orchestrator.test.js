@@ -67,10 +67,25 @@ test("page creator panel props retain state and callback routing", () => {
   });
 
   assert.equal(props.open, true);
+  assert.equal(props.themeStyle, "oneui");
   assert.equal(props.selectedPageType, "media-players");
   assert.equal(props.onClose, onClose);
   assert.equal(props.onSelectPageType, onSelectPageType);
   assert.equal(props.onCreate, onCreate);
+});
+
+test("page creator props preserve the original theme style across rebuilds", () => {
+  const props = buildPageCreatorPanelProps({
+    open: true,
+    themeStyle: "ios",
+    selectedPageType: "media-players",
+  });
+
+  const rebuilt = buildPageCreatorPanelProps(props);
+
+  assert.equal(rebuilt.themeStyle, "ios");
+  assert.equal(rebuilt.selectedPageType, "grid");
+  assert.equal(rebuilt.pageTypeOptions.some((option) => option.value === "media-players"), false);
 });
 
 test("closed page creator panels are hidden", () => {

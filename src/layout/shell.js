@@ -1,4 +1,5 @@
 import {createDock} from "./dock.js";
+import { createIosOrganicWallpaper } from "./ios-organic-wallpaper.js?v=ios-wallpaper-svg-1";
 import {createStatusBar} from "./status-bar.js";
 import { t } from "../i18n/index.js";
 
@@ -15,6 +16,7 @@ export function createShell(meta = {}) {
   const mediaOverlay = document.createElement("div");
   mediaOverlay.className = "mha-background-media-overlay";
   for (let i = 0; i < 4; i++) bg.append(document.createElement("span"));
+  bg.append(createIosOrganicWallpaper());
   bg.append(wallpaper, mediaLayer, mediaOverlay);
 
   const shell = document.createElement("main");

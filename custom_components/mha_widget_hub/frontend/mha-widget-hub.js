@@ -18,7 +18,7 @@ import {
 import {destroyDomSubtree} from "./src/core/dom-lifecycle.js";
 import { createBootLifecycleCoordinator } from "./src/core/boot-lifecycle-coordinator.js";
 import {ICONS} from "./src/components/icons.js";
-import { createRenderPipeline } from "./src/layout/render-pipeline.js";
+import { createRenderPipeline } from "./src/layout/render-pipeline.js?v=ios-wallpaper-svg-1";
 import { createResponsiveDockCoordinator } from "./src/layout/responsive-dock-coordinator.js";
 import {
   captureDockRenderState,
@@ -85,7 +85,14 @@ import { applyDockLabelsSetting } from "./src/settings/dock-labels-setting.js";
 import { applyStatusBarModeSetting } from "./src/settings/status-bar-mode-setting.js";
 import { openDockPageSettingsForPage } from "./src/settings/dock-page-settings.js";
 import { getStyleManifest } from "./src/styles/style-manifest.js";
-import { createDefaultPageConfig, isMediaPlayersPage, normalizeMediaPageConfig, PAGE_TYPES } from "./src/pages/page-types.js";
+import { syncMediaPageSettingsPanel } from "./src/pages/media-page-settings.js";
+import {
+  createDefaultPageConfig,
+  isMediaPageExperienceActive,
+  isMediaPlayersPage,
+  normalizeMediaPageConfig,
+  PAGE_TYPES,
+} from "./src/pages/page-types.js";
 
 const MHA_FRONTEND_ROOT_URL = window.__MHA_FRONTEND_ROOT_URL__
   ? new URL(window.__MHA_FRONTEND_ROOT_URL__)
@@ -864,6 +871,9 @@ _getPageTransitionDirection(){
 	    : null;
 	  const dockRenderState=captureDockRenderState(this.shadowRoot);
 	  const direction=this._getPageTransitionDirection();
+    const activeGrid=currentPanel?.querySelector?.(".mha-grid")
+      || this.shadowRoot?.querySelector?.(".mha-grid")
+      || null;
 
 	  this.shadowRoot?.querySelectorAll?.(".mha-page-panel-snapshot")?.forEach?.(node=>node.remove());
 
@@ -876,11 +886,28 @@ _getPageTransitionDirection(){
     snapshot.style.height=`${currentRect.height}px`;
 	  }
 
-	  this.render();
-	  restoreDockRenderState(this.shadowRoot,dockRenderState,{
-	    scheduleMobileDockOverflowState:()=>this._scheduleMobileDockOverflowState(),
-	    updateDockActiveState:()=>this._updateDockActiveState(),
-	  });
+    if(currentPanel&&activeGrid){
+      const nextPageType=nextPage?.type||"grid";
+      this._syncActivePageBackdropState({activePage:nextPage});
+      currentPanel.dataset.pageType=nextPageType;
+      activeGrid.dataset.pageType=nextPageType;
+      const refreshed=this._refreshActiveGridOnly();
+      this._syncMediaPageSettingsDom();
+
+      if(!refreshed){
+        this.render();
+        restoreDockRenderState(this.shadowRoot,dockRenderState,{
+          scheduleMobileDockOverflowState:()=>this._scheduleMobileDockOverflowState(),
+          updateDockActiveState:()=>this._updateDockActiveState(),
+        });
+      }
+    }else{
+      this.render();
+      restoreDockRenderState(this.shadowRoot,dockRenderState,{
+        scheduleMobileDockOverflowState:()=>this._scheduleMobileDockOverflowState(),
+        updateDockActiveState:()=>this._updateDockActiveState(),
+      });
+    }
 
 	  if(prefersReducedMotion)return;
 
@@ -975,6 +1002,30 @@ _scheduleMobileDockOverflowState(){
 }
 _refreshActiveGridOnly(){
   return this._widgetSurfaceCoordinator.refreshActiveGridOnly();
+}
+_syncActivePageBackdropState({
+  activePage=this._getActivePage(),
+  artworkUrl="",
+  blurBackground=activePage?.config?.blurBackground!==false,
+  themeStyle=this.dataset.themeStyle||this._themeController?.read?.()?.themeStyle||"oneui",
+}={}){
+  const isMediaPage=isMediaPageExperienceActive(activePage,themeStyle);
+  this.dataset.activePageType=activePage?.type||"grid";
+  this.dataset.mediaPageActive=String(isMediaPage);
+  this.dataset.mediaPageBackgroundBlur=String(isMediaPage&&blurBackground);
+
+  if(isMediaPage&&artworkUrl){
+    this.dataset.mediaPageWallpaper="true";
+    this.style.setProperty("--mha-media-page-wallpaper-image",`url("${artworkUrl}")`);
+    return isMediaPage;
+  }
+
+  this.dataset.mediaPageWallpaper="false";
+  this.style.removeProperty("--mha-media-page-wallpaper-image");
+  return isMediaPage;
+}
+_syncMediaPageSettingsDom(){
+  return syncMediaPageSettingsPanel(this.shadowRoot,this._buildMediaPageSettingsProps());
 }
 _getWidgetShellProps(widget,{units,position,widgetId=widget?.id||""}={}){
   return this._widgetSurfaceCoordinator.buildWidgetShellProps(widget,{units,position,widgetId});

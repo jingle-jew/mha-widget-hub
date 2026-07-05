@@ -5,7 +5,8 @@ import {
 } from "../core/mha-frontend-assets.js";
 import { t } from "../i18n/index.js";
 import { createMobileDock } from "./mobile-dock.js";
-import { createShell } from "./shell.js";
+import { createIosOrganicWallpaper } from "./ios-organic-wallpaper.js?v=ios-wallpaper-svg-1";
+import { createShell } from "./shell.js?v=ios-wallpaper-svg-1";
 import {
   getGridOrientation,
   getGridPresetForLayout,
@@ -54,6 +55,36 @@ function getShellViewportMetrics(host) {
 
 function setHostRenderState(host, state = "ready") {
   if (host?.dataset) host.dataset.renderState = state;
+}
+
+function ensureIosOrganicWallpaperNode(background) {
+  if (!background?.querySelector) return;
+  if (background.querySelector(".mha-ios-organic-wallpaper")) return;
+
+  const wallpaperImage = background.querySelector(".mha-background-wallpaper");
+  const svg = createIosOrganicWallpaper();
+
+  if (wallpaperImage?.parentNode === background) {
+    if (typeof background.insertBefore === "function") {
+      background.insertBefore(svg, wallpaperImage);
+      return;
+    }
+
+    svg.parentNode = background;
+    if (Array.isArray(background.appended)) {
+      const imageIndex = background.appended.indexOf(wallpaperImage);
+      const targetIndex = imageIndex >= 0 ? imageIndex : background.appended.length;
+      background.appended.splice(targetIndex, 0, svg);
+    }
+    if (Array.isArray(background.childNodes)) {
+      const imageIndex = background.childNodes.indexOf(wallpaperImage);
+      const targetIndex = imageIndex >= 0 ? imageIndex : background.childNodes.length;
+      background.childNodes.splice(targetIndex, 0, svg);
+    }
+    return;
+  }
+
+  background.append(svg);
 }
 
 export function createRenderPipeline(host, options = {}) {
@@ -467,6 +498,7 @@ export function createRenderPipeline(host, options = {}) {
       ...dockProps,
     });
     const background = persistentBackground || bg;
+    ensureIosOrganicWallpaperNode(background);
     syncShellBackgroundSurface(background);
     if (!persistentBackground) host.shadowRoot.append(background);
     host.shadowRoot.append(shell);

@@ -247,3 +247,27 @@ test("dock detail reuses the shared page icon registry", () => withMockDocument(
     PAGE_ICON_OPTIONS.map(option => getPageIconLabel(option)),
   );
 }));
+
+test("settings panel hides the iOS glass variant selector", () => withMockDocument(() => {
+  const iosPanel = createSettingsPanel({
+    open: true,
+    scope: "all",
+    settingsPage: "main",
+    themeStyle: "ios",
+    themeVariant: "liquid",
+    iosGlass: "liquid",
+  });
+
+  assert.equal(hasText(iosPanel, "Theme variant"), false);
+}));
+
+test("settings panel hides the Alexa theme option", () => withMockDocument(() => {
+  const panel = createSettingsPanel({
+    open: true,
+    scope: "all",
+    settingsPage: "main",
+    themeStyle: "oneui",
+  });
+
+  assert.equal(hasText(panel, "Alexa"), false);
+}));

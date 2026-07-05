@@ -6,9 +6,13 @@ let hubPrototypePromise = null;
 function createMockClassList() {
   return {
     added: [],
+    removed: [],
     toggled: [],
     add(...tokens) {
       this.added.push(...tokens);
+    },
+    remove(...tokens) {
+      this.removed.push(...tokens);
     },
     toggle(token, force) {
       this.toggled.push([token, force]);
@@ -899,6 +903,77 @@ test("render datasets include the persisted dock label visibility state", async 
   assert.equal(host.dataset.dockPosition, "bottom");
   assert.equal(host.dataset.statusBarMode, "hidden");
   assert.equal(host.dataset.themeStyle, "material");
+});
+
+test("media page transitions refresh only the active panel when the grid is already mounted", async () => {
+  const prototype = await loadHubPrototype();
+  const previousMatchMedia = globalThis.window.matchMedia;
+  globalThis.window.matchMedia = () => ({
+    matches: true,
+    addEventListener() {},
+    removeEventListener() {},
+  });
+
+  const grid = createMockElement("section");
+  grid.className = "mha-grid";
+  const panel = createMockElement("section");
+  panel.className = "mha-page-panel mha-page-panel--grid";
+  panel.append(grid);
+  panel.cloneNode = () => createMockElement("section");
+  panel.getBoundingClientRect = () => ({
+    top: 12,
+    left: 24,
+    width: 320,
+    height: 480,
+  });
+
+  const shadowRoot = createMockShadowRoot();
+  shadowRoot.append(panel);
+
+  const calls = [];
+  const host = {
+    shadowRoot,
+    dataset: {
+      themeStyle: "oneui",
+    },
+    style: createMockStyle(),
+    _refreshActiveGridOnly() {
+      calls.push("refreshActiveGridOnly");
+      return true;
+    },
+    _syncActivePageBackdropState(detail) {
+      calls.push(["syncActivePageBackdropState", detail?.activePage?.id || "", detail?.activePage?.type || "grid"]);
+      this.dataset.activePageType = detail?.activePage?.type || "grid";
+    },
+    _syncMediaPageSettingsDom() {
+      calls.push("syncMediaPageSettingsDom");
+    },
+    _getPageTransitionDirection() {
+      return "right";
+    },
+    render() {
+      calls.push("render");
+    },
+  };
+
+  try {
+    prototype._renderPageTransition.call(
+      host,
+      { id: "media", type: "media-players" },
+      { id: "home", type: "grid" },
+    );
+  } finally {
+    globalThis.window.matchMedia = previousMatchMedia;
+  }
+
+  assert.deepEqual(calls, [
+    ["syncActivePageBackdropState", "home", "grid"],
+    "refreshActiveGridOnly",
+    "syncMediaPageSettingsDom",
+  ]);
+  assert.equal(host.dataset.activePageType, "grid");
+  assert.equal(panel.dataset.pageType, "grid");
+  assert.equal(grid.dataset.pageType, "grid");
 });
 
 test("host grid metrics prefer published runtime sizes and include the available content rect", async () => {

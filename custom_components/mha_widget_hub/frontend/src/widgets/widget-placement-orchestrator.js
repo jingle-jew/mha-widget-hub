@@ -126,6 +126,7 @@ export function buildPageCreatorPanelProps({
   onCreate = () => {},
 } = {}) {
   return {
+    themeStyle,
     ...buildPageCreatorState({
       open,
       themeStyle,

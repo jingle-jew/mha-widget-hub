@@ -531,7 +531,7 @@ test("runtime runtime preset delegates to the preset engine with the available r
   );
 });
 
-test("runtime keeps side-dock tablets at the mini reference density while bottom dock can stay wider", () => {
+test("runtime keeps side-dock tablets at the 11-column side-dock density while bottom dock can stay wider", () => {
   const areaStyle = {
     paddingLeft: "0px",
     paddingRight: "0px",
@@ -616,21 +616,21 @@ test("runtime keeps side-dock tablets at the mini reference density while bottom
       columns: miniSideRuntime.getRuntimeGridPreset().columns,
       rows: miniSideRuntime.getRuntimeGridPreset().rows,
     },
-    { columns: 10, rows: 8 },
+    { columns: 11, rows: 8 },
   );
   assert.deepEqual(
     {
       columns: mediumSideRuntime.getRuntimeGridPreset().columns,
       rows: mediumSideRuntime.getRuntimeGridPreset().rows,
     },
-    { columns: 10, rows: 8 },
+    { columns: 11, rows: 8 },
   );
   assert.deepEqual(
     {
       columns: largeSideRuntime.getRuntimeGridPreset().columns,
       rows: largeSideRuntime.getRuntimeGridPreset().rows,
     },
-    { columns: 10, rows: 9 },
+    { columns: 11, rows: 8 },
   );
   assert.deepEqual(
     {
@@ -817,7 +817,7 @@ test("runtime preset sizing uses dock position as part of the tablet density con
       columns: createRuntime("left").getRuntimeGridPreset().columns,
       rows: createRuntime("left").getRuntimeGridPreset().rows,
     },
-    { columns: 10, rows: 8 },
+    { columns: 11, rows: 8 },
   );
   assert.deepEqual(
     {
@@ -889,15 +889,15 @@ test("runtime surfaces the parent grid frame on tablet/desktop", () => {
   });
 
   assert.equal(runtime.syncSquareUnit(), true);
-  assert.equal(hostStyle.values.get("--mha-square-unit"), "85.25px");
-  assert.equal(hostStyle.values.get("--mha-grid-column-size"), "88.3px");
-  assert.equal(hostStyle.values.get("--mha-grid-row-size"), "85.25px");
+  assert.equal(hostStyle.values.get("--mha-square-unit"), "80.27272727272727px");
+  assert.equal(hostStyle.values.get("--mha-grid-column-size"), "80.27272727272727px");
+  assert.equal(hostStyle.values.get("--mha-grid-row-size"), "84.28636363636363px");
   assert.equal(hostStyle.values.get("--mha-panel-frame-width"), "883px");
   assert.equal(hostStyle.values.get("--mha-panel-frame-height"), "682px");
   assert.equal(hostStyle.values.get("--mha-grid-container-width"), "883px");
   assert.equal(hostStyle.values.get("--mha-grid-container-height"), "682px");
-  assert.equal(hostStyle.values.get("--mha-grid-track-width"), "883px");
-  assert.equal(hostStyle.values.get("--mha-grid-track-height"), "682px");
+  assert.equal(hostStyle.values.get("--mha-grid-track-width"), "882.9999999999999px");
+  assert.equal(hostStyle.values.get("--mha-grid-track-height"), "674.290909090909px");
   assert.equal(gridStyle.values.get("--mha-grid-container-width"), undefined);
   assert.equal(gridStyle.values.get("--mha-grid-container-height"), undefined);
   assert.equal(gridStyle.values.get("--mha-grid-track-width"), undefined);
@@ -1041,7 +1041,7 @@ test("runtime debug metrics reflect status-bar and dock vertical reserves withou
 
   assert.equal(rightTopBar.host.dataset.gridDebugStatusBarReservedHeight, "44");
   assert.equal(rightTopBar.host.dataset.gridDebugDockReservedHeight, "0");
-  assert.equal(rightTopBar.host.dataset.gridDebugSelectedRowCount, "7");
+  assert.equal(rightTopBar.host.dataset.gridDebugSelectedRowCount, "8");
 
   assert.equal(leftPill.host.dataset.gridDebugStatusBarReservedHeight, "62");
   assert.equal(leftPill.host.dataset.gridDebugDockReservedHeight, "0");

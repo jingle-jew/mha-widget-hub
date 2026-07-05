@@ -231,7 +231,7 @@ const THEMES = {
     label: "iOS",
     order: 10,
     defaultIconShape: "rounded-square",
-    css: css("styles/themes/ios.css"),
+    css: css("styles/themes/ios.css", "styles/themes/ios-organic-wallpaper.css"),
     wallpaper: {
       type: "advanced",
       accentSource: {
