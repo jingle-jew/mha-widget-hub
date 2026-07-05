@@ -70,15 +70,29 @@
     --mha-dock-item-label-letter-spacing: -.03em;
 
     box-sizing: border-box;
+    border-radius: 30px;
     padding-block: var(--mha-dock-rail-padding-block);
     padding-inline: var(--mha-dock-rail-padding-inline);
     gap: var(--mha-dock-rail-gap);
     overflow: visible;
     border: 0;
-    background: transparent;
-    box-shadow: none;
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
+    background: var(
+      --mha-oneui-mobile-dock-surface,
+      var(--mha-shell-dock-surface, var(--mha-shell-surface, var(--mha-surface-shell)))
+    );
+    box-shadow: var(--mha-shell-shadow, var(--mha-shadow-shell, var(--mha-shadow-floating)));
+    -webkit-backdrop-filter: var(
+      --mha-shell-filter,
+      blur(var(--mha-shell-blur, var(--mha-blur-shell, var(--mha-blur-primary))))
+        saturate(var(--mha-shell-saturation, var(--mha-saturation-shell, var(--mha-surface-saturation))))
+        brightness(var(--mha-shell-brightness, var(--mha-brightness-shell, 1)))
+    );
+    backdrop-filter: var(
+      --mha-shell-filter,
+      blur(var(--mha-shell-blur, var(--mha-blur-shell, var(--mha-blur-primary))))
+        saturate(var(--mha-shell-saturation, var(--mha-saturation-shell, var(--mha-surface-saturation))))
+        brightness(var(--mha-shell-brightness, var(--mha-brightness-shell, 1)))
+    );
   }
 
   :host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock.mha-dock {
