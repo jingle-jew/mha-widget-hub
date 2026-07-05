@@ -148,6 +148,12 @@ export class WidgetResizeCoordinator {
     if (badge) {
       badge.textContent = `${this.sizeToStringFn(nextSize)} · ${density}`;
     }
+
+    element.querySelector?.("[data-widget-component]")?.__mhaUpdateWidgetSize?.({
+      widgetW: Math.min(nextSize.w, activeUnits),
+      widgetH: nextSize.h,
+      configuredWidgetW: nextSize.w,
+    });
   }
 
   finishResize() {
