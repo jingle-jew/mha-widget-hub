@@ -160,7 +160,7 @@ test("tablet landscape presets adapt their direct widget-grid matrix to the meas
       columns: sideDockPreset.columns,
       rows: sideDockPreset.rows,
     },
-    { columns: 10, rows: 8 },
+    { columns: 11, rows: 8 },
   );
   assert.deepEqual(
     {
@@ -229,7 +229,7 @@ test("tablet landscape preset prefers one more row when a side panel would other
 
   assert.deepEqual(
     { columns: compactSidePanel.columns, rows: compactSidePanel.rows },
-    { columns: 10, rows: 8 },
+    { columns: 11, rows: 8 },
   );
 });
 
@@ -277,11 +277,11 @@ test("tablet density profiles split width/height by dock family before the solve
       minCellHeightComfort: compactSide.minCellHeightComfort,
     },
     {
-      preferredColumns: 10,
-      minColumns: 10,
-      maxColumns: 10,
-      preferredRows: 7,
-      minRows: 6,
+      preferredColumns: 11,
+      minColumns: 11,
+      maxColumns: 11,
+      preferredRows: 8,
+      minRows: 8,
       maxRows: 8,
       estimatedColumnGap: 12,
       estimatedRowGap: 12,
@@ -305,12 +305,12 @@ test("tablet density profiles split width/height by dock family before the solve
       minCellHeightComfort: mediumSide.minCellHeightComfort,
     },
     {
-      preferredColumns: 10,
-      minColumns: 10,
-      maxColumns: 10,
+      preferredColumns: 11,
+      minColumns: 11,
+      maxColumns: 11,
       preferredRows: 8,
-      minRows: 7,
-      maxRows: 10,
+      minRows: 8,
+      maxRows: 8,
       minCellWidthAbsolute: 82,
       minCellHeightAbsolute: 82,
       minCellHeightComfort: 79,

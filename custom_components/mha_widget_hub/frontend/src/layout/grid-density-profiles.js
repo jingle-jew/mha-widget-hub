@@ -24,9 +24,12 @@ function isSideDockPosition(dockPosition = "") {
 }
 
 const TABLET_SIDE_DOCK_LANDSCAPE_OVERRIDES = Object.freeze({
-  preferredColumns: 10,
-  minColumns: 10,
-  maxColumns: 10,
+  preferredColumns: 11,
+  minColumns: 11,
+  maxColumns: 11,
+  preferredRows: 8,
+  minRows: 8,
+  maxRows: 8,
   estimatedColumnGap: 12,
   estimatedRowGap: 12,
   estimatedPaddingX: 14,
@@ -289,12 +292,12 @@ export const GRID_DENSITY_PROFILES = Object.freeze({
     landscape: Object.freeze({
       defaults: Object.freeze({
         minCell: 52,
-        targetCell: 62,
+        targetCell: 72,
         maxCell: 90,
-        preferredColumns: 14,
+        preferredColumns: 15,
         preferredRows: 8,
         minColumns: 12,
-        maxColumns: 14,
+        maxColumns: 16,
         minRows: 6,
         maxRows: 12,
         fillX: 0.9,
@@ -312,9 +315,9 @@ export const GRID_DENSITY_PROFILES = Object.freeze({
         Object.freeze({
           min: 1500,
           max: Number.POSITIVE_INFINITY,
-          preferredColumns: 14,
+          preferredColumns: 16,
           minColumns: 14,
-          maxColumns: 14,
+          maxColumns: 16,
         }),
       ]),
       heightBands: Object.freeze([
