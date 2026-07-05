@@ -33,6 +33,7 @@ describe("theme registry", () => {
   it("exposes theme CSS paths from the registry", () => {
     assert.deepEqual(getThemeCssPaths(), [
       "styles/themes/ios.css",
+      "styles/themes/ios-organic-wallpaper.css",
       "styles/themes/oneui.css",
       "styles/themes/material.css",
       "styles/themes/alexa.css",
