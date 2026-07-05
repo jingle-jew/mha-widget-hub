@@ -45,7 +45,7 @@ const STATUS_BAR_MODE_OPTIONS = [
   { value: "hidden", label: "Hidden", labelKey: "settings.statusBarModes.hidden" },
 ];
 
-const STYLE_OPTIONS = getThemeStyleOptions();
+const STYLE_OPTIONS = getThemeStyleOptions().filter((option) => option.value !== "alexa");
 
 const DOCK_POSITION_OPTIONS = [
   { value: "left", label: "Left", labelKey: "settings.dockPositions.left" },

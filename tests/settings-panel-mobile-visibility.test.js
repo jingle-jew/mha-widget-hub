@@ -260,3 +260,14 @@ test("settings panel hides the iOS glass variant selector", () => withMockDocume
 
   assert.equal(hasText(iosPanel, "Theme variant"), false);
 }));
+
+test("settings panel hides the Alexa theme option", () => withMockDocument(() => {
+  const panel = createSettingsPanel({
+    open: true,
+    scope: "all",
+    settingsPage: "main",
+    themeStyle: "oneui",
+  });
+
+  assert.equal(hasText(panel, "Alexa"), false);
+}));
