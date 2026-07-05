@@ -65,7 +65,22 @@ function ensureIosOrganicWallpaperNode(background) {
   const svg = createIosOrganicWallpaper();
 
   if (wallpaperImage?.parentNode === background) {
-    background.insertBefore(svg, wallpaperImage);
+    if (typeof background.insertBefore === "function") {
+      background.insertBefore(svg, wallpaperImage);
+      return;
+    }
+
+    svg.parentNode = background;
+    if (Array.isArray(background.appended)) {
+      const imageIndex = background.appended.indexOf(wallpaperImage);
+      const targetIndex = imageIndex >= 0 ? imageIndex : background.appended.length;
+      background.appended.splice(targetIndex, 0, svg);
+    }
+    if (Array.isArray(background.childNodes)) {
+      const imageIndex = background.childNodes.indexOf(wallpaperImage);
+      const targetIndex = imageIndex >= 0 ? imageIndex : background.childNodes.length;
+      background.childNodes.splice(targetIndex, 0, svg);
+    }
     return;
   }
 

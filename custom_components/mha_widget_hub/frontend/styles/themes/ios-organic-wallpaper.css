@@ -1,5 +1,8 @@
 :host([data-theme-style="ios"]) {
   --mha-ios-accent: var(--mha-accent, #7f94ef);
+  --mha-ios-sheet-2-opacity: 0.7;
+  --mha-ios-sheet-5-opacity: 0.7;
+  --mha-ios-sheet-7-opacity: 0.7;
 }
 
 :host([data-theme-style="ios"][data-theme="light"]) {
@@ -26,6 +29,7 @@
 
 :host([data-theme-style="ios"]) .mha-background {
   background: var(--mha-ios-bg);
+  inset: 0;
   overflow: hidden;
 }
 
@@ -47,6 +51,16 @@
   pointer-events: none;
 }
 
+@media (max-width: 767px) {
+  :host([data-theme-style="ios"]) .mha-background {
+    inset: 0;
+  }
+}
+
+:host([data-theme-style="ios"][data-layout-variant="mobile-landscape"]) .mha-background {
+  inset: 0;
+}
+
 :host(:not([data-theme-style="ios"])) .mha-ios-organic-wallpaper,
 :host([data-theme-style="ios"][data-wallpaper-kind="image"]) .mha-ios-organic-wallpaper,
 :host([data-theme-style="ios"][data-wallpaper-kind="css"]) .mha-ios-organic-wallpaper,
@@ -55,9 +69,18 @@
 }
 
 :host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-1 { fill: var(--mha-ios-sheet-1); }
-:host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-2 { fill: var(--mha-ios-sheet-2); }
+:host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-2 {
+  fill: var(--mha-ios-sheet-2);
+  opacity: var(--mha-ios-sheet-2-opacity);
+}
 :host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-3 { fill: var(--mha-ios-sheet-3); }
 :host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-4 { fill: var(--mha-ios-sheet-4); }
-:host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-5 { fill: var(--mha-ios-sheet-5); }
+:host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-5 {
+  fill: var(--mha-ios-sheet-5);
+  opacity: var(--mha-ios-sheet-5-opacity);
+}
 :host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-6 { fill: var(--mha-ios-sheet-6); }
-:host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-7 { fill: var(--mha-ios-sheet-7); }
+:host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-7 {
+  fill: var(--mha-ios-sheet-7);
+  opacity: var(--mha-ios-sheet-7-opacity);
+}
