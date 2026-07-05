@@ -49,7 +49,22 @@ export function createWidgetInteractionSurfaceCoordinator(host) {
       });
     }
     const add = host.shadowRoot.querySelector(".mha-add-widget-button");
-    if (add) add.hidden = !host._isEditing || host._canAddWidgetToActivePage?.() === false;
+    if (add) {
+      const isDraggingWidget = Boolean(host.classList?.contains?.("is-widget-dragging"));
+      const showDeleteTarget = host._isEditing && isDraggingWidget;
+      const canAddWidget = host._canAddWidgetToActivePage?.() !== false;
+      const label = showDeleteTarget
+        ? t("common.delete", "Delete")
+        : t("settings.addWidget", "Add widget");
+      add.hidden = !host._isEditing || (!showDeleteTarget && !canAddWidget);
+      if (add.dataset) add.dataset.dragDelete = String(showDeleteTarget);
+      if (!showDeleteTarget) add.classList?.remove?.("is-drag-delete-hover");
+      add.setAttribute?.("aria-label", label);
+      setFloatingControlButtonIcon(add, {
+        name: showDeleteTarget ? "trash" : "plus",
+        label,
+      });
+    }
     host.shadowRoot?.querySelectorAll?.(".mha-widget")?.forEach((element) => {
       element.draggable = false;
       element.removeAttribute("draggable");

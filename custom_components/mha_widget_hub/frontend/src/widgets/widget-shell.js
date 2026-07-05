@@ -27,7 +27,6 @@ export function createWidgetShell(
     position,
     onToggleMove,
     onMove,
-    onRemove,
     onStartResize,
     onUpdateResize,
     onFinishResize,
@@ -125,11 +124,7 @@ export function createWidgetShell(
     },
   );
 
-  const closeButton = tool(t("common.delete", "Delete"), "close", () => onRemove?.(widget.id), {
-    className: "mha-tool-button--close",
-  });
-
-  tools.append(dimensionButton, moveButton, closeButton);
+  tools.append(dimensionButton, moveButton);
 
   const badge = document.createElement("span");
   badge.className = "mha-size-badge";

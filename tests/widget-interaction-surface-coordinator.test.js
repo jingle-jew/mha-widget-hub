@@ -125,7 +125,12 @@ test("widget interaction coordinator hides the mobile and tablet edit pencil unt
     append() {},
     replaceChildren() {},
   };
-  const addButton = { hidden: true };
+  const addButton = {
+    hidden: true,
+    dataset: {},
+    setAttribute() {},
+    replaceChildren() {},
+  };
 
   function createHost(layout) {
     return {
@@ -209,7 +214,12 @@ test("widget interaction coordinator keeps edit surfaces open in mobile landscap
     append() {},
     replaceChildren() {},
   };
-  const addButton = { hidden: true };
+  const addButton = {
+    hidden: true,
+    dataset: {},
+    setAttribute() {},
+    replaceChildren() {},
+  };
   const widgetConfigSession = {
     configType: "button",
     mode: "edit",
@@ -256,6 +266,88 @@ test("widget interaction coordinator keeps edit surfaces open in mobile landscap
     assert.equal(host._widgetManagerCategory, "utilities");
     assert.equal(host._widgetConfigSession, widgetConfigSession);
     assert.equal(host._pageCreatorOpen, true);
+  } finally {
+    globalThis.document = previousDocument;
+  }
+});
+
+test("widget interaction coordinator turns the add button into a trash target during widget drag", () => {
+  const previousDocument = globalThis.document;
+  globalThis.document = {
+    createElement() {
+      return {
+        dataset: {},
+        setAttribute() {},
+        append() {},
+        appendChild() {},
+        classList: { add() {} },
+        style: {},
+      };
+    },
+    createElementNS() {
+      return {
+        dataset: {},
+        setAttribute() {},
+        append() {},
+        appendChild() {},
+        classList: { add() {} },
+        style: {},
+      };
+    },
+  };
+
+  const editButton = {
+    hidden: false,
+    dataset: {},
+    setAttribute() {},
+    append() {},
+    replaceChildren() {},
+  };
+  const addButton = {
+    hidden: false,
+    dataset: {},
+    classList: { remove() {} },
+    attributes: {},
+    setAttribute(name, value) {
+      this.attributes[name] = value;
+    },
+    replaceChildren() {},
+  };
+  const host = {
+    _isEditing: true,
+    _widgets: [],
+    dataset: { layout: "desktop" },
+    shadowRoot: {
+      querySelector(selector) {
+        if (selector === ".mha-primary-edit-button") return editButton;
+        if (selector === ".mha-add-widget-button") return addButton;
+        return null;
+      },
+      querySelectorAll() {
+        return [];
+      },
+    },
+    classList: {
+      toggle() {},
+      remove() {},
+      contains(token) {
+        return token === "is-widget-dragging";
+      },
+    },
+    _syncPageCreatorDom() {},
+    _syncWidgetConfigDom() {},
+    _canAddWidgetToActivePage() {
+      return true;
+    },
+  };
+
+  try {
+    const coordinator = createWidgetInteractionSurfaceCoordinator(host);
+    coordinator.syncEditModeDom();
+
+    assert.equal(addButton.hidden, false);
+    assert.equal(addButton.dataset.dragDelete, "true");
+    assert.equal(addButton.attributes["aria-label"], "Delete");
   } finally {
     globalThis.document = previousDocument;
   }

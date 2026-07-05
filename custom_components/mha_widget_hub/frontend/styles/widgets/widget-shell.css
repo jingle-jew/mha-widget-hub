@@ -263,8 +263,8 @@
   top: 12px;
   right: 12px;
   display: flex;
-  inline-size: calc((var(--mha-tool-button-size) * 3) + (var(--mha-tool-gap) * 2));
-  min-inline-size: calc((var(--mha-tool-button-size) * 3) + (var(--mha-tool-gap) * 2));
+  inline-size: calc((var(--mha-tool-button-size) * 2) + var(--mha-tool-gap));
+  min-inline-size: calc((var(--mha-tool-button-size) * 2) + var(--mha-tool-gap));
   justify-content: flex-end;
   gap: clamp(.18rem, .5vw, .32rem);
 }

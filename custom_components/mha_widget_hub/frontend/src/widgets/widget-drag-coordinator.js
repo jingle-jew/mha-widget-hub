@@ -132,6 +132,11 @@ function clearHoveredDropSlot(session) {
   if (session) session.hoveredDropSlot = null;
 }
 
+function clearHoveredDeleteTarget(session) {
+  session?.hoveredDeleteTarget?.classList?.remove?.("is-drag-delete-hover");
+  if (session) session.hoveredDeleteTarget = null;
+}
+
 function syncHoveredDropSlot(host, session, event) {
   if (!session?.armed) return;
   const point = getPoint(event);
@@ -142,11 +147,28 @@ function syncHoveredDropSlot(host, session, event) {
   hovered?.classList?.add?.("is-drag-hover");
 }
 
+function syncHoveredDeleteTarget(host, session, event) {
+  if (!session?.armed) return false;
+  const point = getPoint(event);
+  const hovered = getElementFromPoint(host, point)?.closest?.('.mha-add-widget-button[data-drag-delete="true"]') || null;
+  if (hovered === session.hoveredDeleteTarget) return Boolean(hovered);
+  clearHoveredDeleteTarget(session);
+  session.hoveredDeleteTarget = hovered;
+  hovered?.classList?.add?.("is-drag-delete-hover");
+  return Boolean(hovered);
+}
+
 function commitHoveredDropSlot(host, session) {
   if (!session?.armed || !session.hoveredDropSlot) return false;
   const position = getSlotPosition(session.hoveredDropSlot);
   if (!position) return false;
   host._moveWidgetToDropSlot?.(session.widgetId, position.x, position.y);
+  return true;
+}
+
+function commitHoveredDeleteTarget(host, session) {
+  if (!session?.armed || !session?.hoveredDeleteTarget) return false;
+  host._removeWidget?.(session.widgetId);
   return true;
 }
 
@@ -171,6 +193,7 @@ export function createWidgetDragCoordinator(host, {
     if (!session) return;
     if (session.timer) clearTimeout(session.timer);
     clearHoveredDropSlot(session);
+    clearHoveredDeleteTarget(session);
     clearTouchLock();
     session.element?.releasePointerCapture?.(session.pointerId);
     if (clearSourceState) {
@@ -232,7 +255,12 @@ export function createWidgetDragCoordinator(host, {
       if (session.armed) {
         event.preventDefault?.();
         event.stopPropagation?.();
-        syncHoveredDropSlot(host, session, event);
+        const hoveringDeleteTarget = syncHoveredDeleteTarget(host, session, event);
+        if (hoveringDeleteTarget) {
+          clearHoveredDropSlot(session);
+        } else {
+          syncHoveredDropSlot(host, session, event);
+        }
         maybeSnapScroll(host, session, event);
         return;
       }
@@ -246,9 +274,14 @@ export function createWidgetDragCoordinator(host, {
         event?.preventDefault?.();
         event?.stopPropagation?.();
       }
-      const moved = commitHoveredDropSlot(host, session);
+      const deleted = commitHoveredDeleteTarget(host, session);
+      const moved = deleted ? false : commitHoveredDropSlot(host, session);
       cancelSession(session, { clearSourceState: true });
       session = null;
+      if (deleted) {
+        host._syncEditModeDom?.();
+        return;
+      }
       if (wasArmed && !moved) host._syncEditModeDom?.();
     };
 

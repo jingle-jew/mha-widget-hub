@@ -545,3 +545,90 @@ test("widget drag snap scroll still prefers the widget area when it remains the 
     globalThis.window = previousWindow;
   }
 });
+
+test("widget drag can drop onto the floating trash target to delete the widget", () => {
+  const widget = createWidgetElement();
+  const deleteTarget = {
+    classList: createClassList(),
+    closest(selector) {
+      return selector === '.mha-add-widget-button[data-drag-delete="true"]' ? this : null;
+    },
+  };
+  const host = {
+    _isEditing: true,
+    _activeMoveWidgetId: "",
+    _pendingWidgetPlacement: null,
+    removedWidgetId: "",
+    _isMobileLandscapeLayout() {
+      return false;
+    },
+    _isResizeHandleEvent() {
+      return false;
+    },
+    _removeWidget(id) {
+      this.removedWidgetId = id;
+    },
+    _syncEditModeDomCalls: 0,
+    _syncWidgetDropSlots() {},
+    _syncEditModeDom() {
+      this._syncEditModeDomCalls += 1;
+    },
+    classList: createClassList(),
+    shadowRoot: {
+      elementFromPoint() {
+        return deleteTarget;
+      },
+      querySelector() {
+        return null;
+      },
+    },
+  };
+
+  const previousSetTimeout = globalThis.setTimeout;
+  const previousClearTimeout = globalThis.clearTimeout;
+  let armedCallback = null;
+  globalThis.setTimeout = (callback) => {
+    armedCallback = callback;
+    return 1;
+  };
+  globalThis.clearTimeout = () => {
+    armedCallback = null;
+  };
+
+  try {
+    const coordinator = createWidgetDragCoordinator(host);
+    coordinator.wireWidget(widget, { id: "clock" });
+
+    widget.listeners.get("pointerdown")?.({
+      pointerId: 31,
+      button: 0,
+      clientX: 10,
+      clientY: 20,
+      target: widget,
+    });
+    armedCallback?.();
+
+    widget.listeners.get("pointermove")?.({
+      pointerId: 31,
+      clientX: 16,
+      clientY: 24,
+      preventDefault() {},
+      stopPropagation() {},
+    });
+
+    assert.equal(deleteTarget.classList.contains("is-drag-delete-hover"), true);
+
+    widget.listeners.get("pointerup")?.({
+      pointerId: 31,
+      preventDefault() {},
+      stopPropagation() {},
+    });
+
+    assert.equal(host.removedWidgetId, "clock");
+    assert.equal(host._syncEditModeDomCalls, 2);
+    assert.equal(host.classList.contains("is-widget-dragging"), false);
+  } finally {
+    globalThis.setTimeout = previousSetTimeout;
+    globalThis.clearTimeout = previousClearTimeout;
+  }
+});

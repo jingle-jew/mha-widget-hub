@@ -456,6 +456,28 @@
   transform: none !important;
 }
 
+:host(.is-widget-dragging) .mha-add-widget-button[data-drag-delete="true"] {
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.16), rgba(255,255,255,.05)),
+    color-mix(in srgb, #ff3b30 64%, var(--mha-system-button-bg) 36%) !important;
+  border-color: color-mix(in srgb, #ff3b30 72%, white 18%) !important;
+  color: #fff !important;
+  box-shadow:
+    0 12px 28px color-mix(in srgb, #ff3b30 28%, transparent),
+    inset 0 1px 0 rgba(255,255,255,.18) !important;
+}
+
+:host(.is-widget-dragging) .mha-add-widget-button[data-drag-delete="true"]::before {
+  opacity: .18;
+}
+
+:host(.is-widget-dragging) .mha-add-widget-button.is-drag-delete-hover[data-drag-delete="true"] {
+  transform: scale(1.04) !important;
+  box-shadow:
+    0 16px 34px color-mix(in srgb, #ff3b30 36%, transparent),
+    inset 0 1px 0 rgba(255,255,255,.22) !important;
+}
+
 /* STATUS BAR SAFE FRAME ALIGNMENT
  * Keep the desktop/tablet edit button on the same right visual inset as the
  * status bar. Shell/grid geometry remains untouched.
