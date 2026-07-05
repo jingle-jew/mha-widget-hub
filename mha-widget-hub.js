@@ -323,6 +323,7 @@ constructor(){
     clampWidgetSizeToGridBounds:(widget,size)=>this._clampWidgetSizeToGridBounds(widget,size),
     queryWidgetElement:(widgetId)=>this.shadowRoot?.querySelector?.(`[data-widget-id="${widgetId}"]`),
     saveWidgets:()=>this._saveWidgets(),
+    replaceWidgetDom:(widgetId)=>this._replaceWidgetDom(widgetId),
     scheduleSquareUnitSync:()=>this._scheduleSquareUnitSync(),
   });
   this._widgetSurfaceCoordinator=createWidgetSurfaceCoordinator({

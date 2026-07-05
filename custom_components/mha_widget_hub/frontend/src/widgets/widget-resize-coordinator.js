@@ -18,6 +18,7 @@ export class WidgetResizeCoordinator {
     clampWidgetSizeToGridBounds = (_widget, size) => size,
     queryWidgetElement = () => null,
     saveWidgets = () => false,
+    replaceWidgetDom = () => false,
     scheduleSquareUnitSync = () => {},
     normalizeWidgetForKindFn = normalizeWidgetForKind,
     getWidgetDensityFn = getWidgetDensity,
@@ -35,6 +36,7 @@ export class WidgetResizeCoordinator {
     this.clampWidgetSizeToGridBounds = (...args) => clampWidgetSizeToGridBounds(...args);
     this.queryWidgetElement = (...args) => queryWidgetElement(...args);
     this.saveWidgets = (...args) => saveWidgets(...args);
+    this.replaceWidgetDom = (...args) => replaceWidgetDom(...args);
     this.scheduleSquareUnitSync = (...args) => scheduleSquareUnitSync(...args);
     this.normalizeWidgetForKindFn = (...args) => normalizeWidgetForKindFn(...args);
     this.getWidgetDensityFn = (...args) => getWidgetDensityFn(...args);
@@ -155,6 +157,7 @@ export class WidgetResizeCoordinator {
     this.queryWidgetElement(state.widgetId)?.classList?.remove?.("is-resizing");
     this.setResizeState(null);
     this.saveWidgets();
+    if (this.replaceWidgetDom(state.widgetId)) return;
     this.scheduleSquareUnitSync();
   }
 }

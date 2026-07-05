@@ -82,6 +82,10 @@ function createHarness(overrides = {}) {
       effects.push(["saveWidgets"]);
       return true;
     },
+    replaceWidgetDom: (widgetId) => {
+      effects.push(["replaceWidgetDom", widgetId]);
+      return true;
+    },
     scheduleSquareUnitSync: () => {
       effects.push(["scheduleSquareUnitSync"]);
     },
@@ -209,7 +213,7 @@ test("updateResize is a no-op for mismatched pointers", () => {
   assert.deepEqual(effects, []);
 });
 
-test("finishResize clears the live state, saves widgets, and schedules layout sync", () => {
+test("finishResize clears the live state, saves widgets, and rebuilds the resized widget DOM", () => {
   const { coordinator, state, element, effects } = createHarness();
 
   coordinator.finishResize();
@@ -219,6 +223,6 @@ test("finishResize clears the live state, saves widgets, and schedules layout sy
   assert.deepEqual(effects, [
     ["setResizeState", null],
     ["saveWidgets"],
-    ["scheduleSquareUnitSync"],
+    ["replaceWidgetDom", "clock"],
   ]);
 });
