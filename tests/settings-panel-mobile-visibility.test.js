@@ -247,3 +247,16 @@ test("dock detail reuses the shared page icon registry", () => withMockDocument(
     PAGE_ICON_OPTIONS.map(option => getPageIconLabel(option)),
   );
 }));
+
+test("settings panel hides the iOS glass variant selector", () => withMockDocument(() => {
+  const iosPanel = createSettingsPanel({
+    open: true,
+    scope: "all",
+    settingsPage: "main",
+    themeStyle: "ios",
+    themeVariant: "liquid",
+    iosGlass: "liquid",
+  });
+
+  assert.equal(hasText(iosPanel, "Theme variant"), false);
+}));

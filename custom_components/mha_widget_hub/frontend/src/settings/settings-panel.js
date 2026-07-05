@@ -1116,7 +1116,7 @@ export function createSettingsPanel({
     ];
 
     const themeVariantOptions = getThemeVariantOptions(themeStyle);
-    if (themeVariantOptions.length) {
+    if (themeStyle !== "ios" && themeVariantOptions.length) {
       const effectiveThemeVariant = themeVariant || iosGlass;
       appearanceControls.push(createSelect({
         label: t("settings.themeVariant", "Theme variant"),

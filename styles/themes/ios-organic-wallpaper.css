@@ -1,5 +1,12 @@
 :host([data-theme-style="ios"]) {
   --mha-ios-accent: var(--mha-accent, #7f94ef);
+  --mha-ios-sheet-1-opacity: 0.95;
+  --mha-ios-sheet-2-opacity: 0.9;
+  --mha-ios-sheet-3-opacity: 0.94;
+  --mha-ios-sheet-4-opacity: 0.95;
+  --mha-ios-sheet-5-opacity: 0.9;
+  --mha-ios-sheet-6-opacity: 0.94;
+  --mha-ios-sheet-7-opacity: 0.9;
 }
 
 :host([data-theme-style="ios"][data-theme="light"]) {
@@ -11,6 +18,20 @@
   --mha-ios-sheet-5: color-mix(in srgb, var(--mha-ios-accent) 54%, #ff6fa9);
   --mha-ios-sheet-6: color-mix(in srgb, var(--mha-ios-accent) 68%, #8f6dff);
   --mha-ios-sheet-7: color-mix(in srgb, var(--mha-ios-accent) 82%, #28163f);
+  --mha-ios-sheet-1-top: color-mix(in srgb, var(--mha-ios-sheet-1) 97%, white);
+  --mha-ios-sheet-1-bottom: color-mix(in srgb, var(--mha-ios-sheet-1) 95%, black);
+  --mha-ios-sheet-2-top: color-mix(in srgb, var(--mha-ios-sheet-2) 98%, white);
+  --mha-ios-sheet-2-bottom: color-mix(in srgb, var(--mha-ios-sheet-2) 94%, black);
+  --mha-ios-sheet-3-top: color-mix(in srgb, var(--mha-ios-sheet-3) 97%, white);
+  --mha-ios-sheet-3-bottom: color-mix(in srgb, var(--mha-ios-sheet-3) 95%, black);
+  --mha-ios-sheet-4-top: color-mix(in srgb, var(--mha-ios-sheet-4) 97%, white);
+  --mha-ios-sheet-4-bottom: color-mix(in srgb, var(--mha-ios-sheet-4) 95%, black);
+  --mha-ios-sheet-5-top: color-mix(in srgb, var(--mha-ios-sheet-5) 96%, white);
+  --mha-ios-sheet-5-bottom: color-mix(in srgb, var(--mha-ios-sheet-5) 95%, black);
+  --mha-ios-sheet-6-top: color-mix(in srgb, var(--mha-ios-sheet-6) 97%, white);
+  --mha-ios-sheet-6-bottom: color-mix(in srgb, var(--mha-ios-sheet-6) 95%, black);
+  --mha-ios-sheet-7-top: color-mix(in srgb, var(--mha-ios-sheet-7) 98%, white);
+  --mha-ios-sheet-7-bottom: color-mix(in srgb, var(--mha-ios-sheet-7) 94%, black);
 }
 
 :host([data-theme-style="ios"][data-theme="dark"]) {
@@ -22,6 +43,20 @@
   --mha-ios-sheet-5: color-mix(in srgb, var(--mha-ios-accent) 66%, #5f1f74);
   --mha-ios-sheet-6: color-mix(in srgb, var(--mha-ios-accent) 76%, #1f183f);
   --mha-ios-sheet-7: color-mix(in srgb, var(--mha-ios-accent) 86%, #09020f);
+  --mha-ios-sheet-1-top: color-mix(in srgb, var(--mha-ios-sheet-1) 94%, white);
+  --mha-ios-sheet-1-bottom: color-mix(in srgb, var(--mha-ios-sheet-1) 97%, black);
+  --mha-ios-sheet-2-top: color-mix(in srgb, var(--mha-ios-sheet-2) 95%, white);
+  --mha-ios-sheet-2-bottom: color-mix(in srgb, var(--mha-ios-sheet-2) 92%, black);
+  --mha-ios-sheet-3-top: color-mix(in srgb, var(--mha-ios-sheet-3) 94%, white);
+  --mha-ios-sheet-3-bottom: color-mix(in srgb, var(--mha-ios-sheet-3) 97%, black);
+  --mha-ios-sheet-4-top: color-mix(in srgb, var(--mha-ios-sheet-4) 94%, white);
+  --mha-ios-sheet-4-bottom: color-mix(in srgb, var(--mha-ios-sheet-4) 97%, black);
+  --mha-ios-sheet-5-top: color-mix(in srgb, var(--mha-ios-sheet-5) 93%, white);
+  --mha-ios-sheet-5-bottom: color-mix(in srgb, var(--mha-ios-sheet-5) 96%, black);
+  --mha-ios-sheet-6-top: color-mix(in srgb, var(--mha-ios-sheet-6) 94%, white);
+  --mha-ios-sheet-6-bottom: color-mix(in srgb, var(--mha-ios-sheet-6) 97%, black);
+  --mha-ios-sheet-7-top: color-mix(in srgb, var(--mha-ios-sheet-7) 95%, white);
+  --mha-ios-sheet-7-bottom: color-mix(in srgb, var(--mha-ios-sheet-7) 92%, black);
 }
 
 :host([data-theme-style="ios"]) .mha-background {
@@ -65,10 +100,10 @@
   display: none;
 }
 
-:host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-1 { fill: var(--mha-ios-sheet-1); }
-:host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-2 { fill: var(--mha-ios-sheet-2); opacity: 0.7; }
-:host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-3 { fill: var(--mha-ios-sheet-3); }
-:host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-4 { fill: var(--mha-ios-sheet-4); }
-:host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-5 { fill: var(--mha-ios-sheet-5); opacity: 0.7; }
-:host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-6 { fill: var(--mha-ios-sheet-6); }
-:host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-7 { fill: var(--mha-ios-sheet-7); opacity: 0.7; }
+:host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-1 { opacity: var(--mha-ios-sheet-1-opacity); }
+:host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-2 { opacity: var(--mha-ios-sheet-2-opacity); }
+:host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-3 { opacity: var(--mha-ios-sheet-3-opacity); }
+:host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-4 { opacity: var(--mha-ios-sheet-4-opacity); }
+:host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-5 { opacity: var(--mha-ios-sheet-5-opacity); }
+:host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-6 { opacity: var(--mha-ios-sheet-6-opacity); }
+:host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-7 { opacity: var(--mha-ios-sheet-7-opacity); }
