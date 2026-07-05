@@ -41,6 +41,9 @@ export class WidgetSurfaceCoordinator {
     toggleWidgetMoveMode = () => {},
     moveWidgetByDirection = () => {},
     removeWidget = () => {},
+    startResize = () => false,
+    updateResize = () => {},
+    finishResize = () => {},
     openWidgetConfig = () => {},
     openScenesButtonConfig = () => {},
     createWidgetShellFn = createWidgetShell,
@@ -82,6 +85,9 @@ export class WidgetSurfaceCoordinator {
     this.toggleWidgetMoveMode = (...args) => toggleWidgetMoveMode(...args);
     this.moveWidgetByDirection = (...args) => moveWidgetByDirection(...args);
     this.removeWidget = (...args) => removeWidget(...args);
+    this.startResize = (...args) => startResize(...args);
+    this.updateResize = (...args) => updateResize(...args);
+    this.finishResize = (...args) => finishResize(...args);
     this.openWidgetConfig = (...args) => openWidgetConfig(...args);
     this.openScenesButtonConfig = (...args) => openScenesButtonConfig(...args);
     this.createWidgetShellFn = (...args) => createWidgetShellFn(...args);
@@ -117,6 +123,9 @@ export class WidgetSurfaceCoordinator {
       onToggleMove: (id) => this.toggleWidgetMoveMode(id),
       onMove: (id, direction) => this.moveWidgetByDirection(id, direction),
       onRemove: (id) => this.removeWidget(id),
+      onStartResize: (id, event) => this.startResize(id, event),
+      onUpdateResize: (event) => this.updateResize(event),
+      onFinishResize: () => this.finishResize(),
       onCycleVariant: (id) => this.cycleVariant(id),
       onConfigure: (id) => this.openWidgetConfig(id),
       onConfigureSlot: (id, slotIndex) => this.openScenesButtonConfig(id, slotIndex),

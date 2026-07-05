@@ -317,6 +317,7 @@ constructor(){
     setWidgets:(widgets)=>{this._widgets=widgets;},
     getGridMetrics:()=>this._getGridMetrics(),
     getActiveGridUnits:()=>this._getRuntimeGridUnits(),
+    getWidgetPosition:(widgetId)=>this._getActiveWidgetPositions({create:true})?.[widgetId]||null,
     doesWidgetLayoutFitGrid:(widgets)=>this._doesWidgetLayoutFitGrid(widgets),
     normalizeWidgetsToGridBounds:(widgets)=>this._normalizeWidgetsToGridBounds(widgets),
     clampWidgetSizeToGridBounds:(widget,size)=>this._clampWidgetSizeToGridBounds(widget,size),
@@ -357,6 +358,9 @@ constructor(){
     toggleWidgetMoveMode:(id)=>this._toggleWidgetMoveMode(id),
     moveWidgetByDirection:(id,direction)=>this._moveWidgetByDirection(id,direction),
     removeWidget:(id)=>this._removeWidget(id),
+    startResize:(id,event)=>this._startResize(id,event),
+    updateResize:(event)=>this._updateResize(event),
+    finishResize:()=>this._finishResize(),
     openWidgetConfig:(id)=>this._openWidgetConfig(id),
     openScenesButtonConfig:(id,slotIndex)=>this._openScenesButtonConfig(id,slotIndex),
   });
@@ -1305,7 +1309,7 @@ _normalizeWidgetsToGridBounds(widgets=this._widgets){
 }
 
 
-_startResize(){return this._widgetResizeCoordinator.startResize()}
+_startResize(...args){return this._widgetResizeCoordinator.startResize(...args)}
 _updateResize(e){return this._widgetResizeCoordinator.updateResize(e)}
 _finishResize(){
   return this._widgetResizeCoordinator.finishResize();

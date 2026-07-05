@@ -186,7 +186,7 @@
 }
 
 /* Widget content is inert while edit chrome remains interactive. */
-:host(.is-editing) .mha-widget > *:not(.mha-widget-tools):not(.mha-widget-move-overlay):not(.mha-size-badge),
+:host(.is-editing) .mha-widget > *:not(.mha-widget-tools):not(.mha-widget-move-overlay):not(.mha-size-badge):not(.mha-widget-resize-handle),
 :host(.is-editing) .mha-widget :is(
   .mha-widget-runtime-slider,
   .mha-widget-demo-button,
@@ -338,8 +338,40 @@
   letter-spacing: .01em;
 }
 
+.mha-widget-resize-handle {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  z-index: 30;
+  display: grid;
+  inline-size: var(--mha-control-height);
+  block-size: var(--mha-control-height);
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--mha-border-secondary);
+  border-radius: var(--mha-control-radius);
+  background: var(--mha-widget-control-surface, var(--mha-surface-secondary));
+  color: var(--mha-text-primary);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.14),
+    0 2px 7px rgba(0,0,0,.12);
+  cursor: nwse-resize;
+  touch-action: none;
+}
+
+.mha-widget-resize-handle::before {
+  content: "";
+  inline-size: 10px;
+  block-size: 10px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translate(1px, 1px);
+  opacity: .9;
+}
+
 .mha-widget-tools,
-.mha-size-badge {
+.mha-size-badge,
+.mha-widget-resize-handle {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -361,6 +393,17 @@
     transform 180ms ease;
 }
 
+:host(.is-editing) .mha-widget-resize-handle {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+  transition:
+    opacity 180ms ease,
+    visibility 0s linear 0s,
+    transform 180ms ease;
+}
+
 /* The size badge intentionally stays hidden in edit mode. */
 :host(.is-editing) .mha-size-badge {
   opacity: 0;
@@ -370,7 +413,8 @@
 }
 
 :host(.is-editing) .mha-tool-button,
-:host(.is-editing) .mha-size-badge {
+:host(.is-editing) .mha-size-badge,
+:host(.is-editing) .mha-widget-resize-handle {
   background: var(--mha-edit-control-bg, rgba(20, 22, 30, .96));
   color: var(--mha-edit-control-color, #fff);
   border-color: var(--mha-edit-control-border, rgba(255,255,255,.22));
@@ -378,6 +422,14 @@
     0 10px 24px rgba(0,0,0,.24),
     inset 0 1px 0 rgba(255,255,255,.12);
   backdrop-filter: none;
+}
+
+:host(.is-editing) .mha-widget.is-resizing .mha-size-badge {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: none;
+  transform: translateY(0) scale(1);
+  transition-delay: 0s;
 }
 
 :host(.is-editing) .mha-tool-button[data-action="close"] {
@@ -514,7 +566,8 @@
 }
 
 :host(.is-editing) .mha-widget.is-move-target .mha-tool-button--dimension,
-:host(.is-editing) .mha-widget.is-move-target .mha-tool-button--close {
+:host(.is-editing) .mha-widget.is-move-target .mha-tool-button--close,
+:host(.is-editing) .mha-widget.is-move-target .mha-widget-resize-handle {
   opacity: 0;
   transform: scale(.82);
   pointer-events: none;

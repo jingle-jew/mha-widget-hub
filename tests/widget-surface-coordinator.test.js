@@ -49,6 +49,9 @@ function createHarness(overrides = {}) {
     toggleMove: [],
     move: [],
     remove: [],
+    startResize: [],
+    updateResize: [],
+    finishResize: 0,
     configure: [],
     configureSlot: [],
     wireDrag: [],
@@ -120,6 +123,9 @@ function createHarness(overrides = {}) {
     toggleWidgetMoveMode: (id) => { calls.toggleMove.push(id); },
     moveWidgetByDirection: (id, direction) => { calls.move.push([id, direction]); },
     removeWidget: (id) => { calls.remove.push(id); },
+    startResize: (id, event) => { calls.startResize.push([id, event?.pointerId ?? null]); return true; },
+    updateResize: (event) => { calls.updateResize.push(event?.pointerId ?? null); },
+    finishResize: () => { calls.finishResize += 1; },
     openWidgetConfig: (id) => { calls.configure.push(id); },
     openScenesButtonConfig: (id, slotIndex) => { calls.configureSlot.push([id, slotIndex]); },
     createWidgetShellFn: (widget, props) => {
@@ -180,6 +186,9 @@ test("widget surface coordinator builds widget shell props with the existing cal
   props.onToggleMove("clock");
   props.onMove("clock", "right");
   props.onRemove("clock");
+  props.onStartResize("clock", { pointerId: 44 });
+  props.onUpdateResize({ pointerId: 44 });
+  props.onFinishResize();
   props.onCycleVariant("clock");
   props.onConfigure("clock");
   props.onConfigureSlot("clock", 2);
@@ -187,6 +196,9 @@ test("widget surface coordinator builds widget shell props with the existing cal
   assert.deepEqual(calls.toggleMove, ["clock"]);
   assert.deepEqual(calls.move, [["clock", "right"]]);
   assert.deepEqual(calls.remove, ["clock"]);
+  assert.deepEqual(calls.startResize, [["clock", 44]]);
+  assert.deepEqual(calls.updateResize, [44]);
+  assert.equal(calls.finishResize, 1);
   assert.equal(calls.cycleVariant, "clock");
   assert.deepEqual(calls.configure, ["clock"]);
   assert.deepEqual(calls.configureSlot, [["clock", 2]]);
@@ -210,6 +222,9 @@ test("replace widget keeps position and rebuilds the shell with the same callbac
   assert.equal(typeof rebuiltProps.onToggleMove, "function");
   assert.equal(typeof rebuiltProps.onMove, "function");
   assert.equal(typeof rebuiltProps.onRemove, "function");
+  assert.equal(typeof rebuiltProps.onStartResize, "function");
+  assert.equal(typeof rebuiltProps.onUpdateResize, "function");
+  assert.equal(typeof rebuiltProps.onFinishResize, "function");
   assert.equal(typeof rebuiltProps.onCycleVariant, "function");
 });
 
@@ -255,4 +270,3 @@ test("refresh active grid rebuilds widgets and still refreshes clocks", () => {
   assert.equal(calls.scheduleSquareUnitSync, 1);
   assert.equal(calls.updateClockWidgets, 1);
 });
-
