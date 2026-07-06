@@ -62,5 +62,9 @@ test("weather widget updates its internal layout while resizing", () => {
   content.__mhaUpdateWidgetSize({ widgetW: 3, widgetH: 2 });
 
   assert.equal(content.dataset.weatherSize, "3x2");
-  assert.equal(content.childNodes.length, 2);
+  assert.equal(content.childNodes.length, 1);
+  assert.equal(
+    content.childNodes[0].childNodes.some((node) => node.className === "mha-weather-widget-details"),
+    true,
+  );
 });

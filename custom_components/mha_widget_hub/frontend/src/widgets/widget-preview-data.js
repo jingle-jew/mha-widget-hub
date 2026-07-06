@@ -14,10 +14,12 @@ export const WIDGET_PREVIEW_DATA = freeze({
     temperature: 22,
     humidity: 54,
     windSpeed: 12,
+    temperatureUnit: "°C",
+    windSpeedUnit: "km/h",
     forecast: freeze([
-      freeze({ datetime: "2026-06-17", day: "Mer", temperature: 22, condition: "partlycloudy" }),
-      freeze({ datetime: "2026-06-18", day: "Jeu", temperature: 21, condition: "sunny" }),
-      freeze({ datetime: "2026-06-19", day: "Ven", temperature: 20, condition: "cloudy" }),
+      freeze({ datetime: "2026-06-17", day: "Mer", temperature: 22, templow: 16, condition: "partlycloudy" }),
+      freeze({ datetime: "2026-06-18", day: "Jeu", temperature: 21, templow: 15, condition: "sunny" }),
+      freeze({ datetime: "2026-06-19", day: "Ven", temperature: 20, templow: 14, condition: "cloudy" }),
     ]),
   }),
   media: freeze({
@@ -65,8 +67,10 @@ export const PREVIEW_HASS_STATES = freeze({
     attributes: freeze({
       friendly_name: WIDGET_PREVIEW_DATA.weather.name,
       temperature: WIDGET_PREVIEW_DATA.weather.temperature,
+      temperature_unit: WIDGET_PREVIEW_DATA.weather.temperatureUnit,
       humidity: WIDGET_PREVIEW_DATA.weather.humidity,
       wind_speed: WIDGET_PREVIEW_DATA.weather.windSpeed,
+      wind_speed_unit: WIDGET_PREVIEW_DATA.weather.windSpeedUnit,
       forecast: WIDGET_PREVIEW_DATA.weather.forecast,
     }),
   }),

@@ -1,4 +1,5 @@
 import { resolveAuthorizedEntity } from "./entity-access.js";
+import { getFriendlyEntityName } from "./entity-filters.js";
 import { t } from "../i18n/index.js";
 
 const WEATHER_LABELS = new Map([
@@ -67,7 +68,7 @@ export function normalizeWeatherForecasts(forecast = [], {
   temperatureUnit = "°",
 } = {}) {
   if (!Array.isArray(forecast)) return [];
-  return forecast.slice(0, 4).map((item, index) => {
+  return forecast.slice(0, 5).map((item, index) => {
     const high = formatTemperature(item.temperature, temperatureUnit);
     const low = formatTemperature(item.templow, temperatureUnit);
     return {
@@ -75,9 +76,30 @@ export function normalizeWeatherForecasts(forecast = [], {
         ? formatForecastHour(item.datetime, index)
         : formatForecastDay(item.datetime, index),
       condition: normalizeWeatherCondition(item.condition),
+      high,
+      low,
       temp: type === "hourly" ? high : [high, low].filter(Boolean).join(" / "),
     };
   }).filter(item => item.condition || item.temp);
+}
+
+function getPrimaryTemperatureRange(dailyForecast = [], legacyForecast = [], hourlyForecast = []) {
+  const source = dailyForecast.find(item => item.high || item.low)
+    || legacyForecast.find(item => item.high || item.low)
+    || hourlyForecast.find(item => item.high || item.low)
+    || null;
+
+  if (!source) {
+    return { high: "", low: "", range: "" };
+  }
+
+  const high = source.high || "";
+  const low = source.low || "";
+  return {
+    high,
+    low,
+    range: [high, low].filter(Boolean).join(" / "),
+  };
 }
 
 const FORECAST_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -175,14 +197,19 @@ export function buildWeatherModel(hass, widget = {}, visibilityConfig, forecastB
   const resolvedForecastType = preferredForecastType === "hourly"
     ? (hourlyForecast.length ? "hourly" : dailyForecast.length ? "daily" : legacyForecast.length ? "legacy" : "none")
     : (dailyForecast.length ? "daily" : hourlyForecast.length ? "hourly" : legacyForecast.length ? "legacy" : "none");
+  const temperatureRange = getPrimaryTemperatureRange(dailyForecast, legacyForecast, hourlyForecast);
 
   return {
     ...access,
     condition: normalizeWeatherCondition(access.entityState?.state),
     summary: getWeatherSummary(access.entityState?.state),
+    location: access.entityState ? getFriendlyEntityName(access.entityState, access.entityId) : "",
     temperature: formatTemperature(attributes.temperature, temperatureUnit),
     humidity: formatMetric(attributes.humidity, "%"),
     wind: formatMetric(attributes.wind_speed, windUnit),
+    highTemperature: temperatureRange.high,
+    lowTemperature: temperatureRange.low,
+    temperatureRange: temperatureRange.range,
     forecast,
     forecastType: resolvedForecastType,
   };

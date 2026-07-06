@@ -19,6 +19,7 @@ export class WidgetResizeCoordinator {
     queryWidgetElement = () => null,
     saveWidgets = () => false,
     replaceWidgetDom = () => false,
+    rerenderWidgetContent = () => false,
     scheduleSquareUnitSync = () => {},
     normalizeWidgetForKindFn = normalizeWidgetForKind,
     getWidgetDensityFn = getWidgetDensity,
@@ -37,6 +38,7 @@ export class WidgetResizeCoordinator {
     this.queryWidgetElement = (...args) => queryWidgetElement(...args);
     this.saveWidgets = (...args) => saveWidgets(...args);
     this.replaceWidgetDom = (...args) => replaceWidgetDom(...args);
+    this.rerenderWidgetContent = (...args) => rerenderWidgetContent(...args);
     this.scheduleSquareUnitSync = (...args) => scheduleSquareUnitSync(...args);
     this.normalizeWidgetForKindFn = (...args) => normalizeWidgetForKindFn(...args);
     this.getWidgetDensityFn = (...args) => getWidgetDensityFn(...args);
@@ -107,6 +109,7 @@ export class WidgetResizeCoordinator {
 
     event.preventDefault();
     const current = this.getWidgets().find(widget => widget.id === state.widgetId) || {};
+    const currentSize = this.normalizeWidgetForKindFn(current);
     let nextSize = this.normalizeWidgetForKindFn({
       ...current,
       responsiveSizeMode: "",
@@ -114,6 +117,7 @@ export class WidgetResizeCoordinator {
       h: state.startH + Math.round((event.clientY - state.startY) / state.metrics.rowStep),
     });
     nextSize = this.findFittingResize(current, nextSize);
+    if (currentSize.w === nextSize.w && currentSize.h === nextSize.h) return;
 
     const nextWidgets = this.getWidgets().map(widget => (
       widget.id === state.widgetId
@@ -149,11 +153,19 @@ export class WidgetResizeCoordinator {
       badge.textContent = `${this.sizeToStringFn(nextSize)} · ${density}`;
     }
 
-    element.querySelector?.("[data-widget-component]")?.__mhaUpdateWidgetSize?.({
+    const widgetContent = element.querySelector?.("[data-widget-component]");
+    const liveResizeArgs = {
       widgetW: Math.min(nextSize.w, activeUnits),
       widgetH: nextSize.h,
       configuredWidgetW: nextSize.w,
-    });
+    };
+
+    if (typeof widgetContent?.__mhaUpdateWidgetSize === "function") {
+      widgetContent.__mhaUpdateWidgetSize(liveResizeArgs);
+      return;
+    }
+
+    this.rerenderWidgetContent(state.widgetId);
   }
 
   finishResize() {

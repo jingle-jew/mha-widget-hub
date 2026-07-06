@@ -3,6 +3,7 @@ import { normalizeWidgetForKind } from "../layout/layout-engine.js";
 import { updateClockWidgets } from "./clock-widget.js";
 import { buildWidgetShellState } from "./widget-shell-props.js";
 import { createWidgetShell } from "./widget-shell.js";
+import { rerenderRegisteredWidgetContent } from "./widget-renderers.js";
 import { normalizeStoredWidgetContract } from "./widget-storage.js";
 import {
   getNextWidgetVariantEntries,
@@ -47,6 +48,7 @@ export class WidgetSurfaceCoordinator {
     openWidgetConfig = () => {},
     openScenesButtonConfig = () => {},
     createWidgetShellFn = createWidgetShell,
+    rerenderWidgetContentFn = rerenderRegisteredWidgetContent,
     buildWidgetShellStateFn = buildWidgetShellState,
     normalizeStoredWidgetFn = normalizeStoredWidgetContract,
     normalizeWidgetForKindFn = normalizeWidgetForKind,
@@ -91,6 +93,7 @@ export class WidgetSurfaceCoordinator {
     this.openWidgetConfig = (...args) => openWidgetConfig(...args);
     this.openScenesButtonConfig = (...args) => openScenesButtonConfig(...args);
     this.createWidgetShellFn = (...args) => createWidgetShellFn(...args);
+    this.rerenderWidgetContentFn = (...args) => rerenderWidgetContentFn(...args);
     this.buildWidgetShellStateFn = (...args) => buildWidgetShellStateFn(...args);
     this.normalizeStoredWidgetFn = (...args) => normalizeStoredWidgetFn(...args);
     this.normalizeWidgetForKindFn = (...args) => normalizeWidgetForKindFn(...args);
@@ -151,6 +154,31 @@ export class WidgetSurfaceCoordinator {
     return element;
   }
 
+  buildWidgetRenderContext(widget, {
+    units,
+    rows = this.getGridBounds().rowUnits,
+    layout = this.getEffectiveLayout(),
+  } = {}) {
+    const size = this.normalizeWidgetForKindFn(widget, {
+      units,
+      rowUnits: rows,
+      layout,
+    });
+    const widgetW = Math.min(size.w, units);
+
+    return {
+      size,
+      activeGridUnits: units,
+      activeGridRows: rows,
+      layout,
+      widgetW,
+      widgetH: size.h,
+      isEditing: this.getIsEditing(),
+      hass: this.getHass(),
+      entityVisibilityConfig: this.getEntityVisibilityConfig(),
+    };
+  }
+
   refreshActiveGridOnly() {
     this.cancelWidgetRenderFrame();
     const root = this.getRoot();
@@ -177,6 +205,7 @@ export class WidgetSurfaceCoordinator {
       }));
     });
 
+    this.syncEditModeDom();
     this.updateDockActiveState();
     this.syncWidgetDropSlots();
     this.scheduleSquareUnitSync();
@@ -306,6 +335,30 @@ export class WidgetSurfaceCoordinator {
     this.syncWidgetDropSlots();
     this.scheduleSquareUnitSync();
     return true;
+  }
+
+  rerenderWidgetContent(id) {
+    if (!id) return false;
+
+    const root = this.getRoot();
+    const shell = root?.querySelector?.(`[data-widget-id="${id}"]`);
+    const widget = this.getWidgets().find((item) => item.id === id);
+    if (!shell || !widget) return false;
+
+    const { units, rowUnits } = this.getGridBounds();
+    const layout = this.getEffectiveLayout();
+    return this.rerenderWidgetContentFn(
+      shell,
+      widget,
+      this.buildWidgetRenderContext(widget, {
+        units,
+        rows: rowUnits,
+        layout,
+      }),
+      {
+        destroyDomSubtreeFn: this.destroyDomSubtreeFn,
+      },
+    );
   }
 
   cycleVariant(id) {

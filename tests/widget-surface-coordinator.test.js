@@ -66,6 +66,7 @@ function createHarness(overrides = {}) {
     updateClockWidgets: 0,
     destroyDomSubtree: [],
     createWidgetShell: [],
+    rerenderWidgetContent: [],
     renderRoot: 0,
     cancelWidgetRenderFrame: 0,
   };
@@ -135,6 +136,10 @@ function createHarness(overrides = {}) {
       node.props = props;
       node.dataset = { widgetId: widget.id };
       return node;
+    },
+    rerenderWidgetContentFn: (shell, widget, context) => {
+      calls.rerenderWidgetContent.push({ shell, widget, context });
+      return true;
     },
     buildWidgetShellStateFn: ({
       widgetId,
@@ -228,6 +233,23 @@ test("replace widget keeps position and rebuilds the shell with the same callbac
   assert.equal(typeof rebuiltProps.onCycleVariant, "function");
 });
 
+test("rerender widget content uses the current widget size and render context", () => {
+  const { coordinator, calls, existingWidget } = createHarness({
+    state: {
+      widgets: [{ id: "clock", kind: "clock", w: 4, h: 2, variant: "wide" }],
+    },
+  });
+
+  assert.equal(coordinator.rerenderWidgetContent("clock"), true);
+  assert.equal(calls.rerenderWidgetContent.length, 1);
+  assert.equal(calls.rerenderWidgetContent[0].shell, existingWidget);
+  assert.equal(calls.rerenderWidgetContent[0].widget.variant, "wide");
+  assert.deepEqual(calls.rerenderWidgetContent[0].context.size, { w: 4, h: 2 });
+  assert.equal(calls.rerenderWidgetContent[0].context.widgetW, 4);
+  assert.equal(calls.rerenderWidgetContent[0].context.widgetH, 2);
+  assert.equal(calls.rerenderWidgetContent[0].context.isEditing, true);
+});
+
 test("cycle variant skips invalid layout candidates and applies the first valid one", () => {
   const { coordinator, state, calls } = createHarness({
     options: {
@@ -267,6 +289,7 @@ test("refresh active grid rebuilds widgets and still refreshes clocks", () => {
   assert.equal(grid.childNodes.filter((node) => node.selector === ".mha-widget").length, 2);
   assert.equal(calls.updateDockActiveState, 1);
   assert.equal(calls.syncWidgetDropSlots, 1);
+  assert.equal(calls.syncEditModeDom, 1);
   assert.equal(calls.scheduleSquareUnitSync, 1);
   assert.equal(calls.updateClockWidgets, 1);
 });
