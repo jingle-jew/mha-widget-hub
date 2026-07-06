@@ -15,6 +15,7 @@ import {
 import { runMediaPlayerAction } from "../ha/actions.js";
 import { t } from "../i18n/index.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
+import { findThemeStyleId } from "../settings/theme-registry.js";
 
 export const MEDIA_WIDGET_KIND = "media";
 export const MEDIA_TRANSITION_GRACE_MS = 1200;
@@ -431,7 +432,7 @@ function resolveMediaThemeStyle(context = {}) {
 }
 
 function supportsMediaPagePanelTheme(themeStyle = "") {
-  return ["oneui", "ios", "material"].includes(String(themeStyle || "").trim().toLowerCase());
+  return ["oneui", "ios", "material"].includes(findThemeStyleId(themeStyle));
 }
 
 function isMediaPagePanelWidget(widget = {}, themeStyle = "") {
@@ -489,9 +490,16 @@ function resolveMediaPagePanelSize({
 
   const layout = context?.layout === "mobile" ? "mobile" : "desktop";
   if (layout === "mobile") {
+    const portraitRowUnits = Math.max(
+      6,
+      Number(context?.rowUnits)
+      || Number(context?.rows)
+      || Number(fallbackSize?.h)
+      || 8,
+    );
     return {
       w: 4,
-      h: Math.max(8, Number(fallbackSize?.h) || 8),
+      h: Math.max(6, portraitRowUnits - 1),
     };
   }
 

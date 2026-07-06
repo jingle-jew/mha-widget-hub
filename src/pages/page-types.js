@@ -1,4 +1,5 @@
 import { t } from "../i18n/index.js";
+import { findThemeStyleId } from "../settings/theme-registry.js";
 
 export const PAGE_TYPES = Object.freeze({
   GRID: "grid",
@@ -93,7 +94,7 @@ export function hasMediaPagePanelWidget(page = {}) {
 }
 
 export function supportsMediaPageTheme(themeStyle = "") {
-  return MEDIA_PAGE_THEME_STYLES.has(String(themeStyle || "").trim().toLowerCase());
+  return MEDIA_PAGE_THEME_STYLES.has(findThemeStyleId(themeStyle));
 }
 
 export function isMediaPageExperienceActive(page = {}, themeStyle = "") {

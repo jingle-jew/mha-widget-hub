@@ -242,6 +242,46 @@ test("mobile shell keeps the background viewport-anchored while widget content o
   );
 });
 
+test("media page mobile layout clears the dock and anchors transport in landscape", () => {
+  const gridSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "layout", "widget-grid.css"),
+    "utf8",
+  );
+  const source = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "pages", "media-page.css"),
+    "utf8",
+  );
+
+  assert.match(
+    gridSource,
+    /:host\(\[data-media-page-active="true"\]\)\s+\.mha-widget-area\s*\{[\s\S]*overflow:\s*hidden;/,
+  );
+  assert.match(
+    gridSource,
+    /:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\[data-media-page-active="true"\]\)\s+\.mha-page-stage\s*\{[\s\S]*block-size:\s*calc\([\s\S]*100%[\s\S]*var\(--mha-shell-content-bottom-inset,\s*var\(--mha-mobile-dock-footprint,\s*0px\)\)[\s\S]*\);/,
+  );
+  assert.match(
+    gridSource,
+    /:host\(\[data-layout="mobile"\]\[data-media-page-active="true"\]\)\s+\.mha-widget-area\s*\{[\s\S]*overflow-y:\s*hidden;[\s\S]*touch-action:\s*manipulation;[\s\S]*overscroll-behavior-y:\s*none;/,
+  );
+  assert.match(
+    gridSource,
+    /:host\(\[data-layout="mobile"\]\[data-media-page-active="true"\]\)\s+\.mha-page-stage\s*\{[\s\S]*block-size:\s*100%;[\s\S]*min-block-size:\s*0;/,
+  );
+  assert.match(
+    gridSource,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\[data-media-page-active="true"\]\)\s+\.mha-page-stage\s*\{[\s\S]*block-size:\s*100%;[\s\S]*min-block-size:\s*0;/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\)\s+\.mha-media-page-transport\s*\{[\s\S]*display:\s*flex;[\s\S]*flex-direction:\s*column;[\s\S]*justify-content:\s*flex-end;[\s\S]*block-size:\s*100%;/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\)\s+\.mha-media-page-controls\s*\{[\s\S]*align-self:\s*end;/,
+  );
+});
+
 test("floating controls and settings sheet consume responsive variants instead of raw orientation for mobile landscape", () => {
   const floatingControlsSource = fs.readFileSync(
     path.join(REPO_ROOT, "styles", "layout", "floating-controls.css"),

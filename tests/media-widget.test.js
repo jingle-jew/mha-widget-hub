@@ -1,5 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
 import {
   createMediaTransitionCache,
   MEDIA_WIDGET_CONTENT_RENDERER,
@@ -7,6 +9,8 @@ import {
   resolveMediaTransitionData,
 } from "../src/widgets/media-widget.js";
 import { normalizeWidgetForKind } from "../src/layout/layout-engine.js";
+
+const REPO_ROOT = process.cwd();
 
 function mediaData(overrides = {}) {
   return {
@@ -165,6 +169,26 @@ test("media page panel keeps responsive sizes on supported themes and downgrades
   );
   assert.deepEqual(
     normalizeWidgetForKind(widget, {
+      units: 4,
+      rowUnits: 8,
+      layout: "mobile",
+      themeStyle: "ios",
+      layoutVariant: "mobile-portrait",
+    }),
+    { w: 4, h: 7 },
+  );
+  assert.deepEqual(
+    normalizeWidgetForKind(widget, {
+      units: 4,
+      rowUnits: 9,
+      layout: "mobile",
+      themeStyle: "material",
+      layoutVariant: "mobile-portrait",
+    }),
+    { w: 4, h: 8 },
+  );
+  assert.deepEqual(
+    normalizeWidgetForKind(widget, {
       units: 8,
       rowUnits: 8,
       layout: "tablet",
@@ -263,4 +287,44 @@ test("media page panel shell stays active on supported themes and falls back els
 
   assert.equal(shell.dataset.mediaVariant, "media-page-panel");
   globalThis.document = originalDocument;
+});
+
+test("media page panel css clears the mobile dock and anchors transport in landscape", () => {
+  const source = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "widgets", "media-widget.css"),
+    "utf8",
+  );
+
+  assert.match(
+    source,
+    /:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\[data-theme-style="oneui"\]\)\s+\.mha-widget\[data-widget-kind="media"\]\[data-media-variant="media-page-panel"\]\s*>\s*\.mha-media-widget\[data-media-size="4x4"\],[\s\S]*?:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\[data-theme-style="material"\]\)\s+\.mha-widget\[data-widget-kind="media"\]\[data-media-variant="media-page-panel"\]\s*>\s*\.mha-media-widget\[data-media-size="4x4"\]\s*\{[\s\S]*grid-template-rows:\s*auto minmax\(0,\s*1fr\) auto;[\s\S]*block-size:\s*calc\([\s\S]*var\(--mha-shell-content-bottom-inset,\s*var\(--mha-mobile-dock-footprint,\s*0px\)\)[\s\S]*\);/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\[data-theme-style="oneui"\]\)\s+\.mha-widget\[data-widget-kind="media"\]\[data-media-variant="media-page-panel"\]\s+\.mha-media-widget-artwork\s*\{[\s\S]*inline-size:\s*min\(100%,\s*var\(--mha-media-4x4-artwork-size\)\);/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\[data-theme-style="oneui"\]\)\s+\.mha-widget\[data-widget-kind="media"\]\[data-media-variant="media-page-panel"\]\s*>\s*\.mha-media-widget\[data-media-size="4x4"\]\s*\{[\s\S]*--mha-media-gap:\s*clamp\(\.58rem,\s*min\(4\.6cqi,\s*4\.6cqb\),\s*\.94rem\);[\s\S]*--mha-media-progress-height:\s*clamp\(\.34rem,\s*2\.4cqb,\s*\.58rem\);/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\[data-theme-style="oneui"\]\)\s+\.mha-widget\[data-widget-kind="media"\]\[data-media-variant="media-page-panel"\]\s+\.mha-media-widget-meta-rows\s*\{[\s\S]*display:\s*none;/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\[data-theme-style="oneui"\]\)\s+\.mha-widget\[data-widget-kind="media"\]\[data-media-variant="media-page-panel"\]\s+\.mha-media-widget-transport\s*\{[\s\S]*padding:\s*clamp\(\.78rem,\s*3\.4cqb,\s*\.98rem\);/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\[data-theme-style="oneui"\]\)\s+\.mha-widget\[data-widget-kind="media"\]\[data-media-variant="media-page-panel"\]\s+\.mha-media-widget-transport,[\s\S]*?:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\[data-theme-style="material"\]\)\s+\.mha-widget\[data-widget-kind="media"\]\[data-media-variant="media-page-panel"\]\s+\.mha-media-widget-transport\s*\{[\s\S]*inset-inline:\s*max\(var\(--mha-media-padding\),\s*var\(--mha-mobile-grid-gutter,\s*var\(--mha-page-padding\)\)\);[\s\S]*inset-block-end:\s*var\(--mha-media-padding\);[\s\S]*position:\s*absolute;/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\[data-theme-style="oneui"\]\)\s+\.mha-widget\[data-widget-kind="media"\]\[data-media-variant="media-page-panel"\]\s+\.mha-media-widget-transport,[\s\S]*?:host\(\[data-layout-variant="mobile-landscape"\]\[data-theme-style="material"\]\)\s+\.mha-widget\[data-widget-kind="media"\]\[data-media-variant="media-page-panel"\]\s+\.mha-media-widget-transport\s*\{[\s\S]*display:\s*flex;[\s\S]*flex-direction:\s*column;[\s\S]*justify-content:\s*flex-end;/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\[data-theme-style="oneui"\]\)\s+\.mha-widget\[data-widget-kind="media"\]\[data-media-variant="media-page-panel"\]\s+\.mha-media-widget-progress-shell,[\s\S]*?:host\(\[data-layout-variant="mobile-landscape"\]\[data-theme-style="material"\]\)\s+\.mha-widget\[data-widget-kind="media"\]\[data-media-variant="media-page-panel"\]\s+\.mha-media-widget-progress-shell\s*\{[\s\S]*margin-block-start:\s*auto;/,
+  );
 });

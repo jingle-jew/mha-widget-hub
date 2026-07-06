@@ -31,6 +31,18 @@ test("page creator keeps the media page option on ios", () => {
   assert.equal(state.pageTypeOptions.some((option) => option.value === "media-players" && option.selected), true);
 });
 
+test("page creator keeps the media page option on theme aliases", () => {
+  const state = buildPageCreatorState({
+    open: true,
+    themeStyle: "material-you",
+    selectedPageType: "media-players",
+  });
+
+  assert.equal(state.selectedPageType, "media-players");
+  assert.equal(state.pageTypeOptions.some((option) => option.value === "media-players"), true);
+  assert.equal(state.pageTypeOptions.some((option) => option.value === "media-players" && option.selected), true);
+});
+
 test("widget config popup state preserves the current session payload", () => {
   const state = buildWidgetConfigPopupState({
     session: { mode: "edit", configType: "scenes" },
