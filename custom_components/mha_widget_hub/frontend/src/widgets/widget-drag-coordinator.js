@@ -96,8 +96,16 @@ function getEdgeSnapDirection(scrollArea, point) {
   return 0;
 }
 
+function isMobileEdgeSnapEnabled(host) {
+  if (typeof host?._isMobileLauncherLayout === "function") {
+    return host._isMobileLauncherLayout();
+  }
+  return (host?.dataset?.layout || host?._layout || "") === "mobile";
+}
+
 function maybeSnapScroll(host, session, event) {
   if (!session?.armed) return;
+  if (!isMobileEdgeSnapEnabled(host)) return;
   const now = Date.now();
   if (now - (session.lastEdgeSnapAt || 0) < DEFAULT_EDGE_SNAP_COOLDOWN_MS) return;
 
@@ -279,6 +287,10 @@ export function createWidgetDragCoordinator(host, {
       cancelSession(session, { clearSourceState: true });
       session = null;
       if (deleted) {
+        host._syncEditModeDom?.();
+        return;
+      }
+      if (moved) {
         host._syncEditModeDom?.();
         return;
       }
