@@ -1081,6 +1081,53 @@ test("primary controls use host edit icon and widget-manager bridge callbacks", 
   globalThis.document = previousDocument;
 });
 
+test("primary controls ignore add-button clicks while it acts as a drag-delete target", async () => {
+  const prototype = await loadHubPrototype();
+  const previousDocument = globalThis.document;
+  const calls = [];
+
+  globalThis.document = {
+    ...globalThis.document,
+    createElement(tag) {
+      return createMockElement(tag);
+    },
+    createElementNS(namespace, tag) {
+      return createMockElement(tag, namespace);
+    },
+  };
+
+  const host = {
+    _isEditing: true,
+    dataset: {},
+    classList: {
+      toggle() {},
+    },
+    shadowRoot: {
+      appended: [],
+      append(...nodes) {
+        this.appended.push(...nodes);
+      },
+    },
+    toggleEditMode() {
+      calls.push("toggleEditMode");
+    },
+    _openWidgetManager() {
+      calls.push("openWidgetManager");
+    },
+  };
+
+  prototype._appendPrimaryControls.call(host);
+  const addButton = host.shadowRoot.appended[1];
+  addButton.dataset.dragDelete = "true";
+  addButton.onclick?.({
+    preventDefault() {},
+    stopPropagation() {},
+  });
+
+  assert.deepEqual(calls, []);
+  globalThis.document = previousDocument;
+});
+
 test("immediate UI delegates status updates through the host bridge", async () => {
   const prototype = await loadHubPrototype();
   const previousDocument = globalThis.document;

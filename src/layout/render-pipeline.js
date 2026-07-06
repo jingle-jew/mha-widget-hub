@@ -240,12 +240,14 @@ export function createRenderPipeline(host, options = {}) {
     addWidget.className = "mha-edit-button mha-main-edit-button mha-add-widget-button";
     addWidget.type = "button";
     addWidget.setAttribute("aria-label", t("settings.addWidget", "Add widget"));
+    addWidget.dataset.dragDelete = "false";
     setFloatingControlButtonIcon(addWidget, {
       name: "plus",
       label: t("settings.addWidget", "Add widget"),
     });
     addWidget.hidden = !host._isEditing || host._canAddWidgetToActivePage?.() === false;
     addWidget.onclick = (event) => {
+      if (addWidget.dataset.dragDelete === "true") return;
       event.preventDefault();
       event.stopPropagation();
       host._openWidgetManager();

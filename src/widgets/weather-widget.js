@@ -127,9 +127,9 @@ export function createWeatherWidgetContent(widget = {}, {
   hass,
   entityVisibilityConfig,
 } = {}) {
-  const variant = sizeKey({ widgetW, widgetH });
   const context = {
     hass,
+    variant: sizeKey({ widgetW, widgetH }),
     forecastBundle: null,
     forecastEntityId: "",
     forecastCheckedAt: 0,
@@ -138,10 +138,19 @@ export function createWeatherWidgetContent(widget = {}, {
   const root = document.createElement("div");
   root.className = "mha-weather-widget";
   root.dataset.widgetComponent = "weather";
-  root.dataset.weatherSize = variant;
+  root.dataset.weatherSize = context.variant;
+
+  const renderCurrentVariant = () => {
+    root.dataset.weatherSize = context.variant;
+    renderWeather(
+      root,
+      buildWeatherModel(context.hass, widget, entityVisibilityConfig, context.forecastBundle),
+      context.variant,
+    );
+  };
 
   const hydrateForecasts = nextHass => {
-    if (variant !== "4x2") return;
+    if (context.variant !== "4x2") return;
     const model = buildWeatherModel(nextHass, widget, entityVisibilityConfig, context.forecastBundle);
     if (!model.entityId || !model.entityAllowed || !model.entityAvailable) return;
     const now = Date.now();
@@ -159,18 +168,26 @@ export function createWeatherWidgetContent(widget = {}, {
     fetchWeatherForecastBundle(nextHass, model.entityId).then(bundle => {
       if (requestId !== context.forecastRequestId) return;
       context.forecastBundle = bundle;
-      renderWeather(root, buildWeatherModel(context.hass, widget, entityVisibilityConfig, bundle), variant);
+      renderCurrentVariant();
     });
   };
 
   root.__mhaUpdateFromHass = nextHass => {
     context.hass = nextHass;
-    renderWeather(root, buildWeatherModel(nextHass, widget, entityVisibilityConfig, context.forecastBundle), variant);
+    renderCurrentVariant();
     hydrateForecasts(nextHass);
+  };
+  root.__mhaUpdateWidgetSize = ({ widgetW: nextWidgetW = widgetW, widgetH: nextWidgetH = widgetH } = {}) => {
+    const nextVariant = sizeKey({ widgetW: nextWidgetW, widgetH: nextWidgetH });
+    if (nextVariant === context.variant) return;
+    context.variant = nextVariant;
+    renderCurrentVariant();
+    hydrateForecasts(context.hass);
   };
   root.__mhaDestroy = () => {
     context.forecastRequestId += 1;
     delete root.__mhaUpdateFromHass;
+    delete root.__mhaUpdateWidgetSize;
   };
   root.__mhaUpdateFromHass(hass);
   return root;

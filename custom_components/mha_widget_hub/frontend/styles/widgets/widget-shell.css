@@ -186,7 +186,7 @@
 }
 
 /* Widget content is inert while edit chrome remains interactive. */
-:host(.is-editing) .mha-widget > *:not(.mha-widget-tools):not(.mha-widget-move-overlay):not(.mha-size-badge),
+:host(.is-editing) .mha-widget > *:not(.mha-widget-tools):not(.mha-widget-move-overlay):not(.mha-size-badge):not(.mha-widget-resize-handle),
 :host(.is-editing) .mha-widget :is(
   .mha-widget-runtime-slider,
   .mha-widget-demo-button,
@@ -263,8 +263,8 @@
   top: 12px;
   right: 12px;
   display: flex;
-  inline-size: calc((var(--mha-tool-button-size) * 3) + (var(--mha-tool-gap) * 2));
-  min-inline-size: calc((var(--mha-tool-button-size) * 3) + (var(--mha-tool-gap) * 2));
+  inline-size: calc((var(--mha-tool-button-size) * 2) + var(--mha-tool-gap));
+  min-inline-size: calc((var(--mha-tool-button-size) * 2) + var(--mha-tool-gap));
   justify-content: flex-end;
   gap: clamp(.18rem, .5vw, .32rem);
 }
@@ -338,8 +338,40 @@
   letter-spacing: .01em;
 }
 
+.mha-widget-resize-handle {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  z-index: 30;
+  display: grid;
+  inline-size: var(--mha-control-height);
+  block-size: var(--mha-control-height);
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: calc(var(--mha-widget-radius) * .45);
+  background: transparent;
+  color: currentColor;
+  box-shadow: none;
+  overflow: hidden;
+  cursor: nwse-resize;
+  touch-action: none;
+}
+
+.mha-widget-resize-handle::before {
+  content: "";
+  inline-size: 14px;
+  block-size: 14px;
+  border-right: 3px solid currentColor;
+  border-bottom: 3px solid currentColor;
+  border-end-end-radius: calc(var(--mha-widget-radius) * .45);
+  transform: translate(2px, 2px);
+  opacity: .9;
+}
+
 .mha-widget-tools,
-.mha-size-badge {
+.mha-size-badge,
+.mha-widget-resize-handle {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -351,6 +383,17 @@
 }
 
 :host(.is-editing) .mha-widget-tools {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+  transition:
+    opacity 180ms ease,
+    visibility 0s linear 0s,
+    transform 180ms ease;
+}
+
+:host(.is-editing) .mha-widget-resize-handle {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
@@ -378,6 +421,18 @@
     0 10px 24px rgba(0,0,0,.24),
     inset 0 1px 0 rgba(255,255,255,.12);
   backdrop-filter: none;
+}
+
+:host(.is-editing) .mha-widget-resize-handle {
+  color: var(--mha-edit-control-color, #fff);
+}
+
+:host(.is-editing) .mha-widget.is-resizing .mha-size-badge {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: none;
+  transform: translateY(0) scale(1);
+  transition-delay: 0s;
 }
 
 :host(.is-editing) .mha-tool-button[data-action="close"] {
@@ -514,7 +569,8 @@
 }
 
 :host(.is-editing) .mha-widget.is-move-target .mha-tool-button--dimension,
-:host(.is-editing) .mha-widget.is-move-target .mha-tool-button--close {
+:host(.is-editing) .mha-widget.is-move-target .mha-tool-button--close,
+:host(.is-editing) .mha-widget.is-move-target .mha-widget-resize-handle {
   opacity: 0;
   transform: scale(.82);
   pointer-events: none;

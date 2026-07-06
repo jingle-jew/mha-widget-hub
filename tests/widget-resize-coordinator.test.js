@@ -10,12 +10,18 @@ function createElement() {
     dataset: {},
     style: {
       values,
+      gridColumn: "",
+      gridRow: "",
       setProperty(name, value) {
         values.set(name, String(value));
       },
     },
     classList: {
+      added: [],
       removed: [],
+      add(name) {
+        this.added.push(name);
+      },
       remove(name) {
         this.removed.push(name);
       },
@@ -42,6 +48,11 @@ function createHarness(overrides = {}) {
     },
     widgets: [{ id: "clock", kind: "clock", w: 2, h: 2 }],
     activeGridUnits: 3,
+    gridMetrics: {
+      columnStep: 10,
+      rowStep: 20,
+    },
+    position: { x: 2, y: 3 },
     ...overrides.state,
   };
 
@@ -56,7 +67,9 @@ function createHarness(overrides = {}) {
       state.widgets = widgets;
       effects.push(["setWidgets", structuredClone(widgets)]);
     },
+    getGridMetrics: () => state.gridMetrics,
     getActiveGridUnits: () => state.activeGridUnits,
+    getWidgetPosition: () => state.position,
     doesWidgetLayoutFitGrid: overrides.doesWidgetLayoutFitGrid || (() => true),
     normalizeWidgetsToGridBounds: overrides.normalizeWidgetsToGridBounds || (widgets => widgets),
     clampWidgetSizeToGridBounds: overrides.clampWidgetSizeToGridBounds || ((_widget, size) => ({
@@ -67,6 +80,10 @@ function createHarness(overrides = {}) {
     queryWidgetElement: () => element,
     saveWidgets: () => {
       effects.push(["saveWidgets"]);
+      return true;
+    },
+    replaceWidgetDom: (widgetId) => {
+      effects.push(["replaceWidgetDom", widgetId]);
       return true;
     },
     scheduleSquareUnitSync: () => {
@@ -82,6 +99,39 @@ function createHarness(overrides = {}) {
 
   return { coordinator, state, element, effects };
 }
+
+test("startResize captures the current widget size and marks the shell as resizing", () => {
+  const { coordinator, state, element, effects } = createHarness({
+    state: {
+      resizeState: null,
+      widgets: [{ id: "clock", kind: "clock", w: 3, h: 2 }],
+    },
+  });
+
+  assert.equal(
+    coordinator.startResize("clock", {
+      pointerId: 7,
+      clientX: 120,
+      clientY: 80,
+    }),
+    true,
+  );
+
+  assert.deepEqual(state.resizeState, {
+    pointerId: 7,
+    widgetId: "clock",
+    startX: 120,
+    startY: 80,
+    startW: 3,
+    startH: 2,
+    metrics: {
+      columnStep: 10,
+      rowStep: 20,
+    },
+  });
+  assert.deepEqual(element.classList.added, ["is-resizing"]);
+  assert.deepEqual(effects, [["setResizeState", state.resizeState]]);
+});
 
 test("findFittingResize shrinks height first, then width, and falls back to current size", () => {
   const sequence = [];
@@ -140,6 +190,8 @@ test("updateResize mutates datasets, CSS vars, and badge text for the active poi
   assert.equal(element.style.values.get("--mha-widget-w"), "3");
   assert.equal(element.style.values.get("--mha-widget-configured-w"), "4");
   assert.equal(element.style.values.get("--mha-widget-h"), "4");
+  assert.equal(element.style.gridColumn, "2 / span 3");
+  assert.equal(element.style.gridRow, "3 / span 4");
   assert.equal(element.badge.textContent, "4x4 · dense");
   assert.deepEqual(effects[0], ["preventDefault"]);
 });
@@ -161,7 +213,7 @@ test("updateResize is a no-op for mismatched pointers", () => {
   assert.deepEqual(effects, []);
 });
 
-test("finishResize clears the live state, saves widgets, and schedules layout sync", () => {
+test("finishResize clears the live state, saves widgets, and rebuilds the resized widget DOM", () => {
   const { coordinator, state, element, effects } = createHarness();
 
   coordinator.finishResize();
@@ -171,6 +223,6 @@ test("finishResize clears the live state, saves widgets, and schedules layout sy
   assert.deepEqual(effects, [
     ["setResizeState", null],
     ["saveWidgets"],
-    ["scheduleSquareUnitSync"],
+    ["replaceWidgetDom", "clock"],
   ]);
 });

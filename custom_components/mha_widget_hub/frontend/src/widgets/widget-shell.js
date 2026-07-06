@@ -27,7 +27,9 @@ export function createWidgetShell(
     position,
     onToggleMove,
     onMove,
-    onRemove,
+    onStartResize,
+    onUpdateResize,
+    onFinishResize,
     onCycleVariant,
     onConfigure,
     onConfigureSlot,
@@ -122,11 +124,7 @@ export function createWidgetShell(
     },
   );
 
-  const closeButton = tool(t("common.delete", "Delete"), "close", () => onRemove?.(widget.id), {
-    className: "mha-tool-button--close",
-  });
-
-  tools.append(dimensionButton, moveButton, closeButton);
+  tools.append(dimensionButton, moveButton);
 
   const badge = document.createElement("span");
   badge.className = "mha-size-badge";
@@ -136,9 +134,68 @@ export function createWidgetShell(
     tools,
     createMoveOverlay(widget.id, onMove),
     badge,
+    createResizeHandle(widget.id, {
+      isEditing,
+      isMoveTarget,
+      onStartResize,
+      onUpdateResize,
+      onFinishResize,
+    }),
   );
 
   return shell;
+}
+
+function createResizeHandle(
+  widgetId,
+  {
+    isEditing = false,
+    isMoveTarget = false,
+    onStartResize,
+    onUpdateResize,
+    onFinishResize,
+  } = {},
+) {
+  const handle = document.createElement("button");
+  handle.className = "mha-widget-resize-handle";
+  handle.type = "button";
+  handle.dataset.resizeHandle = "true";
+  handle.setAttribute("aria-label", t("widgets.tools.resizeWidget", "Resize widget"));
+
+  let activePointerId = null;
+
+  const finishPointerSession = (event) => {
+    if (activePointerId == null) return;
+    if (event?.type !== "lostpointercapture" && event?.pointerId !== activePointerId) return;
+    const pointerId = activePointerId;
+    activePointerId = null;
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (event?.type !== "lostpointercapture") {
+      handle.releasePointerCapture?.(pointerId);
+    }
+    onFinishResize?.();
+  };
+
+  handle.addEventListener("pointerdown", (event) => {
+    if (!isEditing || isMoveTarget) return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (!onStartResize?.(widgetId, event)) return;
+    activePointerId = event.pointerId;
+    handle.setPointerCapture?.(event.pointerId);
+  });
+
+  handle.addEventListener("pointermove", (event) => {
+    if (event.pointerId !== activePointerId) return;
+    onUpdateResize?.(event);
+  });
+
+  handle.addEventListener("pointerup", finishPointerSession);
+  handle.addEventListener("pointercancel", finishPointerSession);
+  handle.addEventListener("lostpointercapture", finishPointerSession);
+
+  return handle;
 }
 
 function createMoveOverlay(widgetId, onMove) {

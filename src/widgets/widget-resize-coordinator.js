@@ -12,11 +12,13 @@ export class WidgetResizeCoordinator {
     setWidgets = () => {},
     getGridMetrics = () => null,
     getActiveGridUnits = () => 1,
+    getWidgetPosition = () => null,
     doesWidgetLayoutFitGrid = () => true,
     normalizeWidgetsToGridBounds = widgets => widgets,
     clampWidgetSizeToGridBounds = (_widget, size) => size,
     queryWidgetElement = () => null,
     saveWidgets = () => false,
+    replaceWidgetDom = () => false,
     scheduleSquareUnitSync = () => {},
     normalizeWidgetForKindFn = normalizeWidgetForKind,
     getWidgetDensityFn = getWidgetDensity,
@@ -28,19 +30,41 @@ export class WidgetResizeCoordinator {
     this.setWidgets = (...args) => setWidgets(...args);
     this.getGridMetrics = (...args) => getGridMetrics(...args);
     this.getActiveGridUnits = (...args) => getActiveGridUnits(...args);
+    this.getWidgetPosition = (...args) => getWidgetPosition(...args);
     this.doesWidgetLayoutFitGrid = (...args) => doesWidgetLayoutFitGrid(...args);
     this.normalizeWidgetsToGridBounds = (...args) => normalizeWidgetsToGridBounds(...args);
     this.clampWidgetSizeToGridBounds = (...args) => clampWidgetSizeToGridBounds(...args);
     this.queryWidgetElement = (...args) => queryWidgetElement(...args);
     this.saveWidgets = (...args) => saveWidgets(...args);
+    this.replaceWidgetDom = (...args) => replaceWidgetDom(...args);
     this.scheduleSquareUnitSync = (...args) => scheduleSquareUnitSync(...args);
     this.normalizeWidgetForKindFn = (...args) => normalizeWidgetForKindFn(...args);
     this.getWidgetDensityFn = (...args) => getWidgetDensityFn(...args);
     this.sizeToStringFn = (...args) => sizeToStringFn(...args);
   }
 
-  startResize() {
-    return false;
+  startResize(widgetId, event) {
+    if (!widgetId || !event) return false;
+
+    const current = this.getWidgets().find(widget => widget.id === widgetId);
+    const metrics = this.getGridMetrics();
+    if (!current || !metrics?.columnStep || !metrics?.rowStep) return false;
+
+    const size = this.normalizeWidgetForKindFn(current);
+    const pointerId = Number(event.pointerId);
+    if (!Number.isFinite(pointerId)) return false;
+
+    this.setResizeState({
+      pointerId,
+      widgetId,
+      startX: Number(event.clientX) || 0,
+      startY: Number(event.clientY) || 0,
+      startW: size.w,
+      startH: size.h,
+      metrics,
+    });
+    this.queryWidgetElement(widgetId)?.classList?.add?.("is-resizing");
+    return true;
   }
 
   findFittingResize(current, requested) {
@@ -114,11 +138,22 @@ export class WidgetResizeCoordinator {
     element.style.setProperty("--mha-widget-w", String(Math.min(nextSize.w, activeUnits)));
     element.style.setProperty("--mha-widget-configured-w", String(nextSize.w));
     element.style.setProperty("--mha-widget-h", String(nextSize.h));
+    const position = this.getWidgetPosition(state.widgetId);
+    if (position) {
+      element.style.gridColumn = `${position.x} / span ${Math.min(nextSize.w, activeUnits)}`;
+      element.style.gridRow = `${position.y} / span ${nextSize.h}`;
+    }
 
     const badge = element.querySelector(".mha-size-badge");
     if (badge) {
       badge.textContent = `${this.sizeToStringFn(nextSize)} · ${density}`;
     }
+
+    element.querySelector?.("[data-widget-component]")?.__mhaUpdateWidgetSize?.({
+      widgetW: Math.min(nextSize.w, activeUnits),
+      widgetH: nextSize.h,
+      configuredWidgetW: nextSize.w,
+    });
   }
 
   finishResize() {
@@ -128,6 +163,7 @@ export class WidgetResizeCoordinator {
     this.queryWidgetElement(state.widgetId)?.classList?.remove?.("is-resizing");
     this.setResizeState(null);
     this.saveWidgets();
+    if (this.replaceWidgetDom(state.widgetId)) return;
     this.scheduleSquareUnitSync();
   }
 }
