@@ -84,8 +84,8 @@ test("page creator props preserve the original theme style across rebuilds", () 
   const rebuilt = buildPageCreatorPanelProps(props);
 
   assert.equal(rebuilt.themeStyle, "ios");
-  assert.equal(rebuilt.selectedPageType, "grid");
-  assert.equal(rebuilt.pageTypeOptions.some((option) => option.value === "media-players"), false);
+  assert.equal(rebuilt.selectedPageType, "media-players");
+  assert.equal(rebuilt.pageTypeOptions.some((option) => option.value === "media-players"), true);
 });
 
 test("closed page creator panels are hidden", () => {

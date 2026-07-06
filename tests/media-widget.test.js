@@ -110,7 +110,7 @@ test("media transition cache expires when idle is not temporary", () => {
   assert.equal(expiredIdle.usingGraceCache, undefined);
 });
 
-test("media page panel keeps oneui responsive sizes and downgrades outside oneui", () => {
+test("media page panel keeps responsive sizes on supported themes and downgrades elsewhere", () => {
   const widget = {
     kind: "media",
     variant: "media-page-panel",
@@ -129,6 +129,26 @@ test("media page panel keeps oneui responsive sizes and downgrades outside oneui
       rowUnits: 8,
       layout: "tablet",
       themeStyle: "ios",
+      viewportHeight: 900,
+    }),
+    { w: 6, h: 8 },
+  );
+  assert.deepEqual(
+    normalizeWidgetForKind(widget, {
+      units: 12,
+      rowUnits: 8,
+      layout: "desktop",
+      themeStyle: "material",
+      viewportHeight: 760,
+    }),
+    { w: 8, h: 6 },
+  );
+  assert.deepEqual(
+    normalizeWidgetForKind(widget, {
+      units: 8,
+      rowUnits: 8,
+      layout: "tablet",
+      themeStyle: "alexa",
       viewportHeight: 900,
     }),
     { w: 4, h: 4 },
@@ -185,7 +205,7 @@ test("media page panel keeps oneui responsive sizes and downgrades outside oneui
   );
 });
 
-test("media page panel shell falls back to the standard 4x4 media variant outside oneui", () => {
+test("media page panel shell stays active on supported themes and falls back elsewhere", () => {
   const shell = { dataset: {} };
   const originalDocument = globalThis.document;
 
@@ -193,6 +213,24 @@ test("media page panel shell falls back to the standard 4x4 media variant outsid
     documentElement: {
       dataset: {
         themeStyle: "ios",
+      },
+    },
+  };
+
+  MEDIA_WIDGET_CONTENT_RENDERER.decorateShell({
+    shell,
+    widget: {
+      variant: "media-page-panel",
+      responsiveSizeMode: "media-page-panel",
+    },
+  });
+
+  assert.equal(shell.dataset.mediaVariant, "media-page-panel");
+
+  globalThis.document = {
+    documentElement: {
+      dataset: {
+        themeStyle: "alexa",
       },
     },
   };

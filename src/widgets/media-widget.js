@@ -430,12 +430,16 @@ function resolveMediaThemeStyle(context = {}) {
   ).trim().toLowerCase();
 }
 
-function isOneUiMediaPagePanelWidget(widget = {}, themeStyle = "") {
-  return widget?.responsiveSizeMode === "media-page-panel" && themeStyle === "oneui";
+function supportsMediaPagePanelTheme(themeStyle = "") {
+  return ["oneui", "ios", "material"].includes(String(themeStyle || "").trim().toLowerCase());
+}
+
+function isMediaPagePanelWidget(widget = {}, themeStyle = "") {
+  return widget?.responsiveSizeMode === "media-page-panel" && supportsMediaPagePanelTheme(themeStyle);
 }
 
 function resolveEffectiveMediaVariant(widget = {}, themeStyle = "") {
-  if (widget?.responsiveSizeMode === "media-page-panel" && themeStyle !== "oneui") {
+  if (widget?.responsiveSizeMode === "media-page-panel" && !supportsMediaPagePanelTheme(themeStyle)) {
     return "media-panel";
   }
   return widget?.variant || "media-compact";
@@ -446,7 +450,7 @@ function resolveMediaPagePanelSize({
   fallbackSize = {},
 } = {}) {
   const themeStyle = resolveMediaThemeStyle(context);
-  if (themeStyle !== "oneui") {
+  if (!supportsMediaPagePanelTheme(themeStyle)) {
     return {
       w: 4,
       h: 4,
@@ -463,7 +467,7 @@ function resolveMediaPagePanelSize({
   );
   const isMobileLandscape = context?.layoutVariant === "mobile-landscape"
     || (context?.layout === "mobile" && (Number(context?.units) || 0) >= 8);
-  const isLowHeightOneUiPanel = themeStyle === "oneui"
+  const isLowHeightMediaPagePanel = supportsMediaPagePanelTheme(themeStyle)
     && context?.layout !== "mobile"
     && !isMobileLandscape
     && viewportHeight > 0
@@ -476,7 +480,7 @@ function resolveMediaPagePanelSize({
     };
   }
 
-  if (isLowHeightOneUiPanel) {
+  if (isLowHeightMediaPagePanel) {
     return {
       w: Math.max(8, Number(fallbackSize?.w) || 8),
       h: 6,
@@ -505,7 +509,7 @@ export function createMediaWidgetContent(widget = {}, {
   interactive = true,
 } = {}) {
   const themeStyle = resolveMediaThemeStyle();
-  const useOneUiMediaPagePanel = isOneUiMediaPagePanelWidget(widget, themeStyle);
+  const useMediaPagePanel = isMediaPagePanelWidget(widget, themeStyle);
   const transitionCache = createMediaTransitionCache();
   let graceTimer = null;
   const data = getMediaData(widget, hass, transitionCache);
@@ -592,7 +596,7 @@ export function createMediaWidgetContent(widget = {}, {
     onAction,
   });
   const progress = createProgress(data, {
-    includeLabels: variantKey === "4x2" || useOneUiMediaPagePanel,
+    includeLabels: variantKey === "4x2" || useMediaPagePanel,
   });
   root.append(background);
   setBackgroundImage(root, data.artworkUrl);
