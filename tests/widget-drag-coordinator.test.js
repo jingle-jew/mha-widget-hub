@@ -393,6 +393,7 @@ test("widget drag snap scroll falls back to the host scroll container when the w
   const host = {
     ...hostScrollArea,
     _isEditing: true,
+    dataset: { layout: "mobile" },
     _activeMoveWidgetId: "",
     _pendingWidgetPlacement: null,
     _isMobileLandscapeLayout() {
@@ -479,6 +480,7 @@ test("widget drag snap scroll still prefers the widget area when it remains the 
   const host = {
     ...hostScrollArea,
     _isEditing: true,
+    dataset: { layout: "mobile" },
     _activeMoveWidgetId: "",
     _pendingWidgetPlacement: null,
     _isMobileLandscapeLayout() {
@@ -543,6 +545,95 @@ test("widget drag snap scroll still prefers the widget area when it remains the 
     globalThis.setTimeout = previousSetTimeout;
     globalThis.clearTimeout = previousClearTimeout;
     globalThis.window = previousWindow;
+  }
+});
+
+test("widget drag edge snap scroll stays disabled on tablet and desktop", () => {
+  const widget = createWidgetElement();
+  const widgetArea = createScrollArea({
+    clientHeight: 420,
+    scrollHeight: 1220,
+    scrollTop: 120,
+    top: 100,
+    bottom: 520,
+  });
+  const hostScrollArea = createScrollArea({
+    clientHeight: 700,
+    scrollHeight: 1600,
+    scrollTop: 200,
+    top: 0,
+    bottom: 700,
+  });
+
+  for (const layout of ["tablet", "desktop"]) {
+    const host = {
+      ...hostScrollArea,
+      _isEditing: true,
+      dataset: { layout },
+      _activeMoveWidgetId: "",
+      _pendingWidgetPlacement: null,
+      _isMobileLandscapeLayout() {
+        return false;
+      },
+      _isResizeHandleEvent() {
+        return false;
+      },
+      _syncEditModeDom() {},
+      _syncWidgetDropSlots() {},
+      classList: createClassList(),
+      shadowRoot: {
+        elementFromPoint() {
+          return null;
+        },
+        querySelector(selector) {
+          return selector === ".mha-widget-area" ? widgetArea : null;
+        },
+      },
+    };
+
+    const previousSetTimeout = globalThis.setTimeout;
+    const previousClearTimeout = globalThis.clearTimeout;
+    const previousWindow = globalThis.window;
+    let armedCallback = null;
+    globalThis.setTimeout = (callback) => {
+      armedCallback = callback;
+      return 1;
+    };
+    globalThis.clearTimeout = () => {
+      armedCallback = null;
+    };
+    globalThis.window = { innerHeight: 720 };
+
+    try {
+      const coordinator = createWidgetDragCoordinator(host);
+      coordinator.wireWidget(widget, { id: `clock-${layout}` });
+
+      widget.listeners.get("pointerdown")?.({
+        pointerId: 41,
+        button: 0,
+        clientX: 10,
+        clientY: 20,
+        target: widget,
+      });
+      armedCallback?.();
+
+      widget.listeners.get("pointermove")?.({
+        pointerId: 41,
+        clientX: 16,
+        clientY: 500,
+        preventDefault() {},
+        stopPropagation() {},
+      });
+
+      assert.equal(widgetArea.scrollByCalls.length, 0);
+      assert.equal(host.scrollByCalls.length, 0);
+    } finally {
+      globalThis.setTimeout = previousSetTimeout;
+      globalThis.clearTimeout = previousClearTimeout;
+      globalThis.window = previousWindow;
+      widgetArea.scrollByCalls.length = 0;
+      hostScrollArea.scrollByCalls.length = 0;
+    }
   }
 });
 
@@ -625,6 +716,92 @@ test("widget drag can drop onto the floating trash target to delete the widget",
     });
 
     assert.equal(host.removedWidgetId, "clock");
+    assert.equal(host._syncEditModeDomCalls, 2);
+    assert.equal(host.classList.contains("is-widget-dragging"), false);
+  } finally {
+    globalThis.setTimeout = previousSetTimeout;
+    globalThis.clearTimeout = previousClearTimeout;
+  }
+});
+
+test("widget drag resyncs edit controls after dropping onto a grid slot", () => {
+  const widget = createWidgetElement();
+  const dropSlot = {
+    dataset: { x: "2", y: "3" },
+    classList: createClassList(),
+    closest(selector) {
+      return selector === ".mha-widget-drop-slot" ? this : null;
+    },
+  };
+  const host = {
+    _isEditing: true,
+    _activeMoveWidgetId: "",
+    _pendingWidgetPlacement: null,
+    movedTo: null,
+    _isMobileLandscapeLayout() {
+      return false;
+    },
+    _isResizeHandleEvent() {
+      return false;
+    },
+    _moveWidgetToDropSlot(id, x, y) {
+      this.movedTo = { id, x, y };
+    },
+    _syncEditModeDomCalls: 0,
+    _syncWidgetDropSlots() {},
+    _syncEditModeDom() {
+      this._syncEditModeDomCalls += 1;
+    },
+    classList: createClassList(),
+    shadowRoot: {
+      elementFromPoint() {
+        return dropSlot;
+      },
+      querySelector() {
+        return null;
+      },
+    },
+  };
+
+  const previousSetTimeout = globalThis.setTimeout;
+  const previousClearTimeout = globalThis.clearTimeout;
+  let armedCallback = null;
+  globalThis.setTimeout = (callback) => {
+    armedCallback = callback;
+    return 1;
+  };
+  globalThis.clearTimeout = () => {
+    armedCallback = null;
+  };
+
+  try {
+    const coordinator = createWidgetDragCoordinator(host);
+    coordinator.wireWidget(widget, { id: "clock" });
+
+    widget.listeners.get("pointerdown")?.({
+      pointerId: 51,
+      button: 0,
+      clientX: 10,
+      clientY: 20,
+      target: widget,
+    });
+    armedCallback?.();
+
+    widget.listeners.get("pointermove")?.({
+      pointerId: 51,
+      clientX: 16,
+      clientY: 24,
+      preventDefault() {},
+      stopPropagation() {},
+    });
+
+    widget.listeners.get("pointerup")?.({
+      pointerId: 51,
+      preventDefault() {},
+      stopPropagation() {},
+    });
+
+    assert.deepEqual(host.movedTo, { id: "clock", x: 2, y: 3 });
     assert.equal(host._syncEditModeDomCalls, 2);
     assert.equal(host.classList.contains("is-widget-dragging"), false);
   } finally {
