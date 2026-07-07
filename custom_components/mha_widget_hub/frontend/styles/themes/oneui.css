@@ -63,7 +63,7 @@
   --mha-bg-radial-2: color-mix(in srgb, var(--mha-bg-blob-2) 24%, transparent);
   --mha-bg-radial-3: color-mix(in srgb, var(--mha-bg-blob-3) 18%, transparent);
   --mha-bg-blob-1: color-mix(in srgb, var(--mha-accent) 72%, #73b1ff);
-  --mha-bg-blob-2: color-mix(in srgb, var(--mha-accent) 58%, #7f9fff);
+  --mha-bg-blob-2: color-mix(in srgb, var(--mha-accent) 38%, #ffb06f);
   --mha-bg-blob-3: color-mix(in srgb, var(--mha-accent) 44%, #c77dff);
   --mha-bg-blob-4: color-mix(in srgb, var(--mha-accent) 34%, #ff93bf);
   --mha-bg-blob-opacity: .31;
@@ -124,7 +124,7 @@
   --mha-bg-radial-2: color-mix(in srgb, var(--mha-bg-blob-2) 28%, transparent);
   --mha-bg-radial-3: color-mix(in srgb, var(--mha-bg-blob-3) 20%, transparent);
   --mha-bg-blob-1: color-mix(in srgb, var(--mha-accent) 70%, #65a8ff);
-  --mha-bg-blob-2: color-mix(in srgb, var(--mha-accent) 56%, #8b72ff);
+  --mha-bg-blob-2: color-mix(in srgb, var(--mha-accent) 36%, #ff9f6e);
   --mha-bg-blob-3: color-mix(in srgb, var(--mha-accent) 42%, #c77dff);
   --mha-bg-blob-4: color-mix(in srgb, var(--mha-accent) 32%, #ff87b7);
   --mha-bg-blob-opacity: .34;
