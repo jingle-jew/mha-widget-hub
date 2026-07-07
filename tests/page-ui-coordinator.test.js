@@ -206,14 +206,14 @@ test("page creator stays available in mobile landscape while editing", () => {
   assert.equal(calls.syncDocks, 1);
 });
 
-test("media page creation falls back to a normal grid page outside oneui", () => {
+test("media page creation falls back to a normal grid page on unsupported themes", () => {
   const { coordinator, state } = createHarness({
     state: {
       pageCreatorOpen: true,
       newPageType: "media-players",
     },
     options: {
-      getThemeStyle: () => "ios",
+      getThemeStyle: () => "alexa",
     },
   });
 

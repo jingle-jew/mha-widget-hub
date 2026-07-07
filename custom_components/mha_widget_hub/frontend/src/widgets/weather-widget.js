@@ -31,6 +31,13 @@ function createText(className, text) {
   return el;
 }
 
+function appendTextIfAny(parent, className, text) {
+  if (!text) return null;
+  const el = createText(className, text);
+  parent.append(el);
+  return el;
+}
+
 function createWeatherGlyph(condition = "partly-cloudy") {
   return createCurrentWeatherIcon(condition, {
     label: "Current conditions",
@@ -48,14 +55,22 @@ function createMetricChip({ icon = "", label = "", value = "" } = {}) {
   return chip;
 }
 
-function createCurrentPane(data, { className = "" } = {}) {
+function createCurrentPane(data, { className = "", variant = "2x2", details = null } = {}) {
   const pane = document.createElement("section");
   pane.className = ["mha-weather-widget-current", className].filter(Boolean).join(" ");
+  pane.dataset.weatherVariant = variant;
+  appendTextIfAny(pane, "mha-weather-widget-location", data.location);
   pane.append(
     createText("mha-weather-widget-temp", data.temperature),
     createWeatherGlyph(data.condition),
+  );
+  appendTextIfAny(pane, "mha-weather-widget-range", data.temperatureRange);
+  pane.append(
     createText("mha-weather-widget-summary", data.summary),
   );
+  if (details?.childNodes?.length) {
+    pane.append(details);
+  }
   return pane;
 }
 
@@ -64,7 +79,7 @@ function createDetails(data) {
   details.className = "mha-weather-widget-details";
   if (data.humidity) details.append(createMetricChip({ icon: "💧", value: data.humidity }));
   if (data.wind) details.append(createMetricChip({ icon: "↗", value: data.wind }));
-  return details;
+  return details.childNodes.length ? details : null;
 }
 
 function createForecastStack(forecast = []) {
@@ -75,7 +90,7 @@ function createForecastStack(forecast = []) {
     stack.append(createText("mha-weather-widget-forecast-empty", "Forecasts unavailables"));
     return stack;
   }
-  forecast.slice(0, 4).forEach((item) => {
+  forecast.slice(0, 5).forEach((item) => {
     const row = document.createElement("div");
     row.className = "mha-weather-widget-forecast-row";
     row.append(
@@ -111,12 +126,22 @@ function renderWeather(root, data, variant) {
   }
 
   if (variant === "4x1" || variant === "2x2") {
-    root.append(createCurrentPane(data));
+    root.append(createCurrentPane(data, {
+      variant,
+      className: variant === "4x1" ? "mha-weather-widget-current--horizontal" : "",
+    }));
   } else if (variant === "3x2") {
-    root.append(createCurrentPane(data), createDetails(data));
+    root.append(createCurrentPane(data, {
+      variant,
+      className: "mha-weather-widget-current--split",
+      details: createDetails(data),
+    }));
   } else {
-    const left = createCurrentPane(data, { className: "mha-weather-widget-current--split" });
-    left.append(createDetails(data));
+    const left = createCurrentPane(data, {
+      variant,
+      className: "mha-weather-widget-current--split",
+      details: createDetails(data),
+    });
     root.append(left, createForecastStack(data.forecast));
   }
 }

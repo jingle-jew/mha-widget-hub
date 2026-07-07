@@ -23,8 +23,8 @@ import {
   getDefaultPageIcon,
   isMediaPageExperienceActive,
   isMediaPlayersPage,
-  isOneUiMediaPageTheme,
   PAGE_TYPES,
+  supportsMediaPageTheme,
 } from "./page-types.js";
 
 export class PageUiCoordinator {
@@ -244,7 +244,7 @@ export class PageUiCoordinator {
   }
 
   setPageCreatorType(type = PAGE_TYPES.GRID) {
-    const nextType = !isOneUiMediaPageTheme(this.getThemeStyle()) && type === PAGE_TYPES.MEDIA_PLAYERS
+    const nextType = !supportsMediaPageTheme(this.getThemeStyle()) && type === PAGE_TYPES.MEDIA_PLAYERS
       ? PAGE_TYPES.GRID
       : (type || PAGE_TYPES.GRID);
     this.setNewPageType(nextType);
@@ -254,7 +254,7 @@ export class PageUiCoordinator {
 
   createPageFromCreator() {
     if (!this.getIsEditing()) return false;
-    const pageType = !isOneUiMediaPageTheme(this.getThemeStyle())
+    const pageType = !supportsMediaPageTheme(this.getThemeStyle())
       ? PAGE_TYPES.GRID
       : (this.getNewPageType() || PAGE_TYPES.GRID);
     return this.addPage({

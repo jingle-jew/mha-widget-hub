@@ -354,12 +354,27 @@ export function getThemeStyleIds() {
   return getThemeDefinitions().map(({ id }) => id);
 }
 
+export function findThemeStyleId(themeStyle = "") {
+  const normalized = String(themeStyle || "").trim().toLowerCase();
+  if (!normalized) return "";
+  if (THEME_REGISTRY[normalized]) return normalized;
+
+  const aliasedTheme = getThemeDefinitions().find(({ aliases = [] }) => (
+    aliases.some(alias => String(alias || "").trim().toLowerCase() === normalized)
+  ));
+  return aliasedTheme?.id || "";
+}
+
+export function resolveThemeStyleId(themeStyle = getDefaultThemeStyle()) {
+  return findThemeStyleId(themeStyle) || getDefaultThemeStyle();
+}
+
 export function getDefaultThemeStyle() {
   return "oneui";
 }
 
 export function getThemeDefinition(themeStyle = getDefaultThemeStyle()) {
-  return THEME_REGISTRY[themeStyle] || THEME_REGISTRY[getDefaultThemeStyle()];
+  return THEME_REGISTRY[resolveThemeStyleId(themeStyle)] || THEME_REGISTRY[getDefaultThemeStyle()];
 }
 
 export function getThemeDockDefinition(themeStyle = getDefaultThemeStyle()) {

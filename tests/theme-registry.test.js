@@ -61,6 +61,12 @@ describe("theme registry", () => {
     assert.equal(getDefaultIconShape("unknown"), "squircle");
   });
 
+  it("resolves registered theme aliases to their canonical ids", () => {
+    assert.equal(getThemeDefinition("liquid-glass").id, "ios");
+    assert.equal(getThemeDefinition("frosted-glass").id, "ios");
+    assert.equal(getThemeDefinition("material-you").id, "material");
+  });
+
   it("normalizes a theme-level dock manifest contract", () => {
     assert.deepEqual(getThemeDockDefinition("oneui"), {
       usesDock: true,

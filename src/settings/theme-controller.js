@@ -1,5 +1,10 @@
 import { deriveOneUiBlobPalette, normalizeAccent, supportsAutoAccent } from "./accent-palettes.js";
-import { getDefaultIconShape, getThemeStyleIds, normalizeThemeVariantSelection } from "./theme-registry.js";
+import {
+  getDefaultIconShape,
+  getThemeStyleIds,
+  normalizeThemeVariantSelection,
+  resolveThemeStyleId,
+} from "./theme-registry.js";
 
 export const THEME_STYLES = Object.freeze(new Set(getThemeStyleIds()));
 
@@ -31,7 +36,8 @@ export function getStoredThemeSetting(host) {
 }
 
 export function normalizeThemeStyle(themeStyle = "oneui") {
-  return THEME_STYLES.has(themeStyle) ? themeStyle : "oneui";
+  const normalized = String(themeStyle || "").trim().toLowerCase();
+  return THEME_STYLES.has(normalized) ? normalized : resolveThemeStyleId(normalized);
 }
 
 export function getStoredThemeStyle(host) {

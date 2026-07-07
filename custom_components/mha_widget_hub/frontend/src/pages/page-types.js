@@ -1,4 +1,5 @@
 import { t } from "../i18n/index.js";
+import { findThemeStyleId } from "../settings/theme-registry.js";
 
 export const PAGE_TYPES = Object.freeze({
   GRID: "grid",
@@ -13,6 +14,8 @@ export const MEDIA_PAGE_VISUAL_STYLES = Object.freeze([
   "material-you",
   "alexa",
 ]);
+
+const MEDIA_PAGE_THEME_STYLES = new Set(["oneui", "ios", "material"]);
 
 export function normalizePageType(type = PAGE_TYPES.GRID) {
   return Object.values(PAGE_TYPES).includes(type) ? type : PAGE_TYPES.GRID;
@@ -90,12 +93,12 @@ export function hasMediaPagePanelWidget(page = {}) {
   )));
 }
 
-export function isOneUiMediaPageTheme(themeStyle = "") {
-  return String(themeStyle || "").trim().toLowerCase() === "oneui";
+export function supportsMediaPageTheme(themeStyle = "") {
+  return MEDIA_PAGE_THEME_STYLES.has(findThemeStyleId(themeStyle));
 }
 
 export function isMediaPageExperienceActive(page = {}, themeStyle = "") {
-  return isOneUiMediaPageTheme(themeStyle)
+  return supportsMediaPageTheme(themeStyle)
     && (isMediaPlayersPage(page) || hasMediaPagePanelWidget(page));
 }
 
@@ -147,7 +150,7 @@ export function getPageCreatorTypeOptions({ themeStyle = "oneui" } = {}) {
     }),
   ];
 
-  if (isOneUiMediaPageTheme(themeStyle)) {
+  if (supportsMediaPageTheme(themeStyle)) {
     options.push(Object.freeze({
       value: PAGE_TYPES.MEDIA_PLAYERS,
       icon: "media-player",

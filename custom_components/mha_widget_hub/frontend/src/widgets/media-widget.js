@@ -15,6 +15,7 @@ import {
 import { runMediaPlayerAction } from "../ha/actions.js";
 import { t } from "../i18n/index.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
+import { findThemeStyleId } from "../settings/theme-registry.js";
 
 export const MEDIA_WIDGET_KIND = "media";
 export const MEDIA_TRANSITION_GRACE_MS = 1200;
@@ -430,12 +431,16 @@ function resolveMediaThemeStyle(context = {}) {
   ).trim().toLowerCase();
 }
 
-function isOneUiMediaPagePanelWidget(widget = {}, themeStyle = "") {
-  return widget?.responsiveSizeMode === "media-page-panel" && themeStyle === "oneui";
+function supportsMediaPagePanelTheme(themeStyle = "") {
+  return ["oneui", "ios", "material"].includes(findThemeStyleId(themeStyle));
+}
+
+function isMediaPagePanelWidget(widget = {}, themeStyle = "") {
+  return widget?.responsiveSizeMode === "media-page-panel" && supportsMediaPagePanelTheme(themeStyle);
 }
 
 function resolveEffectiveMediaVariant(widget = {}, themeStyle = "") {
-  if (widget?.responsiveSizeMode === "media-page-panel" && themeStyle !== "oneui") {
+  if (widget?.responsiveSizeMode === "media-page-panel" && !supportsMediaPagePanelTheme(themeStyle)) {
     return "media-panel";
   }
   return widget?.variant || "media-compact";
@@ -446,7 +451,7 @@ function resolveMediaPagePanelSize({
   fallbackSize = {},
 } = {}) {
   const themeStyle = resolveMediaThemeStyle(context);
-  if (themeStyle !== "oneui") {
+  if (!supportsMediaPagePanelTheme(themeStyle)) {
     return {
       w: 4,
       h: 4,
@@ -463,7 +468,7 @@ function resolveMediaPagePanelSize({
   );
   const isMobileLandscape = context?.layoutVariant === "mobile-landscape"
     || (context?.layout === "mobile" && (Number(context?.units) || 0) >= 8);
-  const isLowHeightOneUiPanel = themeStyle === "oneui"
+  const isLowHeightMediaPagePanel = supportsMediaPagePanelTheme(themeStyle)
     && context?.layout !== "mobile"
     && !isMobileLandscape
     && viewportHeight > 0
@@ -476,7 +481,7 @@ function resolveMediaPagePanelSize({
     };
   }
 
-  if (isLowHeightOneUiPanel) {
+  if (isLowHeightMediaPagePanel) {
     return {
       w: Math.max(8, Number(fallbackSize?.w) || 8),
       h: 6,
@@ -485,9 +490,16 @@ function resolveMediaPagePanelSize({
 
   const layout = context?.layout === "mobile" ? "mobile" : "desktop";
   if (layout === "mobile") {
+    const portraitRowUnits = Math.max(
+      6,
+      Number(context?.rowUnits)
+      || Number(context?.rows)
+      || Number(fallbackSize?.h)
+      || 8,
+    );
     return {
       w: 4,
-      h: Math.max(8, Number(fallbackSize?.h) || 8),
+      h: Math.max(6, portraitRowUnits - 1),
     };
   }
 
@@ -505,7 +517,7 @@ export function createMediaWidgetContent(widget = {}, {
   interactive = true,
 } = {}) {
   const themeStyle = resolveMediaThemeStyle();
-  const useOneUiMediaPagePanel = isOneUiMediaPagePanelWidget(widget, themeStyle);
+  const useMediaPagePanel = isMediaPagePanelWidget(widget, themeStyle);
   const transitionCache = createMediaTransitionCache();
   let graceTimer = null;
   const data = getMediaData(widget, hass, transitionCache);
@@ -592,7 +604,7 @@ export function createMediaWidgetContent(widget = {}, {
     onAction,
   });
   const progress = createProgress(data, {
-    includeLabels: variantKey === "4x2" || useOneUiMediaPagePanel,
+    includeLabels: variantKey === "4x2" || useMediaPagePanel,
   });
   root.append(background);
   setBackgroundImage(root, data.artworkUrl);

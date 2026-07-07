@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { createWidgetResizeCoordinator } from "../src/widgets/widget-resize-coordinator.js";
 
-function createElement() {
+function createElement(widgetContent = null) {
   const values = new Map();
   const badge = { textContent: "" };
   return {
@@ -27,14 +27,16 @@ function createElement() {
       },
     },
     querySelector(selector) {
-      return selector === ".mha-size-badge" ? badge : null;
+      if (selector === ".mha-size-badge") return badge;
+      if (selector === "[data-widget-component]") return widgetContent;
+      return null;
     },
     badge,
   };
 }
 
 function createHarness(overrides = {}) {
-  const element = createElement();
+  const element = createElement(overrides.widgetContent || null);
   const effects = [];
   const state = {
     resizeState: {
@@ -84,6 +86,10 @@ function createHarness(overrides = {}) {
     },
     replaceWidgetDom: (widgetId) => {
       effects.push(["replaceWidgetDom", widgetId]);
+      return true;
+    },
+    rerenderWidgetContent: (widgetId) => {
+      effects.push(["rerenderWidgetContent", widgetId]);
       return true;
     },
     scheduleSquareUnitSync: () => {
@@ -194,6 +200,7 @@ test("updateResize mutates datasets, CSS vars, and badge text for the active poi
   assert.equal(element.style.gridRow, "3 / span 4");
   assert.equal(element.badge.textContent, "4x4 · dense");
   assert.deepEqual(effects[0], ["preventDefault"]);
+  assert.deepEqual(effects.at(-1), ["rerenderWidgetContent", "clock"]);
 });
 
 test("updateResize is a no-op for mismatched pointers", () => {
@@ -225,4 +232,31 @@ test("finishResize clears the live state, saves widgets, and rebuilds the resize
     ["saveWidgets"],
     ["replaceWidgetDom", "clock"],
   ]);
+});
+
+test("updateResize prefers the widget-specific live size hook when present", () => {
+  const calls = [];
+  const { coordinator, effects } = createHarness({
+    widgetContent: {
+      __mhaUpdateWidgetSize(args) {
+        calls.push(args);
+      },
+    },
+  });
+
+  coordinator.updateResize({
+    pointerId: 12,
+    clientX: 20,
+    clientY: 40,
+    preventDefault() {
+      effects.push(["preventDefault"]);
+    },
+  });
+
+  assert.deepEqual(calls, [{
+    widgetW: 3,
+    widgetH: 4,
+    configuredWidgetW: 4,
+  }]);
+  assert.equal(effects.some(([name]) => name === "rerenderWidgetContent"), false);
 });

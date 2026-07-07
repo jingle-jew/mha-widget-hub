@@ -19,16 +19,28 @@ test("page creator state exposes typed page options with one selected entry", ()
   assert.equal(state.pageTypeOptions.some((option) => option.label && option.description), true);
 });
 
-test("page creator hides the media page option outside oneui", () => {
+test("page creator keeps the media page option on ios", () => {
   const state = buildPageCreatorState({
     open: true,
     themeStyle: "ios",
     selectedPageType: "media-players",
   });
 
-  assert.equal(state.selectedPageType, "grid");
-  assert.equal(state.pageTypeOptions.some((option) => option.value === "media-players"), false);
-  assert.equal(state.pageTypeOptions[0]?.selected, true);
+  assert.equal(state.selectedPageType, "media-players");
+  assert.equal(state.pageTypeOptions.some((option) => option.value === "media-players"), true);
+  assert.equal(state.pageTypeOptions.some((option) => option.value === "media-players" && option.selected), true);
+});
+
+test("page creator keeps the media page option on theme aliases", () => {
+  const state = buildPageCreatorState({
+    open: true,
+    themeStyle: "material-you",
+    selectedPageType: "media-players",
+  });
+
+  assert.equal(state.selectedPageType, "media-players");
+  assert.equal(state.pageTypeOptions.some((option) => option.value === "media-players"), true);
+  assert.equal(state.pageTypeOptions.some((option) => option.value === "media-players" && option.selected), true);
 });
 
 test("widget config popup state preserves the current session payload", () => {

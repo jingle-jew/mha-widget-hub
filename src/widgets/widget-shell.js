@@ -107,7 +107,7 @@ export function createWidgetShell(
 
   if (!shouldOpenConfig) {
     dimensionButton.addEventListener("pointerdown", (event) => {
-      if (isMoveTarget) return;
+      if (shell.classList.contains("is-move-target")) return;
       event.preventDefault();
       event.stopPropagation();
       onCycleVariant?.(widget.id);
@@ -135,8 +135,6 @@ export function createWidgetShell(
     createMoveOverlay(widget.id, onMove),
     badge,
     createResizeHandle(widget.id, {
-      isEditing,
-      isMoveTarget,
       onStartResize,
       onUpdateResize,
       onFinishResize,
@@ -149,8 +147,6 @@ export function createWidgetShell(
 function createResizeHandle(
   widgetId,
   {
-    isEditing = false,
-    isMoveTarget = false,
     onStartResize,
     onUpdateResize,
     onFinishResize,
@@ -178,7 +174,7 @@ function createResizeHandle(
   };
 
   handle.addEventListener("pointerdown", (event) => {
-    if (!isEditing || isMoveTarget) return;
+    if (handle.closest(".mha-widget")?.classList?.contains?.("is-move-target")) return;
     event.preventDefault();
     event.stopPropagation();
     if (!onStartResize?.(widgetId, event)) return;

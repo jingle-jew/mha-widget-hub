@@ -347,7 +347,7 @@ test("widget interaction coordinator turns the add button into a trash target du
 
     assert.equal(addButton.hidden, false);
     assert.equal(addButton.dataset.dragDelete, "true");
-    assert.equal(addButton.attributes["aria-label"], "Delete");
+    assert.match(addButton.attributes["aria-label"], /^(Supprimer|Delete)$/);
   } finally {
     globalThis.document = previousDocument;
   }

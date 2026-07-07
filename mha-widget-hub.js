@@ -324,6 +324,7 @@ constructor(){
     queryWidgetElement:(widgetId)=>this.shadowRoot?.querySelector?.(`[data-widget-id="${widgetId}"]`),
     saveWidgets:()=>this._saveWidgets(),
     replaceWidgetDom:(widgetId)=>this._replaceWidgetDom(widgetId),
+    rerenderWidgetContent:(widgetId)=>this._widgetSurfaceCoordinator?.rerenderWidgetContent(widgetId)===true,
     scheduleSquareUnitSync:()=>this._scheduleSquareUnitSync(),
   });
   this._widgetSurfaceCoordinator=createWidgetSurfaceCoordinator({
