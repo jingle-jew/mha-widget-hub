@@ -163,15 +163,15 @@
 :host([data-theme-style="oneui"]) .mha-background span:nth-child(3) {
   inline-size: min(38vw, 30rem);
   block-size: min(38vw, 30rem);
-  animation: mha-oneui-orbit-q3 27s ease-in-out infinite;
-  animation-delay: -17.8s;
+  animation: mha-oneui-orbit-q4 35s ease-in-out infinite;
+  animation-delay: -6.6s;
 }
 
 :host([data-theme-style="oneui"]) .mha-background span:nth-child(4) {
   inline-size: min(36vw, 28rem);
   block-size: min(36vw, 28rem);
-  animation: mha-oneui-orbit-q4 35s ease-in-out infinite;
-  animation-delay: -6.6s;
+  animation: mha-oneui-orbit-q3 27s ease-in-out infinite;
+  animation-delay: -17.8s;
 }
 
 @keyframes mha-oneui-orbit-q1 {
