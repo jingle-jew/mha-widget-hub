@@ -125,6 +125,7 @@ Important fields:
 | `storage` | widget-specific storage compatibility adapter |
 | `shell` | shell behavior hints |
 | `placementFlow` | creation/placement behavior |
+| `normalizeSize` | widget-specific size normalization when needed |
 
 ---
 
@@ -380,7 +381,78 @@ Examples:
 
 ---
 
-## 13. Register The Widget
+## 13. Special Widget Contracts
+
+Not every widget is a normal user-added grid tile.
+
+Current special widget categories include:
+
+### Hidden widgets
+
+A widget can be registered and renderable while hidden from the manager.
+
+Use:
+
+```js
+manager: {
+  hidden: true,
+}
+```
+
+or per entry:
+
+```js
+hidden: true
+```
+
+This is useful for compatibility, internal/system widgets or widgets that are created by another flow.
+
+### Seed widgets
+
+A seed widget is created by page or migration logic rather than directly from the widget manager.
+
+Example:
+
+```text
+createMediaPageWidgetSeed()
+```
+
+Seed widgets should still normalize through the registry so they keep the same renderer, CSS, storage and config contracts as normal widgets.
+
+### Page-panel widgets
+
+A page-panel widget is a widget-backed page experience.
+
+Current example:
+
+```text
+media-page-panel
+```
+
+It uses:
+
+```text
+variant: media-page-panel
+responsiveSizeMode: media-page-panel
+```
+
+This lets the media page use the widget pipeline while behaving visually like a dedicated page surface.
+
+### Slot-configurable widgets
+
+Some widgets expose internal slots that can be configured independently.
+
+Current example:
+
+```text
+scenes-widget
+```
+
+Do not implement slot-specific config as global widget-shell exceptions. Prefer widget capabilities and config manifest behavior.
+
+---
+
+## 14. Register The Widget
 
 Import the widget inside:
 
@@ -407,7 +479,7 @@ This is currently the only required registry registration step.
 
 ---
 
-## 14. Aliases
+## 15. Aliases
 
 Aliases provide backward compatibility.
 
@@ -431,7 +503,7 @@ The registry resolves aliases automatically.
 
 ---
 
-## 15. Widget Sizes
+## 16. Widget Sizes
 
 MHA uses a public widget-size vocabulary:
 
@@ -450,9 +522,11 @@ defaultSize: freezeSize(2, 2)
 
 Manager entries and variants may expose additional sizes.
 
+Special page-panel widgets can use larger internal sizes when the page/layout contract requires it.
+
 ---
 
-## 16. Existing Widgets
+## 17. Existing Widgets
 
 Current widget modules include:
 
@@ -475,12 +549,13 @@ Good reference implementations:
 | HA entity config | `toggle-widget.js`, `slider-widget.js` |
 | combined entity behavior | `toggle-slider-widget.js` |
 | media model/actions | `media-widget.js` |
+| page-panel widget behavior | `media-widget.js` + `src/pages/page-types.js` |
 | slot config | `scenes-widget.js` |
 | weather data | `weather-widget.js` |
 
 ---
 
-## 17. Recommended Development Workflow
+## 18. Recommended Development Workflow
 
 1. Create the widget file.
 2. Define manager entries.
@@ -489,16 +564,17 @@ Good reference implementations:
 5. Add preview support.
 6. Add config manifest if needed.
 7. Add storage normalization if needed.
-8. Register in `widget-module-registry.js`.
-9. Add or update tests.
-10. Verify preview rendering.
-11. Verify widget manager integration.
-12. Test in Home Assistant.
-13. Commit as a standalone change.
+8. Add shell/placement metadata if needed.
+9. Register in `widget-module-registry.js`.
+10. Add or update tests.
+11. Verify preview rendering.
+12. Verify widget manager integration.
+13. Test in Home Assistant.
+14. Commit as a standalone change.
 
 ---
 
-## 18. Long-Term Goal
+## 19. Long-Term Goal
 
 The target architecture remains:
 
@@ -509,3 +585,5 @@ Register widget module
 ```
 
 A contributor should be able to add a complete widget by touching only one or two files, with CSS/config/preview/metadata discovered from the widget module.
+
+Special widgets should still follow this model. If a widget needs page-level behavior, document that behavior in the widget definition/page contract instead of adding one-off central branches.
