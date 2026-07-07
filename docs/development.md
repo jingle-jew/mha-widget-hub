@@ -34,6 +34,7 @@ styles/
   components/
   core/
   layout/
+  pages/
   panels/
   screensaver/
   settings/
@@ -76,6 +77,7 @@ npm test
 npm run check:syntax
 npm run check:sync
 npm run check
+npm run check:layout
 ```
 
 Use:
@@ -165,11 +167,39 @@ Known areas that can differ by browser:
 - ResizeObserver timing;
 - fixed/floating positioning;
 - CSS grid sizing;
-- transform scaling.
+- transform scaling;
+- orientation changes.
 
 ---
 
-## 8. CSS Development Rules
+## 8. Render Stability Rules
+
+The render pipeline lives in:
+
+```text
+src/layout/render-pipeline.js
+```
+
+It uses render states, critical boot styling, stylesheet settling, widget placeholders, progressive widget rendering and deferred UI mounting.
+
+When touching render stability:
+
+- preserve `data-render-state` behavior;
+- preserve critical boot styling;
+- avoid showing raw UI while styles are pending;
+- avoid moving heavy secondary surfaces into the immediate render path without reason;
+- prefer targeted DOM sync over full rerender when the state did not change;
+- add/update tests around the specific render seam.
+
+See:
+
+```text
+docs/rendering-pipeline.md
+```
+
+---
+
+## 9. CSS Development Rules
 
 MHA uses layered CSS.
 
@@ -181,6 +211,7 @@ styles/components
 styles/system
 styles/themes
 styles/layout
+styles/pages
 styles/panels
 styles/settings
 styles/widget-manager
@@ -195,6 +226,7 @@ General rules:
 - avoid hardcoded colors when a token exists;
 - avoid theme-specific widget hacks;
 - keep layout CSS separate from visual theme CSS;
+- keep page-specific CSS in `styles/pages`;
 - keep widget-specific CSS in `styles/widgets`;
 - keep shared panel surfaces in `styles/panels`.
 
@@ -222,7 +254,7 @@ unless the value is intentionally local and no suitable token exists.
 
 ---
 
-## 9. Widget Development Rules
+## 10. Widget Development Rules
 
 A widget should be added through a widget module.
 
@@ -266,7 +298,44 @@ docs/config-flows.md
 
 ---
 
-## 10. Theme Development Rules
+## 11. Page Development Rules
+
+Page logic lives in:
+
+```text
+src/pages/
+```
+
+Use page modules for:
+
+- page normalization;
+- page persistence;
+- page type configuration;
+- page creator behavior;
+- page UI coordination;
+- dedicated page experiences such as media pages.
+
+Do not treat every page-level feature as a normal widget. Some screens can be page experiences backed by widgets during transition.
+
+Current example:
+
+```text
+media-players page
+        ↓
+media-page-panel widget seed
+        ↓
+media widget renderer + page-level CSS
+```
+
+See:
+
+```text
+docs/pages.md
+```
+
+---
+
+## 12. Theme Development Rules
 
 Theme work should start in:
 
@@ -275,7 +344,14 @@ src/settings/theme-registry.js
 styles/themes/
 ```
 
-Themes should define values. Components and widgets should consume tokens.
+Themes should define values. Components, pages and widgets should consume tokens.
+
+Current visual systems:
+
+- iOS;
+- OneUI;
+- Material You;
+- Alexa.
 
 See:
 
@@ -286,7 +362,7 @@ docs/theme-tokens.md
 
 ---
 
-## 11. Config Flow Development Rules
+## 13. Config Flow Development Rules
 
 Config flows currently use:
 
@@ -320,7 +396,7 @@ docs/config-flows.md
 
 ---
 
-## 12. Panel Development Rules
+## 14. Panel Development Rules
 
 Shared panel/overlay primitives live in:
 
@@ -342,7 +418,7 @@ Avoid inventing a separate modal contract unless the visual/behavioral needs are
 
 ---
 
-## 13. Coordinator Development Rules
+## 15. Coordinator Development Rules
 
 The main file now delegates to domain coordinators.
 
@@ -368,7 +444,7 @@ Avoid turning a coordinator into a second giant root file.
 
 ---
 
-## 14. Home Assistant Abstraction Rules
+## 16. Home Assistant Abstraction Rules
 
 Use helpers from:
 
@@ -391,7 +467,7 @@ Avoid scattering direct `hass.callService()` and raw entity parsing inside widge
 
 ---
 
-## 15. Placement/Layout Rules
+## 17. Placement/Layout Rules
 
 Placement math should stay pure and testable.
 
@@ -418,7 +494,7 @@ When changing placement behavior, add or update tests.
 
 ---
 
-## 16. Main File Rules
+## 18. Main File Rules
 
 `mha-widget-hub.js` should coordinate modules.
 
@@ -432,13 +508,14 @@ It should not become the place for:
 - config field rendering;
 - placement math;
 - panel DOM contracts;
-- reusable widget state logic.
+- reusable widget state logic;
+- page-specific rendering logic.
 
 If a change makes the main file larger, ask whether the logic belongs in a module or coordinator.
 
 ---
 
-## 17. Manual Visual Test Matrix
+## 19. Manual Visual Test Matrix
 
 For UI changes, check:
 
@@ -454,12 +531,17 @@ For UI changes, check:
 - desktop layout;
 - tablet layout;
 - mobile layout;
+- mobile portrait;
+- mobile landscape;
 - light mode;
 - dark mode;
 - OneUI;
 - Material;
+- Alexa;
 - iOS Liquid;
 - iOS Frosted;
+- standard grid pages;
+- dedicated media page;
 - screensaver;
 - NowBar;
 - widget add/configure/move/resize/remove flows.
@@ -468,7 +550,7 @@ The final visual judgment is manual.
 
 ---
 
-## 18. Cache Notes
+## 20. Cache Notes
 
 Home Assistant frontend caching can hide changes.
 
@@ -484,7 +566,7 @@ Do not assume a bug is fixed until the updated frontend file is actually loaded.
 
 ---
 
-## 19. Safe Commit Strategy
+## 21. Safe Commit Strategy
 
 Prefer small, committable phases.
 
@@ -508,7 +590,7 @@ Small commits make regressions much easier to isolate.
 
 ---
 
-## 20. Before Opening A Pull Request
+## 22. Before Opening A Pull Request
 
 Run:
 
@@ -525,6 +607,7 @@ Then manually test:
 - at least one desktop viewport;
 - at least one mobile/tablet viewport;
 - affected themes;
+- affected pages;
 - affected widgets;
 - affected config flows.
 
@@ -532,7 +615,7 @@ Update documentation when changing extension contracts.
 
 ---
 
-## 21. Documentation Rule
+## 23. Documentation Rule
 
 If a change affects how contributors add or modify something, update the matching doc:
 
@@ -540,6 +623,8 @@ If a change affects how contributors add or modify something, update the matchin
 |---|---|
 | widget module contract | `docs/widgets.md`, `docs/adding-widgets.md` |
 | theme contract | `docs/themes.md`, `docs/theme-tokens.md` |
+| page behavior | `docs/pages.md`, `docs/architecture.md` |
+| render pipeline behavior | `docs/rendering-pipeline.md`, `docs/architecture.md` |
 | preview behavior | `docs/preview-system.md` |
 | config flow behavior | `docs/config-flows.md` |
 | panel/surface behavior | `docs/architecture.md`, `docs/development.md` |
@@ -548,7 +633,7 @@ If a change affects how contributors add or modify something, update the matchin
 
 ---
 
-## 22. Development Philosophy
+## 24. Development Philosophy
 
 MHA is becoming a real frontend platform, not a single custom card.
 
@@ -574,4 +659,4 @@ duplicated logic
 one-off exception
 ```
 
-The goal is a stable extension architecture where widgets and themes can be added safely with minimal file changes.
+The goal is a stable extension architecture where widgets, themes and page experiences can be added safely with minimal file changes.

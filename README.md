@@ -21,6 +21,7 @@ MHA is intentionally built around its own native widget system. It does not depe
 - Widget variants and sizing
 - Widget configuration flows
 - Responsive layouts
+- Dedicated page experiences such as media pages
 - Screensaver and NowBar surfaces
 
 ### Visual Systems
@@ -28,7 +29,8 @@ MHA is intentionally built around its own native widget system. It does not depe
 - OneUI
 - iOS Liquid Glass
 - iOS Frosted Glass
-- Material-inspired
+- Material You
+- Alexa
 
 ### Home Assistant Integration
 
@@ -66,6 +68,8 @@ See:
 - [Architecture](docs/architecture.md)
 - [Development](docs/development.md)
 - [Conventions](docs/conventions.md)
+- [Pages](docs/pages.md)
+- [Rendering pipeline](docs/rendering-pipeline.md)
 - [Adding widgets](docs/adding-widgets.md)
 - [Widgets](docs/widgets.md)
 - [Themes](docs/themes.md)
@@ -84,12 +88,13 @@ MHA Widget Hub is currently a functional launcher platform featuring:
 - Configurable widgets
 - Responsive layouts
 - Multi-page navigation
+- Dedicated page experiences
 - Administrative entity filtering
 - Multiple visual systems
 - Home Assistant integration
-- Modular widget, panel, settings, layout and screensaver coordinators
+- Modular widget, panel, settings, layout, page and screensaver coordinators
 
-The project is actively evolving toward a stable registry-driven architecture where widgets and themes can be added with minimal central code changes.
+The project is actively evolving toward a stable registry-driven architecture where widgets, themes and page experiences can be added with minimal central code changes.
 
 ---
 
