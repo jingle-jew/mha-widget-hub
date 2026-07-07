@@ -2,30 +2,31 @@
 
 This document describes the current theme system used by MHA Widget Hub.
 
+MHA themes are registry-driven visual systems. They define the raw visual language, while components, panels and widgets should consume semantic tokens instead of hardcoding one-off values.
+
 ---
 
 ## 1. Target Model
 
-MHA themes are registry-driven.
-
-The target contract is:
+MHA themes follow this contract:
 
 ```text
-1 theme = 1 CSS + 1 manifest entry + optional accent palette
+1 theme = 1 registry entry + 1 or more CSS files + optional accent palette + optional dock contract
 ```
 
-A minimal theme only needs:
+A minimal theme usually touches:
 
 ```text
 styles/themes/my-theme.css
 src/settings/theme-registry.js
 ```
 
-A theme may also provide a dedicated accent palette in:
+A theme may also provide:
 
 ```text
 src/settings/accent-palettes.js
 styles/themes/accent-palettes.css
+styles/themes/my-theme-dock.css
 ```
 
 If a theme does not provide its own accent palette, MHA falls back to the default accent palette.
@@ -34,11 +35,12 @@ If a theme does not provide its own accent palette, MHA falls back to the defaul
 
 ## 2. Current Registered Themes
 
-| Theme style id | Label | CSS file | Default icon shape | Aliases |
+| Theme style id | Label | Main CSS file | Default icon shape | Aliases |
 |---|---|---|---|---|
-| `ios` | iOS | `styles/themes/ios.css` | `rounded-square` | `apple`, `liquid-glass`, `frosted-glass` |
+| `ios` | iOS | `styles/themes/ios.css` + `styles/themes/ios-organic-wallpaper.css` | `rounded-square` | `apple`, `liquid-glass`, `frosted-glass` |
 | `oneui` | OneUI | `styles/themes/oneui.css` | `squircle` | `samsung`, `one-ui` |
 | `material` | Material You | `styles/themes/material.css` | `circle` | `material-you`, `material3`, `material-3` |
+| `alexa` | Alexa | `styles/themes/alexa.css` | `circle` | `echo`, `amazon-alexa`, `amazon` |
 
 The default theme style is:
 
@@ -48,8 +50,8 @@ oneui
 
 The iOS theme currently exposes two variants:
 
-- Liquid Glass
-- Frosted Glass
+- Liquid Glass;
+- Frosted Glass.
 
 These are theme variants, not separate theme styles.
 
@@ -75,7 +77,8 @@ The registry is the source of truth for:
 - variants;
 - accent options;
 - default accent;
-- auto accent support.
+- auto accent support;
+- dock contract.
 
 A registry entry may define:
 
@@ -83,7 +86,7 @@ A registry entry may define:
 {
   id: "mytheme",
   label: "My Theme",
-  order: 40,
+  order: 50,
   defaultIconShape: "rounded-square",
   css: css("styles/themes/my-theme.css"),
   wallpaper: {
@@ -99,6 +102,12 @@ A registry entry may define:
   defaultAccent: "sky",
   supportsAutoAccent: true,
   aliases: ["my-theme"],
+  dock: {
+    usesDock: true,
+    contentBuilder: "default",
+    css: ["styles/themes/my-theme-dock.css"],
+    supportedPositions: ["left", "right", "bottom"],
+  },
 }
 ```
 
@@ -106,7 +115,33 @@ The registry normalizes definitions before exposing them to the rest of the app.
 
 ---
 
-## 4. Theme State
+## 4. Dock Contracts
+
+Theme dock behavior is part of the theme registry.
+
+A dock contract can define:
+
+| Field | Meaning |
+|---|---|
+| `usesDock` | Whether the visual system uses the standard dock. |
+| `contentBuilder` | Dock content variant used by layout rendering. |
+| `css` | Optional dock-specific CSS files loaded through the style manifest. |
+| `supportedPositions` | Supported dock positions such as `left`, `right`, `bottom`. |
+
+Current dock-specific CSS:
+
+| Theme | Dock CSS |
+|---|---|
+| iOS | `styles/themes/ios-dock.css` |
+| OneUI | `styles/themes/oneui-dock.css` |
+| Material You | `styles/themes/material-dock.css` |
+| Alexa | none currently registered |
+
+Do not add dock-only theme hacks inside generic dock CSS when the behavior belongs to a theme dock contract.
+
+---
+
+## 5. Theme State
 
 Theme state is handled by:
 
@@ -126,7 +161,7 @@ Synchronized attributes include:
 |---|---|
 | `data-theme-setting` | User preference: `auto`, `dark`, or `light` |
 | `data-theme` | Resolved visual mode: `dark` or `light` |
-| `data-theme-style` | Visual system: `ios`, `oneui`, or `material` |
+| `data-theme-style` | Visual system: `ios`, `oneui`, `material`, or `alexa` |
 | `data-theme-variant` | Generic theme variant id |
 | `data-ios-glass` | Legacy iOS compatibility attribute: `liquid` or `frosted` |
 | `data-accent` | Active accent key |
@@ -136,25 +171,9 @@ Synchronized attributes include:
 
 Theme CSS should target dataset attributes instead of relying on JavaScript branching.
 
-Example:
-
-```css
-:host([data-theme-style="ios"][data-theme-variant="liquid"]) {
-  --mha-surface-blur: 10px;
-}
-```
-
-For now, iOS CSS may still target the legacy compatibility attribute:
-
-```css
-:host([data-theme-style="ios"][data-ios-glass="frosted"]) {
-  --mha-surface-blur: 22px;
-}
-```
-
 ---
 
-## 5. Stored Theme Keys
+## 6. Stored Theme Keys
 
 The theme controller uses these local storage keys:
 
@@ -179,7 +198,7 @@ Each visual style can remember its own accent independently.
 
 ---
 
-## 6. Style Manifest Loading Order
+## 7. Style Manifest Loading Order
 
 Theme CSS is part of the global style manifest:
 
@@ -187,24 +206,32 @@ Theme CSS is part of the global style manifest:
 src/styles/style-manifest.js
 ```
 
-Theme CSS paths are read from the theme registry through `getThemeCssPaths()`.
+Theme CSS paths are read from the theme registry through:
+
+```text
+getThemeCssPaths()
+getThemeDockCssPaths()
+```
 
 High-level order:
 
 ```text
-1. Core tokens
-2. Base reusable components and system controls
+1. Core base/tokens
+2. Reusable components and system controls
 3. Registered theme CSS files
-4. Accent palettes
-5. Semantic token adapters
-6. Core background/layout CSS
-7. Dock/status/grid/floating-control CSS
-8. Settings, widget manager and config popup CSS
-9. Shared panel CSS
-10. Light text contract
-11. Widget layout/shell CSS
-12. Widget-specific CSS from the widget registry
-13. Screensaver CSS
+4. Accent palettes and semantic token adapters
+5. Surface aliases and iOS raw/surface maps
+6. Core background, glass and Android edge-to-edge CSS
+7. Shell, grid, status bar, dock and floating controls
+8. Page-specific CSS such as media pages
+9. Settings, widget manager and config popup CSS
+10. Shared panel CSS
+11. Light text contract
+12. Widget layout/shell contracts
+13. Theme dock CSS files
+14. Widget CSS from the widget registry
+15. Widget internals contracts
+16. Screensaver CSS
 ```
 
 Important consequence:
@@ -213,7 +240,7 @@ Theme files define the raw visual language. `semantic-tokens.css` maps those raw
 
 ---
 
-## 7. Adding A New Theme
+## 8. Adding A New Theme
 
 ### Step 1 — Create the theme CSS
 
@@ -259,52 +286,23 @@ Edit:
 src/settings/theme-registry.js
 ```
 
-Add a new entry:
-
-```js
-mytheme: normalizeThemeDefinition({
-  id: "mytheme",
-  label: "My Theme",
-  order: 40,
-  defaultIconShape: "rounded-square",
-  css: css("styles/themes/my-theme.css"),
-  defaultAccent: "sky",
-  supportsAutoAccent: true,
-  aliases: ["my-theme"],
-}),
-```
+Add a normalized entry.
 
 ### Step 3 — Add variants, if needed
 
-Variants are optional.
-
-Example:
-
-```js
-variants: [
-  { id: "soft", label: "Soft", order: 10, default: true },
-  { id: "solid", label: "Solid", order: 20 },
-],
-```
-
-If a theme defines variants, Settings automatically displays a variant selector.
+Variants are optional. If a theme defines variants, Settings automatically displays a variant selector.
 
 ### Step 4 — Add accent support, if needed
 
 Accent palettes are optional.
 
-A theme can provide accent options in the registry:
+Resolution order for accent options:
 
-```js
-accents: [
-  { value: "blue", label: "Blue" },
-  { value: "green", label: "Green" },
-],
+```text
+registry accents
+→ ACCENT_PALETTES[themeStyle]
+→ DEFAULT_ACCENT_PALETTE
 ```
-
-If no registry accent list is provided, MHA falls back to the matching `ACCENT_PALETTES[themeStyle]` entry.
-
-If no matching palette exists, MHA falls back to `DEFAULT_ACCENT_PALETTE`.
 
 For dedicated reference colors or wallpaper-based matching, edit:
 
@@ -318,14 +316,6 @@ For CSS application of accent variables, edit:
 styles/themes/accent-palettes.css
 ```
 
-Example:
-
-```css
-:host([data-theme-style="mytheme"][data-accent="blue"]) {
-  --mha-accent: #...;
-}
-```
-
 ### Step 5 — Verify semantic adapters
 
 Usually, no change should be needed in:
@@ -336,35 +326,9 @@ styles/themes/semantic-tokens.css
 
 If the new theme needs a special mapping between raw theme values and semantic roles, add a small theme-specific adapter there.
 
-### Step 6 — Test manually
-
-Test:
-
-- light mode;
-- dark mode;
-- auto mode;
-- manual accents;
-- auto accent if supported;
-- variants if defined;
-- icon shape `auto`;
-- settings panel;
-- widget manager;
-- config popup;
-- shared panel sheets;
-- dock left/right/bottom;
-- status bar;
-- widgets;
-- screensaver/Now Bar.
-
-Also run:
-
-```bash
-npm run check
-```
-
 ---
 
-## 8. Theme Responsibilities
+## 9. Theme Responsibilities
 
 A theme owns the visual language of MHA.
 
@@ -396,81 +360,37 @@ Themes should not define:
 
 ---
 
-## 9. iOS Theme Notes
+## 10. Theme Notes
 
-The iOS theme contains two glass variants.
+### iOS
 
-### Liquid Glass
+The iOS theme contains two glass variants:
 
-Preferred generic selector:
-
-```css
-:host([data-theme-style="ios"][data-theme-variant="liquid"])
-```
-
-Legacy compatibility selector:
-
-```css
-:host([data-theme-style="ios"][data-ios-glass="liquid"])
-```
-
-Current direction:
-
-- less blur;
-- more translucent;
-- stronger liquid/reflection feeling;
-- no heavy colored shadows;
-- panels and widgets share similar surface logic.
-
-### Frosted Glass
-
-Preferred generic selector:
-
-```css
-:host([data-theme-style="ios"][data-theme-variant="frosted"])
-```
-
-Legacy compatibility selector:
-
-```css
-:host([data-theme-style="ios"][data-ios-glass="frosted"])
-```
-
-Current direction:
-
-- more classic Apple frosted material;
-- stronger blur than Liquid;
-- more opaque panels/tiles;
-- neutral gray/white tinting;
-- visually distinct from OneUI.
-
-Important:
+- Liquid Glass;
+- Frosted Glass.
 
 Liquid and Frosted are not separate registry entries. Do not add `ios-liquid` and `ios-frosted` to `theme-registry.js` unless the architecture intentionally changes.
 
----
+Current direction:
 
-## 10. OneUI Theme Notes
+- preserve glass/surface identity;
+- avoid heavy colored shadows or decorative glow;
+- keep Liquid lighter and more translucent;
+- keep Frosted more opaque and classic.
 
-OneUI is currently the default theme style.
+### OneUI
 
-Selector:
-
-```css
-:host([data-theme-style="oneui"])
-```
+OneUI is the default theme style.
 
 Current direction:
 
 - practical, readable surfaces;
-- stronger clarity than iOS Liquid;
+- strong clarity;
 - good contrast;
 - squircle icon shape by default;
 - stable reference for several widget visuals.
 
----
-
-## 11. Material Theme Notes
+### Material You
 
 Material is handled as:
 
@@ -486,28 +406,23 @@ Current direction:
 - less glass-like than iOS and OneUI;
 - Material-specific tokens such as `--mha-material-surface-container`.
 
-Material has extra palette behavior in `accent-palettes.css`, including:
+### Alexa
 
-```css
---mha-material-you-symbol-1
---mha-material-you-icon-container
-```
+Alexa is a registered visual system.
 
-These should remain Material-specific unless the design system is intentionally generalized.
+Current direction:
+
+- ambient assistant-style surfaces;
+- circular default icon shape;
+- cyan/blue accent family by default;
+- compatible with the standard dock positions;
+- should remain native MHA, not an embedded Alexa UI clone.
 
 ---
 
-## 12. Accent System
+## 11. Accent System
 
-Accent data is split between registry metadata, JavaScript matching logic, and CSS application.
-
-Resolution order for accent options:
-
-```text
-registry accents
-→ ACCENT_PALETTES[themeStyle]
-→ DEFAULT_ACCENT_PALETTE
-```
+Accent data is split between registry metadata, JavaScript matching logic and CSS application.
 
 JavaScript accent logic lives in:
 
@@ -515,26 +430,11 @@ JavaScript accent logic lives in:
 src/settings/accent-palettes.js
 ```
 
-This file defines:
-
-- fallback accent palettes;
-- reference colors;
-- wallpaper color matching logic;
-- default palette fallback.
-
 CSS application layer:
 
 ```text
 styles/themes/accent-palettes.css
 ```
-
-This file maps:
-
-```text
-data-theme-style + data-accent
-```
-
-to CSS variables.
 
 Core accent tokens:
 
@@ -547,7 +447,7 @@ Core accent tokens:
 
 ---
 
-## 13. Icon Shape System
+## 12. Icon Shape System
 
 Default icon shapes are defined in the theme registry:
 
@@ -555,7 +455,8 @@ Default icon shapes are defined in the theme registry:
 |---|---|
 | iOS | `rounded-square` |
 | OneUI | `squircle` |
-| Material | `circle` |
+| Material You | `circle` |
+| Alexa | `circle` |
 
 The user can override with:
 
@@ -570,7 +471,7 @@ When set to `auto`, the resolved shape comes from the theme registry.
 
 ---
 
-## 14. Recommended Theme Tokens
+## 13. Recommended Theme Tokens
 
 New themes should define raw theme values, then let the semantic layer translate them.
 
@@ -602,4 +503,33 @@ Recommended base tokens to define:
 --mha-bg-blob-1
 --mha-bg-blob-2
 --mha-bg-blob-3
+```
+
+---
+
+## 14. Manual Theme Validation
+
+Test:
+
+- light mode;
+- dark mode;
+- auto mode;
+- manual accents;
+- auto accent if supported;
+- variants if defined;
+- icon shape `auto`;
+- settings panel;
+- widget manager;
+- config popup;
+- shared panel sheets;
+- dock left/right/bottom;
+- status bar;
+- widgets;
+- dedicated page experiences;
+- screensaver/NowBar.
+
+Also run:
+
+```bash
+npm run check
 ```
