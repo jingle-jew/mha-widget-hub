@@ -114,12 +114,23 @@ export function createRenderPipeline(host, options = {}) {
     const resolvedArtworkUrl = artworkUrl || resolveMediaPageArtworkUrl(activePage);
 
     if (isMediaPage && resolvedArtworkUrl) {
+      clearTimeout(host._mediaPageWallpaperClearTimer || 0);
+      host._mediaPageWallpaperClearTimer = 0;
       host.dataset.mediaPageWallpaper = "true";
       host.style?.setProperty?.("--mha-media-page-wallpaper-image", `url("${resolvedArtworkUrl}")`);
       return;
     }
 
     host.dataset.mediaPageWallpaper = "false";
+    clearTimeout(host._mediaPageWallpaperClearTimer || 0);
+    if (host._pageTypeWallpaperCrossfadeActive) {
+      host._mediaPageWallpaperClearTimer = setTimeout(() => {
+        host._mediaPageWallpaperClearTimer = 0;
+        if (host.dataset.mediaPageWallpaper === "true") return;
+        host.style?.removeProperty?.("--mha-media-page-wallpaper-image");
+      }, host._pageTypeWallpaperCrossfadeDurationMs || 480);
+      return;
+    }
     host.style?.removeProperty?.("--mha-media-page-wallpaper-image");
   }
 

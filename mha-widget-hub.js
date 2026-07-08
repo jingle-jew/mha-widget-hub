@@ -863,9 +863,10 @@ _disableEditMode(){
   this._scheduleSquareUnitSync();
   return true;
 }
-_getPageTransitionDirection(){
+_getPageTransitionDirection(previousPage=null,nextPage=null){
+  void previousPage;
+  void nextPage;
   if(this._isMobileDefaultLayout())return"bottom";
-  if(this._dockPosition==="right")return"left";
   return"right";
 }
 	_renderPageTransition(previousPage=null,nextPage=null){
@@ -876,14 +877,33 @@ _getPageTransitionDirection(){
 	    ? currentPanel.cloneNode(true)
 	    : null;
 	  const dockRenderState=captureDockRenderState(this.shadowRoot);
-	  const direction=this._getPageTransitionDirection();
+	  const direction=this._getPageTransitionDirection(previousPage,nextPage);
+    const themeStyle=this.dataset.themeStyle||this._themeController?.read?.()?.themeStyle||"";
+    const previousIsMediaPage=isMediaPageExperienceActive(previousPage,themeStyle);
+    const nextIsMediaPage=isMediaPageExperienceActive(nextPage,themeStyle);
+    const pageTypeChanged=previousIsMediaPage!==nextIsMediaPage;
     const nextPageNeedsDedicatedRender=isMediaPageExperienceActive(
       nextPage,
-      this.dataset.themeStyle||this._themeController?.read?.()?.themeStyle||"",
+      themeStyle,
     );
     const activeGrid=currentPanel?.querySelector?.(".mha-grid")
       || this.shadowRoot?.querySelector?.(".mha-grid")
       || null;
+
+    clearTimeout(this._pageTypeWallpaperCrossfadeTimer||0);
+    this._pageTypeWallpaperCrossfadeDurationMs=480;
+    this._pageTypeWallpaperCrossfadeActive=pageTypeChanged;
+    this.dataset.pageTypeWallpaperCrossfade=String(pageTypeChanged);
+    if(pageTypeChanged){
+      this._pageTypeWallpaperCrossfadeTimer=setTimeout(()=>{
+        this._pageTypeWallpaperCrossfadeTimer=0;
+        this._pageTypeWallpaperCrossfadeActive=false;
+        this.dataset.pageTypeWallpaperCrossfade="false";
+        if(this.dataset.mediaPageWallpaper!=="true"){
+          this.style?.removeProperty?.("--mha-media-page-wallpaper-image");
+        }
+      },this._pageTypeWallpaperCrossfadeDurationMs);
+    }
 
 	  this.shadowRoot?.querySelectorAll?.(".mha-page-panel-snapshot")?.forEach?.(node=>node.remove());
 
