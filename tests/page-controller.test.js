@@ -47,31 +47,22 @@ test("page creation keeps the existing id and naming contract", () => {
   assert.equal(pages.length, 3);
 });
 
-test("media page creation seeds a normal page with a responsive media widget", () => {
+test("media page creation preserves the dedicated page type", () => {
   const result = addPage(pages, {
     pageType: PAGE_TYPES.MEDIA_PLAYERS,
     now: () => 123456789,
   });
 
-  assert.equal(result.page.type, undefined);
+  assert.equal(result.page.type, PAGE_TYPES.MEDIA_PLAYERS);
   assert.equal(result.page.icon, "media-player");
-  assert.equal(result.page.widgets.length, 1);
-  assert.deepEqual(
-    result.page.widgets[0] && {
-      kind: result.page.widgets[0].kind,
-      variant: result.page.widgets[0].variant,
-      responsiveSizeMode: result.page.widgets[0].responsiveSizeMode,
-      w: result.page.widgets[0].w,
-      h: result.page.widgets[0].h,
-    },
-    {
-      kind: "media",
-      variant: "media-page-panel",
-      responsiveSizeMode: "media-page-panel",
-      w: 4,
-      h: 8,
-    },
-  );
+  assert.deepEqual(result.page.widgets, []);
+  assert.deepEqual(result.page.config, {
+    enabledPlayerIds: [],
+    defaultPlayerId: "",
+    selectedPlayerId: "",
+    visualStyle: "theme",
+    blurBackground: true,
+  });
 });
 
 test("page movement respects list boundaries", () => {

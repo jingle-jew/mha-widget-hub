@@ -83,12 +83,12 @@ test("default first-launch pages are two grids plus one media page", () => {
     [
       { id: "home", name: "Home", icon: "home", type: "grid", widgets: 0 },
       { id: "page-2", name: "Page 2", icon: "grid", type: "grid", widgets: 0 },
-      { id: "media", name: "Media Players", icon: "media-player", type: "grid", widgets: 1 },
+      { id: "media", name: "Media Players", icon: "media-player", type: "media-players", widgets: 0 },
     ],
   );
 });
 
-test("legacy media pages are migrated to normal grid pages with a seeded media widget", () => {
+test("legacy media pages keep the dedicated page type and selected player config", () => {
   const migrated = normalizePage({
     id: "media",
     name: "Media Players",
@@ -99,21 +99,27 @@ test("legacy media pages are migrated to normal grid pages with a seeded media w
     widgets: [],
   }, 2);
 
-  assert.equal(migrated.type, undefined);
+  assert.equal(migrated.type, "media-players");
   assert.equal(migrated.icon, "media-player");
-  assert.equal(migrated.widgets.length, 1);
-  assert.deepEqual(
-    migrated.widgets[0] && {
-      kind: migrated.widgets[0].kind,
-      variant: migrated.widgets[0].variant,
-      entityId: migrated.widgets[0].entityId,
-      responsiveSizeMode: migrated.widgets[0].responsiveSizeMode,
-    },
-    {
+  assert.deepEqual(migrated.widgets, []);
+  assert.equal(migrated.config.selectedPlayerId, "media_player.salon");
+});
+
+test("legacy single-widget media pages are promoted to the dedicated page type", () => {
+  const migrated = normalizePage({
+    id: "media",
+    name: "Media Players",
+    widgets: [{
+      id: "widget-media-page-media",
       kind: "media",
       variant: "media-page-panel",
-      entityId: "media_player.salon",
       responsiveSizeMode: "media-page-panel",
-    },
-  );
+      entityId: "media_player.salon",
+    }],
+  }, 2);
+
+  assert.equal(migrated.type, "media-players");
+  assert.equal(migrated.widgets.length, 1);
+  assert.equal(migrated.config.selectedPlayerId, "media_player.salon");
+  assert.deepEqual(migrated.config.enabledPlayerIds, ["media_player.salon"]);
 });

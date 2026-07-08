@@ -877,6 +877,10 @@ _getPageTransitionDirection(){
 	    : null;
 	  const dockRenderState=captureDockRenderState(this.shadowRoot);
 	  const direction=this._getPageTransitionDirection();
+    const nextPageNeedsDedicatedRender=isMediaPageExperienceActive(
+      nextPage,
+      this.dataset.themeStyle||this._themeController?.read?.()?.themeStyle||"",
+    );
     const activeGrid=currentPanel?.querySelector?.(".mha-grid")
       || this.shadowRoot?.querySelector?.(".mha-grid")
       || null;
@@ -892,7 +896,7 @@ _getPageTransitionDirection(){
     snapshot.style.height=`${currentRect.height}px`;
 	  }
 
-    if(currentPanel&&activeGrid){
+    if(currentPanel&&activeGrid&&!nextPageNeedsDedicatedRender){
       const nextPageType=nextPage?.type||"grid";
       this._syncActivePageBackdropState({activePage:nextPage});
       currentPanel.dataset.pageType=nextPageType;
@@ -901,6 +905,7 @@ _getPageTransitionDirection(){
       this._syncMediaPageSettingsDom();
 
       if(!refreshed){
+        this._skipStabilizingRenderOnce=true;
         this.render();
         restoreDockRenderState(this.shadowRoot,dockRenderState,{
           scheduleMobileDockOverflowState:()=>this._scheduleMobileDockOverflowState(),
@@ -908,6 +913,7 @@ _getPageTransitionDirection(){
         });
       }
     }else{
+      this._skipStabilizingRenderOnce=true;
       this.render();
       restoreDockRenderState(this.shadowRoot,dockRenderState,{
         scheduleMobileDockOverflowState:()=>this._scheduleMobileDockOverflowState(),

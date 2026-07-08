@@ -951,6 +951,8 @@ test("media page transitions refresh only the active panel when the grid is alre
     _getPageTransitionDirection() {
       return "right";
     },
+    _updateDockActiveState() {},
+    _scheduleMobileDockOverflowState() {},
     render() {
       calls.push("render");
     },
@@ -1204,6 +1206,164 @@ test("immediate UI delegates status updates through the host bridge", async () =
   ]);
   assert.equal(pageStage.appended.length, 1);
   globalThis.document = previousDocument;
+});
+
+test("immediate UI mounts the dedicated media page instead of a widget grid", async () => {
+  const prototype = await loadHubPrototype();
+  const previousDocument = globalThis.document;
+  const calls = [];
+
+  globalThis.document = {
+    ...globalThis.document,
+    documentElement: {
+      dataset: {
+        themeStyle: "oneui",
+        themeVariant: "liquid-glass",
+      },
+    },
+    createDocumentFragment() {
+      return {
+        isFragment: true,
+        childNodes: [],
+        append(node) {
+          this.childNodes.push(node);
+        },
+      };
+    },
+    createElement(tag) {
+      return createMockElement(tag);
+    },
+    createElementNS(namespace, tag) {
+      return createMockElement(tag, namespace);
+    },
+  };
+
+  const pageStage = createMockElement("div");
+  const host = {
+    _widgets: [],
+    _isEditing: false,
+    dataset: {
+      themeStyle: "oneui",
+    },
+    classList: {
+      toggle() {},
+    },
+    shadowRoot: {
+      appended: [],
+      append(...nodes) {
+        this.appended.push(...nodes);
+      },
+    },
+    _hass: { states: {} },
+    _entityVisibilityConfig: null,
+    _getActivePage() {
+      return {
+        id: "media",
+        type: "media-players",
+        config: {
+          enabledPlayerIds: [],
+          defaultPlayerId: "",
+          selectedPlayerId: "",
+          visualStyle: "theme",
+          blurBackground: true,
+        },
+      };
+    },
+    _getActiveWidgetPositions() {
+      return {};
+    },
+    _buildMediaPageProps() {
+      return {
+        hass: this._hass,
+        visibilityConfig: this._entityVisibilityConfig,
+      };
+    },
+    _canAddWidgetToActivePage() {
+      return false;
+    },
+    _getEditButtonIcon() {
+      return "<svg>edit</svg>";
+    },
+    toggleEditMode() {},
+    _openWidgetManager() {},
+    _wireDockAutoHide(surface) {
+      calls.push(["wireDockAutoHide", surface?.className || ""]);
+    },
+    _updateStatusDom() {
+      calls.push("updateStatusDom");
+    },
+  };
+
+  prototype._mountImmediateUi.call(host, {
+    layout: "desktop",
+    pageStage,
+    units: 4,
+    rows: 8,
+  });
+
+  assert.deepEqual(calls, [
+    ["wireDockAutoHide", "mha-media-page"],
+    "updateStatusDom",
+  ]);
+  assert.equal(pageStage.appended.length, 1);
+  assert.deepEqual(pageStage.appended[0]?.classList?.added || [], ["mha-page-panel--media"]);
+  assert.equal(pageStage.appended[0]?.querySelector?.(".mha-media-page")?.className, "mha-media-page");
+  globalThis.document = previousDocument;
+});
+
+test("page transition forces a full render when entering the dedicated media page", async () => {
+  const prototype = await loadHubPrototype();
+  const previousMatchMedia = globalThis.window.matchMedia;
+  globalThis.window.matchMedia = () => ({ matches: false });
+
+  const panel = createMockElement("section");
+  panel.className = "mha-page-panel";
+  const grid = createMockElement("section");
+  grid.className = "mha-grid";
+  panel.append(grid);
+  const shadowRoot = createMockShadowRoot();
+  shadowRoot.append(panel);
+
+  const calls = [];
+  const host = {
+    shadowRoot,
+    dataset: {
+      themeStyle: "oneui",
+    },
+    _themeController: {
+      read() {
+        return { themeStyle: "oneui" };
+      },
+    },
+    _refreshActiveGridOnly() {
+      calls.push("refreshActiveGridOnly");
+      return true;
+    },
+    _syncActivePageBackdropState(detail) {
+      calls.push(["syncActivePageBackdropState", detail?.activePage?.id || "", detail?.activePage?.type || "grid"]);
+    },
+    _syncMediaPageSettingsDom() {
+      calls.push("syncMediaPageSettingsDom");
+    },
+    _getPageTransitionDirection() {
+      return "right";
+    },
+    render() {
+      calls.push("render");
+    },
+  };
+
+  try {
+    prototype._renderPageTransition.call(
+      host,
+      { id: "home", type: "grid" },
+      { id: "media", type: "media-players" },
+    );
+  } finally {
+    globalThis.window.matchMedia = previousMatchMedia;
+  }
+
+  assert.deepEqual(calls, ["render"]);
 });
 
 test("deferred UI rebuilds settings through syncSettingsDom instead of appending raw panels", async () => {
