@@ -15,10 +15,16 @@ export function resolveResponsiveStatusBarMode(
   {
     hasPersistedStatusBarMode = false,
     layout = "desktop",
+    isDesktopEnvironment = false,
   } = {},
 ) {
   const normalized = normalizeStatusBarMode(value || STATUS_BAR_MODES.TOP_BAR);
-  if (!hasPersistedStatusBarMode && layout === "desktop" && normalized === STATUS_BAR_MODES.TOP_BAR) {
+  if (
+    !hasPersistedStatusBarMode
+    && isDesktopEnvironment
+    && layout !== "mobile"
+    && normalized === STATUS_BAR_MODES.TOP_BAR
+  ) {
     return STATUS_BAR_MODES.HIDDEN;
   }
   return normalized;

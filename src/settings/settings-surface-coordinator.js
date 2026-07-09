@@ -2,6 +2,7 @@ import {
   buildSettingsCoordinatorProps,
   syncSettingsPanels,
 } from "./settings-panel-coordinator.js";
+import { detectDesktopEnvironment } from "../core/device-environment.js";
 import { resolveResponsiveStatusBarMode } from "../core/status-bar-mode.js";
 
 const SETTINGS_BACKDROP_SELECTOR = ".mha-settings-backdrop";
@@ -37,6 +38,7 @@ export function createSettingsSurfaceCoordinator(host) {
       || resolveResponsiveStatusBarMode(host._statusBarMode, {
         hasPersistedStatusBarMode: Boolean(host._hasPersistedStatusBarMode),
         layout: resolvedLayout,
+        isDesktopEnvironment: responsiveState.isDesktopEnvironment ?? detectDesktopEnvironment(),
       });
     return buildSettingsCoordinatorProps({
       settingsOpen: host._settingsOpen,
