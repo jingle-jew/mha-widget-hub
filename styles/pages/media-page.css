@@ -134,6 +134,22 @@
   min-inline-size: min(100%, 14rem);
 }
 
+.mha-media-page-settings-panel[data-settings-scope] .mha-media-page-settings-scrim {
+  background: var(--mha-scrim-surface, var(--mha-surface-scrim, var(--mha-bg-overlay)));
+  opacity: 0;
+}
+
+:host([data-theme-style="ios"]) .mha-media-page-settings-panel[data-settings-scope] .mha-media-page-settings-scrim,
+:host([data-theme-style="oneui"]) .mha-media-page-settings-panel[data-settings-scope] .mha-media-page-settings-scrim {
+  -webkit-backdrop-filter: var(--mha-backdrop-filter, var(--mha-shell-filter, none));
+  backdrop-filter: var(--mha-backdrop-filter, var(--mha-shell-filter, none));
+}
+
+.mha-media-page-settings-panel[data-settings-scope][data-open="true"] .mha-media-page-settings-scrim {
+  opacity: var(--mha-scrim-opacity, 1);
+  pointer-events: auto;
+}
+
 .mha-media-page-player-select {
   display: grid;
   gap: clamp(.3rem, .6cqi, .55rem);

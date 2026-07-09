@@ -9,6 +9,8 @@ import {
   PANEL_MOBILE_PRESENTATIONS,
   PANEL_SURFACE_ROLES,
 } from "../panels/panel-surface-contract.js";
+import { SETTINGS_PANEL_VISIBILITY_TRANSITION_MS } from "../panels/panel-transition-timing.js";
+import { syncPanelVisibility } from "../panels/panel-visibility-controller.js";
 import { validateWallpaperFile } from "./wallpaper-storage.js";
 import { getThemeStyleOptions, getThemeVariantOptions } from "./theme-registry.js";
 import { getPageIconLabel, PAGE_ICON_OPTIONS } from "../pages/page-icons.js";
@@ -821,6 +823,13 @@ function getAccentSwatchSignature(root) {
   return root.querySelector(".mha-settings-accent-swatches")?.dataset.accentSignature || "";
 }
 
+function syncSettingsPanelVisibility(panel, open) {
+  return syncPanelVisibility(panel, open, {
+    transitionMs: SETTINGS_PANEL_VISIBILITY_TRANSITION_MS,
+    closeStateDatasetKey: "panelCloseState",
+  });
+}
+
 export function updateSettingsPanel(existing, next) {
   if (!existing || !next) return false;
   if (existing.dataset.settingsScope !== next.dataset.settingsScope) return false;
@@ -831,12 +840,10 @@ export function updateSettingsPanel(existing, next) {
   if (getValueControlSignature(existing) !== getValueControlSignature(next)) return false;
   if (getAccentSwatchSignature(existing) !== getAccentSwatchSignature(next)) return false;
 
-  existing.dataset.open = next.dataset.open;
   existing.dataset.iconShape = next.dataset.iconShape;
   existing.dataset.mobileLayout = next.dataset.mobileLayout || "false";
   existing.dataset.mobileLandscape = next.dataset.mobileLandscape || "false";
-  existing.hidden = next.hidden;
-  existing.setAttribute("aria-hidden", next.getAttribute("aria-hidden") || "false");
+  syncSettingsPanelVisibility(existing, next.dataset.open === "true");
 
   updateMatchedValueControls(existing, next);
   updateAccentPressedState(existing, next);

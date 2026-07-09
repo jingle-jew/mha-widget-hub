@@ -15,12 +15,7 @@
 :host([data-theme-style="ios"].is-widget-surface-open) .mha-shell,
 :host([data-theme-style="ios"].is-widget-surface-open) .mha-dock,
 :host([data-theme-style="ios"].is-widget-surface-open) .mha-mobile-dock,
-:host([data-theme-style="ios"].is-widget-surface-open) .mha-edit-button,
-:host([data-theme-style="ios"].is-settings-open) .mha-background,
-:host([data-theme-style="ios"].is-settings-open) .mha-shell,
-:host([data-theme-style="ios"].is-settings-open) .mha-dock,
-:host([data-theme-style="ios"].is-settings-open) .mha-mobile-dock,
-:host([data-theme-style="ios"].is-settings-open) .mha-edit-button {
+:host([data-theme-style="ios"].is-widget-surface-open) .mha-edit-button {
   --mha-backdrop-filter-fallback: saturate(var(--mha-surface-saturation, 190%)) brightness(.92);
   --mha-backdrop-filter: blur(var(--mha-surface-blur, 10px)) saturate(var(--mha-surface-saturation, 190%)) brightness(.92);
 }
@@ -29,12 +24,7 @@
 :host([data-theme-style="ios"][data-ios-glass="liquid"].is-widget-surface-open) .mha-shell,
 :host([data-theme-style="ios"][data-ios-glass="liquid"].is-widget-surface-open) .mha-dock,
 :host([data-theme-style="ios"][data-ios-glass="liquid"].is-widget-surface-open) .mha-mobile-dock,
-:host([data-theme-style="ios"][data-ios-glass="liquid"].is-widget-surface-open) .mha-edit-button,
-:host([data-theme-style="ios"][data-ios-glass="liquid"].is-settings-open) .mha-background,
-:host([data-theme-style="ios"][data-ios-glass="liquid"].is-settings-open) .mha-shell,
-:host([data-theme-style="ios"][data-ios-glass="liquid"].is-settings-open) .mha-dock,
-:host([data-theme-style="ios"][data-ios-glass="liquid"].is-settings-open) .mha-mobile-dock,
-:host([data-theme-style="ios"][data-ios-glass="liquid"].is-settings-open) .mha-edit-button {
+:host([data-theme-style="ios"][data-ios-glass="liquid"].is-widget-surface-open) .mha-edit-button {
   --mha-backdrop-filter-fallback: saturate(.82) brightness(.92);
   --mha-backdrop-filter: blur(var(--mha-surface-blur, 10px)) saturate(.82) brightness(.92);
 }
@@ -53,11 +43,6 @@
 :host([data-theme-style="ios"].is-widget-surface-open) .mha-dock,
 :host([data-theme-style="ios"].is-widget-surface-open) .mha-mobile-dock,
 :host([data-theme-style="ios"].is-widget-surface-open) .mha-edit-button,
-:host([data-theme-style="ios"].is-settings-open) .mha-background,
-:host([data-theme-style="ios"].is-settings-open) .mha-shell,
-:host([data-theme-style="ios"].is-settings-open) .mha-dock,
-:host([data-theme-style="ios"].is-settings-open) .mha-mobile-dock,
-:host([data-theme-style="ios"].is-settings-open) .mha-edit-button,
 :host([data-theme-style="oneui"].is-widget-surface-open) .mha-background,
 :host([data-theme-style="oneui"].is-widget-surface-open) .mha-shell,
 :host([data-theme-style="oneui"].is-widget-surface-open) .mha-dock,
@@ -78,11 +63,6 @@
   :host([data-theme-style="ios"].is-widget-surface-open) .mha-dock,
   :host([data-theme-style="ios"].is-widget-surface-open) .mha-mobile-dock,
   :host([data-theme-style="ios"].is-widget-surface-open) .mha-edit-button,
-  :host([data-theme-style="ios"].is-settings-open) .mha-background,
-  :host([data-theme-style="ios"].is-settings-open) .mha-shell,
-  :host([data-theme-style="ios"].is-settings-open) .mha-dock,
-  :host([data-theme-style="ios"].is-settings-open) .mha-mobile-dock,
-  :host([data-theme-style="ios"].is-settings-open) .mha-edit-button,
   :host([data-theme-style="oneui"].is-widget-surface-open) .mha-background,
   :host([data-theme-style="oneui"].is-widget-surface-open) .mha-shell,
   :host([data-theme-style="oneui"].is-widget-surface-open) .mha-dock,
@@ -98,11 +78,6 @@
   :host([data-theme-style="ios"].is-widget-surface-open) .mha-dock,
   :host([data-theme-style="ios"].is-widget-surface-open) .mha-mobile-dock,
   :host([data-theme-style="ios"].is-widget-surface-open) .mha-edit-button,
-  :host([data-theme-style="ios"].is-settings-open) .mha-background,
-  :host([data-theme-style="ios"].is-settings-open) .mha-shell,
-  :host([data-theme-style="ios"].is-settings-open) .mha-dock,
-  :host([data-theme-style="ios"].is-settings-open) .mha-mobile-dock,
-  :host([data-theme-style="ios"].is-settings-open) .mha-edit-button,
   :host([data-theme-style="oneui"].is-widget-surface-open) .mha-background,
   :host([data-theme-style="oneui"].is-widget-surface-open) .mha-shell,
   :host([data-theme-style="oneui"].is-widget-surface-open) .mha-dock,
@@ -118,11 +93,6 @@
   :host([data-theme-style="ios"].is-widget-surface-open) .mha-dock,
   :host([data-theme-style="ios"].is-widget-surface-open) .mha-mobile-dock,
   :host([data-theme-style="ios"].is-widget-surface-open) .mha-edit-button,
-  :host([data-theme-style="ios"].is-settings-open) .mha-background,
-  :host([data-theme-style="ios"].is-settings-open) .mha-shell,
-  :host([data-theme-style="ios"].is-settings-open) .mha-dock,
-  :host([data-theme-style="ios"].is-settings-open) .mha-mobile-dock,
-  :host([data-theme-style="ios"].is-settings-open) .mha-edit-button,
   :host([data-theme-style="oneui"].is-widget-surface-open) .mha-background,
   :host([data-theme-style="oneui"].is-widget-surface-open) .mha-shell,
   :host([data-theme-style="oneui"].is-widget-surface-open) .mha-dock,

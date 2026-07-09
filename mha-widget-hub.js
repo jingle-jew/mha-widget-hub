@@ -533,14 +533,15 @@ _canAddWidgetToActivePage(){
 }
 _openMediaPageSettings(){
   if(!isMediaPlayersPage(this._getActivePage()))return false;
+  if(this._mediaPageSettingsOpen)return true;
   this._mediaPageSettingsOpen=true;
-  this.render();
+  this._syncMediaPageSettingsDom();
   return true;
 }
 _closeMediaPageSettings(){
   if(!this._mediaPageSettingsOpen)return false;
   this._mediaPageSettingsOpen=false;
-  this.render();
+  this._syncMediaPageSettingsDom();
   return true;
 }
 _updatePageConfig(pageId,updater){
@@ -549,13 +550,22 @@ _updatePageConfig(pageId,updater){
 _updateActiveMediaPageConfig(patch={}){
   const page=this._getActivePage();
   if(!isMediaPlayersPage(page))return false;
-  return this._updatePageConfig(page.id,(config={})=>{
+  const result=updatePageConfig(this._pages,page.id,(config={})=>{
     const next=normalizeMediaPageConfig({...config,...patch});
     const enabledIds=Array.isArray(next.enabledPlayerIds)?next.enabledPlayerIds.filter(Boolean):[];
     if(next.defaultPlayerId&&!enabledIds.includes(next.defaultPlayerId))next.defaultPlayerId=enabledIds[0]||"";
     if(next.selectedPlayerId&&!enabledIds.includes(next.selectedPlayerId))next.selectedPlayerId=next.defaultPlayerId||enabledIds[0]||"";
     return next;
   });
+  if(!result)return false;
+  this._pages=result.pages;
+  const nextPage=this._getActivePage();
+  this._recordPersistenceResult(this._savePages());
+  this._syncSettingsDom();
+  this._syncMediaPageSettingsDom();
+  this.shadowRoot?.querySelector?.(".mha-media-page")?.__mhaUpdatePage?.(nextPage);
+  this._syncActivePageBackdropState({activePage:nextPage});
+  return true;
 }
 _selectMediaPagePlayer(playerId=""){
   return this._updateActiveMediaPageConfig({selectedPlayerId:String(playerId||"").trim()});

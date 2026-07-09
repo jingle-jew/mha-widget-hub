@@ -1,20 +1,58 @@
 import { getEntitiesForDomain } from "../ha/entity-filters.js";
 import { t } from "../i18n/index.js";
 import { createPanelShell } from "../panels/panel-shell.js";
+import { syncPanelVisibility } from "../panels/panel-visibility-controller.js";
 import {
   applyPanelSurfaceContract,
   PANEL_MOBILE_PRESENTATIONS,
   PANEL_SURFACE_ROLES,
 } from "../panels/panel-surface-contract.js";
+import { SETTINGS_PANEL_VISIBILITY_TRANSITION_MS } from "../panels/panel-transition-timing.js";
+import { replaceSettingsPanelPreservingUiState } from "../settings/settings-panel-orchestrator.js";
+import {
+  applyWidgetSurfaceHostLayoutState,
+  syncWidgetSurfaceOpenState,
+} from "../widgets/widget-placement-orchestrator.js";
 import { getMediaPageVisualStyleOptions } from "./page-types.js";
 
-function createCheckboxRow({ label, checked = false, onChange = () => {} } = {}) {
+function syncDataset(target, source) {
+  if (!target?.dataset || !source?.dataset) return;
+  Object.keys(target.dataset).forEach((key) => {
+    if (key === "open" || key === "panelCloseState") return;
+    if (!(key in source.dataset)) delete target.dataset[key];
+  });
+  Object.entries(source.dataset).forEach(([key, value]) => {
+    if (key === "open" || key === "panelCloseState") return;
+    target.dataset[key] = value;
+  });
+}
+
+function updateMediaPageSettingsPanel(existing, next) {
+  if (!existing || !next) return false;
+  syncDataset(existing, next);
+  const existingSheet = existing.querySelector(".mha-media-page-settings-sheet");
+  const nextSheet = next.querySelector(".mha-media-page-settings-sheet");
+  const existingScrim = existing.querySelector(".mha-media-page-settings-scrim");
+  const nextScrim = next.querySelector(".mha-media-page-settings-scrim");
+  if (!existingSheet || !nextSheet || !existingScrim || !nextScrim) return false;
+  existingScrim.replaceWith(nextScrim);
+  existingSheet.replaceChildren(...nextSheet.childNodes);
+  return true;
+}
+
+function createCheckboxRow({
+  label,
+  checked = false,
+  controlId = "",
+  onChange = () => {},
+} = {}) {
   const labelNode = document.createElement("label");
   labelNode.className = "mha-settings-checkbox mha-media-page-settings-checkbox";
 
   const input = document.createElement("input");
   input.type = "checkbox";
   input.className = "mha-settings-checkbox-input";
+  if (controlId) input.dataset.settingsControl = controlId;
   input.checked = Boolean(checked);
   input.addEventListener("change", () => onChange(input.checked));
 
@@ -25,7 +63,13 @@ function createCheckboxRow({ label, checked = false, onChange = () => {} } = {})
   return labelNode;
 }
 
-function createSelectField({ label, value = "", options = [], onChange = () => {} } = {}) {
+function createSelectField({
+  label,
+  value = "",
+  options = [],
+  controlId = "",
+  onChange = () => {},
+} = {}) {
   const field = document.createElement("label");
   field.className = "mha-settings-field mha-media-page-settings-field";
 
@@ -35,7 +79,7 @@ function createSelectField({ label, value = "", options = [], onChange = () => {
 
   const select = document.createElement("select");
   select.className = "mha-settings-select mha-media-page-settings-select";
-  select.value = value;
+  if (controlId) select.dataset.settingsControl = controlId;
   select.addEventListener("change", () => onChange(select.value));
 
   options.forEach((option) => {
@@ -44,6 +88,7 @@ function createSelectField({ label, value = "", options = [], onChange = () => {
     node.textContent = option.label;
     select.append(node);
   });
+  select.value = value;
 
   field.append(text, select);
   return field;
@@ -90,6 +135,8 @@ export function createMediaPageSettingsPanel({
     surfaceRole: PANEL_SURFACE_ROLES.PANEL,
     mobilePresentation: PANEL_MOBILE_PRESENTATIONS.SHEET,
   });
+  root.dataset.settingsScope = "media-page";
+  root.dataset.settingsPage = "main";
 
   root.hidden = !open;
 
@@ -100,6 +147,7 @@ export function createMediaPageSettingsPanel({
     ? availablePlayers.map((player) => createCheckboxRow({
       label: player.name,
       checked: enabledSet.has(player.entity_id),
+      controlId: `media-player:${player.entity_id}`,
       onChange: (checked) => {
         const nextEnabled = checked
           ? [...new Set([...enabledPlayerIds, player.entity_id])]
@@ -115,6 +163,7 @@ export function createMediaPageSettingsPanel({
       createSelectField({
         label: t("mediaPage.defaultPlayer", "Default player"),
         value: page?.config?.defaultPlayerId || "",
+        controlId: "default-player",
         options: [
           { value: "", label: t("mediaPage.autoPlayerFallback", "Automatic fallback") },
           ...availablePlayers
@@ -128,12 +177,14 @@ export function createMediaPageSettingsPanel({
       createSelectField({
         label: t("mediaPage.visualStyle", "Visual style"),
         value: page?.config?.visualStyle || "theme",
+        controlId: "visual-style",
         options: getMediaPageVisualStyleOptions(),
         onChange: value => onConfigChange({ visualStyle: value }),
       }),
       createCheckboxRow({
         label: t("mediaPage.blurBackground", "Blur artwork in the background"),
         checked: page?.config?.blurBackground !== false,
+        controlId: "blur-background",
         onChange: checked => onConfigChange({ blurBackground: checked }),
       }),
     ]),
@@ -151,6 +202,18 @@ function createEmptyState(text = "") {
 }
 
 export function syncMediaPageSettingsPanel(root, props = {}) {
-  root?.querySelector?.(".mha-media-page-settings-panel")?.remove();
-  root?.append?.(createMediaPageSettingsPanel(props));
+  const existing = root?.querySelector?.(".mha-media-page-settings-panel") || null;
+  const next = applyWidgetSurfaceHostLayoutState(root, createMediaPageSettingsPanel(props));
+  const panel = replaceSettingsPanelPreservingUiState({
+    root,
+    existing,
+    next,
+    updatePanel: updateMediaPageSettingsPanel,
+  });
+  syncPanelVisibility(panel, Boolean(props.open), {
+    transitionMs: SETTINGS_PANEL_VISIBILITY_TRANSITION_MS,
+    closeStateDatasetKey: "panelCloseState",
+  });
+  syncWidgetSurfaceOpenState(root);
+  return panel;
 }
