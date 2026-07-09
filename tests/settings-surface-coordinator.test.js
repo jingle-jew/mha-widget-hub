@@ -159,3 +159,131 @@ test("settings surface coordinator owns both open-state flags and panel sync", (
   assert.equal(host.lastSync.props.all.showDockLabels, true);
   assert.equal(host.lastSync.props.all.statusBarMode, "top-bar");
 });
+
+test("settings surface coordinator exposes the desktop default status bar as hidden until persisted", () => {
+  globalThis.document = {
+    documentElement: {
+      dataset: { iconShape: "squircle" },
+    },
+    createElement() {
+      return {
+        className: "",
+        dataset: {},
+        attributes: {},
+        hidden: false,
+        setAttribute(name, value) {
+          this.attributes[name] = value;
+        },
+      };
+    },
+  };
+
+  const host = {
+    _settingsOpen: true,
+    _screensaverSettingsOpen: false,
+    _language: "en",
+    _hideHaSidebar: false,
+    _showDockLabels: false,
+    _hasPersistedStatusBarMode: false,
+    _statusBarMode: "top-bar",
+    _accentPaletteExpanded: false,
+    _settingsPage: "main",
+    _pages: [],
+    _activePageId: "",
+    _dockSettingsPageId: "",
+    _dockPosition: "left",
+    _customWallpapers: {},
+    _hass: { states: {} },
+    _entityVisibilityConfig: { users: [] },
+    dataset: { iconShape: "circle" },
+    classList: { toggle() {} },
+    shadowRoot: {
+      querySelector() {
+        return null;
+      },
+      append() {},
+    },
+    _getResponsiveState() {
+      return {
+        layout: "desktop",
+        isMobileLayout: false,
+        effectiveStatusBarMode: "hidden",
+        settingsCapabilities: {
+          supportsScreensaver: true,
+          supportsDockPosition: true,
+          supportsSidebarToggle: true,
+          showsStatusBarOptions: true,
+          isMobileLandscape: false,
+        },
+      };
+    },
+    _themeController: {
+      read() {
+        return {
+          themeSetting: "dark",
+          themeStyle: "oneui",
+          iosGlass: "liquid",
+          accent: "sky",
+          accentMode: "manual",
+          iconShapeSetting: "auto",
+          iconShape: "squircle",
+        };
+      },
+    },
+    _screensaverController: {
+      read() {
+        return {
+          enabled: true,
+          delay: 30000,
+          preview: false,
+          nowBar: true,
+          nowBarItems: {},
+          nowBarConfig: {},
+          clockVariant: "digital",
+        };
+      },
+    },
+    _syncSettingsPanels({ props }) {
+      host.lastSync = props;
+    },
+    _closeSettings() {},
+    _closeScreensaverSettings() {},
+    _applyLanguageFromSettings() {},
+    _applyThemeFromSettings() {},
+    _applyThemeStyleFromSettings() {},
+    _applyIosGlassFromSettings() {},
+    _applyAccentFromSettings() {},
+    _applyAccentModeFromSettings() {},
+    _setAccentPaletteExpanded() {},
+    _applyIconShapeFromSettings() {},
+    _applyHideHaSidebarFromSettings() {},
+    _applyDockLabelsFromSettings() {},
+    _applyStatusBarModeFromSettings() {},
+    _applyScreensaverEnabledFromSettings() {},
+    _applyScreensaverDelayFromSettings() {},
+    _applyScreensaverPreviewFromSettings() {},
+    _applyScreensaverNowBarFromSettings() {},
+    _applyScreensaverNowBarItemFromSettings() {},
+    _applyScreensaverNowBarTileEnabledFromSettings() {},
+    _applyScreensaverNowBarEntitySelectionFromSettings() {},
+    _applyScreensaverNowBarNowItemFromSettings() {},
+    _applyScreensaverClockVariantFromSettings() {},
+    resetGrid() {},
+    _openWallpaperSettings() {},
+    _openNowBarSettings() {},
+    _openSettings() {},
+    _openDockSettings() {},
+    _openDockPageSettings() {},
+    _moveDockPage() {},
+    _deleteDockPage() {},
+    _renameDockPage() {},
+    _changeDockPageIcon() {},
+    _applyDockPositionFromSettings() {},
+    _saveCustomWallpaper() {},
+    _resetCustomWallpaper() {},
+  };
+
+  createSettingsSurfaceCoordinator(host).sync();
+
+  assert.equal(host.lastSync.all.statusBarMode, "hidden");
+});

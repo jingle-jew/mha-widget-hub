@@ -16,6 +16,7 @@ import {
   getStoredDockPosition,
   getStoredHideHaSidebar,
   getStoredLanguageSetting,
+  readStoredStatusBarMode,
   getStoredStatusBarMode,
   normalizeDockPosition,
   normalizeLanguageSetting,
@@ -87,6 +88,21 @@ test("status bar persistence falls back to top bar when no value is stored", () 
   const storage = createStorage();
 
   assert.equal(getStoredStatusBarMode(storage), "top-bar");
+  assert.deepEqual(readStoredStatusBarMode(storage), {
+    mode: "top-bar",
+    persisted: false,
+  });
+});
+
+test("status bar persistence reports whether the preference already exists", () => {
+  const storage = createStorage({
+    "mha-status-bar-mode": "hidden",
+  });
+
+  assert.deepEqual(readStoredStatusBarMode(storage), {
+    mode: "hidden",
+    persisted: true,
+  });
 });
 
 test("grid reset helper clears only the persisted grid-related keys", () => {

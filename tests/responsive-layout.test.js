@@ -108,6 +108,34 @@ test("responsive state keeps tablet landscape intact when the viewport is not ph
   assert.equal(state.statusBarVisible, true);
 });
 
+test("responsive state hides the default desktop status bar until the user picks a mode", () => {
+  const state = computeResponsiveState({
+    layoutMode: "auto",
+    viewportMetrics: { width: 1440, height: 900 },
+    dockPosition: "left",
+    statusBarMode: "top-bar",
+    hasPersistedStatusBarMode: false,
+  });
+
+  assert.equal(state.layout, "desktop");
+  assert.equal(state.effectiveStatusBarMode, "hidden");
+  assert.equal(state.statusBarVisible, false);
+});
+
+test("responsive state preserves the desktop status bar once the user preference is persisted", () => {
+  const state = computeResponsiveState({
+    layoutMode: "auto",
+    viewportMetrics: { width: 1440, height: 900 },
+    dockPosition: "left",
+    statusBarMode: "top-bar",
+    hasPersistedStatusBarMode: true,
+  });
+
+  assert.equal(state.layout, "desktop");
+  assert.equal(state.effectiveStatusBarMode, "top-bar");
+  assert.equal(state.statusBarVisible, true);
+});
+
 test("widget and logical sizes convert consistently", () => {
   assert.deepEqual(widgetSizeToLogicalSize({ w: 4, h: 2 }), { w: 4, h: 2 });
   assert.deepEqual(logicalSizeToWidgetSize({ w: 2, h: 3 }), { w: 2, h: 3 });

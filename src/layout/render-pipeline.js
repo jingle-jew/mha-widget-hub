@@ -379,7 +379,7 @@ export function createRenderPipeline(host, options = {}) {
       iconShapeSetting,
       iconShape,
       accent,
-      statusBarMode: host._statusBarMode || "pill",
+      statusBarMode: responsiveState.effectiveStatusBarMode || host._statusBarMode || "pill",
       statusBarVisible: responsiveState.statusBarVisible ?? (layout !== "mobile"),
     };
   }

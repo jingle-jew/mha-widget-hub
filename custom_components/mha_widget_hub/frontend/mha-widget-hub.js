@@ -1252,6 +1252,7 @@ _syncResponsiveState({publish=false,viewportMetrics=null,availableContentRect=nu
     availableContentRect,
     dockPosition:this._dockPosition,
     statusBarMode:this._statusBarMode,
+    hasPersistedStatusBarMode:Boolean(this._hasPersistedStatusBarMode),
   });
   this._responsiveState=responsiveState;
   if(publish){

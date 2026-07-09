@@ -11,6 +11,7 @@ export function applyStatusBarModeSetting(
   const nextMode = normalizeStatusBarMode(mode);
 
   host._statusBarMode = nextMode;
+  host._hasPersistedStatusBarMode = true;
   host.dataset.statusBarMode = nextMode;
   host._recordPersistenceResult(writeStorageValueRef(storageKey, nextMode));
   host._syncSettingsDom();

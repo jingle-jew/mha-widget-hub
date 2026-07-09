@@ -2,6 +2,7 @@ import {
   buildSettingsCoordinatorProps,
   syncSettingsPanels,
 } from "./settings-panel-coordinator.js";
+import { resolveResponsiveStatusBarMode } from "../core/status-bar-mode.js";
 
 const SETTINGS_BACKDROP_SELECTOR = ".mha-settings-backdrop";
 
@@ -30,13 +31,20 @@ export function createSettingsSurfaceCoordinator(host) {
     const screensaverState = host._screensaverController.read();
     const responsiveState = host._getResponsiveState?.() || {};
     const settingsCapabilities = responsiveState.settingsCapabilities || {};
+    const resolvedLayout = responsiveState.layout
+      || (responsiveState.isMobileLayout ? "mobile" : "desktop");
+    const effectiveStatusBarMode = responsiveState.effectiveStatusBarMode
+      || resolveResponsiveStatusBarMode(host._statusBarMode, {
+        hasPersistedStatusBarMode: Boolean(host._hasPersistedStatusBarMode),
+        layout: resolvedLayout,
+      });
     return buildSettingsCoordinatorProps({
       settingsOpen: host._settingsOpen,
       screensaverSettingsOpen: host._screensaverSettingsOpen,
       language: host._language,
       hideHaSidebar: host._hideHaSidebar,
       showDockLabels: host._showDockLabels,
-      statusBarMode: host._statusBarMode,
+      statusBarMode: effectiveStatusBarMode,
       accentPaletteExpanded: host._accentPaletteExpanded,
       settingsPage: host._settingsPage,
       dockPages: host._pages,

@@ -177,6 +177,8 @@ export function normalizeGridOrientation(orientation = "landscape") {
   return orientation === "portrait" ? "portrait" : "landscape";
 }
 
+import { resolveResponsiveStatusBarMode } from "../core/status-bar-mode.js";
+
 export function getLayoutVariant(layout = "desktop", orientation = "landscape") {
   return `${layout}-${normalizeGridOrientation(orientation)}`;
 }
@@ -194,6 +196,7 @@ export function computeResponsiveState({
   availableContentRect = null,
   dockPosition = "left",
   statusBarMode = "top-bar",
+  hasPersistedStatusBarMode = false,
 } = {}) {
   const rect = host?.getBoundingClientRect?.() || {};
   const metrics = viewportMetrics || rect;
@@ -224,7 +227,11 @@ export function computeResponsiveState({
     : (isMobileLayout
       ? "bottom"
       : (effectiveDockPosition === "bottom" ? "bottom" : "side"));
-  const statusBarVisible = statusBarMode !== "hidden" && !isMobileLayout;
+  const effectiveStatusBarMode = resolveResponsiveStatusBarMode(statusBarMode, {
+    hasPersistedStatusBarMode,
+    layout,
+  });
+  const statusBarVisible = effectiveStatusBarMode !== "hidden" && !isMobileLayout;
   const scrollModel = isMobileLandscape ? "widget-area" : (isMobileLayout ? "viewport" : "widget-area");
   const presetRect = availableContentRect
     ? { ...availableContentRect, dockPosition: effectiveDockPosition }
@@ -241,6 +248,7 @@ export function computeResponsiveState({
     dockFamily,
     dockPosition: effectiveDockPosition,
     requestedDockPosition: dockPosition,
+    effectiveStatusBarMode,
     statusBarVisible,
     scrollModel,
     gridPreset: getGridPresetForLayout(layout, orientation, presetRect),

@@ -24,6 +24,7 @@ test("createHubRuntimeDefaults returns the expected initial runtime state", () =
   assert.equal(defaults._dockPosition, "left");
   assert.equal(defaults._hideHaSidebar, false);
   assert.equal(defaults._showDockLabels, false);
+  assert.equal(defaults._hasPersistedStatusBarMode, false);
   assert.equal(defaults._statusBarMode, "top-bar");
   assert.equal(defaults._language, "auto");
   assert.deepEqual(defaults._customWallpapers, { light: null, dark: null });
