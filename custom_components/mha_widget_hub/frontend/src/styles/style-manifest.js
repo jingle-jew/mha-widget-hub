@@ -56,6 +56,7 @@ const STATIC_STYLE_MANIFEST_AFTER_THEMES = Object.freeze([
   entry("styles/panels/page-creator-sheet.css", "component"),
   entry("styles/panels/page-creator-bottom.css", "component"),
   entry("styles/panels/page-creator-contract.css", "component"),
+  entry("styles/panels/page-creator-popup-center.css", "component"),
   entry("styles/settings/settings-bottom.css", "component"),
   entry("styles/themes/light-text-contract.css", "theme"),
   entry("styles/widgets/widget-layout.css", "structure"),
