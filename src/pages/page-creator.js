@@ -7,7 +7,16 @@ import {
   PANEL_MOBILE_PRESENTATIONS,
   PANEL_SURFACE_ROLES,
 } from "../panels/panel-surface-contract.js";
+import { PAGE_CREATOR_VISIBILITY_TRANSITION_MS } from "../panels/panel-transition-timing.js";
+import { syncPanelVisibility } from "../panels/panel-visibility-controller.js";
 import { t } from "../i18n/index.js";
+
+function syncPageCreatorPanelVisibility(panel, open, { animateClose = true } = {}) {
+  return syncPanelVisibility(panel, open, {
+    transitionMs: PAGE_CREATOR_VISIBILITY_TRANSITION_MS,
+    animateClose,
+  });
+}
 
 export function createPageCreatorPanel({
   open = false,
@@ -70,7 +79,7 @@ export function createPageCreatorPanel({
   actions.append(cancel, create);
 
   const root = applyPanelSurfaceContract(createPanelShell({
-    open,
+    open: false,
     rootClassName: "mha-page-creator",
     scrimClassName: "mha-page-creator-scrim",
     sheetClassName: "mha-page-creator-sheet",
@@ -86,15 +95,27 @@ export function createPageCreatorPanel({
     surfaceRole: PANEL_SURFACE_ROLES.POPUP,
     mobilePresentation: PANEL_MOBILE_PRESENTATIONS.SHEET,
   });
-  root.hidden = !open;
-  return root;
+  return syncPageCreatorPanelVisibility(root, open, { animateClose: false });
 }
 
 export function syncPageCreatorPanel(root, props) {
-  root?.querySelectorAll?.("section.mha-page-creator:not(.mha-widget-config-popup)")
-    ?.forEach((panel) => panel.remove());
+  const panels = [...root?.querySelectorAll?.("section.mha-page-creator:not(.mha-widget-config-popup)") || []];
+  const [existing, ...stalePanels] = panels;
+  stalePanels.forEach(panel => panel?.remove?.());
+
+  if (existing && !props?.open) {
+    syncPageCreatorPanelVisibility(existing, false, { animateClose: true });
+    return existing;
+  }
+
   const panel = createPageCreatorPanel(props);
-  root?.append?.(panel);
+  if (existing?.replaceWith) existing.replaceWith(panel);
+  else if (existing?.remove) {
+    existing.remove();
+    root?.append?.(panel);
+  } else {
+    root?.append?.(panel);
+  }
   return panel;
 }
 

@@ -9,6 +9,8 @@ import {
   PANEL_MOBILE_PRESENTATIONS,
   PANEL_SURFACE_ROLES,
 } from "../panels/panel-surface-contract.js";
+import { SETTINGS_PANEL_VISIBILITY_TRANSITION_MS } from "../panels/panel-transition-timing.js";
+import { syncPanelVisibility } from "../panels/panel-visibility-controller.js";
 import { validateWallpaperFile } from "./wallpaper-storage.js";
 import { getThemeStyleOptions, getThemeVariantOptions } from "./theme-registry.js";
 import { getPageIconLabel, PAGE_ICON_OPTIONS } from "../pages/page-icons.js";
@@ -821,61 +823,11 @@ function getAccentSwatchSignature(root) {
   return root.querySelector(".mha-settings-accent-swatches")?.dataset.accentSignature || "";
 }
 
-const SETTINGS_PANEL_VISIBILITY_TRANSITION_MS = 320;
-
-function cancelQueuedSettingsPanelOpen(panel) {
-  const frameId = panel?._mhaOpenVisibilityFrame;
-  if (frameId == null) return;
-  const cancelFrame = globalThis.cancelAnimationFrame || globalThis.clearTimeout;
-  cancelFrame(frameId);
-  panel._mhaOpenVisibilityFrame = null;
-}
-
-function cancelQueuedSettingsPanelHide(panel) {
-  const timerId = panel?._mhaHideVisibilityTimer;
-  if (timerId == null) return;
-  globalThis.clearTimeout(timerId);
-  panel._mhaHideVisibilityTimer = null;
-}
-
-function queueSettingsPanelOpen(panel) {
-  const requestFrame = globalThis.requestAnimationFrame || (callback => globalThis.setTimeout(callback, 0));
-  panel._mhaOpenVisibilityFrame = requestFrame(() => {
-    panel._mhaOpenVisibilityFrame = null;
-    if (panel?._mhaDesiredOpenState !== true) return;
-    panel.dataset.open = "true";
-    panel.setAttribute("aria-hidden", "false");
-  });
-}
-
 function syncSettingsPanelVisibility(panel, open) {
-  if (!panel) return;
-  const nextOpen = Boolean(open);
-  panel._mhaDesiredOpenState = nextOpen;
-  cancelQueuedSettingsPanelOpen(panel);
-  cancelQueuedSettingsPanelHide(panel);
-
-  if (nextOpen) {
-    panel.hidden = false;
-    if (panel.dataset.open === "true") {
-      panel.setAttribute("aria-hidden", "false");
-      return;
-    }
-
-    panel.dataset.open = "false";
-    panel.setAttribute("aria-hidden", "false");
-    queueSettingsPanelOpen(panel);
-    return;
-  }
-
-  panel.dataset.open = "false";
-  panel.setAttribute("aria-hidden", "true");
-  panel.hidden = false;
-  panel._mhaHideVisibilityTimer = globalThis.setTimeout(() => {
-    panel._mhaHideVisibilityTimer = null;
-    if (panel?._mhaDesiredOpenState === true) return;
-    panel.hidden = true;
-  }, SETTINGS_PANEL_VISIBILITY_TRANSITION_MS);
+  return syncPanelVisibility(panel, open, {
+    transitionMs: SETTINGS_PANEL_VISIBILITY_TRANSITION_MS,
+    closeStateDatasetKey: "panelCloseState",
+  });
 }
 
 export function updateSettingsPanel(existing, next) {

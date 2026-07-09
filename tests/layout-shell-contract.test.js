@@ -326,7 +326,27 @@ test("floating controls and settings sheet consume responsive variants instead o
   );
   assert.match(
     settingsPanelSource,
-    /\.mha-settings-panel\[data-mobile-layout="true"\] \.mha-settings-sheet\s*\{[\s\S]*opacity:\s*1;[\s\S]*transform:\s*translateY\(18px\);[\s\S]*transition:[\s\S]*transform 240ms cubic-bezier\(\.2,.8,.2,1\);/,
+    /\.mha-settings-sheet\s*\{[\s\S]*--mha-settings-sheet-hidden-transform:\s*translateX\(calc\(100% \+ clamp\(1rem, 2\.6vw, 2rem\)\)\);[\s\S]*transform:\s*var\(--mha-settings-sheet-hidden-transform\);[\s\S]*transform-origin:\s*right center;/,
+  );
+  assert.match(
+    settingsPanelSource,
+    /\.mha-settings-panel\[data-mobile-layout="true"\] \.mha-settings-sheet\s*\{[\s\S]*--mha-settings-sheet-hidden-transform:\s*translateY\(110dvh\);[\s\S]*--mha-settings-sheet-visible-transform:\s*translateY\(0\);[\s\S]*opacity:\s*1;[\s\S]*transform:\s*var\(--mha-settings-sheet-hidden-transform\);[\s\S]*transition:[\s\S]*transform var\(--mha-panel-visibility-duration, 360ms\) cubic-bezier\(\.22,1,.36,1\);/,
+  );
+  assert.match(
+    settingsPanelSource,
+    /\.mha-settings-panel\[data-panel-swap-state\] \.mha-settings-sheet\s*\{[\s\S]*animation-duration:\s*var\(--mha-panel-visibility-duration, 360ms\);[\s\S]*-webkit-backdrop-filter:\s*none;[\s\S]*backdrop-filter:\s*none;/,
+  );
+  assert.match(
+    settingsPanelSource,
+    /\.mha-settings-shared-scrim\s*\{[\s\S]*z-index:\s*109;[\s\S]*background:\s*var\(--mha-scrim-surface, var\(--mha-surface-scrim, var\(--mha-bg-overlay\)\)\);[\s\S]*opacity:\s*var\(--mha-scrim-opacity, 1\);/,
+  );
+  assert.match(
+    settingsPanelSource,
+    /\.mha-settings-panel\[data-panel-swap-state\] \.mha-settings-scrim\s*\{[\s\S]*opacity:\s*0;[\s\S]*pointer-events:\s*none;/,
+  );
+  assert.match(
+    settingsPanelSource,
+    /\.mha-settings-panel\[data-panel-swap-state="entering"\] \.mha-settings-sheet\s*\{[\s\S]*animation-name:\s*mha-settings-panel-sheet-in;[\s\S]*animation-delay:\s*120ms;/,
   );
   assert.match(
     settingsPanelSource,
@@ -350,6 +370,14 @@ test("floating controls and settings sheet consume responsive variants instead o
   );
   assert.match(
     pageCreatorSource,
+    /\.mha-page-creator\s*\{[\s\S]*place-items:\s*center end;/,
+  );
+  assert.match(
+    pageCreatorSource,
+    /\.mha-page-creator-sheet\s*\{[\s\S]*transform:\s*translateX\(calc\(100% \+ clamp\(1rem, 4vw, 2rem\)\)\);[\s\S]*transform-origin:\s*right center;/,
+  );
+  assert.match(
+    pageCreatorSource,
     /@media \(max-width: 767px\)\s*\{[\s\S]*:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\) \.mha-page-creator\[data-mobile-presentation="sheet"\]\s*\{[\s\S]*opacity:\s*0;[\s\S]*pointer-events:\s*none;[\s\S]*transition:\s*none;/,
   );
   assert.match(
@@ -362,7 +390,7 @@ test("floating controls and settings sheet consume responsive variants instead o
   );
   assert.match(
     pageCreatorSource,
-    /@media \(max-width: 767px\)\s*\{[\s\S]*:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\) \.mha-page-creator\[data-mobile-presentation="sheet"\] \.mha-page-creator-sheet\s*\{[\s\S]*z-index:\s*1;[\s\S]*opacity:\s*1;[\s\S]*pointer-events:\s*none;[\s\S]*transform:\s*translateY\(18px\);[\s\S]*transition:\s*transform 220ms cubic-bezier\(\.2,.8,.2,1\);/,
+    /@media \(max-width: 767px\)\s*\{[\s\S]*:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\) \.mha-page-creator\[data-mobile-presentation="sheet"\] \.mha-page-creator-sheet\s*\{[\s\S]*z-index:\s*1;[\s\S]*opacity:\s*1;[\s\S]*pointer-events:\s*none;[\s\S]*transform:\s*translateY\(28px\);[\s\S]*transition:\s*transform var\(--mha-panel-visibility-duration, 300ms\) cubic-bezier\(\.22,1,.36,1\);/,
   );
   assert.doesNotMatch(
     widgetManagerSource,

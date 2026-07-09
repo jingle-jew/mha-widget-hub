@@ -17,8 +17,15 @@ function createPanel({ scope = "all", page = "main", withBody = true } = {}) {
     contains: (node) => node?.inside === true,
     querySelector: (selector) => selector === ".mha-settings-body" ? body : null,
     querySelectorAll: () => [],
+    setAttribute(name, value) {
+      this.attributes = this.attributes || {};
+      this.attributes[name] = value;
+    },
     replaceWith(next) {
       this.replacedWith = next;
+    },
+    remove() {
+      this.removed = true;
     },
     body,
   };
@@ -93,6 +100,73 @@ test("replaced settings view restores its body scroll position", () => {
   assert.equal(result, next);
   assert.equal(existing.replacedWith, next);
   assert.equal(next.body.scrollTop, 240);
+});
+
+test("different settings views animate by appending the next panel while delaying removal", () => {
+  const previousSetTimeout = globalThis.setTimeout;
+  const previousDocument = globalThis.document;
+  const callbacks = [];
+  globalThis.setTimeout = (callback) => {
+    callbacks.push(callback);
+    return 1;
+  };
+
+  try {
+    const existing = createPanel({ page: "main" });
+    const next = createPanel({ page: "dock" });
+    next.dataset.open = "true";
+    globalThis.document = {
+      createElement() {
+        return {
+          className: "",
+          dataset: {},
+          attributes: {},
+          setAttribute(name, value) {
+            this.attributes[name] = value;
+          },
+          remove() {
+            this.removed = true;
+          },
+        };
+      },
+    };
+    const appendedNodes = [];
+    const root = {
+      activeElement: null,
+      querySelector(selector) {
+        if (selector === ".mha-settings-shared-scrim") {
+          return appendedNodes.find(node => node.className === "mha-settings-shared-scrim") || null;
+        }
+        return null;
+      },
+      append(node) {
+        appendedNodes.push(node);
+        this.appended = node;
+      },
+    };
+
+    const result = replaceSettingsPanelPreservingUiState({
+      root,
+      existing,
+      next,
+      updatePanel: () => false,
+    });
+
+    assert.equal(result, next);
+    assert.equal(root.appended, next);
+    assert.equal(appendedNodes.some(node => node.className === "mha-settings-shared-scrim"), true);
+    assert.equal(existing.replacedWith, undefined);
+    assert.equal(existing.dataset.panelSwapState, "leaving");
+    assert.equal(next.dataset.panelSwapState, "entering");
+
+    callbacks.forEach(callback => callback());
+    assert.equal(existing.removed, true);
+    assert.equal(next.dataset.panelSwapState, undefined);
+    assert.equal(appendedNodes.find(node => node.className === "mha-settings-shared-scrim")?.removed, true);
+  } finally {
+    globalThis.setTimeout = previousSetTimeout;
+    globalThis.document = previousDocument;
+  }
 });
 
 test("settings panel ui state capture and restore preserves body scroll by scope and page", () => {
