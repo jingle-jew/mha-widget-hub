@@ -161,6 +161,50 @@ test("frame alignment stylesheet no longer pilots grid alignment directly from d
   assert.doesNotMatch(source, /--mha-grid-track-justify:\s*(start|end|center)/);
 });
 
+test("pill status bar uses page padding as its tablet/desktop frame inset on both sides", () => {
+  const source = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "layout", "frame-alignment.css"),
+    "utf8",
+  );
+  const statusSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "layout", "status-bar.css"),
+    "utf8",
+  );
+
+  assert.match(
+    source,
+    /left:\s*var\(--mha-ha-sidebar-reserved-inline-start,\s*0px\)\s*!important;/,
+  );
+  assert.match(
+    source,
+    /right:\s*var\(--mha-page-padding\)\s*!important;/,
+  );
+  assert.match(
+    statusSource,
+    /left:\s*var\(--mha-ha-sidebar-reserved-inline-start,\s*0px\);/,
+  );
+  assert.match(
+    statusSource,
+    /right:\s*var\(--mha-page-padding\);/,
+  );
+  assert.doesNotMatch(
+    source,
+    /--mha-frame-edge-inset:/,
+  );
+  assert.doesNotMatch(
+    source,
+    /left:\s*calc\(\s*var\(--mha-page-padding\)\s*\+\s*var\(--mha-ha-sidebar-reserved-inline-start,\s*0px\)\s*\)\s*!important;/,
+  );
+  assert.doesNotMatch(
+    statusSource,
+    /right:\s*max\(\s*var\(--mha-safe-area-right, env\(safe-area-inset-right\)\),\s*clamp\(0\.75rem,\s*1\.8vw,\s*1\.25rem\)\s*\);/,
+  );
+  assert.doesNotMatch(
+    statusSource,
+    /left:\s*calc\(\s*var\(--mha-page-padding\)\s*\+\s*var\(--mha-ha-sidebar-reserved-inline-start,\s*0px\)\s*\);/,
+  );
+});
+
 test("bottom dock labels reserve extra shell height without coupling it to icon size", () => {
   const source = fs.readFileSync(
     path.join(REPO_ROOT, "styles", "layout", "widget-grid.css"),
