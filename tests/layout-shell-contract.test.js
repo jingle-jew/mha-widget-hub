@@ -299,6 +299,10 @@ test("floating controls and settings sheet consume responsive variants instead o
     path.join(REPO_ROOT, "styles", "panels", "panel-surface-contract.css"),
     "utf8",
   );
+  const pageCreatorSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "panels", "page-creator.css"),
+    "utf8",
+  );
   const pageCreatorSheetSource = fs.readFileSync(
     path.join(REPO_ROOT, "styles", "panels", "page-creator-sheet.css"),
     "utf8",
@@ -322,7 +326,7 @@ test("floating controls and settings sheet consume responsive variants instead o
   );
   assert.match(
     settingsPanelSource,
-    /\.mha-settings-panel\[data-mobile-layout="true"\] \.mha-settings-sheet\s*\{[\s\S]*transform:\s*translateY\(18px\) scale\(\.98\);/,
+    /\.mha-settings-panel\[data-mobile-layout="true"\] \.mha-settings-sheet\s*\{[\s\S]*opacity:\s*1;[\s\S]*transform:\s*translateY\(18px\);[\s\S]*transition:[\s\S]*transform 240ms cubic-bezier\(\.2,.8,.2,1\);/,
   );
   assert.match(
     settingsPanelSource,
@@ -343,6 +347,22 @@ test("floating controls and settings sheet consume responsive variants instead o
   assert.match(
     pageCreatorSheetSource,
     /\.mha-page-creator\[data-mobile-presentation="sheet"\] \.mha-page-creator-sheet\s*\{[\s\S]*inset-block-start:\s*auto;[\s\S]*inset-block-end:\s*0;[\s\S]*block-size:\s*auto;[\s\S]*max-block-size:\s*var\(--mha-mobile-sheet-max-height\);/,
+  );
+  assert.match(
+    pageCreatorSource,
+    /@media \(max-width: 767px\)\s*\{[\s\S]*:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\) \.mha-page-creator\[data-mobile-presentation="sheet"\]\s*\{[\s\S]*opacity:\s*0;[\s\S]*pointer-events:\s*none;[\s\S]*transition:\s*none;/,
+  );
+  assert.match(
+    pageCreatorSource,
+    /@media \(max-width: 767px\)\s*\{[\s\S]*:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\) \.mha-page-creator\[data-open="true"\]\[data-mobile-presentation="sheet"\]\s*\{[\s\S]*opacity:\s*1;[\s\S]*pointer-events:\s*auto;/,
+  );
+  assert.match(
+    pageCreatorSource,
+    /@media \(max-width: 767px\)\s*\{[\s\S]*:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\) \.mha-page-creator\[data-mobile-presentation="sheet"\] \.mha-page-creator-scrim\s*\{[\s\S]*z-index:\s*0;[\s\S]*opacity:\s*0;[\s\S]*pointer-events:\s*none;[\s\S]*transition:\s*opacity 180ms ease;/,
+  );
+  assert.match(
+    pageCreatorSource,
+    /@media \(max-width: 767px\)\s*\{[\s\S]*:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\) \.mha-page-creator\[data-mobile-presentation="sheet"\] \.mha-page-creator-sheet\s*\{[\s\S]*z-index:\s*1;[\s\S]*opacity:\s*1;[\s\S]*pointer-events:\s*none;[\s\S]*transform:\s*translateY\(18px\);[\s\S]*transition:\s*transform 220ms cubic-bezier\(\.2,.8,.2,1\);/,
   );
   assert.doesNotMatch(
     widgetManagerSource,

@@ -67,6 +67,54 @@ function withMockDocument(run) {
   }
 }
 
+function withMockAnimationQueues(run) {
+  const previousRequestAnimationFrame = globalThis.requestAnimationFrame;
+  const previousCancelAnimationFrame = globalThis.cancelAnimationFrame;
+  const previousSetTimeout = globalThis.setTimeout;
+  const previousClearTimeout = globalThis.clearTimeout;
+  let nextId = 1;
+  const frameQueue = new Map();
+  const timeoutQueue = new Map();
+
+  globalThis.requestAnimationFrame = (callback) => {
+    const id = nextId++;
+    frameQueue.set(id, callback);
+    return id;
+  };
+  globalThis.cancelAnimationFrame = (id) => {
+    frameQueue.delete(id);
+  };
+  globalThis.setTimeout = (callback, _delay = 0) => {
+    const id = nextId++;
+    timeoutQueue.set(id, callback);
+    return id;
+  };
+  globalThis.clearTimeout = (id) => {
+    timeoutQueue.delete(id);
+  };
+
+  const flushFrames = () => {
+    const callbacks = [...frameQueue.values()];
+    frameQueue.clear();
+    callbacks.forEach(callback => callback());
+  };
+
+  const flushTimeouts = () => {
+    const callbacks = [...timeoutQueue.values()];
+    timeoutQueue.clear();
+    callbacks.forEach(callback => callback());
+  };
+
+  try {
+    return run({ flushFrames, flushTimeouts });
+  } finally {
+    globalThis.requestAnimationFrame = previousRequestAnimationFrame;
+    globalThis.cancelAnimationFrame = previousCancelAnimationFrame;
+    globalThis.setTimeout = previousSetTimeout;
+    globalThis.clearTimeout = previousClearTimeout;
+  }
+}
+
 function matchesSelector(node, selector) {
   if (!node || !selector) return false;
   if (selector.startsWith(".")) {
@@ -229,6 +277,44 @@ test("settings panel updates its mobile landscape dataset in place across viewpo
   assert.equal(portraitPanel.dataset.mobileLayout, "true");
   assert.equal(portraitPanel.dataset.mobileLandscape, "true");
 }));
+
+test("settings panel keeps desktop close animation visible before hiding", () => withMockDocument(() => withMockAnimationQueues(({ flushFrames, flushTimeouts }) => {
+  const openPanel = createSettingsPanel({
+    open: true,
+    scope: "all",
+    settingsPage: "main",
+    isMobileLayout: false,
+  });
+  const closedPanel = createSettingsPanel({
+    open: false,
+    scope: "all",
+    settingsPage: "main",
+    isMobileLayout: false,
+  });
+
+  assert.equal(updateSettingsPanel(openPanel, closedPanel), true);
+  assert.equal(openPanel.dataset.open, "false");
+  assert.equal(openPanel.hidden, false);
+  assert.equal(openPanel.getAttribute("aria-hidden"), "true");
+
+  flushTimeouts();
+  assert.equal(openPanel.hidden, true);
+
+  const reopenedPanel = createSettingsPanel({
+    open: true,
+    scope: "all",
+    settingsPage: "main",
+    isMobileLayout: false,
+  });
+
+  assert.equal(updateSettingsPanel(openPanel, reopenedPanel), true);
+  assert.equal(openPanel.hidden, false);
+  assert.equal(openPanel.dataset.open, "false");
+  assert.equal(openPanel.getAttribute("aria-hidden"), "false");
+
+  flushFrames();
+  assert.equal(openPanel.dataset.open, "true");
+})));
 
 test("dock detail reuses the shared page icon registry", () => withMockDocument(() => {
   const dockDetail = createSettingsPanel({

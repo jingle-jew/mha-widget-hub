@@ -821,6 +821,63 @@ function getAccentSwatchSignature(root) {
   return root.querySelector(".mha-settings-accent-swatches")?.dataset.accentSignature || "";
 }
 
+const SETTINGS_PANEL_VISIBILITY_TRANSITION_MS = 320;
+
+function cancelQueuedSettingsPanelOpen(panel) {
+  const frameId = panel?._mhaOpenVisibilityFrame;
+  if (frameId == null) return;
+  const cancelFrame = globalThis.cancelAnimationFrame || globalThis.clearTimeout;
+  cancelFrame(frameId);
+  panel._mhaOpenVisibilityFrame = null;
+}
+
+function cancelQueuedSettingsPanelHide(panel) {
+  const timerId = panel?._mhaHideVisibilityTimer;
+  if (timerId == null) return;
+  globalThis.clearTimeout(timerId);
+  panel._mhaHideVisibilityTimer = null;
+}
+
+function queueSettingsPanelOpen(panel) {
+  const requestFrame = globalThis.requestAnimationFrame || (callback => globalThis.setTimeout(callback, 0));
+  panel._mhaOpenVisibilityFrame = requestFrame(() => {
+    panel._mhaOpenVisibilityFrame = null;
+    if (panel?._mhaDesiredOpenState !== true) return;
+    panel.dataset.open = "true";
+    panel.setAttribute("aria-hidden", "false");
+  });
+}
+
+function syncSettingsPanelVisibility(panel, open) {
+  if (!panel) return;
+  const nextOpen = Boolean(open);
+  panel._mhaDesiredOpenState = nextOpen;
+  cancelQueuedSettingsPanelOpen(panel);
+  cancelQueuedSettingsPanelHide(panel);
+
+  if (nextOpen) {
+    panel.hidden = false;
+    if (panel.dataset.open === "true") {
+      panel.setAttribute("aria-hidden", "false");
+      return;
+    }
+
+    panel.dataset.open = "false";
+    panel.setAttribute("aria-hidden", "false");
+    queueSettingsPanelOpen(panel);
+    return;
+  }
+
+  panel.dataset.open = "false";
+  panel.setAttribute("aria-hidden", "true");
+  panel.hidden = false;
+  panel._mhaHideVisibilityTimer = globalThis.setTimeout(() => {
+    panel._mhaHideVisibilityTimer = null;
+    if (panel?._mhaDesiredOpenState === true) return;
+    panel.hidden = true;
+  }, SETTINGS_PANEL_VISIBILITY_TRANSITION_MS);
+}
+
 export function updateSettingsPanel(existing, next) {
   if (!existing || !next) return false;
   if (existing.dataset.settingsScope !== next.dataset.settingsScope) return false;
@@ -831,12 +888,10 @@ export function updateSettingsPanel(existing, next) {
   if (getValueControlSignature(existing) !== getValueControlSignature(next)) return false;
   if (getAccentSwatchSignature(existing) !== getAccentSwatchSignature(next)) return false;
 
-  existing.dataset.open = next.dataset.open;
   existing.dataset.iconShape = next.dataset.iconShape;
   existing.dataset.mobileLayout = next.dataset.mobileLayout || "false";
   existing.dataset.mobileLandscape = next.dataset.mobileLandscape || "false";
-  existing.hidden = next.hidden;
-  existing.setAttribute("aria-hidden", next.getAttribute("aria-hidden") || "false");
+  syncSettingsPanelVisibility(existing, next.dataset.open === "true");
 
   updateMatchedValueControls(existing, next);
   updateAccentPressedState(existing, next);
