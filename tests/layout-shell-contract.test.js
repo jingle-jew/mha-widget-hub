@@ -91,6 +91,66 @@ test("side docks do not keep a mirrored bottom inset once the shell top reserve 
   );
 });
 
+test("generic side dock labels reuse the bottom-dock item proportions", () => {
+  const source = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "layout", "dock.css"),
+    "utf8",
+  );
+
+  assert.match(
+    source,
+    /\[data-dock-labels="true"\]\[data-dock-position="left"\]:not\(\[data-theme-style="oneui"\]\)/,
+  );
+  assert.match(
+    source,
+    /\[data-dock-labels="true"\]\[data-dock-position="right"\]:not\(\[data-theme-style="oneui"\]\)/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-dock-position="left"\]:not\(\[data-theme-style="oneui"\]\)\) \.mha-dock,[\s\S]*--mha-dock-empty-padding-inline:\s*var\(--mha-dock-empty-padding-block\);/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-dock-position="left"\]:not\(\[data-theme-style="oneui"\]\)\) \.mha-dock,[\s\S]*--mha-dock-rail-padding-inline:\s*var\(--mha-dock-rail-padding-block\);/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-dock-labels="true"\]:not\(\[data-theme-style="oneui"\]\)\) \.mha-dock,\s*:host\(\[data-dock-labels="true"\]:not\(\[data-theme-style="oneui"\]\)\) \.mha-mobile-dock\s*\{[\s\S]*--mha-dock-item-label-display:\s*block;/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-dock-labels="true"\]\[data-dock-position="left"\]:not\(\[data-theme-style="oneui"\]\)\) \.mha-dock,[\s\S]*--mha-dock-item-inline-size:\s*max\(5rem,\s*calc\(var\(--mha-icon-size\) \+ 1rem\)\);/,
+  );
+  assert.match(
+    source,
+    /--mha-dock-item-min-block-size:\s*calc\(var\(--mha-icon-size\) \+ \.78rem\);/,
+  );
+  assert.match(
+    source,
+    /--mha-dock-empty-width:\s*calc\(var\(--mha-dock-item-inline-size\) \+ \(var\(--mha-dock-rail-padding-inline\) \* 2\)\);/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-dock-labels="true"\]\[data-dock-position="bottom"\]:not\(\[data-theme-style="oneui"\]\)\) \.mha-dock,[\s\S]*--mha-dock-item-inline-size:\s*max\(5rem,\s*calc\(var\(--mha-icon-size\) \+ 1rem\)\);/,
+  );
+  assert.match(
+    source,
+    /--mha-dock-item-overflow:\s*visible;/,
+  );
+  assert.match(
+    source,
+    /--mha-dock-empty-height:\s*calc\(var\(--mha-dock-labeled-capsule-size\) \+ 1rem\);/,
+  );
+  assert.doesNotMatch(
+    source,
+    /--mha-dock-empty-height:\s*calc\(var\(--mha-icon-size\) \+/,
+  );
+  assert.doesNotMatch(
+    source,
+    /--mha-side-dock-rail-width:\s*clamp\(8\.5rem,\s*11vw,\s*10rem\);/,
+  );
+});
+
 test("frame alignment stylesheet no longer pilots grid alignment directly from dock position", () => {
   const source = fs.readFileSync(
     path.join(REPO_ROOT, "styles", "layout", "frame-alignment.css"),
@@ -99,6 +159,22 @@ test("frame alignment stylesheet no longer pilots grid alignment directly from d
 
   assert.doesNotMatch(source, /data-dock-position=.*mha-grid/);
   assert.doesNotMatch(source, /--mha-grid-track-justify:\s*(start|end|center)/);
+});
+
+test("bottom dock labels reserve extra shell height without coupling it to icon size", () => {
+  const source = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "layout", "widget-grid.css"),
+    "utf8",
+  );
+
+  assert.match(
+    source,
+    /:host\(\[data-dock-position="bottom"\]\[data-dock-labels="true"\]:not\(\[data-theme-style="oneui"\]\)\)\s*\{[\s\S]*--mha-shell-bottom-dock-height:\s*calc\([\s\S]*calc\(var\(--mha-shell-bottom-dock-capsule-size\) \* \.88\)[\s\S]*1rem[\s\S]*var\(--mha-shell-bottom-dock-clearance\)/,
+  );
+  assert.doesNotMatch(
+    source,
+    /--mha-shell-bottom-dock-height:\s*calc\([\s\S]*var\(--mha-icon-size\)/,
+  );
 });
 
 test("status bar mode remains a shell-owned layout input instead of a settings-only style toggle", () => {

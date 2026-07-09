@@ -500,6 +500,15 @@
     --mha-statusbar-reserved-top: 0px;
   }
 
+  :host([data-dock-position="bottom"][data-dock-labels="true"]:not([data-theme-style="oneui"])) {
+    --mha-shell-bottom-dock-height: calc(
+      calc(var(--mha-shell-bottom-dock-capsule-size) * .88)
+      + 1rem
+      + var(--mha-shell-bottom-dock-clearance)
+    );
+    --mha-bottom-dock-height: var(--mha-shell-bottom-dock-height);
+  }
+
   :host([data-dock-position="left"]) .mha-workspace {
     --mha-shell-content-bottom-inset: 0px !important;
     grid-template-columns: var(--mha-dock-zone-width) minmax(0, 1fr);
