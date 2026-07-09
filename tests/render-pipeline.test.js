@@ -1348,6 +1348,7 @@ test("page transition forces a full render when entering the dedicated media pag
     _getPageTransitionDirection() {
       return "right";
     },
+    _updateDockActiveState() {},
     render() {
       calls.push("render");
     },
