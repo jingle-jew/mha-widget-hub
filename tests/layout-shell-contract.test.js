@@ -338,7 +338,23 @@ test("floating controls and settings sheet consume responsive variants instead o
   );
   assert.match(
     settingsPanelSource,
-    /\.mha-settings-backdrop\s*\{[\s\S]*z-index:\s*109;[\s\S]*background:\s*var\(--mha-scrim-surface, var\(--mha-surface-scrim, var\(--mha-bg-overlay\)\)\);[\s\S]*opacity:\s*var\(--mha-scrim-opacity, 1\);/,
+    /\.mha-settings-backdrop\s*\{[\s\S]*z-index:\s*109;[\s\S]*background:\s*var\(--mha-scrim-surface, var\(--mha-surface-scrim, var\(--mha-bg-overlay\)\)\);[\s\S]*opacity:\s*0;[\s\S]*pointer-events:\s*none;/,
+  );
+  assert.match(
+    settingsPanelSource,
+    /:host\(\[data-theme-style="ios"\]\) \.mha-settings-backdrop,\s*:host\(\[data-theme-style="oneui"\]\) \.mha-settings-backdrop\s*\{[\s\S]*-webkit-backdrop-filter:\s*var\(--mha-backdrop-filter, var\(--mha-shell-filter, none\)\);[\s\S]*backdrop-filter:\s*var\(--mha-backdrop-filter, var\(--mha-shell-filter, none\)\);/,
+  );
+  assert.match(
+    settingsPanelSource,
+    /\.mha-settings-backdrop\[data-active="true"\]\s*\{[\s\S]*opacity:\s*var\(--mha-scrim-opacity, 1\);/,
+  );
+  assert.match(
+    settingsPanelSource,
+    /:host\(\[data-theme-style="ios"\]\.is-settings-open\) \.mha-background,[\s\S]*:host\(\[data-theme-style="oneui"\]\.is-screensaver-settings-open\) \.mha-edit-button\s*\{[\s\S]*-webkit-filter:\s*saturate\(var\(--mha-backdrop-saturation, \.82\)\) brightness\(var\(--mha-backdrop-brightness, \.86\)\);[\s\S]*filter:\s*saturate\(var\(--mha-backdrop-saturation, \.82\)\) brightness\(var\(--mha-backdrop-brightness, \.86\)\);/,
+  );
+  assert.match(
+    settingsPanelSource,
+    /@supports \(filter: blur\(1px\)\)\s*\{[\s\S]*:host\(\[data-theme-style="ios"\]\.is-settings-open\) \.mha-background,[\s\S]*filter:\s*var\(--mha-backdrop-filter, blur\(var\(--mha-backdrop-blur, 10px\)\) saturate\(var\(--mha-backdrop-saturation, \.82\)\) brightness\(var\(--mha-backdrop-brightness, \.86\)\)\);/,
   );
   assert.match(
     settingsPanelSource,

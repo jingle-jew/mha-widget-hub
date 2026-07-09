@@ -11,6 +11,8 @@ export function createSettingsSurfaceCoordinator(host) {
     if (existing) return existing;
     const backdrop = document.createElement("div");
     backdrop.className = "mha-settings-backdrop";
+    backdrop.dataset.active = "false";
+    backdrop.hidden = true;
     backdrop.setAttribute("aria-hidden", "true");
     root?.append?.(backdrop);
     return backdrop;
@@ -123,9 +125,9 @@ export function createSettingsSurfaceCoordinator(host) {
 
   return {
     getProps,
-      sync,
-      syncSettingsOpenState,
-      syncScreensaverOpenState,
-      syncSettingsBackdrop,
-    };
+    sync,
+    syncSettingsOpenState,
+    syncScreensaverOpenState,
+    syncSettingsBackdrop,
+  };
 }

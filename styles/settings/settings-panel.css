@@ -2,6 +2,26 @@
  * MHA Settings panel.
  */
 
+.mha-settings-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 109;
+  background: var(--mha-scrim-surface, var(--mha-surface-scrim, var(--mha-bg-overlay)));
+  opacity: 0;
+  pointer-events: none;
+  transition: none;
+}
+
+:host([data-theme-style="ios"]) .mha-settings-backdrop,
+:host([data-theme-style="oneui"]) .mha-settings-backdrop {
+  -webkit-backdrop-filter: var(--mha-backdrop-filter, var(--mha-shell-filter, none));
+  backdrop-filter: var(--mha-backdrop-filter, var(--mha-shell-filter, none));
+}
+
+.mha-settings-backdrop[data-active="true"] {
+  opacity: var(--mha-scrim-opacity, 1);
+}
+
 .mha-settings-panel {
   position: fixed;
   inset: 0;
@@ -21,15 +41,6 @@
   opacity: 0;
   pointer-events: none;
   transition: none;
-}
-
-.mha-settings-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 109;
-  background: var(--mha-scrim-surface, var(--mha-surface-scrim, var(--mha-bg-overlay)));
-  opacity: var(--mha-scrim-opacity, 1);
-  pointer-events: none;
 }
 
 .mha-settings-sheet {
@@ -419,11 +430,91 @@
  * the settings panel itself sharp.
  */
 :host(.is-settings-open) .mha-background,
+:host(.is-screensaver-settings-open) .mha-background,
 :host(.is-settings-open) .mha-shell,
+:host(.is-screensaver-settings-open) .mha-shell,
 :host(.is-settings-open) .mha-dock,
+:host(.is-screensaver-settings-open) .mha-dock,
 :host(.is-settings-open) .mha-mobile-dock,
-:host(.is-settings-open) .mha-edit-button {
+:host(.is-screensaver-settings-open) .mha-mobile-dock,
+:host(.is-settings-open) .mha-edit-button,
+:host(.is-screensaver-settings-open) .mha-edit-button {
   pointer-events: none;
+}
+
+:host([data-theme-style="ios"].is-settings-open) .mha-background,
+:host([data-theme-style="ios"].is-settings-open) .mha-shell,
+:host([data-theme-style="ios"].is-settings-open) .mha-dock,
+:host([data-theme-style="ios"].is-settings-open) .mha-mobile-dock,
+:host([data-theme-style="ios"].is-settings-open) .mha-edit-button,
+:host([data-theme-style="ios"].is-screensaver-settings-open) .mha-background,
+:host([data-theme-style="ios"].is-screensaver-settings-open) .mha-shell,
+:host([data-theme-style="ios"].is-screensaver-settings-open) .mha-dock,
+:host([data-theme-style="ios"].is-screensaver-settings-open) .mha-mobile-dock,
+:host([data-theme-style="ios"].is-screensaver-settings-open) .mha-edit-button,
+:host([data-theme-style="oneui"].is-settings-open) .mha-background,
+:host([data-theme-style="oneui"].is-settings-open) .mha-shell,
+:host([data-theme-style="oneui"].is-settings-open) .mha-dock,
+:host([data-theme-style="oneui"].is-settings-open) .mha-mobile-dock,
+:host([data-theme-style="oneui"].is-settings-open) .mha-edit-button,
+:host([data-theme-style="oneui"].is-screensaver-settings-open) .mha-background,
+:host([data-theme-style="oneui"].is-screensaver-settings-open) .mha-shell,
+:host([data-theme-style="oneui"].is-screensaver-settings-open) .mha-dock,
+:host([data-theme-style="oneui"].is-screensaver-settings-open) .mha-mobile-dock,
+:host([data-theme-style="oneui"].is-screensaver-settings-open) .mha-edit-button {
+  -webkit-filter: saturate(var(--mha-backdrop-saturation, .82)) brightness(var(--mha-backdrop-brightness, .86));
+  filter: saturate(var(--mha-backdrop-saturation, .82)) brightness(var(--mha-backdrop-brightness, .86));
+  transition: filter 180ms ease, -webkit-filter 180ms ease;
+}
+
+@supports (filter: blur(1px)) {
+  :host([data-theme-style="ios"].is-settings-open) .mha-background,
+  :host([data-theme-style="ios"].is-settings-open) .mha-shell,
+  :host([data-theme-style="ios"].is-settings-open) .mha-dock,
+  :host([data-theme-style="ios"].is-settings-open) .mha-mobile-dock,
+  :host([data-theme-style="ios"].is-settings-open) .mha-edit-button,
+  :host([data-theme-style="ios"].is-screensaver-settings-open) .mha-background,
+  :host([data-theme-style="ios"].is-screensaver-settings-open) .mha-shell,
+  :host([data-theme-style="ios"].is-screensaver-settings-open) .mha-dock,
+  :host([data-theme-style="ios"].is-screensaver-settings-open) .mha-mobile-dock,
+  :host([data-theme-style="ios"].is-screensaver-settings-open) .mha-edit-button,
+  :host([data-theme-style="oneui"].is-settings-open) .mha-background,
+  :host([data-theme-style="oneui"].is-settings-open) .mha-shell,
+  :host([data-theme-style="oneui"].is-settings-open) .mha-dock,
+  :host([data-theme-style="oneui"].is-settings-open) .mha-mobile-dock,
+  :host([data-theme-style="oneui"].is-settings-open) .mha-edit-button,
+  :host([data-theme-style="oneui"].is-screensaver-settings-open) .mha-background,
+  :host([data-theme-style="oneui"].is-screensaver-settings-open) .mha-shell,
+  :host([data-theme-style="oneui"].is-screensaver-settings-open) .mha-dock,
+  :host([data-theme-style="oneui"].is-screensaver-settings-open) .mha-mobile-dock,
+  :host([data-theme-style="oneui"].is-screensaver-settings-open) .mha-edit-button {
+    filter: var(--mha-backdrop-filter, blur(var(--mha-backdrop-blur, 10px)) saturate(var(--mha-backdrop-saturation, .82)) brightness(var(--mha-backdrop-brightness, .86)));
+  }
+}
+
+@supports (-webkit-filter: blur(1px)) {
+  :host([data-theme-style="ios"].is-settings-open) .mha-background,
+  :host([data-theme-style="ios"].is-settings-open) .mha-shell,
+  :host([data-theme-style="ios"].is-settings-open) .mha-dock,
+  :host([data-theme-style="ios"].is-settings-open) .mha-mobile-dock,
+  :host([data-theme-style="ios"].is-settings-open) .mha-edit-button,
+  :host([data-theme-style="ios"].is-screensaver-settings-open) .mha-background,
+  :host([data-theme-style="ios"].is-screensaver-settings-open) .mha-shell,
+  :host([data-theme-style="ios"].is-screensaver-settings-open) .mha-dock,
+  :host([data-theme-style="ios"].is-screensaver-settings-open) .mha-mobile-dock,
+  :host([data-theme-style="ios"].is-screensaver-settings-open) .mha-edit-button,
+  :host([data-theme-style="oneui"].is-settings-open) .mha-background,
+  :host([data-theme-style="oneui"].is-settings-open) .mha-shell,
+  :host([data-theme-style="oneui"].is-settings-open) .mha-dock,
+  :host([data-theme-style="oneui"].is-settings-open) .mha-mobile-dock,
+  :host([data-theme-style="oneui"].is-settings-open) .mha-edit-button,
+  :host([data-theme-style="oneui"].is-screensaver-settings-open) .mha-background,
+  :host([data-theme-style="oneui"].is-screensaver-settings-open) .mha-shell,
+  :host([data-theme-style="oneui"].is-screensaver-settings-open) .mha-dock,
+  :host([data-theme-style="oneui"].is-screensaver-settings-open) .mha-mobile-dock,
+  :host([data-theme-style="oneui"].is-screensaver-settings-open) .mha-edit-button {
+    -webkit-filter: var(--mha-backdrop-filter, blur(var(--mha-backdrop-blur, 10px)) saturate(var(--mha-backdrop-saturation, .82)) brightness(var(--mha-backdrop-brightness, .86)));
+  }
 }
 
 /* Keep modal layers crisp and interactive. */
