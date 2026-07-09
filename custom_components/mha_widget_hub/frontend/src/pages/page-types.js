@@ -86,11 +86,13 @@ export function isMediaPlayersPage(page = {}) {
   return normalizePageType(page?.type) === PAGE_TYPES.MEDIA_PLAYERS;
 }
 
+export function isMediaPagePanelWidget(widget = {}) {
+  return widget?.responsiveSizeMode === "media-page-panel"
+    || widget?.variant === "media-page-panel";
+}
+
 export function hasMediaPagePanelWidget(page = {}) {
-  return Boolean((page?.widgets || []).some(widget => (
-    widget?.responsiveSizeMode === "media-page-panel"
-    || widget?.variant === "media-page-panel"
-  )));
+  return Boolean((page?.widgets || []).some(widget => isMediaPagePanelWidget(widget)));
 }
 
 export function supportsMediaPageTheme(themeStyle = "") {

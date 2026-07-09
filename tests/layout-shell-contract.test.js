@@ -299,6 +299,10 @@ test("floating controls and settings sheet consume responsive variants instead o
     path.join(REPO_ROOT, "styles", "panels", "panel-surface-contract.css"),
     "utf8",
   );
+  const pageCreatorSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "panels", "page-creator.css"),
+    "utf8",
+  );
   const pageCreatorSheetSource = fs.readFileSync(
     path.join(REPO_ROOT, "styles", "panels", "page-creator-sheet.css"),
     "utf8",
@@ -322,7 +326,47 @@ test("floating controls and settings sheet consume responsive variants instead o
   );
   assert.match(
     settingsPanelSource,
-    /\.mha-settings-panel\[data-mobile-layout="true"\] \.mha-settings-sheet\s*\{[\s\S]*transform:\s*translateY\(18px\) scale\(\.98\);/,
+    /\.mha-settings-sheet\s*\{[\s\S]*--mha-settings-sheet-hidden-transform:\s*translateX\(calc\(100% \+ clamp\(1rem, 2\.6vw, 2rem\)\)\);[\s\S]*transform:\s*var\(--mha-settings-sheet-hidden-transform\);[\s\S]*transform-origin:\s*right center;/,
+  );
+  assert.match(
+    settingsPanelSource,
+    /\.mha-settings-panel\[data-mobile-layout="true"\] \.mha-settings-sheet\s*\{[\s\S]*--mha-settings-sheet-hidden-transform:\s*translateY\(110dvh\);[\s\S]*--mha-settings-sheet-visible-transform:\s*translateY\(0\);[\s\S]*opacity:\s*1;[\s\S]*transform:\s*var\(--mha-settings-sheet-hidden-transform\);[\s\S]*transition:[\s\S]*transform var\(--mha-panel-visibility-duration, 360ms\) cubic-bezier\(\.22,1,.36,1\);/,
+  );
+  assert.match(
+    settingsPanelSource,
+    /\.mha-settings-panel\[data-panel-swap-state\] \.mha-settings-sheet\s*\{[\s\S]*animation-duration:\s*var\(--mha-panel-visibility-duration, 360ms\);[\s\S]*-webkit-backdrop-filter:\s*none;[\s\S]*backdrop-filter:\s*none;/,
+  );
+  assert.match(
+    settingsPanelSource,
+    /\.mha-settings-backdrop\s*\{[\s\S]*z-index:\s*109;[\s\S]*background:\s*var\(--mha-scrim-surface, var\(--mha-surface-scrim, var\(--mha-bg-overlay\)\)\);[\s\S]*opacity:\s*0;[\s\S]*pointer-events:\s*none;/,
+  );
+  assert.match(
+    settingsPanelSource,
+    /:host\(\[data-theme-style="ios"\]\) \.mha-settings-backdrop,\s*:host\(\[data-theme-style="oneui"\]\) \.mha-settings-backdrop\s*\{[\s\S]*-webkit-backdrop-filter:\s*var\(--mha-backdrop-filter, var\(--mha-shell-filter, none\)\);[\s\S]*backdrop-filter:\s*var\(--mha-backdrop-filter, var\(--mha-shell-filter, none\)\);/,
+  );
+  assert.match(
+    settingsPanelSource,
+    /\.mha-settings-backdrop\[data-active="true"\]\s*\{[\s\S]*opacity:\s*var\(--mha-scrim-opacity, 1\);/,
+  );
+  assert.match(
+    settingsPanelSource,
+    /:host\(\[data-theme-style="ios"\]\.is-settings-open\) \.mha-background,[\s\S]*:host\(\[data-theme-style="oneui"\]\.is-screensaver-settings-open\) \.mha-edit-button\s*\{[\s\S]*-webkit-filter:\s*saturate\(var\(--mha-backdrop-saturation, \.82\)\) brightness\(var\(--mha-backdrop-brightness, \.86\)\);[\s\S]*filter:\s*saturate\(var\(--mha-backdrop-saturation, \.82\)\) brightness\(var\(--mha-backdrop-brightness, \.86\)\);/,
+  );
+  assert.match(
+    settingsPanelSource,
+    /@supports \(filter: blur\(1px\)\)\s*\{[\s\S]*:host\(\[data-theme-style="ios"\]\.is-settings-open\) \.mha-background,[\s\S]*filter:\s*var\(--mha-backdrop-filter, blur\(var\(--mha-backdrop-blur, 10px\)\) saturate\(var\(--mha-backdrop-saturation, \.82\)\) brightness\(var\(--mha-backdrop-brightness, \.86\)\)\);/,
+  );
+  assert.match(
+    settingsPanelSource,
+    /\.mha-settings-panel\[data-panel-swap-state\] \.mha-settings-scrim\s*\{[\s\S]*opacity:\s*0;[\s\S]*pointer-events:\s*none;/,
+  );
+  assert.match(
+    settingsPanelSource,
+    /\.mha-settings-panel\[data-settings-scope\]\[data-open="true"\] \.mha-settings-scrim\s*\{[\s\S]*opacity:\s*0;[\s\S]*pointer-events:\s*auto;/,
+  );
+  assert.match(
+    settingsPanelSource,
+    /\.mha-settings-panel\[data-panel-swap-state="entering"\] \.mha-settings-sheet\s*\{[\s\S]*animation-name:\s*mha-settings-panel-sheet-in;[\s\S]*animation-delay:\s*120ms;/,
   );
   assert.match(
     settingsPanelSource,
@@ -343,6 +387,30 @@ test("floating controls and settings sheet consume responsive variants instead o
   assert.match(
     pageCreatorSheetSource,
     /\.mha-page-creator\[data-mobile-presentation="sheet"\] \.mha-page-creator-sheet\s*\{[\s\S]*inset-block-start:\s*auto;[\s\S]*inset-block-end:\s*0;[\s\S]*block-size:\s*auto;[\s\S]*max-block-size:\s*var\(--mha-mobile-sheet-max-height\);/,
+  );
+  assert.match(
+    pageCreatorSource,
+    /\.mha-page-creator\s*\{[\s\S]*place-items:\s*center end;/,
+  );
+  assert.match(
+    pageCreatorSource,
+    /\.mha-page-creator-sheet\s*\{[\s\S]*transform:\s*translateX\(calc\(100% \+ clamp\(1rem, 4vw, 2rem\)\)\);[\s\S]*transform-origin:\s*right center;/,
+  );
+  assert.match(
+    pageCreatorSource,
+    /@media \(max-width: 767px\)\s*\{[\s\S]*:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\) \.mha-page-creator\[data-mobile-presentation="sheet"\]\s*\{[\s\S]*opacity:\s*0;[\s\S]*pointer-events:\s*none;[\s\S]*transition:\s*none;/,
+  );
+  assert.match(
+    pageCreatorSource,
+    /@media \(max-width: 767px\)\s*\{[\s\S]*:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\) \.mha-page-creator\[data-open="true"\]\[data-mobile-presentation="sheet"\]\s*\{[\s\S]*opacity:\s*1;[\s\S]*pointer-events:\s*auto;/,
+  );
+  assert.match(
+    pageCreatorSource,
+    /@media \(max-width: 767px\)\s*\{[\s\S]*:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\) \.mha-page-creator\[data-mobile-presentation="sheet"\] \.mha-page-creator-scrim\s*\{[\s\S]*z-index:\s*0;[\s\S]*opacity:\s*0;[\s\S]*pointer-events:\s*none;[\s\S]*transition:\s*opacity 180ms ease;/,
+  );
+  assert.match(
+    pageCreatorSource,
+    /@media \(max-width: 767px\)\s*\{[\s\S]*:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\) \.mha-page-creator\[data-mobile-presentation="sheet"\] \.mha-page-creator-sheet\s*\{[\s\S]*z-index:\s*1;[\s\S]*opacity:\s*1;[\s\S]*pointer-events:\s*none;[\s\S]*transform:\s*translateY\(28px\);[\s\S]*transition:\s*transform var\(--mha-panel-visibility-duration, 300ms\) cubic-bezier\(\.22,1,.36,1\);/,
   );
   assert.doesNotMatch(
     widgetManagerSource,

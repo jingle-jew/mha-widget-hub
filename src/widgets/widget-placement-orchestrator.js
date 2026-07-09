@@ -12,6 +12,7 @@ const OPEN_WIDGET_SURFACE_SELECTOR = [
   '.mha-widget-manager-panel[data-open="true"]:not([hidden])',
   'section.mha-page-creator:not(.mha-widget-config-popup)[data-open="true"]:not([hidden])',
   '.mha-widget-config-popup[data-open="true"]:not([hidden])',
+  '.mha-media-page-settings-panel[data-open="true"]:not([hidden])',
 ].join(",");
 
 export function applyWidgetSurfaceHostLayoutState(root, panel) {

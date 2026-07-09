@@ -533,14 +533,15 @@ _canAddWidgetToActivePage(){
 }
 _openMediaPageSettings(){
   if(!isMediaPlayersPage(this._getActivePage()))return false;
+  if(this._mediaPageSettingsOpen)return true;
   this._mediaPageSettingsOpen=true;
-  this.render();
+  this._syncMediaPageSettingsDom();
   return true;
 }
 _closeMediaPageSettings(){
   if(!this._mediaPageSettingsOpen)return false;
   this._mediaPageSettingsOpen=false;
-  this.render();
+  this._syncMediaPageSettingsDom();
   return true;
 }
 _updatePageConfig(pageId,updater){
@@ -549,13 +550,27 @@ _updatePageConfig(pageId,updater){
 _updateActiveMediaPageConfig(patch={}){
   const page=this._getActivePage();
   if(!isMediaPlayersPage(page))return false;
-  return this._updatePageConfig(page.id,(config={})=>{
+  const patchKeys=Object.keys(patch||{});
+  const styleOnlyPatch=patchKeys.length>0
+    && patchKeys.every(key=>key==="visualStyle"||key==="blurBackground");
+  const result=updatePageConfig(this._pages,page.id,(config={})=>{
     const next=normalizeMediaPageConfig({...config,...patch});
     const enabledIds=Array.isArray(next.enabledPlayerIds)?next.enabledPlayerIds.filter(Boolean):[];
     if(next.defaultPlayerId&&!enabledIds.includes(next.defaultPlayerId))next.defaultPlayerId=enabledIds[0]||"";
     if(next.selectedPlayerId&&!enabledIds.includes(next.selectedPlayerId))next.selectedPlayerId=next.defaultPlayerId||enabledIds[0]||"";
     return next;
   });
+  if(!result)return false;
+  this._pages=result.pages;
+  const nextPage=this._getActivePage();
+  this._recordPersistenceResult(this._savePages());
+  this._syncSettingsDom();
+  this._syncMediaPageSettingsDom();
+  this.shadowRoot?.querySelector?.(".mha-media-page")?.__mhaUpdatePage?.(nextPage,{
+    styleOnly:styleOnlyPatch,
+  });
+  this._syncActivePageBackdropState({activePage:nextPage});
+  return true;
 }
 _selectMediaPagePlayer(playerId=""){
   return this._updateActiveMediaPageConfig({selectedPlayerId:String(playerId||"").trim()});
@@ -863,9 +878,10 @@ _disableEditMode(){
   this._scheduleSquareUnitSync();
   return true;
 }
-_getPageTransitionDirection(){
+_getPageTransitionDirection(previousPage=null,nextPage=null){
+  void previousPage;
+  void nextPage;
   if(this._isMobileDefaultLayout())return"bottom";
-  if(this._dockPosition==="right")return"left";
   return"right";
 }
 	_renderPageTransition(previousPage=null,nextPage=null){
@@ -876,10 +892,33 @@ _getPageTransitionDirection(){
 	    ? currentPanel.cloneNode(true)
 	    : null;
 	  const dockRenderState=captureDockRenderState(this.shadowRoot);
-	  const direction=this._getPageTransitionDirection();
+	  const direction=this._getPageTransitionDirection(previousPage,nextPage);
+    const themeStyle=this.dataset.themeStyle||this._themeController?.read?.()?.themeStyle||"";
+    const previousIsMediaPage=isMediaPageExperienceActive(previousPage,themeStyle);
+    const nextIsMediaPage=isMediaPageExperienceActive(nextPage,themeStyle);
+    const pageTypeChanged=previousIsMediaPage!==nextIsMediaPage;
+    const nextPageNeedsDedicatedRender=isMediaPageExperienceActive(
+      nextPage,
+      themeStyle,
+    );
     const activeGrid=currentPanel?.querySelector?.(".mha-grid")
       || this.shadowRoot?.querySelector?.(".mha-grid")
       || null;
+
+    clearTimeout(this._pageTypeWallpaperCrossfadeTimer||0);
+    this._pageTypeWallpaperCrossfadeDurationMs=480;
+    this._pageTypeWallpaperCrossfadeActive=pageTypeChanged;
+    this.dataset.pageTypeWallpaperCrossfade=String(pageTypeChanged);
+    if(pageTypeChanged){
+      this._pageTypeWallpaperCrossfadeTimer=setTimeout(()=>{
+        this._pageTypeWallpaperCrossfadeTimer=0;
+        this._pageTypeWallpaperCrossfadeActive=false;
+        this.dataset.pageTypeWallpaperCrossfade="false";
+        if(this.dataset.mediaPageWallpaper!=="true"){
+          this.style?.removeProperty?.("--mha-media-page-wallpaper-image");
+        }
+      },this._pageTypeWallpaperCrossfadeDurationMs);
+    }
 
 	  this.shadowRoot?.querySelectorAll?.(".mha-page-panel-snapshot")?.forEach?.(node=>node.remove());
 
@@ -892,7 +931,7 @@ _getPageTransitionDirection(){
     snapshot.style.height=`${currentRect.height}px`;
 	  }
 
-    if(currentPanel&&activeGrid){
+    if(currentPanel&&activeGrid&&!nextPageNeedsDedicatedRender){
       const nextPageType=nextPage?.type||"grid";
       this._syncActivePageBackdropState({activePage:nextPage});
       currentPanel.dataset.pageType=nextPageType;
@@ -901,6 +940,7 @@ _getPageTransitionDirection(){
       this._syncMediaPageSettingsDom();
 
       if(!refreshed){
+        this._skipStabilizingRenderOnce=true;
         this.render();
         restoreDockRenderState(this.shadowRoot,dockRenderState,{
           scheduleMobileDockOverflowState:()=>this._scheduleMobileDockOverflowState(),
@@ -908,6 +948,7 @@ _getPageTransitionDirection(){
         });
       }
     }else{
+      this._skipStabilizingRenderOnce=true;
       this.render();
       restoreDockRenderState(this.shadowRoot,dockRenderState,{
         scheduleMobileDockOverflowState:()=>this._scheduleMobileDockOverflowState(),
@@ -1211,6 +1252,7 @@ _syncResponsiveState({publish=false,viewportMetrics=null,availableContentRect=nu
     availableContentRect,
     dockPosition:this._dockPosition,
     statusBarMode:this._statusBarMode,
+    hasPersistedStatusBarMode:Boolean(this._hasPersistedStatusBarMode),
   });
   this._responsiveState=responsiveState;
   if(publish){

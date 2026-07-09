@@ -17,8 +17,15 @@ function createPanel({ scope = "all", page = "main", withBody = true } = {}) {
     contains: (node) => node?.inside === true,
     querySelector: (selector) => selector === ".mha-settings-body" ? body : null,
     querySelectorAll: () => [],
+    setAttribute(name, value) {
+      this.attributes = this.attributes || {};
+      this.attributes[name] = value;
+    },
     replaceWith(next) {
       this.replacedWith = next;
+    },
+    remove() {
+      this.removed = true;
     },
     body,
   };
@@ -93,6 +100,46 @@ test("replaced settings view restores its body scroll position", () => {
   assert.equal(result, next);
   assert.equal(existing.replacedWith, next);
   assert.equal(next.body.scrollTop, 240);
+});
+
+test("different settings views animate by appending the next panel while delaying removal", () => {
+  const previousSetTimeout = globalThis.setTimeout;
+  const callbacks = [];
+  globalThis.setTimeout = (callback) => {
+    callbacks.push(callback);
+    return 1;
+  };
+
+  try {
+    const existing = createPanel({ page: "main" });
+    const next = createPanel({ page: "dock" });
+    next.dataset.open = "true";
+    const root = {
+      activeElement: null,
+      append(node) {
+        this.appended = node;
+      },
+    };
+
+    const result = replaceSettingsPanelPreservingUiState({
+      root,
+      existing,
+      next,
+      updatePanel: () => false,
+    });
+
+    assert.equal(result, next);
+    assert.equal(root.appended, next);
+    assert.equal(existing.replacedWith, undefined);
+    assert.equal(existing.dataset.panelSwapState, "leaving");
+    assert.equal(next.dataset.panelSwapState, "entering");
+
+    callbacks.forEach(callback => callback());
+    assert.equal(existing.removed, true);
+    assert.equal(next.dataset.panelSwapState, undefined);
+  } finally {
+    globalThis.setTimeout = previousSetTimeout;
+  }
 });
 
 test("settings panel ui state capture and restore preserves body scroll by scope and page", () => {

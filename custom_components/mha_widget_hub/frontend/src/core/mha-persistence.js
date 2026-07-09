@@ -36,10 +36,16 @@ export function getStoredDockLabels(storage = localStorage) {
   return readBoolean(DOCK_LABELS, false, storage);
 }
 
+export function readStoredStatusBarMode(storage = localStorage) {
+  const storedValue = storage.getItem(STATUS_BAR_MODE);
+  return {
+    mode: normalizeStatusBarMode(storedValue || "top-bar"),
+    persisted: storedValue != null && storedValue !== "",
+  };
+}
+
 export function getStoredStatusBarMode(storage = localStorage) {
-  return normalizeStatusBarMode(
-    storage.getItem(STATUS_BAR_MODE) || "top-bar",
-  );
+  return readStoredStatusBarMode(storage).mode;
 }
 
 export function normalizeLanguageSetting(value = "auto") {

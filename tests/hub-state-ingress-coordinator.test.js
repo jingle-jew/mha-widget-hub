@@ -82,6 +82,7 @@ test("hub state ingress coordinator initializes persisted shell state", () => {
   assert.equal(host._dockPosition, "right");
   assert.equal(host._hideHaSidebar, true);
   assert.equal(host._showDockLabels, true);
+  assert.equal(host._hasPersistedStatusBarMode, true);
   assert.equal(host._statusBarMode, "top-bar");
   assert.equal(host._language, "fr");
   assert.equal(host._activePageId, "home");

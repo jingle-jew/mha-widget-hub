@@ -177,6 +177,9 @@ export function normalizeGridOrientation(orientation = "landscape") {
   return orientation === "portrait" ? "portrait" : "landscape";
 }
 
+import { resolveResponsiveStatusBarMode } from "../core/status-bar-mode.js";
+import { detectDesktopEnvironment } from "../core/device-environment.js";
+
 export function getLayoutVariant(layout = "desktop", orientation = "landscape") {
   return `${layout}-${normalizeGridOrientation(orientation)}`;
 }
@@ -194,6 +197,10 @@ export function computeResponsiveState({
   availableContentRect = null,
   dockPosition = "left",
   statusBarMode = "top-bar",
+  hasPersistedStatusBarMode = false,
+  isDesktopEnvironment = null,
+  navigatorRef = globalThis.navigator,
+  matchMediaFn = (query) => globalThis.matchMedia?.(query),
 } = {}) {
   const rect = host?.getBoundingClientRect?.() || {};
   const metrics = viewportMetrics || rect;
@@ -224,7 +231,15 @@ export function computeResponsiveState({
     : (isMobileLayout
       ? "bottom"
       : (effectiveDockPosition === "bottom" ? "bottom" : "side"));
-  const statusBarVisible = statusBarMode !== "hidden" && !isMobileLayout;
+  const desktopEnvironment = typeof isDesktopEnvironment === "boolean"
+    ? isDesktopEnvironment
+    : detectDesktopEnvironment({ navigatorRef, matchMediaFn });
+  const effectiveStatusBarMode = resolveResponsiveStatusBarMode(statusBarMode, {
+    hasPersistedStatusBarMode,
+    layout,
+    isDesktopEnvironment: desktopEnvironment,
+  });
+  const statusBarVisible = effectiveStatusBarMode !== "hidden" && !isMobileLayout;
   const scrollModel = isMobileLandscape ? "widget-area" : (isMobileLayout ? "viewport" : "widget-area");
   const presetRect = availableContentRect
     ? { ...availableContentRect, dockPosition: effectiveDockPosition }
@@ -241,6 +256,8 @@ export function computeResponsiveState({
     dockFamily,
     dockPosition: effectiveDockPosition,
     requestedDockPosition: dockPosition,
+    isDesktopEnvironment: desktopEnvironment,
+    effectiveStatusBarMode,
     statusBarVisible,
     scrollModel,
     gridPreset: getGridPresetForLayout(layout, orientation, presetRect),

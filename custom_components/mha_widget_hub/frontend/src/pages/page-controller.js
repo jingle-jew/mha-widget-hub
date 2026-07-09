@@ -1,6 +1,5 @@
 import { normalizePage } from "./page-model.js";
 import {
-  createMediaPageWidgetSeed,
   createDefaultPageConfig,
   getDefaultPageIcon,
   getDefaultPageName,
@@ -42,17 +41,9 @@ export function addPage(
     id,
     name: getDefaultPageName(type, index - 1),
     icon: icon || getDefaultPageIcon(type),
-    widgets: type === PAGE_TYPES.MEDIA_PLAYERS
-      ? [
-        createMediaPageWidgetSeed({
-          pageId: id,
-          pageName: getDefaultPageName(type, index - 1),
-          config,
-        }),
-      ]
-      : [],
+    widgets: [],
   };
-  if (type !== PAGE_TYPES.GRID && type !== PAGE_TYPES.MEDIA_PLAYERS) {
+  if (type !== PAGE_TYPES.GRID) {
     rawPage.type = type;
     rawPage.config = config;
   }

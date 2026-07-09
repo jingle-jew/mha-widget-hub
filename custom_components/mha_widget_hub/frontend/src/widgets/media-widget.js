@@ -108,7 +108,7 @@ export function resolveMediaTransitionData(data, cache, now) {
   return applyMediaTransitionCache(data, cache, now);
 }
 
-function getMediaData(widget = {}, hass, cache = null, now = getMediaTimestamp()) {
+export function buildMediaWidgetData(widget = {}, hass, cache = null, now = getMediaTimestamp()) {
   const previewData = WIDGET_PREVIEW_DATA.media;
   const entity = resolveMediaEntity(widget, hass);
   const attributes = entity?.attributes || {};
@@ -158,7 +158,7 @@ function createText(className, text = "") {
   return node;
 }
 
-function setArtworkImage(artwork, artworkUrl = "") {
+export function setMediaArtworkImage(artwork, artworkUrl = "") {
   const image = artwork.querySelector(".mha-media-widget-artwork-image");
   const hasArtwork = Boolean(artworkUrl);
   artwork.dataset.hasArtwork = String(hasArtwork);
@@ -171,7 +171,7 @@ function setArtworkImage(artwork, artworkUrl = "") {
   }
 }
 
-function setBackgroundImage(root, artworkUrl = "") {
+export function setMediaBackgroundImage(root, artworkUrl = "") {
   const image = root.querySelector(".mha-media-widget-background-image");
   const hasArtwork = Boolean(artworkUrl);
   root.dataset.hasArtwork = String(hasArtwork);
@@ -184,7 +184,7 @@ function setBackgroundImage(root, artworkUrl = "") {
   }
 }
 
-function createArtworkBackground(data) {
+export function createMediaArtworkBackground(data) {
   const background = document.createElement("div");
   background.className = "mha-media-widget-background";
   background.setAttribute("aria-hidden", "true");
@@ -198,7 +198,7 @@ function createArtworkBackground(data) {
   return background;
 }
 
-function createArtwork(data) {
+export function createMediaArtwork(data) {
   const artwork = document.createElement("div");
   artwork.className = "mha-media-widget-artwork";
   artwork.setAttribute("aria-hidden", "true");
@@ -214,11 +214,11 @@ function createArtwork(data) {
     createText("mha-media-widget-artwork-glyph", "♪"),
   );
   artwork.dataset.playing = String(data.playing);
-  setArtworkImage(artwork, data.artworkUrl);
+  setMediaArtworkImage(artwork, data.artworkUrl);
   return artwork;
 }
 
-function createTitleStack(data) {
+export function createMediaTitleStack(data) {
   const stack = document.createElement("div");
   stack.className = "mha-media-widget-text";
   stack.append(
@@ -228,14 +228,14 @@ function createTitleStack(data) {
   return stack;
 }
 
-function createMetaDetails(data) {
+export function createMediaMetaDetails(data) {
   const details = document.createElement("div");
   details.className = "mha-media-widget-meta-details";
   details.append(createText("mha-media-widget-source", data.app));
   return details;
 }
 
-function createSourceBadge(data) {
+export function createMediaSourceBadge(data) {
   const badge = document.createElement("div");
   badge.className = "mha-media-widget-source-badge";
   badge.append(
@@ -245,7 +245,7 @@ function createSourceBadge(data) {
   return badge;
 }
 
-function createControlButton(label, symbol, {
+export function createMediaControlButton(label, symbol, {
   primary = false,
   action = "",
   className = "",
@@ -275,15 +275,15 @@ function createControlButton(label, symbol, {
   return button;
 }
 
-function createPlaybackButtons(data, { interactive = true, onAction } = {}) {
+export function createMediaPlaybackButtons(data, { interactive = true, onAction } = {}) {
   return [
-    createControlButton(t("widgets.mediaControls.previous", "Previous"), "‹", {
+    createMediaControlButton(t("widgets.mediaControls.previous", "Previous"), "‹", {
       action: "previous",
       disabled: !data.canPrevious,
       interactive,
       onAction,
     }),
-    createControlButton(data.playing ? t("widgets.mediaControls.pause", "Pause") : t("widgets.mediaControls.play", "Play"), data.playing ? "Ⅱ" : "▶", {
+    createMediaControlButton(data.playing ? t("widgets.mediaControls.pause", "Pause") : t("widgets.mediaControls.play", "Play"), data.playing ? "Ⅱ" : "▶", {
       primary: true,
       action: "playPause",
       className: "mha-media-widget-play-toggle",
@@ -291,7 +291,7 @@ function createPlaybackButtons(data, { interactive = true, onAction } = {}) {
       interactive,
       onAction,
     }),
-    createControlButton(t("widgets.mediaControls.next", "Next"), "›", {
+    createMediaControlButton(t("widgets.mediaControls.next", "Next"), "›", {
       action: "next",
       disabled: !data.canNext,
       interactive,
@@ -300,15 +300,15 @@ function createPlaybackButtons(data, { interactive = true, onAction } = {}) {
   ];
 }
 
-function createVolumeButtons(data, { interactive = true, onAction } = {}) {
+export function createMediaVolumeButtons(data, { interactive = true, onAction } = {}) {
   return [
-    createControlButton(t("widgets.mediaControls.volumeDown", "Volume down"), "−", {
+    createMediaControlButton(t("widgets.mediaControls.volumeDown", "Volume down"), "−", {
       action: "volumeDown",
       disabled: !data.canVolumeDown,
       interactive,
       onAction,
     }),
-    createControlButton(data.muted ? t("widgets.mediaControls.unmute", "Unmute") : t("widgets.mediaControls.mute", "Mute"), data.muted ? t("widgets.mediaControls.mute", "Mute") : "Vol", {
+    createMediaControlButton(data.muted ? t("widgets.mediaControls.unmute", "Unmute") : t("widgets.mediaControls.mute", "Mute"), data.muted ? t("widgets.mediaControls.mute", "Mute") : "Vol", {
       primary: true,
       action: "mute",
       className: "mha-media-widget-play-toggle",
@@ -316,7 +316,7 @@ function createVolumeButtons(data, { interactive = true, onAction } = {}) {
       interactive,
       onAction,
     }),
-    createControlButton(t("widgets.mediaControls.volumeUp", "Volume up"), "+", {
+    createMediaControlButton(t("widgets.mediaControls.volumeUp", "Volume up"), "+", {
       action: "volumeUp",
       disabled: !data.canVolumeUp,
       interactive,
@@ -325,7 +325,7 @@ function createVolumeButtons(data, { interactive = true, onAction } = {}) {
   ];
 }
 
-function renderControls(controls, data, { mode = "playback", interactive = true, onAction } = {}) {
+export function renderMediaControls(controls, data, { mode = "playback", interactive = true, onAction } = {}) {
   const group = controls.querySelector(".mha-media-widget-controls-group");
   const toggle = controls.querySelector(".mha-media-widget-control-toggle");
   if (!group || !toggle) return;
@@ -333,8 +333,8 @@ function renderControls(controls, data, { mode = "playback", interactive = true,
   controls.dataset.mode = mode;
   group.replaceChildren(...(
     mode === "volume"
-      ? createVolumeButtons(data, { interactive, onAction })
-      : createPlaybackButtons(data, { interactive, onAction })
+      ? createMediaVolumeButtons(data, { interactive, onAction })
+      : createMediaPlaybackButtons(data, { interactive, onAction })
   ));
 
   const showingPlaybackReturn = mode === "volume";
@@ -354,14 +354,14 @@ function renderControls(controls, data, { mode = "playback", interactive = true,
   toggle.tabIndex = interactive ? 0 : -1;
 }
 
-function createControls(data, { mode = "playback", interactive = true, onAction } = {}) {
+export function createMediaControls(data, { mode = "playback", interactive = true, onAction } = {}) {
   const controls = document.createElement("div");
   controls.className = "mha-media-widget-controls-shell";
 
   const group = document.createElement("div");
   group.className = "mha-media-widget-controls mha-media-widget-controls-group";
 
-  const toggle = createControlButton(t("widgets.mediaControls.volume", "Volume"), data.volumeLabel, {
+  const toggle = createMediaControlButton(t("widgets.mediaControls.volume", "Volume"), data.volumeLabel, {
     action: "toggleVolume",
     interactive,
     onAction,
@@ -369,11 +369,11 @@ function createControls(data, { mode = "playback", interactive = true, onAction 
   toggle.classList.add("mha-media-widget-control-toggle");
 
   controls.append(group, toggle);
-  renderControls(controls, data, { mode, interactive, onAction });
+  renderMediaControls(controls, data, { mode, interactive, onAction });
   return controls;
 }
 
-function setProgressState(progress, data) {
+export function setMediaProgressState(progress, data) {
   if (!progress) return;
   const width = data.progress?.available
     ? `${Math.max(0, Math.min(100, data.progress.ratio * 100))}%`
@@ -381,12 +381,12 @@ function setProgressState(progress, data) {
   progress.style.setProperty("--mha-media-progress-fill-width", width);
 }
 
-function createProgress(data, { includeLabels = false } = {}) {
+export function createMediaProgress(data, { includeLabels = false } = {}) {
   const progress = document.createElement("div");
   progress.className = "mha-media-widget-progress";
   progress.setAttribute("aria-hidden", "true");
   progress.append(createText("mha-media-widget-progress-fill"));
-  setProgressState(progress, data);
+  setMediaProgressState(progress, data);
 
   if (!includeLabels) return progress;
 
@@ -404,7 +404,7 @@ function createProgress(data, { includeLabels = false } = {}) {
   return shell;
 }
 
-function createMetaRows(data) {
+export function createMediaMetaRows(data) {
   const rows = document.createElement("div");
   rows.className = "mha-media-widget-meta-rows";
   rows.append(
@@ -520,7 +520,7 @@ export function createMediaWidgetContent(widget = {}, {
   const useMediaPagePanel = isMediaPagePanelWidget(widget, themeStyle);
   const transitionCache = createMediaTransitionCache();
   let graceTimer = null;
-  const data = getMediaData(widget, hass, transitionCache);
+  const data = buildMediaWidgetData(widget, hass, transitionCache);
   const context = {
     hass,
     entity: data.entity,
@@ -541,7 +541,7 @@ export function createMediaWidgetContent(widget = {}, {
     if (!interactive) return;
     if (action === "toggleVolume") {
       context.controlsMode = context.controlsMode === "volume" ? "playback" : "volume";
-      renderControls(controls, context.data, {
+      renderMediaControls(controls, context.data, {
         mode: context.controlsMode,
         interactive,
         onAction,
@@ -566,15 +566,15 @@ export function createMediaWidgetContent(widget = {}, {
     if (sourceBadgeNode) sourceBadgeNode.textContent = nextData.app;
     const artworkNode = root.querySelector(".mha-media-widget-artwork");
     artworkNode?.setAttribute("data-playing", String(nextData.playing));
-    if (artworkNode) setArtworkImage(artworkNode, nextData.artworkUrl);
-    setBackgroundImage(root, nextData.artworkUrl);
+    if (artworkNode) setMediaArtworkImage(artworkNode, nextData.artworkUrl);
+    setMediaBackgroundImage(root, nextData.artworkUrl);
     const progressNode = root.querySelector(".mha-media-widget-progress");
-    setProgressState(progressNode, nextData);
+    setMediaProgressState(progressNode, nextData);
     const currentNode = root.querySelector(".mha-media-widget-progress-current");
     if (currentNode) currentNode.textContent = nextData.progress?.available ? formatMediaDuration(nextData.progress.current) : "--:--";
     const durationNode = root.querySelector(".mha-media-widget-progress-duration");
     if (durationNode) durationNode.textContent = nextData.progress?.available ? formatMediaDuration(nextData.progress.duration) : "--:--";
-    renderControls(controls, nextData, {
+    renderMediaControls(controls, nextData, {
       mode: context.controlsMode,
       interactive,
       onAction,
@@ -590,31 +590,31 @@ export function createMediaWidgetContent(widget = {}, {
     const delay = Math.max(0, MEDIA_TRANSITION_GRACE_MS - elapsed + 1);
     graceTimer = setTimeout(() => {
       graceTimer = null;
-      context.hass && applyData(getMediaData(widget, context.hass, transitionCache));
+      context.hass && applyData(buildMediaWidgetData(widget, context.hass, transitionCache));
     }, delay);
   };
 
-  const background = createArtworkBackground(data);
-  const artwork = createArtwork(data);
-  const text = createTitleStack(data);
-  const metaDetails = createMetaDetails(data);
-  const controls = createControls(data, {
+  const background = createMediaArtworkBackground(data);
+  const artwork = createMediaArtwork(data);
+  const text = createMediaTitleStack(data);
+  const metaDetails = createMediaMetaDetails(data);
+  const controls = createMediaControls(data, {
     mode: context.controlsMode,
     interactive,
     onAction,
   });
-  const progress = createProgress(data, {
+  const progress = createMediaProgress(data, {
     includeLabels: variantKey === "4x2" || useMediaPagePanel,
   });
   root.append(background);
-  setBackgroundImage(root, data.artworkUrl);
+  setMediaBackgroundImage(root, data.artworkUrl);
 
   if (variantKey === "2x2") {
-    root.append(artwork, createSourceBadge(data), text, controls);
+    root.append(artwork, createMediaSourceBadge(data), text, controls);
   } else if (variantKey === "4x2") {
     const info = document.createElement("div");
     info.className = "mha-media-widget-info";
-    info.append(createSourceBadge(data), text, progress, controls);
+    info.append(createMediaSourceBadge(data), text, progress, controls);
     root.append(artwork, info);
   } else {
     const info = document.createElement("div");
@@ -623,7 +623,7 @@ export function createMediaWidgetContent(widget = {}, {
 
     const transport = document.createElement("div");
     transport.className = "mha-media-widget-transport";
-    transport.append(createMetaRows(data), progress, controls);
+    transport.append(createMediaMetaRows(data), progress, controls);
 
     root.append(artwork, info, transport);
   }
@@ -637,7 +637,7 @@ export function createMediaWidgetContent(widget = {}, {
   }
 
   root.__mhaUpdateFromHass = nextHass => {
-    const nextData = getMediaData(widget, nextHass, transitionCache);
+    const nextData = buildMediaWidgetData(widget, nextHass, transitionCache);
     context.hass = nextHass;
     applyData(nextData);
     scheduleGraceRefresh(nextData);

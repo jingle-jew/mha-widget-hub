@@ -19,13 +19,15 @@
   object-fit:cover;
   object-position:center;
   pointer-events:none;
+  transition:opacity 220ms ease;
 }
 .mha-background-media,
 .mha-background-media-overlay{
   position:absolute;
   inset:0;
   pointer-events:none;
-  display:none;
+  display:block;
+  visibility:hidden;
   opacity:0;
   transition:opacity 220ms ease;
 }
@@ -50,6 +52,7 @@
   border-radius:999px;
   filter:blur(var(--mha-bg-blob-blur));
   opacity:var(--mha-bg-blob-opacity);
+  transition:opacity 220ms ease;
   animation:mha-float 22s ease-in-out infinite alternate;
 }
 .mha-background span:nth-child(1){left:4%;top:8%;background:var(--mha-bg-blob-1)}
@@ -279,8 +282,21 @@
 
 :host([data-media-page-active="true"][data-media-page-wallpaper="true"]) .mha-background-media,
 :host([data-media-page-active="true"][data-media-page-wallpaper="true"]) .mha-background-media-overlay {
-  display:block;
+  visibility:visible;
   opacity: 1;
+}
+
+:host([data-page-type-wallpaper-crossfade="true"]) .mha-background-media,
+:host([data-page-type-wallpaper-crossfade="true"]) .mha-background-media-overlay,
+:host([data-page-type-wallpaper-crossfade="true"]) .mha-background-wallpaper,
+:host([data-page-type-wallpaper-crossfade="true"]) .mha-background span {
+  transition-duration: 480ms;
+  transition-timing-function: cubic-bezier(.22, 1, .36, 1);
+}
+
+:host([data-page-type-wallpaper-crossfade="true"]) .mha-background-media,
+:host([data-page-type-wallpaper-crossfade="true"]) .mha-background-media-overlay {
+  visibility: visible;
 }
 
 :host([data-media-page-active="true"][data-media-page-wallpaper="true"]) .mha-background span {

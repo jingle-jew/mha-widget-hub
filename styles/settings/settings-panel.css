@@ -2,6 +2,26 @@
  * MHA Settings panel.
  */
 
+.mha-settings-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 109;
+  background: var(--mha-scrim-surface, var(--mha-surface-scrim, var(--mha-bg-overlay)));
+  opacity: 0;
+  pointer-events: none;
+  transition: none;
+}
+
+:host([data-theme-style="ios"]) .mha-settings-backdrop,
+:host([data-theme-style="oneui"]) .mha-settings-backdrop {
+  -webkit-backdrop-filter: var(--mha-backdrop-filter, var(--mha-shell-filter, none));
+  backdrop-filter: var(--mha-backdrop-filter, var(--mha-shell-filter, none));
+}
+
+.mha-settings-backdrop[data-active="true"] {
+  opacity: var(--mha-scrim-opacity, 1);
+}
+
 .mha-settings-panel {
   position: fixed;
   inset: 0;
@@ -17,13 +37,15 @@
   inset: 0;
   border: 0;
   padding: 0;
-  background: var(--mha-bg-overlay);
+  background: transparent;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 240ms ease;
+  transition: none;
 }
 
 .mha-settings-sheet {
+  --mha-settings-sheet-hidden-transform: translateX(calc(100% + clamp(1rem, 2.6vw, 2rem)));
+  --mha-settings-sheet-visible-transform: translateX(0);
   position: fixed;
   inset-block: clamp(1rem, 2.6vw, 2rem);
   inset-inline-end: clamp(1rem, 2.6vw, 2rem);
@@ -39,13 +61,11 @@
   box-shadow: var(--mha-shadow-panel);
   -webkit-backdrop-filter: blur(var(--mha-blur-strong)) saturate(var(--mha-surface-saturation));
   backdrop-filter: blur(var(--mha-blur-strong)) saturate(var(--mha-surface-saturation));
-  opacity: 0;
+  opacity: 1;
   pointer-events: none;
-  transform: translateX(18px) scale(.98);
+  transform: var(--mha-settings-sheet-hidden-transform);
   transform-origin: right center;
-  transition:
-    opacity 240ms ease,
-    transform 240ms cubic-bezier(.2,.8,.2,1);
+  transition: transform var(--mha-panel-visibility-duration, 360ms) cubic-bezier(.22,1,.36,1);
   overflow: hidden;
 }
 
@@ -58,10 +78,83 @@
   pointer-events: auto;
 }
 
-.mha-settings-panel[data-open="true"] .mha-settings-sheet {
-  opacity: 1;
+.mha-settings-panel[data-settings-scope] .mha-settings-scrim {
+  background: transparent;
+  opacity: 0;
+}
+
+.mha-settings-panel[data-settings-scope][data-open="true"] .mha-settings-scrim {
+  opacity: 0;
   pointer-events: auto;
-  transform: translateX(0) scale(1);
+}
+
+.mha-settings-panel[data-open="true"] .mha-settings-sheet {
+  pointer-events: auto;
+  transform: var(--mha-settings-sheet-visible-transform);
+}
+
+.mha-settings-panel[data-panel-close-state="closing"] {
+  pointer-events: none;
+}
+
+.mha-settings-panel[data-panel-close-state="closing"] .mha-settings-scrim {
+  animation: none;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mha-settings-panel[data-panel-close-state="closing"] .mha-settings-sheet {
+  pointer-events: none;
+  animation: mha-settings-panel-sheet-out var(--mha-panel-visibility-duration, 360ms) cubic-bezier(.22,1,.36,1) both;
+}
+
+.mha-settings-panel[data-panel-swap-state] {
+  pointer-events: none;
+}
+
+.mha-settings-panel[data-panel-swap-state="entering"] {
+  pointer-events: auto;
+}
+
+.mha-settings-panel[data-panel-swap-state] .mha-settings-scrim {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mha-settings-panel[data-panel-swap-state] .mha-settings-sheet {
+  pointer-events: auto;
+  animation-duration: var(--mha-panel-visibility-duration, 360ms);
+  animation-timing-function: cubic-bezier(.22,1,.36,1);
+  animation-fill-mode: both;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.mha-settings-panel[data-panel-swap-state] .mha-settings-sheet::before {
+  opacity: 0;
+}
+
+.mha-settings-panel[data-panel-swap-state="entering"] {
+  z-index: 111;
+}
+
+.mha-settings-panel[data-panel-swap-state="leaving"] {
+  z-index: 112;
+}
+
+.mha-settings-panel[data-panel-swap-state="entering"] .mha-settings-sheet {
+  animation-name: mha-settings-panel-sheet-in;
+  animation-delay: 120ms;
+}
+
+.mha-settings-panel[data-panel-swap-state="leaving"] .mha-settings-sheet {
+  animation-name: mha-settings-panel-sheet-out;
+}
+
+@media (min-width: 768px) {
+  .mha-settings-panel[data-settings-scope] .mha-settings-scrim {
+    transition: none;
+  }
 }
 
 .mha-settings-header {
@@ -250,12 +343,16 @@
     border-start-end-radius: var(--mha-mobile-sheet-top-radius);
     border-end-start-radius: 0;
     border-end-end-radius: 0;
-    transform: translateY(18px) scale(.98);
+    --mha-settings-sheet-hidden-transform: translateY(110dvh);
+    --mha-settings-sheet-visible-transform: translateY(0);
+    opacity: 1;
+    transform: var(--mha-settings-sheet-hidden-transform);
     transform-origin: bottom center;
+    transition: transform var(--mha-panel-visibility-duration, 360ms) cubic-bezier(.22,1,.36,1);
   }
 
   .mha-settings-panel[data-open="true"] .mha-settings-sheet {
-    transform: translateY(0) scale(1);
+    transform: var(--mha-settings-sheet-visible-transform);
   }
 
   .mha-settings-body {
@@ -278,23 +375,31 @@
   border-start-end-radius: var(--mha-mobile-sheet-top-radius);
   border-end-start-radius: 0;
   border-end-end-radius: 0;
-  transform: translateY(18px) scale(.98);
+  --mha-settings-sheet-hidden-transform: translateY(110dvh);
+  --mha-settings-sheet-visible-transform: translateY(0);
+  opacity: 1;
+  transform: var(--mha-settings-sheet-hidden-transform);
   transform-origin: bottom center;
+  transition: transform var(--mha-panel-visibility-duration, 360ms) cubic-bezier(.22,1,.36,1);
 }
 
 .mha-settings-panel[data-mobile-layout="true"][data-open="true"] .mha-settings-sheet {
-  transform: translateY(0) scale(1);
+  transform: var(--mha-settings-sheet-visible-transform);
+}
+
+@keyframes mha-settings-panel-sheet-in {
+  from { transform: var(--mha-settings-sheet-hidden-transform); }
+  to { transform: var(--mha-settings-sheet-visible-transform); }
+}
+
+@keyframes mha-settings-panel-sheet-out {
+  from { transform: var(--mha-settings-sheet-visible-transform); }
+  to { transform: var(--mha-settings-sheet-hidden-transform); }
 }
 
 .mha-settings-panel[data-mobile-layout="true"] .mha-settings-body {
   padding-block-end: calc(clamp(1rem, 2.2vw, 1.35rem) + var(--mha-mobile-sheet-bottom-comfort, 0px));
 }
-
-@media (prefers-reduced-motion: reduce) {
-  .mha-settings-scrim,
-  .mha-settings-sheet,
-}
-
 
 /* LIGHT THEME SETTINGS TEXT CONTRACT
  * Material palette remains untouched.
@@ -325,39 +430,96 @@
  * the settings panel itself sharp.
  */
 :host(.is-settings-open) .mha-background,
+:host(.is-screensaver-settings-open) .mha-background,
 :host(.is-settings-open) .mha-shell,
+:host(.is-screensaver-settings-open) .mha-shell,
 :host(.is-settings-open) .mha-dock,
+:host(.is-screensaver-settings-open) .mha-dock,
 :host(.is-settings-open) .mha-mobile-dock,
-:host(.is-settings-open) .mha-edit-button {
-  filter: blur(var(--mha-settings-background-blur, 10px)) saturate(.82) brightness(.86);
-  transform: translateZ(0) scale(.995);
-  transition:
-    filter 240ms ease,
-    transform 240ms cubic-bezier(.2,.8,.2,1);
+:host(.is-screensaver-settings-open) .mha-mobile-dock,
+:host(.is-settings-open) .mha-edit-button,
+:host(.is-screensaver-settings-open) .mha-edit-button {
   pointer-events: none;
+}
+
+:host([data-theme-style="ios"].is-settings-open) .mha-background,
+:host([data-theme-style="ios"].is-settings-open) .mha-shell,
+:host([data-theme-style="ios"].is-settings-open) .mha-dock,
+:host([data-theme-style="ios"].is-settings-open) .mha-mobile-dock,
+:host([data-theme-style="ios"].is-settings-open) .mha-edit-button,
+:host([data-theme-style="ios"].is-screensaver-settings-open) .mha-background,
+:host([data-theme-style="ios"].is-screensaver-settings-open) .mha-shell,
+:host([data-theme-style="ios"].is-screensaver-settings-open) .mha-dock,
+:host([data-theme-style="ios"].is-screensaver-settings-open) .mha-mobile-dock,
+:host([data-theme-style="ios"].is-screensaver-settings-open) .mha-edit-button,
+:host([data-theme-style="oneui"].is-settings-open) .mha-background,
+:host([data-theme-style="oneui"].is-settings-open) .mha-shell,
+:host([data-theme-style="oneui"].is-settings-open) .mha-dock,
+:host([data-theme-style="oneui"].is-settings-open) .mha-mobile-dock,
+:host([data-theme-style="oneui"].is-settings-open) .mha-edit-button,
+:host([data-theme-style="oneui"].is-screensaver-settings-open) .mha-background,
+:host([data-theme-style="oneui"].is-screensaver-settings-open) .mha-shell,
+:host([data-theme-style="oneui"].is-screensaver-settings-open) .mha-dock,
+:host([data-theme-style="oneui"].is-screensaver-settings-open) .mha-mobile-dock,
+:host([data-theme-style="oneui"].is-screensaver-settings-open) .mha-edit-button {
+  -webkit-filter: saturate(var(--mha-backdrop-saturation, .82)) brightness(var(--mha-backdrop-brightness, .86));
+  filter: saturate(var(--mha-backdrop-saturation, .82)) brightness(var(--mha-backdrop-brightness, .86));
+  transition: filter 180ms ease, -webkit-filter 180ms ease;
+}
+
+@supports (filter: blur(1px)) {
+  :host([data-theme-style="ios"].is-settings-open) .mha-background,
+  :host([data-theme-style="ios"].is-settings-open) .mha-shell,
+  :host([data-theme-style="ios"].is-settings-open) .mha-dock,
+  :host([data-theme-style="ios"].is-settings-open) .mha-mobile-dock,
+  :host([data-theme-style="ios"].is-settings-open) .mha-edit-button,
+  :host([data-theme-style="ios"].is-screensaver-settings-open) .mha-background,
+  :host([data-theme-style="ios"].is-screensaver-settings-open) .mha-shell,
+  :host([data-theme-style="ios"].is-screensaver-settings-open) .mha-dock,
+  :host([data-theme-style="ios"].is-screensaver-settings-open) .mha-mobile-dock,
+  :host([data-theme-style="ios"].is-screensaver-settings-open) .mha-edit-button,
+  :host([data-theme-style="oneui"].is-settings-open) .mha-background,
+  :host([data-theme-style="oneui"].is-settings-open) .mha-shell,
+  :host([data-theme-style="oneui"].is-settings-open) .mha-dock,
+  :host([data-theme-style="oneui"].is-settings-open) .mha-mobile-dock,
+  :host([data-theme-style="oneui"].is-settings-open) .mha-edit-button,
+  :host([data-theme-style="oneui"].is-screensaver-settings-open) .mha-background,
+  :host([data-theme-style="oneui"].is-screensaver-settings-open) .mha-shell,
+  :host([data-theme-style="oneui"].is-screensaver-settings-open) .mha-dock,
+  :host([data-theme-style="oneui"].is-screensaver-settings-open) .mha-mobile-dock,
+  :host([data-theme-style="oneui"].is-screensaver-settings-open) .mha-edit-button {
+    filter: var(--mha-backdrop-filter, blur(var(--mha-backdrop-blur, 10px)) saturate(var(--mha-backdrop-saturation, .82)) brightness(var(--mha-backdrop-brightness, .86)));
+  }
+}
+
+@supports (-webkit-filter: blur(1px)) {
+  :host([data-theme-style="ios"].is-settings-open) .mha-background,
+  :host([data-theme-style="ios"].is-settings-open) .mha-shell,
+  :host([data-theme-style="ios"].is-settings-open) .mha-dock,
+  :host([data-theme-style="ios"].is-settings-open) .mha-mobile-dock,
+  :host([data-theme-style="ios"].is-settings-open) .mha-edit-button,
+  :host([data-theme-style="ios"].is-screensaver-settings-open) .mha-background,
+  :host([data-theme-style="ios"].is-screensaver-settings-open) .mha-shell,
+  :host([data-theme-style="ios"].is-screensaver-settings-open) .mha-dock,
+  :host([data-theme-style="ios"].is-screensaver-settings-open) .mha-mobile-dock,
+  :host([data-theme-style="ios"].is-screensaver-settings-open) .mha-edit-button,
+  :host([data-theme-style="oneui"].is-settings-open) .mha-background,
+  :host([data-theme-style="oneui"].is-settings-open) .mha-shell,
+  :host([data-theme-style="oneui"].is-settings-open) .mha-dock,
+  :host([data-theme-style="oneui"].is-settings-open) .mha-mobile-dock,
+  :host([data-theme-style="oneui"].is-settings-open) .mha-edit-button,
+  :host([data-theme-style="oneui"].is-screensaver-settings-open) .mha-background,
+  :host([data-theme-style="oneui"].is-screensaver-settings-open) .mha-shell,
+  :host([data-theme-style="oneui"].is-screensaver-settings-open) .mha-dock,
+  :host([data-theme-style="oneui"].is-screensaver-settings-open) .mha-mobile-dock,
+  :host([data-theme-style="oneui"].is-screensaver-settings-open) .mha-edit-button {
+    -webkit-filter: var(--mha-backdrop-filter, blur(var(--mha-backdrop-blur, 10px)) saturate(var(--mha-backdrop-saturation, .82)) brightness(var(--mha-backdrop-brightness, .86)));
+  }
 }
 
 /* Keep modal layers crisp and interactive. */
 :host(.is-settings-open) .mha-settings-panel {
-  filter: none;
-  transform: none;
   pointer-events: auto;
-}
-
-/* The scrim adds depth, not the blur itself. */
-.mha-settings-panel[data-open="true"] .mha-settings-scrim {
-  background: rgba(0,0,0,.22);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  :host(.is-settings-open) .mha-background,
-  :host(.is-settings-open) .mha-shell,
-  :host(.is-settings-open) .mha-dock,
-  :host(.is-settings-open) .mha-mobile-dock,
-  :host(.is-settings-open) .mha-edit-button {
-    transition: none;
-    transform: none;
-  }
 }
 
 /* iOS light only: make settings brighter and glassier, while still aligned with widget style. */
@@ -649,63 +811,16 @@
 .mha-settings-accent-swatches[data-theme-style="material"] .mha-settings-accent-swatch[data-accent="lavender"] { --mha-swatch-color: #7350b8; }
 .mha-settings-accent-swatches[data-theme-style="material"] .mha-settings-accent-swatch[data-accent="magenta"] { --mha-swatch-color: #9c3d8f; }
 
-/* SETTINGS BACKDROP BY VISUAL STYLE
- * iOS and OneUI use a blurred background behind the settings sheet.
- * Material keeps the page sharp and simply dims it with a stronger scrim.
- */
-:host([data-theme-style="ios"].is-settings-open) .mha-background,
-:host([data-theme-style="ios"].is-settings-open) .mha-shell,
-:host([data-theme-style="ios"].is-settings-open) .mha-dock,
-:host([data-theme-style="ios"].is-settings-open) .mha-mobile-dock,
-:host([data-theme-style="ios"].is-settings-open) .mha-edit-button,
-:host([data-theme-style="oneui"].is-settings-open) .mha-background,
-:host([data-theme-style="oneui"].is-settings-open) .mha-shell,
-:host([data-theme-style="oneui"].is-settings-open) .mha-dock,
-:host([data-theme-style="oneui"].is-settings-open) .mha-mobile-dock,
-:host([data-theme-style="oneui"].is-settings-open) .mha-edit-button {
-  filter: blur(var(--mha-settings-background-blur, 10px)) saturate(.82) brightness(.86);
-  transform: translateZ(0) scale(.995);
-}
-
-:host([data-theme-style="material"].is-settings-open) .mha-background,
-:host([data-theme-style="material"].is-settings-open) .mha-shell,
-:host([data-theme-style="material"].is-settings-open) .mha-dock,
-:host([data-theme-style="material"].is-settings-open) .mha-mobile-dock,
-:host([data-theme-style="material"].is-settings-open) .mha-edit-button {
-  filter: brightness(.72) saturate(.94);
-  transform: none;
-}
-
 :host([data-theme-style="material"]) .mha-settings-panel[data-open="true"] .mha-settings-scrim {
-  background: rgba(0,0,0,.34);
+  background: transparent;
 }
 
 :host([data-theme-style="material"][data-theme="light"]) .mha-settings-panel[data-open="true"] .mha-settings-scrim {
-  background: rgba(29,27,32,.24);
+  background: transparent;
 }
 
 :host([data-theme-style="material"][data-theme="dark"]) .mha-settings-panel[data-open="true"] .mha-settings-scrim {
-  background: rgba(0,0,0,.42);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  :host([data-theme-style="ios"].is-settings-open) .mha-background,
-  :host([data-theme-style="ios"].is-settings-open) .mha-shell,
-  :host([data-theme-style="ios"].is-settings-open) .mha-dock,
-  :host([data-theme-style="ios"].is-settings-open) .mha-mobile-dock,
-  :host([data-theme-style="ios"].is-settings-open) .mha-edit-button,
-  :host([data-theme-style="oneui"].is-settings-open) .mha-background,
-  :host([data-theme-style="oneui"].is-settings-open) .mha-shell,
-  :host([data-theme-style="oneui"].is-settings-open) .mha-dock,
-  :host([data-theme-style="oneui"].is-settings-open) .mha-mobile-dock,
-  :host([data-theme-style="oneui"].is-settings-open) .mha-edit-button,
-  :host([data-theme-style="material"].is-settings-open) .mha-background,
-  :host([data-theme-style="material"].is-settings-open) .mha-shell,
-  :host([data-theme-style="material"].is-settings-open) .mha-dock,
-  :host([data-theme-style="material"].is-settings-open) .mha-mobile-dock,
-  :host([data-theme-style="material"].is-settings-open) .mha-edit-button {
-    transform: none;
-  }
+  background: transparent;
 }
 
 /* MATERIAL SETTINGS DYNAMIC SURFACES
@@ -742,23 +857,8 @@
   border-color: transparent;
 }
 
-/* MATERIAL LIGHT SETTINGS DIM TUNING
- * Material does not blur the page behind settings.
- *
- * In light mode, the previous dim was too heavy/gray. Keep the Material scrim
- * behavior, but let the background stay lighter and more colorful.
- */
-:host([data-theme-style="material"][data-theme="light"].is-settings-open) .mha-background,
-:host([data-theme-style="material"][data-theme="light"].is-settings-open) .mha-shell,
-:host([data-theme-style="material"][data-theme="light"].is-settings-open) .mha-dock,
-:host([data-theme-style="material"][data-theme="light"].is-settings-open) .mha-mobile-dock,
-:host([data-theme-style="material"][data-theme="light"].is-settings-open) .mha-edit-button {
-  filter: brightness(.86) saturate(.98);
-  transform: none;
-}
-
 :host([data-theme-style="material"][data-theme="light"]) .mha-settings-panel[data-open="true"] .mha-settings-scrim {
-  background: rgba(29,27,32,.16);
+  background: transparent;
 }
 
 /* FINAL ACCENT SWATCH SHAPE

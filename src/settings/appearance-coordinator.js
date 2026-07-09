@@ -189,7 +189,11 @@ export class AppearanceCoordinator {
     return themeState;
   }
 
-  transitionSystemThemeChange() {
+  transitionSystemThemeChange({
+    applyThemeChange = () => this.syncTheme(),
+    syncSettings = false,
+    syncScreensaverSettings = false,
+  } = {}) {
     if (!this.isConnected()) return false;
 
     const root = this.getRoot();
@@ -208,9 +212,11 @@ export class AppearanceCoordinator {
     this.clearTimeoutFn(this.themeTransitionTimer);
     this.cancelAnimationFrameFn(this.themeTransitionFrame);
 
-    const themeState = this.syncTheme();
+    const themeState = applyThemeChange();
     this.applyCustomWallpaperState(themeState);
     this.syncAutoAccentFromWallpaper();
+    if (syncSettings) this.syncSettingsDom();
+    if (syncScreensaverSettings) this.syncScreensaverSettingsDom();
     this.scheduleAppearanceDomRefresh();
 
     const finish = () => {
@@ -234,12 +240,15 @@ export class AppearanceCoordinator {
   }
 
   applyThemeStyleFromSettings(value = "oneui") {
-    const themeState = this.setThemeStyle(value);
-    this.applyCustomWallpaperState(themeState);
-    this.syncAutoAccentFromWallpaper();
-    this.syncSettingsDom();
-    this.scheduleAppearanceDomRefresh();
-    return themeState;
+    let themeState = null;
+    this.transitionSystemThemeChange({
+      applyThemeChange: () => {
+        themeState = this.setThemeStyle(value);
+        return themeState;
+      },
+      syncSettings: true,
+    });
+    return themeState || this.readThemeState();
   }
 
   applyIosGlassFromSettings(value = "liquid") {

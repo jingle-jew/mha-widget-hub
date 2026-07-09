@@ -66,6 +66,7 @@ test("responsive state formalizes mobile landscape as a distinct variant", () =>
     viewportMetrics: { width: 844, height: 390 },
     dockPosition: "bottom",
     statusBarMode: "top-bar",
+    isDesktopEnvironment: false,
   });
 
   assert.equal(state.layout, "mobile");
@@ -85,6 +86,7 @@ test("responsive state keeps mobile landscape active even below the tablet width
     viewportMetrics: { width: 740, height: 360 },
     dockPosition: "bottom",
     statusBarMode: "top-bar",
+    isDesktopEnvironment: false,
   });
 
   assert.equal(state.layout, "mobile");
@@ -100,11 +102,74 @@ test("responsive state keeps tablet landscape intact when the viewport is not ph
     viewportMetrics: { width: 1024, height: 600 },
     dockPosition: "left",
     statusBarMode: "top-bar",
+    isDesktopEnvironment: false,
   });
 
   assert.equal(state.layout, "tablet");
   assert.equal(state.layoutVariant, "tablet-landscape");
   assert.equal(state.dockFamily, "side");
+  assert.equal(state.statusBarVisible, true);
+});
+
+test("responsive state hides the default desktop status bar until the user picks a mode", () => {
+  const state = computeResponsiveState({
+    layoutMode: "auto",
+    viewportMetrics: { width: 1440, height: 900 },
+    dockPosition: "left",
+    statusBarMode: "top-bar",
+    hasPersistedStatusBarMode: false,
+    isDesktopEnvironment: true,
+  });
+
+  assert.equal(state.layout, "desktop");
+  assert.equal(state.effectiveStatusBarMode, "hidden");
+  assert.equal(state.statusBarVisible, false);
+});
+
+test("responsive state preserves the desktop status bar once the user preference is persisted", () => {
+  const state = computeResponsiveState({
+    layoutMode: "auto",
+    viewportMetrics: { width: 1440, height: 900 },
+    dockPosition: "left",
+    statusBarMode: "top-bar",
+    hasPersistedStatusBarMode: true,
+    isDesktopEnvironment: true,
+  });
+
+  assert.equal(state.layout, "desktop");
+  assert.equal(state.effectiveStatusBarMode, "top-bar");
+  assert.equal(state.statusBarVisible, true);
+});
+
+test("responsive state keeps the default status bar hidden in tablet layout on a real desktop environment", () => {
+  const state = computeResponsiveState({
+    layoutMode: "auto",
+    viewportMetrics: { width: 1180, height: 820 },
+    dockPosition: "left",
+    statusBarMode: "top-bar",
+    hasPersistedStatusBarMode: false,
+    isDesktopEnvironment: true,
+  });
+
+  assert.equal(state.layout, "tablet");
+  assert.equal(state.isDesktopEnvironment, true);
+  assert.equal(state.effectiveStatusBarMode, "hidden");
+  assert.equal(state.statusBarVisible, false);
+});
+
+test("responsive state keeps the default tablet status bar on touch-first tablet environments", () => {
+  const state = computeResponsiveState({
+    layoutMode: "auto",
+    viewportMetrics: { width: 1180, height: 820 },
+    dockPosition: "left",
+    statusBarMode: "top-bar",
+    hasPersistedStatusBarMode: false,
+    isDesktopEnvironment: false,
+  });
+
+  assert.equal(state.layout, "tablet");
+  assert.equal(state.isDesktopEnvironment, false);
+  assert.equal(state.effectiveStatusBarMode, "top-bar");
   assert.equal(state.statusBarVisible, true);
 });
 

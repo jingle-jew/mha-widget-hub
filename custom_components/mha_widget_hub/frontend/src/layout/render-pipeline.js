@@ -3,6 +3,8 @@ import {
   createCriticalBootStyleElement,
   createFrontendStyleElements,
 } from "../core/mha-frontend-assets.js";
+import { getEntitiesForDomain } from "../ha/entity-filters.js";
+import { getMediaArtworkUrl } from "../ha/media.js";
 import { t } from "../i18n/index.js";
 import { createMobileDock } from "./mobile-dock.js";
 import { createIosOrganicWallpaper } from "./ios-organic-wallpaper.js?v=ios-wallpaper-svg-1";
@@ -19,6 +21,7 @@ import {
 } from "./layout-engine.js";
 import { getLayoutForWidth } from "./responsive.js";
 import { createPagePanel } from "../pages/page-panel.js";
+import { createMediaPage } from "../pages/media-page.js";
 import { syncMediaPageSettingsPanel } from "../pages/media-page-settings.js";
 import { isMediaPageExperienceActive } from "../pages/page-types.js";
 import {
@@ -108,14 +111,51 @@ export function createRenderPipeline(host, options = {}) {
     host.dataset.mediaPageActive = String(isMediaPage);
     host.dataset.mediaPageBackgroundBlur = String(isMediaPage && blurBackground);
 
-    if (isMediaPage && artworkUrl) {
+    const resolvedArtworkUrl = artworkUrl || resolveMediaPageArtworkUrl(activePage);
+
+    if (isMediaPage && resolvedArtworkUrl) {
+      clearTimeout(host._mediaPageWallpaperClearTimer || 0);
+      host._mediaPageWallpaperClearTimer = 0;
       host.dataset.mediaPageWallpaper = "true";
-      host.style.setProperty("--mha-media-page-wallpaper-image", `url("${artworkUrl}")`);
+      host.style?.setProperty?.("--mha-media-page-wallpaper-image", `url("${resolvedArtworkUrl}")`);
       return;
     }
 
     host.dataset.mediaPageWallpaper = "false";
-    host.style.removeProperty("--mha-media-page-wallpaper-image");
+    clearTimeout(host._mediaPageWallpaperClearTimer || 0);
+    if (host._pageTypeWallpaperCrossfadeActive) {
+      host._mediaPageWallpaperClearTimer = setTimeout(() => {
+        host._mediaPageWallpaperClearTimer = 0;
+        if (host.dataset.mediaPageWallpaper === "true") return;
+        host.style?.removeProperty?.("--mha-media-page-wallpaper-image");
+      }, host._pageTypeWallpaperCrossfadeDurationMs || 480);
+      return;
+    }
+    host.style?.removeProperty?.("--mha-media-page-wallpaper-image");
+  }
+
+  function resolveMediaPageArtworkUrl(activePage = getActivePage(host)) {
+    if (!activePage) return "";
+
+    const availablePlayers = getEntitiesForDomain(
+      host._hass,
+      "media_player",
+      host._entityVisibilityConfig,
+    );
+    const enabledPlayerIds = Array.isArray(activePage?.config?.enabledPlayerIds)
+      && activePage.config.enabledPlayerIds.length
+      ? activePage.config.enabledPlayerIds.filter(Boolean)
+      : availablePlayers.map(player => player.entity_id);
+    const availableIds = new Set(availablePlayers.map(player => player.entity_id));
+    const selectedPlayerId = [
+      activePage?.config?.selectedPlayerId,
+      activePage?.config?.defaultPlayerId,
+      ...enabledPlayerIds,
+    ].find(playerId => playerId && availableIds.has(playerId))
+      || availablePlayers.find(player => enabledPlayerIds.includes(player.entity_id))?.entity_id
+      || "";
+    const entity = selectedPlayerId ? host._hass?.states?.[selectedPlayerId] || null : null;
+    return getMediaArtworkUrl(entity);
   }
 
   function createWidgetPlaceholder(widget, {
@@ -339,12 +379,14 @@ export function createRenderPipeline(host, options = {}) {
       iconShapeSetting,
       iconShape,
       accent,
-      statusBarMode: host._statusBarMode || "pill",
+      statusBarMode: responsiveState.effectiveStatusBarMode || host._statusBarMode || "pill",
       statusBarVisible: responsiveState.statusBarVisible ?? (layout !== "mobile"),
     };
   }
 
   function prepareRenderCycle({ renderId, themeState }) {
+    const skipStabilizingRender = Boolean(host._skipStabilizingRenderOnce);
+    host._skipStabilizingRenderOnce = false;
     host._applyCustomWallpaperState(themeState);
     host._applyHaSidebarMode(host._hideHaSidebar);
     syncMediaPageBackdropState({ themeStyle: themeState?.themeStyle || "" });
@@ -355,7 +397,12 @@ export function createRenderPipeline(host, options = {}) {
     host._clearTouchEditLongPress?.();
     host._stylesReadyRenderId = 0;
     host.dataset.widgetsState = "pending";
-    setHostRenderState(host, host._bootComplete ? "stabilizing" : "booting");
+    setHostRenderState(
+      host,
+      host._bootComplete
+        ? (skipStabilizingRender ? "ready" : "stabilizing")
+        : "booting",
+    );
   }
 
   function applyRenderDatasetsAndRuntimeVars({
@@ -413,6 +460,32 @@ export function createRenderPipeline(host, options = {}) {
     });
     panel.classList.add("mha-page-panel--grid");
     return { panel, grid };
+  }
+
+  function createMediaPagePanel(page = {}) {
+    const mediaPageProps = host._buildMediaPageProps?.() || {};
+    const externalBackdropSync = mediaPageProps.onBackgroundArtworkChange;
+    const content = createMediaPage(page, {
+      ...mediaPageProps,
+      onBackgroundArtworkChange: (artworkUrl, options = {}) => {
+        const activePage = getActivePage(host);
+        if (activePage?.id !== page?.id) return;
+        externalBackdropSync?.(artworkUrl, options);
+        syncMediaPageBackdropState({
+          activePage: page,
+          artworkUrl,
+          blurBackground: options.blurBackground,
+          themeStyle: host.dataset.themeStyle || "",
+        });
+      },
+    });
+    const panel = createPagePanel({
+      page,
+      kind: "media",
+      content,
+    });
+    panel.classList.add("mha-page-panel--media");
+    return { panel, content };
   }
 
   function syncShellBackgroundSurface(bg) {
@@ -513,6 +586,19 @@ export function createRenderPipeline(host, options = {}) {
     let grid = null;
     let activeSurface = null;
     if (!pageStage) return { positions, grid, activeSurface };
+    if (isMediaPageExperienceActive(activePage, host.dataset.themeStyle || "")) {
+      const mediaPanel = createMediaPagePanel(activePage);
+      pageStage.append(mediaPanel.panel);
+      activeSurface = mediaPanel.content;
+      if (layout === "mobile") {
+        host.shadowRoot.append(createMobileDock(host._getDockProps()));
+        host._scheduleMobileDockOverflowState?.();
+      }
+      appendPrimaryControls();
+      host._wireDockAutoHide(activeSurface);
+      host._updateStatusDom?.();
+      return { positions, grid, activeSurface };
+    }
     const gridPanel = createGridPanel(activePage);
     grid = gridPanel.grid;
     pageStage.append(gridPanel.panel);
@@ -543,6 +629,14 @@ export function createRenderPipeline(host, options = {}) {
     positions,
     renderId,
   }) {
+    if (!grid) {
+      host.dataset.widgetsState = "ready";
+      host._scheduleHassUpdate();
+      host._syncEditModeDom?.();
+      host._syncWidgetDropSlots?.();
+      host._scheduleIconSymbolRefresh?.();
+      return;
+    }
     host._widgetRenderFrame = requestAnimationFrame(() => {
       host._widgetRenderFrame = 0;
       if (host._renderId !== renderId) return;

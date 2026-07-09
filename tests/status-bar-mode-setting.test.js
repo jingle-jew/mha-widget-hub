@@ -28,6 +28,7 @@ test("applyStatusBarModeSetting persists, normalizes, and relayouts the shell", 
   });
 
   assert.equal(result, "top-bar");
+  assert.equal(host._hasPersistedStatusBarMode, true);
   assert.equal(host._statusBarMode, "top-bar");
   assert.equal(host.dataset.statusBarMode, "top-bar");
   assert.deepEqual(calls, [
@@ -55,6 +56,7 @@ test("applyStatusBarModeSetting falls back to pill for unknown values", () => {
   });
 
   assert.equal(result, "pill");
+  assert.equal(host._hasPersistedStatusBarMode, true);
   assert.equal(host._statusBarMode, "pill");
   assert.equal(host.dataset.statusBarMode, "pill");
 });

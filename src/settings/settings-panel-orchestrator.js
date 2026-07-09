@@ -1,3 +1,5 @@
+import { SETTINGS_PANEL_VISIBILITY_TRANSITION_MS } from "../panels/panel-transition-timing.js";
+
 export function getPanelFocusIdentity(root, panel) {
   const active = root?.activeElement;
   if (!active || !panel?.contains(active)) return null;
@@ -47,6 +49,36 @@ export function findPanelFocusTarget(panel, identity) {
   }) || null;
 }
 
+const SETTINGS_PANEL_SWAP_TRANSITION_MS = SETTINGS_PANEL_VISIBILITY_TRANSITION_MS;
+
+function animateSettingsPanelSwap({
+  root,
+  existing,
+  next,
+  focusIdentity = null,
+} = {}) {
+  if (!root || !existing || !next || typeof root.append !== "function" || typeof existing.remove !== "function") {
+    existing?.replaceWith?.(next);
+    return next;
+  }
+
+  existing.dataset.panelSwapState = "leaving";
+  next.hidden = false;
+  next.dataset.open = "true";
+  next.setAttribute?.("aria-hidden", "false");
+  next.dataset.panelSwapState = "entering";
+
+  root.append(next);
+
+  globalThis.setTimeout(() => {
+    existing.remove();
+    delete next.dataset.panelSwapState;
+    findPanelFocusTarget(next, focusIdentity)?.focus?.({ preventScroll: true });
+  }, SETTINGS_PANEL_SWAP_TRANSITION_MS);
+
+  return next;
+}
+
 export function replaceSettingsPanelPreservingUiState({
   root,
   existing,
@@ -61,6 +93,18 @@ export function replaceSettingsPanelPreservingUiState({
   const focusIdentity = sameView ? getPanelFocusIdentity(root, existing) : null;
 
   if (sameView && updatePanel(existing, next)) return existing;
+  if (
+    existing
+    && !sameView
+    && existing?.dataset?.settingsScope === next?.dataset?.settingsScope
+    && existing?.hidden === false
+    && next?.dataset?.open === "true"
+  ) {
+    const body = next?.querySelector?.(".mha-settings-body");
+    if (body) body.scrollTop = 0;
+    return animateSettingsPanelSwap({ root, existing, next, focusIdentity });
+  }
+
   if (existing) existing.replaceWith(next);
   else root?.append(next);
 

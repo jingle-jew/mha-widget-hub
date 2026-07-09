@@ -193,10 +193,11 @@
 .mha-page-panel {
   opacity: 1;
   transform: translate3d(0, 0, 0);
+  transform-origin: center center;
 }
 
 .mha-page-panel--entering {
-  animation: mha-page-panel-enter 440ms cubic-bezier(.22,.78,.2,1) both;
+  animation: mha-page-panel-enter 620ms cubic-bezier(.22,1,.36,1) both;
   will-change: transform, opacity;
 }
 
@@ -208,16 +209,17 @@
   overflow: hidden;
   opacity: 1;
   transform: translate3d(0, 0, 0);
+  transform-origin: center center;
 }
 
 .mha-page-panel-snapshot--leaving.is-animating {
-  animation: mha-page-panel-exit 400ms cubic-bezier(.38,0,.2,1) both;
+  animation: mha-page-panel-exit 700ms cubic-bezier(.32,0,.18,1) both;
   will-change: transform, opacity;
 }
 
 @keyframes mha-page-panel-enter {
   from {
-    opacity: .16;
+    opacity: .08;
     transform: translate3d(var(--mha-page-panel-enter-x, 0), var(--mha-page-panel-enter-y, 0), 0);
   }
 
@@ -233,6 +235,24 @@
     transform: translate3d(0, 0, 0);
   }
 
+  28% {
+    opacity: .94;
+    transform: translate3d(
+      calc(var(--mha-page-panel-exit-x, 0) * .22),
+      calc(var(--mha-page-panel-exit-y, 0) * .22),
+      0
+    );
+  }
+
+  62% {
+    opacity: .52;
+    transform: translate3d(
+      calc(var(--mha-page-panel-exit-x, 0) * .76),
+      calc(var(--mha-page-panel-exit-y, 0) * .76),
+      0
+    );
+  }
+
   to {
     opacity: 0;
     transform: translate3d(var(--mha-page-panel-exit-x, 0), var(--mha-page-panel-exit-y, 0), 0);
@@ -240,12 +260,12 @@
 }
 
 .mha-page-panel[data-transition-direction="right"] {
-  --mha-page-panel-enter-x: 56px;
+  --mha-page-panel-enter-x: 112px;
   --mha-page-panel-enter-y: 0px;
 }
 
 .mha-page-panel-snapshot[data-transition-direction="right"] {
-  --mha-page-panel-exit-x: 56px;
+  --mha-page-panel-exit-x: -72px;
   --mha-page-panel-exit-y: 0px;
 }
 
@@ -261,12 +281,12 @@
 
 .mha-page-panel[data-transition-direction="bottom"] {
   --mha-page-panel-enter-x: 0px;
-  --mha-page-panel-enter-y: 56px;
+  --mha-page-panel-enter-y: 104px;
 }
 
 .mha-page-panel-snapshot[data-transition-direction="bottom"] {
   --mha-page-panel-exit-x: 0px;
-  --mha-page-panel-exit-y: 56px;
+  --mha-page-panel-exit-y: -60px;
 }
 
 @media (min-width: 768px) {

@@ -2,20 +2,51 @@ import {
   buildSettingsCoordinatorProps,
   syncSettingsPanels,
 } from "./settings-panel-coordinator.js";
+import { detectDesktopEnvironment } from "../core/device-environment.js";
+import { resolveResponsiveStatusBarMode } from "../core/status-bar-mode.js";
+
+const SETTINGS_BACKDROP_SELECTOR = ".mha-settings-backdrop";
 
 export function createSettingsSurfaceCoordinator(host) {
+  function ensureSettingsBackdrop(root) {
+    const existing = root?.querySelector?.(SETTINGS_BACKDROP_SELECTOR);
+    if (existing) return existing;
+    const backdrop = document.createElement("div");
+    backdrop.className = "mha-settings-backdrop";
+    backdrop.dataset.active = "false";
+    backdrop.hidden = true;
+    backdrop.setAttribute("aria-hidden", "true");
+    root?.append?.(backdrop);
+    return backdrop;
+  }
+
+  function syncSettingsBackdrop() {
+    const backdrop = ensureSettingsBackdrop(host.shadowRoot);
+    const active = Boolean(host._settingsOpen || host._screensaverSettingsOpen);
+    backdrop.hidden = !active;
+    backdrop.dataset.active = String(active);
+  }
+
   function getProps() {
     const themeState = host._themeController.read();
     const screensaverState = host._screensaverController.read();
     const responsiveState = host._getResponsiveState?.() || {};
     const settingsCapabilities = responsiveState.settingsCapabilities || {};
+    const resolvedLayout = responsiveState.layout
+      || (responsiveState.isMobileLayout ? "mobile" : "desktop");
+    const effectiveStatusBarMode = responsiveState.effectiveStatusBarMode
+      || resolveResponsiveStatusBarMode(host._statusBarMode, {
+        hasPersistedStatusBarMode: Boolean(host._hasPersistedStatusBarMode),
+        layout: resolvedLayout,
+        isDesktopEnvironment: responsiveState.isDesktopEnvironment ?? detectDesktopEnvironment(),
+      });
     return buildSettingsCoordinatorProps({
       settingsOpen: host._settingsOpen,
       screensaverSettingsOpen: host._screensaverSettingsOpen,
       language: host._language,
       hideHaSidebar: host._hideHaSidebar,
       showDockLabels: host._showDockLabels,
-      statusBarMode: host._statusBarMode,
+      statusBarMode: effectiveStatusBarMode,
       accentPaletteExpanded: host._accentPaletteExpanded,
       settingsPage: host._settingsPage,
       dockPages: host._pages,
@@ -92,6 +123,7 @@ export function createSettingsSurfaceCoordinator(host) {
   function sync() {
     syncSettingsOpenState();
     syncScreensaverOpenState();
+    syncSettingsBackdrop();
     const syncPanels = typeof host._syncSettingsPanels === "function"
       ? host._syncSettingsPanels
       : syncSettingsPanels;
@@ -106,5 +138,6 @@ export function createSettingsSurfaceCoordinator(host) {
     sync,
     syncSettingsOpenState,
     syncScreensaverOpenState,
+    syncSettingsBackdrop,
   };
 }
