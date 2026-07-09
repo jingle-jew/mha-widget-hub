@@ -1,0 +1,8 @@
+/* Weather detail chips: keep metrics layout while removing the decorative pill. */
+.mha-weather-widget-details .mha-weather-widget-chip {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
