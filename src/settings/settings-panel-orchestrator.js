@@ -50,24 +50,6 @@ export function findPanelFocusTarget(panel, identity) {
 }
 
 const SETTINGS_PANEL_SWAP_TRANSITION_MS = SETTINGS_PANEL_VISIBILITY_TRANSITION_MS;
-const SETTINGS_SHARED_SWAP_SCRIM_SELECTOR = ".mha-settings-shared-scrim";
-
-function ensureSharedSwapScrim(root, panel) {
-  const existingScrim = root?.querySelector?.(SETTINGS_SHARED_SWAP_SCRIM_SELECTOR);
-  if (existingScrim) {
-    existingScrim.dataset.active = "true";
-    return existingScrim;
-  }
-
-  const documentRef = panel?.ownerDocument || globalThis.document;
-  const scrim = documentRef?.createElement?.("div");
-  if (!scrim) return null;
-  scrim.className = "mha-settings-shared-scrim";
-  scrim.dataset.active = "true";
-  scrim.setAttribute?.("aria-hidden", "true");
-  root?.append?.(scrim);
-  return scrim;
-}
 
 function animateSettingsPanelSwap({
   root,
@@ -86,19 +68,11 @@ function animateSettingsPanelSwap({
   next.setAttribute?.("aria-hidden", "false");
   next.dataset.panelSwapState = "entering";
 
-  const sharedSwapScrim = ensureSharedSwapScrim(root, existing);
-  const swapToken = Symbol("mha-settings-swap");
-  root._mhaSettingsSwapToken = swapToken;
-
   root.append(next);
 
   globalThis.setTimeout(() => {
     existing.remove();
     delete next.dataset.panelSwapState;
-    if (root?._mhaSettingsSwapToken === swapToken) {
-      delete root._mhaSettingsSwapToken;
-      sharedSwapScrim?.remove?.();
-    }
     findPanelFocusTarget(next, focusIdentity)?.focus?.({ preventScroll: true });
   }, SETTINGS_PANEL_SWAP_TRANSITION_MS);
 

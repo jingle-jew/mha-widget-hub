@@ -338,11 +338,15 @@ test("floating controls and settings sheet consume responsive variants instead o
   );
   assert.match(
     settingsPanelSource,
-    /\.mha-settings-shared-scrim\s*\{[\s\S]*z-index:\s*109;[\s\S]*background:\s*var\(--mha-scrim-surface, var\(--mha-surface-scrim, var\(--mha-bg-overlay\)\)\);[\s\S]*opacity:\s*var\(--mha-scrim-opacity, 1\);/,
+    /\.mha-settings-backdrop\s*\{[\s\S]*z-index:\s*109;[\s\S]*background:\s*var\(--mha-scrim-surface, var\(--mha-surface-scrim, var\(--mha-bg-overlay\)\)\);[\s\S]*opacity:\s*var\(--mha-scrim-opacity, 1\);/,
   );
   assert.match(
     settingsPanelSource,
     /\.mha-settings-panel\[data-panel-swap-state\] \.mha-settings-scrim\s*\{[\s\S]*opacity:\s*0;[\s\S]*pointer-events:\s*none;/,
+  );
+  assert.match(
+    settingsPanelSource,
+    /\.mha-settings-panel\[data-settings-scope\]\[data-open="true"\] \.mha-settings-scrim\s*\{[\s\S]*opacity:\s*0;[\s\S]*pointer-events:\s*auto;/,
   );
   assert.match(
     settingsPanelSource,

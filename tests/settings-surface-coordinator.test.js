@@ -8,9 +8,21 @@ test("settings surface coordinator owns both open-state flags and panel sync", (
     documentElement: {
       dataset: { iconShape: "squircle" },
     },
+    createElement() {
+      return {
+        className: "",
+        dataset: {},
+        attributes: {},
+        hidden: false,
+        setAttribute(name, value) {
+          this.attributes[name] = value;
+        },
+      };
+    },
   };
 
   const toggles = [];
+  const appendedNodes = [];
   const host = {
     _settingsOpen: true,
     _screensaverSettingsOpen: false,
@@ -48,7 +60,18 @@ test("settings surface coordinator owns both open-state flags and panel sync", (
         toggles.push([name, value]);
       },
     },
-    shadowRoot: { id: "root" },
+    shadowRoot: {
+      id: "root",
+      querySelector(selector) {
+        if (selector === ".mha-settings-backdrop") {
+          return appendedNodes.find(node => node.className === "mha-settings-backdrop") || null;
+        }
+        return null;
+      },
+      append(node) {
+        appendedNodes.push(node);
+      },
+    },
     _themeController: {
       read() {
         return {
@@ -124,6 +147,8 @@ test("settings surface coordinator owns both open-state flags and panel sync", (
   ]);
   assert.equal(host.dataset.settingsOpen, "true");
   assert.equal(host.dataset.screensaverSettingsOpen, "false");
+  assert.equal(appendedNodes.some(node => node.className === "mha-settings-backdrop"), true);
+  assert.equal(appendedNodes.find(node => node.className === "mha-settings-backdrop")?.dataset.active, "true");
   assert.equal(host.lastSync.root, host.shadowRoot);
   assert.equal(host.lastSync.props.all.scope, "all");
   assert.equal(host.lastSync.props.screensaver.scope, "screensaver");

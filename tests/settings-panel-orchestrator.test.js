@@ -104,7 +104,6 @@ test("replaced settings view restores its body scroll position", () => {
 
 test("different settings views animate by appending the next panel while delaying removal", () => {
   const previousSetTimeout = globalThis.setTimeout;
-  const previousDocument = globalThis.document;
   const callbacks = [];
   globalThis.setTimeout = (callback) => {
     callbacks.push(callback);
@@ -115,32 +114,9 @@ test("different settings views animate by appending the next panel while delayin
     const existing = createPanel({ page: "main" });
     const next = createPanel({ page: "dock" });
     next.dataset.open = "true";
-    globalThis.document = {
-      createElement() {
-        return {
-          className: "",
-          dataset: {},
-          attributes: {},
-          setAttribute(name, value) {
-            this.attributes[name] = value;
-          },
-          remove() {
-            this.removed = true;
-          },
-        };
-      },
-    };
-    const appendedNodes = [];
     const root = {
       activeElement: null,
-      querySelector(selector) {
-        if (selector === ".mha-settings-shared-scrim") {
-          return appendedNodes.find(node => node.className === "mha-settings-shared-scrim") || null;
-        }
-        return null;
-      },
       append(node) {
-        appendedNodes.push(node);
         this.appended = node;
       },
     };
@@ -154,7 +130,6 @@ test("different settings views animate by appending the next panel while delayin
 
     assert.equal(result, next);
     assert.equal(root.appended, next);
-    assert.equal(appendedNodes.some(node => node.className === "mha-settings-shared-scrim"), true);
     assert.equal(existing.replacedWith, undefined);
     assert.equal(existing.dataset.panelSwapState, "leaving");
     assert.equal(next.dataset.panelSwapState, "entering");
@@ -162,10 +137,8 @@ test("different settings views animate by appending the next panel while delayin
     callbacks.forEach(callback => callback());
     assert.equal(existing.removed, true);
     assert.equal(next.dataset.panelSwapState, undefined);
-    assert.equal(appendedNodes.find(node => node.className === "mha-settings-shared-scrim")?.removed, true);
   } finally {
     globalThis.setTimeout = previousSetTimeout;
-    globalThis.document = previousDocument;
   }
 });
 

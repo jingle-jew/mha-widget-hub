@@ -3,7 +3,26 @@ import {
   syncSettingsPanels,
 } from "./settings-panel-coordinator.js";
 
+const SETTINGS_BACKDROP_SELECTOR = ".mha-settings-backdrop";
+
 export function createSettingsSurfaceCoordinator(host) {
+  function ensureSettingsBackdrop(root) {
+    const existing = root?.querySelector?.(SETTINGS_BACKDROP_SELECTOR);
+    if (existing) return existing;
+    const backdrop = document.createElement("div");
+    backdrop.className = "mha-settings-backdrop";
+    backdrop.setAttribute("aria-hidden", "true");
+    root?.append?.(backdrop);
+    return backdrop;
+  }
+
+  function syncSettingsBackdrop() {
+    const backdrop = ensureSettingsBackdrop(host.shadowRoot);
+    const active = Boolean(host._settingsOpen || host._screensaverSettingsOpen);
+    backdrop.hidden = !active;
+    backdrop.dataset.active = String(active);
+  }
+
   function getProps() {
     const themeState = host._themeController.read();
     const screensaverState = host._screensaverController.read();
@@ -92,6 +111,7 @@ export function createSettingsSurfaceCoordinator(host) {
   function sync() {
     syncSettingsOpenState();
     syncScreensaverOpenState();
+    syncSettingsBackdrop();
     const syncPanels = typeof host._syncSettingsPanels === "function"
       ? host._syncSettingsPanels
       : syncSettingsPanels;
@@ -103,8 +123,9 @@ export function createSettingsSurfaceCoordinator(host) {
 
   return {
     getProps,
-    sync,
-    syncSettingsOpenState,
-    syncScreensaverOpenState,
-  };
+      sync,
+      syncSettingsOpenState,
+      syncScreensaverOpenState,
+      syncSettingsBackdrop,
+    };
 }
