@@ -5,8 +5,8 @@
  */
 :host{
   --mha-page-padding-mobile:14px;
-  --mha-page-padding-tablet:20px;
-  --mha-page-padding-desktop:22px;
+  --mha-page-padding-tablet:10px;
+  --mha-page-padding-desktop:10px;
   --mha-page-padding-wallpanel:var(--mha-page-padding-tablet);
   --mha-page-padding:var(--mha-page-padding-desktop);
   --mha-grid-gap-mobile:10px;

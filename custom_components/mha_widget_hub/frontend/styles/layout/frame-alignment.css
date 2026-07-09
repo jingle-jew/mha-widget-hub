@@ -12,11 +12,12 @@
     /* Final tablet/desktop status-bar alignment lives here.
      * status-bar.css owns sizing/material; frame-alignment.css owns the
      * shared outer frame edges.
+     *
+     * The pill status bar is absolutely positioned inside `.mha-shell`, whose
+     * own inline padding already contributes the outer frame inset. Only the
+     * Home Assistant sidebar reserve should be added on the left here.
      */
-    left: calc(
-      var(--mha-page-padding)
-      + var(--mha-ha-sidebar-reserved-inline-start, 0px)
-    ) !important;
+    left: var(--mha-ha-sidebar-reserved-inline-start, 0px) !important;
     right: var(--mha-page-padding) !important;
     width: auto !important;
     inline-size: auto !important;
