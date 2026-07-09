@@ -82,6 +82,48 @@
   --mha-media-text-shadow: none;
 }
 
+.mha-media-page-layout,
+.mha-media-page-transport,
+.mha-media-page-icon-button,
+.mha-media-page-select,
+.mha-media-page-chip,
+.mha-media-page .mha-media-widget-source-badge,
+.mha-media-page .mha-media-widget-control,
+.mha-media-page .mha-media-widget-progress,
+.mha-media-page .mha-media-widget-progress-fill {
+  transition:
+    background-color 220ms ease,
+    border-color 220ms ease,
+    color 220ms ease,
+    box-shadow 220ms ease,
+    opacity 220ms ease,
+    -webkit-backdrop-filter 220ms ease,
+    backdrop-filter 220ms ease,
+    filter 220ms ease;
+}
+
+.mha-media-page[data-visual-transition="true"] .mha-media-page-layout,
+.mha-media-page[data-visual-transition="true"] .mha-media-page-transport,
+.mha-media-page[data-visual-transition="true"] .mha-media-page-icon-button,
+.mha-media-page[data-visual-transition="true"] .mha-media-page-select,
+.mha-media-page[data-visual-transition="true"] .mha-media-page-chip,
+.mha-media-page[data-visual-transition="true"] .mha-media-page .mha-media-widget-source-badge,
+.mha-media-page[data-visual-transition="true"] .mha-media-page .mha-media-widget-control,
+.mha-media-page[data-visual-transition="true"] .mha-media-page .mha-media-widget-progress,
+.mha-media-page[data-visual-transition="true"] .mha-media-page .mha-media-widget-progress-fill {
+  animation: mha-media-page-visual-fade 280ms ease;
+}
+
+@keyframes mha-media-page-visual-fade {
+  0% {
+    opacity: .68;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
 .mha-media-page-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr);

@@ -550,6 +550,9 @@ _updatePageConfig(pageId,updater){
 _updateActiveMediaPageConfig(patch={}){
   const page=this._getActivePage();
   if(!isMediaPlayersPage(page))return false;
+  const patchKeys=Object.keys(patch||{});
+  const styleOnlyPatch=patchKeys.length>0
+    && patchKeys.every(key=>key==="visualStyle"||key==="blurBackground");
   const result=updatePageConfig(this._pages,page.id,(config={})=>{
     const next=normalizeMediaPageConfig({...config,...patch});
     const enabledIds=Array.isArray(next.enabledPlayerIds)?next.enabledPlayerIds.filter(Boolean):[];
@@ -563,7 +566,9 @@ _updateActiveMediaPageConfig(patch={}){
   this._recordPersistenceResult(this._savePages());
   this._syncSettingsDom();
   this._syncMediaPageSettingsDom();
-  this.shadowRoot?.querySelector?.(".mha-media-page")?.__mhaUpdatePage?.(nextPage);
+  this.shadowRoot?.querySelector?.(".mha-media-page")?.__mhaUpdatePage?.(nextPage,{
+    styleOnly:styleOnlyPatch,
+  });
   this._syncActivePageBackdropState({activePage:nextPage});
   return true;
 }

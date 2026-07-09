@@ -260,6 +260,7 @@ export function createMediaPage(page = {}, {
   root.append(background, layout);
 
   let progressTimer = 0;
+  let visualTransitionTimer = 0;
   const transitionCache = createMediaTransitionCache();
   const context = {
     page,
@@ -288,19 +289,42 @@ export function createMediaPage(page = {}, {
     }
   };
 
-  const applyView = (view, { progressOnly = false } = {}) => {
-    context.view = view;
-    if (progressOnly) {
-      applyProgress(view);
-      return;
-    }
-
+  const applySurfaceState = (view) => {
     root.dataset.visualStyle = view.effectiveVisualStyle;
     root.dataset.hasArtwork = String(Boolean(view.media.artworkUrl));
     root.dataset.backgroundBlur = String(view.blurBackground);
     onBackgroundArtworkChange(view.media.artworkUrl || "", {
       blurBackground: view.blurBackground,
     });
+  };
+
+  const beginVisualTransition = () => {
+    clearTimeout(visualTransitionTimer);
+    root.dataset.visualTransition = "false";
+    requestAnimationFrame(() => {
+      root.dataset.visualTransition = "true";
+      visualTransitionTimer = globalThis.setTimeout(() => {
+        visualTransitionTimer = 0;
+        root.dataset.visualTransition = "false";
+      }, 280);
+    });
+  };
+
+  const applyView = (view, { progressOnly = false, styleOnly = false } = {}) => {
+    const previousView = context.view;
+    context.view = view;
+    if (progressOnly) {
+      applyProgress(view);
+      return;
+    }
+
+    applySurfaceState(view);
+    if (styleOnly) {
+      const visualStyleChanged = previousView?.effectiveVisualStyle !== view.effectiveVisualStyle;
+      const blurChanged = previousView?.blurBackground !== view.blurBackground;
+      if (visualStyleChanged || blurChanged) beginVisualTransition();
+      return;
+    }
 
     eyebrow.textContent = view.media.app || t("mediaPage.mediaCenter", "Media Center");
     if (titleNode) titleNode.textContent = view.media.title || t("mediaPage.nothingPlaying", "Nothing playing");
@@ -350,8 +374,14 @@ export function createMediaPage(page = {}, {
     syncProgressTicker();
   };
 
-  root.__mhaUpdatePage = (nextPage) => {
+  root.__mhaUpdatePage = (nextPage, options = {}) => {
     context.page = nextPage || context.page;
+    const styleOnly = options?.styleOnly === true;
+    if (styleOnly) {
+      const nextView = buildViewState(context.page, context.hass, context.visibilityConfig, transitionCache);
+      applyView(nextView, { styleOnly: true });
+      return;
+    }
     refresh();
     syncProgressTicker();
   };
@@ -359,6 +389,8 @@ export function createMediaPage(page = {}, {
   root.__mhaDestroy = () => {
     if (progressTimer) clearInterval(progressTimer);
     progressTimer = 0;
+    if (visualTransitionTimer) clearTimeout(visualTransitionTimer);
+    visualTransitionTimer = 0;
   };
 
   return root;

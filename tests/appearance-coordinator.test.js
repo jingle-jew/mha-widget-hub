@@ -69,8 +69,10 @@ function createHarness(overrides = {}) {
     ...overrides.state,
   };
 
-  const rafCallbacks = [];
-  const timeoutCallbacks = [];
+  const rafCallbacks = new Map();
+  const timeoutCallbacks = new Map();
+  let rafId = 0;
+  let timeoutId = 0;
 
   const coordinator = createAppearanceCoordinator({
     host,
@@ -120,15 +122,21 @@ function createHarness(overrides = {}) {
     refreshActiveGridOnly: () => calls.push("refreshActiveGridOnly"),
     scheduleIconSymbolRefresh: () => calls.push("scheduleIconSymbolRefresh"),
     requestAnimationFrameFn: (callback) => {
-      rafCallbacks.push(callback);
-      return rafCallbacks.length;
+      const id = ++rafId;
+      rafCallbacks.set(id, callback);
+      return id;
     },
-    cancelAnimationFrameFn: () => {},
+    cancelAnimationFrameFn: (id) => {
+      rafCallbacks.delete(id);
+    },
     setTimeoutFn: (callback) => {
-      timeoutCallbacks.push(callback);
-      return timeoutCallbacks.length;
+      const id = ++timeoutId;
+      timeoutCallbacks.set(id, callback);
+      return id;
     },
-    clearTimeoutFn: () => {},
+    clearTimeoutFn: (id) => {
+      timeoutCallbacks.delete(id);
+    },
     createElement: () => ({
       className: "",
       dataset: {},
@@ -157,15 +165,28 @@ function createHarness(overrides = {}) {
     state,
     calls,
     flushRaf() {
-      while (rafCallbacks.length) {
-        const callback = rafCallbacks.shift();
+      while (rafCallbacks.size) {
+        const pending = Array.from(rafCallbacks.entries());
+        rafCallbacks.clear();
+        for (const [, callback] of pending) {
+          callback();
+        }
+      }
+    },
+    flushNextRaf() {
+      const pending = Array.from(rafCallbacks.entries());
+      rafCallbacks.clear();
+      for (const [, callback] of pending) {
         callback();
       }
     },
     flushTimeouts() {
-      while (timeoutCallbacks.length) {
-        const callback = timeoutCallbacks.shift();
-        callback();
+      while (timeoutCallbacks.size) {
+        const pending = Array.from(timeoutCallbacks.entries());
+        timeoutCallbacks.clear();
+        for (const [, callback] of pending) {
+          callback();
+        }
       }
     },
   };
@@ -249,6 +270,47 @@ test("appearance refresh resyncs the page creator with the new theme style", () 
 
   assert.equal(harness.coordinator.refreshAppearanceDom(), true);
   assert.deepEqual(harness.calls, [
+    "syncDocksDom",
+    "refreshActiveGridOnly",
+    "syncPageCreator",
+    "scheduleIconSymbolRefresh",
+  ]);
+});
+
+test("theme style changes use the shared theme transition cover", () => {
+  const harness = createHarness();
+  harness.host._pageUiCoordinator = {
+    syncPageCreator() {
+      harness.calls.push("syncPageCreator");
+    },
+  };
+
+  const themeState = harness.coordinator.applyThemeStyleFromSettings("ios");
+
+  assert.equal(themeState.themeStyle, "ios");
+  assert.equal(harness.host.classList.contains("is-theme-transitioning"), true);
+  assert.equal(harness.root.children.length, 1);
+  assert.equal(harness.root.children[0].className, "mha-theme-transition-cover");
+  assert.equal(harness.root.children[0].dataset.state, "covering");
+  assert.deepEqual(harness.calls.slice(0, 5), [
+    ["setThemeStyle", "ios"],
+    ["applyWallpaperState", "ios"],
+    "syncTheme",
+    "syncSettingsDom",
+    "syncSettingsDom",
+  ]);
+
+  harness.flushNextRaf();
+  assert.equal(harness.root.children[0].dataset.state, "covering");
+
+  harness.flushNextRaf();
+  assert.equal(harness.root.children[0].dataset.state, "revealing");
+
+  harness.flushRaf();
+  harness.flushTimeouts();
+  assert.equal(harness.root.children.length, 0);
+  assert.equal(harness.host.classList.contains("is-theme-transitioning"), false);
+  assert.deepEqual(harness.calls.slice(5), [
     "syncDocksDom",
     "refreshActiveGridOnly",
     "syncPageCreator",

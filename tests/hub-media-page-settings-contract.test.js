@@ -40,7 +40,9 @@ test("active media page config updates patch the current media surface in place"
   assert.match(updateSection, /const result=updatePageConfig\(this\._pages,page\.id,/);
   assert.match(updateSection, /this\._pages=result\.pages;/);
   assert.match(updateSection, /this\._syncMediaPageSettingsDom\(\);/);
-  assert.match(updateSection, /this\.shadowRoot\?\.querySelector\?\.\("\.mha-media-page"\)\?\.__mhaUpdatePage\?\.\(nextPage\);/);
+  assert.match(updateSection, /const styleOnlyPatch=patchKeys\.length>0/);
+  assert.match(updateSection, /this\.shadowRoot\?\.querySelector\?\.\("\.mha-media-page"\)\?\.__mhaUpdatePage\?\.\(nextPage,\{/);
+  assert.match(updateSection, /styleOnly:styleOnlyPatch,/);
   assert.match(updateSection, /this\._syncActivePageBackdropState\(\{activePage:nextPage\}\);/);
   assert.match(updateSection, /return true;/);
 });
