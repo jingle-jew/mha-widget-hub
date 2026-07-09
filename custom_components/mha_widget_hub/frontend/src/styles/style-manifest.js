@@ -67,6 +67,7 @@ const STATIC_STYLE_MANIFEST_AFTER_THEMES = Object.freeze([
 ]);
 
 const STATIC_STYLE_MANIFEST_AFTER_WIDGETS = Object.freeze([
+  entry("styles/widgets/weather-detail-chips.css", "component"),
   entry("styles/widgets/widget-control-internals-contract.css", "component"),
   entry("styles/widgets/widget-slider-internals-contract.css", "component"),
   entry("styles/widgets/widget-media-internals-contract.css", "component"),
