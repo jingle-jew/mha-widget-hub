@@ -931,7 +931,12 @@ _getPageTransitionDirection(previousPage=null,nextPage=null){
     snapshot.style.height=`${currentRect.height}px`;
 	  }
 
-    if(currentPanel&&activeGrid&&!nextPageNeedsDedicatedRender){
+    const canRefreshGridInPlace=currentPanel
+      && activeGrid
+      && !previousIsMediaPage
+      && !nextPageNeedsDedicatedRender;
+
+    if(canRefreshGridInPlace){
       const nextPageType=nextPage?.type||"grid";
       this._syncActivePageBackdropState({activePage:nextPage});
       currentPanel.dataset.pageType=nextPageType;
