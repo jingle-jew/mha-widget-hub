@@ -362,7 +362,7 @@ test("mobile shell keeps the background viewport-anchored while widget content o
   );
 });
 
-test("media page mobile layout clears the dock and keeps the right widget panel structural in landscape", () => {
+test("media page mobile layout scrolls as snapped sheets in portrait and landscape", () => {
   const gridSource = fs.readFileSync(
     path.join(REPO_ROOT, "styles", "layout", "widget-grid.css"),
     "utf8",
@@ -382,7 +382,7 @@ test("media page mobile layout clears the dock and keeps the right widget panel 
   );
   assert.match(
     gridSource,
-    /:host\(\[data-layout="mobile"\]\[data-media-page-active="true"\]\)\s+\.mha-widget-area\s*\{[\s\S]*overflow-y:\s*hidden;[\s\S]*touch-action:\s*manipulation;[\s\S]*overscroll-behavior-y:\s*none;/,
+    /:host\(\[data-layout="mobile"\]\[data-media-page-active="true"\]\)\s+\.mha-widget-area\s*\{[\s\S]*overflow-y:\s*hidden;[\s\S]*-webkit-overflow-scrolling:\s*auto;[\s\S]*touch-action:\s*pan-y;[\s\S]*overscroll-behavior-y:\s*contain;/,
   );
   assert.match(
     gridSource,
@@ -398,19 +398,31 @@ test("media page mobile layout clears the dock and keeps the right widget panel 
   );
   assert.match(
     source,
-    /:host\(\[data-layout-variant="mobile-landscape"\]\)\s+\.mha-media-page-layout\s*\{[\s\S]*grid-template-columns:\s*repeat\(8,\s*minmax\(0,\s*1fr\)\);/,
+    /\.mha-media-page\s*\{[\s\S]*overflow-anchor:\s*none;/,
   );
   assert.match(
     source,
-    /:host\(\[data-layout-variant="mobile-landscape"\]\)\s+\.mha-media-page-widget-panel\s*\{[\s\S]*grid-column:\s*5\s*\/\s*span\s*4;/,
+    /:host\(\[data-layout="mobile"\]\) \.mha-media-page\s*\{[\s\S]*overflow-y:\s*auto;[\s\S]*scroll-snap-type:\s*y mandatory;[\s\S]*touch-action:\s*pan-y;/,
   );
   assert.match(
     source,
-    /\.mha-media-page-widget-panel\s*\{[\s\S]*grid-template-rows:\s*auto minmax\(0,\s*1fr\);[\s\S]*overflow:\s*hidden;/,
+    /:host\(\[data-layout="mobile"\]\) \.mha-media-page-now-playing,\s*:host\(\[data-layout="mobile"\]\) \.mha-media-page-widget-panel\s*\{[\s\S]*scroll-snap-align:\s*start;[\s\S]*scroll-snap-stop:\s*always;/,
   );
   assert.match(
     source,
-    /\.mha-media-page-widget-grid\s*\{[\s\S]*inline-size:\s*100%;[\s\S]*block-size:\s*100%;[\s\S]*min-block-size:\s*0;/,
+    /:host\(\[data-layout="mobile"\]\) \.mha-media-page-widget-panel\s*\{[\s\S]*min-block-size:\s*max\([\s\S]*var\(--mha-media-page-mobile-sheet-block-size\),[\s\S]*var\(--mha-grid-track-height, 100%\)/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\)\s+\.mha-media-page-now-playing-shell\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*\.9fr\) minmax\(0,\s*1fr\);[\s\S]*grid-template-rows:\s*minmax\(0,\s*1fr\) auto;/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\) \.mha-media-page-primary\s*\{[\s\S]*display:\s*contents;/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\) \.mha-media-page-transport\s*\{[\s\S]*grid-row:\s*1;[\s\S]*align-self:\s*end;/,
   );
 });
 

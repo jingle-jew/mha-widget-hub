@@ -42,6 +42,7 @@
 
 .mha-media-page {
   position: relative;
+  box-sizing: border-box;
   container-type: inline-size;
   inline-size: 100%;
   min-block-size: 100%;
@@ -53,6 +54,7 @@
     var(--mha-media-page-safe-inline-start);
   color: var(--mha-media-page-on-surface);
   overflow: hidden;
+  overflow-anchor: none;
   isolation: isolate;
 
   --mha-media-gap: var(--mha-media-page-panel-gap);
@@ -473,6 +475,61 @@
   }
 }
 
+:host([data-layout="mobile"]) .mha-media-page {
+  --mha-media-page-mobile-sheet-block-size: 100%;
+  block-size: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  scroll-snap-type: y mandatory;
+  scroll-padding-block-start: 0;
+  touch-action: pan-y;
+}
+
+:host([data-layout="mobile"]) .mha-media-page::-webkit-scrollbar {
+  display: none;
+  inline-size: 0;
+  block-size: 0;
+}
+
+:host([data-layout="mobile"]) .mha-media-page-layout {
+  grid-template-columns: minmax(0, 1fr);
+  grid-auto-rows: auto;
+  align-content: start;
+  min-block-size: auto;
+}
+
+:host([data-layout="mobile"]) .mha-media-page-now-playing,
+:host([data-layout="mobile"]) .mha-media-page-widget-panel {
+  grid-column: 1 / -1;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+:host([data-layout="mobile"]) .mha-media-page-now-playing {
+  min-block-size: var(--mha-media-page-mobile-sheet-block-size);
+}
+
+:host([data-layout="mobile"]) .mha-media-page-widget-panel {
+  min-block-size: max(
+    var(--mha-media-page-mobile-sheet-block-size),
+    calc(
+      var(--mha-grid-track-height, 100%)
+      + (var(--mha-media-page-widget-panel-padding) * 2)
+      + clamp(3rem, 8svh, 4.25rem)
+    )
+  );
+  max-block-size: none;
+  overflow: visible;
+}
+
+:host([data-layout="mobile"]) .mha-media-page-widget-panel-body,
+:host([data-layout="mobile"]) .mha-media-page-widget-grid {
+  block-size: auto;
+  min-block-size: var(--mha-grid-track-height, 0px);
+}
+
 :host([data-layout="tablet"]) .mha-media-page-controls {
   display: flex;
   flex-wrap: nowrap;
@@ -482,6 +539,8 @@
 }
 
 :host([data-layout-variant="mobile-landscape"]) .mha-media-page {
+  --mha-media-page-artwork-size: clamp(10rem, 22svw, 14rem);
+  --mha-media-page-content-gap: clamp(.75rem, 1.8svh, 1.1rem);
   --mha-media-page-safe-block-start: var(
     --mha-mobile-landscape-dock-top-offset,
     var(--mha-page-padding)
@@ -493,21 +552,58 @@
 }
 
 :host([data-layout-variant="mobile-landscape"]) .mha-media-page-layout {
-  grid-template-columns: repeat(8, minmax(0, 1fr));
-  grid-template-rows: minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
+  grid-auto-rows: auto;
   align-items: stretch;
 }
 
 :host([data-layout-variant="mobile-landscape"]) .mha-media-page-now-playing {
-  grid-column: 1 / span 4;
+  grid-column: 1 / -1;
 }
 
 :host([data-layout-variant="mobile-landscape"]) .mha-media-page-widget-panel {
-  grid-column: 5 / span 4;
+  grid-column: 1 / -1;
 }
 
 :host([data-layout-variant="mobile-landscape"]) .mha-media-page-now-playing-shell {
-  justify-items: center;
+  grid-template-columns: minmax(0, .9fr) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  align-items: center;
+  justify-items: stretch;
+  column-gap: clamp(1rem, 3svw, 2rem);
+}
+
+:host([data-layout-variant="mobile-landscape"]) .mha-media-page-artwork-section {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: end;
+}
+
+:host([data-layout-variant="mobile-landscape"]) .mha-media-page-primary {
+  display: contents;
+}
+
+:host([data-layout-variant="mobile-landscape"]) .mha-media-page .mha-media-widget-text {
+  grid-column: 1;
+  grid-row: 2;
+  align-self: start;
+  justify-self: center;
+}
+
+:host([data-layout-variant="mobile-landscape"]) .mha-media-page-controls,
+:host([data-layout-variant="mobile-landscape"]) .mha-media-page-transport {
+  grid-column: 2;
+}
+
+:host([data-layout-variant="mobile-landscape"]) .mha-media-page-transport {
+  grid-row: 1;
+  align-self: end;
+}
+
+:host([data-layout-variant="mobile-landscape"]) .mha-media-page-controls {
+  grid-row: 2;
+  align-self: start;
+  padding-block-end: clamp(.4rem, 2svh, 1rem);
 }
 
 :host([data-layout-variant="mobile-landscape"]) .mha-media-page-controls {

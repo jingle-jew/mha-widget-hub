@@ -333,6 +333,15 @@ export function createMediaPage(page = {}, {
     applyView(nextView, { progressOnly });
   };
 
+  const resetScrollPosition = () => {
+    root.scrollTop = 0;
+  };
+
+  const scheduleScrollReset = () => {
+    const scheduler = globalThis.requestAnimationFrame || ((callback) => globalThis.setTimeout(callback, 0));
+    scheduler(resetScrollPosition);
+  };
+
   const syncProgressTicker = () => {
     if (progressTimer) {
       clearInterval(progressTimer);
@@ -346,12 +355,15 @@ export function createMediaPage(page = {}, {
 
   applyView(context.view);
   syncProgressTicker();
+  scheduleScrollReset();
 
   root.__mhaUpdateFromHass = (nextHass) => {
     context.hass = nextHass;
     refresh();
     syncProgressTicker();
   };
+
+  root.__mhaResetScrollPosition = resetScrollPosition;
 
   root.__mhaUpdatePage = (nextPage, options = {}) => {
     context.page = nextPage || context.page;

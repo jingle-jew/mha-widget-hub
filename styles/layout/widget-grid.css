@@ -354,8 +354,8 @@
   padding-inline: 0;
   overflow-y: hidden;
   -webkit-overflow-scrolling: auto;
-  touch-action: manipulation;
-  overscroll-behavior-y: none;
+  touch-action: pan-y;
+  overscroll-behavior-y: contain;
 }
 
 :host([data-layout="mobile"][data-media-page-active="true"]) .mha-page-stage {

@@ -292,6 +292,106 @@ test("responsive dock coordinator toggles floating controls on portrait scroll d
   }
 });
 
+test("responsive dock coordinator resets media page scroll after mobile orientation changes", () => {
+  const previousWindow = globalThis.window;
+  const previousRaf = globalThis.requestAnimationFrame;
+  const previousCancelRaf = globalThis.cancelAnimationFrame;
+  const previousSetTimeout = globalThis.setTimeout;
+  const previousClearTimeout = globalThis.clearTimeout;
+  const rafCallbacks = [];
+  const timeoutCallbacks = [];
+
+  globalThis.window = {
+    matchMedia() {
+      return { matches: false };
+    },
+  };
+  globalThis.requestAnimationFrame = (callback) => {
+    rafCallbacks.push(callback);
+    return rafCallbacks.length;
+  };
+  globalThis.cancelAnimationFrame = () => {};
+  globalThis.setTimeout = (callback) => {
+    timeoutCallbacks.push(callback);
+    return timeoutCallbacks.length;
+  };
+  globalThis.clearTimeout = () => {};
+
+  const calls = [];
+  const mediaPage = {
+    __mhaResetScrollPosition() {
+      calls.push("resetMediaPageScroll");
+    },
+  };
+  const host = {
+    _relayoutTimer: 0,
+    _viewportRaf: 0,
+    _responsiveState: {
+      layout: "mobile",
+      layoutVariant: "mobile-portrait",
+      dockFamily: "bottom",
+      statusBarVisible: false,
+    },
+    dataset: {
+      mediaPageActive: "true",
+    },
+    classList: createClassList(),
+    shadowRoot: {
+      querySelector(selector) {
+        return selector === ".mha-media-page" ? mediaPage : null;
+      },
+    },
+    _syncResponsiveState() {
+      const next = {
+        layout: "mobile",
+        layoutVariant: "mobile-landscape",
+        dockFamily: "side",
+        statusBarVisible: false,
+      };
+      this._responsiveState = next;
+      calls.push("syncResponsiveState");
+      return next;
+    },
+    render() {
+      calls.push("render");
+    },
+    _syncGridRuntimeMetrics() {
+      calls.push("syncGridRuntimeMetrics");
+    },
+    _observeLayoutSize() {
+      calls.push("observeLayoutSize");
+    },
+    _syncEditModeDom() {
+      calls.push("syncEditModeDom");
+    },
+    _syncWidgetDropSlots() {
+      calls.push("syncWidgetDropSlots");
+    },
+  };
+
+  try {
+    const coordinator = createResponsiveDockCoordinator(host);
+    coordinator.handleViewportChange();
+    rafCallbacks.shift()?.();
+    rafCallbacks.shift()?.();
+    timeoutCallbacks.shift()?.();
+    timeoutCallbacks.shift()?.();
+
+    assert.deepEqual(calls, [
+      "syncResponsiveState",
+      "render",
+      "resetMediaPageScroll",
+      "resetMediaPageScroll",
+    ]);
+  } finally {
+    globalThis.window = previousWindow;
+    globalThis.requestAnimationFrame = previousRaf;
+    globalThis.cancelAnimationFrame = previousCancelRaf;
+    globalThis.setTimeout = previousSetTimeout;
+    globalThis.clearTimeout = previousClearTimeout;
+  }
+});
+
 test("responsive dock coordinator scrolls the mobile landscape dock to the bottom on edit entry", () => {
   const previousWindow = globalThis.window;
   const previousRaf = globalThis.requestAnimationFrame;
