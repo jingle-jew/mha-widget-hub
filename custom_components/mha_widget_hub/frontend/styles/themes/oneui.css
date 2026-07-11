@@ -12,6 +12,10 @@
   --mha-status-bar-radius: var(--mha-statusbar-radius);
   --mha-surface-blur: 24px;
   --mha-surface-saturation: 145%;
+  --mha-glass-noise-image: var(--mha-glass-noise-texture);
+  --mha-glass-noise-opacity: .046;
+  --mha-glass-noise-size: 104px 104px;
+  --mha-glass-noise-blend-mode: overlay;
   --mha-widget-shell-border: transparent;
   --mha-widget-shell-border-edit: transparent;
   --mha-widget-inner-highlight: transparent;

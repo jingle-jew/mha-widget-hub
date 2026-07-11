@@ -60,6 +60,41 @@ function setHostRenderState(host, state = "ready") {
   if (host?.dataset) host.dataset.renderState = state;
 }
 
+function clampMediaPageSidebarRows(value, {
+  min = 5,
+  max = 12,
+} = {}) {
+  return Math.max(min, Math.min(max, Math.round(Number(value) || min)));
+}
+
+function getMediaPageBootstrapPreset({
+  layout = "desktop",
+  layoutVariant = "desktop-landscape",
+  viewport = {},
+} = {}) {
+  const viewportHeight = Math.max(0, Number(viewport?.height) || 0);
+  const isMobileLandscape = layoutVariant === "mobile-landscape";
+  const targetCell = layout === "mobile"
+    ? (isMobileLandscape ? 68 : 82)
+    : (layout === "tablet" ? 90 : 96);
+  const minRows = layout === "mobile" ? (isMobileLandscape ? 4 : 6) : 5;
+  const maxRows = layout === "mobile" ? (isMobileLandscape ? 8 : 14) : 12;
+  const estimatedPanelHeight = viewportHeight * (
+    layout === "mobile"
+      ? (isMobileLandscape ? 0.52 : 0.44)
+      : 0.72
+  );
+
+  return {
+    columns: 4,
+    rows: clampMediaPageSidebarRows(
+      estimatedPanelHeight > 0 ? estimatedPanelHeight / targetCell : 8,
+      { min: minRows, max: maxRows },
+    ),
+    density: "media-page-sidebar",
+  };
+}
+
 function ensureIosOrganicWallpaperNode(background) {
   if (!background?.querySelector) return;
   if (background.querySelector(".mha-ios-organic-wallpaper")) return;
@@ -353,14 +388,23 @@ export function createRenderPipeline(host, options = {}) {
     const gridOrientation = responsiveState.orientation
       || host._getGridOrientation?.()
       || getGridOrientation(viewport);
-    const preset = host._getRuntimeGridPreset?.()
-      || host._getLogicalGridPreset?.()
-      || getGridPresetForLayout(layout, gridOrientation);
+    const { themeStyle, iconShapeSetting, iconShape, accent } = themeState;
+    const activePage = getActivePage(host);
+    const preset = isMediaPageExperienceActive(activePage, themeStyle)
+      ? getMediaPageBootstrapPreset({
+        layout,
+        layoutVariant: responsiveState.layoutVariant || `${layout}-${gridOrientation}`,
+        viewport,
+      })
+      : (
+        host._getRuntimeGridPreset?.()
+        || host._getLogicalGridPreset?.()
+        || getGridPresetForLayout(layout, gridOrientation)
+      );
     const units = getInternalGridColumnCountFromLogical(preset.columns);
     const rows = getInternalGridRowCountFromLogical(preset.rows);
     const cols = preset.columns;
     const logicalRows = preset.rows;
-    const { themeStyle, iconShapeSetting, iconShape, accent } = themeState;
     return {
       renderId: host._renderId + 1,
       themeState,
@@ -588,7 +632,17 @@ export function createRenderPipeline(host, options = {}) {
     if (!pageStage) return { positions, grid, activeSurface };
     if (isMediaPageExperienceActive(activePage, host.dataset.themeStyle || "")) {
       const mediaPanel = createMediaPagePanel(activePage);
+      grid = mediaPanel.content?.__mhaGrid || mediaPanel.content?.querySelector?.(".mha-grid") || null;
       pageStage.append(mediaPanel.panel);
+      if (grid?.dataset) grid.dataset.pageType = activePage?.type || "media-players";
+      if (grid) {
+        appendWidgetPlaceholders(grid, {
+          units,
+          rows,
+          layout,
+          positions,
+        });
+      }
       activeSurface = mediaPanel.content;
       if (layout === "mobile") {
         host.shadowRoot.append(createMobileDock(host._getDockProps()));
@@ -596,6 +650,7 @@ export function createRenderPipeline(host, options = {}) {
       }
       appendPrimaryControls();
       host._wireDockAutoHide(activeSurface);
+      host._wireTouchEditLongPress?.(grid);
       host._updateStatusDom?.();
       return { positions, grid, activeSurface };
     }

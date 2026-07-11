@@ -37,12 +37,13 @@ export function createWidgetInteractionSurfaceCoordinator(host) {
     host.classList.toggle("is-placing-widget", Boolean(host._pendingWidgetPlacement));
     host.dataset.editing = String(host._isEditing);
     if (host._isEditing) host.classList.remove("is-mobile-floating-controls-hidden", "is-dock-hidden");
+    const mediaPageActive = host.dataset?.mediaPageActive === "true";
     const edit = host.shadowRoot.querySelector(".mha-primary-edit-button");
     if (edit) {
       const label = t(host._isEditing ? "common.close" : "common.edit", host._isEditing ? "Close" : "Edit");
       edit.setAttribute("aria-label", label);
-      edit.hidden = isTouchEditLayout() ? !host._isEditing : false;
-      edit.dataset.touchEditClose = String(isTouchEditLayout() && host._isEditing);
+      edit.hidden = mediaPageActive || (isTouchEditLayout() ? !host._isEditing : false);
+      edit.dataset.touchEditClose = String(!mediaPageActive && isTouchEditLayout() && host._isEditing);
       setFloatingControlButtonIcon(edit, {
         name: getPrimaryEditIconName(host._isEditing),
         label,
@@ -56,7 +57,7 @@ export function createWidgetInteractionSurfaceCoordinator(host) {
       const label = showDeleteTarget
         ? t("common.delete", "Delete")
         : t("settings.addWidget", "Add widget");
-      add.hidden = !host._isEditing || (!showDeleteTarget && !canAddWidget);
+      add.hidden = mediaPageActive || !host._isEditing || (!showDeleteTarget && !canAddWidget);
       if (add.dataset) add.dataset.dragDelete = String(showDeleteTarget);
       if (!showDeleteTarget) add.classList?.remove?.("is-drag-delete-hover");
       add.setAttribute?.("aria-label", label);

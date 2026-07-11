@@ -232,6 +232,41 @@ function hasStableGridCells({
   return minTrackSize >= Math.max(hardMin, comfortMin * 0.6);
 }
 
+function isMediaPageSidebarGrid(grid = null) {
+  return Boolean(grid?.closest?.(".mha-media-page-widget-panel"));
+}
+
+function clampMediaPageSidebarRows(value, {
+  min = 5,
+  max = 12,
+} = {}) {
+  return Math.max(min, Math.min(max, Math.round(Number(value) || min)));
+}
+
+function getMediaPageSidebarPreset({
+  layout = "desktop",
+  rect = null,
+} = {}) {
+  const height = Math.max(0, Number(rect?.height) || 0);
+  const targetCell = layout === "mobile"
+    ? 82
+    : (layout === "tablet" ? 90 : 96);
+  const minRows = layout === "mobile" ? 6 : 5;
+  const maxRows = layout === "mobile" ? 14 : 12;
+
+  return {
+    columns: 4,
+    rows: clampMediaPageSidebarRows(
+      height > 0 ? height / targetCell : 8,
+      { min: minRows, max: maxRows },
+    ),
+    density: "media-page-sidebar",
+    minCell: layout === "mobile" ? 60 : 52,
+    targetCell,
+    maxCell: layout === "mobile" ? 120 : 104,
+  };
+}
+
 export class GridRuntime {
   constructor({
     host,
@@ -509,9 +544,16 @@ export class GridRuntime {
 
   getRuntimeGridPreset({
     orientation = null,
+    grid = this.getRoot()?.querySelector?.(".mha-grid"),
     availableContentRect = this.getAvailableContentRect(),
   } = {}) {
     const layout = this.getResolvedLayout();
+    if (isMediaPageSidebarGrid(grid)) {
+      return getMediaPageSidebarPreset({
+        layout,
+        rect: availableContentRect,
+      });
+    }
     const fallbackOrientation = this.getResolvedGridOrientation({
       metrics: this.getRuntimeMetrics(),
       fallbackMetrics: this.host?.getBoundingClientRect?.() || {},

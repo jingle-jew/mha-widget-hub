@@ -52,8 +52,8 @@
 @media (min-width: 768px) {
   .mha-status-bar {
     top: var(--mha-floating-top);
-    left: calc(var(--mha-page-padding) + var(--mha-ha-sidebar-reserved-inline-start, 0px));
-    right: max(var(--mha-safe-area-right, env(safe-area-inset-right)), clamp(0.75rem, 1.8vw, 1.25rem));
+    left: var(--mha-ha-sidebar-reserved-inline-start, 0px);
+    right: var(--mha-page-padding);
     width: auto;
     height: var(--mha-statusbar-height-compact);
     min-height: var(--mha-statusbar-height-compact);

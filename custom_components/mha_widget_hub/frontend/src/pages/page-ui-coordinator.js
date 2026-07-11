@@ -121,11 +121,13 @@ export class PageUiCoordinator {
   buildDockProps() {
     const themeStyle = this.getThemeStyle();
     const dockDefinition = getThemeDockDefinition(themeStyle);
+    const activePage = this.getPages().find(page => page.id === this.getActivePageId()) || null;
+    const isMediaPage = isMediaPageExperienceActive(activePage, themeStyle);
     return this.createDockPropsFn({
       ...this.buildDockStatePropsFn({
         pages: this.getPages(),
         activePageId: this.getActivePageId(),
-        isEditing: this.getIsEditing(),
+        isEditing: this.getIsEditing() && !isMediaPage,
       }),
       themeStyle,
       dockPosition: this.getDockPosition(),
@@ -196,7 +198,6 @@ export class PageUiCoordinator {
     this.recordPersistenceResult(this.writeActivePage(result.activePageId));
     this.setWidgets(this.readWidgets());
     const nextPage = this.getPages().find(page => page.id === result.activePageId) || null;
-    if (isMediaPlayersPage(nextPage)) this.exitEditMode();
     this.refreshAfterActivePageChange(previousPage, nextPage);
     this.syncDocks();
     return true;
@@ -217,7 +218,6 @@ export class PageUiCoordinator {
     this.setPageCreatorOpen(false);
     this.setNewPageType(PAGE_TYPES.GRID);
     this.savePages();
-    if (isMediaPlayersPage(result.page)) this.exitEditMode();
     this.syncDocks();
     this.syncPageCreator();
     this.refreshAfterActivePageChange(previousPage, result.page);

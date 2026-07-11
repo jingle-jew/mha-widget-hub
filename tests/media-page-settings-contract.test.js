@@ -14,6 +14,10 @@ const mediaPageCss = readFileSync(
   new URL("../styles/pages/media-page.css", import.meta.url),
   "utf8",
 );
+const widgetManagerCss = readFileSync(
+  new URL("../styles/widget-manager/widget-manager.css", import.meta.url),
+  "utf8",
+);
 
 test("media page settings panel sync reuses the shared panel visibility/orchestration flow", () => {
   assert.match(
@@ -64,5 +68,16 @@ test("media page settings panel participates in the shared widget-surface open-s
   assert.match(
     widgetPlacementSource,
     /'\.mha-media-page-settings-panel\[data-open="true"\]:not\(\[hidden\]\)'/,
+  );
+});
+
+test("media page local widget editing hides redundant global/category controls", () => {
+  assert.match(
+    mediaPageCss,
+    /:host\(\.is-editing\) \.mha-media-page-widget-panel-edit\s*\{[\s\S]*display:\s*none;/,
+  );
+  assert.match(
+    widgetManagerCss,
+    /:host\(\[data-media-page-active="true"\]\) \.mha-widget-manager-back\s*\{[\s\S]*display:\s*none !important;/,
   );
 });

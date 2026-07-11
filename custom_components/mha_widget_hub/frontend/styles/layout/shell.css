@@ -186,8 +186,10 @@
   box-shadow: none !important;
 }
 
-:host([data-media-page-active="true"]) .mha-primary-edit-button {
-  display: none;
+:host([data-media-page-active="true"]) .mha-primary-edit-button,
+:host([data-media-page-active="true"]) .mha-add-widget-button {
+  display: none !important;
+  pointer-events: none;
 }
 
 .mha-page-panel {

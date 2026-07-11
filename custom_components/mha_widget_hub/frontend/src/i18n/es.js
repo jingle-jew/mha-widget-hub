@@ -239,6 +239,7 @@ export const es = Object.freeze({
     settingsTitle: "Ajustes de la página multimedia",
     closeSettings: "Cerrar ajustes de la página multimedia",
     availablePlayers: "Reproductores disponibles",
+    widgetGridHint: "Añade aquí widgets multimedia para componer la lista de reproductores.",
     defaultPlayer: "Reproductor predeterminado",
     autoPlayerFallback: "Fallback automático",
     appearance: "Apariencia",

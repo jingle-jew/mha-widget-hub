@@ -239,6 +239,7 @@ export const en = Object.freeze({
     settingsTitle: "Media page settings",
     closeSettings: "Close media page settings",
     availablePlayers: "Available players",
+    widgetGridHint: "Add media widgets here to build the player list.",
     defaultPlayer: "Default player",
     autoPlayerFallback: "Automatic fallback",
     appearance: "Appearance",

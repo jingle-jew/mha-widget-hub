@@ -91,6 +91,66 @@ test("side docks do not keep a mirrored bottom inset once the shell top reserve 
   );
 });
 
+test("generic side dock labels reuse the bottom-dock item proportions", () => {
+  const source = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "layout", "dock.css"),
+    "utf8",
+  );
+
+  assert.match(
+    source,
+    /\[data-dock-labels="true"\]\[data-dock-position="left"\]:not\(\[data-theme-style="oneui"\]\)/,
+  );
+  assert.match(
+    source,
+    /\[data-dock-labels="true"\]\[data-dock-position="right"\]:not\(\[data-theme-style="oneui"\]\)/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-dock-position="left"\]:not\(\[data-theme-style="oneui"\]\)\) \.mha-dock,[\s\S]*--mha-dock-empty-padding-inline:\s*var\(--mha-dock-empty-padding-block\);/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-dock-position="left"\]:not\(\[data-theme-style="oneui"\]\)\) \.mha-dock,[\s\S]*--mha-dock-rail-padding-inline:\s*var\(--mha-dock-rail-padding-block\);/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-dock-labels="true"\]:not\(\[data-theme-style="oneui"\]\)\) \.mha-dock,\s*:host\(\[data-dock-labels="true"\]:not\(\[data-theme-style="oneui"\]\)\) \.mha-mobile-dock\s*\{[\s\S]*--mha-dock-item-label-display:\s*block;/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-dock-labels="true"\]\[data-dock-position="left"\]:not\(\[data-theme-style="oneui"\]\)\) \.mha-dock,[\s\S]*--mha-dock-item-inline-size:\s*max\(5rem,\s*calc\(var\(--mha-icon-size\) \+ 1rem\)\);/,
+  );
+  assert.match(
+    source,
+    /--mha-dock-item-min-block-size:\s*calc\(var\(--mha-icon-size\) \+ \.78rem\);/,
+  );
+  assert.match(
+    source,
+    /--mha-dock-empty-width:\s*calc\(var\(--mha-dock-item-inline-size\) \+ \(var\(--mha-dock-rail-padding-inline\) \* 2\)\);/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-dock-labels="true"\]\[data-dock-position="bottom"\]:not\(\[data-theme-style="oneui"\]\)\) \.mha-dock,[\s\S]*--mha-dock-item-inline-size:\s*max\(5rem,\s*calc\(var\(--mha-icon-size\) \+ 1rem\)\);/,
+  );
+  assert.match(
+    source,
+    /--mha-dock-item-overflow:\s*visible;/,
+  );
+  assert.match(
+    source,
+    /--mha-dock-empty-height:\s*calc\(var\(--mha-dock-labeled-capsule-size\) \+ 1rem\);/,
+  );
+  assert.doesNotMatch(
+    source,
+    /--mha-dock-empty-height:\s*calc\(var\(--mha-icon-size\) \+/,
+  );
+  assert.doesNotMatch(
+    source,
+    /--mha-side-dock-rail-width:\s*clamp\(8\.5rem,\s*11vw,\s*10rem\);/,
+  );
+});
+
 test("frame alignment stylesheet no longer pilots grid alignment directly from dock position", () => {
   const source = fs.readFileSync(
     path.join(REPO_ROOT, "styles", "layout", "frame-alignment.css"),
@@ -99,6 +159,66 @@ test("frame alignment stylesheet no longer pilots grid alignment directly from d
 
   assert.doesNotMatch(source, /data-dock-position=.*mha-grid/);
   assert.doesNotMatch(source, /--mha-grid-track-justify:\s*(start|end|center)/);
+});
+
+test("pill status bar uses page padding as its tablet/desktop frame inset on both sides", () => {
+  const source = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "layout", "frame-alignment.css"),
+    "utf8",
+  );
+  const statusSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "layout", "status-bar.css"),
+    "utf8",
+  );
+
+  assert.match(
+    source,
+    /left:\s*var\(--mha-ha-sidebar-reserved-inline-start,\s*0px\)\s*!important;/,
+  );
+  assert.match(
+    source,
+    /right:\s*var\(--mha-page-padding\)\s*!important;/,
+  );
+  assert.match(
+    statusSource,
+    /left:\s*var\(--mha-ha-sidebar-reserved-inline-start,\s*0px\);/,
+  );
+  assert.match(
+    statusSource,
+    /right:\s*var\(--mha-page-padding\);/,
+  );
+  assert.doesNotMatch(
+    source,
+    /--mha-frame-edge-inset:/,
+  );
+  assert.doesNotMatch(
+    source,
+    /left:\s*calc\(\s*var\(--mha-page-padding\)\s*\+\s*var\(--mha-ha-sidebar-reserved-inline-start,\s*0px\)\s*\)\s*!important;/,
+  );
+  assert.doesNotMatch(
+    statusSource,
+    /right:\s*max\(\s*var\(--mha-safe-area-right, env\(safe-area-inset-right\)\),\s*clamp\(0\.75rem,\s*1\.8vw,\s*1\.25rem\)\s*\);/,
+  );
+  assert.doesNotMatch(
+    statusSource,
+    /left:\s*calc\(\s*var\(--mha-page-padding\)\s*\+\s*var\(--mha-ha-sidebar-reserved-inline-start,\s*0px\)\s*\);/,
+  );
+});
+
+test("bottom dock labels reserve extra shell height without coupling it to icon size", () => {
+  const source = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "layout", "widget-grid.css"),
+    "utf8",
+  );
+
+  assert.match(
+    source,
+    /:host\(\[data-dock-position="bottom"\]\[data-dock-labels="true"\]:not\(\[data-theme-style="oneui"\]\)\)\s*\{[\s\S]*--mha-shell-bottom-dock-height:\s*calc\([\s\S]*calc\(var\(--mha-shell-bottom-dock-capsule-size\) \* \.88\)[\s\S]*1rem[\s\S]*var\(--mha-shell-bottom-dock-clearance\)/,
+  );
+  assert.doesNotMatch(
+    source,
+    /--mha-shell-bottom-dock-height:\s*calc\([\s\S]*var\(--mha-icon-size\)/,
+  );
 });
 
 test("status bar mode remains a shell-owned layout input instead of a settings-only style toggle", () => {
@@ -242,7 +362,7 @@ test("mobile shell keeps the background viewport-anchored while widget content o
   );
 });
 
-test("media page mobile layout clears the dock and anchors transport in landscape", () => {
+test("media page mobile layout scrolls as snapped sheets in portrait and landscape", () => {
   const gridSource = fs.readFileSync(
     path.join(REPO_ROOT, "styles", "layout", "widget-grid.css"),
     "utf8",
@@ -262,7 +382,7 @@ test("media page mobile layout clears the dock and anchors transport in landscap
   );
   assert.match(
     gridSource,
-    /:host\(\[data-layout="mobile"\]\[data-media-page-active="true"\]\)\s+\.mha-widget-area\s*\{[\s\S]*overflow-y:\s*hidden;[\s\S]*touch-action:\s*manipulation;[\s\S]*overscroll-behavior-y:\s*none;/,
+    /:host\(\[data-layout="mobile"\]\[data-media-page-active="true"\]\)\s+\.mha-widget-area\s*\{[\s\S]*overflow-y:\s*hidden;[\s\S]*-webkit-overflow-scrolling:\s*auto;[\s\S]*touch-action:\s*pan-y;[\s\S]*overscroll-behavior-y:\s*contain;/,
   );
   assert.match(
     gridSource,
@@ -274,11 +394,35 @@ test("media page mobile layout clears the dock and anchors transport in landscap
   );
   assert.match(
     source,
-    /:host\(\[data-layout-variant="mobile-landscape"\]\)\s+\.mha-media-page-transport\s*\{[\s\S]*display:\s*flex;[\s\S]*flex-direction:\s*column;[\s\S]*justify-content:\s*flex-end;[\s\S]*block-size:\s*100%;/,
+    /@media \(min-width:\s*768px\)\s*\{[\s\S]*\.mha-media-page-layout\s*\{[\s\S]*grid-template-columns:\s*repeat\(12,\s*minmax\(0,\s*1fr\)\);[\s\S]*\.mha-media-page-now-playing\s*\{[\s\S]*grid-column:\s*1\s*\/\s*span\s*6;[\s\S]*\.mha-media-page-widget-panel\s*\{[\s\S]*grid-column:\s*8\s*\/\s*span\s*5;/,
   );
   assert.match(
     source,
-    /:host\(\[data-layout-variant="mobile-landscape"\]\)\s+\.mha-media-page-controls\s*\{[\s\S]*align-self:\s*end;/,
+    /\.mha-media-page\s*\{[\s\S]*overflow-anchor:\s*none;/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-layout="mobile"\]\) \.mha-media-page\s*\{[\s\S]*overflow-y:\s*auto;[\s\S]*scroll-snap-type:\s*y mandatory;[\s\S]*touch-action:\s*pan-y;/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-layout="mobile"\]\) \.mha-media-page-now-playing,\s*:host\(\[data-layout="mobile"\]\) \.mha-media-page-widget-panel\s*\{[\s\S]*scroll-snap-align:\s*start;[\s\S]*scroll-snap-stop:\s*always;/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-layout="mobile"\]\) \.mha-media-page-widget-panel\s*\{[\s\S]*min-block-size:\s*max\([\s\S]*var\(--mha-media-page-mobile-sheet-block-size\),[\s\S]*var\(--mha-grid-track-height, 100%\)/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\)\s+\.mha-media-page-now-playing-shell\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*\.9fr\) minmax\(0,\s*1fr\);[\s\S]*grid-template-rows:\s*minmax\(0,\s*1fr\) auto;/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\) \.mha-media-page-primary\s*\{[\s\S]*display:\s*contents;/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\) \.mha-media-page-transport\s*\{[\s\S]*grid-row:\s*1;[\s\S]*align-self:\s*end;/,
   );
 });
 

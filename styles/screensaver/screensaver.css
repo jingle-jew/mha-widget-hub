@@ -2,6 +2,46 @@
  * MHA Screensaver.
  */
 
+:host {
+  --mha-screensaver-background-filter-fallback:
+    saturate(.84)
+    brightness(.72);
+  --mha-screensaver-background-filter:
+    blur(18px)
+    saturate(.84)
+    brightness(.72);
+}
+
+:host([data-theme="light"]) {
+  --mha-screensaver-background-filter-fallback:
+    saturate(.82)
+    brightness(.88);
+  --mha-screensaver-background-filter:
+    blur(18px)
+    saturate(.82)
+    brightness(.88);
+}
+
+:host([data-theme-style="material"][data-theme="light"]) {
+  --mha-screensaver-background-filter-fallback:
+    saturate(.96)
+    brightness(.9);
+  --mha-screensaver-background-filter:
+    blur(16px)
+    saturate(.96)
+    brightness(.9);
+}
+
+:host([data-theme-style="material"][data-theme="dark"]) {
+  --mha-screensaver-background-filter-fallback:
+    saturate(.92)
+    brightness(.78);
+  --mha-screensaver-background-filter:
+    blur(16px)
+    saturate(.92)
+    brightness(.78);
+}
+
 .mha-screensaver {
   position: fixed;
   inset: 0;
@@ -212,8 +252,31 @@
   content: none !important;
 }
 
+:host(.is-screensaver-visible) .mha-background {
+  -webkit-filter: var(--mha-screensaver-background-filter-fallback);
+  filter: var(--mha-screensaver-background-filter-fallback);
+  transition: filter 240ms ease, -webkit-filter 240ms ease;
+}
+
+@supports (filter: blur(1px)) {
+  :host(.is-screensaver-visible) .mha-background {
+    filter: var(--mha-screensaver-background-filter);
+  }
+}
+
+@supports (-webkit-filter: blur(1px)) {
+  :host(.is-screensaver-visible) .mha-background {
+    -webkit-filter: var(--mha-screensaver-background-filter);
+  }
+}
+
+:host(:not(.is-screensaver-visible)) .mha-background {
+  transition: filter 240ms ease, -webkit-filter 240ms ease;
+}
+
 .mha-screensaver-shade {
   background: rgba(0,0,0,.36);
+  -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
 }
 

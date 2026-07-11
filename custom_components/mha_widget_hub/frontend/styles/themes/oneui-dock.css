@@ -49,7 +49,7 @@
     --mha-dock-rail-gap: clamp(.42rem, .78vw, .68rem);
     --mha-icon-size: clamp(1.85rem, 2vw, 2.25rem);
     --mha-dock-icon-min-size: var(--mha-icon-size);
-    --mha-dock-item-inline-size: 100%;
+    --mha-dock-item-inline-size: 90%;
     --mha-dock-item-block-size: auto;
     --mha-dock-item-min-inline-size: 0;
     --mha-dock-item-min-block-size: calc(var(--mha-oneui-rail-pill-base-height) * 1.5);
@@ -70,7 +70,7 @@
     --mha-dock-item-label-letter-spacing: -.03em;
 
     box-sizing: border-box;
-    border-radius: 30px;
+    border-radius: 40px;
     padding-block: var(--mha-dock-rail-padding-block);
     padding-inline: var(--mha-dock-rail-padding-inline);
     gap: var(--mha-dock-rail-gap);
@@ -218,8 +218,8 @@
     justify-items: start;
     column-gap: var(--mha-dock-item-gap);
     box-sizing: border-box;
-    inline-size: 100%;
-    max-inline-size: 100%;
+    inline-size: var(--mha-dock-item-inline-size);
+    max-inline-size: var(--mha-dock-item-inline-size);
     border: 0;
     background: transparent;
     color: var(--mha-text);

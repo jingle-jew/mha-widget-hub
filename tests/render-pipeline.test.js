@@ -905,7 +905,7 @@ test("render datasets include the persisted dock label visibility state", async 
   assert.equal(host.dataset.themeStyle, "material");
 });
 
-test("media page transitions refresh only the active panel when the grid is already mounted", async () => {
+test("grid page transitions refresh only the active panel when the grid is already mounted", async () => {
   const prototype = await loadHubPrototype();
   const previousMatchMedia = globalThis.window.matchMedia;
   globalThis.window.matchMedia = () => ({
@@ -961,15 +961,15 @@ test("media page transitions refresh only the active panel when the grid is alre
   try {
     prototype._renderPageTransition.call(
       host,
-      { id: "media", type: "media-players" },
       { id: "home", type: "grid" },
+      { id: "lights", type: "grid" },
     );
   } finally {
     globalThis.window.matchMedia = previousMatchMedia;
   }
 
   assert.deepEqual(calls, [
-    ["syncActivePageBackdropState", "home", "grid"],
+    ["syncActivePageBackdropState", "lights", "grid"],
     "refreshActiveGridOnly",
     "syncMediaPageSettingsDom",
   ]);
@@ -1289,6 +1289,9 @@ test("immediate UI mounts the dedicated media page instead of a widget grid", as
     _wireDockAutoHide(surface) {
       calls.push(["wireDockAutoHide", surface?.className || ""]);
     },
+    _wireTouchEditLongPress(grid) {
+      calls.push(["wireTouchEditLongPress", grid?.className || ""]);
+    },
     _updateStatusDom() {
       calls.push("updateStatusDom");
     },
@@ -1303,11 +1306,32 @@ test("immediate UI mounts the dedicated media page instead of a widget grid", as
 
   assert.deepEqual(calls, [
     ["wireDockAutoHide", "mha-media-page"],
+    ["wireTouchEditLongPress", "mha-grid mha-media-page-widget-grid"],
     "updateStatusDom",
   ]);
   assert.equal(pageStage.appended.length, 1);
   assert.deepEqual(pageStage.appended[0]?.classList?.added || [], ["mha-page-panel--media"]);
   assert.equal(pageStage.appended[0]?.querySelector?.(".mha-media-page")?.className, "mha-media-page");
+  assert.equal(
+    pageStage.appended[0]?.querySelector?.(".mha-media-page-widget-panel")?.className,
+    "mha-media-page-widget-panel mha-page-panel--grid",
+  );
+  assert.equal(
+    pageStage.appended[0]?.querySelector?.(".mha-media-page-artwork-settings")?.className,
+    "mha-media-page-icon-button mha-media-page-artwork-settings",
+  );
+  assert.equal(
+    pageStage.appended[0]?.querySelector?.(".mha-media-page-widget-panel-edit")?.className,
+    "mha-media-page-icon-button mha-media-page-widget-panel-edit",
+  );
+  assert.equal(
+    pageStage.appended[0]?.querySelector?.(".mha-media-page-widget-panel-add")?.className,
+    "mha-media-page-icon-button mha-media-page-widget-panel-add",
+  );
+  assert.equal(
+    pageStage.appended[0]?.querySelector?.(".mha-media-page-widget-panel-close")?.className,
+    "mha-media-page-icon-button mha-media-page-widget-panel-close",
+  );
   globalThis.document = previousDocument;
 });
 
@@ -1359,6 +1383,66 @@ test("page transition forces a full render when entering the dedicated media pag
       host,
       { id: "home", type: "grid" },
       { id: "media", type: "media-players" },
+    );
+  } finally {
+    globalThis.window.matchMedia = previousMatchMedia;
+  }
+
+  assert.deepEqual(calls, ["render"]);
+});
+
+test("page transition forces a full render when leaving the dedicated media page", async () => {
+  const prototype = await loadHubPrototype();
+  const previousMatchMedia = globalThis.window.matchMedia;
+  globalThis.window.matchMedia = () => ({ matches: false });
+
+  const panel = createMockElement("section");
+  panel.className = "mha-page-panel";
+  panel.classList.add("mha-page-panel--media");
+  const mediaPage = createMockElement("section");
+  mediaPage.className = "mha-media-page";
+  const grid = createMockElement("section");
+  grid.className = "mha-grid mha-media-page-widget-grid";
+  mediaPage.append(grid);
+  panel.append(mediaPage);
+  const shadowRoot = createMockShadowRoot();
+  shadowRoot.append(panel);
+
+  const calls = [];
+  const host = {
+    shadowRoot,
+    dataset: {
+      themeStyle: "oneui",
+    },
+    _themeController: {
+      read() {
+        return { themeStyle: "oneui" };
+      },
+    },
+    _refreshActiveGridOnly() {
+      calls.push("refreshActiveGridOnly");
+      return true;
+    },
+    _syncActivePageBackdropState(detail) {
+      calls.push(["syncActivePageBackdropState", detail?.activePage?.id || "", detail?.activePage?.type || "grid"]);
+    },
+    _syncMediaPageSettingsDom() {
+      calls.push("syncMediaPageSettingsDom");
+    },
+    _getPageTransitionDirection() {
+      return "left";
+    },
+    _updateDockActiveState() {},
+    render() {
+      calls.push("render");
+    },
+  };
+
+  try {
+    prototype._renderPageTransition.call(
+      host,
+      { id: "media", type: "media-players" },
+      { id: "home", type: "grid" },
     );
   } finally {
     globalThis.window.matchMedia = previousMatchMedia;

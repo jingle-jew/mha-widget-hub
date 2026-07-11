@@ -421,6 +421,53 @@ test("runtime applies the existing grid dataset and CSS contract", () => {
   assert.equal(dropSlotSyncs, 1);
 });
 
+test("media page sidebar grid keeps a fixed four-column preset while rows follow height", () => {
+  const mediaSidebar = { clientWidth: 420, clientHeight: 860 };
+  const grid = {
+    closest(selector) {
+      if (selector === ".mha-media-page-widget-panel") return mediaSidebar;
+      if (selector === ".mha-page-panel--grid") return mediaSidebar;
+      return null;
+    },
+  };
+  const root = {
+    querySelector(selector) {
+      if (selector === ".mha-grid") return grid;
+      if (selector === ".mha-widget-area") return null;
+      return null;
+    },
+  };
+  const runtime = createGridRuntime({
+    host: {
+      dataset: {},
+      style: createStyle(),
+      getBoundingClientRect() {
+        return { width: 1440, height: 900 };
+      },
+    },
+    getRoot: () => root,
+    getLayoutMode: () => "desktop",
+    getEffectiveLayout: () => "desktop",
+    getStyle: () => ({
+      paddingLeft: "0px",
+      paddingRight: "0px",
+      paddingTop: "0px",
+      paddingBottom: "0px",
+      getPropertyValue() {
+        return "";
+      },
+    }),
+  });
+
+  const preset = runtime.getRuntimeGridPreset({
+    grid,
+    availableContentRect: { width: 420, height: 860 },
+  });
+
+  assert.equal(preset.columns, 4);
+  assert.equal(preset.rows, 9);
+});
+
 test("runtime logical preset ignores measured panel metrics on tablet and desktop", () => {
   const panel = { clientWidth: 883, clientHeight: 682 };
   const area = { clientWidth: 860, clientHeight: 676 };

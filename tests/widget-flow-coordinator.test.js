@@ -100,6 +100,15 @@ test("widget manager opens in mobile landscape while editing", async () => {
   assert.equal(calls.syncWidgetDropSlots, 1);
 });
 
+test("widget manager can open directly on a requested category", async () => {
+  const { coordinator, state } = await createHarness();
+
+  coordinator.openWidgetManager("media");
+
+  assert.equal(state.widgetManagerOpen, true);
+  assert.equal(state.widgetManagerCategory, "media");
+});
+
 test("widget placement flows still start in mobile landscape", async () => {
   const { coordinator, state, calls } = await createHarness();
 

@@ -12,6 +12,10 @@
   --mha-status-bar-radius: var(--mha-statusbar-radius);
   --mha-surface-blur: 16px;
   --mha-surface-saturation: 190%;
+  --mha-glass-noise-image: var(--mha-glass-noise-texture);
+  --mha-glass-noise-opacity: .056;
+  --mha-glass-noise-size: 112px 112px;
+  --mha-glass-noise-blend-mode: overlay;
   --mha-widget-reflection-opacity: .54;
   --mha-widget-reflection:
     radial-gradient(circle at 18% 0%, rgba(255,255,255,.26), transparent 34%),

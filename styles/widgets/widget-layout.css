@@ -93,7 +93,6 @@
   box-shadow: none !important;
 }
 
-:host([data-theme-style="oneui"]) .mha-widget::before,
 :host([data-theme-style="oneui"]) .mha-widget::after {
   border-color: transparent !important;
   box-shadow: none !important;

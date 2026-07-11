@@ -60,12 +60,12 @@ export function createWidgetFlowCoordinator({
     syncWidgetManagerPanel(getRoot(), buildWidgetManagerProps());
   }
 
-  function openWidgetManager() {
+  function openWidgetManager(initialCategory = "") {
     if (!getIsEditing()) return;
     setPendingWidgetPlacement(null);
     setActiveMoveWidgetId("");
     setWidgetManagerOpen(true);
-    setWidgetManagerCategory("");
+    setWidgetManagerCategory(initialCategory);
     syncEditModeDom();
     syncWidgetDropSlots();
     syncWidgetManagerDom();

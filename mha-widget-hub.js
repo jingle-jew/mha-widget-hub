@@ -513,6 +513,9 @@ _buildMediaPageProps(){
     visibilityConfig:this._entityVisibilityConfig,
     onSelectPlayer:(playerId)=>this._selectMediaPagePlayer(playerId),
     onOpenSettings:()=>this._openMediaPageSettings(),
+    onToggleEditMode:()=>this.toggleEditMode(),
+    onOpenWidgetManager:()=>this._openWidgetManager("media"),
+    onCloseEditMode:()=>this._disableEditMode(),
   };
 }
 _buildMediaPageSettingsProps(){
@@ -529,7 +532,7 @@ _syncMediaPageSettingsDom(){
   return this.render();
 }
 _canAddWidgetToActivePage(){
-  return !isMediaPlayersPage(this._getActivePage());
+  return true;
 }
 _openMediaPageSettings(){
   if(!isMediaPlayersPage(this._getActivePage()))return false;
@@ -621,8 +624,13 @@ _isMobileLandscapeLayout(){
 _syncWidgetManagerDom(){
   return getWidgetFlowCoordinatorForHost(this).syncWidgetManagerDom();
 }
-_openWidgetManager(){
-  return getWidgetFlowCoordinatorForHost(this).openWidgetManager();
+_openWidgetManager(category=""){
+  const initialCategory=category||(
+    isMediaPlayersPage(this._getActivePage())
+      ?"media"
+      :""
+  );
+  return getWidgetFlowCoordinatorForHost(this).openWidgetManager(initialCategory);
 }
 _closeWidgetManager(){
   return getWidgetFlowCoordinatorForHost(this).closeWidgetManager();
@@ -931,7 +939,12 @@ _getPageTransitionDirection(previousPage=null,nextPage=null){
     snapshot.style.height=`${currentRect.height}px`;
 	  }
 
-    if(currentPanel&&activeGrid&&!nextPageNeedsDedicatedRender){
+    const canRefreshGridInPlace=currentPanel
+      && activeGrid
+      && !previousIsMediaPage
+      && !nextPageNeedsDedicatedRender;
+
+    if(canRefreshGridInPlace){
       const nextPageType=nextPage?.type||"grid";
       this._syncActivePageBackdropState({activePage:nextPage});
       currentPanel.dataset.pageType=nextPageType;
@@ -1011,7 +1024,6 @@ _setActivePage(id){
   if(shouldCloseMediaPageSettings)this._mediaPageSettingsOpen=false;
   const changed=this._pageUiCoordinator.selectPage(id);
   if(!changed&&shouldCloseMediaPageSettings)this._mediaPageSettingsOpen=true;
-  if(changed&&isMediaPlayersPage(this._getActivePage()))this._disableEditMode();
   if(changed&&!isMediaPlayersPage(this._getActivePage()))this._mediaPageSettingsOpen=false;
   return changed;
 }

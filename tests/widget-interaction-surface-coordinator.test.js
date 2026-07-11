@@ -182,6 +182,86 @@ test("widget interaction coordinator hides the mobile and tablet edit pencil unt
   }
 });
 
+test("widget interaction coordinator hides global floating edit controls on media pages", () => {
+  const previousDocument = globalThis.document;
+  globalThis.document = {
+    createElement() {
+      return {
+        dataset: {},
+        setAttribute() {},
+        append() {},
+        appendChild() {},
+        classList: { add() {} },
+        style: {},
+      };
+    },
+    createElementNS() {
+      return {
+        dataset: {},
+        setAttribute() {},
+        append() {},
+        appendChild() {},
+        classList: { add() {} },
+        style: {},
+      };
+    },
+  };
+  const editButton = {
+    hidden: false,
+    dataset: {},
+    setAttribute() {},
+    append() {},
+    replaceChildren() {},
+  };
+  const addButton = {
+    hidden: false,
+    dataset: {},
+    setAttribute() {},
+    replaceChildren() {},
+    classList: { remove() {} },
+  };
+  const host = {
+    _isEditing: true,
+    _widgets: [],
+    dataset: { layout: "desktop", mediaPageActive: "true" },
+    shadowRoot: {
+      querySelector(selector) {
+        if (selector === ".mha-primary-edit-button") return editButton;
+        if (selector === ".mha-add-widget-button") return addButton;
+        return null;
+      },
+      querySelectorAll() {
+        return [];
+      },
+    },
+    _isMobileLandscapeLayout() {
+      return false;
+    },
+    classList: {
+      toggle() {},
+      remove() {},
+      contains() {
+        return false;
+      },
+    },
+    _syncPageCreatorDom() {},
+    _syncWidgetConfigDom() {},
+    _canAddWidgetToActivePage() {
+      return true;
+    },
+  };
+
+  try {
+    const coordinator = createWidgetInteractionSurfaceCoordinator(host);
+    coordinator.syncEditModeDom();
+    assert.equal(editButton.hidden, true);
+    assert.equal(addButton.hidden, true);
+    assert.equal(editButton.dataset.touchEditClose, "false");
+  } finally {
+    globalThis.document = previousDocument;
+  }
+});
+
 test("widget interaction coordinator keeps edit surfaces open in mobile landscape while editing", () => {
   const previousDocument = globalThis.document;
   globalThis.document = {

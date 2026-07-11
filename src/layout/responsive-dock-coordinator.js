@@ -140,6 +140,31 @@ export function createResponsiveDockCoordinator(host) {
     syncDockActiveState(host.shadowRoot, host._activePageId);
   }
 
+  function scheduleMediaPageScrollReset() {
+    if (host.dataset?.mediaPageActive !== "true") return false;
+    const responsiveState = host._responsiveState || getResponsiveState();
+    if (responsiveState?.layout !== "mobile") return false;
+
+    const reset = () => {
+      const mediaPage = host.shadowRoot?.querySelector?.(".mha-media-page");
+      if (!mediaPage) return;
+      if (typeof mediaPage.__mhaResetScrollPosition === "function") {
+        mediaPage.__mhaResetScrollPosition();
+        return;
+      }
+      mediaPage.scrollTop = 0;
+    };
+
+    cancelAnimationFrame(host._mediaPageScrollResetFrame || 0);
+    clearTimeout(host._mediaPageScrollResetTimer || 0);
+    host._mediaPageScrollResetFrame = requestAnimationFrame(() => {
+      host._mediaPageScrollResetFrame = 0;
+      reset();
+      host._mediaPageScrollResetTimer = setTimeout(reset, 140);
+    });
+    return true;
+  }
+
   function syncDocksDom() {
     const result = host._pageUiCoordinator.syncDocks();
     scheduleMobileDockOverflowState();
@@ -176,6 +201,13 @@ export function createResponsiveDockCoordinator(host) {
           || previousResponsiveState.statusBarVisible !== nextResponsiveState.statusBarVisible
         )
       );
+      const mediaPageOrientationChanged = Boolean(
+        previousResponsiveState
+        && nextResponsiveState
+        && previousResponsiveState.layout === "mobile"
+        && nextResponsiveState.layout === "mobile"
+        && previousResponsiveState.layoutVariant !== nextResponsiveState.layoutVariant
+      );
 
       if (requiresStructuralRelayout && typeof host.render === "function") {
         host.render();
@@ -186,6 +218,7 @@ export function createResponsiveDockCoordinator(host) {
         host._syncEditModeDom();
         host._syncWidgetDropSlots();
       }
+      if (mediaPageOrientationChanged) scheduleMediaPageScrollReset();
       host._relayoutTimer = setTimeout(() => {
         host._isResponsiveRelayouting = false;
         host.classList.remove("is-responsive-relayouting");

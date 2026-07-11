@@ -7,6 +7,30 @@
   --mha-ios-sheet-5-opacity: 0.9;
   --mha-ios-sheet-6-opacity: 0.94;
   --mha-ios-sheet-7-opacity: 0.9;
+  --mha-ios-sheet-1-drift-distance: 22px;
+  --mha-ios-sheet-2-drift-distance: 29px;
+  --mha-ios-sheet-3-drift-distance: 24px;
+  --mha-ios-sheet-4-drift-distance: 27px;
+  --mha-ios-sheet-5-drift-distance: 20px;
+  --mha-ios-sheet-6-drift-distance: 30px;
+  --mha-ios-sheet-7-drift-distance: 26px;
+  --mha-ios-sheet-1-drift-duration: 52s;
+  --mha-ios-sheet-2-drift-duration: 81s;
+  --mha-ios-sheet-3-drift-duration: 63s;
+  --mha-ios-sheet-4-drift-duration: 74s;
+  --mha-ios-sheet-5-drift-duration: 57s;
+  --mha-ios-sheet-6-drift-duration: 89s;
+  --mha-ios-sheet-7-drift-duration: 68s;
+  --mha-ios-sheet-1-drift-delay: -11s;
+  --mha-ios-sheet-2-drift-delay: -37s;
+  --mha-ios-sheet-3-drift-delay: -23s;
+  --mha-ios-sheet-4-drift-delay: -49s;
+  --mha-ios-sheet-5-drift-delay: -17s;
+  --mha-ios-sheet-6-drift-delay: -61s;
+  --mha-ios-sheet-7-drift-delay: -29s;
+  --mha-ios-sheet-scale-x: 1;
+  --mha-ios-sheet-scale-y: 1;
+  --mha-ios-sheet-transform-origin: center center;
 }
 
 :host([data-theme-style="ios"][data-theme="light"]) {
@@ -107,3 +131,149 @@
 :host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-5 { opacity: var(--mha-ios-sheet-5-opacity); }
 :host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-6 { opacity: var(--mha-ios-sheet-6-opacity); }
 :host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-7 { opacity: var(--mha-ios-sheet-7-opacity); }
+
+@keyframes mha-ios-organic-sheet-drift {
+  from {
+    transform: translate3d(
+      var(--mha-ios-sheet-drift-from-x, 0px),
+      var(--mha-ios-sheet-drift-from-y, 0px),
+      0
+    ) scale(
+      var(--mha-ios-sheet-scale-x, 1),
+      var(--mha-ios-sheet-scale-y, 1)
+    );
+  }
+
+  to {
+    transform: translate3d(
+      var(--mha-ios-sheet-drift-to-x, 0px),
+      var(--mha-ios-sheet-drift-to-y, 0px),
+      0
+    ) scale(
+      var(--mha-ios-sheet-scale-x, 1),
+      var(--mha-ios-sheet-scale-y, 1)
+    );
+  }
+}
+
+:host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-1,
+:host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-2,
+:host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-3,
+:host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-4,
+:host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-5,
+:host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-6,
+:host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-7 {
+  transform-box: fill-box;
+  transform-origin: var(--mha-ios-sheet-transform-origin, center center);
+  will-change: transform;
+  backface-visibility: hidden;
+  animation-name: mha-ios-organic-sheet-drift;
+  animation-timing-function: ease-in-out;
+  animation-direction: alternate;
+  animation-iteration-count: infinite;
+  animation-fill-mode: both;
+}
+
+:host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-1 {
+  --mha-ios-sheet-drift-distance: var(--mha-ios-sheet-1-drift-distance);
+  --mha-ios-sheet-drift-from-x: var(--mha-ios-sheet-drift-distance);
+  --mha-ios-sheet-drift-to-x: calc(var(--mha-ios-sheet-drift-distance) * -1);
+  --mha-ios-sheet-drift-from-y: 0px;
+  --mha-ios-sheet-drift-to-y: 0px;
+  animation-duration: var(--mha-ios-sheet-1-drift-duration);
+  animation-delay: var(--mha-ios-sheet-1-drift-delay);
+}
+
+:host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-2 {
+  --mha-ios-sheet-drift-distance: var(--mha-ios-sheet-2-drift-distance);
+  --mha-ios-sheet-drift-from-x: calc(var(--mha-ios-sheet-drift-distance) * -1);
+  --mha-ios-sheet-drift-to-x: var(--mha-ios-sheet-drift-distance);
+  --mha-ios-sheet-drift-from-y: 0px;
+  --mha-ios-sheet-drift-to-y: 0px;
+  animation-duration: var(--mha-ios-sheet-2-drift-duration);
+  animation-delay: var(--mha-ios-sheet-2-drift-delay);
+}
+
+:host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-3 {
+  --mha-ios-sheet-drift-distance: var(--mha-ios-sheet-3-drift-distance);
+  --mha-ios-sheet-drift-from-x: var(--mha-ios-sheet-drift-distance);
+  --mha-ios-sheet-drift-to-x: calc(var(--mha-ios-sheet-drift-distance) * -1);
+  --mha-ios-sheet-drift-from-y: 0px;
+  --mha-ios-sheet-drift-to-y: 0px;
+  animation-duration: var(--mha-ios-sheet-3-drift-duration);
+  animation-delay: var(--mha-ios-sheet-3-drift-delay);
+}
+
+:host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-4 {
+  --mha-ios-sheet-drift-distance: var(--mha-ios-sheet-4-drift-distance);
+  --mha-ios-sheet-drift-from-x: calc(var(--mha-ios-sheet-drift-distance) * -1);
+  --mha-ios-sheet-drift-to-x: var(--mha-ios-sheet-drift-distance);
+  --mha-ios-sheet-drift-from-y: 0px;
+  --mha-ios-sheet-drift-to-y: 0px;
+  animation-duration: var(--mha-ios-sheet-4-drift-duration);
+  animation-delay: var(--mha-ios-sheet-4-drift-delay);
+}
+
+:host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-5 {
+  --mha-ios-sheet-drift-distance: var(--mha-ios-sheet-5-drift-distance);
+  --mha-ios-sheet-drift-from-x: calc(var(--mha-ios-sheet-drift-distance) * -1);
+  --mha-ios-sheet-drift-to-x: var(--mha-ios-sheet-drift-distance);
+  --mha-ios-sheet-drift-from-y: 0px;
+  --mha-ios-sheet-drift-to-y: 0px;
+  animation-duration: var(--mha-ios-sheet-5-drift-duration);
+  animation-delay: var(--mha-ios-sheet-5-drift-delay);
+}
+
+:host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-6 {
+  --mha-ios-sheet-drift-distance: var(--mha-ios-sheet-6-drift-distance);
+  --mha-ios-sheet-drift-from-x: 0px;
+  --mha-ios-sheet-drift-to-x: 0px;
+  --mha-ios-sheet-drift-from-y: calc(var(--mha-ios-sheet-drift-distance) * -1);
+  --mha-ios-sheet-drift-to-y: var(--mha-ios-sheet-drift-distance);
+  animation-duration: var(--mha-ios-sheet-6-drift-duration);
+  animation-delay: var(--mha-ios-sheet-6-drift-delay);
+}
+
+:host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-7 {
+  --mha-ios-sheet-drift-distance: var(--mha-ios-sheet-7-drift-distance);
+  --mha-ios-sheet-drift-from-x: 0px;
+  --mha-ios-sheet-drift-to-x: 0px;
+  --mha-ios-sheet-drift-from-y: var(--mha-ios-sheet-drift-distance);
+  --mha-ios-sheet-drift-to-y: calc(var(--mha-ios-sheet-drift-distance) * -1);
+  animation-duration: var(--mha-ios-sheet-7-drift-duration);
+  animation-delay: var(--mha-ios-sheet-7-drift-delay);
+}
+
+@media (min-width: 1440px) {
+  :host([data-theme-style="ios"][data-layout="desktop"]) .mha-ios-organic-wallpaper .sheet-1,
+  :host([data-theme-style="ios"][data-layout="desktop"]) .mha-ios-organic-wallpaper .sheet-2,
+  :host([data-theme-style="ios"][data-layout="desktop"]) .mha-ios-organic-wallpaper .sheet-3 {
+    --mha-ios-sheet-transform-origin: left center;
+  }
+
+  :host([data-theme-style="ios"][data-layout="desktop"]) .mha-ios-organic-wallpaper .sheet-1 {
+    --mha-ios-sheet-scale-x: 1.08;
+  }
+
+  :host([data-theme-style="ios"][data-layout="desktop"]) .mha-ios-organic-wallpaper .sheet-2 {
+    --mha-ios-sheet-scale-x: 1.1;
+  }
+
+  :host([data-theme-style="ios"][data-layout="desktop"]) .mha-ios-organic-wallpaper .sheet-3 {
+    --mha-ios-sheet-scale-x: 1.16;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-1,
+  :host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-2,
+  :host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-3,
+  :host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-4,
+  :host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-5,
+  :host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-6,
+  :host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-7 {
+    animation: none !important;
+    transform: none !important;
+    will-change: auto;
+  }
+}

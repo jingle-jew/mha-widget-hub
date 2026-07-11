@@ -354,8 +354,8 @@
   padding-inline: 0;
   overflow-y: hidden;
   -webkit-overflow-scrolling: auto;
-  touch-action: manipulation;
-  overscroll-behavior-y: none;
+  touch-action: pan-y;
+  overscroll-behavior-y: contain;
 }
 
 :host([data-layout="mobile"][data-media-page-active="true"]) .mha-page-stage {
@@ -498,6 +498,15 @@
 
   :host([data-status-bar-mode="hidden"]) {
     --mha-statusbar-reserved-top: 0px;
+  }
+
+  :host([data-dock-position="bottom"][data-dock-labels="true"]:not([data-theme-style="oneui"])) {
+    --mha-shell-bottom-dock-height: calc(
+      calc(var(--mha-shell-bottom-dock-capsule-size) * .88)
+      + 1rem
+      + var(--mha-shell-bottom-dock-clearance)
+    );
+    --mha-bottom-dock-height: var(--mha-shell-bottom-dock-height);
   }
 
   :host([data-dock-position="left"]) .mha-workspace {
