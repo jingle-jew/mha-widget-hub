@@ -529,7 +529,7 @@ _syncMediaPageSettingsDom(){
   return this.render();
 }
 _canAddWidgetToActivePage(){
-  return !isMediaPlayersPage(this._getActivePage());
+  return true;
 }
 _openMediaPageSettings(){
   if(!isMediaPlayersPage(this._getActivePage()))return false;
@@ -1011,7 +1011,6 @@ _setActivePage(id){
   if(shouldCloseMediaPageSettings)this._mediaPageSettingsOpen=false;
   const changed=this._pageUiCoordinator.selectPage(id);
   if(!changed&&shouldCloseMediaPageSettings)this._mediaPageSettingsOpen=true;
-  if(changed&&isMediaPlayersPage(this._getActivePage()))this._disableEditMode();
   if(changed&&!isMediaPlayersPage(this._getActivePage()))this._mediaPageSettingsOpen=false;
   return changed;
 }

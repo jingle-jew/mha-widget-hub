@@ -362,7 +362,7 @@ test("mobile shell keeps the background viewport-anchored while widget content o
   );
 });
 
-test("media page mobile layout clears the dock and anchors transport in landscape", () => {
+test("media page mobile layout clears the dock and keeps the right widget panel structural in landscape", () => {
   const gridSource = fs.readFileSync(
     path.join(REPO_ROOT, "styles", "layout", "widget-grid.css"),
     "utf8",
@@ -394,11 +394,15 @@ test("media page mobile layout clears the dock and anchors transport in landscap
   );
   assert.match(
     source,
-    /:host\(\[data-layout-variant="mobile-landscape"\]\)\s+\.mha-media-page-transport\s*\{[\s\S]*display:\s*flex;[\s\S]*flex-direction:\s*column;[\s\S]*justify-content:\s*flex-end;[\s\S]*block-size:\s*100%;/,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\)\s+\.mha-media-page-layout\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s+minmax\(0,\s*1fr\);/,
   );
   assert.match(
     source,
-    /:host\(\[data-layout-variant="mobile-landscape"\]\)\s+\.mha-media-page-controls\s*\{[\s\S]*align-self:\s*end;/,
+    /\.mha-media-page-widget-panel\s*\{[\s\S]*grid-template-rows:\s*auto minmax\(0,\s*1fr\);[\s\S]*overflow:\s*hidden;/,
+  );
+  assert.match(
+    source,
+    /\.mha-media-page-widget-grid\s*\{[\s\S]*inline-size:\s*100%;[\s\S]*block-size:\s*100%;[\s\S]*min-block-size:\s*0;/,
   );
 });
 

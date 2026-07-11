@@ -1289,6 +1289,9 @@ test("immediate UI mounts the dedicated media page instead of a widget grid", as
     _wireDockAutoHide(surface) {
       calls.push(["wireDockAutoHide", surface?.className || ""]);
     },
+    _wireTouchEditLongPress(grid) {
+      calls.push(["wireTouchEditLongPress", grid?.className || ""]);
+    },
     _updateStatusDom() {
       calls.push("updateStatusDom");
     },
@@ -1303,11 +1306,16 @@ test("immediate UI mounts the dedicated media page instead of a widget grid", as
 
   assert.deepEqual(calls, [
     ["wireDockAutoHide", "mha-media-page"],
+    ["wireTouchEditLongPress", "mha-grid mha-media-page-widget-grid"],
     "updateStatusDom",
   ]);
   assert.equal(pageStage.appended.length, 1);
   assert.deepEqual(pageStage.appended[0]?.classList?.added || [], ["mha-page-panel--media"]);
   assert.equal(pageStage.appended[0]?.querySelector?.(".mha-media-page")?.className, "mha-media-page");
+  assert.equal(
+    pageStage.appended[0]?.querySelector?.(".mha-media-page-widget-panel")?.className,
+    "mha-media-page-widget-panel mha-page-panel--grid",
+  );
   globalThis.document = previousDocument;
 });
 

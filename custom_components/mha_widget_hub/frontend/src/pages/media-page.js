@@ -7,13 +7,10 @@ import { findThemeStyleId } from "../settings/theme-registry.js";
 import {
   buildMediaWidgetData,
   createMediaArtwork,
-  createMediaMetaDetails,
   createMediaPlaybackButtons,
   createMediaProgress,
-  createMediaSourceBadge,
   createMediaTitleStack,
   createMediaTransitionCache,
-  createMediaVolumeButtons,
   setMediaArtworkImage,
   setMediaProgressState,
 } from "../widgets/media-widget.js";
@@ -30,31 +27,6 @@ function resolveSelectedPlayer(config = {}, players = []) {
   return players[0]?.entity_id || "";
 }
 
-function createPlayerSelect(players = [], selectedPlayerId = "", onChange = () => {}) {
-  const field = document.createElement("label");
-  field.className = "mha-media-page-player-select";
-
-  const label = document.createElement("span");
-  label.className = "mha-media-page-select-label";
-  label.textContent = t("mediaPage.player", "Player");
-
-  const select = document.createElement("select");
-  select.className = "mha-media-page-select";
-  select.setAttribute("aria-label", t("mediaPage.player", "Player"));
-  select.addEventListener("change", (event) => onChange(event.currentTarget.value));
-
-  players.forEach((player) => {
-    const option = document.createElement("option");
-    option.value = player.entity_id;
-    option.textContent = player.name;
-    option.selected = player.entity_id === selectedPlayerId;
-    select.append(option);
-  });
-
-  field.append(label, select);
-  return field;
-}
-
 function createIconButton({ label, icon, className = "", onClick = () => {} } = {}) {
   const button = document.createElement("button");
   button.className = ["mha-media-page-icon-button", className].filter(Boolean).join(" ");
@@ -63,13 +35,6 @@ function createIconButton({ label, icon, className = "", onClick = () => {} } = 
   button.append(createIconSymbol({ name: icon, label }));
   button.addEventListener("click", () => onClick());
   return button;
-}
-
-function createMetaChip(text = "") {
-  const chip = document.createElement("span");
-  chip.className = "mha-media-page-chip";
-  chip.textContent = text;
-  return chip;
 }
 
 function resolveEffectiveVisualStyle(themeStyle = "oneui", pageVisualStyle = "theme") {
@@ -140,23 +105,6 @@ function buildViewState(page = {}, hass, visibilityConfig, cache = null) {
   };
 }
 
-function syncPlayerSelect(container, view, onSelectPlayer) {
-  container.replaceChildren();
-  if (!view.enabledPlayers.length) return;
-  container.append(createPlayerSelect(
-    view.enabledPlayers,
-    view.selectedPlayerId,
-    playerId => onSelectPlayer(playerId),
-  ));
-}
-
-function syncMetaChips(container, view) {
-  container.replaceChildren(
-    createMetaChip(view.deviceName || t("mediaPage.noPlayerSelected", "No player selected")),
-    createMetaChip(view.stateLabel),
-  );
-}
-
 function syncControlGroup(container, buttons = []) {
   container.replaceChildren(...buttons);
 }
@@ -164,7 +112,6 @@ function syncControlGroup(container, buttons = []) {
 export function createMediaPage(page = {}, {
   hass = null,
   visibilityConfig = null,
-  onSelectPlayer = () => {},
   onOpenSettings = () => {},
   onBackgroundArtworkChange = () => {},
 } = {}) {
@@ -180,34 +127,19 @@ export function createMediaPage(page = {}, {
   const layout = document.createElement("div");
   layout.className = "mha-media-page-layout";
 
-  const hero = document.createElement("section");
-  hero.className = "mha-media-page-hero";
+  const nowPlaying = document.createElement("section");
+  nowPlaying.className = "mha-media-page-now-playing";
 
-  const heroMedia = document.createElement("div");
-  heroMedia.className = "mha-media-page-media";
+  const nowPlayingShell = document.createElement("div");
+  nowPlayingShell.className = "mha-media-page-now-playing-shell";
 
   const artwork = createMediaArtwork({
     artworkUrl: "",
     playing: false,
   });
 
-  const info = document.createElement("div");
-  info.className = "mha-media-page-info";
-
-  const topbar = document.createElement("div");
-  topbar.className = "mha-media-page-topbar";
-
-  const playerSelectSlot = document.createElement("div");
-  playerSelectSlot.className = "mha-media-page-topbar-slot";
-
-  const settingsButton = createIconButton({
-    label: t("mediaPage.openSettings", "Open media page settings"),
-    icon: "gear",
-    onClick: onOpenSettings,
-  });
-
-  const eyebrow = document.createElement("span");
-  eyebrow.className = "mha-media-page-eyebrow";
+  const primary = document.createElement("div");
+  primary.className = "mha-media-page-primary";
 
   const titleStack = createMediaTitleStack({
     title: t("mediaPage.nothingPlaying", "Nothing playing"),
@@ -216,22 +148,8 @@ export function createMediaPage(page = {}, {
   const titleNode = titleStack.querySelector(".mha-media-widget-title");
   const subtitleNode = titleStack.querySelector(".mha-media-widget-artist");
 
-  const metaDetails = createMediaMetaDetails({ app: "MHA Media" });
-  const sourceNode = metaDetails.querySelector(".mha-media-widget-source");
-
-  const meta = document.createElement("div");
-  meta.className = "mha-media-page-meta";
-
-  const status = document.createElement("p");
-  status.className = "mha-media-page-status";
-
-  info.append(topbar, eyebrow, titleStack, metaDetails, meta, status);
-
-  const transport = document.createElement("section");
+  const transport = document.createElement("div");
   transport.className = "mha-media-page-transport";
-
-  const sourceBadge = createMediaSourceBadge({ app: "MHA Media" });
-  const sourceBadgeLabel = sourceBadge.querySelector(".mha-media-widget-source-badge-label");
 
   const progress = createMediaProgress({
     progress: { available: false, current: 0, duration: 0, ratio: 0 },
@@ -247,17 +165,52 @@ export function createMediaPage(page = {}, {
 
   const playbackGroup = document.createElement("div");
   playbackGroup.className = "mha-media-page-control-group mha-media-page-control-group--playback";
+  controls.append(playbackGroup);
 
-  const volumeGroup = document.createElement("div");
-  volumeGroup.className = "mha-media-page-control-group mha-media-page-control-group--volume";
+  transport.append(progress, controls);
+  primary.append(titleStack, transport);
+  nowPlayingShell.append(artwork, primary);
+  nowPlaying.append(nowPlayingShell);
 
-  controls.append(playbackGroup, volumeGroup);
+  const widgetPanel = document.createElement("aside");
+  widgetPanel.className = "mha-media-page-widget-panel mha-page-panel--grid";
 
-  transport.append(sourceBadge, progress, controls);
-  heroMedia.append(artwork, info);
-  hero.append(heroMedia);
-  layout.append(hero, transport);
+  const widgetPanelHeader = document.createElement("div");
+  widgetPanelHeader.className = "mha-media-page-widget-panel-header";
+
+  const widgetPanelTitle = document.createElement("h2");
+  widgetPanelTitle.className = "mha-media-page-widget-panel-title";
+  widgetPanelTitle.textContent = t("mediaPage.availablePlayers", "Available players");
+
+  const settingsButton = createIconButton({
+    label: t("mediaPage.openSettings", "Open media page settings"),
+    icon: "gear",
+    className: "mha-media-page-widget-panel-settings",
+    onClick: onOpenSettings,
+  });
+
+  const widgetPanelBody = document.createElement("div");
+  widgetPanelBody.className = "mha-media-page-widget-panel-body";
+
+  const grid = document.createElement("section");
+  grid.className = "mha-grid mha-media-page-widget-grid";
+  grid.setAttribute("aria-label", t("settings.widgetGrid", "Widget grid"));
+  if (grid.dataset) grid.dataset.pageType = page?.type || "media-players";
+
+  const emptyState = document.createElement("p");
+  emptyState.className = "mha-media-page-widget-empty";
+  emptyState.textContent = t(
+    "mediaPage.widgetGridHint",
+    "Add media widgets here to build the player list.",
+  );
+
+  widgetPanelHeader.append(widgetPanelTitle, settingsButton);
+  widgetPanelBody.append(grid, emptyState);
+  widgetPanel.append(widgetPanelHeader, widgetPanelBody);
+
+  layout.append(nowPlaying, widgetPanel);
   root.append(background, layout);
+  root.__mhaGrid = grid;
 
   let progressTimer = 0;
   let visualTransitionTimer = 0;
@@ -326,24 +279,19 @@ export function createMediaPage(page = {}, {
       return;
     }
 
-    eyebrow.textContent = view.media.app || t("mediaPage.mediaCenter", "Media Center");
+    const hasSelectedEntity = Boolean(view.media.entity);
     if (titleNode) titleNode.textContent = view.media.title || t("mediaPage.nothingPlaying", "Nothing playing");
-    if (subtitleNode) subtitleNode.textContent = view.media.subtitle || t("mediaPage.ready", "Ready");
-    if (sourceNode) sourceNode.textContent = view.media.app;
-    if (sourceBadgeLabel) sourceBadgeLabel.textContent = view.media.app;
-    status.textContent = view.statusLine;
+    if (subtitleNode) {
+      subtitleNode.textContent = hasSelectedEntity
+        ? (view.media.subtitle || t("mediaPage.ready", "Ready"))
+        : view.statusLine;
+    }
     setMediaArtworkImage(context.artwork, view.media.artworkUrl);
     context.artwork.dataset.playing = String(view.media.playing);
 
-    syncPlayerSelect(playerSelectSlot, view, onSelectPlayer);
-    syncMetaChips(meta, view);
     syncControlGroup(
       playbackGroup,
       createMediaPlaybackButtons(view.media, { onAction }),
-    );
-    syncControlGroup(
-      volumeGroup,
-      createMediaVolumeButtons(view.media, { onAction }),
     );
     applyProgress(view);
   };
@@ -364,7 +312,6 @@ export function createMediaPage(page = {}, {
     }, 1000);
   };
 
-  topbar.append(playerSelectSlot, settingsButton);
   applyView(context.view);
   syncProgressTicker();
 

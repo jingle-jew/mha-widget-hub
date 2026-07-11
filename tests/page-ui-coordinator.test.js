@@ -12,6 +12,7 @@ function createHarness(overrides = {}) {
     syncWidgetDropSlots: 0,
     syncSettingsDom: 0,
     renderRoot: 0,
+    exitEditMode: 0,
     recordPersistenceResult: [],
     writeActivePage: [],
     writeWidgetPositions: [],
@@ -94,6 +95,7 @@ function createHarness(overrides = {}) {
     renderRoot: () => { calls.renderRoot += 1; },
     openDockSettings: () => {},
     openSettings: () => {},
+    exitEditMode: () => { calls.exitEditMode += 1; },
     clearPlacementState: () => {
       state.activeMoveWidgetId = "";
       state.pendingWidgetPlacement = null;
@@ -123,6 +125,33 @@ test("selecting a page closes placement state and reloads widgets", () => {
   assert.equal(calls.refreshActiveGridOnly, 1);
   assert.equal(calls.syncWidgetDropSlots, 1);
   assert.equal(calls.syncDocks, 1);
+});
+
+test("selecting a media page keeps edit mode available while still forcing a full render", () => {
+  const { coordinator, state, calls } = createHarness({
+    state: {
+      pages: [
+        { id: "home", name: "Home", icon: "home", type: "grid", widgets: [{ id: "clock" }] },
+        {
+          id: "media",
+          name: "Media Players",
+          icon: "media-player",
+          type: "media-players",
+          widgets: [{ id: "speaker-a" }],
+        },
+      ],
+    },
+  });
+
+  assert.equal(coordinator.selectPage("media"), true);
+  assert.equal(state.activePageId, "media");
+  assert.deepEqual(calls.transitionPageRender, [{
+    previousPageId: "home",
+    nextPageId: "media",
+    previousPageType: "grid",
+    nextPageType: "media-players",
+  }]);
+  assert.equal(calls.exitEditMode, 0);
 });
 
 test("deleting a selected dock-detail page returns settings to dock and cleans positions when the active page changes", () => {
