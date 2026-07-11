@@ -732,6 +732,18 @@
     --mha-dock-empty-width: calc(var(--mha-dock-item-inline-size) + (var(--mha-dock-rail-padding-inline) * 2));
   }
 
+  :host([data-dock-labels="true"][data-dock-position="left"]:not([data-theme-style="oneui"])) .mha-dock,
+  :host([data-dock-labels="true"][data-dock-position="right"]:not([data-theme-style="oneui"])) .mha-dock,
+  :host([data-dock-labels="true"]:not([data-dock-position]):not([data-theme-style="oneui"])) .mha-dock {
+    --mha-dock-empty-width: var(
+      --mha-side-dock-rail-width,
+      var(--mha-shell-side-dock-rail-size, var(--mha-dock-unit-size))
+    );
+    --mha-dock-rail-padding-inline: clamp(.22rem, .5vw, .38rem);
+    --mha-dock-item-inline-size: 100%;
+    --mha-dock-item-min-inline-size: 0;
+  }
+
   :host([data-dock-labels="true"][data-dock-position="bottom"]:not([data-theme-style="oneui"])) .mha-dock,
   :host([data-dock-labels="true"][data-dock-position="bottom"]:not([data-theme-style="oneui"])) .mha-dock-zone > .mha-dock {
     --mha-dock-empty-height: calc(var(--mha-dock-labeled-capsule-size) + 1rem);
@@ -776,6 +788,12 @@
     overflow-wrap: anywhere;
     word-break: normal;
     line-height: 1.08;
+  }
+
+  :host([data-dock-labels="true"][data-dock-position="left"]:not([data-theme-style="oneui"])) .mha-dock-item > .mha-dock-item-label,
+  :host([data-dock-labels="true"][data-dock-position="right"]:not([data-theme-style="oneui"])) .mha-dock-item > .mha-dock-item-label,
+  :host([data-dock-labels="true"]:not([data-dock-position]):not([data-theme-style="oneui"])) .mha-dock-item > .mha-dock-item-label {
+    inline-size: 100%;
   }
 
   :host([data-dock-labels="true"][data-dock-position="bottom"]:not([data-theme-style="oneui"])) .mha-dock,

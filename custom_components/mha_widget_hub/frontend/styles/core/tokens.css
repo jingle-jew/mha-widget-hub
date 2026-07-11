@@ -103,6 +103,7 @@
 }
 :host([data-layout="mobile"]){--mha-page-padding:var(--mha-page-padding-mobile);--mha-grid-gap:var(--mha-grid-gap-mobile);--mha-dock-button-size:52px}
 :host([data-layout="tablet"]){--mha-page-padding:var(--mha-page-padding-tablet);--mha-grid-gap:var(--mha-grid-gap-tablet);--mha-dock-button-size:56px}
+:host(:not([data-theme-style="oneui"])){--mha-side-dock-rail-width:86px}
 
 /* MHA clean theme base
  * data-theme="dark|light" is the only color-mode source of truth.
