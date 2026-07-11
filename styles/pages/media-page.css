@@ -329,6 +329,10 @@
   display: none;
 }
 
+:host(.is-editing) .mha-media-page-widget-panel-edit {
+  display: none;
+}
+
 .mha-media-page-widget-panel-body {
   position: relative;
   display: grid;

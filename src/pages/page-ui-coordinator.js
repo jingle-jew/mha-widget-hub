@@ -121,11 +121,13 @@ export class PageUiCoordinator {
   buildDockProps() {
     const themeStyle = this.getThemeStyle();
     const dockDefinition = getThemeDockDefinition(themeStyle);
+    const activePage = this.getPages().find(page => page.id === this.getActivePageId()) || null;
+    const isMediaPage = isMediaPageExperienceActive(activePage, themeStyle);
     return this.createDockPropsFn({
       ...this.buildDockStatePropsFn({
         pages: this.getPages(),
         activePageId: this.getActivePageId(),
-        isEditing: this.getIsEditing(),
+        isEditing: this.getIsEditing() && !isMediaPage,
       }),
       themeStyle,
       dockPosition: this.getDockPosition(),

@@ -52,6 +52,10 @@
     border-color 160ms ease;
 }
 
+:host([data-media-page-active="true"]) .mha-widget-manager-back {
+  display: none !important;
+}
+
 .mha-widget-manager-back:hover,
 .mha-widget-manager-back:focus-visible {
   transform: translateY(-1px);

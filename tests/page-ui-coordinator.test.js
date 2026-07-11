@@ -262,3 +262,18 @@ test("buildDockProps resolves dock content from the current theme manifest", () 
   assert.equal(coordinator.buildDockProps().themeStyle, "material");
   assert.equal(coordinator.buildDockProps().dockPosition, "right");
 });
+
+test("buildDockProps keeps media page widget editing out of dock edit mode", () => {
+  const { coordinator } = createHarness({
+    state: {
+      activePageId: "media",
+      isEditing: true,
+      pages: [
+        { id: "home", name: "Home", icon: "home", type: "grid", widgets: [] },
+        { id: "media", name: "Media Players", icon: "media-player", type: "media-players", widgets: [] },
+      ],
+    },
+  });
+
+  assert.equal(coordinator.buildDockProps().isEditing, false);
+});
