@@ -394,7 +394,15 @@ test("media page mobile layout clears the dock and keeps the right widget panel 
   );
   assert.match(
     source,
-    /:host\(\[data-layout-variant="mobile-landscape"\]\)\s+\.mha-media-page-layout\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s+minmax\(0,\s*1fr\);/,
+    /@media \(min-width:\s*768px\)\s*\{[\s\S]*\.mha-media-page-layout\s*\{[\s\S]*grid-template-columns:\s*repeat\(12,\s*minmax\(0,\s*1fr\)\);[\s\S]*\.mha-media-page-now-playing\s*\{[\s\S]*grid-column:\s*1\s*\/\s*span\s*6;[\s\S]*\.mha-media-page-widget-panel\s*\{[\s\S]*grid-column:\s*8\s*\/\s*span\s*5;/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\)\s+\.mha-media-page-layout\s*\{[\s\S]*grid-template-columns:\s*repeat\(8,\s*minmax\(0,\s*1fr\)\);/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\)\s+\.mha-media-page-widget-panel\s*\{[\s\S]*grid-column:\s*5\s*\/\s*span\s*4;/,
   );
   assert.match(
     source,
