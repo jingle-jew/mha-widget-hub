@@ -1,4 +1,7 @@
-import { getEntitiesForDomain } from "../ha/entity-filters.js";
+import {
+  getAvailableMediaPlayers,
+  resolveEnabledMediaPlayerIds,
+} from "../ha/media-players.js";
 import { t } from "../i18n/index.js";
 import { createPanelShell } from "../panels/panel-shell.js";
 import { syncPanelVisibility } from "../panels/panel-visibility-controller.js";
@@ -113,10 +116,8 @@ export function createMediaPageSettingsPanel({
   onClose = () => {},
   onConfigChange = () => {},
 } = {}) {
-  const availablePlayers = getEntitiesForDomain(hass, "media_player", visibilityConfig);
-  const enabledPlayerIds = Array.isArray(page?.config?.enabledPlayerIds) && page.config.enabledPlayerIds.length
-    ? page.config.enabledPlayerIds
-    : availablePlayers.map(player => player.entity_id);
+  const availablePlayers = getAvailableMediaPlayers(hass, visibilityConfig);
+  const enabledPlayerIds = resolveEnabledMediaPlayerIds(page?.config, availablePlayers);
   const enabledSet = new Set(enabledPlayerIds);
 
   const root = applyPanelSurfaceContract(createPanelShell({

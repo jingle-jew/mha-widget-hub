@@ -1,4 +1,4 @@
-import { getEntityDomain } from "./entity.js";
+import { getEntityDomain, isEntityAvailable } from "./entity.js";
 import { filterEntitiesForCurrentUser } from "../admin/entity-permissions.js";
 
 export function getFriendlyEntityName(entity, entityId = "") {
@@ -15,9 +15,17 @@ export function getFriendlyEntityName(entity, entityId = "") {
     .replace(/\b\p{L}/gu, letter => letter.toLocaleUpperCase());
 }
 
-export function getEntitiesForDomain(hass, domain, config) {
+function isEntityVisibleForDomain(entityState, domain) {
+  return isEntityAvailable(entityState)
+    || (domain === "button" && entityState?.state === "unknown");
+}
+
+function collectEntitiesForDomain(hass, domain, config, { availableOnly = false } = {}) {
   const entities = Object.entries(hass?.states || {})
-    .filter(([entityId]) => getEntityDomain(entityId) === domain)
+    .filter(([entityId, entityState]) => (
+      getEntityDomain(entityId) === domain
+      && (!availableOnly || isEntityVisibleForDomain(entityState, domain))
+    ))
     .map(([entityId, entityState]) => ({
       entity_id: entityId,
       name: getFriendlyEntityName(entityState, entityId),
@@ -28,4 +36,12 @@ export function getEntitiesForDomain(hass, domain, config) {
   return config
     ? filterEntitiesForCurrentUser(hass, entities, config)
     : entities;
+}
+
+export function getEntitiesForDomain(hass, domain, config) {
+  return collectEntitiesForDomain(hass, domain, config);
+}
+
+export function getAvailableEntitiesForDomain(hass, domain, config) {
+  return collectEntitiesForDomain(hass, domain, config, { availableOnly: true });
 }

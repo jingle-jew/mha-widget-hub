@@ -1,6 +1,10 @@
 import { runMediaPlayerAction } from "../ha/actions.js";
-import { getEntitiesForDomain } from "../ha/entity-filters.js";
 import { formatMediaDuration, getMediaStateLabel } from "../ha/media.js";
+import {
+  getAvailableMediaPlayers,
+  resolveEnabledMediaPlayers,
+  resolveSelectedMediaPlayerId,
+} from "../ha/media-players.js";
 import { t } from "../i18n/index.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
 import { findThemeStyleId } from "../settings/theme-registry.js";
@@ -14,18 +18,6 @@ import {
   setMediaArtworkImage,
   setMediaProgressState,
 } from "../widgets/media-widget.js";
-
-function resolveEnabledPlayerIds(config = {}, availablePlayers = []) {
-  const ids = Array.isArray(config.enabledPlayerIds) ? config.enabledPlayerIds.filter(Boolean) : [];
-  return ids.length ? ids : availablePlayers.map(player => player.entity_id);
-}
-
-function resolveSelectedPlayer(config = {}, players = []) {
-  const ids = new Set(players.map(player => player.entity_id));
-  if (config.selectedPlayerId && ids.has(config.selectedPlayerId)) return config.selectedPlayerId;
-  if (config.defaultPlayerId && ids.has(config.defaultPlayerId)) return config.defaultPlayerId;
-  return players[0]?.entity_id || "";
-}
 
 function createIconButton({ label, icon, className = "", onClick = () => {} } = {}) {
   const button = document.createElement("button");
@@ -71,10 +63,9 @@ function buildStatusLine({
 }
 
 function buildViewState(page = {}, hass, visibilityConfig, cache = null) {
-  const availablePlayers = getEntitiesForDomain(hass, "media_player", visibilityConfig);
-  const enabledPlayerIds = resolveEnabledPlayerIds(page.config, availablePlayers);
-  const enabledPlayers = availablePlayers.filter(player => enabledPlayerIds.includes(player.entity_id));
-  const selectedPlayerId = resolveSelectedPlayer(page.config, enabledPlayers);
+  const availablePlayers = getAvailableMediaPlayers(hass, visibilityConfig);
+  const enabledPlayers = resolveEnabledMediaPlayers(page.config, availablePlayers);
+  const selectedPlayerId = resolveSelectedMediaPlayerId(page.config, enabledPlayers);
   const selectedPlayer = enabledPlayers.find(player => player.entity_id === selectedPlayerId) || null;
   const media = buildMediaWidgetData({ entityId: selectedPlayerId }, hass, cache);
   const themeStyle = findThemeStyleId(globalThis.document?.documentElement?.dataset?.themeStyle || "oneui");
