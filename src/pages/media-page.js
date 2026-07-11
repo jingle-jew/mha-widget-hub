@@ -113,6 +113,9 @@ export function createMediaPage(page = {}, {
   hass = null,
   visibilityConfig = null,
   onOpenSettings = () => {},
+  onToggleEditMode = () => {},
+  onOpenWidgetManager = () => {},
+  onCloseEditMode = () => {},
   onBackgroundArtworkChange = () => {},
 } = {}) {
   const root = document.createElement("section");
@@ -137,6 +140,17 @@ export function createMediaPage(page = {}, {
     artworkUrl: "",
     playing: false,
   });
+
+  const artworkSection = document.createElement("div");
+  artworkSection.className = "mha-media-page-artwork-section";
+
+  const settingsButton = createIconButton({
+    label: t("mediaPage.openSettings", "Open media page settings"),
+    icon: "gear",
+    className: "mha-media-page-artwork-settings",
+    onClick: onOpenSettings,
+  });
+  artworkSection.append(artwork, settingsButton);
 
   const primary = document.createElement("div");
   primary.className = "mha-media-page-primary";
@@ -169,7 +183,7 @@ export function createMediaPage(page = {}, {
 
   transport.append(progress);
   primary.append(titleStack, transport);
-  nowPlayingShell.append(artwork, primary, controls);
+  nowPlayingShell.append(artworkSection, primary, controls);
   nowPlaying.append(nowPlayingShell);
 
   const widgetPanel = document.createElement("aside");
@@ -182,12 +196,30 @@ export function createMediaPage(page = {}, {
   widgetPanelTitle.className = "mha-media-page-widget-panel-title";
   widgetPanelTitle.textContent = t("mediaPage.availablePlayers", "Available players");
 
-  const settingsButton = createIconButton({
-    label: t("mediaPage.openSettings", "Open media page settings"),
-    icon: "gear",
-    className: "mha-media-page-widget-panel-settings",
-    onClick: onOpenSettings,
+  const widgetPanelActions = document.createElement("div");
+  widgetPanelActions.className = "mha-media-page-widget-panel-actions";
+
+  const editButton = createIconButton({
+    label: t("common.edit", "Edit"),
+    icon: "edit",
+    className: "mha-media-page-widget-panel-edit",
+    onClick: onToggleEditMode,
   });
+
+  const addButton = createIconButton({
+    label: t("settings.addWidget", "Add widget"),
+    icon: "plus",
+    className: "mha-media-page-widget-panel-add",
+    onClick: onOpenWidgetManager,
+  });
+
+  const closeEditButton = createIconButton({
+    label: t("common.close", "Close"),
+    icon: "close",
+    className: "mha-media-page-widget-panel-close",
+    onClick: onCloseEditMode,
+  });
+  widgetPanelActions.append(editButton, addButton, closeEditButton);
 
   const widgetPanelBody = document.createElement("div");
   widgetPanelBody.className = "mha-media-page-widget-panel-body";
@@ -204,7 +236,7 @@ export function createMediaPage(page = {}, {
     "Add media widgets here to build the player list.",
   );
 
-  widgetPanelHeader.append(widgetPanelTitle, settingsButton);
+  widgetPanelHeader.append(widgetPanelTitle, widgetPanelActions);
   widgetPanelBody.append(grid, emptyState);
   widgetPanel.append(widgetPanelHeader, widgetPanelBody);
 

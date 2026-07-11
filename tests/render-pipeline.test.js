@@ -1316,6 +1316,22 @@ test("immediate UI mounts the dedicated media page instead of a widget grid", as
     pageStage.appended[0]?.querySelector?.(".mha-media-page-widget-panel")?.className,
     "mha-media-page-widget-panel mha-page-panel--grid",
   );
+  assert.equal(
+    pageStage.appended[0]?.querySelector?.(".mha-media-page-artwork-settings")?.className,
+    "mha-media-page-icon-button mha-media-page-artwork-settings",
+  );
+  assert.equal(
+    pageStage.appended[0]?.querySelector?.(".mha-media-page-widget-panel-edit")?.className,
+    "mha-media-page-icon-button mha-media-page-widget-panel-edit",
+  );
+  assert.equal(
+    pageStage.appended[0]?.querySelector?.(".mha-media-page-widget-panel-add")?.className,
+    "mha-media-page-icon-button mha-media-page-widget-panel-add",
+  );
+  assert.equal(
+    pageStage.appended[0]?.querySelector?.(".mha-media-page-widget-panel-close")?.className,
+    "mha-media-page-icon-button mha-media-page-widget-panel-close",
+  );
   globalThis.document = previousDocument;
 });
 

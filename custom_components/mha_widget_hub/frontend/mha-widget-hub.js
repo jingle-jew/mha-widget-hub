@@ -513,6 +513,9 @@ _buildMediaPageProps(){
     visibilityConfig:this._entityVisibilityConfig,
     onSelectPlayer:(playerId)=>this._selectMediaPagePlayer(playerId),
     onOpenSettings:()=>this._openMediaPageSettings(),
+    onToggleEditMode:()=>this.toggleEditMode(),
+    onOpenWidgetManager:()=>this._openWidgetManager("media"),
+    onCloseEditMode:()=>this._disableEditMode(),
   };
 }
 _buildMediaPageSettingsProps(){
@@ -621,8 +624,13 @@ _isMobileLandscapeLayout(){
 _syncWidgetManagerDom(){
   return getWidgetFlowCoordinatorForHost(this).syncWidgetManagerDom();
 }
-_openWidgetManager(){
-  return getWidgetFlowCoordinatorForHost(this).openWidgetManager();
+_openWidgetManager(category=""){
+  const initialCategory=category||(
+    isMediaPlayersPage(this._getActivePage())
+      ?"media"
+      :""
+  );
+  return getWidgetFlowCoordinatorForHost(this).openWidgetManager(initialCategory);
 }
 _closeWidgetManager(){
   return getWidgetFlowCoordinatorForHost(this).closeWidgetManager();

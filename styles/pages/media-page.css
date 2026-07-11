@@ -145,6 +145,7 @@
 
 .mha-media-page-now-playing,
 .mha-media-page-now-playing-shell,
+.mha-media-page-artwork-section,
 .mha-media-page-primary,
 .mha-media-page-widget-panel,
 .mha-media-page-widget-panel-body {
@@ -168,6 +169,15 @@
   align-content: stretch;
   justify-items: center;
   min-block-size: 100%;
+}
+
+.mha-media-page-artwork-section {
+  position: relative;
+  display: grid;
+  place-items: center;
+  inline-size: min(100%, var(--mha-media-page-artwork-size));
+  justify-self: center;
+  align-self: center;
 }
 
 .mha-media-page-primary {
@@ -202,10 +212,13 @@
   inline-size: 2.9rem;
   block-size: 2.9rem;
   flex: 0 0 auto;
+  display: grid;
+  place-items: center;
   border-radius: 999px;
   border: 1px solid var(--mha-media-page-panel-border);
   background: color-mix(in srgb, var(--mha-media-page-surface) 94%, transparent);
   color: inherit;
+  cursor: pointer;
 }
 
 .mha-media-page-icon-button .mha-icon-symbol {
@@ -214,11 +227,18 @@
 }
 
 .mha-media-page .mha-media-widget-artwork {
-  inline-size: min(100%, var(--mha-media-page-artwork-size));
+  inline-size: 100%;
   block-size: auto;
   aspect-ratio: 1;
   justify-self: center;
   align-self: center;
+}
+
+.mha-media-page-artwork-settings {
+  position: absolute;
+  inset-block-start: clamp(.65rem, 1.4cqi, .95rem);
+  inset-inline-end: clamp(.65rem, 1.4cqi, .95rem);
+  z-index: 1;
 }
 
 .mha-media-page .mha-media-widget-text {
@@ -295,6 +315,18 @@
   letter-spacing: .08em;
   text-transform: uppercase;
   color: var(--mha-text-secondary, var(--mha-muted));
+}
+
+.mha-media-page-widget-panel-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: clamp(.4rem, .8cqi, .55rem);
+}
+
+:host(:not(.is-editing)) .mha-media-page-widget-panel-add,
+:host(:not(.is-editing)) .mha-media-page-widget-panel-close {
+  display: none;
 }
 
 .mha-media-page-widget-panel-body {
