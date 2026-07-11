@@ -167,9 +167,9 @@ export function createMediaPage(page = {}, {
   playbackGroup.className = "mha-media-page-control-group mha-media-page-control-group--playback";
   controls.append(playbackGroup);
 
-  transport.append(progress, controls);
+  transport.append(progress);
   primary.append(titleStack, transport);
-  nowPlayingShell.append(artwork, primary);
+  nowPlayingShell.append(artwork, primary, controls);
   nowPlaying.append(nowPlayingShell);
 
   const widgetPanel = document.createElement("aside");

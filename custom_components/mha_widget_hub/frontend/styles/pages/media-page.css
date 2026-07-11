@@ -151,8 +151,9 @@
 
 .mha-media-page-now-playing-shell {
   display: grid;
+  grid-template-rows: minmax(0, 1fr) auto minmax(0, 1fr);
   gap: var(--mha-media-page-content-gap);
-  align-content: center;
+  align-content: stretch;
   justify-items: center;
   min-block-size: 100%;
 }
@@ -160,7 +161,9 @@
 .mha-media-page-primary {
   display: grid;
   gap: clamp(.95rem, 1.8cqi, 1.45rem);
-  align-content: start;
+  align-self: center;
+  align-content: center;
+  justify-items: center;
   min-inline-size: 0;
   text-align: center;
 }
@@ -201,10 +204,13 @@
   block-size: auto;
   aspect-ratio: 1;
   justify-self: center;
+  align-self: end;
 }
 
 .mha-media-page .mha-media-widget-text {
   inline-size: min(100%, 28rem);
+  justify-self: center;
+  text-align: center;
 }
 
 .mha-media-page .mha-media-widget-title {
@@ -218,7 +224,7 @@
 .mha-media-page-transport {
   display: grid;
   gap: clamp(.9rem, 1.7cqi, 1.25rem);
-  align-self: start;
+  align-self: center;
   inline-size: min(100%, 28rem);
   justify-self: center;
 }
@@ -229,6 +235,9 @@
 
 .mha-media-page-controls {
   display: grid;
+  align-self: end;
+  justify-self: center;
+  justify-content: center;
   gap: var(--mha-media-page-panel-gap);
 }
 
@@ -402,29 +411,15 @@
   }
 
   .mha-media-page-now-playing-shell {
-    justify-items: start;
-    align-content: end;
-  }
-
-  .mha-media-page-primary {
-    text-align: left;
-  }
-
-  .mha-media-page .mha-media-widget-artwork {
-    justify-self: start;
-  }
-
-  .mha-media-page .mha-media-widget-text,
-  .mha-media-page-transport {
-    justify-self: start;
+    justify-items: center;
   }
 
   .mha-media-page-controls {
-    justify-content: start;
+    justify-content: center;
   }
 
   .mha-media-page-control-group {
-    justify-content: start;
+    justify-content: center;
   }
 }
 
@@ -432,7 +427,7 @@
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   gap: .85rem;
 }
 
@@ -462,22 +457,9 @@
 }
 
 :host([data-layout-variant="mobile-landscape"]) .mha-media-page-now-playing-shell {
-  justify-items: start;
-  align-content: center;
-}
-
-:host([data-layout-variant="mobile-landscape"]) .mha-media-page-primary {
-  text-align: left;
-}
-
-:host([data-layout-variant="mobile-landscape"]) .mha-media-page .mha-media-widget-artwork {
-  justify-self: start;
-}
-
-:host([data-layout-variant="mobile-landscape"]) .mha-media-page-transport {
-  justify-self: start;
+  justify-items: center;
 }
 
 :host([data-layout-variant="mobile-landscape"]) .mha-media-page-controls {
-  justify-content: start;
+  justify-content: center;
 }
