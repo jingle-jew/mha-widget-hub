@@ -8,6 +8,15 @@
   --mha-media-page-grid-gap: var(--mha-grid-gap, var(--mha-media-page-content-gap));
   --mha-media-page-panel-gap: clamp(.85rem, 1.5cqi, 1.35rem);
   --mha-media-page-widget-panel-padding: clamp(1rem, 2.2cqi, 1.4rem);
+  --mha-media-page-grid-cell-size: var(--mha-grid-row-size, var(--mha-square-unit, 72px));
+  --mha-media-page-metadata-min-height: calc(
+    (var(--mha-media-page-grid-cell-size) * 2)
+    + var(--mha-grid-gap, 0px)
+  );
+  --mha-media-page-playback-height: calc(
+    (var(--mha-media-page-grid-cell-size) * 2)
+    + var(--mha-grid-gap, 0px)
+  );
   --mha-media-page-surface: color-mix(in srgb, var(--mha-surface-panel, var(--mha-widget-surface)) 92%, transparent);
   --mha-media-page-panel-surface: color-mix(in srgb, var(--mha-media-page-surface) 94%, transparent);
   --mha-media-page-panel-border: color-mix(in srgb, var(--mha-widget-border) 82%, transparent);
@@ -151,7 +160,10 @@
 
 .mha-media-page-now-playing-shell {
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto minmax(0, 1fr);
+  grid-template-rows:
+    max-content
+    minmax(var(--mha-media-page-metadata-min-height), 1fr)
+    var(--mha-media-page-playback-height);
   gap: var(--mha-media-page-content-gap);
   align-content: stretch;
   justify-items: center;
@@ -160,11 +172,13 @@
 
 .mha-media-page-primary {
   display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
   gap: clamp(.95rem, 1.8cqi, 1.45rem);
-  align-self: center;
-  align-content: center;
+  align-self: stretch;
+  align-content: stretch;
   justify-items: center;
   min-inline-size: 0;
+  inline-size: min(100%, 28rem);
   text-align: center;
 }
 
@@ -204,7 +218,7 @@
   block-size: auto;
   aspect-ratio: 1;
   justify-self: center;
-  align-self: end;
+  align-self: center;
 }
 
 .mha-media-page .mha-media-widget-text {
@@ -224,8 +238,8 @@
 .mha-media-page-transport {
   display: grid;
   gap: clamp(.9rem, 1.7cqi, 1.25rem);
-  align-self: center;
-  inline-size: min(100%, 28rem);
+  align-self: end;
+  inline-size: 100%;
   justify-self: center;
 }
 
@@ -235,7 +249,7 @@
 
 .mha-media-page-controls {
   display: grid;
-  align-self: end;
+  align-self: center;
   justify-self: center;
   justify-content: center;
   gap: var(--mha-media-page-panel-gap);
