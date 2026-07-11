@@ -21,10 +21,6 @@
   overflow: hidden;
 }
 
-.mha-widget::before {
-  display: none;
-}
-
 .mha-widget::after {
   content: "";
   position: absolute;
@@ -781,7 +777,6 @@
   background-image: none;
 }
 
-:host([data-theme-style="ios"]) .mha-widget::before,
 :host([data-theme-style="ios"]) .mha-widget::after {
   background: none;
   background-image: none;
