@@ -28,6 +28,9 @@
   --mha-ios-sheet-5-drift-delay: -17s;
   --mha-ios-sheet-6-drift-delay: -61s;
   --mha-ios-sheet-7-drift-delay: -29s;
+  --mha-ios-sheet-scale-x: 1;
+  --mha-ios-sheet-scale-y: 1;
+  --mha-ios-sheet-transform-origin: center center;
 }
 
 :host([data-theme-style="ios"][data-theme="light"]) {
@@ -135,6 +138,9 @@
       var(--mha-ios-sheet-drift-from-x, 0px),
       var(--mha-ios-sheet-drift-from-y, 0px),
       0
+    ) scale(
+      var(--mha-ios-sheet-scale-x, 1),
+      var(--mha-ios-sheet-scale-y, 1)
     );
   }
 
@@ -143,6 +149,9 @@
       var(--mha-ios-sheet-drift-to-x, 0px),
       var(--mha-ios-sheet-drift-to-y, 0px),
       0
+    ) scale(
+      var(--mha-ios-sheet-scale-x, 1),
+      var(--mha-ios-sheet-scale-y, 1)
     );
   }
 }
@@ -155,7 +164,7 @@
 :host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-6,
 :host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-7 {
   transform-box: fill-box;
-  transform-origin: center center;
+  transform-origin: var(--mha-ios-sheet-transform-origin, center center);
   will-change: transform;
   backface-visibility: hidden;
   animation-name: mha-ios-organic-sheet-drift;
@@ -233,6 +242,26 @@
   --mha-ios-sheet-drift-to-y: calc(var(--mha-ios-sheet-drift-distance) * -1);
   animation-duration: var(--mha-ios-sheet-7-drift-duration);
   animation-delay: var(--mha-ios-sheet-7-drift-delay);
+}
+
+@media (min-width: 1440px) {
+  :host([data-theme-style="ios"][data-layout="desktop"]) .mha-ios-organic-wallpaper .sheet-1,
+  :host([data-theme-style="ios"][data-layout="desktop"]) .mha-ios-organic-wallpaper .sheet-2,
+  :host([data-theme-style="ios"][data-layout="desktop"]) .mha-ios-organic-wallpaper .sheet-3 {
+    --mha-ios-sheet-transform-origin: left center;
+  }
+
+  :host([data-theme-style="ios"][data-layout="desktop"]) .mha-ios-organic-wallpaper .sheet-1 {
+    --mha-ios-sheet-scale-x: 1.08;
+  }
+
+  :host([data-theme-style="ios"][data-layout="desktop"]) .mha-ios-organic-wallpaper .sheet-2 {
+    --mha-ios-sheet-scale-x: 1.1;
+  }
+
+  :host([data-theme-style="ios"][data-layout="desktop"]) .mha-ios-organic-wallpaper .sheet-3 {
+    --mha-ios-sheet-scale-x: 1.16;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
