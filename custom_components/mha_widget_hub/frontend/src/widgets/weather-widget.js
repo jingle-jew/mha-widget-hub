@@ -57,12 +57,20 @@ function createWeatherGlyph(condition = "partly-cloudy") {
   });
 }
 
-function createMetricChip({ icon = "", label = "", value = "" } = {}) {
+function createMetricChip({
+  icon = "",
+  label = "",
+  value = "",
+  showLabel = true,
+} = {}) {
   const chip = document.createElement("span");
   chip.className = "mha-weather-widget-chip";
   chip.append(
     createIconSymbol({ name: icon, label }),
-    createText("mha-weather-widget-chip-text", `${label ? `${label} ` : ""}${value}`.trim()),
+    createText(
+      "mha-weather-widget-chip-text",
+      `${showLabel && label ? `${label} ` : ""}${value}`.trim(),
+    ),
   );
   return chip;
 }
@@ -104,7 +112,7 @@ function createCurrentPane(data, { className = "", variant = "2x2", details = nu
   return pane;
 }
 
-function createDetails(data) {
+function createDetails(data, { showLabels = true } = {}) {
   const details = document.createElement("div");
   details.className = "mha-weather-widget-details";
   if (data.humidity) {
@@ -112,6 +120,7 @@ function createDetails(data) {
       icon: "humidity",
       label: t("weatherPage.metrics.humidity", "Humidity"),
       value: data.humidity,
+      showLabel: showLabels,
     }));
   }
   if (data.wind) {
@@ -119,23 +128,38 @@ function createDetails(data) {
       icon: "wind",
       label: t("weatherPage.metrics.wind", "Wind"),
       value: data.wind,
+      showLabel: showLabels,
     }));
   }
   return details.childNodes.length ? details : null;
+}
+
+function getCompactWeatherLocation(location = "") {
+  const raw = String(location || "").trim();
+  if (!raw) return "";
+  const compact = raw.replace(
+    /\s+(?:prévisions?|previsions?|forecasts?|weather|météo|meteo)\s*$/iu,
+    "",
+  ).trim();
+  return compact || raw;
 }
 
 function createClassicCurrentPane(data) {
   const pane = document.createElement("section");
   pane.className = "mha-weather-widget-current mha-weather-widget-current--split";
   pane.dataset.weatherVariant = "4x2";
-  appendTextIfAny(pane, "mha-weather-widget-location", data.location);
+  appendTextIfAny(
+    pane,
+    "mha-weather-widget-location",
+    getCompactWeatherLocation(data.location),
+  );
   pane.append(
     createText("mha-weather-widget-temp", data.temperature),
     createWeatherGlyph(data.condition),
   );
   appendTextIfAny(pane, "mha-weather-widget-range", data.temperatureRange);
   pane.append(createText("mha-weather-widget-summary", data.summary));
-  const details = createDetails(data);
+  const details = createDetails(data, { showLabels: false });
   if (details?.childNodes?.length) pane.append(details);
   return pane;
 }
@@ -211,7 +235,7 @@ function createForecastChart(forecast = []) {
     svg.append(createSvgElement("circle", {
       cx: point.x,
       cy: point.y,
-      r: 1.65,
+      r: 1.9,
       class: "mha-weather-widget-forecast-point",
     }));
   });

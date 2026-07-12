@@ -242,6 +242,20 @@ test("weather metric variants depend on the metric kind", () => {
     w: 4,
     h: 1,
   });
+  const summaryVariants = getWidgetVariants({
+    kind: "weather-metric",
+    metricKey: "summary",
+    valueKind: "text",
+    w: 4,
+    h: 2,
+  });
+  const tendencyVariants = getWidgetVariants({
+    kind: "weather-metric",
+    metricKey: "pressure-tendency",
+    valueKind: "text",
+    w: 2,
+    h: 1,
+  });
 
   assert.deepEqual(metricVariants.map(entry => entry.size), [
     { w: 2, h: 2 },
@@ -249,6 +263,14 @@ test("weather metric variants depend on the metric kind", () => {
   ]);
   assert.deepEqual(sunVariants.map(entry => entry.size), [
     { w: 2, h: 2 },
+    { w: 4, h: 1 },
+  ]);
+  assert.deepEqual(summaryVariants.map(entry => entry.size), [
+    { w: 4, h: 2 },
+    { w: 4, h: 1 },
+  ]);
+  assert.deepEqual(tendencyVariants.map(entry => entry.size), [
+    { w: 2, h: 1 },
     { w: 4, h: 1 },
   ]);
 });
@@ -266,9 +288,25 @@ test("weather metric size normalization preserves compact contracts", () => {
     w: 4,
     h: 1,
   }, normalizeWidgetSize);
+  const summary = normalizeWidgetContract({
+    kind: "weather-metric",
+    metricKey: "summary",
+    valueKind: "text",
+    w: 4,
+    h: 2,
+  }, normalizeWidgetSize);
+  const tendency = normalizeWidgetContract({
+    kind: "weather-metric",
+    metricKey: "pressure-tendency",
+    valueKind: "text",
+    w: 2,
+    h: 2,
+  }, normalizeWidgetSize);
 
   assert.deepEqual({ w: metric.w, h: metric.h }, { w: 2, h: 1 });
   assert.deepEqual({ w: sun.w, h: sun.h }, { w: 4, h: 1 });
+  assert.deepEqual({ w: summary.w, h: summary.h }, { w: 4, h: 2 });
+  assert.deepEqual({ w: tendency.w, h: tendency.h }, { w: 2, h: 1 });
 });
 
 test("variant cycling starts after the current size", () => {

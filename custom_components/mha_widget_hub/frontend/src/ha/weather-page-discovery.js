@@ -33,6 +33,7 @@ export const WEATHER_METRIC_DEFINITIONS = Object.freeze([
     keywords: Object.freeze(["apparent temperature", "feels like", "feels like temperature", "ressentie", "ressenti", "humidex", "wind chill", "refroidissement eolien", "refroidissement éolien"]),
     entityIdSuffixes: Object.freeze(["apparent_temperature", "feels_like_temperature", "humidex", "wind_chill"]),
     requiresKeyword: true,
+    preferredSize: Object.freeze({ w: 2, h: 1 }),
     priority: 96,
   }),
   Object.freeze({
@@ -44,6 +45,7 @@ export const WEATHER_METRIC_DEFINITIONS = Object.freeze([
     keywords: Object.freeze(["dew point", "point de rosee", "point de rosée"]),
     entityIdSuffixes: Object.freeze(["dew_point"]),
     requiresKeyword: true,
+    preferredSize: Object.freeze({ w: 2, h: 1 }),
     priority: 94,
   }),
   Object.freeze({
@@ -106,6 +108,7 @@ export const WEATHER_METRIC_DEFINITIONS = Object.freeze([
     keywords: Object.freeze(["wind gust", "gust speed", "rafale", "rafales"]),
     entityIdSuffixes: Object.freeze(["wind_gust", "wind_gust_speed"]),
     requiresKeyword: true,
+    preferredSize: Object.freeze({ w: 2, h: 1 }),
     priority: 89,
   }),
   Object.freeze({
@@ -127,6 +130,7 @@ export const WEATHER_METRIC_DEFINITIONS = Object.freeze([
     keywords: Object.freeze(["pressure tendency", "tendance pression", "barometric tendency"]),
     entityIdSuffixes: Object.freeze(["tendency", "pressure_tendency", "barometric_tendency"]),
     valueKind: "text",
+    preferredSize: Object.freeze({ w: 2, h: 1 }),
     priority: 115,
   }),
   Object.freeze({
@@ -299,7 +303,7 @@ export const WEATHER_METRIC_DEFINITIONS = Object.freeze([
       openweathermap: Object.freeze(["weather"]),
     }),
     valueKind: "text",
-    preferredSize: Object.freeze({ w: 4, h: 1 }),
+    preferredSize: Object.freeze({ w: 4, h: 2 }),
     priority: 80,
   }),
   Object.freeze({

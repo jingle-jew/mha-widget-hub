@@ -432,18 +432,31 @@ test("weather page seed creates grid-compatible sections", () => {
   assert.equal(seed.widgets.every(widget => [1, 2].includes(widget.h)), true);
 });
 
-test("async weather page seed stores discovery metadata and wide text metrics", async () => {
+test("async weather page seed stores discovery metadata and intentional metric sizes", async () => {
   const seed = await discoverWeatherPageSeed({
     hass: createRegistryHass(),
     pageId: "weather-registry",
   });
-  const summary = seed.widgets.find(widget => widget.metricKey === "summary");
+  const byMetric = new Map(seed.widgets.map(widget => [widget.metricKey, widget]));
+  const summary = byMetric.get("summary");
 
   assert.equal(seed.config.discoveryMode, "registry");
   assert.equal(seed.config.registryLinked, true);
   assert.equal(seed.config.autoDetectedMetricKeys.includes("dew-point"), true);
+  assert.deepEqual(
+    { w: byMetric.get("dew-point")?.w, h: byMetric.get("dew-point")?.h },
+    { w: 2, h: 1 },
+  );
+  assert.deepEqual(
+    { w: byMetric.get("wind-gust")?.w, h: byMetric.get("wind-gust")?.h },
+    { w: 2, h: 1 },
+  );
+  assert.deepEqual(
+    { w: byMetric.get("pressure-tendency")?.w, h: byMetric.get("pressure-tendency")?.h },
+    { w: 2, h: 1 },
+  );
   assert.equal(summary?.valueKind, "text");
   assert.equal(summary?.w, 4);
-  assert.equal(summary?.h, 1);
-  assert.equal(summary?.variant, "weather-metric-text-wide");
+  assert.equal(summary?.h, 2);
+  assert.equal(summary?.variant, "weather-metric-text-tall");
 });

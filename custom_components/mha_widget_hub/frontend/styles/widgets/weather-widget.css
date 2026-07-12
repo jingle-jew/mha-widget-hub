@@ -1378,7 +1378,7 @@
 .mha-weather-widget-forecast-line {
   fill: none;
   stroke: color-mix(in srgb, var(--mha-weather-text) 78%, transparent);
-  stroke-width: 1.35;
+  stroke-width: 1.6;
   vector-effect: non-scaling-stroke;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -1387,7 +1387,7 @@
 .mha-weather-widget-forecast-point {
   fill: var(--mha-weather-text);
   stroke: color-mix(in srgb, var(--mha-weather-bg-end) 55%, transparent);
-  stroke-width: 1;
+  stroke-width: 1.15;
   vector-effect: non-scaling-stroke;
 }
 
@@ -1416,12 +1416,12 @@
 .mha-weather-widget-forecast-item .mha-weather-widget-forecast-temp {
   inline-size: 100%;
   text-align: center;
-  font-size: clamp(.58rem, 2.6cqi, .72rem);
+  font-size: clamp(.62rem, 2.8cqi, .78rem);
 }
 
 .mha-weather-widget-forecast-item .mha-weather-widget-forecast-icon {
-  inline-size: clamp(1rem, 4.4cqi, 1.4rem);
-  block-size: clamp(1rem, 4.4cqi, 1.4rem);
+  inline-size: clamp(1.05rem, 4.6cqi, 1.5rem);
+  block-size: clamp(1.05rem, 4.6cqi, 1.5rem);
 }
 
 .mha-weather-widget-forecast-precipitation {
@@ -1431,11 +1431,11 @@
   justify-content: center;
   gap: .16rem;
   color: var(--mha-weather-muted);
-  font-size: clamp(.52rem, 2.25cqi, .64rem);
+  font-size: clamp(.56rem, 2.4cqi, .68rem);
 }
 
 .mha-weather-widget-forecast-precipitation .mha-icon-symbol {
-  --mha-icon-symbol-size: .68rem;
+  --mha-icon-symbol-size: .74rem;
   --mha-icon-symbol-color: currentColor;
 }
 

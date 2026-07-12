@@ -1,6 +1,8 @@
 import { buildWeatherMetricModel } from "../ha/weather-page-data.js";
+import { buildWeatherModel } from "../ha/weather.js";
 import { t } from "../i18n/index.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
+import { createCurrentWeatherIcon } from "./weather-current-icons.js";
 import { css, freezeSize, isLocalWidgetKind, variant } from "./widget-definition-utils.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -42,6 +44,7 @@ const WEATHER_METRIC_SQUARE_VARIANT = variant("weather-metric-square", "Metric 2
 const WEATHER_METRIC_COMPACT_VARIANT = variant("weather-metric-compact", "Metric 2×1", 2, 1);
 const WEATHER_METRIC_WIDE_VARIANT = variant("weather-metric-wide", "Metric 4×1", 4, 1);
 const WEATHER_METRIC_TEXT_WIDE_VARIANT = variant("weather-metric-text-wide", "Text 4×1", 4, 1);
+const WEATHER_METRIC_TEXT_TALL_VARIANT = variant("weather-metric-text-tall", "Text 4×2", 4, 2);
 const WEATHER_METRIC_VARIANTS = Object.freeze([
   WEATHER_METRIC_SQUARE_VARIANT,
   WEATHER_METRIC_COMPACT_VARIANT,
@@ -50,18 +53,34 @@ const WEATHER_SUN_VARIANTS = Object.freeze([
   WEATHER_METRIC_SQUARE_VARIANT,
   WEATHER_METRIC_WIDE_VARIANT,
 ]);
+const WEATHER_SUMMARY_VARIANTS = Object.freeze([
+  WEATHER_METRIC_TEXT_TALL_VARIANT,
+  WEATHER_METRIC_TEXT_WIDE_VARIANT,
+]);
+const WEATHER_TENDENCY_VARIANTS = Object.freeze([
+  WEATHER_METRIC_COMPACT_VARIANT,
+  WEATHER_METRIC_TEXT_WIDE_VARIANT,
+]);
 
 function resolveWeatherMetricVariants(widget = {}) {
   if (widget.metricKey === "sun") return WEATHER_SUN_VARIANTS;
+  if (widget.metricKey === "summary") return WEATHER_SUMMARY_VARIANTS;
+  if (widget.metricKey === "pressure-tendency") return WEATHER_TENDENCY_VARIANTS;
   if (widget.valueKind === "text") return Object.freeze([WEATHER_METRIC_TEXT_WIDE_VARIANT]);
   return WEATHER_METRIC_VARIANTS;
 }
 
 function normalizeWeatherMetricSize(size = {}, { widget = {} } = {}) {
-  if (widget.valueKind === "text") return { w: 4, h: 1 };
   if (widget.metricKey === "sun") {
     return size.h <= 1 ? { w: 4, h: 1 } : { w: 2, h: 2 };
   }
+  if (widget.metricKey === "summary") {
+    return size.h <= 1 ? { w: 4, h: 1 } : { w: 4, h: 2 };
+  }
+  if (widget.metricKey === "pressure-tendency") {
+    return size.w >= 4 ? { w: 4, h: 1 } : { w: 2, h: 1 };
+  }
+  if (widget.valueKind === "text") return { w: 4, h: 1 };
   return size.h <= 1 ? { w: 2, h: 1 } : { w: 2, h: 2 };
 }
 
@@ -89,6 +108,16 @@ function clamp(value, min = 0, max = 1) {
 function getMetricLabel(metricKey = "metric", fallback = "Weather") {
   const [key, defaultLabel] = METRIC_LABELS[metricKey] || ["", fallback];
   return key ? t(key, defaultLabel) : fallback;
+}
+
+function getCompactWeatherLocation(location = "") {
+  const raw = String(location || "").trim();
+  if (!raw) return "";
+  const compact = raw.replace(
+    /\s+(?:prévisions?|previsions?|forecasts?|weather|météo|meteo)\s*$/iu,
+    "",
+  ).trim();
+  return compact || raw;
 }
 
 function normalizeWindKmh(value, unit = "") {
@@ -292,6 +321,58 @@ function createValueBlock(model) {
   return block;
 }
 
+function createSummaryWeatherHeader(weather = {}) {
+  const header = document.createElement("div");
+  header.className = "mha-weather-summary-overview";
+
+  header.append(createCurrentWeatherIcon(weather.condition || "unknown", {
+    className: "mha-weather-summary-icon",
+    label: weather.summary || t("weatherPage.current.title", "Current conditions"),
+  }));
+
+  const primary = document.createElement("div");
+  primary.className = "mha-weather-summary-primary";
+  primary.append(
+    createText("mha-weather-summary-temperature", weather.temperature || "--"),
+    createText("mha-weather-summary-location", getCompactWeatherLocation(weather.location)),
+  );
+
+  const secondary = document.createElement("div");
+  secondary.className = "mha-weather-summary-secondary";
+  secondary.append(createText(
+    "mha-weather-summary-condition",
+    weather.summary || t("common.unavailable", "Unavailable"),
+  ));
+  const metadata = weather.temperatureRange
+    || [weather.humidity, weather.wind].filter(Boolean).join(" · ");
+  if (metadata) {
+    secondary.append(createText("mha-weather-summary-metadata", metadata));
+  }
+
+  header.append(primary, secondary);
+  return header;
+}
+
+function renderSummaryMetric(root, model, weather = {}) {
+  root.dataset.metricLayout = "summary";
+
+  const divider = document.createElement("span");
+  divider.className = "mha-weather-summary-divider";
+  divider.setAttribute("aria-hidden", "true");
+
+  const body = document.createElement("section");
+  body.className = "mha-weather-summary-body";
+  body.append(
+    createText(
+      "mha-weather-summary-eyebrow",
+      getMetricLabel("summary", model.title || "Weather summary"),
+    ),
+    createText("mha-weather-summary-text", model.value || "--"),
+  );
+
+  root.append(createSummaryWeatherHeader(weather), divider, body);
+}
+
 function renderSunMetric(root, model, header) {
   const sunValues = document.createElement("div");
   sunValues.className = "mha-weather-metric-sun-values";
@@ -316,7 +397,7 @@ function renderSunMetric(root, model, header) {
   );
 }
 
-function renderMetric(root, model) {
+function renderMetric(root, model, { weatherModel = null } = {}) {
   root.replaceChildren();
   root.dataset.metricKey = model.metricKey;
   root.dataset.metricKind = model.valueKind || "number";
@@ -327,8 +408,15 @@ function renderMetric(root, model) {
   const header = document.createElement("div");
   header.className = "mha-weather-metric-header";
   const label = getMetricLabel(model.metricKey, model.title || "Weather");
+  const iconBubble = document.createElement("span");
+  iconBubble.className = "mha-weather-metric-icon-bubble";
+  iconBubble.append(createIconSymbol({
+    name: model.icon || "weather",
+    label,
+    className: "mha-weather-metric-glyph",
+  }));
   header.append(
-    createIconSymbol({ name: model.icon || "weather", label }),
+    iconBubble,
     createText("mha-weather-metric-label", label),
   );
 
@@ -351,6 +439,11 @@ function renderMetric(root, model) {
   if (model.metricKey === "sun") {
     root.dataset.metricLayout = "sun";
     renderSunMetric(root, model, header);
+    return;
+  }
+
+  if (model.metricKey === "summary") {
+    renderSummaryMetric(root, model, weatherModel || {});
     return;
   }
 
@@ -384,9 +477,22 @@ export function createWeatherMetricWidgetContent(widget = {}, {
   root.dataset.widgetComponent = "weather-metric";
 
   const renderCurrent = () => {
-    const compactSize = widget.metricKey === "sun" || widget.valueKind === "text" ? "4x1" : "2x1";
-    root.dataset.weatherMetricSize = context.widgetH <= 1 ? compactSize : "2x2";
-    renderMetric(root, buildWeatherMetricModel(context.hass, widget, entityVisibilityConfig));
+    if (widget.metricKey === "sun") {
+      root.dataset.weatherMetricSize = context.widgetH <= 1 ? "4x1" : "2x2";
+    } else if (widget.valueKind === "text") {
+      root.dataset.weatherMetricSize = context.widgetH >= 2 && context.widgetW >= 4
+        ? "4x2"
+        : context.widgetW >= 4 ? "4x1" : "2x1";
+    } else {
+      root.dataset.weatherMetricSize = context.widgetH <= 1 ? "2x1" : "2x2";
+    }
+    const model = buildWeatherMetricModel(context.hass, widget, entityVisibilityConfig);
+    const weatherModel = widget.metricKey === "summary"
+      ? buildWeatherModel(context.hass, {
+        entityId: widget.weatherEntityId || "",
+      }, entityVisibilityConfig)
+      : null;
+    renderMetric(root, model, { weatherModel });
   };
 
   root.__mhaUpdateFromHass = nextHass => {
@@ -428,7 +534,7 @@ export const WEATHER_METRIC_WIDGET_DEFINITION = Object.freeze({
   css: css("styles/widgets/weather-metric-widget.css"),
   preview: "weather",
   aliases: ["weather-metric-widget"],
-  variantAliases: ["weather-metric-square", "weather-metric-compact", "weather-metric-wide", "weather-metric-text-wide"],
+  variantAliases: ["weather-metric-square", "weather-metric-compact", "weather-metric-wide", "weather-metric-text-wide", "weather-metric-text-tall"],
   defaultVariant: "weather-metric-square",
   defaultSize: freezeSize(2, 2),
   normalizeSize: normalizeWeatherMetricSize,
@@ -461,6 +567,7 @@ export const WEATHER_METRIC_WIDGET_DEFINITION = Object.freeze({
     WEATHER_METRIC_COMPACT_VARIANT,
     WEATHER_METRIC_WIDE_VARIANT,
     WEATHER_METRIC_TEXT_WIDE_VARIANT,
+    WEATHER_METRIC_TEXT_TALL_VARIANT,
   ],
 });
 

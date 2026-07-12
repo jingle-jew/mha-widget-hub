@@ -1,7 +1,18 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
+import { createWeatherMetricWidgetContent } from "../src/widgets/weather-metric-widget.js";
 import { createWeatherWidgetContent } from "../src/widgets/weather-widget.js";
+
+function findByClass(node, className) {
+  if (!node) return null;
+  if (node.className === className) return node;
+  for (const child of node.childNodes || []) {
+    const match = findByClass(child, className);
+    if (match) return match;
+  }
+  return null;
+}
 
 function installDom() {
   class FakeNode {}
@@ -30,6 +41,61 @@ function installDom() {
     },
   };
 }
+
+test("weather summary metric combines current weather with narrative text", () => {
+  installDom();
+
+  const hass = {
+    states: {
+      "weather.home": {
+        entity_id: "weather.home",
+        state: "partlycloudy",
+        attributes: {
+          friendly_name: "Val-d'Or Prévisions",
+          temperature: 26,
+          temperature_unit: "°C",
+          humidity: 43,
+          wind_speed: 18,
+          wind_speed_unit: "km/h",
+        },
+      },
+      "sensor.val_d_or_summary": {
+        entity_id: "sensor.val_d_or_summary",
+        state: "Alternance de soleil et de nuages aujourd’hui.",
+        attributes: {
+          friendly_name: "Résumé",
+        },
+      },
+    },
+    config: {
+      unit_system: {
+        temperature: "°C",
+        wind_speed: "km/h",
+      },
+    },
+  };
+
+  const content = createWeatherMetricWidgetContent({
+    kind: "weather-metric",
+    metricKey: "summary",
+    valueKind: "text",
+    sourceType: "entity",
+    entityId: "sensor.val_d_or_summary",
+    weatherEntityId: "weather.home",
+  }, {
+    widgetW: 4,
+    widgetH: 2,
+    hass,
+  });
+
+  assert.equal(content.dataset.metricLayout, "summary");
+  assert.equal(findByClass(content, "mha-weather-summary-temperature")?.textContent, "26°C");
+  assert.equal(findByClass(content, "mha-weather-summary-location")?.textContent, "Val-d'Or");
+  assert.equal(
+    findByClass(content, "mha-weather-summary-text")?.textContent,
+    "Alternance de soleil et de nuages aujourd’hui.",
+  );
+});
 
 test("weather widget updates its internal layout while resizing", () => {
   installDom();
