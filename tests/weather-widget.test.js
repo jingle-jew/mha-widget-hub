@@ -214,6 +214,52 @@ test("weather widget updates its internal layout while resizing", () => {
   );
 });
 
+test("weather forecast timeline grid matches the rendered forecast cards", () => {
+  installDom();
+
+  const content = createWeatherWidgetContent({
+    kind: "weather",
+    entityId: "weather.home",
+    displayMode: "forecast",
+    forecastType: "hourly",
+  }, {
+    widgetW: 4,
+    widgetH: 2,
+    hass: {
+      states: {
+        "weather.home": {
+          entity_id: "weather.home",
+          state: "partlycloudy",
+          attributes: {
+            temperature: 8,
+            temperature_unit: "°C",
+            forecast: Array.from({ length: 12 }, (_, index) => ({
+              datetime: `2026-07-12T${String(index).padStart(2, "0")}:00:00`,
+              temperature: 8 + index,
+              condition: "partlycloudy",
+              precipitation_probability: index * 5,
+            })),
+          },
+        },
+      },
+      config: {
+        unit_system: {
+          temperature: "°C",
+          wind_speed: "km/h",
+        },
+      },
+    },
+  });
+
+  const timeline = findByClass(content, "mha-weather-widget-forecast-timeline");
+  const chart = findByClass(content, "mha-weather-widget-forecast-chart");
+  const svg = chart?.childNodes[0];
+  const points = (svg?.childNodes || []).filter(node => node.tagName === "CIRCLE");
+  assert.equal(timeline?.style["--mha-weather-forecast-count"], "5");
+  assert.equal(timeline?.childNodes.length, 5);
+  assert.equal(points.length, 5);
+});
+
 test("weather narrative widget renders honestly when forecasts are unavailable", () => {
   installDom();
 

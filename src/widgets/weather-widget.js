@@ -272,6 +272,7 @@ function createForecastItem(item = {}) {
 function createForecastStack(forecast = [], title = "", forecastType = "daily") {
   const stack = document.createElement("section");
   stack.className = "mha-weather-widget-forecast";
+  const forecastItems = forecast.slice(0, 5);
   const header = document.createElement("div");
   header.className = "mha-weather-widget-forecast-header";
   header.append(
@@ -289,7 +290,7 @@ function createForecastStack(forecast = [], title = "", forecastType = "daily") 
   );
   stack.append(header);
 
-  if (!forecast.length) {
+  if (!forecastItems.length) {
     stack.dataset.empty = "true";
     stack.append(createText(
       "mha-weather-widget-forecast-empty",
@@ -298,13 +299,13 @@ function createForecastStack(forecast = [], title = "", forecastType = "daily") 
     return stack;
   }
 
-  const chart = createForecastChart(forecast);
+  const chart = createForecastChart(forecastItems);
   if (chart) stack.append(chart);
 
   const timeline = document.createElement("div");
   timeline.className = "mha-weather-widget-forecast-timeline";
-  timeline.style.setProperty("--mha-weather-forecast-count", String(forecast.length));
-  forecast.slice(0, 5).forEach(item => timeline.append(createForecastItem(item)));
+  timeline.style.setProperty("--mha-weather-forecast-count", String(forecastItems.length));
+  forecastItems.forEach(item => timeline.append(createForecastItem(item)));
   stack.append(timeline);
   return stack;
 }
