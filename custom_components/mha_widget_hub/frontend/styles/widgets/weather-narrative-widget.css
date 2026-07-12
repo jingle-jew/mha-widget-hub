@@ -7,6 +7,15 @@
   --mha-weather-narrative-muted: rgba(255, 255, 255, .74);
   --mha-weather-narrative-surface: rgba(255, 255, 255, .14);
   --mha-weather-narrative-border: rgba(255, 255, 255, .22);
+  --mha-weather-sun: #ffd75e;
+  --mha-weather-sun-core: #fff3a6;
+  --mha-weather-moon: #f6f8ff;
+  --mha-weather-cloud: rgba(255, 255, 255, .94);
+  --mha-weather-cloud-shade: rgba(216, 238, 255, .82);
+  --mha-weather-rain: #bde9ff;
+  --mha-weather-snow: rgba(255, 255, 255, .96);
+  --mha-weather-bolt: #ffe26b;
+  --mha-weather-fog: rgba(255, 255, 255, .72);
   background:
     radial-gradient(circle at 12% 0%, var(--mha-weather-narrative-glow), transparent 34%),
     linear-gradient(145deg, var(--mha-weather-narrative-start), var(--mha-weather-narrative-end));
@@ -299,4 +308,3 @@
     transition: none;
   }
 }
-

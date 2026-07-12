@@ -58,7 +58,7 @@ function getPeriodKey(date, now) {
 
 function getPeriodLabel(date, now) {
   const key = getPeriodKey(date, now);
-  return t(`weatherNarrative.periods.${key}`, key === "tomorrowMorning" ? "tomorrow morning" : "today");
+  return t(`widgets.weatherNarrative.periods.${key}`, key === "tomorrowMorning" ? "tomorrow morning" : "today");
 }
 
 function getTimeLabel(date) {
@@ -106,7 +106,7 @@ function getStrongestWind(items, weather = {}) {
 }
 
 function translateMessage(key, fallback, params = {}) {
-  return t(`weatherNarrative.messages.${key}`, fallback, params);
+  return t(`widgets.weatherNarrative.messages.${key}`, fallback, params);
 }
 
 function createEvent({

@@ -607,6 +607,10 @@ export const fr = Object.freeze({
         label: "Prévisions météo",
         description: "Prévisions verticales.",
       }),
+      "weather-brief": Object.freeze({
+        label: "Bulletin météo",
+        description: "Un bulletin météo contextuel avec un graphique adaptatif.",
+      }),
       "compact-media": Object.freeze({
         label: "Média compact",
         description: "Lecture rapide.",

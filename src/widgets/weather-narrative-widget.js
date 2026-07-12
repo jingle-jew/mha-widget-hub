@@ -50,21 +50,21 @@ function getChartSeries(event, weather) {
   const definitions = {
     temperature: {
       key: "temperatureValue",
-      label: t("weatherNarrative.charts.temperature", "Temperature"),
+      label: t("widgets.weatherNarrative.charts.temperature", "Temperature"),
       unit: weather.temperatureUnit || "°",
       className: "temperature",
     },
     precipitation: {
       key: "precipitationProbability",
       fallbackKey: "precipitation",
-      label: t("weatherNarrative.charts.precipitation", "Precipitation probability"),
+      label: t("widgets.weatherNarrative.charts.precipitation", "Precipitation probability"),
       unit: "%",
       className: "precipitation",
     },
     wind: {
       key: "windGustValue",
       fallbackKey: "windSpeedValue",
-      label: t("weatherNarrative.charts.wind", "Wind gusts"),
+      label: t("widgets.weatherNarrative.charts.wind", "Wind gusts"),
       unit: weather.windUnit || "",
       className: "wind",
     },
@@ -179,7 +179,7 @@ function createNarrativeVisual(event, weather) {
   visual.className = "mha-weather-narrative-visual";
   visual.append(createText(
     "mha-weather-narrative-visual-title",
-    t(`weatherNarrative.charts.${event.chartKind}`, event.chartKind === "empty" ? "Current conditions" : "Next hours"),
+    t(`widgets.weatherNarrative.charts.${event.chartKind}`, event.chartKind === "empty" ? "Current conditions" : "Next hours"),
   ));
   if (event.chartKind === "alert") {
     visual.append(createAlertVisual(event));
@@ -202,7 +202,7 @@ function renderWeatherNarrative(root, weather, widget, now = new Date()) {
   const copy = document.createElement("div");
   copy.className = "mha-weather-narrative-copy";
   copy.append(
-    createText("mha-weather-narrative-location", weather.location || t("weatherNarrative.title", "Weather brief")),
+    createText("mha-weather-narrative-location", weather.location || t("widgets.weatherNarrative.title", "Weather brief")),
     createText("mha-weather-narrative-headline", event.headline),
     createText("mha-weather-narrative-secondary", event.secondary),
   );
@@ -280,8 +280,8 @@ export const WEATHER_NARRATIVE_WIDGET_CONFIG_MANIFEST = Object.freeze({
   type: "weather-narrative",
   title: "Configure weather brief",
   hint: "Choose the weather entity used for the narrative brief.",
-  titleKey: "weatherNarrative.config.title",
-  hintKey: "weatherNarrative.config.hint",
+  titleKey: "widgets.weatherNarrative.config.title",
+  hintKey: "widgets.weatherNarrative.config.hint",
   createDraft: createWeatherConfigDraft,
   build: buildWeatherWidgetConfig,
   renderFields: renderWeatherConfigFields,
