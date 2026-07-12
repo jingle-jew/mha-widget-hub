@@ -97,6 +97,79 @@ test("weather summary metric combines current weather with narrative text", () =
   );
 });
 
+test("weather metric 2x1 uses the simple-button sibling layout", () => {
+  installDom();
+
+  const hass = {
+    states: {
+      "sensor.feels_like": {
+        entity_id: "sensor.feels_like",
+        state: "5.6",
+        attributes: {
+          friendly_name: "Ressenti",
+          unit_of_measurement: "°C",
+          device_class: "temperature",
+        },
+      },
+    },
+  };
+
+  const content = createWeatherMetricWidgetContent({
+    kind: "weather-metric",
+    metricKey: "apparent-temperature",
+    sourceType: "entity",
+    entityId: "sensor.feels_like",
+  }, {
+    widgetW: 2,
+    widgetH: 1,
+    hass,
+  });
+
+  assert.equal(content.dataset.weatherMetricSize, "2x1");
+  assert.equal(content.dataset.metricLayout, "compact");
+  assert.equal(content.childNodes.length, 2);
+  assert.equal(content.childNodes[0].className, "mha-weather-metric-icon-bubble");
+  assert.equal(content.childNodes[1].className, "mha-weather-metric-compact-text");
+  assert.equal(content.childNodes[1].childNodes[0].className, "mha-weather-metric-label");
+  assert.equal(content.childNodes[1].childNodes[1].className, "mha-weather-metric-value-block");
+});
+
+test("weather metric text 2x1 keeps its state below the label", () => {
+  installDom();
+
+  const hass = {
+    states: {
+      "sensor.pressure_tendency": {
+        entity_id: "sensor.pressure_tendency",
+        state: "En baisse",
+        attributes: {
+          friendly_name: "Tendance",
+        },
+      },
+    },
+  };
+
+  const content = createWeatherMetricWidgetContent({
+    kind: "weather-metric",
+    metricKey: "pressure-tendency",
+    valueKind: "text",
+    sourceType: "entity",
+    entityId: "sensor.pressure_tendency",
+  }, {
+    widgetW: 2,
+    widgetH: 1,
+    hass,
+  });
+
+  assert.equal(content.dataset.metricLayout, "compact");
+  assert.equal(content.childNodes.length, 2);
+  assert.equal(content.childNodes[0].className, "mha-weather-metric-icon-bubble");
+  assert.equal(content.childNodes[1].className, "mha-weather-metric-compact-text");
+  assert.equal(content.childNodes[1].childNodes[0].className, "mha-weather-metric-label");
+  assert.equal(content.childNodes[1].childNodes[1].className, "mha-weather-metric-text-value");
+  assert.equal(content.childNodes[1].childNodes[1].textContent, "En baisse");
+});
+
 test("weather widget updates its internal layout while resizing", () => {
   installDom();
 

@@ -359,7 +359,7 @@
   translate: -50% -50%;
 }
 
-.mha-weather-metric-widget[data-weather-metric-size="2x1"] {
+.mha-weather-metric-widget[data-weather-metric-size="2x1"][data-metric-layout="compact"] {
   --mha-weather-metric-compact-icon-size: var(--mha-control-icon-bubble-size, 2.75rem);
   --mha-weather-metric-compact-icon-radius: var(--mha-control-icon-bubble-radius, 999px);
   --mha-weather-metric-compact-icon-bg: var(
@@ -372,27 +372,28 @@
     color-mix(in srgb, var(--mha-text-primary) 10%, transparent)
   );
 
-  grid-template-columns: var(--mha-weather-metric-compact-icon-size) minmax(0, 1fr);
-  grid-template-rows: repeat(2, minmax(0, 1fr));
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
   align-items: center;
+  justify-content: start;
   justify-items: start;
   column-gap: var(--mha-control-gap, clamp(.62rem, min(6.5cqi, 17cqb), .95rem));
   row-gap: 0;
+  box-sizing: border-box;
   padding-inline-start: var(--mha-control-edge-balance, clamp(.18rem, 2.35cqi, .42rem));
 }
 
-.mha-weather-metric-widget[data-weather-metric-size="2x1"] .mha-weather-metric-header {
-  display: contents;
-}
-
-.mha-weather-metric-widget[data-weather-metric-size="2x1"] .mha-weather-metric-icon-bubble {
+.mha-weather-metric-widget[data-weather-metric-size="2x1"][data-metric-layout="compact"] .mha-weather-metric-icon-bubble {
   grid-column: 1;
-  grid-row: 1 / span 2;
+  grid-row: 1;
   align-self: center;
   justify-self: start;
   inline-size: var(--mha-weather-metric-compact-icon-size);
   block-size: var(--mha-weather-metric-compact-icon-size);
   aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  place-content: center;
   border: 1px solid var(--mha-weather-metric-compact-icon-border);
   border-radius: var(--mha-weather-metric-compact-icon-radius);
   background: var(--mha-weather-metric-compact-icon-bg);
@@ -403,50 +404,67 @@
   overflow: hidden;
 }
 
-.mha-weather-metric-widget[data-weather-metric-size="2x1"] .mha-weather-metric-icon-bubble .mha-icon-symbol,
-.mha-weather-metric-widget[data-weather-metric-size="2x1"] .mha-weather-metric-glyph {
+.mha-weather-metric-widget[data-weather-metric-size="2x1"][data-metric-layout="compact"] .mha-weather-metric-icon-bubble .mha-icon-symbol,
+.mha-weather-metric-widget[data-weather-metric-size="2x1"][data-metric-layout="compact"] .mha-weather-metric-glyph {
   --mha-icon-symbol-size: var(--mha-control-icon-glyph-size, 1.55rem);
   --mha-icon-symbol-color: currentColor;
   justify-self: center;
   margin: 0;
 }
 
-.mha-weather-metric-widget[data-weather-metric-size="2x1"] .mha-weather-metric-label {
+.mha-weather-metric-widget[data-weather-metric-size="2x1"][data-metric-layout="compact"] .mha-weather-metric-compact-text {
   grid-column: 2;
   grid-row: 1;
-  align-self: end;
+  align-self: center;
   justify-self: start;
-  inline-size: 100%;
+  min-inline-size: 0;
+  min-block-size: 0;
+  max-inline-size: 100%;
+  inline-size: fit-content;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  grid-auto-flow: row;
+  align-content: center;
+  justify-items: start;
+  gap: var(--mha-type-stack-gap, clamp(.32rem, 2.7cqb, .62rem));
+  overflow: hidden;
   text-align: start;
 }
 
-.mha-weather-metric-widget[data-weather-metric-size="2x1"] .mha-weather-metric-description,
-.mha-weather-metric-widget[data-weather-metric-size="2x1"] .mha-weather-metric-progress,
-.mha-weather-metric-widget[data-weather-metric-size="2x1"] .mha-weather-metric-compass,
-.mha-weather-metric-widget[data-weather-metric-size="2x1"] .mha-weather-metric-horizon {
-  display: none;
+.mha-weather-metric-widget[data-weather-metric-size="2x1"][data-metric-layout="compact"] .mha-weather-metric-label {
+  grid-column: 1;
+  grid-row: 1;
 }
 
-.mha-weather-metric-widget[data-weather-metric-size="2x1"] .mha-weather-metric-value-block,
-.mha-weather-metric-widget[data-weather-metric-size="2x1"] > .mha-weather-metric-value,
-.mha-weather-metric-widget[data-weather-metric-size="2x1"] .mha-weather-metric-text-value {
-  grid-column: 2;
+.mha-weather-metric-widget[data-weather-metric-size="2x1"][data-metric-layout="compact"] .mha-weather-metric-value-block,
+.mha-weather-metric-widget[data-weather-metric-size="2x1"][data-metric-layout="compact"] .mha-weather-metric-text-value {
+  grid-column: 1;
   grid-row: 2;
-  align-self: start;
+  position: static;
+  inset: auto;
+  align-self: auto;
   justify-self: start;
   min-inline-size: 0;
   max-inline-size: 100%;
   text-align: start;
 }
 
-.mha-weather-metric-widget[data-weather-metric-size="2x1"] .mha-weather-metric-value-block {
+.mha-weather-metric-widget[data-weather-metric-size="2x1"][data-metric-layout="compact"] .mha-weather-metric-description,
+.mha-weather-metric-widget[data-weather-metric-size="2x1"][data-metric-layout="compact"] .mha-weather-metric-progress,
+.mha-weather-metric-widget[data-weather-metric-size="2x1"][data-metric-layout="compact"] .mha-weather-metric-compass,
+.mha-weather-metric-widget[data-weather-metric-size="2x1"][data-metric-layout="compact"] .mha-weather-metric-horizon {
+  display: none;
+}
+
+.mha-weather-metric-widget[data-weather-metric-size="2x1"][data-metric-layout="compact"] .mha-weather-metric-value-block {
   display: flex;
   align-items: baseline;
   gap: .28em;
   overflow: hidden;
 }
 
-.mha-weather-metric-widget[data-weather-metric-size="2x1"] .mha-weather-metric-text-value {
+.mha-weather-metric-widget[data-weather-metric-size="2x1"][data-metric-layout="compact"] .mha-weather-metric-text-value {
   display: block;
   overflow: hidden;
   text-overflow: ellipsis;

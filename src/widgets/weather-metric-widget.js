@@ -321,6 +321,13 @@ function createValueBlock(model) {
   return block;
 }
 
+function renderCompactMetric(root, iconBubble, labelElement, valueElement) {
+  const textStack = document.createElement("span");
+  textStack.className = "mha-weather-metric-compact-text";
+  textStack.append(labelElement, valueElement);
+  root.append(iconBubble, textStack);
+}
+
 function createSummaryWeatherHeader(weather = {}) {
   const header = document.createElement("div");
   header.className = "mha-weather-summary-overview";
@@ -408,6 +415,7 @@ function renderMetric(root, model, { weatherModel = null } = {}) {
   const header = document.createElement("div");
   header.className = "mha-weather-metric-header";
   const label = getMetricLabel(model.metricKey, model.title || "Weather");
+  const labelElement = createText("mha-weather-metric-label", label);
   const iconBubble = document.createElement("span");
   iconBubble.className = "mha-weather-metric-icon-bubble";
   iconBubble.append(createIconSymbol({
@@ -415,12 +423,17 @@ function renderMetric(root, model, { weatherModel = null } = {}) {
     label,
     className: "mha-weather-metric-glyph",
   }));
-  header.append(
-    iconBubble,
-    createText("mha-weather-metric-label", label),
-  );
+  header.append(iconBubble, labelElement);
+
+  const isCompact = root.dataset.weatherMetricSize === "2x1";
+  if (isCompact) root.dataset.metricLayout = "compact";
 
   if (!model.entityId || !model.entityAllowed || !model.entityAvailable) {
+    if (isCompact) {
+      renderCompactMetric(root, iconBubble, labelElement, createValueBlock(model));
+      return;
+    }
+
     root.append(
       header,
       createText("mha-weather-metric-value", "--"),
@@ -448,11 +461,19 @@ function renderMetric(root, model, { weatherModel = null } = {}) {
   }
 
   if (model.valueKind === "text") {
-    root.dataset.metricLayout = "text";
-    root.append(
-      header,
-      createText("mha-weather-metric-text-value", model.value || "--"),
-    );
+    const textValue = createText("mha-weather-metric-text-value", model.value || "--");
+    if (isCompact) {
+      renderCompactMetric(root, iconBubble, labelElement, textValue);
+    } else {
+      root.dataset.metricLayout = "text";
+      root.append(header, textValue);
+    }
+    return;
+  }
+
+  const valueBlock = createValueBlock(model);
+  if (isCompact) {
+    renderCompactMetric(root, iconBubble, labelElement, valueBlock);
     return;
   }
 
@@ -461,7 +482,7 @@ function renderMetric(root, model, { weatherModel = null } = {}) {
   root.dataset.metricLayout = visual ? "visual" : "value-only";
   root.append(header);
   if (description) root.append(createText("mha-weather-metric-description", description));
-  root.append(createValueBlock(model));
+  root.append(valueBlock);
   if (visual) root.append(visual);
 }
 
