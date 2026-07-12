@@ -26,6 +26,7 @@ export function addPage(
     icon = "",
     pageType = PAGE_TYPES.GRID,
     pageConfig = {},
+    initialWidgets = [],
     now = Date.now,
     normalizeWidget,
   } = {},
@@ -41,7 +42,7 @@ export function addPage(
     id,
     name: getDefaultPageName(type, index - 1),
     icon: icon || getDefaultPageIcon(type),
-    widgets: [],
+    widgets: Array.isArray(initialWidgets) ? initialWidgets : [],
   };
   if (type !== PAGE_TYPES.GRID) {
     rawPage.type = type;

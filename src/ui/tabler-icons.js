@@ -213,6 +213,63 @@ export const TABLER_ICON_REGISTRY = Object.freeze({
     "M8 12a4 4 0 1 0 8 0a4 4 0 1 0 -8 0",
     "M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7",
   ]),
+  "droplet-percent": defineTablerIcon([
+    "M12 3.1l4.4 5.3a6 6 0 1 1 -8.8 0l4.4 -5.3",
+    "M9 11l6 6",
+    "M9.5 16.5l0 .01",
+    "M14.5 11.5l0 .01",
+  ]),
+  umbrella: defineTablerIcon([
+    "M4 12a8 8 0 0 1 16 0z",
+    "M12 12v6a2 2 0 0 0 4 0",
+  ]),
+  wind: defineTablerIcon([
+    "M5 8h8a2 2 0 1 0 -2 -2",
+    "M3 12h13a2 2 0 1 1 -2 2",
+    "M5 16h5",
+  ]),
+  gauge: defineTablerIcon([
+    "M12 14l4 -4",
+    "M3 14a9 9 0 1 1 18 0",
+    "M5 19h14",
+  ]),
+  "sun-high": defineTablerIcon([
+    "M8 12a4 4 0 1 0 8 0a4 4 0 1 0 -8 0",
+    "M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7",
+  ]),
+  air: defineTablerIcon([
+    "M3 8h10a2 2 0 1 0 -2 -2",
+    "M3 12h15a2 2 0 1 1 -2 2",
+    "M3 16h7",
+  ]),
+  eye: defineTablerIcon([
+    "M3 12s3 -6 9 -6s9 6 9 6s-3 6 -9 6s-9 -6 -9 -6",
+    "M9 12a3 3 0 1 0 6 0a3 3 0 1 0 -6 0",
+  ]),
+  mist: defineTablerIcon([
+    "M5 5h14",
+    "M3 9h18",
+    "M5 13h14",
+    "M3 17h18",
+  ]),
+  sunrise: defineTablerIcon([
+    "M3 18h18",
+    "M5 14h14",
+    "M12 10v-7",
+    "M9 6l3 -3l3 3",
+    "M4.2 10.2l1.4 1.4m12.8 0l1.4 -1.4",
+  ]),
+  sunset: defineTablerIcon([
+    "M3 18h18",
+    "M5 14h14",
+    "M12 3v7",
+    "M9 7l3 3l3 -3",
+    "M4.2 10.2l1.4 1.4m12.8 0l1.4 -1.4",
+  ]),
+  compass: defineTablerIcon([
+    "M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0",
+    "M14.5 9.5l-2 5l-3 1l2 -5l3 -1",
+  ]),
   moon: defineTablerIcon([
     "M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454l0 .008",
   ]),
@@ -258,6 +315,17 @@ export const MHA_TABLER_ICON_REGISTRY = Object.freeze({
   palette: "palette",
   image: "photo",
   sun: "sun",
+  humidity: "droplet-percent",
+  umbrella: "umbrella",
+  wind: "wind",
+  pressure: "gauge",
+  uv: "sun-high",
+  "air-quality": "air",
+  visibility: "eye",
+  fog: "mist",
+  sunrise: "sunrise",
+  sunset: "sunset",
+  compass: "compass",
   moon: "moon",
 });
 

@@ -9,6 +9,7 @@ import {
   decorateWidgetShell,
 } from "./widget-renderers.js";
 import {
+  getWidgetCapabilities,
   getWidgetConfigType,
   getWidgetRendererName,
   getWidgetShellBehavior,
@@ -39,6 +40,7 @@ export function createWidgetShell(
 ) {
   const widgetKind = resolveWidgetKind(widget);
   const widgetRendererName = getWidgetRendererName(widget);
+  const widgetCapabilities = getWidgetCapabilities(widget);
   const shellBehavior = getWidgetShellBehavior(widget);
   const widgetConfigType = getWidgetConfigType(widget);
   const size = normalizeWidgetForKind(widget, {
@@ -130,16 +132,19 @@ export function createWidgetShell(
   badge.className = "mha-size-badge";
   badge.textContent = `${sizeToString(size)} · ${density}`;
 
-  shell.append(
+  const shellChildren = [
     tools,
     createMoveOverlay(widget.id, onMove),
     badge,
-    createResizeHandle(widget.id, {
+  ];
+  if (widgetCapabilities.resizable) {
+    shellChildren.push(createResizeHandle(widget.id, {
       onStartResize,
       onUpdateResize,
       onFinishResize,
-    }),
-  );
+    }));
+  }
+  shell.append(...shellChildren);
 
   return shell;
 }

@@ -207,10 +207,12 @@ export const en = Object.freeze({
     }),
     pageTypeLabels: Object.freeze({
       grid: "Grid",
+      weather: "Weather",
       "media-players": "Media",
     }),
     pageTypeDescriptions: Object.freeze({
       grid: "A standard page with MHA widgets.",
+      weather: "A weather dashboard automatically composed with the MHA grid.",
       "media-players": "A dedicated page for media players.",
     }),
     mediaPageVisualStyles: Object.freeze({
@@ -245,6 +247,83 @@ export const en = Object.freeze({
     appearance: "Appearance",
     visualStyle: "Visual style",
     blurBackground: "Blur artwork in the background",
+  }),
+  weatherPage: Object.freeze({
+    notDetected: "No matching Home Assistant entity detected",
+    sunrise: "Sunrise",
+    sunset: "Sunset",
+    current: Object.freeze({
+      title: "Current conditions",
+      calm: "Comfortable conditions",
+      humid: "Humid air",
+      windy: "Windy conditions",
+    }),
+    forecast: Object.freeze({
+      nextHours: "Next hours",
+      nextDays: "Next days",
+      precipitation: "Precipitation",
+    }),
+    metrics: Object.freeze({
+      humidity: "Humidity",
+      precipitation: "Precipitation",
+      wind: "Wind",
+      pressure: "Pressure",
+      uv: "UV index",
+      airQuality: "Air quality",
+      visibility: "Visibility",
+      sun: "Sunrise & sunset",
+    }),
+    descriptions: Object.freeze({
+      humidity: Object.freeze({
+        veryDry: "Very dry air",
+        dry: "Rather dry air",
+        comfortable: "Comfortable humidity",
+        humid: "Humid air",
+        veryHumid: "Very humid air",
+      }),
+      precipitation: Object.freeze({
+        none: "No precipitation expected",
+        low: "Low chance",
+        possible: "Precipitation possible",
+        likely: "Precipitation likely",
+      }),
+      wind: Object.freeze({
+        calm: "Calm",
+        light: "Light wind",
+        breezy: "Breezy",
+        windy: "Windy",
+        strong: "Strong wind",
+      }),
+      pressure: Object.freeze({
+        low: "Low pressure",
+        normal: "Normal pressure",
+        high: "High pressure",
+      }),
+      uv: Object.freeze({
+        low: "Low",
+        moderate: "Moderate",
+        high: "High",
+        veryHigh: "Very high",
+        extreme: "Extreme",
+      }),
+      "air-quality": Object.freeze({
+        low: "Low health risk",
+        moderate: "Moderate",
+        high: "Poor air quality",
+        veryHigh: "Very poor air quality",
+        hazardous: "Hazardous",
+      }),
+      visibility: Object.freeze({
+        poor: "Very poor visibility",
+        reduced: "Reduced visibility",
+        good: "Good visibility",
+        excellent: "Excellent visibility",
+      }),
+      sun: Object.freeze({
+        day: "Daylight",
+        night: "Night",
+      }),
+    }),
   }),
   admin: Object.freeze({
     title: "MHA Admin",
@@ -357,6 +436,7 @@ export const en = Object.freeze({
       forecast: "Forecasts",
       forecastDaily: "Daily",
       forecastHourly: "Hourly",
+      forecastUnavailable: "Forecast unavailable",
       forecastTypes: Object.freeze({
         daily: "Daily",
         hourly: "Hourly",

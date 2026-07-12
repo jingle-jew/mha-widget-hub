@@ -1,9 +1,11 @@
 import { t } from "../i18n/index.js";
 import { findThemeStyleId } from "../settings/theme-registry.js";
+import { createWeatherPageSeed } from "./weather-page-seed.js";
 
 export const PAGE_TYPES = Object.freeze({
   GRID: "grid",
   MEDIA_PLAYERS: "media-players",
+  WEATHER: "weather",
 });
 
 export const MEDIA_PAGE_VISUAL_STYLES = Object.freeze([
@@ -23,8 +25,12 @@ export function normalizePageType(type = PAGE_TYPES.GRID) {
 
 export function createDefaultPageConfig(type = PAGE_TYPES.GRID, {
   availablePlayerIds = [],
+  weatherEntityId = "",
 } = {}) {
   const normalizedType = normalizePageType(type);
+  if (normalizedType === PAGE_TYPES.WEATHER) {
+    return { weatherEntityId: String(weatherEntityId || "").trim() };
+  }
   if (normalizedType !== PAGE_TYPES.MEDIA_PLAYERS) return {};
 
   const uniquePlayerIds = [...new Set(
@@ -68,22 +74,32 @@ export function normalizePageConfig(type = PAGE_TYPES.GRID, config = {}) {
   if (normalizedType === PAGE_TYPES.MEDIA_PLAYERS) {
     return normalizeMediaPageConfig(config);
   }
+  if (normalizedType === PAGE_TYPES.WEATHER) {
+    return { weatherEntityId: String(config?.weatherEntityId || "").trim() };
+  }
   return {};
 }
 
 export function getDefaultPageName(type = PAGE_TYPES.GRID, index = 0) {
   const normalizedType = normalizePageType(type);
   if (normalizedType === PAGE_TYPES.MEDIA_PLAYERS) return "Media Players";
+  if (normalizedType === PAGE_TYPES.WEATHER) return "Weather";
   return index === 0 ? "Home" : `Page ${index + 1}`;
 }
 
 export function getDefaultPageIcon(type = PAGE_TYPES.GRID) {
   const normalizedType = normalizePageType(type);
-  return normalizedType === PAGE_TYPES.MEDIA_PLAYERS ? "media-player" : "grid";
+  if (normalizedType === PAGE_TYPES.MEDIA_PLAYERS) return "media-player";
+  if (normalizedType === PAGE_TYPES.WEATHER) return "weather";
+  return "grid";
 }
 
 export function isMediaPlayersPage(page = {}) {
   return normalizePageType(page?.type) === PAGE_TYPES.MEDIA_PLAYERS;
+}
+
+export function isWeatherPage(page = {}) {
+  return normalizePageType(page?.type) === PAGE_TYPES.WEATHER;
 }
 
 export function isMediaPagePanelWidget(widget = {}) {
@@ -142,6 +158,10 @@ export function createMediaPageWidgetSeed({
   };
 }
 
+export function createWeatherPageWidgets(options = {}) {
+  return createWeatherPageSeed(options);
+}
+
 export function getPageCreatorTypeOptions({ themeStyle = "oneui" } = {}) {
   const options = [
     Object.freeze({
@@ -151,6 +171,13 @@ export function getPageCreatorTypeOptions({ themeStyle = "oneui" } = {}) {
       description: t("settings.pageTypeDescriptions.grid", "A standard page with MHA widgets."),
     }),
   ];
+
+  options.push(Object.freeze({
+    value: PAGE_TYPES.WEATHER,
+    icon: "weather",
+    label: t("settings.pageTypeLabels.weather", "Weather"),
+    description: t("settings.pageTypeDescriptions.weather", "A weather dashboard built from MHA widgets."),
+  }));
 
   if (supportsMediaPageTheme(themeStyle)) {
     options.push(Object.freeze({

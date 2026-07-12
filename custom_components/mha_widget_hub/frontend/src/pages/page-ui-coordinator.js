@@ -20,6 +20,7 @@ import {
 } from "./page-creator.js";
 import {
   createDefaultPageConfig,
+  createWeatherPageWidgets,
   getDefaultPageIcon,
   isMediaPageExperienceActive,
   isMediaPlayersPage,
@@ -50,6 +51,8 @@ export class PageUiCoordinator {
     getIsEditing = () => false,
     getThemeStyle = () => "oneui",
     getDockPosition = () => "left",
+    getHass = () => null,
+    getEntityVisibilityConfig = () => null,
     isMobileLandscapeLayout = () => false,
     normalizeWidget,
     savePages = () => false,
@@ -94,6 +97,8 @@ export class PageUiCoordinator {
     this.getIsEditing = (...args) => getIsEditing(...args);
     this.getThemeStyle = (...args) => getThemeStyle(...args);
     this.getDockPosition = (...args) => getDockPosition(...args);
+    this.getHass = (...args) => getHass(...args);
+    this.getEntityVisibilityConfig = (...args) => getEntityVisibilityConfig(...args);
     this.isMobileLandscapeLayout = (...args) => isMobileLandscapeLayout(...args);
     this.normalizeWidget = normalizeWidget;
     this.savePages = (...args) => savePages(...args);
@@ -203,12 +208,13 @@ export class PageUiCoordinator {
     return true;
   }
 
-  addPage({ icon = "grid", pageType = PAGE_TYPES.GRID, pageConfig = {} } = {}) {
+  addPage({ icon = "grid", pageType = PAGE_TYPES.GRID, pageConfig = {}, initialWidgets = [] } = {}) {
     const previousPage = this.getPages().find(page => page.id === this.getActivePageId()) || null;
     const result = addPage(this.getPages(), {
       icon,
       pageType,
       pageConfig,
+      initialWidgets,
       normalizeWidget: this.normalizeWidget,
     });
 
@@ -257,10 +263,20 @@ export class PageUiCoordinator {
     const pageType = !supportsMediaPageTheme(this.getThemeStyle())
       ? PAGE_TYPES.GRID
       : (this.getNewPageType() || PAGE_TYPES.GRID);
+    const weatherSeed = pageType === PAGE_TYPES.WEATHER
+      ? createWeatherPageWidgets({
+        hass: this.getHass(),
+        visibilityConfig: this.getEntityVisibilityConfig(),
+        pageId: `weather-${Date.now().toString(36)}`,
+      })
+      : null;
     return this.addPage({
       pageType,
       icon: getDefaultPageIcon(pageType),
-      pageConfig: createDefaultPageConfig(pageType),
+      pageConfig: createDefaultPageConfig(pageType, {
+        weatherEntityId: weatherSeed?.weatherEntityId || "",
+      }),
+      initialWidgets: weatherSeed?.widgets || [],
     });
   }
 

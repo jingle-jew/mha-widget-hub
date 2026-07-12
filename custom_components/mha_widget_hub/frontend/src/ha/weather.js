@@ -37,6 +37,11 @@ export function getWeatherSummary(condition = "") {
   return key ? t(key) : t("widgets.weather.title", "Weather");
 }
 
+function toFiniteNumber(value) {
+  const parsed = Number.parseFloat(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 function formatMetric(value, unit = "") {
   if (value == null || value === "") return "";
   return `${value}${unit ? ` ${unit}` : ""}`;
@@ -69,9 +74,14 @@ export function normalizeWeatherForecasts(forecast = [], {
 } = {}) {
   if (!Array.isArray(forecast)) return [];
   return forecast.slice(0, 5).map((item, index) => {
+    const temperatureValue = toFiniteNumber(item.temperature);
+    const lowTemperatureValue = toFiniteNumber(item.templow);
+    const precipitationProbability = toFiniteNumber(item.precipitation_probability);
+    const precipitation = toFiniteNumber(item.precipitation);
     const high = formatTemperature(item.temperature, temperatureUnit);
     const low = formatTemperature(item.templow, temperatureUnit);
     return {
+      datetime: item.datetime || "",
       day: type === "hourly"
         ? formatForecastHour(item.datetime, index)
         : formatForecastDay(item.datetime, index),
@@ -79,6 +89,10 @@ export function normalizeWeatherForecasts(forecast = [], {
       high,
       low,
       temp: type === "hourly" ? high : [high, low].filter(Boolean).join(" / "),
+      temperatureValue,
+      lowTemperatureValue,
+      precipitationProbability,
+      precipitation,
     };
   }).filter(item => item.condition || item.temp);
 }
@@ -205,8 +219,17 @@ export function buildWeatherModel(hass, widget = {}, visibilityConfig, forecastB
     summary: getWeatherSummary(access.entityState?.state),
     location: access.entityState ? getFriendlyEntityName(access.entityState, access.entityId) : "",
     temperature: formatTemperature(attributes.temperature, temperatureUnit),
+    temperatureValue: toFiniteNumber(attributes.temperature),
+    temperatureUnit,
     humidity: formatMetric(attributes.humidity, "%"),
+    humidityValue: toFiniteNumber(attributes.humidity),
     wind: formatMetric(attributes.wind_speed, windUnit),
+    windSpeedValue: toFiniteNumber(attributes.wind_speed),
+    windUnit,
+    windBearing: toFiniteNumber(attributes.wind_bearing),
+    precipitationProbability: toFiniteNumber(attributes.precipitation_probability),
+    pressureValue: toFiniteNumber(attributes.pressure),
+    visibilityValue: toFiniteNumber(attributes.visibility),
     highTemperature: temperatureRange.high,
     lowTemperature: temperatureRange.low,
     temperatureRange: temperatureRange.range,

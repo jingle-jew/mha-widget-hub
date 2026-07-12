@@ -43,6 +43,8 @@ test("widget capabilities and flows are read from the widget contract", () => {
   assert.equal(getWidgetPlacementFlow({ kind: "scenes" }), "slot-config-first");
   assert.equal(getWidgetPlacementFlow({ kind: "button" }), "configure-first");
   assert.equal(getWidgetPlacementFlow({ kind: "clock" }), "direct");
+  assert.equal(getWidgetCapabilities({ kind: "weather", displayMode: "current" }).resizable, true);
+  assert.equal(getWidgetCapabilities({ kind: "weather", displayMode: "forecast" }).resizable, false);
 });
 
 test("widget manager visibility is declared in widget definitions", async () => {
@@ -225,6 +227,48 @@ test("slider variants follow widget orientation", () => {
   assert.ok(horizontal.every(entry => entry.size.h === 1));
   assert.equal(vertical.length, 3);
   assert.ok(vertical.every(entry => entry.size.w === 1));
+});
+
+test("weather metric variants depend on the metric kind", () => {
+  const metricVariants = getWidgetVariants({
+    kind: "weather-metric",
+    metricKey: "wind",
+    w: 2,
+    h: 2,
+  });
+  const sunVariants = getWidgetVariants({
+    kind: "weather-metric",
+    metricKey: "sun",
+    w: 4,
+    h: 1,
+  });
+
+  assert.deepEqual(metricVariants.map(entry => entry.size), [
+    { w: 2, h: 2 },
+    { w: 2, h: 1 },
+  ]);
+  assert.deepEqual(sunVariants.map(entry => entry.size), [
+    { w: 2, h: 2 },
+    { w: 4, h: 1 },
+  ]);
+});
+
+test("weather metric size normalization preserves compact contracts", () => {
+  const metric = normalizeWidgetContract({
+    kind: "weather-metric",
+    metricKey: "humidity",
+    w: 4,
+    h: 1,
+  }, normalizeWidgetSize);
+  const sun = normalizeWidgetContract({
+    kind: "weather-metric",
+    metricKey: "sun",
+    w: 4,
+    h: 1,
+  }, normalizeWidgetSize);
+
+  assert.deepEqual({ w: metric.w, h: metric.h }, { w: 2, h: 1 });
+  assert.deepEqual({ w: sun.w, h: sun.h }, { w: 4, h: 1 });
 });
 
 test("variant cycling starts after the current size", () => {

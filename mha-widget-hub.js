@@ -274,6 +274,8 @@ constructor(){
 	    getIsEditing:()=>this._isEditing,
 	    getThemeStyle:()=>this.dataset.themeStyle||this._themeController?.read?.()?.themeStyle||"oneui",
 	    getDockPosition:()=>this._dockPosition,
+	    getHass:()=>this._hass,
+	    getEntityVisibilityConfig:()=>this._entityVisibilityConfig,
 	    isMobileLandscapeLayout:()=>this._isMobileLandscapeLayout(),
 	    normalizeWidget:normalizeStoredWidgetContract,
     savePages:()=>this._savePages(),
