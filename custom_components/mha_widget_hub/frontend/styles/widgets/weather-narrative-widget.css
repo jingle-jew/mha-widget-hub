@@ -44,7 +44,6 @@
   min-block-size: 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-rows: minmax(0, 1fr) auto;
   column-gap: clamp(.5rem, 2.7cqi, .9rem);
   align-items: center;
 }
@@ -57,16 +56,13 @@
   gap: clamp(.18rem, 1cqb, .32rem);
 }
 
-.mha-weather-narrative-location,
-.mha-weather-narrative-secondary,
-.mha-weather-narrative-visual-title {
+.mha-weather-narrative-secondary {
   color: var(--mha-weather-narrative-muted);
   font-size: var(--mha-type-widget-caption-size, .7rem);
   font-weight: var(--mha-typography-weight, 700);
   letter-spacing: .02em;
 }
 
-.mha-weather-narrative-location,
 .mha-weather-narrative-secondary {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -107,9 +103,10 @@
 }
 
 .mha-weather-narrative-temperature {
-  grid-column: 1 / -1;
-  grid-row: 2;
-  justify-self: end;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: var(--mha-weather-narrative-text);
   font-size: clamp(1.15rem, 4.4cqi, 1.9rem);
   line-height: .9;
@@ -121,8 +118,7 @@
   min-inline-size: 0;
   min-block-size: 0;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  gap: clamp(.25rem, 1.3cqb, .42rem);
+  grid-template-rows: minmax(0, 1fr);
   padding: clamp(.52rem, 2.5cqi, .84rem);
   border: 1px solid var(--mha-weather-narrative-border);
   border-radius: var(--mha-radius-control, 1rem);

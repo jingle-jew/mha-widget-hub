@@ -201,10 +201,6 @@ function createEmptyVisual(event, weather) {
 function createNarrativeVisual(event, weather) {
   const visual = document.createElement("section");
   visual.className = "mha-weather-narrative-visual";
-  visual.append(createText(
-    "mha-weather-narrative-visual-title",
-    t(`widgets.weatherNarrative.charts.${event.chartKind}`, event.chartKind === "empty" ? "Current conditions" : "Next hours"),
-  ));
   if (event.chartKind === "alert") {
     visual.append(createAlertVisual(event));
   } else {
@@ -226,13 +222,12 @@ function renderWeatherNarrative(root, weather, widget, now = new Date()) {
   const copy = document.createElement("div");
   copy.className = "mha-weather-narrative-copy";
   copy.append(
-    createText("mha-weather-narrative-location", weather.location || t("widgets.weatherNarrative.title", "Weather brief")),
+    createText("mha-weather-narrative-temperature", weather.temperature || ""),
     createText("mha-weather-narrative-headline", event.headline),
     createText("mha-weather-narrative-secondary", event.secondary),
   );
   const icon = createNarrativeIcon(event, weather);
-  const temperature = createText("mha-weather-narrative-temperature", weather.temperature || "");
-  header.append(copy, icon, temperature);
+  header.append(copy, icon);
   root.append(header, createNarrativeVisual(event, weather));
   void widget;
 }
