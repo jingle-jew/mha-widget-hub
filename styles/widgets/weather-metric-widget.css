@@ -132,6 +132,20 @@
   align-self: end;
 }
 
+.mha-weather-metric-widget[data-weather-metric-size="2x2"][data-metric-layout="value-only"] .mha-weather-metric-value-block {
+  position: absolute;
+  inset-inline-end: 0;
+  inset-block-end: 0;
+  justify-self: auto;
+  align-self: auto;
+  text-align: end;
+}
+
+.mha-weather-metric-widget[data-weather-metric-size="2x2"][data-metric-layout="visual"] .mha-weather-metric-value-block {
+  justify-self: end;
+  text-align: end;
+}
+
 .mha-weather-metric-progress {
   position: relative;
   align-self: end;
