@@ -21,16 +21,27 @@
   --mha-weather-metric-accent: var(--mha-accent-primary, var(--mha-text-primary));
   --mha-weather-metric-track: color-mix(in srgb, var(--mha-text-primary) 14%, transparent);
   --mha-weather-metric-soft: color-mix(in srgb, var(--mha-weather-metric-accent) 16%, transparent);
-  --mha-weather-metric-label-size: var(--mha-type-widget-label-size, var(--mha-font-size-sm, .84rem));
-  --mha-weather-metric-label-weight: var(--mha-type-widget-label-weight, 680);
-  --mha-weather-metric-caption-size: var(--mha-type-widget-caption-size, var(--mha-font-size-xs, .72rem));
-  --mha-weather-metric-caption-weight: var(--mha-type-widget-caption-weight, 580);
-  --mha-weather-metric-body-size: clamp(.86rem, min(4.2cqi, 12cqb), 1.12rem);
-  --mha-weather-metric-body-weight: var(--mha-type-widget-body-weight, 580);
-  --mha-weather-metric-value-size: clamp(1.72rem, min(15cqi, 16cqb), 3.25rem);
-  --mha-weather-metric-value-weight: var(--mha-type-weather-temp-weight, 740);
-  --mha-weather-metric-unit-size: clamp(.72rem, 5.2cqi, 1rem);
-  --mha-weather-metric-unit-weight: 650;
+  --mha-weather-metric-label-size: var(--mha-type-widget-label-size);
+  --mha-weather-metric-label-weight: var(--mha-type-widget-label-weight);
+  --mha-weather-metric-label-line-height: var(--mha-type-widget-label-line-height);
+  --mha-weather-metric-label-tracking: var(--mha-type-widget-label-tracking);
+  --mha-weather-metric-caption-size: var(--mha-type-widget-caption-size);
+  --mha-weather-metric-caption-weight: var(--mha-type-widget-caption-weight);
+  --mha-weather-metric-caption-line-height: var(--mha-type-widget-caption-line-height);
+  --mha-weather-metric-body-size: var(--mha-type-widget-body-size);
+  --mha-weather-metric-body-weight: var(--mha-type-widget-body-weight);
+  --mha-weather-metric-body-line-height: var(--mha-type-widget-body-line-height);
+  --mha-weather-metric-value-size: var(--mha-type-weather-temp-display-size);
+  --mha-weather-metric-value-weight: var(--mha-type-weather-temp-weight);
+  --mha-weather-metric-value-line-height: var(--mha-type-widget-value-line-height);
+  --mha-weather-metric-value-tracking: var(--mha-type-widget-value-tracking);
+  --mha-weather-metric-unit-size: var(--mha-type-widget-state-size);
+  --mha-weather-metric-unit-weight: var(--mha-type-widget-state-weight);
+  --mha-weather-metric-unit-line-height: var(--mha-type-widget-state-line-height);
+  --mha-weather-metric-unit-tracking: var(--mha-type-widget-state-tracking);
+  --mha-weather-metric-sun-time-size: var(--mha-type-widget-value-size);
+  --mha-weather-metric-sun-time-weight: var(--mha-type-widget-value-weight);
+  --mha-weather-summary-temperature-size: var(--mha-type-weather-summary-temp-size);
   position: absolute;
   inset: var(--mha-widget-inner-padding);
   min-inline-size: 0;
@@ -87,12 +98,15 @@
 .mha-weather-metric-label {
   font-size: var(--mha-weather-metric-label-size);
   font-weight: var(--mha-weather-metric-label-weight);
+  line-height: var(--mha-weather-metric-label-line-height);
+  letter-spacing: var(--mha-weather-metric-label-tracking);
 }
 
 .mha-weather-metric-description {
   color: var(--mha-text-secondary);
   font-size: var(--mha-weather-metric-caption-size);
   font-weight: var(--mha-weather-metric-caption-weight);
+  line-height: var(--mha-weather-metric-caption-line-height);
 }
 
 .mha-weather-metric-text-value {
@@ -104,7 +118,7 @@
   color: var(--mha-text-primary);
   font-size: var(--mha-weather-metric-body-size);
   font-weight: var(--mha-weather-metric-body-weight);
-  line-height: 1.35;
+  line-height: var(--mha-weather-metric-body-line-height);
 }
 
 .mha-weather-metric-value-block {
@@ -123,14 +137,16 @@
   color: var(--mha-text-primary);
   font-size: var(--mha-weather-metric-value-size);
   font-weight: var(--mha-weather-metric-value-weight);
-  line-height: .92;
-  letter-spacing: -.045em;
+  line-height: var(--mha-weather-metric-value-line-height);
+  letter-spacing: var(--mha-weather-metric-value-tracking);
 }
 
 .mha-weather-metric-unit {
   color: var(--mha-text-secondary);
   font-size: var(--mha-weather-metric-unit-size);
   font-weight: var(--mha-weather-metric-unit-weight);
+  line-height: var(--mha-weather-metric-unit-line-height);
+  letter-spacing: var(--mha-weather-metric-unit-tracking);
 }
 
 .mha-weather-metric-widget[data-metric-layout="value-only"] {
@@ -321,8 +337,9 @@
 
 .mha-weather-metric-sun-label {
   color: var(--mha-text-secondary);
-  font-size: var(--mha-type-widget-caption-size, var(--mha-font-size-xs, .7rem));
-  font-weight: var(--mha-type-widget-caption-weight, 580);
+  font-size: var(--mha-weather-metric-caption-size);
+  font-weight: var(--mha-weather-metric-caption-weight);
+  line-height: var(--mha-weather-metric-caption-line-height);
 }
 
 .mha-weather-metric-sun-time {
@@ -331,9 +348,9 @@
   text-overflow: clip;
   white-space: nowrap;
   color: var(--mha-text-primary);
-  font-size: clamp(.9rem, min(4.8cqi, 17cqb), 1.42rem);
-  font-weight: var(--mha-type-weather-temp-weight, 720);
-  line-height: 1;
+  font-size: var(--mha-weather-metric-sun-time-size);
+  font-weight: var(--mha-weather-metric-sun-time-weight);
+  line-height: var(--mha-type-widget-value-line-height);
 }
 
 .mha-weather-metric-sun-arc {
@@ -369,43 +386,50 @@
   translate: -50% -50%;
 }
 
-.mha-weather-metric-widget:not([data-weather-metric-size="4x2"]) {
-  --mha-weather-metric-label-size: clamp(.72rem, min(4.6cqi, 7cqb), .8rem);
-  --mha-weather-metric-label-weight: 620;
-  --mha-weather-metric-caption-size: clamp(.62rem, min(3.7cqi, 5.8cqb), .68rem);
-  --mha-weather-metric-caption-weight: 520;
-  --mha-weather-metric-body-size: clamp(.76rem, min(3.8cqi, 9.5cqb), .98rem);
-  --mha-weather-metric-body-weight: 540;
-  --mha-weather-metric-value-size: clamp(1.42rem, min(13cqi, 14cqb), 2.72rem);
-  --mha-weather-metric-value-weight: 680;
-  --mha-weather-metric-unit-size: clamp(.64rem, 4.6cqi, .88rem);
-  --mha-weather-metric-unit-weight: 590;
+.mha-weather-metric-widget[data-weather-metric-size="2x1"],
+.mha-weather-metric-widget[data-weather-metric-size="2x2"],
+.mha-weather-metric-widget[data-weather-metric-size="4x1"] {
+  --mha-weather-metric-label-size: var(--mha-type-widget-label-compact-size);
+  --mha-weather-metric-caption-size: var(--mha-type-widget-caption-compact-size);
+  --mha-weather-metric-body-size: var(--mha-type-widget-body-compact-size);
+  --mha-weather-metric-value-size: var(--mha-type-weather-temp-compact-size);
+  --mha-weather-metric-unit-size: var(--mha-type-widget-state-compact-size);
+  --mha-weather-metric-sun-time-size: var(--mha-type-widget-value-compact-size);
+  --mha-weather-summary-temperature-size: var(--mha-type-weather-summary-temp-compact-size);
 }
 
-.mha-weather-metric-widget:not([data-weather-metric-size="4x2"]) .mha-weather-metric-sun-label,
-.mha-weather-metric-widget:not([data-weather-metric-size="4x2"]) .mha-weather-summary-location,
-.mha-weather-metric-widget:not([data-weather-metric-size="4x2"]) .mha-weather-summary-metadata,
-.mha-weather-metric-widget:not([data-weather-metric-size="4x2"]) .mha-weather-summary-eyebrow {
+.mha-weather-metric-widget[data-weather-metric-size="2x1"] .mha-weather-metric-sun-label,
+.mha-weather-metric-widget[data-weather-metric-size="2x2"] .mha-weather-metric-sun-label,
+.mha-weather-metric-widget[data-weather-metric-size="4x1"] .mha-weather-metric-sun-label,
+.mha-weather-metric-widget[data-weather-metric-size="2x1"] .mha-weather-summary-location,
+.mha-weather-metric-widget[data-weather-metric-size="2x2"] .mha-weather-summary-location,
+.mha-weather-metric-widget[data-weather-metric-size="4x1"] .mha-weather-summary-location,
+.mha-weather-metric-widget[data-weather-metric-size="2x1"] .mha-weather-summary-metadata,
+.mha-weather-metric-widget[data-weather-metric-size="2x2"] .mha-weather-summary-metadata,
+.mha-weather-metric-widget[data-weather-metric-size="4x1"] .mha-weather-summary-metadata,
+.mha-weather-metric-widget[data-weather-metric-size="2x1"] .mha-weather-summary-eyebrow,
+.mha-weather-metric-widget[data-weather-metric-size="2x2"] .mha-weather-summary-eyebrow,
+.mha-weather-metric-widget[data-weather-metric-size="4x1"] .mha-weather-summary-eyebrow {
   font-size: var(--mha-weather-metric-caption-size);
   font-weight: var(--mha-weather-metric-caption-weight);
 }
 
-.mha-weather-metric-widget:not([data-weather-metric-size="4x2"]) .mha-weather-metric-sun-time {
-  font-size: clamp(.8rem, min(4.2cqi, 14cqb), 1.2rem);
-  font-weight: 660;
+.mha-weather-metric-widget[data-weather-metric-size="2x1"] .mha-weather-summary-temperature,
+.mha-weather-metric-widget[data-weather-metric-size="2x2"] .mha-weather-summary-temperature,
+.mha-weather-metric-widget[data-weather-metric-size="4x1"] .mha-weather-summary-temperature {
+  font-size: var(--mha-weather-summary-temperature-size);
 }
 
-.mha-weather-metric-widget:not([data-weather-metric-size="4x2"]) .mha-weather-summary-temperature {
-  font-size: clamp(1.52rem, min(7.8cqi, 10.5cqb), 2.5rem);
-  font-weight: 680;
-}
-
-.mha-weather-metric-widget:not([data-weather-metric-size="4x2"]) .mha-weather-summary-condition {
+.mha-weather-metric-widget[data-weather-metric-size="2x1"] .mha-weather-summary-condition,
+.mha-weather-metric-widget[data-weather-metric-size="2x2"] .mha-weather-summary-condition,
+.mha-weather-metric-widget[data-weather-metric-size="4x1"] .mha-weather-summary-condition {
   font-size: var(--mha-weather-metric-label-size);
   font-weight: var(--mha-weather-metric-label-weight);
 }
 
-.mha-weather-metric-widget:not([data-weather-metric-size="4x2"]) .mha-weather-summary-text {
+.mha-weather-metric-widget[data-weather-metric-size="2x1"] .mha-weather-summary-text,
+.mha-weather-metric-widget[data-weather-metric-size="2x2"] .mha-weather-summary-text,
+.mha-weather-metric-widget[data-weather-metric-size="4x1"] .mha-weather-summary-text {
   font-size: var(--mha-weather-metric-body-size);
   font-weight: var(--mha-weather-metric-body-weight);
 }
@@ -591,9 +615,9 @@
   grid-row: 2;
   align-self: start;
   -webkit-line-clamp: 7;
-  font-size: clamp(.94rem, min(3.4cqi, 6.8cqb), 1.28rem);
-  font-weight: var(--mha-type-widget-body-weight, 580);
-  line-height: 1.42;
+  font-size: var(--mha-type-widget-body-lg-size);
+  font-weight: var(--mha-type-widget-body-weight);
+  line-height: var(--mha-type-widget-body-relaxed-line-height);
 }
 
 .mha-weather-metric-widget[data-metric-layout="summary"] {
@@ -649,10 +673,10 @@
 
 .mha-weather-summary-temperature {
   color: var(--mha-text-primary);
-  font-size: clamp(1.8rem, min(8.8cqi, 12cqb), 3rem);
-  font-weight: var(--mha-type-weather-temp-weight, 740);
-  line-height: .92;
-  letter-spacing: -.045em;
+  font-size: var(--mha-weather-summary-temperature-size);
+  font-weight: var(--mha-type-weather-temp-weight);
+  line-height: var(--mha-type-widget-value-line-height);
+  letter-spacing: var(--mha-type-widget-value-tracking);
   white-space: nowrap;
 }
 
@@ -660,8 +684,9 @@
 .mha-weather-summary-metadata,
 .mha-weather-summary-eyebrow {
   color: var(--mha-text-secondary);
-  font-size: var(--mha-type-widget-caption-size, var(--mha-font-size-xs, .72rem));
-  font-weight: var(--mha-type-widget-caption-weight, 580);
+  font-size: var(--mha-weather-metric-caption-size);
+  font-weight: var(--mha-weather-metric-caption-weight);
+  line-height: var(--mha-weather-metric-caption-line-height);
 }
 
 .mha-weather-summary-location,
@@ -673,8 +698,10 @@
 
 .mha-weather-summary-condition {
   color: var(--mha-text-primary);
-  font-size: var(--mha-type-widget-label-size, var(--mha-font-size-sm, .84rem));
-  font-weight: var(--mha-type-widget-label-weight, 680);
+  font-size: var(--mha-weather-metric-label-size);
+  font-weight: var(--mha-weather-metric-label-weight);
+  line-height: var(--mha-weather-metric-label-line-height);
+  letter-spacing: var(--mha-weather-metric-label-tracking);
 }
 
 .mha-weather-summary-divider {
@@ -697,9 +724,9 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 5;
   color: var(--mha-text-primary);
-  font-size: clamp(.9rem, min(3.2cqi, 6.4cqb), 1.18rem);
-  font-weight: var(--mha-type-widget-body-weight, 620);
-  line-height: 1.35;
+  font-size: var(--mha-weather-metric-body-size);
+  font-weight: var(--mha-weather-metric-body-weight);
+  line-height: var(--mha-weather-metric-body-line-height);
   white-space: normal;
 }
 
@@ -732,8 +759,8 @@
 
 .mha-weather-metric-widget[data-weather-metric-size="4x1"][data-metric-layout="summary"] .mha-weather-summary-text {
   -webkit-line-clamp: 2;
-  font-size: var(--mha-type-widget-label-size, var(--mha-font-size-sm, .84rem));
-  line-height: 1.25;
+  font-size: var(--mha-weather-metric-label-size);
+  line-height: var(--mha-type-widget-label-line-height);
 }
 
 @container (max-width: 12rem) {
@@ -742,7 +769,7 @@
   }
 
   .mha-weather-metric-value {
-    font-size: clamp(1.45rem, 13cqi, 2.45rem);
+    font-size: var(--mha-type-weather-temp-compact-size);
   }
 
   .mha-weather-metric-compass {
