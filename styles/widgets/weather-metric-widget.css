@@ -173,6 +173,7 @@
 }
 
 .mha-weather-metric-progress {
+  --mha-weather-metric-progress-marker-size: clamp(.62rem, 4cqi, .86rem);
   position: relative;
   align-self: end;
   block-size: clamp(.72rem, 5.6cqb, 1rem);
@@ -218,8 +219,12 @@
 .mha-weather-metric-progress-marker {
   position: absolute;
   inset-block-start: 50%;
-  inset-inline-start: var(--mha-weather-metric-progress, 0%);
-  inline-size: clamp(.62rem, 4cqi, .86rem);
+  inset-inline-start: clamp(
+    calc(var(--mha-weather-metric-progress-marker-size) / 2),
+    var(--mha-weather-metric-progress, 0%),
+    calc(100% - var(--mha-weather-metric-progress-marker-size) / 2)
+  );
+  inline-size: var(--mha-weather-metric-progress-marker-size);
   aspect-ratio: 1;
   translate: -50% -50%;
   border: 2px solid var(--mha-surface-primary, var(--mha-widget-surface));
