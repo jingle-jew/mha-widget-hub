@@ -453,13 +453,14 @@ function createMetricSourceFromWeather(weatherEntity, definition) {
   };
 }
 
-function createMetricSourceFromSensor(sensor, definition, score = 0) {
+function createMetricSourceFromSensor(sensor, definition, score = 0, weatherEntityId = "") {
   if (!sensor) return null;
   return {
     key: definition.key,
     icon: definition.icon,
     label: definition.label,
     sourceType: "entity",
+    weatherEntityId,
     entityId: sensor.entity_id,
     attribute: "",
     unit: sensor.state?.attributes?.unit_of_measurement || definition.fallbackUnit || "",
@@ -526,7 +527,7 @@ function classifySensor(entity, registryEntry = {}) {
     || null;
 }
 
-function collectGlobalSensorSources(sensors = [], weatherName = "") {
+function collectGlobalSensorSources(sensors = [], weatherName = "", weatherEntityId = "") {
   const bestByMetric = new Map();
   const weatherLocationTokens = tokenizeLocation(weatherName);
   sensors.forEach(sensor => {
@@ -546,7 +547,7 @@ function collectGlobalSensorSources(sensors = [], weatherName = "") {
     }
   });
   return [...bestByMetric.values()].map(candidate => (
-    createMetricSourceFromSensor(candidate.sensor, candidate.definition, candidate.score)
+    createMetricSourceFromSensor(candidate.sensor, candidate.definition, candidate.score, weatherEntityId)
   ));
 }
 
@@ -560,7 +561,7 @@ export function resolveWeatherPageSourcesFromState(
   const sunEntities = getAvailableEntitiesForDomain(hass, "sun", visibilityConfig);
   const weatherEntity = resolveWeatherEntity(weatherEntities, weatherEntityId);
   const weatherName = weatherEntity?.name || weatherEntity?.state?.attributes?.friendly_name || "";
-  const sensorSources = collectGlobalSensorSources(sensors, weatherName);
+  const sensorSources = collectGlobalSensorSources(sensors, weatherName, weatherEntity?.entity_id || "");
   const sunSource = createSunSource(sunEntities);
 
   return {
@@ -648,6 +649,7 @@ function collectRegistrySensorSources({
   weatherEntry,
   relatedDeviceIds,
   weatherName,
+  weatherEntityId = "",
 } = {}) {
   const bestByMetric = new Map();
   sensors.forEach(sensor => {
@@ -676,7 +678,7 @@ function collectRegistrySensorSources({
   });
 
   return [...bestByMetric.values()].map(candidate => (
-    createMetricSourceFromSensor(candidate.sensor, candidate.definition, candidate.score)
+    createMetricSourceFromSensor(candidate.sensor, candidate.definition, candidate.score, weatherEntityId)
   ));
 }
 
@@ -708,6 +710,7 @@ export async function discoverWeatherPageSources(
     weatherEntry,
     relatedDeviceIds,
     weatherName,
+    weatherEntityId: fallback.weatherEntityId,
   });
   const sunSource = createSunSource(sunEntities);
 

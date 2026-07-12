@@ -482,6 +482,7 @@ test("async weather page seed stores discovery metadata and intentional metric s
   assert.equal(seed.config.discoveryMode, "registry");
   assert.equal(seed.config.registryLinked, true);
   assert.equal(seed.config.autoDetectedMetricKeys.includes("dew-point"), true);
+  assert.equal(summary?.weatherEntityId, "weather.home");
   assert.deepEqual(
     { w: byMetric.get("dew-point")?.w, h: byMetric.get("dew-point")?.h },
     { w: 2, h: 1 },

@@ -99,6 +99,46 @@ test("weather summary metric combines current weather with narrative text", () =
   );
 });
 
+test("weather summary metric falls back to an available weather entity for legacy sensor widgets", () => {
+  installDom();
+
+  const content = createWeatherMetricWidgetContent({
+    kind: "weather-metric",
+    metricKey: "summary",
+    valueKind: "text",
+    sourceType: "entity",
+    entityId: "sensor.val_d_or_summary",
+  }, {
+    widgetW: 4,
+    widgetH: 2,
+    hass: {
+      states: {
+        "weather.home": {
+          entity_id: "weather.home",
+          state: "partlycloudy",
+          attributes: {
+            friendly_name: "Val-d'Or Prévisions",
+            temperature: 26,
+            temperature_unit: "°C",
+          },
+        },
+        "sensor.val_d_or_summary": {
+          entity_id: "sensor.val_d_or_summary",
+          state: "Alternance de soleil et de nuages aujourd’hui.",
+          attributes: { friendly_name: "Résumé" },
+        },
+      },
+      config: {
+        unit_system: { temperature: "°C" },
+      },
+    },
+  });
+
+  assert.equal(content.dataset.metricLayout, "summary");
+  assert.equal(findByClass(content, "mha-weather-summary-temperature")?.textContent, "26°C");
+  assert.equal(findByClass(content, "mha-weather-summary-location")?.textContent, "Val-d'Or");
+});
+
 test("weather summary metric uses its weather attribute entity for current conditions", () => {
   installDom();
 

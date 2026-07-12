@@ -487,9 +487,14 @@ function renderMetric(root, model, { weatherModel = null } = {}) {
   if (visual) root.append(visual);
 }
 
-function getSummaryWeatherEntityId(widget = {}) {
+function getFirstWeatherEntityId(hass) {
+  return Object.keys(hass?.states || {}).find(entityId => entityId.startsWith("weather.")) || "";
+}
+
+function getSummaryWeatherEntityId(widget = {}, hass) {
   return widget.weatherEntityId
-    || (widget.sourceType === "weather-attribute" ? widget.entityId || widget.entity_id || "" : "");
+    || (widget.sourceType === "weather-attribute" ? widget.entityId || widget.entity_id || "" : "")
+    || getFirstWeatherEntityId(hass);
 }
 
 const WEATHER_ATTRIBUTE_PREVIEW_SOURCES = Object.freeze({
@@ -606,7 +611,7 @@ export function createWeatherMetricWidgetContent(widget = {}, {
     const model = buildWeatherMetricModel(context.hass, widget, entityVisibilityConfig);
     const weatherModel = widget.metricKey === "summary"
       ? buildWeatherModel(context.hass, {
-        entityId: getSummaryWeatherEntityId(widget),
+        entityId: getSummaryWeatherEntityId(widget, context.hass),
       }, entityVisibilityConfig)
       : null;
     renderMetric(root, model, { weatherModel });
