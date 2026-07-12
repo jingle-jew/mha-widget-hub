@@ -124,6 +124,7 @@ function getWidgetFlowCoordinatorForHost(host){
       getWidgetConfigSession:()=>host._widgetConfigSession,
       setWidgetConfigSession:(session)=>{host._widgetConfigSession=session;},
       getHass:()=>host._hass,
+      getActivePage:()=>host._getActivePage(),
       getWidgetConfigHassReady:()=>host._widgetConfigHassReady,
       setWidgetConfigHassReady:(ready)=>{host._widgetConfigHassReady=ready;},
       getEntityVisibilityConfig:()=>host._entityVisibilityConfig,

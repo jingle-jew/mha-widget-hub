@@ -10,6 +10,11 @@ import {
   discoverWeatherPageSeed,
 } from "../src/pages/weather-page-seed.js";
 import {
+  buildWeatherPageWidgetManagerCategory,
+  discoverWeatherPageWidgetManagerCategory,
+  WEATHER_PAGE_WIDGET_MANAGER_CATEGORY_ID,
+} from "../src/pages/weather-page-widget-catalog.js";
+import {
   getDefaultPageIcon,
   getDefaultPageName,
   getPageCreatorTypeOptions,
@@ -430,6 +435,40 @@ test("weather page seed creates grid-compatible sections", () => {
   assert.equal(seed.widgets.some(widget => widget.kind === "weather-metric"), true);
   assert.equal(seed.widgets.every(widget => [2, 4].includes(widget.w)), true);
   assert.equal(seed.widgets.every(widget => [1, 2].includes(widget.h)), true);
+});
+
+test("weather page widget manager category exposes semantic integration capabilities", () => {
+  const category = buildWeatherPageWidgetManagerCategory({
+    hass: createHass(),
+    weatherEntityId: "weather.home",
+  });
+  const byKey = new Map(category.widgets.map(widget => [widget.metricKey || `${widget.displayMode}-${widget.forecastType}`, widget]));
+
+  assert.equal(category.id, WEATHER_PAGE_WIDGET_MANAGER_CATEGORY_ID);
+  assert.equal(category.labelKey, "widgets.weatherManager.title");
+  assert.equal(byKey.has("current-daily"), true);
+  assert.equal(byKey.has("forecast-hourly"), true);
+  assert.equal(byKey.has("forecast-daily"), true);
+  assert.equal(category.widgets.some(widget => widget.kind === "weather-narrative"), true);
+  assert.equal(byKey.get("humidity")?.labelKey, "weatherPage.metrics.humidity");
+  assert.equal(byKey.get("uv")?.labelKey, "weatherPage.metrics.uv");
+  assert.equal(byKey.get("precipitation-probability")?.labelKey, "weatherPage.metrics.precipitationProbability");
+  assert.equal(byKey.get("air-quality")?.entityId, "sensor.air_quality_index");
+  assert.equal(category.widgets.some(widget => widget.entityId === "sensor.outdoor_humidity"), false);
+});
+
+test("weather page widget manager registry discovery exposes linked integration sensors", async () => {
+  const category = await discoverWeatherPageWidgetManagerCategory({
+    hass: createRegistryHass(),
+    weatherEntityId: "weather.home",
+  });
+  const metricKeys = category.widgets.map(widget => widget.metricKey).filter(Boolean);
+
+  assert.equal(category.registryLinked, true);
+  assert.equal(metricKeys.includes("dew-point"), true);
+  assert.equal(metricKeys.includes("air-quality-pm25"), true);
+  assert.equal(metricKeys.includes("wind-gust"), true);
+  assert.equal(category.widgets.some(widget => widget.entityId === "sensor.bedroom_humidity"), false);
 });
 
 test("async weather page seed stores discovery metadata and intentional metric sizes", async () => {

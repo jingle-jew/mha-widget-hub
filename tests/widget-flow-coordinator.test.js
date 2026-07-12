@@ -49,6 +49,7 @@ async function createHarness(overrides = {}) {
       locale: { language: "en" },
     },
     entityVisibilityConfig: null,
+    activePage: null,
     ...overrides.state,
   };
 
@@ -63,6 +64,7 @@ async function createHarness(overrides = {}) {
     getWidgetConfigSession: () => state.widgetConfigSession,
     setWidgetConfigSession: (session) => { state.widgetConfigSession = session; },
     getHass: () => state.hass,
+    getActivePage: () => state.activePage,
     getWidgetConfigHassReady: () => state.widgetConfigHassReady,
     setWidgetConfigHassReady: (ready) => { state.widgetConfigHassReady = ready; },
     getEntityVisibilityConfig: () => state.entityVisibilityConfig,
@@ -107,6 +109,42 @@ test("widget manager can open directly on a requested category", async () => {
 
   assert.equal(state.widgetManagerOpen, true);
   assert.equal(state.widgetManagerCategory, "media");
+});
+
+test("weather pages open a single-category weather widget manager", async () => {
+  const { coordinator, state } = await createHarness({
+    state: {
+      activePage: {
+        id: "weather",
+        type: "weather",
+        config: { weatherEntityId: "weather.home" },
+      },
+      hass: {
+        states: {
+          "weather.home": {
+            entity_id: "weather.home",
+            state: "sunny",
+            attributes: {
+              friendly_name: "Maison",
+              humidity: 50,
+              uv_index: 3,
+            },
+          },
+        },
+        user: { name: "Test" },
+        locale: { language: "en" },
+      },
+    },
+  });
+
+  coordinator.openWidgetManager();
+  const categories = coordinator.getWidgetManagerCategories();
+
+  assert.equal(state.widgetManagerOpen, true);
+  assert.equal(state.widgetManagerCategory, "weather-page");
+  assert.equal(categories.length, 1);
+  assert.equal(categories[0].id, "weather-page");
+  assert.equal(categories[0].widgets.some(widget => widget.metricKey === "uv"), true);
 });
 
 test("widget placement flows still start in mobile landscape", async () => {

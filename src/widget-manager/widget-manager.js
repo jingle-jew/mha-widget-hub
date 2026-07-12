@@ -81,15 +81,15 @@ function createCategoryButton(category, onSelectCategory) {
   icon.className = "mha-widget-manager-category-icon";
   icon.append(createIconSymbol({
     name: category.icon || "clock",
-    label: t(`widgets.categories.${category.id}`, category.label),
+    label: category.labelKey ? t(category.labelKey, category.label) : t(`widgets.categories.${category.id}`, category.label),
     className: "mha-widget-manager-category-symbol",
   }));
   const text = document.createElement("span");
   text.className = "mha-widget-manager-category-text";
   const label = document.createElement("strong");
-  label.textContent = t(`widgets.categories.${category.id}`, category.label);
+  label.textContent = category.labelKey ? t(category.labelKey, category.label) : t(`widgets.categories.${category.id}`, category.label);
   const description = document.createElement("small");
-  description.textContent = t(`widgets.categoryDescriptions.${category.id}`, category.description || "");
+  description.textContent = category.descriptionKey ? t(category.descriptionKey, category.description || "") : t(`widgets.categoryDescriptions.${category.id}`, category.description || "");
   text.append(label, description);
   button.append(icon, text);
   button.addEventListener("click", () => onSelectCategory?.(category.id));
@@ -122,8 +122,11 @@ function createWidgetButton(category, item, onSelectWidget) {
   return button;
 }
 
-export function createWidgetManager({open=false,activeCategory="",categories=WIDGET_MANAGER_CATEGORIES,onClose,onBack,onSelectCategory,onSelectWidget} = {}) {
+export function createWidgetManager({open=false,activeCategory="",categories=WIDGET_MANAGER_CATEGORIES,singleCategory=false,emptyLabel="",onClose,onBack,onSelectCategory,onSelectWidget} = {}) {
   const selectedCategory = categories.find((category) => category.id === activeCategory) || null;
+  const selectedCategoryLabel = selectedCategory
+    ? (selectedCategory.labelKey ? t(selectedCategory.labelKey, selectedCategory.label) : t(`widgets.categories.${selectedCategory.id}`, selectedCategory.label))
+    : "";
 
   const title = document.createElement("div");
   title.className = "mha-settings-title-block";
@@ -132,12 +135,12 @@ export function createWidgetManager({open=false,activeCategory="",categories=WID
   eyebrow.textContent = selectedCategory ? t("widgets.manager.title", "Widgets") : "MHA";
   const h2 = document.createElement("h2");
   h2.className = "mha-settings-title";
-  h2.textContent = selectedCategory ? t(`widgets.categories.${selectedCategory.id}`, selectedCategory.label) : t("widgets.manager.title", "Widgets");
+  h2.textContent = selectedCategory ? selectedCategoryLabel : t("widgets.manager.title", "Widgets");
   title.append(eyebrow, h2);
 
   const actions = document.createElement("div");
   actions.className = "mha-widget-manager-actions";
-  if (selectedCategory) {
+  if (selectedCategory && !singleCategory) {
     const back = createBackButton({
       label: t("widgets.manager.backToCategories", "Back to categories"),
       className: "mha-widget-manager-back",
@@ -155,10 +158,15 @@ export function createWidgetManager({open=false,activeCategory="",categories=WID
   const body = document.createElement("div");
   body.className = "mha-widget-manager-body mha-settings-body";
   if (selectedCategory) {
+    const widgets = Array.isArray(selectedCategory.widgets) ? selectedCategory.widgets : [];
     const list = document.createElement("div");
     list.className = "mha-widget-manager-widget-list";
-    selectedCategory.widgets.forEach((item) => list.append(createWidgetButton(selectedCategory, item, onSelectWidget)));
-    body.append(list);
+    widgets.forEach((item) => list.append(createWidgetButton(selectedCategory, item, onSelectWidget)));
+    if (widgets.length) {
+      body.append(list);
+    } else {
+      body.append(el("p", "mha-widget-manager-empty", emptyLabel || t("widgets.manager.empty", "No widgets available.")));
+    }
   } else {
     const grid = document.createElement("div");
     grid.className = "mha-widget-manager-category-grid";
@@ -173,7 +181,7 @@ export function createWidgetManager({open=false,activeCategory="",categories=WID
     sheetClassName: "mha-widget-manager-sheet mha-settings-sheet",
     headerClassName: "mha-widget-manager-header mha-settings-header",
     closeClassName: "mha-settings-close",
-    title: selectedCategory ? t(`widgets.categories.${selectedCategory.id}`, selectedCategory.label) : t("widgets.manager.title", "Widgets"),
+    title: selectedCategory ? selectedCategoryLabel : t("widgets.manager.title", "Widgets"),
     ariaLabel: t("widgets.manager.ariaLabel", "Widget manager"),
     closeLabel: t("common.close", "Close"),
     scrimLabel: t("widgets.manager.close", "Close widget manager"),

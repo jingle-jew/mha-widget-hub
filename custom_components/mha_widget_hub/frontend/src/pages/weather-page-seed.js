@@ -43,7 +43,7 @@ function sortMetricSources(metrics = []) {
   ));
 }
 
-function createWeatherWidget({
+export function createWeatherPageWeatherWidget({
   id,
   pageName,
   entityId,
@@ -70,7 +70,7 @@ function createWeatherWidget({
   };
 }
 
-function resolveMetricSize(source = {}) {
+export function resolveWeatherPageMetricSize(source = {}) {
   const preferred = source.preferredSize;
   if (Number(preferred?.w) > 0 && Number(preferred?.h) > 0) {
     return { w: Number(preferred.w), h: Number(preferred.h) };
@@ -78,7 +78,7 @@ function resolveMetricSize(source = {}) {
   return { w: 2, h: 2 };
 }
 
-function resolveMetricVariant(source = {}, size = {}) {
+export function resolveWeatherPageMetricVariant(source = {}, size = {}) {
   if (source.key === "sun") return size.h <= 1 ? "weather-metric-wide" : "weather-metric-square";
   if (source.valueKind === "text") {
     if (size.w >= 4 && size.h >= 2) return "weather-metric-text-tall";
@@ -87,15 +87,15 @@ function resolveMetricVariant(source = {}, size = {}) {
   return size.h <= 1 ? "weather-metric-compact" : "weather-metric-square";
 }
 
-function createMetricWidget({ pageId, source }) {
-  const size = resolveMetricSize(source);
+export function createWeatherPageMetricWidget({ pageId, source }) {
+  const size = resolveWeatherPageMetricSize(source);
   return {
     id: `widget-weather-page-${pageId}-${source.key}`,
     kind: "weather-metric",
     type: "weather-metric",
     component: "weather-metric-widget",
     category: "climate",
-    variant: resolveMetricVariant(source, size),
+    variant: resolveWeatherPageMetricVariant(source, size),
     w: size.w,
     h: size.h,
     metricKey: source.key,
@@ -121,27 +121,27 @@ function createWeatherPageSeedFromSources({
   const metrics = sortMetricSources(Array.isArray(sources.metrics) ? sources.metrics : []);
 
   const widgets = [
-    createWeatherWidget({
+    createWeatherPageWeatherWidget({
       id: `widget-weather-page-${normalizedPageId}-current`,
       pageName,
       entityId,
       displayMode: "current",
     }),
-    createWeatherWidget({
+    createWeatherPageWeatherWidget({
       id: `widget-weather-page-${normalizedPageId}-hourly`,
       pageName,
       entityId,
       displayMode: "forecast",
       forecastType: "hourly",
     }),
-    createWeatherWidget({
+    createWeatherPageWeatherWidget({
       id: `widget-weather-page-${normalizedPageId}-daily`,
       pageName,
       entityId,
       displayMode: "forecast",
       forecastType: "daily",
     }),
-    ...metrics.map(source => createMetricWidget({
+    ...metrics.map(source => createWeatherPageMetricWidget({
       pageId: normalizedPageId,
       source,
     })),
