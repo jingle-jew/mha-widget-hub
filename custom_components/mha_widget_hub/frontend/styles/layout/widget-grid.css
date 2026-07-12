@@ -350,6 +350,36 @@
   overflow: visible;
 }
 
+/* Dedicated Weather pages can naturally exceed one dashboard viewport when
+ * integrations expose many related entities. Keep regular grid pages locked,
+ * but let the active weather grid grow vertically inside the widget area.
+ */
+:host([data-active-page-type="weather"]) .mha-widget-area {
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  overscroll-behavior-y: contain;
+}
+
+:host([data-active-page-type="weather"]) .mha-page-stage {
+  block-size: auto;
+  min-block-size: 100%;
+  align-content: start;
+}
+
+:host([data-active-page-type="weather"]) .mha-page-panel[data-page-type="weather"] {
+  block-size: auto;
+  min-block-size: 100%;
+  overflow: visible;
+}
+
+:host([data-active-page-type="weather"]) .mha-page-panel[data-page-type="weather"] > .mha-grid {
+  block-size: auto;
+  min-block-size: var(--mha-grid-track-height, 100%);
+  max-block-size: none;
+}
+
 :host([data-layout="mobile"][data-media-page-active="true"]) .mha-widget-area {
   padding-inline: 0;
   overflow-y: hidden;
