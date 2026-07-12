@@ -90,6 +90,7 @@ import {
   createDefaultPageConfig,
   isMediaPageExperienceActive,
   isMediaPlayersPage,
+  isWeatherPage,
   normalizeMediaPageConfig,
   PAGE_TYPES,
 } from "./src/pages/page-types.js";
@@ -308,6 +309,7 @@ constructor(){
     getRuntimeGridPreset:()=>this._getRuntimeGridPreset(),
     getWidgetAreaMetrics:()=>this._getWidgetAreaMetrics(),
     isMobileLayout:()=>this._isMobileLauncherLayout(),
+    allowUnboundedRows:()=>this._activePageAllowsUnboundedRows(),
     recordPersistenceResult:(success)=>this._recordPersistenceResult(success),
     writeWidgetPositions:(positions)=>writeJson(POSITIONS,positions),
     getRoot:()=>this.shadowRoot,
@@ -382,6 +384,7 @@ constructor(){
     getPositions:()=>this._getActiveWidgetPositions({create:true}),
     getGridBounds:()=>this._getGridBounds(),
     isMobileLayout:()=>this._isMobileLauncherLayout(),
+    allowUnboundedRows:()=>this._activePageAllowsUnboundedRows(),
     canMoveWidget:id=>this._isEditing&&this._activeMoveWidgetId===id,
     savePositions:positions=>this._saveCurrentWidgetPositions(positions),
     applyPositions:positions=>this._applyWidgetPositionsToDom(positions),
@@ -1143,9 +1146,13 @@ _getActiveWidgetPositions({create=false}={}){
 _toggleWidgetMoveMode(id){
   return getWidgetInteractionSurfaceCoordinatorForHost(this).toggleMoveMode(id);
 }
+_activePageAllowsUnboundedRows(){
+  return isWeatherPage(this._getActivePage());
+}
 _isPositionMapValidForWidgets(nextPositions,widgets,units,rowUnits){
   return isPositionMapValidForWidgets(nextPositions,widgets,units,rowUnits,{
-    allowUnboundedRows:this._isMobileLauncherLayout(),
+    allowUnboundedRows:this._isMobileLauncherLayout()||this._activePageAllowsUnboundedRows(),
+    layout:this._isMobileLauncherLayout()?"mobile":"desktop",
   });
 }
 _tryTranslatedGroupSwap(id,direction,positions,units,rowUnits){
@@ -1175,7 +1182,10 @@ _getAvailableDropSlotsForCandidate(candidateWidget,positions=this._getActiveWidg
     currentPosition,
     units,
     rowUnits,
-    {allowUnboundedRows:this._isMobileLauncherLayout()},
+    {
+      allowUnboundedRows:this._isMobileLauncherLayout()||this._activePageAllowsUnboundedRows(),
+      layout:this._isMobileLauncherLayout()?"mobile":"desktop",
+    },
   );
 }
 _getAvailableDropSlotsForWidget(id,positions=this._getActiveWidgetPositions({create:true})){
@@ -1329,6 +1339,7 @@ _getGridBounds(){
 _doesWidgetLayoutFitGrid(widgets=this._widgets){
   const bounds=this._getGridBounds();
   return doesWidgetLayoutFitGrid(widgets,bounds.units,bounds.rowUnits,{
+    allowUnboundedRows:this._isMobileLauncherLayout()||this._activePageAllowsUnboundedRows(),
     layout:this._isMobileLauncherLayout()?"mobile":"desktop",
   });
 }

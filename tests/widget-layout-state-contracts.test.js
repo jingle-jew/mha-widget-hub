@@ -42,6 +42,7 @@ function createHarness(overrides = {}) {
     bounds: { units: 4, rowUnits: 6 },
     runtimeGridPreset: { columns: 4, rows: 6 },
     mobile: false,
+    unboundedRows: false,
     ...overrides.state,
   };
 
@@ -72,6 +73,7 @@ function createHarness(overrides = {}) {
     getEffectiveLayout: () => state.effectiveLayout,
     getRuntimeGridPreset: () => state.runtimeGridPreset,
     isMobileLayout: () => state.mobile,
+    allowUnboundedRows: () => state.unboundedRows,
     recordPersistenceResult: (value) => {
       effects.push(["record", value]);
       return value;
@@ -155,7 +157,10 @@ test("desktop position validation uses bounded rows", () => {
   coordinator.readStoredPositions();
 
   assert.equal(validationCalls.length, 1);
-  assert.deepEqual(validationCalls[0][4], { allowUnboundedRows: false });
+  assert.deepEqual(validationCalls[0][4], {
+    allowUnboundedRows: false,
+    layout: "desktop",
+  });
 });
 
 test("mobile position validation allows unbounded rows", () => {
@@ -174,7 +179,42 @@ test("mobile position validation allows unbounded rows", () => {
   coordinator.readStoredPositions();
 
   assert.equal(validationCalls.length, 1);
-  assert.deepEqual(validationCalls[0][4], { allowUnboundedRows: true });
+  assert.deepEqual(validationCalls[0][4], {
+    allowUnboundedRows: true,
+    layout: "mobile",
+  });
+});
+
+test("scrollable tablet pages validate unbounded rows without mobile layout", () => {
+  const packCalls = [];
+  const { coordinator, validationCalls } = createHarness({
+    state: {
+      unboundedRows: true,
+      widgetPositions: {
+        "living-room:tablet:4x6": {
+          clock: { x: 1, y: 1 },
+          weather: { x: 3, y: 8 },
+        },
+      },
+    },
+    packWidgetsFn: (...args) => {
+      packCalls.push(args);
+      return {};
+    },
+  });
+
+  coordinator.readStoredPositions();
+  coordinator.packWidgetsForCurrentGrid();
+
+  assert.equal(validationCalls.length, 1);
+  assert.deepEqual(validationCalls[0][4], {
+    allowUnboundedRows: true,
+    layout: "desktop",
+  });
+  assert.deepEqual(packCalls[0][3], {
+    allowUnboundedRows: true,
+    layout: "desktop",
+  });
 });
 
 test("saveCurrentPositions persists positions under the active layout key", () => {

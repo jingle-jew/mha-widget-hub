@@ -149,14 +149,14 @@ export function isPositionMapValidForWidgets(
   widgets,
   units,
   rowUnits,
-  { allowUnboundedRows = false } = {},
+  { allowUnboundedRows = false, layout = allowUnboundedRows ? "mobile" : "desktop" } = {},
 ) {
   const maxRows = allowUnboundedRows
     ? Number.POSITIVE_INFINITY
     : rowUnits;
   const context = {
     rowUnits,
-    layout: allowUnboundedRows ? "mobile" : "desktop",
+    layout,
   };
 
   for (const widget of widgets) {

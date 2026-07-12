@@ -28,6 +28,7 @@ export class PlacementController {
     getPositions = () => null,
     getGridBounds = () => ({ units: 1, rowUnits: 1 }),
     isMobileLayout = () => false,
+    allowUnboundedRows = () => false,
     canMoveWidget = () => false,
     savePositions = () => {},
     applyPositions = () => {},
@@ -42,6 +43,7 @@ export class PlacementController {
     this.getPositions = (...args) => getPositions(...args);
     this.getGridBounds = (...args) => getGridBounds(...args);
     this.isMobileLayout = (...args) => isMobileLayout(...args);
+    this.allowUnboundedRows = (...args) => allowUnboundedRows(...args);
     this.canMoveWidget = (...args) => canMoveWidget(...args);
     this.savePositions = (...args) => savePositions(...args);
     this.applyPositions = (...args) => applyPositions(...args);
@@ -59,8 +61,15 @@ export class PlacementController {
       widgets,
       units,
       rowUnits,
-      { allowUnboundedRows: this.isMobileLayout() },
+      {
+        allowUnboundedRows: this.allowsUnboundedRows(),
+        layout: this.isMobileLayout() ? "mobile" : "desktop",
+      },
     );
+  }
+
+  allowsUnboundedRows() {
+    return this.isMobileLayout() || this.allowUnboundedRows();
   }
 
   tryDirectNeighborSwap(
@@ -211,7 +220,7 @@ export class PlacementController {
       units,
       rowUnits,
       {
-        allowUnboundedRows: this.isMobileLayout(),
+        allowUnboundedRows: this.allowsUnboundedRows(),
         layout: context.layout,
       },
     );
@@ -279,7 +288,7 @@ export class PlacementController {
       w: width,
       h: height,
     };
-    const maxY = this.isMobileLayout()
+    const maxY = this.allowsUnboundedRows()
       ? Number.POSITIVE_INFINITY
       : rowUnits - height + 1;
     const isCandidateInBounds = candidate => !(
