@@ -1,6 +1,9 @@
 import { t } from "../i18n/index.js";
 import { findThemeStyleId } from "../settings/theme-registry.js";
-import { createWeatherPageSeed } from "./weather-page-seed.js";
+import {
+  createWeatherPageSeed,
+  discoverWeatherPageSeed,
+} from "./weather-page-seed.js";
 
 export const PAGE_TYPES = Object.freeze({
   GRID: "grid",
@@ -23,13 +26,31 @@ export function normalizePageType(type = PAGE_TYPES.GRID) {
   return Object.values(PAGE_TYPES).includes(type) ? type : PAGE_TYPES.GRID;
 }
 
+export function normalizeWeatherPageConfig(config = {}) {
+  const autoDetectedMetricKeys = [...new Set(
+    (Array.isArray(config.autoDetectedMetricKeys) ? config.autoDetectedMetricKeys : [])
+      .map(key => String(key || "").trim())
+      .filter(Boolean),
+  )];
+  const discoveryMode = config.discoveryMode === "registry"
+    ? "registry"
+    : "state-fallback";
+
+  return {
+    weatherEntityId: String(config.weatherEntityId || "").trim(),
+    autoDetectedMetricKeys,
+    discoveryMode,
+    registryLinked: config.registryLinked === true,
+  };
+}
+
 export function createDefaultPageConfig(type = PAGE_TYPES.GRID, {
   availablePlayerIds = [],
   weatherEntityId = "",
 } = {}) {
   const normalizedType = normalizePageType(type);
   if (normalizedType === PAGE_TYPES.WEATHER) {
-    return { weatherEntityId: String(weatherEntityId || "").trim() };
+    return normalizeWeatherPageConfig({ weatherEntityId });
   }
   if (normalizedType !== PAGE_TYPES.MEDIA_PLAYERS) return {};
 
@@ -75,7 +96,7 @@ export function normalizePageConfig(type = PAGE_TYPES.GRID, config = {}) {
     return normalizeMediaPageConfig(config);
   }
   if (normalizedType === PAGE_TYPES.WEATHER) {
-    return { weatherEntityId: String(config?.weatherEntityId || "").trim() };
+    return normalizeWeatherPageConfig(config);
   }
   return {};
 }
@@ -160,6 +181,10 @@ export function createMediaPageWidgetSeed({
 
 export function createWeatherPageWidgets(options = {}) {
   return createWeatherPageSeed(options);
+}
+
+export async function discoverWeatherPageWidgets(options = {}) {
+  return discoverWeatherPageSeed(options);
 }
 
 export function getPageCreatorTypeOptions({ themeStyle = "oneui" } = {}) {

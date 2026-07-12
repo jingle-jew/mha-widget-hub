@@ -1,77 +1,10 @@
 import { resolveAuthorizedEntity } from "./entity-access.js";
-import { getAvailableEntitiesForDomain, getFriendlyEntityName } from "./entity-filters.js";
-
-const METRIC_DEFINITIONS = Object.freeze([
-  Object.freeze({
-    key: "humidity",
-    icon: "humidity",
-    attributes: Object.freeze(["humidity"]),
-    deviceClasses: Object.freeze(["humidity"]),
-    keywords: Object.freeze(["humidity", "humidite", "humidité"]),
-    fallbackUnit: "%",
-  }),
-  Object.freeze({
-    key: "precipitation",
-    icon: "umbrella",
-    attributes: Object.freeze(["precipitation_probability", "precipitation"]),
-    deviceClasses: Object.freeze(["precipitation", "precipitation_intensity"]),
-    keywords: Object.freeze(["precipitation", "precipitations", "rain", "pluie"]),
-  }),
-  Object.freeze({
-    key: "wind",
-    icon: "wind",
-    attributes: Object.freeze(["wind_speed", "wind_gust_speed"]),
-    deviceClasses: Object.freeze(["wind_speed"]),
-    keywords: Object.freeze(["wind", "vent"]),
-  }),
-  Object.freeze({
-    key: "pressure",
-    icon: "pressure",
-    attributes: Object.freeze(["pressure"]),
-    deviceClasses: Object.freeze(["atmospheric_pressure", "pressure"]),
-    keywords: Object.freeze(["pressure", "pression", "barometer", "barometre", "baromètre"]),
-  }),
-  Object.freeze({
-    key: "uv",
-    icon: "uv",
-    attributes: Object.freeze(["uv_index"]),
-    deviceClasses: Object.freeze(["uv_index"]),
-    keywords: Object.freeze(["uv index", "indice uv", "ultraviolet"]),
-  }),
-  Object.freeze({
-    key: "air-quality",
-    icon: "air-quality",
-    attributes: Object.freeze(["air_quality_index", "aqi"]),
-    deviceClasses: Object.freeze([
-      "aqi",
-      "pm25",
-      "pm10",
-      "carbon_dioxide",
-      "volatile_organic_compounds",
-      "volatile_organic_compounds_parts",
-    ]),
-    keywords: Object.freeze([
-      "air quality",
-      "qualite air",
-      "qualité air",
-      "aqi",
-      "aqhi",
-      "cote air sante",
-      "côte air santé",
-      "cas",
-      "pm2.5",
-      "pm25",
-      "pm10",
-    ]),
-  }),
-  Object.freeze({
-    key: "visibility",
-    icon: "visibility",
-    attributes: Object.freeze(["visibility"]),
-    deviceClasses: Object.freeze(["distance"]),
-    keywords: Object.freeze(["visibility", "visibilite", "visibilité"]),
-  }),
-]);
+import { getFriendlyEntityName } from "./entity-filters.js";
+import {
+  discoverWeatherPageSources,
+  resolveWeatherAttributeUnit,
+  resolveWeatherPageSourcesFromState,
+} from "./weather-page-discovery.js";
 
 function hasValue(value) {
   return value !== undefined && value !== null && value !== "";
@@ -90,113 +23,40 @@ function normalizeText(value = "") {
     .trim();
 }
 
-function getSensorSearchText(entity = {}) {
-  const state = entity.state || {};
-  return normalizeText([
-    entity.entity_id,
-    entity.name,
-    state.attributes?.friendly_name,
-    state.attributes?.device_class,
-    state.attributes?.unit_of_measurement,
-  ].filter(Boolean).join(" "));
+export function resolveWeatherPageSources(hass, visibilityConfig, options = {}) {
+  return resolveWeatherPageSourcesFromState(hass, visibilityConfig, options);
 }
 
-function scoreSensor(entity, definition) {
-  const attributes = entity.state?.attributes || {};
-  const deviceClass = String(attributes.device_class || "").trim().toLowerCase();
-  const searchText = getSensorSearchText(entity);
-  let score = 0;
+export { discoverWeatherPageSources };
 
-  if (definition.deviceClasses.includes(deviceClass)) score += 100;
-  if (definition.key === "visibility" && deviceClass === "distance" && searchText.includes("visibility")) score += 70;
-  definition.keywords.forEach((keyword) => {
-    if (searchText.includes(normalizeText(keyword))) score += 20;
-  });
-
-  return score;
-}
-
-function findBestSensor(sensors, definition) {
-  return sensors
-    .map(entity => ({ entity, score: scoreSensor(entity, definition) }))
-    .filter(candidate => candidate.score > 0)
-    .sort((a, b) => b.score - a.score || a.entity.name.localeCompare(b.entity.name))[0]?.entity || null;
-}
-
-function resolveWeatherAttributeUnit(attributes = {}, attribute = "", fallbackUnit = "") {
-  if (attribute === "humidity" || attribute === "precipitation_probability") return "%";
-  if (attribute === "wind_speed" || attribute === "wind_gust_speed") return attributes.wind_speed_unit || fallbackUnit;
-  if (attribute === "pressure") return attributes.pressure_unit || fallbackUnit;
-  if (attribute === "visibility") return attributes.visibility_unit || fallbackUnit;
-  if (attribute === "precipitation") return attributes.precipitation_unit || fallbackUnit;
-  return fallbackUnit;
-}
-
-function createMetricSourceFromWeather(weatherEntity, definition) {
-  const attributes = weatherEntity?.state?.attributes || {};
-  const attribute = definition.attributes.find(name => hasValue(attributes[name]));
-  if (!attribute) return null;
-
-  return {
-    key: definition.key,
-    icon: definition.icon,
-    sourceType: "weather-attribute",
-    weatherEntityId: weatherEntity.entity_id,
-    entityId: weatherEntity.entity_id,
-    attribute,
-    unit: resolveWeatherAttributeUnit(attributes, attribute, definition.fallbackUnit || ""),
-  };
-}
-
-function createMetricSourceFromSensor(sensor, definition) {
-  if (!sensor) return null;
-  return {
-    key: definition.key,
-    icon: definition.icon,
-    sourceType: "entity",
-    entityId: sensor.entity_id,
-    attribute: "",
-    unit: sensor.state?.attributes?.unit_of_measurement || definition.fallbackUnit || "",
-  };
-}
-
-export function resolveWeatherPageSources(hass, visibilityConfig) {
-  const weatherEntities = getAvailableEntitiesForDomain(hass, "weather", visibilityConfig);
-  const sensors = getAvailableEntitiesForDomain(hass, "sensor", visibilityConfig);
-  const sunEntities = getAvailableEntitiesForDomain(hass, "sun", visibilityConfig);
-  const weatherEntity = weatherEntities[0] || null;
-
-  const metrics = METRIC_DEFINITIONS.map((definition) => (
-    createMetricSourceFromWeather(weatherEntity, definition)
-    || createMetricSourceFromSensor(findBestSensor(sensors, definition), definition)
-  )).filter(Boolean);
-
-  const sunEntity = sunEntities.find(entity => (
-    hasValue(entity.state?.attributes?.next_rising)
-    || hasValue(entity.state?.attributes?.next_setting)
-  )) || null;
-
-  if (sunEntity) {
-    metrics.push({
-      key: "sun",
-      icon: "sunrise",
-      sourceType: "sun",
-      entityId: sunEntity.entity_id,
-      attribute: "",
-      unit: "",
-    });
+function normalizeDisplayValue(value) {
+  if (Array.isArray(value)) {
+    return value
+      .map(item => normalizeDisplayValue(item))
+      .filter(item => item && item !== "--")
+      .join(" · ") || "--";
   }
-
-  return {
-    weatherEntityId: weatherEntity?.entity_id || "",
-    metrics,
-  };
+  if (value && typeof value === "object") {
+    const preferred = [
+      value.title,
+      value.headline,
+      value.summary,
+      value.message,
+      value.description,
+      value.event,
+      value.text,
+      value.name,
+    ].find(hasValue);
+    return preferred == null ? "--" : String(preferred);
+  }
+  return hasValue(value) ? String(value) : "--";
 }
 
 function formatMetricValue(value, unit = "") {
-  if (!hasValue(value)) return "--";
+  const normalizedValue = normalizeDisplayValue(value);
+  if (normalizedValue === "--") return normalizedValue;
   const normalizedUnit = String(unit || "").trim();
-  return `${value}${normalizedUnit ? ` ${normalizedUnit}` : ""}`;
+  return `${normalizedValue}${normalizedUnit ? ` ${normalizedUnit}` : ""}`;
 }
 
 function formatSunTime(value) {
@@ -229,6 +89,14 @@ function inferAirQualityMeasurement({ deviceClass = "", unit = "", sourceName = 
   return "generic";
 }
 
+function resolveAirQualityMeasurement(metricKey = "", context = {}) {
+  if (metricKey === "air-quality-pm1") return "pm1";
+  if (metricKey === "air-quality-pm25") return "pm25";
+  if (metricKey === "air-quality-pm10") return "pm10";
+  if (metricKey.startsWith("air-quality-")) return metricKey.slice("air-quality-".length);
+  return inferAirQualityMeasurement(context);
+}
+
 function buildSunMetricModel(hass, widget, visibilityConfig) {
   const access = resolveAuthorizedEntity(hass, widget.entityId, {
     allowedDomains: ["sun"],
@@ -247,6 +115,7 @@ function buildSunMetricModel(hass, widget, visibilityConfig) {
     secondaryValue: formatSunTime(nextSetting),
     rawValue: null,
     valueNumber: null,
+    valueKind: "sun",
     unit: "",
     deviceClass: "sun",
     measurementType: "sun",
@@ -264,10 +133,12 @@ export function buildWeatherPageData(hass, visibilityConfig) {
     const model = buildWeatherMetricModel(hass, {
       metricKey: source.key,
       icon: source.icon,
+      label: source.label,
       sourceType: source.sourceType,
       entityId: source.entityId,
       attribute: source.attribute,
       unit: source.unit,
+      valueKind: source.valueKind,
     }, visibilityConfig);
     return [source.key === "air-quality" ? "airQuality" : source.key, model];
   }));
@@ -301,24 +172,26 @@ export function buildWeatherMetricModel(hass, widget = {}, visibilityConfig) {
     || "";
   const deviceClass = String(attributes.device_class || "").trim().toLowerCase();
   const sourceName = access.entityState ? getFriendlyEntityName(access.entityState, access.entityId) : "";
-  const measurementType = widget.metricKey === "air-quality"
-    ? inferAirQualityMeasurement({
+  const metricKey = widget.metricKey || "metric";
+  const measurementType = metricKey.startsWith("air-quality")
+    ? resolveAirQualityMeasurement(metricKey, {
       deviceClass,
       unit,
       sourceName,
       attribute: widget.attribute,
     })
-    : widget.metricKey || deviceClass || "metric";
+    : metricKey || deviceClass || "metric";
 
   return {
     ...access,
-    metricKey: widget.metricKey || "metric",
+    metricKey,
     icon: widget.icon || "weather",
     title: widget.label || sourceName,
     value: formatMetricValue(rawValue, unit),
     secondaryValue: "",
     rawValue,
     valueNumber: toFiniteNumber(rawValue),
+    valueKind: widget.valueKind === "text" ? "text" : "number",
     unit,
     deviceClass,
     measurementType,

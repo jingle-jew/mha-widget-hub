@@ -1,4 +1,7 @@
-import { resolveWeatherPageSources } from "../ha/weather-page-data.js";
+import {
+  discoverWeatherPageSources,
+  resolveWeatherPageSources,
+} from "../ha/weather-page-data.js";
 
 function createWeatherWidget({
   id,
@@ -27,20 +30,36 @@ function createWeatherWidget({
   };
 }
 
+function resolveMetricSize(source = {}) {
+  const preferred = source.preferredSize;
+  if (Number(preferred?.w) > 0 && Number(preferred?.h) > 0) {
+    return { w: Number(preferred.w), h: Number(preferred.h) };
+  }
+  return { w: 2, h: 2 };
+}
+
+function resolveMetricVariant(source = {}, size = {}) {
+  if (source.key === "sun") return size.h <= 1 ? "weather-metric-wide" : "weather-metric-square";
+  if (source.valueKind === "text") return "weather-metric-text-wide";
+  return size.h <= 1 ? "weather-metric-compact" : "weather-metric-square";
+}
+
 function createMetricWidget({ pageId, source }) {
-  const isSun = source.key === "sun";
+  const size = resolveMetricSize(source);
   return {
     id: `widget-weather-page-${pageId}-${source.key}`,
     kind: "weather-metric",
     type: "weather-metric",
     component: "weather-metric-widget",
     category: "climate",
-    variant: isSun ? "weather-metric-wide" : "weather-metric-square",
-    w: isSun ? 4 : 2,
-    h: isSun ? 1 : 2,
+    variant: resolveMetricVariant(source, size),
+    w: size.w,
+    h: size.h,
     metricKey: source.key,
     icon: source.icon,
+    label: source.label || "",
     sourceType: source.sourceType,
+    valueKind: source.valueKind || "number",
     weatherEntityId: source.weatherEntityId || "",
     entityId: source.entityId || "",
     entity_id: source.entityId || "",
@@ -49,15 +68,14 @@ function createMetricWidget({ pageId, source }) {
   };
 }
 
-export function createWeatherPageSeed({
+function createWeatherPageSeedFromSources({
   pageId = "weather",
   pageName = "Weather",
-  hass,
-  visibilityConfig,
+  sources = {},
 } = {}) {
   const normalizedPageId = String(pageId || "weather").trim() || "weather";
-  const sources = resolveWeatherPageSources(hass, visibilityConfig);
-  const entityId = sources.weatherEntityId;
+  const entityId = sources.weatherEntityId || "";
+  const metrics = Array.isArray(sources.metrics) ? sources.metrics : [];
 
   const widgets = [
     createWeatherWidget({
@@ -80,7 +98,7 @@ export function createWeatherPageSeed({
       displayMode: "forecast",
       forecastType: "daily",
     }),
-    ...sources.metrics.map(source => createMetricWidget({
+    ...metrics.map(source => createMetricWidget({
       pageId: normalizedPageId,
       source,
     })),
@@ -90,8 +108,32 @@ export function createWeatherPageSeed({
     weatherEntityId: entityId,
     config: {
       weatherEntityId: entityId,
-      autoDetectedMetricKeys: sources.metrics.map(source => source.key),
+      autoDetectedMetricKeys: metrics.map(source => source.key),
+      discoveryMode: sources.discoveryMode || "state-fallback",
+      registryLinked: sources.registryLinked === true,
     },
     widgets,
   };
+}
+
+export function createWeatherPageSeed({
+  pageId = "weather",
+  pageName = "Weather",
+  hass,
+  visibilityConfig,
+  weatherEntityId = "",
+} = {}) {
+  const sources = resolveWeatherPageSources(hass, visibilityConfig, { weatherEntityId });
+  return createWeatherPageSeedFromSources({ pageId, pageName, sources });
+}
+
+export async function discoverWeatherPageSeed({
+  pageId = "weather",
+  pageName = "Weather",
+  hass,
+  visibilityConfig,
+  weatherEntityId = "",
+} = {}) {
+  const sources = await discoverWeatherPageSources(hass, visibilityConfig, { weatherEntityId });
+  return createWeatherPageSeedFromSources({ pageId, pageName, sources });
 }

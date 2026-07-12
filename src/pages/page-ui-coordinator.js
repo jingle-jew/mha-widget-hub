@@ -20,7 +20,7 @@ import {
 } from "./page-creator.js";
 import {
   createDefaultPageConfig,
-  createWeatherPageWidgets,
+  discoverWeatherPageWidgets,
   getDefaultPageIcon,
   isMediaPageExperienceActive,
   isMediaPlayersPage,
@@ -258,25 +258,37 @@ export class PageUiCoordinator {
     return true;
   }
 
+  async createWeatherPageFromCreator() {
+    if (!this.getIsEditing()) return false;
+    const weatherSeed = await discoverWeatherPageWidgets({
+      hass: this.getHass(),
+      visibilityConfig: this.getEntityVisibilityConfig(),
+      pageId: `weather-${Date.now().toString(36)}`,
+    });
+    if (!this.getIsEditing()) return false;
+    return this.addPage({
+      pageType: PAGE_TYPES.WEATHER,
+      icon: getDefaultPageIcon(PAGE_TYPES.WEATHER),
+      pageConfig: weatherSeed.config,
+      initialWidgets: weatherSeed.widgets,
+    });
+  }
+
   createPageFromCreator() {
     if (!this.getIsEditing()) return false;
-    const pageType = !supportsMediaPageTheme(this.getThemeStyle())
+    const requestedPageType = this.getNewPageType() || PAGE_TYPES.GRID;
+    const pageType = requestedPageType === PAGE_TYPES.MEDIA_PLAYERS
+      && !supportsMediaPageTheme(this.getThemeStyle())
       ? PAGE_TYPES.GRID
-      : (this.getNewPageType() || PAGE_TYPES.GRID);
-    const weatherSeed = pageType === PAGE_TYPES.WEATHER
-      ? createWeatherPageWidgets({
-        hass: this.getHass(),
-        visibilityConfig: this.getEntityVisibilityConfig(),
-        pageId: `weather-${Date.now().toString(36)}`,
-      })
-      : null;
+      : requestedPageType;
+    if (pageType === PAGE_TYPES.WEATHER) {
+      return this.createWeatherPageFromCreator();
+    }
     return this.addPage({
       pageType,
       icon: getDefaultPageIcon(pageType),
-      pageConfig: createDefaultPageConfig(pageType, {
-        weatherEntityId: weatherSeed?.weatherEntityId || "",
-      }),
-      initialWidgets: weatherSeed?.widgets || [],
+      pageConfig: createDefaultPageConfig(pageType),
+      initialWidgets: [],
     });
   }
 

@@ -7,18 +7,41 @@ const SVG_NS = "http://www.w3.org/2000/svg";
 
 const METRIC_LABELS = Object.freeze({
   humidity: Object.freeze(["weatherPage.metrics.humidity", "Humidity"]),
+  "apparent-temperature": Object.freeze(["weatherPage.metrics.apparentTemperature", "Feels like"]),
+  "dew-point": Object.freeze(["weatherPage.metrics.dewPoint", "Dew point"]),
+  "precipitation-probability": Object.freeze(["weatherPage.metrics.precipitationProbability", "Precipitation probability"]),
   precipitation: Object.freeze(["weatherPage.metrics.precipitation", "Precipitation"]),
+  "precipitation-rate": Object.freeze(["weatherPage.metrics.precipitationRate", "Precipitation rate"]),
+  "snow-depth": Object.freeze(["weatherPage.metrics.snowDepth", "Snow depth"]),
   wind: Object.freeze(["weatherPage.metrics.wind", "Wind"]),
+  "wind-gust": Object.freeze(["weatherPage.metrics.windGust", "Wind gusts"]),
   pressure: Object.freeze(["weatherPage.metrics.pressure", "Pressure"]),
-  uv: Object.freeze(["weatherPage.metrics.uv", "UV index"]),
-  "air-quality": Object.freeze(["weatherPage.metrics.airQuality", "Air quality"]),
+  "pressure-tendency": Object.freeze(["weatherPage.metrics.pressureTendency", "Pressure tendency"]),
   visibility: Object.freeze(["weatherPage.metrics.visibility", "Visibility"]),
+  "cloud-coverage": Object.freeze(["weatherPage.metrics.cloudCoverage", "Cloud coverage"]),
+  uv: Object.freeze(["weatherPage.metrics.uv", "UV index"]),
+  ozone: Object.freeze(["weatherPage.metrics.ozone", "Ozone"]),
+  "solar-radiation": Object.freeze(["weatherPage.metrics.solarRadiation", "Solar radiation"]),
+  illuminance: Object.freeze(["weatherPage.metrics.illuminance", "Illuminance"]),
+  "sunshine-duration": Object.freeze(["weatherPage.metrics.sunshineDuration", "Sunshine duration"]),
+  "air-quality": Object.freeze(["weatherPage.metrics.airQuality", "Air quality"]),
+  "air-quality-pm1": Object.freeze(["weatherPage.metrics.pm1", "PM1"]),
+  "air-quality-pm25": Object.freeze(["weatherPage.metrics.pm25", "PM2.5"]),
+  "air-quality-pm10": Object.freeze(["weatherPage.metrics.pm10", "PM10"]),
+  "air-quality-co": Object.freeze(["weatherPage.metrics.carbonMonoxide", "Carbon monoxide"]),
+  "air-quality-co2": Object.freeze(["weatherPage.metrics.carbonDioxide", "Carbon dioxide"]),
+  "air-quality-no2": Object.freeze(["weatherPage.metrics.nitrogenDioxide", "Nitrogen dioxide"]),
+  "air-quality-so2": Object.freeze(["weatherPage.metrics.sulfurDioxide", "Sulfur dioxide"]),
+  "air-quality-voc": Object.freeze(["weatherPage.metrics.voc", "Volatile organic compounds"]),
+  summary: Object.freeze(["weatherPage.metrics.summary", "Weather summary"]),
+  alerts: Object.freeze(["weatherPage.metrics.alerts", "Weather alerts"]),
   sun: Object.freeze(["weatherPage.metrics.sun", "Sunrise & sunset"]),
 });
 
 const WEATHER_METRIC_SQUARE_VARIANT = variant("weather-metric-square", "Metric 2×2", 2, 2);
 const WEATHER_METRIC_COMPACT_VARIANT = variant("weather-metric-compact", "Metric 2×1", 2, 1);
 const WEATHER_METRIC_WIDE_VARIANT = variant("weather-metric-wide", "Metric 4×1", 4, 1);
+const WEATHER_METRIC_TEXT_WIDE_VARIANT = variant("weather-metric-text-wide", "Text 4×1", 4, 1);
 const WEATHER_METRIC_VARIANTS = Object.freeze([
   WEATHER_METRIC_SQUARE_VARIANT,
   WEATHER_METRIC_COMPACT_VARIANT,
@@ -29,10 +52,13 @@ const WEATHER_SUN_VARIANTS = Object.freeze([
 ]);
 
 function resolveWeatherMetricVariants(widget = {}) {
-  return widget.metricKey === "sun" ? WEATHER_SUN_VARIANTS : WEATHER_METRIC_VARIANTS;
+  if (widget.metricKey === "sun") return WEATHER_SUN_VARIANTS;
+  if (widget.valueKind === "text") return Object.freeze([WEATHER_METRIC_TEXT_WIDE_VARIANT]);
+  return WEATHER_METRIC_VARIANTS;
 }
 
 function normalizeWeatherMetricSize(size = {}, { widget = {} } = {}) {
+  if (widget.valueKind === "text") return { w: 4, h: 1 };
   if (widget.metricKey === "sun") {
     return size.h <= 1 ? { w: 4, h: 1 } : { w: 2, h: 2 };
   }
@@ -90,6 +116,10 @@ function normalizeVisibilityKm(value, unit = "") {
   return value;
 }
 
+function supportsAirQualityProfile(model) {
+  return ["aqhi", "aqi", "pm25", "pm10"].includes(model.measurementType);
+}
+
 function getAirQualityProfile(model) {
   const value = model.valueNumber;
   if (!Number.isFinite(value)) return { level: "unknown", progress: 0 };
@@ -115,7 +145,11 @@ function getMetricDescription(model) {
 
   if (model.metricKey === "humidity" && Number.isFinite(value)) {
     level = value < 30 ? "veryDry" : value < 40 ? "dry" : value <= 60 ? "comfortable" : value <= 75 ? "humid" : "veryHumid";
-  } else if (model.metricKey === "precipitation" && Number.isFinite(value)) {
+  } else if (
+    (model.metricKey === "precipitation-probability"
+      || (model.metricKey === "precipitation" && String(model.unit || "").includes("%")))
+    && Number.isFinite(value)
+  ) {
     level = value < 10 ? "none" : value < 35 ? "low" : value < 65 ? "possible" : "likely";
   } else if (model.metricKey === "wind") {
     const windKmh = normalizeWindKmh(value, model.unit);
@@ -125,7 +159,7 @@ function getMetricDescription(model) {
     level = !Number.isFinite(pressureHpa) ? "unknown" : pressureHpa < 1000 ? "low" : pressureHpa <= 1025 ? "normal" : "high";
   } else if (model.metricKey === "uv" && Number.isFinite(value)) {
     level = value < 3 ? "low" : value < 6 ? "moderate" : value < 8 ? "high" : value < 11 ? "veryHigh" : "extreme";
-  } else if (model.metricKey === "air-quality") {
+  } else if (model.metricKey.startsWith("air-quality") && supportsAirQualityProfile(model)) {
     level = getAirQualityProfile(model).level;
   } else if (model.metricKey === "visibility") {
     const visibilityKm = normalizeVisibilityKm(value, model.unit);
@@ -134,10 +168,13 @@ function getMetricDescription(model) {
     level = model.isDay ? "day" : "night";
   }
 
-  return t(
-    `weatherPage.descriptions.${model.metricKey}.${level}`,
-    level === "unknown" ? t("common.unknown", "Unknown") : level,
-  );
+  if (level === "unknown") return "";
+  const descriptionKey = model.metricKey.startsWith("air-quality")
+    ? "air-quality"
+    : model.metricKey === "precipitation-probability"
+      ? "precipitation"
+      : model.metricKey;
+  return t(`weatherPage.descriptions.${descriptionKey}.${level}`, level);
 }
 
 function createProgressVisual({ kind = "generic", progress = 0, segmented = false } = {}) {
@@ -225,7 +262,10 @@ function createMetricVisual(model) {
   if (model.metricKey === "humidity") {
     return createProgressVisual({ kind: "humidity", progress: Number.isFinite(value) ? value / 100 : 0 });
   }
-  if (model.metricKey === "precipitation") {
+  if (
+    model.metricKey === "precipitation-probability"
+    || (model.metricKey === "precipitation" && String(model.unit || "").includes("%"))
+  ) {
     return createProgressVisual({ kind: "precipitation", progress: Number.isFinite(value) ? value / 100 : 0 });
   }
   if (model.metricKey === "wind") return createCompassVisual(model);
@@ -236,11 +276,11 @@ function createMetricVisual(model) {
   if (model.metricKey === "uv") {
     return createProgressVisual({ kind: "uv", progress: Number.isFinite(value) ? value / 11 : 0, segmented: true });
   }
-  if (model.metricKey === "air-quality") {
+  if (model.metricKey.startsWith("air-quality") && supportsAirQualityProfile(model)) {
     return createProgressVisual({ kind: "air-quality", progress: getAirQualityProfile(model).progress, segmented: true });
   }
   if (model.metricKey === "visibility") return createVisibilityVisual(model);
-  return createProgressVisual({ kind: "generic", progress: 0 });
+  return null;
 }
 
 function createValueBlock(model) {
@@ -279,6 +319,8 @@ function renderSunMetric(root, model, header) {
 function renderMetric(root, model) {
   root.replaceChildren();
   root.dataset.metricKey = model.metricKey;
+  root.dataset.metricKind = model.valueKind || "number";
+  root.dataset.metricLayout = "unavailable";
   root.dataset.entityAllowed = String(model.entityAllowed);
   root.dataset.entityAvailable = String(model.entityAvailable);
 
@@ -307,16 +349,27 @@ function renderMetric(root, model) {
   }
 
   if (model.metricKey === "sun") {
+    root.dataset.metricLayout = "sun";
     renderSunMetric(root, model, header);
     return;
   }
 
-  root.append(
-    header,
-    createText("mha-weather-metric-description", getMetricDescription(model)),
-    createValueBlock(model),
-    createMetricVisual(model),
-  );
+  if (model.valueKind === "text") {
+    root.dataset.metricLayout = "text";
+    root.append(
+      header,
+      createText("mha-weather-metric-text-value", model.value || "--"),
+    );
+    return;
+  }
+
+  const description = getMetricDescription(model);
+  const visual = createMetricVisual(model);
+  root.dataset.metricLayout = visual ? "visual" : "value-only";
+  root.append(header);
+  if (description) root.append(createText("mha-weather-metric-description", description));
+  root.append(createValueBlock(model));
+  if (visual) root.append(visual);
 }
 
 export function createWeatherMetricWidgetContent(widget = {}, {
@@ -331,7 +384,7 @@ export function createWeatherMetricWidgetContent(widget = {}, {
   root.dataset.widgetComponent = "weather-metric";
 
   const renderCurrent = () => {
-    const compactSize = widget.metricKey === "sun" ? "4x1" : "2x1";
+    const compactSize = widget.metricKey === "sun" || widget.valueKind === "text" ? "4x1" : "2x1";
     root.dataset.weatherMetricSize = context.widgetH <= 1 ? compactSize : "2x2";
     renderMetric(root, buildWeatherMetricModel(context.hass, widget, entityVisibilityConfig));
   };
@@ -375,7 +428,7 @@ export const WEATHER_METRIC_WIDGET_DEFINITION = Object.freeze({
   css: css("styles/widgets/weather-metric-widget.css"),
   preview: "weather",
   aliases: ["weather-metric-widget"],
-  variantAliases: ["weather-metric-square", "weather-metric-compact", "weather-metric-wide"],
+  variantAliases: ["weather-metric-square", "weather-metric-compact", "weather-metric-wide", "weather-metric-text-wide"],
   defaultVariant: "weather-metric-square",
   defaultSize: freezeSize(2, 2),
   normalizeSize: normalizeWeatherMetricSize,
@@ -392,6 +445,7 @@ export const WEATHER_METRIC_WIDGET_DEFINITION = Object.freeze({
       icon: String(widget.icon || "weather"),
       label: String(widget.label || ""),
       sourceType: String(widget.sourceType || "entity"),
+      valueKind: widget.valueKind === "text" ? "text" : "number",
       weatherEntityId: String(widget.weatherEntityId || ""),
       entityId: String(widget.entityId || widget.entity_id || ""),
       attribute: String(widget.attribute || ""),
@@ -406,6 +460,7 @@ export const WEATHER_METRIC_WIDGET_DEFINITION = Object.freeze({
     WEATHER_METRIC_SQUARE_VARIANT,
     WEATHER_METRIC_COMPACT_VARIANT,
     WEATHER_METRIC_WIDE_VARIANT,
+    WEATHER_METRIC_TEXT_WIDE_VARIANT,
   ],
 });
 

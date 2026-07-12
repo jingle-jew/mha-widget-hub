@@ -47,6 +47,18 @@
   font-weight: var(--mha-type-widget-caption-weight, 580);
 }
 
+.mha-weather-metric-text-value {
+  min-inline-size: 0;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  color: var(--mha-text-primary);
+  font-size: clamp(.86rem, min(4.2cqi, 12cqb), 1.12rem);
+  font-weight: var(--mha-type-widget-body-weight, 580);
+  line-height: 1.35;
+}
+
 .mha-weather-metric-value-block {
   align-self: end;
   min-inline-size: 0;
@@ -71,6 +83,15 @@
   color: var(--mha-text-secondary);
   font-size: clamp(.72rem, 5.2cqi, 1rem);
   font-weight: 650;
+}
+
+.mha-weather-metric-widget[data-metric-layout="value-only"] {
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.mha-weather-metric-widget[data-metric-layout="value-only"] .mha-weather-metric-value-block {
+  grid-row: 2;
+  align-self: end;
 }
 
 .mha-weather-metric-progress {
@@ -355,6 +376,24 @@
 .mha-weather-metric-widget[data-weather-metric-size="4x1"] .mha-weather-metric-sun-values {
   grid-column: 3;
   grid-row: 1 / span 2;
+}
+
+.mha-weather-metric-widget[data-weather-metric-size="4x1"][data-metric-kind="text"] {
+  grid-template-columns: minmax(7rem, .72fr) minmax(0, 2.28fr);
+  grid-template-rows: minmax(0, 1fr);
+  gap: clamp(.65rem, 3cqi, 1.25rem);
+}
+
+.mha-weather-metric-widget[data-weather-metric-size="4x1"][data-metric-kind="text"] .mha-weather-metric-header {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: center;
+}
+
+.mha-weather-metric-widget[data-weather-metric-size="4x1"][data-metric-kind="text"] .mha-weather-metric-text-value {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
 }
 
 @container (max-width: 12rem) {

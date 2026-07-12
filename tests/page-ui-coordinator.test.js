@@ -251,6 +251,73 @@ test("media page creation falls back to a normal grid page on unsupported themes
   assert.deepEqual(state.pages.at(-1)?.widgets, []);
 });
 
+test("weather page creation keeps its type and waits for registry discovery on Alexa", async () => {
+  const hass = {
+    states: {
+      "weather.home": {
+        entity_id: "weather.home",
+        state: "sunny",
+        attributes: {
+          friendly_name: "Maison Prévisions",
+          temperature: 18,
+          temperature_unit: "°C",
+          humidity: 52,
+        },
+      },
+      "sensor.home_dew_point": {
+        entity_id: "sensor.home_dew_point",
+        state: "8",
+        attributes: {
+          friendly_name: "Maison Point de rosée",
+          device_class: "temperature",
+          unit_of_measurement: "°C",
+        },
+      },
+    },
+    user: { id: "dev-user", is_admin: true },
+    callWS: async ({ type }) => {
+      if (type === "config/entity_registry/list") {
+        return [
+          {
+            entity_id: "weather.home",
+            platform: "met",
+            config_entry_id: "weather-entry",
+            device_id: "weather-device",
+          },
+          {
+            entity_id: "sensor.home_dew_point",
+            platform: "met",
+            config_entry_id: "weather-entry",
+            device_id: "weather-device",
+          },
+        ];
+      }
+      if (type === "config/device_registry/list") {
+        return [{ id: "weather-device", config_entries: ["weather-entry"] }];
+      }
+      return [];
+    },
+  };
+  const { coordinator, state } = createHarness({
+    state: {
+      pageCreatorOpen: true,
+      newPageType: "weather",
+    },
+    options: {
+      getThemeStyle: () => "alexa",
+      getHass: () => hass,
+    },
+  });
+
+  assert.equal(await coordinator.createPageFromCreator(), true);
+  const page = state.pages.at(-1);
+  assert.equal(page?.type, "weather");
+  assert.equal(page?.icon, "weather");
+  assert.equal(page?.config?.discoveryMode, "registry");
+  assert.equal(page?.config?.autoDetectedMetricKeys.includes("dew-point"), true);
+  assert.equal(page?.widgets.some(widget => widget.metricKey === "dew-point"), true);
+});
+
 test("buildDockProps resolves dock content from the current theme manifest", () => {
   const { coordinator } = createHarness({
     options: {
