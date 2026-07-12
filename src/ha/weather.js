@@ -20,6 +20,7 @@ const WEATHER_LABELS = new Map([
   ["snowy", "widgets.weatherConditions.snowy"],
   ["snow", "widgets.weatherConditions.snowy"],
   ["snowy-rainy", "widgets.weatherConditions.snowyRainy"],
+  ["freezing-rainy", "widgets.weatherConditions.freezingRainy"],
   ["fog", "widgets.weatherConditions.fog"],
   ["foggy", "widgets.weatherConditions.fog"],
   ["windy", "widgets.weatherConditions.windy"],
@@ -71,13 +72,22 @@ function formatForecastHour(datetime, index) {
 export function normalizeWeatherForecasts(forecast = [], {
   type = "daily",
   temperatureUnit = "°",
+  windUnit = "",
+  limit = 5,
 } = {}) {
   if (!Array.isArray(forecast)) return [];
-  return forecast.slice(0, 5).map((item, index) => {
+  return forecast.slice(0, limit).map((item, index) => {
     const temperatureValue = toFiniteNumber(item.temperature);
     const lowTemperatureValue = toFiniteNumber(item.templow);
     const precipitationProbability = toFiniteNumber(item.precipitation_probability);
     const precipitation = toFiniteNumber(item.precipitation);
+    const apparentTemperatureValue = toFiniteNumber(
+      item.apparent_temperature ?? item.feels_like_temperature,
+    );
+    const humidityValue = toFiniteNumber(item.humidity);
+    const windSpeedValue = toFiniteNumber(item.wind_speed);
+    const windGustValue = toFiniteNumber(item.wind_gust_speed ?? item.wind_gust);
+    const uvIndexValue = toFiniteNumber(item.uv_index ?? item.uv);
     const high = formatTemperature(item.temperature, temperatureUnit);
     const low = formatTemperature(item.templow, temperatureUnit);
     return {
@@ -93,8 +103,33 @@ export function normalizeWeatherForecasts(forecast = [], {
       lowTemperatureValue,
       precipitationProbability,
       precipitation,
+      apparentTemperatureValue,
+      humidityValue,
+      windSpeedValue,
+      windGustValue,
+      windUnit: item.wind_speed_unit || windUnit,
+      uvIndexValue,
     };
   }).filter(item => item.condition || item.temp);
+}
+
+function normalizeWeatherAlerts(attributes = {}) {
+  const source = attributes.alerts ?? attributes.warnings ?? attributes.advisories;
+  const values = Array.isArray(source) ? source : source == null ? [] : [source];
+  return values.map((value) => {
+    if (value && typeof value === "object") {
+      return String(
+        value.title
+          || value.headline
+          || value.summary
+          || value.description
+          || value.message
+          || value.event
+          || "",
+      ).trim();
+    }
+    return String(value || "").trim();
+  }).filter(Boolean);
 }
 
 function getPrimaryTemperatureRange(dailyForecast = [], legacyForecast = [], hourlyForecast = []) {
@@ -195,14 +230,20 @@ export function buildWeatherModel(hass, widget = {}, visibilityConfig, forecastB
   const dailyForecast = normalizeWeatherForecasts(forecastBundle?.daily, {
     type: "daily",
     temperatureUnit,
+    windUnit,
+    limit: 8,
   });
   const hourlyForecast = normalizeWeatherForecasts(forecastBundle?.hourly, {
     type: "hourly",
     temperatureUnit,
+    windUnit,
+    limit: 24,
   });
   const legacyForecast = normalizeWeatherForecasts(attributes.forecast, {
     type: "daily",
     temperatureUnit,
+    windUnit,
+    limit: 8,
   });
   const preferredForecastType = widget?.forecastType === "hourly" ? "hourly" : "daily";
   const forecast = preferredForecastType === "hourly"
@@ -225,14 +266,28 @@ export function buildWeatherModel(hass, widget = {}, visibilityConfig, forecastB
     humidityValue: toFiniteNumber(attributes.humidity),
     wind: formatMetric(attributes.wind_speed, windUnit),
     windSpeedValue: toFiniteNumber(attributes.wind_speed),
+    windGustValue: toFiniteNumber(attributes.wind_gust_speed),
     windUnit,
     windBearing: toFiniteNumber(attributes.wind_bearing),
+    apparentTemperatureValue: toFiniteNumber(
+      attributes.apparent_temperature ?? attributes.feels_like_temperature,
+    ),
+    apparentTemperature: formatTemperature(
+      attributes.apparent_temperature ?? attributes.feels_like_temperature,
+      temperatureUnit,
+    ),
+    cloudCoverageValue: toFiniteNumber(attributes.cloud_coverage),
     precipitationProbability: toFiniteNumber(attributes.precipitation_probability),
+    precipitationValue: toFiniteNumber(attributes.precipitation),
+    uvIndexValue: toFiniteNumber(attributes.uv_index ?? attributes.uv),
     pressureValue: toFiniteNumber(attributes.pressure),
     visibilityValue: toFiniteNumber(attributes.visibility),
     highTemperature: temperatureRange.high,
     lowTemperature: temperatureRange.low,
     temperatureRange: temperatureRange.range,
+    dailyForecast,
+    hourlyForecast,
+    alerts: normalizeWeatherAlerts(attributes),
     forecast,
     forecastType: resolvedForecastType,
   };

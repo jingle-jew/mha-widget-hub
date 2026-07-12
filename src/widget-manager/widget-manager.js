@@ -52,7 +52,16 @@ function createWidgetPreview(item) {
   const media = el("div", "mha-widget-manager-preview-media-frame");
   area.append(media);
 
-  const preview = createLiveWidgetPreview(item) || createGenericPreviewFallback(item);
+  let preview;
+  try {
+    preview = createLiveWidgetPreview(item) || createGenericPreviewFallback(item);
+  } catch (error) {
+    // The manager must remain usable when a preview cannot be rendered. A
+    // preview is optional; removing the whole panel would leave only its scrim
+    // visible and make the category impossible to navigate.
+    console.warn(`[mha-widget-hub] Widget preview unavailable for ${kind}.`, error);
+    preview = createGenericPreviewFallback(item);
+  }
   if (preview.classList.contains("mha-widget-manager-live-preview")) {
     media.dataset.previewMode = "live";
   } else {

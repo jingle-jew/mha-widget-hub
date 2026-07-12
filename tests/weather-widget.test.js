@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import { createWeatherMetricWidgetContent } from "../src/widgets/weather-metric-widget.js";
 import { createWeatherWidgetContent } from "../src/widgets/weather-widget.js";
+import { createWeatherNarrativeWidgetContent } from "../src/widgets/weather-narrative-widget.js";
 
 function findByClass(node, className) {
   if (!node) return null;
@@ -211,4 +212,31 @@ test("weather widget updates its internal layout while resizing", () => {
     content.childNodes[0].childNodes.some((node) => node.className === "mha-weather-widget-details"),
     true,
   );
+});
+
+test("weather narrative widget renders honestly when forecasts are unavailable", () => {
+  installDom();
+
+  const content = createWeatherNarrativeWidgetContent({
+    kind: "weather-narrative",
+    entityId: "weather.home",
+  }, {
+    hass: {
+      states: {
+        "weather.home": {
+          entity_id: "weather.home",
+          state: "partlycloudy",
+          attributes: {
+            friendly_name: "Maison",
+            temperature: 22,
+            temperature_unit: "°C",
+          },
+        },
+      },
+    },
+  });
+
+  assert.equal(content.dataset.weatherNarrativeKind, "summary");
+  assert.equal(content.childNodes.length, 2);
+  content.__mhaDestroy();
 });
