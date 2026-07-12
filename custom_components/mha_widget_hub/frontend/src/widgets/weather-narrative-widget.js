@@ -11,7 +11,6 @@ import {
 import { createIconSymbol } from "../ui/icon-symbol.js";
 import { t } from "../i18n/index.js";
 
-const SVG_NS = "http://www.w3.org/2000/svg";
 const FORECAST_REFRESH_MS = 10 * 60 * 1000;
 
 export function isWeatherNarrativeWidget(widget = {}) {
@@ -22,12 +21,6 @@ function createText(className, text = "") {
   const element = document.createElement("span");
   element.className = className;
   element.textContent = text == null ? "" : String(text);
-  return element;
-}
-
-function createSvgElement(name, attributes = {}) {
-  const element = document.createElementNS(SVG_NS, name);
-  Object.entries(attributes).forEach(([key, value]) => element.setAttribute(key, String(value)));
   return element;
 }
 
@@ -55,10 +48,11 @@ function getChartSeries(event, weather) {
       className: "temperature",
     },
     precipitation: {
-      key: "precipitationProbability",
-      fallbackKey: "precipitation",
-      label: t("widgets.weatherNarrative.charts.precipitation", "Precipitation probability"),
-      unit: "%",
+      key: "precipitation",
+      fallbackKey: "precipitationProbability",
+      label: t("widgets.weatherNarrative.charts.precipitation", "Precipitation"),
+      unit: "mm",
+      fallbackUnit: "%",
       className: "precipitation",
     },
     wind: {
@@ -80,8 +74,53 @@ function getChartSeries(event, weather) {
       const value = item[definition.key] ?? item[definition.fallbackKey];
       return Number.isFinite(value) ? value : null;
     });
-    return { ...definition, items, values };
+    const hasPrimaryValues = items.some(item => Number.isFinite(item[definition.key]));
+    return {
+      ...definition,
+      items,
+      values,
+      unit: hasPrimaryValues ? definition.unit : definition.fallbackUnit || definition.unit,
+    };
   }).filter(seriesItem => seriesItem.values.filter(Number.isFinite).length >= 2);
+}
+
+function selectChartItems(series, maxItems = 6) {
+  const indexes = series[0].items
+    .map((_, index) => index)
+    .filter(index => series.some(seriesItem => Number.isFinite(seriesItem.values[index])));
+  if (indexes.length <= maxItems) return indexes.map(index => ({ index, item: series[0].items[index] }));
+
+  const selectedIndexes = Array.from({ length: maxItems }, (_, position) => (
+    indexes[Math.round(position * (indexes.length - 1) / (maxItems - 1))]
+  ));
+  return [...new Set(selectedIndexes)].map(index => ({ index, item: series[0].items[index] }));
+}
+
+function getBarHeight(value, seriesItem) {
+  const values = seriesItem.values.filter(Number.isFinite);
+  if (!values.length || !Number.isFinite(value)) return 0;
+
+  if (seriesItem.className === "temperature") {
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const range = max - min;
+    return range < 0.5 ? 52 : 18 + ((value - min) / range) * 70;
+  }
+
+  const max = Math.max(1, ...values);
+  return 10 + (value / max) * 78;
+}
+
+function formatChartValue(value, seriesItem) {
+  if (!Number.isFinite(value)) return "—";
+  const maximumFractionDigits = seriesItem.className === "precipitation" ? 2 : 0;
+  return Number(value).toLocaleString([], { maximumFractionDigits });
+}
+
+function formatChartTime(datetime) {
+  const date = new Date(datetime);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }).replace(/\s/g, "");
 }
 
 function createChart(event, weather) {
@@ -93,64 +132,49 @@ function createChart(event, weather) {
   chart.setAttribute("role", "img");
   chart.setAttribute("aria-label", series.map(item => item.label).join(" · "));
 
-  const svg = createSvgElement("svg", {
-    viewBox: "0 0 100 42",
-    preserveAspectRatio: "none",
-    "aria-hidden": "true",
-  });
-  [10, 21, 32].forEach(y => svg.append(createSvgElement("line", {
-    x1: 3,
-    y1: y,
-    x2: 97,
-    y2: y,
-    class: "mha-weather-narrative-grid-line",
-  })));
+  const plot = document.createElement("div");
+  plot.className = "mha-weather-narrative-chart-plot";
+  const columns = document.createElement("div");
+  columns.className = "mha-weather-narrative-chart-columns";
+  selectChartItems(series).forEach(({ index, item }) => {
+    const column = document.createElement("div");
+    column.className = "mha-weather-narrative-chart-column";
+    column.append(createText("mha-weather-narrative-chart-time", formatChartTime(item.datetime)));
 
-  series.forEach(seriesItem => {
-    const numericValues = seriesItem.values.filter(Number.isFinite);
-    const min = Math.min(...numericValues);
-    const max = Math.max(...numericValues);
-    const range = Math.max(1, max - min);
-    const points = seriesItem.values.map((value, index) => {
-      const x = seriesItem.values.length <= 1 ? 50 : 4 + (index / (seriesItem.values.length - 1)) * 92;
-      const y = Number.isFinite(value) ? 34 - ((value - min) / range) * 24 : 34;
-      return { x, y, value };
+    const bars = document.createElement("div");
+    bars.className = "mha-weather-narrative-chart-bars";
+    const values = document.createElement("div");
+    values.className = "mha-weather-narrative-chart-values";
+    series.forEach(seriesItem => {
+      const value = seriesItem.values[index];
+      const bar = document.createElement("span");
+      bar.className = `mha-weather-narrative-bar mha-weather-narrative-bar--${seriesItem.className}`;
+      bar.style.setProperty("--bar-height", `${getBarHeight(value, seriesItem)}%`);
+      if (!Number.isFinite(value)) bar.classList.add("mha-weather-narrative-bar--empty");
+      bars.append(bar);
+
+      const valueLabel = createText(
+        `mha-weather-narrative-chart-value mha-weather-narrative-chart-value--${seriesItem.className}`,
+        formatChartValue(value, seriesItem),
+      );
+      valueLabel.setAttribute("title", seriesItem.unit ? `${valueLabel.textContent} ${seriesItem.unit}` : valueLabel.textContent);
+      values.append(valueLabel);
     });
-    const validPoints = points.filter(point => Number.isFinite(point.value));
-    svg.append(createSvgElement("polyline", {
-      points: validPoints.map(point => `${point.x},${point.y}`).join(" "),
-      class: `mha-weather-narrative-line mha-weather-narrative-line--${seriesItem.className}`,
-    }));
-    validPoints.forEach(point => svg.append(createSvgElement("circle", {
-      cx: point.x,
-      cy: point.y,
-      r: series.length > 1 ? 1.15 : 1.55,
-      class: `mha-weather-narrative-point mha-weather-narrative-point--${seriesItem.className}`,
-    })));
+    column.append(bars, values);
+    columns.append(column);
   });
-  chart.append(svg);
+  plot.append(columns);
+  chart.append(plot);
 
   const legend = document.createElement("div");
   legend.className = "mha-weather-narrative-chart-legend";
   series.forEach(seriesItem => legend.append(
-    createText(`mha-weather-narrative-legend mha-weather-narrative-legend--${seriesItem.className}`, seriesItem.label),
+    createText(
+      `mha-weather-narrative-legend mha-weather-narrative-legend--${seriesItem.className}`,
+      `${seriesItem.label}${seriesItem.unit ? ` · ${seriesItem.unit}` : ""}`,
+    ),
   ));
   chart.append(legend);
-
-  const labels = document.createElement("div");
-  labels.className = "mha-weather-narrative-chart-labels";
-  const labelItems = series[0].items.filter((item, index) => (
-    Number.isFinite(series[0].values[index])
-    && (index === 0 || index === series[0].items.length - 1 || index % 3 === 0)
-  ));
-  labelItems.slice(0, 5).forEach(item => {
-    const date = new Date(item.datetime);
-    if (Number.isNaN(date.getTime())) return;
-    labels.append(createText("mha-weather-narrative-chart-label", date.toLocaleTimeString([], {
-      hour: "2-digit",
-    }).replace(/\s/g, "")));
-  });
-  chart.append(labels);
   return chart;
 }
 

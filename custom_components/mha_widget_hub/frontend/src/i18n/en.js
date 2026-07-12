@@ -502,7 +502,7 @@ export const en = Object.freeze({
       }),
       charts: Object.freeze({
         temperature: "Temperature",
-        precipitation: "Precipitation probability",
+        precipitation: "Precipitation",
         "precipitation-wind": "Precipitation and wind",
         wind: "Wind gusts",
         alert: "Weather alert",
