@@ -486,6 +486,11 @@ function renderMetric(root, model, { weatherModel = null } = {}) {
   if (visual) root.append(visual);
 }
 
+function getSummaryWeatherEntityId(widget = {}) {
+  return widget.weatherEntityId
+    || (widget.sourceType === "weather-attribute" ? widget.entityId || widget.entity_id || "" : "");
+}
+
 export function createWeatherMetricWidgetContent(widget = {}, {
   widgetW = 2,
   widgetH = 2,
@@ -510,7 +515,7 @@ export function createWeatherMetricWidgetContent(widget = {}, {
     const model = buildWeatherMetricModel(context.hass, widget, entityVisibilityConfig);
     const weatherModel = widget.metricKey === "summary"
       ? buildWeatherModel(context.hass, {
-        entityId: widget.weatherEntityId || "",
+        entityId: getSummaryWeatherEntityId(widget),
       }, entityVisibilityConfig)
       : null;
     renderMetric(root, model, { weatherModel });

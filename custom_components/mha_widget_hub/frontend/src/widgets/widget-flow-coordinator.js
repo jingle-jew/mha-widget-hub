@@ -179,6 +179,12 @@ export function createWidgetFlowCoordinator({
     });
   }
 
+  function hasPreconfiguredWeatherForecastIntent(widget = {}) {
+    return widget.kind === "weather"
+      && widget.displayMode === "forecast"
+      && ["daily", "hourly"].includes(widget.forecastType);
+  }
+
   function syncWidgetConfigDom() {
     syncWidgetConfigPanel(getRoot(), buildWidgetConfigPanelProps({
       session: getWidgetConfigSession(),
@@ -193,6 +199,10 @@ export function createWidgetFlowCoordinator({
   function beginWidgetPlacement(item) {
     if (!getIsEditing()) return;
     const widget = createWidgetFromCatalogItem(item);
+    if (isWeatherWidgetManagerActive() && hasPreconfiguredWeatherForecastIntent(widget)) {
+      startWidgetPlacement(widget);
+      return;
+    }
     const placementFlow = getWidgetPlacementFlow(widget);
     if (placementFlow === "direct") {
       startWidgetPlacement(widget);

@@ -147,6 +147,47 @@ test("weather pages open a single-category weather widget manager", async () => 
   assert.equal(categories[0].widgets.some(widget => widget.metricKey === "uv"), true);
 });
 
+test("weather page forecast widgets skip the config popup because forecast type is preselected", async () => {
+  const { coordinator, state, calls } = await createHarness({
+    state: {
+      activePage: {
+        id: "weather",
+        type: "weather",
+        config: { weatherEntityId: "weather.home" },
+      },
+      hass: {
+        states: {
+          "weather.home": {
+            entity_id: "weather.home",
+            state: "sunny",
+            attributes: { friendly_name: "Maison" },
+          },
+        },
+        user: { name: "Test" },
+        locale: { language: "en" },
+      },
+    },
+  });
+
+  coordinator.beginWidgetPlacement({
+    kind: "weather",
+    category: "climate",
+    variant: "adaptive-weather",
+    label: "Hourly forecast",
+    size: { w: 4, h: 2 },
+    entityId: "weather.home",
+    displayMode: "forecast",
+    forecastType: "hourly",
+  });
+
+  assert.equal(state.widgetConfigSession, null);
+  assert.equal(state.pendingWidgetPlacement?.kind, "weather");
+  assert.equal(state.pendingWidgetPlacement?.displayMode, "forecast");
+  assert.equal(state.pendingWidgetPlacement?.forecastType, "hourly");
+  assert.equal(calls.syncEditModeDom, 1);
+  assert.equal(calls.syncWidgetDropSlots, 1);
+});
+
 test("widget placement flows still start in mobile landscape", async () => {
   const { coordinator, state, calls } = await createHarness();
 
