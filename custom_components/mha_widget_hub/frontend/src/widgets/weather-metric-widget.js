@@ -361,8 +361,69 @@ function createSummaryWeatherHeader(weather = {}) {
   return header;
 }
 
-function renderSummaryMetric(root, model, weather = {}) {
+function normalizeSummaryCondition(condition = "") {
+  return String(condition || "unknown").trim().toLowerCase();
+}
+
+function getSummarySkyKind(condition = "") {
+  const normalized = normalizeSummaryCondition(condition);
+  if (["sunny", "clear", "clear-night"].includes(normalized)) return "sunny";
+  if (
+    normalized.includes("rain")
+    || normalized.includes("pouring")
+    || normalized.includes("lightning")
+    || normalized.includes("snow")
+    || normalized.includes("hail")
+  ) return "precipitation";
+  return "cloudy";
+}
+
+function getFirstSunEntityState(hass) {
+  return Object.entries(hass?.states || {})
+    .find(([entityId]) => entityId.startsWith("sun."))?.[1] || null;
+}
+
+function getMinutesUntil(value = "", now = Date.now()) {
+  const timestamp = new Date(value).getTime();
+  if (!Number.isFinite(timestamp)) return null;
+  return (timestamp - now) / 60000;
+}
+
+function getFallbackSummaryDayPhase(date = new Date()) {
+  const hour = date.getHours();
+  if (hour >= 5 && hour < 8) return "dawn";
+  if (hour >= 8 && hour < 18) return "day";
+  if (hour >= 18 && hour < 21) return "dusk";
+  return "night";
+}
+
+function getSummaryDayPhase(hass) {
+  const sun = getFirstSunEntityState(hass);
+  const attributes = sun?.attributes || {};
+  const minutesToSunrise = getMinutesUntil(attributes.next_rising);
+  const minutesToSunset = getMinutesUntil(attributes.next_setting);
+
+  if (sun?.state === "above_horizon") {
+    return minutesToSunset != null && minutesToSunset >= 0 && minutesToSunset <= 120
+      ? "dusk"
+      : "day";
+  }
+  if (sun?.state === "below_horizon") {
+    return minutesToSunrise != null && minutesToSunrise >= 0 && minutesToSunrise <= 120
+      ? "dawn"
+      : "night";
+  }
+  return getFallbackSummaryDayPhase();
+}
+
+function applySummaryAtmosphere(root, weather = {}, hass) {
+  root.dataset.summaryPhase = getSummaryDayPhase(hass);
+  root.dataset.summarySky = getSummarySkyKind(weather.condition);
+}
+
+function renderSummaryMetric(root, model, weather = {}, hass) {
   root.dataset.metricLayout = "summary";
+  applySummaryAtmosphere(root, weather, hass);
 
   const divider = document.createElement("span");
   divider.className = "mha-weather-summary-divider";
@@ -405,7 +466,7 @@ function renderSunMetric(root, model, header) {
   );
 }
 
-function renderMetric(root, model, { weatherModel = null } = {}) {
+function renderMetric(root, model, { weatherModel = null, hass = null } = {}) {
   root.replaceChildren();
   root.dataset.metricKey = model.metricKey;
   root.dataset.metricKind = model.valueKind || "number";
@@ -457,7 +518,7 @@ function renderMetric(root, model, { weatherModel = null } = {}) {
   }
 
   if (model.metricKey === "summary") {
-    renderSummaryMetric(root, model, weatherModel || {});
+    renderSummaryMetric(root, model, weatherModel || {}, hass);
     return;
   }
 
@@ -614,7 +675,7 @@ export function createWeatherMetricWidgetContent(widget = {}, {
         entityId: getSummaryWeatherEntityId(widget, context.hass),
       }, entityVisibilityConfig)
       : null;
-    renderMetric(root, model, { weatherModel });
+    renderMetric(root, model, { weatherModel, hass: context.hass });
   };
 
   root.__mhaUpdateFromHass = nextHass => {

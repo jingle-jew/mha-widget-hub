@@ -139,6 +139,51 @@ test("weather summary metric falls back to an available weather entity for legac
   assert.equal(findByClass(content, "mha-weather-summary-location")?.textContent, "Val-d'Or");
 });
 
+test("weather summary metric exposes atmosphere data for adaptive gradients", () => {
+  installDom();
+
+  const soon = new Date(Date.now() + 45 * 60 * 1000).toISOString();
+  const content = createWeatherMetricWidgetContent({
+    kind: "weather-metric",
+    metricKey: "summary",
+    valueKind: "text",
+    sourceType: "weather-attribute",
+    entityId: "weather.home",
+    attribute: "summary",
+  }, {
+    widgetW: 4,
+    widgetH: 2,
+    hass: {
+      states: {
+        "weather.home": {
+          entity_id: "weather.home",
+          state: "rainy",
+          attributes: {
+            friendly_name: "Maison",
+            temperature: 18,
+            temperature_unit: "°C",
+            summary: "Averses en soirée.",
+          },
+        },
+        "sun.sun": {
+          entity_id: "sun.sun",
+          state: "above_horizon",
+          attributes: {
+            next_setting: soon,
+          },
+        },
+      },
+      config: {
+        unit_system: { temperature: "°C" },
+      },
+    },
+  });
+
+  assert.equal(content.dataset.metricLayout, "summary");
+  assert.equal(content.dataset.summaryPhase, "dusk");
+  assert.equal(content.dataset.summarySky, "precipitation");
+});
+
 test("weather summary metric uses its weather attribute entity for current conditions", () => {
   installDom();
 
