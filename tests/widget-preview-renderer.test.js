@@ -70,3 +70,23 @@ test("weather exposes a live preview renderer", () => {
   assert.equal(preview?.dataset.size, "4x2");
   assert.equal(preview?.childNodes.length, 1);
 });
+
+test("weather metric exposes a live preview renderer with fallback preview data", () => {
+  installDom();
+  const preview = createLiveWidgetPreview({
+    kind: "weather-metric",
+    variant: "weather-metric-square",
+    size: { w: 2, h: 2 },
+    metricKey: "air-quality-pm25",
+    sourceType: "entity",
+    entityId: "sensor.real_pm25",
+    unit: "µg/m³",
+  });
+
+  assert.equal(getWidgetPreviewRenderer({ kind: "weather-metric" }).mode, "live");
+  assert.equal(hasLiveWidgetPreview({ kind: "weather-metric" }), true);
+  assert.equal(preview?.className, "mha-widget-manager-live-preview");
+  assert.equal(preview?.dataset.kind, "weather-metric");
+  assert.equal(preview?.dataset.size, "2x2");
+  assert.equal(preview?.childNodes.length, 1);
+});

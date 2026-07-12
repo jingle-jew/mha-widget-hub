@@ -333,6 +333,7 @@ test("registered widgets expose preview renderer manifests", async () => {
     ["toggle-slider", "live"],
     ["media", "live"],
     ["scenes", "live"],
+    ["weather-metric", "live"],
   ]);
 
   for (const [kind, definition] of Object.entries(WIDGET_REGISTRY)) {

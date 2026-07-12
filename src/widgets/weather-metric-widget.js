@@ -4,6 +4,7 @@ import { t } from "../i18n/index.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
 import { createCurrentWeatherIcon } from "./weather-current-icons.js";
 import { css, freezeSize, isLocalWidgetKind, variant } from "./widget-definition-utils.js";
+import { WIDGET_PREVIEW_DATA } from "./widget-preview-data.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -491,6 +492,96 @@ function getSummaryWeatherEntityId(widget = {}) {
     || (widget.sourceType === "weather-attribute" ? widget.entityId || widget.entity_id || "" : "");
 }
 
+const WEATHER_ATTRIBUTE_PREVIEW_SOURCES = Object.freeze({
+  humidity: Object.freeze({ attribute: "humidity", unit: "%" }),
+  "apparent-temperature": Object.freeze({ attribute: "apparent_temperature", unit: "°C" }),
+  "dew-point": Object.freeze({ attribute: "dew_point", unit: "°C" }),
+  "precipitation-probability": Object.freeze({ attribute: "precipitation_probability", unit: "%" }),
+  precipitation: Object.freeze({ attribute: "precipitation", unit: "mm" }),
+  "precipitation-rate": Object.freeze({ attribute: "precipitation", unit: "mm" }),
+  "wind-gust": Object.freeze({ attribute: "wind_gust_speed", unit: "km/h" }),
+  wind: Object.freeze({ attribute: "wind_speed", unit: "km/h" }),
+  pressure: Object.freeze({ attribute: "pressure", unit: "hPa" }),
+  visibility: Object.freeze({ attribute: "visibility", unit: "km" }),
+  "cloud-coverage": Object.freeze({ attribute: "cloud_coverage", unit: "%" }),
+  uv: Object.freeze({ attribute: "uv_index", unit: "" }),
+  "solar-radiation": Object.freeze({ attribute: "solar_radiation", unit: "W/m²" }),
+  illuminance: Object.freeze({ attribute: "illuminance", unit: "lx" }),
+  "sunshine-duration": Object.freeze({ attribute: "sunshine_duration", unit: "h" }),
+  "snow-depth": Object.freeze({ attribute: "snow_depth", unit: "cm" }),
+  summary: Object.freeze({ attribute: "summary", unit: "", valueKind: "text" }),
+});
+
+const SENSOR_PREVIEW_SOURCES = Object.freeze({
+  "air-quality": WIDGET_PREVIEW_DATA.weatherMetricSensors.airQuality,
+  "air-quality-pm25": WIDGET_PREVIEW_DATA.weatherMetricSensors.pm25,
+  "air-quality-pm10": WIDGET_PREVIEW_DATA.weatherMetricSensors.pm10,
+  ozone: WIDGET_PREVIEW_DATA.weatherMetricSensors.ozone,
+  "pressure-tendency": WIDGET_PREVIEW_DATA.weatherMetricSensors.pressureTendency,
+});
+
+function hasPreviewEntity(context = {}, entityId = "") {
+  return Boolean(entityId && context.hass?.states?.[entityId]);
+}
+
+function createWeatherMetricPreviewWidget(item = {}, context = {}) {
+  if (hasPreviewEntity(context, item.entityId || item.entity_id)) {
+    return {
+      ...item,
+      kind: "weather-metric",
+      type: "weather-metric",
+      component: WEATHER_METRIC_WIDGET_DEFINITION.component,
+      variant: item.variant || WEATHER_METRIC_WIDGET_DEFINITION.defaultVariant,
+    };
+  }
+
+  if (item.metricKey === "sun") {
+    return {
+      ...item,
+      kind: "weather-metric",
+      type: "weather-metric",
+      component: WEATHER_METRIC_WIDGET_DEFINITION.component,
+      variant: item.variant || WEATHER_METRIC_WIDGET_DEFINITION.defaultVariant,
+      sourceType: "sun",
+      entityId: WIDGET_PREVIEW_DATA.sun.entityId,
+      entity_id: WIDGET_PREVIEW_DATA.sun.entityId,
+    };
+  }
+
+  const sensor = SENSOR_PREVIEW_SOURCES[item.metricKey];
+  if (sensor) {
+    return {
+      ...item,
+      kind: "weather-metric",
+      type: "weather-metric",
+      component: WEATHER_METRIC_WIDGET_DEFINITION.component,
+      variant: item.variant || WEATHER_METRIC_WIDGET_DEFINITION.defaultVariant,
+      sourceType: "entity",
+      entityId: sensor.entityId,
+      entity_id: sensor.entityId,
+      unit: item.unit || sensor.unit || "",
+      valueKind: item.valueKind || (item.metricKey === "pressure-tendency" ? "text" : "number"),
+    };
+  }
+
+  const weatherAttribute = WEATHER_ATTRIBUTE_PREVIEW_SOURCES[item.metricKey]
+    || WEATHER_ATTRIBUTE_PREVIEW_SOURCES.humidity;
+  return {
+    ...item,
+    kind: "weather-metric",
+    type: "weather-metric",
+    component: WEATHER_METRIC_WIDGET_DEFINITION.component,
+    variant: item.variant || WEATHER_METRIC_WIDGET_DEFINITION.defaultVariant,
+    sourceType: "weather-attribute",
+    weatherEntityId: WIDGET_PREVIEW_DATA.weather.entityId,
+    entityId: WIDGET_PREVIEW_DATA.weather.entityId,
+    entity_id: WIDGET_PREVIEW_DATA.weather.entityId,
+    attribute: weatherAttribute.attribute,
+    unit: item.unit || weatherAttribute.unit || "",
+    valueKind: weatherAttribute.valueKind || item.valueKind || "number",
+  };
+}
+
 export function createWeatherMetricWidgetContent(widget = {}, {
   widgetW = 2,
   widgetH = 2,
@@ -601,5 +692,8 @@ export const WIDGET_MODULE = Object.freeze({
   kind: "weather-metric",
   definition: WEATHER_METRIC_WIDGET_DEFINITION,
   renderer: WEATHER_METRIC_WIDGET_CONTENT_RENDERER,
-  preview: Object.freeze({ mode: "static" }),
+  preview: Object.freeze({
+    mode: "live",
+    createWidget: createWeatherMetricPreviewWidget,
+  }),
 });
