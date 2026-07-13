@@ -1061,8 +1061,15 @@
 }
 
 :host([data-layout="mobile"]) .mha-media-page {
-  --mha-media-page-mobile-sheet-block-size: 100%;
+  /* Sheets are viewport-bound, not relative to the padded media content box. */
+  --mha-media-page-mobile-sheet-block-size: 100vh;
+  --mha-media-page-mobile-sheet-block-size: 100dvh;
+  --mha-media-page-player-sheet-block-end: max(
+    clamp(.75rem, 1.8svh, 1rem),
+    calc(var(--mha-safe-bottom, 0px) + 1svh)
+  );
   block-size: 100%;
+  padding-block: 0;
   overflow-x: hidden;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
@@ -1083,6 +1090,7 @@
   grid-auto-rows: auto;
   align-content: start;
   min-block-size: auto;
+  row-gap: 0;
 }
 
 :host([data-layout="mobile"]) .mha-media-page-now-playing,
@@ -1093,26 +1101,40 @@
 }
 
 :host([data-layout="mobile"]) .mha-media-page-now-playing {
+  box-sizing: border-box;
+  block-size: var(--mha-media-page-mobile-sheet-block-size);
   min-block-size: var(--mha-media-page-mobile-sheet-block-size);
+  padding-block:
+    var(--mha-media-page-safe-block-start)
+    var(--mha-media-page-safe-block-end);
 }
 
 :host([data-layout="mobile"]) .mha-media-page-widget-panel {
-  min-block-size: max(
-    var(--mha-media-page-mobile-sheet-block-size),
-    calc(
-      var(--mha-grid-track-height, 100%)
-      + (var(--mha-media-page-widget-panel-padding) * 2)
-      + clamp(3rem, 8svh, 4.25rem)
-    )
+  block-size: calc(
+    var(--mha-media-page-mobile-sheet-block-size)
+    - var(--mha-media-page-safe-block-start)
+    - var(--mha-media-page-player-sheet-block-end)
   );
-  max-block-size: none;
-  overflow: visible;
+  min-block-size: calc(
+    var(--mha-media-page-mobile-sheet-block-size)
+    - var(--mha-media-page-safe-block-start)
+    - var(--mha-media-page-player-sheet-block-end)
+  );
+  max-block-size: calc(
+    var(--mha-media-page-mobile-sheet-block-size)
+    - var(--mha-media-page-safe-block-start)
+    - var(--mha-media-page-player-sheet-block-end)
+  );
+  margin-block:
+    var(--mha-media-page-safe-block-start)
+    var(--mha-media-page-player-sheet-block-end);
+  overflow: hidden;
 }
 
 :host([data-layout="mobile"]) .mha-media-page-widget-panel-body,
-:host([data-layout="mobile"]) .mha-media-page-widget-grid {
-  block-size: auto;
-  min-block-size: var(--mha-grid-track-height, 0px);
+:host([data-layout="mobile"]) .mha-media-page-player-list {
+  block-size: 100%;
+  min-block-size: 0;
 }
 
 :host([data-layout="tablet"]) .mha-media-page-controls {
@@ -1148,6 +1170,15 @@
 
 :host([data-layout-variant="mobile-landscape"]) .mha-media-page-widget-panel {
   grid-column: 1 / -1;
+}
+
+/* The landscape dock keeps its structural rail to avoid reflowing the two
+ * media sheets mid-snap, but leaves the interaction space while browsing
+ * available players. */
+:host([data-layout-variant="mobile-landscape"][data-media-page-active="true"].is-mobile-floating-controls-hidden) .mha-dock {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(calc(-100% - var(--mha-mobile-grid-gutter, 1rem)));
 }
 
 :host([data-layout-variant="mobile-landscape"]) .mha-media-page-now-playing-shell {

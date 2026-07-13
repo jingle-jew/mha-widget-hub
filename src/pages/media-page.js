@@ -69,6 +69,123 @@ function buildStatusLine({
 }
 
 export const MEDIA_PAGE_INACTIVE_FALLBACK_MS = 10_000;
+const MOBILE_MEDIA_PAGE_SCROLL_THRESHOLD = 4;
+const MOBILE_MEDIA_PAGE_RETURN_GESTURE_THRESHOLD = 12;
+
+export function resolveMobileMediaPagePane(scrollTop = 0) {
+  return Number(scrollTop || 0) <= MOBILE_MEDIA_PAGE_SCROLL_THRESHOLD
+    ? "now-playing"
+    : "available-players";
+}
+
+export function shouldReturnToMobileMediaNowPlaying({
+  playerListScrollTop = 0,
+  gestureStartedAtTop = false,
+  gestureDeltaY = 0,
+} = {}) {
+  return Boolean(gestureStartedAtTop)
+    && Number(playerListScrollTop || 0) <= MOBILE_MEDIA_PAGE_SCROLL_THRESHOLD
+    && Number(gestureDeltaY || 0) <= -MOBILE_MEDIA_PAGE_RETURN_GESTURE_THRESHOLD;
+}
+
+function getMediaPageHost(root) {
+  return root?.getRootNode?.()?.host || null;
+}
+
+function isMobileMediaPage(root) {
+  const host = getMediaPageHost(root);
+  return host?.dataset?.layout === "mobile";
+}
+
+function scrollMobileMediaPageToNowPlaying(root) {
+  if (typeof root?.scrollTo === "function") {
+    root.scrollTo({ top: 0, behavior: "smooth" });
+    return;
+  }
+  if (root) root.scrollTop = 0;
+}
+
+function createMobileMediaPageScrollCoordinator(root, playerList) {
+  let touchStartY = null;
+  let gestureStartedAtTop = false;
+
+  const syncDockState = () => {
+    const host = getMediaPageHost(root);
+    if (!host?.classList) return "disabled";
+    if (!isMobileMediaPage(root)) {
+      root.dataset.mobileMediaPane = "disabled";
+      host.classList.remove("is-mobile-floating-controls-hidden");
+      return "disabled";
+    }
+
+    const pane = resolveMobileMediaPagePane(root.scrollTop);
+    root.dataset.mobileMediaPane = pane;
+    host.classList.toggle(
+      "is-mobile-floating-controls-hidden",
+      pane !== "now-playing",
+    );
+    return pane;
+  };
+
+  const reset = () => {
+    root.scrollTop = 0;
+    if (playerList) playerList.scrollTop = 0;
+    syncDockState();
+  };
+
+  const onWheel = (event) => {
+    if (!isMobileMediaPage(root)) return;
+    if (!shouldReturnToMobileMediaNowPlaying({
+      playerListScrollTop: playerList?.scrollTop,
+      gestureStartedAtTop: true,
+      gestureDeltaY: event.deltaY,
+    })) return;
+    event.preventDefault?.();
+    scrollMobileMediaPageToNowPlaying(root);
+  };
+
+  const onTouchStart = (event) => {
+    if (!isMobileMediaPage(root)) return;
+    touchStartY = event.touches?.[0]?.clientY ?? null;
+    gestureStartedAtTop = Number(playerList?.scrollTop || 0) <= MOBILE_MEDIA_PAGE_SCROLL_THRESHOLD;
+  };
+
+  const onTouchEnd = (event) => {
+    const touchEndY = event.changedTouches?.[0]?.clientY;
+    if (touchStartY === null || !Number.isFinite(touchEndY)) {
+      touchStartY = null;
+      gestureStartedAtTop = false;
+      return;
+    }
+
+    const shouldReturn = shouldReturnToMobileMediaNowPlaying({
+      playerListScrollTop: playerList?.scrollTop,
+      gestureStartedAtTop,
+      gestureDeltaY: touchStartY - touchEndY,
+    });
+    touchStartY = null;
+    gestureStartedAtTop = false;
+    if (shouldReturn) scrollMobileMediaPageToNowPlaying(root);
+  };
+
+  root.addEventListener("scroll", syncDockState, { passive: true });
+  playerList?.addEventListener("wheel", onWheel, { passive: false });
+  playerList?.addEventListener("touchstart", onTouchStart, { passive: true });
+  playerList?.addEventListener("touchend", onTouchEnd, { passive: true });
+  playerList?.addEventListener("touchcancel", onTouchEnd, { passive: true });
+
+  return {
+    reset,
+    syncDockState,
+    destroy() {
+      root.removeEventListener("scroll", syncDockState);
+      playerList?.removeEventListener("wheel", onWheel);
+      playerList?.removeEventListener("touchstart", onTouchStart);
+      playerList?.removeEventListener("touchend", onTouchEnd);
+      playerList?.removeEventListener("touchcancel", onTouchEnd);
+    },
+  };
+}
 
 function isPlayerPlaying(hass, playerId = "") {
   return String(hass?.states?.[playerId]?.state || "").trim().toLowerCase() === "playing";
@@ -315,6 +432,8 @@ export function createMediaPage(page = {}, {
   root.append(background, layout);
   root.__mhaGrid = null;
   root.__mhaPlayerList = playerList;
+  const mobileScrollCoordinator = createMobileMediaPageScrollCoordinator(root, playerList);
+  root.__mhaSyncMobileDockState = mobileScrollCoordinator.syncDockState;
 
   let progressTimer = 0;
   let visualTransitionTimer = 0;
@@ -585,7 +704,7 @@ export function createMediaPage(page = {}, {
   };
 
   const resetScrollPosition = () => {
-    root.scrollTop = 0;
+    mobileScrollCoordinator.reset();
   };
 
   const scheduleScrollReset = () => {
@@ -654,6 +773,7 @@ export function createMediaPage(page = {}, {
     clearInactiveSelectionTimer();
     if (visualTransitionTimer) clearTimeout(visualTransitionTimer);
     visualTransitionTimer = 0;
+    mobileScrollCoordinator.destroy();
     automaticPlayerCards.forEach((card) => card.__mhaDestroy?.());
     automaticPlayerCards = [];
   };

@@ -160,6 +160,33 @@ test("responsive dock coordinator hides floating controls in mobile landscape", 
   }
 });
 
+test("responsive dock coordinator delegates dock visibility to the active media page", () => {
+  const host = {
+    classList: createClassList(),
+    _gridScrollCleanup: null,
+    shadowRoot: {
+      querySelector() {
+        return null;
+      },
+    },
+  };
+  const mediaPage = {
+    classList: {
+      contains(token) {
+        return token === "mha-media-page";
+      },
+    },
+    __mhaSyncMobileDockState() {
+      host.classList.add("is-mobile-floating-controls-hidden");
+    },
+  };
+
+  const coordinator = createResponsiveDockCoordinator(host);
+  coordinator.wireDockAutoHide(mediaPage);
+
+  assert.equal(host.classList.contains("is-mobile-floating-controls-hidden"), true);
+});
+
 test("responsive dock coordinator rerenders when the layout variant changes", () => {
   const previousWindow = globalThis.window;
   const previousRaf = globalThis.requestAnimationFrame;
