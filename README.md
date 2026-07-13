@@ -79,6 +79,14 @@ See:
 - [Roadmap](docs/roadmap.md)
 - [Release checklist](docs/release-checklist.md)
 
+### Local Theme Studio
+
+```bash
+npm run theme-studio
+```
+
+Open `http://127.0.0.1:4173`. See [the dedicated Theme Studio guide](tools/theme-studio/README.md) for the audited architecture, safety guardrails and extension workflow.
+
 ---
 
 ## Current Project Status
