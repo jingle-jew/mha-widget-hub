@@ -3,8 +3,15 @@ import {
   createWidgetConfigSession,
   supportsWidgetConfiguration,
 } from "../widget-config/widget-config-popup.js";
+import { t } from "../i18n/index.js";
 import { getScenesDefaultButtonIndex } from "../widget-config/widget-config-props.js";
 import { WIDGET_MANAGER_CATEGORIES } from "../widget-manager/widget-manager.js";
+import { isWeatherPage } from "../pages/page-types.js";
+import {
+  buildWeatherPageWidgetManagerCategory,
+  discoverWeatherPageWidgetManagerCategory,
+  WEATHER_PAGE_WIDGET_MANAGER_CATEGORY_ID,
+} from "../pages/weather-page-widget-catalog.js";
 import {
   buildWidgetConfigPanelProps,
   buildWidgetManagerPanelProps,
@@ -26,6 +33,7 @@ export function createWidgetFlowCoordinator({
   getWidgetConfigSession = () => null,
   setWidgetConfigSession = () => {},
   getHass = () => null,
+  getActivePage = () => null,
   getWidgetConfigHassReady = () => false,
   setWidgetConfigHassReady = () => {},
   getEntityVisibilityConfig = () => null,
@@ -40,15 +48,73 @@ export function createWidgetFlowCoordinator({
   replaceWidgetDom = () => {},
   saveWidgets = () => {},
 } = {}) {
+  let weatherManagerDiscoveryKey = "";
+  let weatherManagerDiscoveryRequestId = 0;
+  let weatherManagerDiscoveredCategory = null;
+
+  function getWeatherManagerContext() {
+    const activePage = getActivePage();
+    if (!isWeatherPage(activePage)) return null;
+    const weatherEntityId = activePage?.config?.weatherEntityId || "";
+    return {
+      activePage,
+      weatherEntityId,
+      key: `${activePage?.id || "weather"}:${weatherEntityId}`,
+    };
+  }
+
   function getWidgetManagerCategories() {
+    const weatherContext = getWeatherManagerContext();
+    if (weatherContext) {
+      if (
+        weatherManagerDiscoveredCategory
+        && weatherManagerDiscoveryKey === weatherContext.key
+      ) {
+        return [weatherManagerDiscoveredCategory];
+      }
+      return [buildWeatherPageWidgetManagerCategory({
+        hass: getHass(),
+        visibilityConfig: getEntityVisibilityConfig(),
+        weatherEntityId: weatherContext.weatherEntityId,
+      })];
+    }
     return WIDGET_MANAGER_CATEGORIES;
   }
 
+  function isWeatherWidgetManagerActive() {
+    return Boolean(getWeatherManagerContext());
+  }
+
+  function refreshWeatherWidgetManagerCategory() {
+    const weatherContext = getWeatherManagerContext();
+    const hass = getHass();
+    if (!weatherContext || !hass) return;
+    const requestId = ++weatherManagerDiscoveryRequestId;
+    weatherManagerDiscoveryKey = weatherContext.key;
+    discoverWeatherPageWidgetManagerCategory({
+      hass,
+      visibilityConfig: getEntityVisibilityConfig(),
+      weatherEntityId: weatherContext.weatherEntityId,
+    }).then((category) => {
+      if (requestId !== weatherManagerDiscoveryRequestId) return;
+      if (!isWeatherWidgetManagerActive() || !getWidgetManagerOpen()) return;
+      const currentContext = getWeatherManagerContext();
+      if (!currentContext || currentContext.key !== weatherContext.key) return;
+      weatherManagerDiscoveredCategory = category;
+      syncWidgetManagerDom();
+    }).catch((error) => {
+      console.warn("[mha-widget-hub] Weather widget manager discovery failed.", error);
+    });
+  }
+
   function buildWidgetManagerProps() {
+    const weatherManager = isWeatherWidgetManagerActive();
     return buildWidgetManagerPanelProps({
       open: getWidgetManagerOpen(),
       activeCategory: getWidgetManagerCategory(),
       categories: getWidgetManagerCategories(),
+      singleCategory: weatherManager,
+      emptyLabel: weatherManager ? t("widgets.weatherManager.empty", "No weather widgets available for this integration.") : "",
       onClose: () => closeWidgetManager(),
       onBack: () => showWidgetManagerCategories(),
       onSelectCategory: (id) => selectWidgetManagerCategory(id),
@@ -62,13 +128,17 @@ export function createWidgetFlowCoordinator({
 
   function openWidgetManager(initialCategory = "") {
     if (!getIsEditing()) return;
+    const category = initialCategory || (isWeatherWidgetManagerActive() ? WEATHER_PAGE_WIDGET_MANAGER_CATEGORY_ID : "");
     setPendingWidgetPlacement(null);
     setActiveMoveWidgetId("");
     setWidgetManagerOpen(true);
-    setWidgetManagerCategory(initialCategory);
+    setWidgetManagerCategory(category);
     syncEditModeDom();
     syncWidgetDropSlots();
     syncWidgetManagerDom();
+    if (category === WEATHER_PAGE_WIDGET_MANAGER_CATEGORY_ID) {
+      refreshWeatherWidgetManagerCategory();
+    }
   }
 
   function closeWidgetManager() {
@@ -78,6 +148,11 @@ export function createWidgetFlowCoordinator({
   }
 
   function showWidgetManagerCategories() {
+    if (isWeatherWidgetManagerActive()) {
+      setWidgetManagerCategory(WEATHER_PAGE_WIDGET_MANAGER_CATEGORY_ID);
+      syncWidgetManagerDom();
+      return;
+    }
     setWidgetManagerCategory("");
     syncWidgetManagerDom();
   }
@@ -104,6 +179,12 @@ export function createWidgetFlowCoordinator({
     });
   }
 
+  function hasPreconfiguredWeatherForecastIntent(widget = {}) {
+    return widget.kind === "weather"
+      && widget.displayMode === "forecast"
+      && ["daily", "hourly"].includes(widget.forecastType);
+  }
+
   function syncWidgetConfigDom() {
     syncWidgetConfigPanel(getRoot(), buildWidgetConfigPanelProps({
       session: getWidgetConfigSession(),
@@ -118,6 +199,10 @@ export function createWidgetFlowCoordinator({
   function beginWidgetPlacement(item) {
     if (!getIsEditing()) return;
     const widget = createWidgetFromCatalogItem(item);
+    if (isWeatherWidgetManagerActive() && hasPreconfiguredWeatherForecastIntent(widget)) {
+      startWidgetPlacement(widget);
+      return;
+    }
     const placementFlow = getWidgetPlacementFlow(widget);
     if (placementFlow === "direct") {
       startWidgetPlacement(widget);

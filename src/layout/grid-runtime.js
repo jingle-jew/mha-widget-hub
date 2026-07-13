@@ -236,6 +236,10 @@ function isMediaPageSidebarGrid(grid = null) {
   return Boolean(grid?.closest?.(".mha-media-page-widget-panel"));
 }
 
+function isWeatherPageGrid(grid = null) {
+  return grid?.dataset?.pageType === "weather";
+}
+
 function clampMediaPageSidebarRows(value, {
   min = 5,
   max = 12,
@@ -469,7 +473,15 @@ export class GridRuntime {
 
   getAvailableContentRect(grid = this.getRoot()?.querySelector?.(".mha-grid")) {
     const widgetAreaRect = this.getWidgetAreaRect();
-    if (this.isMobileLayout()) return widgetAreaRect;
+    /*
+     * A weather page is intentionally allowed to grow vertically. Its panel
+     * therefore derives its height from the grid tracks and cannot be the
+     * input used to calculate those same tracks. Measure the stable widget
+     * area instead, just as mobile does.
+     */
+    if ((this.isMobileLayout() || isWeatherPageGrid(grid)) && widgetAreaRect) {
+      return widgetAreaRect;
+    }
     return this.getGridFrameRect(grid) || widgetAreaRect;
   }
 

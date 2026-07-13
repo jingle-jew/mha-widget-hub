@@ -297,7 +297,6 @@
 :host([data-theme-style="ios"][data-ios-glass="liquid"][data-theme="light"]) {
   --mha-ios-liquid-surface: rgba(255,255,255,.24);
   --mha-ios-liquid-primary-surface:
-    radial-gradient(circle at 20% 10%, rgba(255,255,255,.40), transparent 34%),
     linear-gradient(145deg, rgba(255,255,255,.30), rgba(255,255,255,.16));
   --mha-ios-liquid-surface-active: rgba(255,255,255,.82);
   --mha-ios-liquid-surface-muted: rgba(255,255,255,.16);
@@ -319,7 +318,6 @@
 :host([data-theme-style="ios"][data-ios-glass="liquid"][data-theme="dark"]) {
   --mha-ios-liquid-surface: rgba(255,255,255,.085);
   --mha-ios-liquid-primary-surface:
-    radial-gradient(circle at 20% 10%, rgba(255,255,255,.22), transparent 34%),
     linear-gradient(145deg, rgba(255,255,255,.125), rgba(255,255,255,.060));
   --mha-ios-liquid-surface-active: rgba(255,255,255,.88);
   --mha-ios-liquid-surface-muted: rgba(255,255,255,.055);

@@ -9,6 +9,7 @@ export const WIDGET_VARIANTS = Object.freeze({
   clock: WIDGET_REGISTRY.clock.variants,
   button: WIDGET_REGISTRY.button.variants,
   weather: WIDGET_REGISTRY.weather.variants,
+  weatherNarrative: WIDGET_REGISTRY["weather-narrative"].variants,
   sliderHorizontal: WIDGET_REGISTRY.slider.variantGroups.horizontal,
   sliderVertical: WIDGET_REGISTRY.slider.variantGroups.vertical,
   toggle: WIDGET_REGISTRY.toggle.variants,

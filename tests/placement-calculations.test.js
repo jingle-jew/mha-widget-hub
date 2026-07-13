@@ -196,3 +196,15 @@ test("layout fit reports whether first-fit packing can contain all widgets", () 
     false,
   );
 });
+
+test("layout fit can allow scrollable rows without using mobile sizing", () => {
+  assert.equal(
+    doesWidgetLayoutFitGrid(
+      [widget("a", 2, 2), widget("b", 2, 2), widget("c", 1, 1)],
+      4,
+      2,
+      { allowUnboundedRows: true, layout: "desktop" },
+    ),
+    true,
+  );
+});

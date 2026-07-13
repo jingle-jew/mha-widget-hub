@@ -80,6 +80,15 @@ test("Tabler provider resolves the first migrated MHA icon names", () => {
   assert.equal(resolveTablerIconForMhaName("media-player")?.name, "device-speaker");
   assert.equal(resolveTablerIconForMhaName("play")?.name, "player-play");
   assert.equal(resolveTablerIconForMhaName("volume-off")?.name, "volume-off");
+  assert.equal(resolveTablerIconForMhaName("humidity")?.name, "droplet-percent");
+  assert.equal(resolveTablerIconForMhaName("wind")?.name, "wind");
+  assert.equal(resolveTablerIconForMhaName("pressure")?.name, "gauge");
+  assert.equal(resolveTablerIconForMhaName("uv")?.name, "sun-high");
+  assert.equal(resolveTablerIconForMhaName("air-quality")?.name, "air");
+  assert.equal(resolveTablerIconForMhaName("visibility")?.name, "eye");
+  assert.equal(resolveTablerIconForMhaName("fog")?.name, "mist");
+  assert.equal(resolveTablerIconForMhaName("sunrise")?.name, "sunrise");
+  assert.equal(resolveTablerIconForMhaName("sunset")?.name, "sunset");
 });
 
 test("Tabler provider stays opt-in and preserves local fallback for unmapped icons", () => {

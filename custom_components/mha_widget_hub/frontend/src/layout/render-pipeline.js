@@ -3,8 +3,12 @@ import {
   createCriticalBootStyleElement,
   createFrontendStyleElements,
 } from "../core/mha-frontend-assets.js";
-import { getEntitiesForDomain } from "../ha/entity-filters.js";
 import { getMediaArtworkUrl } from "../ha/media.js";
+import {
+  getAvailableMediaPlayers,
+  resolveEnabledMediaPlayers,
+  resolveSelectedMediaPlayerId,
+} from "../ha/media-players.js";
 import { t } from "../i18n/index.js";
 import { createMobileDock } from "./mobile-dock.js";
 import { createIosOrganicWallpaper } from "./ios-organic-wallpaper.js?v=ios-wallpaper-svg-1";
@@ -23,7 +27,8 @@ import { getLayoutForWidth } from "./responsive.js";
 import { createPagePanel } from "../pages/page-panel.js";
 import { createMediaPage } from "../pages/media-page.js";
 import { syncMediaPageSettingsPanel } from "../pages/media-page-settings.js";
-import { isMediaPageExperienceActive } from "../pages/page-types.js";
+import { isMediaPageExperienceActive, isWeatherPage } from "../pages/page-types.js";
+import { WEATHER_PAGE_WIDGET_MANAGER_CATEGORY_ID } from "../pages/weather-page-widget-catalog.js";
 import {
   captureSettingsPanelsUiState,
   restoreSettingsPanelsUiState,
@@ -172,23 +177,9 @@ export function createRenderPipeline(host, options = {}) {
   function resolveMediaPageArtworkUrl(activePage = getActivePage(host)) {
     if (!activePage) return "";
 
-    const availablePlayers = getEntitiesForDomain(
-      host._hass,
-      "media_player",
-      host._entityVisibilityConfig,
-    );
-    const enabledPlayerIds = Array.isArray(activePage?.config?.enabledPlayerIds)
-      && activePage.config.enabledPlayerIds.length
-      ? activePage.config.enabledPlayerIds.filter(Boolean)
-      : availablePlayers.map(player => player.entity_id);
-    const availableIds = new Set(availablePlayers.map(player => player.entity_id));
-    const selectedPlayerId = [
-      activePage?.config?.selectedPlayerId,
-      activePage?.config?.defaultPlayerId,
-      ...enabledPlayerIds,
-    ].find(playerId => playerId && availableIds.has(playerId))
-      || availablePlayers.find(player => enabledPlayerIds.includes(player.entity_id))?.entity_id
-      || "";
+    const availablePlayers = getAvailableMediaPlayers(host._hass, host._entityVisibilityConfig);
+    const enabledPlayers = resolveEnabledMediaPlayers(activePage?.config, availablePlayers);
+    const selectedPlayerId = resolveSelectedMediaPlayerId(activePage?.config, enabledPlayers);
     const entity = selectedPlayerId ? host._hass?.states?.[selectedPlayerId] || null : null;
     return getMediaArtworkUrl(entity);
   }
@@ -346,10 +337,13 @@ export function createRenderPipeline(host, options = {}) {
       host._syncSettingsDom?.();
       restoreSettingsPanelsUiState(host.shadowRoot, host._settingsPanelsUiState);
       host._settingsPanelsUiState = null;
+      const widgetManagerWeatherScoped = isWeatherPage(host._getActivePage?.());
       host.shadowRoot.append(applyWidgetSurfaceHostLayoutState(host.shadowRoot, createWidgetManagerPanel(buildWidgetManagerPanelProps({
         open: host._widgetManagerOpen,
-        activeCategory: host._widgetManagerCategory,
+        activeCategory: host._widgetManagerCategory || (widgetManagerWeatherScoped ? WEATHER_PAGE_WIDGET_MANAGER_CATEGORY_ID : ""),
         categories: host._getWidgetManagerCategories?.() || [],
+        singleCategory: widgetManagerWeatherScoped,
+        emptyLabel: widgetManagerWeatherScoped ? t("widgets.weatherManager.empty", "No weather widgets available for this integration.") : "",
         onClose: () => host._closeWidgetManager(),
         onBack: () => host._showWidgetManagerCategories(),
         onSelectCategory: (id) => host._selectWidgetManagerCategory(id),

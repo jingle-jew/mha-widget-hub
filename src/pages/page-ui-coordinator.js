@@ -20,6 +20,7 @@ import {
 } from "./page-creator.js";
 import {
   createDefaultPageConfig,
+  discoverWeatherPageWidgets,
   getDefaultPageIcon,
   isMediaPageExperienceActive,
   isMediaPlayersPage,
@@ -50,6 +51,8 @@ export class PageUiCoordinator {
     getIsEditing = () => false,
     getThemeStyle = () => "oneui",
     getDockPosition = () => "left",
+    getHass = () => null,
+    getEntityVisibilityConfig = () => null,
     isMobileLandscapeLayout = () => false,
     normalizeWidget,
     savePages = () => false,
@@ -94,6 +97,8 @@ export class PageUiCoordinator {
     this.getIsEditing = (...args) => getIsEditing(...args);
     this.getThemeStyle = (...args) => getThemeStyle(...args);
     this.getDockPosition = (...args) => getDockPosition(...args);
+    this.getHass = (...args) => getHass(...args);
+    this.getEntityVisibilityConfig = (...args) => getEntityVisibilityConfig(...args);
     this.isMobileLandscapeLayout = (...args) => isMobileLandscapeLayout(...args);
     this.normalizeWidget = normalizeWidget;
     this.savePages = (...args) => savePages(...args);
@@ -203,12 +208,13 @@ export class PageUiCoordinator {
     return true;
   }
 
-  addPage({ icon = "grid", pageType = PAGE_TYPES.GRID, pageConfig = {} } = {}) {
+  addPage({ icon = "grid", pageType = PAGE_TYPES.GRID, pageConfig = {}, initialWidgets = [] } = {}) {
     const previousPage = this.getPages().find(page => page.id === this.getActivePageId()) || null;
     const result = addPage(this.getPages(), {
       icon,
       pageType,
       pageConfig,
+      initialWidgets,
       normalizeWidget: this.normalizeWidget,
     });
 
@@ -252,15 +258,37 @@ export class PageUiCoordinator {
     return true;
   }
 
+  async createWeatherPageFromCreator() {
+    if (!this.getIsEditing()) return false;
+    const weatherSeed = await discoverWeatherPageWidgets({
+      hass: this.getHass(),
+      visibilityConfig: this.getEntityVisibilityConfig(),
+      pageId: `weather-${Date.now().toString(36)}`,
+    });
+    if (!this.getIsEditing()) return false;
+    return this.addPage({
+      pageType: PAGE_TYPES.WEATHER,
+      icon: getDefaultPageIcon(PAGE_TYPES.WEATHER),
+      pageConfig: weatherSeed.config,
+      initialWidgets: weatherSeed.widgets,
+    });
+  }
+
   createPageFromCreator() {
     if (!this.getIsEditing()) return false;
-    const pageType = !supportsMediaPageTheme(this.getThemeStyle())
+    const requestedPageType = this.getNewPageType() || PAGE_TYPES.GRID;
+    const pageType = requestedPageType === PAGE_TYPES.MEDIA_PLAYERS
+      && !supportsMediaPageTheme(this.getThemeStyle())
       ? PAGE_TYPES.GRID
-      : (this.getNewPageType() || PAGE_TYPES.GRID);
+      : requestedPageType;
+    if (pageType === PAGE_TYPES.WEATHER) {
+      return this.createWeatherPageFromCreator();
+    }
     return this.addPage({
       pageType,
       icon: getDefaultPageIcon(pageType),
       pageConfig: createDefaultPageConfig(pageType),
+      initialWidgets: [],
     });
   }
 

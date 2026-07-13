@@ -78,6 +78,27 @@ Phase 1 rule: do not delete legacy tokens. Use these tokens for new/migrated com
 
 ---
 
+## Typography tokens
+
+Widget typography is role-based: components should consume semantic type roles rather than hardcoded font values.
+
+| Role | Size tokens | Weight / rhythm tokens | Typical consumers |
+|---|---|---|---|
+| Widget label | `--mha-type-widget-label-size`, `--mha-type-widget-label-compact-size` | `--mha-type-widget-label-weight`, `--mha-type-widget-label-line-height`, `--mha-type-widget-label-tracking` | widget labels and primary names |
+| Widget state | `--mha-type-widget-state-size`, `--mha-type-widget-state-compact-size` | `--mha-type-widget-state-weight`, `--mha-type-widget-state-line-height`, `--mha-type-widget-state-tracking` | secondary states and units |
+| Widget caption | `--mha-type-widget-caption-size`, `--mha-type-widget-caption-compact-size` | `--mha-type-widget-caption-weight`, `--mha-type-widget-caption-line-height` | metadata, descriptions, supporting captions |
+| Widget body | `--mha-type-widget-body-size`, `--mha-type-widget-body-lg-size`, `--mha-type-widget-body-compact-size` | `--mha-type-widget-body-weight`, `--mha-type-widget-body-line-height`, `--mha-type-widget-body-relaxed-line-height` | narrative text and longer summaries |
+| Widget value/display | `--mha-type-widget-value-size`, `--mha-type-widget-display-sm`, `--mha-type-widget-display-md`, `--mha-type-widget-display-lg` | `--mha-type-widget-value-weight`, `--mha-type-widget-display-weight`, `--mha-type-widget-value-line-height`, `--mha-type-widget-value-tracking` | numeric values and large display text |
+| Control text | `--mha-type-control-label-size`, `--mha-type-control-state-size` | `--mha-type-control-label-weight`, `--mha-type-control-state-weight`, `--mha-type-control-line-height`, `--mha-type-control-label-tracking`, `--mha-type-control-state-tracking` | buttons, toggles, combined controls |
+| Weather text | `--mha-type-weather-temp-size`, `--mha-type-weather-temp-display-size`, `--mha-type-weather-temp-compact-size`, `--mha-type-weather-summary-size`, `--mha-type-weather-summary-temp-size`, `--mha-type-weather-summary-temp-compact-size` | `--mha-type-weather-temp-weight`, `--mha-type-weather-summary-weight` | weather temperatures and summaries |
+| Chips | `--mha-type-widget-chip-size` | `--mha-type-chip-weight` | compact pills and chip labels |
+
+Normal label, state, caption, body, unit and control text should not depend directly on `cqi`, `cqb`, `vw` or `vh`. Display roles may use container-aware sizing when the text itself is the primary visual object, such as large weather temperatures.
+
+Text colors remain separate from typography: use `--mha-text-primary` for primary values/body, `--mha-text-secondary` for labels/units, and `--mha-text-tertiary` for low-emphasis metadata.
+
+---
+
 ## Effect tokens
 
 | Token | Simple description |

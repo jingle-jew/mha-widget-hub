@@ -811,6 +811,65 @@ test("available content rect resolves from the widget area on mobile", () => {
   });
 });
 
+test("weather pages measure the stable widget area instead of their growing panel", () => {
+  const panel = {
+    clientWidth: 1386,
+    clientHeight: 692,
+    getBoundingClientRect() {
+      return { left: 322, top: 124, width: 1386, height: 692 };
+    },
+  };
+  const area = {
+    clientWidth: 1386,
+    clientHeight: 905,
+    getBoundingClientRect() {
+      return { left: 322, top: 124, width: 1386, height: 905 };
+    },
+  };
+  const style = {
+    paddingLeft: "0px",
+    paddingRight: "0px",
+    paddingTop: "0px",
+    paddingBottom: "0px",
+  };
+  const grid = {
+    dataset: { pageType: "weather" },
+    closest(selector) {
+      return selector === ".mha-page-panel--grid" ? panel : null;
+    },
+  };
+  const root = {
+    querySelector(selector) {
+      if (selector === ".mha-widget-area") return area;
+      if (selector === ".mha-grid") return grid;
+      return null;
+    },
+  };
+  const runtime = createGridRuntime({
+    host: {
+      dataset: {},
+      style: createStyle(),
+      shadowRoot: root,
+      isConnected: true,
+      getBoundingClientRect: () => ({ width: 1621, height: 926 }),
+    },
+    getLayoutMode: () => "desktop",
+    getEffectiveLayout: () => "desktop",
+    getStyle: () => style,
+  });
+
+  assert.deepEqual(runtime.getAvailableContentRect(), {
+    x: 322,
+    y: 124,
+    width: 1386,
+    height: 905,
+    left: 322,
+    top: 124,
+    right: 1708,
+    bottom: 1029,
+  });
+});
+
 test("runtime preset sizing uses dock position as part of the tablet density context", () => {
   const panel = { clientWidth: 975, clientHeight: 753 };
   const area = { clientWidth: 952, clientHeight: 747 };

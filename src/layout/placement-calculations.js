@@ -272,7 +272,7 @@ export function packTranslatedSwapBand(
       widgets,
       units,
       rowUnits,
-      { allowUnboundedRows },
+      { allowUnboundedRows, layout },
     ) ? next : null;
   }
 
@@ -298,7 +298,7 @@ export function packTranslatedSwapBand(
       widgets,
       units,
       rowUnits,
-      { allowUnboundedRows },
+      { allowUnboundedRows, layout },
     ) ? next : null;
   }
 
@@ -425,7 +425,7 @@ export function getAvailableDropSlotsForCandidate(
         validationWidgets,
         units,
         rowUnits,
-        { allowUnboundedRows },
+        { allowUnboundedRows, layout },
       )) {
         slots.push({ x, y, w: width, h: height });
       }
@@ -439,24 +439,33 @@ export function doesWidgetLayoutFitGrid(
   widgets,
   columns,
   rows,
-  { layout = "desktop" } = {},
+  { allowUnboundedRows = false, layout = "desktop" } = {},
 ) {
+  const normalizedWidgets = widgets.map(rawWidget => normalizeWidgetForKind(rawWidget, {
+    units: columns,
+    rowUnits: rows,
+    layout,
+  }));
+  const effectiveRows = allowUnboundedRows
+    ? Math.max(
+      rows,
+      normalizedWidgets.reduce(
+        (total, widget) => total + Math.max(1, Number(widget.h) || 1),
+        0,
+      ),
+    )
+    : rows;
   const occupied = Array.from(
-    { length: rows },
+    { length: effectiveRows },
     () => Array(columns).fill(false),
   );
 
-  for (const rawWidget of widgets) {
-    const widget = normalizeWidgetForKind(rawWidget, {
-      units: columns,
-      rowUnits: rows,
-      layout,
-    });
+  for (const widget of normalizedWidgets) {
     const width = Math.max(1, Math.min(columns, Number(widget.w) || 1));
-    const height = Math.max(1, Math.min(rows, Number(widget.h) || 1));
+    const height = Math.max(1, Math.min(effectiveRows, Number(widget.h) || 1));
     let placed = false;
 
-    for (let y = 0; y <= rows - height && !placed; y += 1) {
+    for (let y = 0; y <= effectiveRows - height && !placed; y += 1) {
       for (let x = 0; x <= columns - width && !placed; x += 1) {
         let fits = true;
         for (let row = y; row < y + height && fits; row += 1) {

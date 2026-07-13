@@ -101,3 +101,31 @@ test("unregistered catalog items keep the existing empty-widget fallback", () =>
     h: 2,
   });
 });
+
+test("weather metric catalog items preserve their detected source contract", () => {
+  const widget = createWidgetFromCatalogItem({
+    kind: "weather-metric",
+    variant: "weather-metric-compact",
+    label: "Indice UV",
+    size: { w: 2, h: 1 },
+    metricKey: "uv",
+    icon: "uv",
+    sourceType: "weather-attribute",
+    valueKind: "number",
+    weatherEntityId: "weather.home",
+    entityId: "weather.home",
+    attribute: "uv_index",
+    unit: "",
+  }, deterministicId);
+
+  assert.equal(widget.kind, "weather-metric");
+  assert.equal(widget.variant, "weather-metric-compact");
+  assert.equal(widget.metricKey, "uv");
+  assert.equal(widget.label, "Indice UV");
+  assert.equal(widget.sourceType, "weather-attribute");
+  assert.equal(widget.weatherEntityId, "weather.home");
+  assert.equal(widget.entityId, "weather.home");
+  assert.equal(widget.attribute, "uv_index");
+  assert.equal(widget.w, 2);
+  assert.equal(widget.h, 1);
+});

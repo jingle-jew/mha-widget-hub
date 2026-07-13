@@ -17,6 +17,7 @@ function createHarness({
   units = 6,
   rowUnits = 4,
   mobile = false,
+  unboundedRows = false,
   movable = true,
 } = {}) {
   const effects = [];
@@ -26,6 +27,7 @@ function createHarness({
     getPositions: () => positions,
     getGridBounds: () => ({ units, rowUnits }),
     isMobileLayout: () => mobile,
+    allowUnboundedRows: () => unboundedRows,
     canMoveWidget: id => movable && activeMoveWidgetId === id,
     savePositions: next => effects.push(["save", structuredClone(next)]),
     applyPositions: next => effects.push(["apply", structuredClone(next)]),
@@ -97,6 +99,28 @@ test("mobile directional moves can continue below configured rows", () => {
 
   assert.equal(harness.controller.moveByDirection("active", "down"), true);
   assert.deepEqual(positions.active, { x: 1, y: 3 });
+});
+
+test("scrollable tablet directional moves can continue below configured rows", () => {
+  const positions = { active: { x: 1, y: 2 } };
+  const harness = createHarness({
+    positions,
+    units: 2,
+    rowUnits: 2,
+    unboundedRows: true,
+  });
+
+  assert.equal(harness.controller.moveByDirection("active", "down"), true);
+  assert.deepEqual(positions.active, { x: 1, y: 3 });
+  assert.deepEqual(harness.effects[1], [
+    "applySingle",
+    {
+      widgetId: "active",
+      position: { x: 1, y: 3 },
+      width: 2,
+      height: 2,
+    },
+  ]);
 });
 
 test("a direct neighbor swap persists and applies the complete position map", () => {

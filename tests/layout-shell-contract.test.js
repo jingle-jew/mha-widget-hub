@@ -332,6 +332,14 @@ test("mobile shell keeps the background viewport-anchored while widget content o
     gridSource,
     /:host\(\[data-layout="mobile"\]\) \.mha-page-panel--grid > \.mha-grid\s*\{[\s\S]*--mha-grid-padding-block-start:\s*0px;[\s\S]*--mha-grid-padding-block-end:\s*0px;/,
   );
+  assert.match(
+    gridSource,
+    /:host\(\[data-active-page-type="weather"\]\) \.mha-widget-area\s*\{[\s\S]*overflow-y:\s*auto;[\s\S]*touch-action:\s*pan-y;/,
+  );
+  assert.match(
+    gridSource,
+    /:host\(\[data-active-page-type="weather"\]\) \.mha-page-panel\[data-page-type="weather"\] > \.mha-grid\s*\{[\s\S]*block-size:\s*auto;[\s\S]*max-block-size:\s*none;/,
+  );
   assert.doesNotMatch(
     gridSource,
     /:host\(\[data-layout="mobile"\]\) \.mha-page-panel--grid\s*\{[\s\S]*padding-block-start:\s*var\(--mha-page-padding\);/,

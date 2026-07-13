@@ -207,6 +207,21 @@
     }
 
     function createMockHass() {
+      const forecastDate = (offsetHours = 0) => new Date(Date.now() + offsetHours * 60 * 60 * 1000).toISOString();
+      const dailyForecast = [
+        { datetime: forecastDate(12), condition: "partlycloudy", temperature: 18, templow: 7, precipitation_probability: 20, precipitation: 0.2 },
+        { datetime: forecastDate(36), condition: "rainy", temperature: 14, templow: 6, precipitation_probability: 75, precipitation: 7.4 },
+        { datetime: forecastDate(60), condition: "cloudy", temperature: 12, templow: 4, precipitation_probability: 35, precipitation: 1.1 },
+        { datetime: forecastDate(84), condition: "sunny", temperature: 17, templow: 5, precipitation_probability: 10, precipitation: 0 },
+        { datetime: forecastDate(108), condition: "partlycloudy", temperature: 19, templow: 8, precipitation_probability: 25, precipitation: 0.4 },
+      ];
+      const hourlyForecast = [
+        { datetime: forecastDate(1), condition: "clear-night", temperature: 8, precipitation_probability: 5, precipitation: 0 },
+        { datetime: forecastDate(2), condition: "partlycloudy", temperature: 8, precipitation_probability: 10, precipitation: 0 },
+        { datetime: forecastDate(3), condition: "cloudy", temperature: 7, precipitation_probability: 25, precipitation: 0 },
+        { datetime: forecastDate(4), condition: "rainy", temperature: 7, precipitation_probability: 65, precipitation: 1.4 },
+        { datetime: forecastDate(5), condition: "rainy", temperature: 6, precipitation_probability: 80, precipitation: 2.1 },
+      ];
       const states = {
         "light.salon": createMockEntity("light.salon", "on", {
           friendly_name: "Salon",
@@ -267,40 +282,166 @@
           temperature: 22,
           unit_of_measurement: "°C",
         }),
-        "weather.maison": createMockEntity("weather.maison", "partlycloudy", {
-          friendly_name: "Maison",
-          temperature: 22,
+        "weather.val_d_or_previsions": createMockEntity("weather.val_d_or_previsions", "partlycloudy", {
+          friendly_name: "Val-d'Or Prévisions",
+          temperature: 8,
           temperature_unit: "°C",
-          humidity: 48,
-          wind_speed: 9,
+          humidity: 44,
+          pressure: 1011.8,
+          pressure_unit: "hPa",
+          wind_speed: 12,
+          wind_bearing: 238,
           wind_speed_unit: "km/h",
-          forecast: [
-            { condition: "partlycloudy", temperature: 23, templow: 14 },
-            { condition: "sunny", temperature: 25, templow: 15 },
-            { condition: "rainy", temperature: 19, templow: 12 },
-            { condition: "cloudy", temperature: 20, templow: 13 },
-          ],
+          precipitation_probability: 20,
+          precipitation_unit: "mm",
+          forecast: dailyForecast,
         }),
         "weather.home": createMockEntity("weather.home", "partlycloudy", {
-          friendly_name: "Maison",
-          temperature: 22,
+          friendly_name: "ZZ Maison Prévisions secondaire",
+          temperature: 8,
           temperature_unit: "°C",
-          humidity: 48,
-          wind_speed: 9,
+          humidity: 44,
+          pressure: 1011.8,
+          pressure_unit: "hPa",
+          wind_speed: 12,
+          wind_bearing: 238,
           wind_speed_unit: "km/h",
-          forecast: [
-            { condition: "partlycloudy", temperature: 23, templow: 14 },
-            { condition: "sunny", temperature: 25, templow: 15 },
-            { condition: "rainy", temperature: 19, templow: 12 },
-            { condition: "cloudy", temperature: 20, templow: 13 },
-          ],
+          precipitation_probability: 20,
+          precipitation_unit: "mm",
+          forecast: dailyForecast,
+        }),
+        "sensor.val_d_or_temperature_ressentie": createMockEntity("sensor.val_d_or_temperature_ressentie", "5.6", {
+          friendly_name: "Val-d'Or Température ressentie",
+          unit_of_measurement: "°C",
+          device_class: "temperature",
+        }),
+        "sensor.val_d_or_dew_point": createMockEntity("sensor.val_d_or_dew_point", "-3.2", {
+          friendly_name: "Point de rosée",
+          unit_of_measurement: "°C",
+          device_class: "temperature",
+        }),
+        "sensor.val_d_or_wind_gust": createMockEntity("sensor.val_d_or_wind_gust", "27", {
+          friendly_name: "Rafale de vent",
+          unit_of_measurement: "km/h",
+          device_class: "wind_speed",
+        }),
+        "sensor.val_d_or_visibility": createMockEntity("sensor.val_d_or_visibility", "24.1", {
+          friendly_name: "Visibilité",
+          unit_of_measurement: "km",
+          device_class: "distance",
+        }),
+        "sensor.val_d_or_uv_index": createMockEntity("sensor.val_d_or_uv_index", "2", {
+          friendly_name: "Indice UV",
+          device_class: "uv_index",
+        }),
+        "sensor.val_d_or_couverture_nuageuse": createMockEntity("sensor.val_d_or_couverture_nuageuse", "62", {
+          friendly_name: "Val-d'Or Couverture nuageuse",
+          unit_of_measurement: "%",
+        }),
+        "sensor.val_d_or_intensite_precipitations": createMockEntity("sensor.val_d_or_intensite_precipitations", "0.4", {
+          friendly_name: "Val-d'Or Intensité des précipitations",
+          unit_of_measurement: "mm/h",
+          device_class: "precipitation_intensity",
+        }),
+        "sensor.val_d_or_tendency": createMockEntity("sensor.val_d_or_tendency", "En baisse", {
+          friendly_name: "Tendance",
+        }),
+        "sensor.val_d_or_rayonnement_solaire": createMockEntity("sensor.val_d_or_rayonnement_solaire", "186", {
+          friendly_name: "Val-d'Or Rayonnement solaire",
+          unit_of_measurement: "W/m²",
+          device_class: "irradiance",
+        }),
+        "sensor.val_d_or_eclairement": createMockEntity("sensor.val_d_or_eclairement", "12400", {
+          friendly_name: "Val-d'Or Éclairement extérieur",
+          unit_of_measurement: "lx",
+          device_class: "illuminance",
+        }),
+        "sensor.val_d_or_ozone": createMockEntity("sensor.val_d_or_ozone", "31", {
+          friendly_name: "Val-d'Or Ozone",
+          unit_of_measurement: "µg/m³",
+          device_class: "ozone",
+        }),
+        "sensor.val_d_or_duree_ensoleillement": createMockEntity("sensor.val_d_or_duree_ensoleillement", "94", {
+          friendly_name: "Val-d'Or Durée d’ensoleillement",
+          unit_of_measurement: "min",
+          device_class: "duration",
+        }),
+        "sensor.val_d_or_hauteur_neige": createMockEntity("sensor.val_d_or_hauteur_neige", "3", {
+          friendly_name: "Val-d'Or Hauteur de neige",
+          unit_of_measurement: "cm",
+          device_class: "distance",
+        }),
+        "sensor.val_d_or_aqhi": createMockEntity("sensor.val_d_or_aqhi", "2", {
+          friendly_name: "CAS",
+          unit_of_measurement: "AQHI",
+          device_class: "aqi",
+        }),
+        "sensor.val_d_or_pm25": createMockEntity("sensor.val_d_or_pm25", "3.4", {
+          friendly_name: "Val-d'Or PM2.5",
+          unit_of_measurement: "µg/m³",
+          device_class: "pm25",
+        }),
+        "sensor.val_d_or_summary": createMockEntity("sensor.val_d_or_summary", "Nuageux avec quelques éclaircies en soirée. Pluie faible possible durant la nuit.", {
+          friendly_name: "Résumé",
+        }),
+        "sensor.val_d_or_warnings": createMockEntity("sensor.val_d_or_warnings", "0", {
+          friendly_name: "Alertes",
+        }),
+        "sensor.chambre_humidite": createMockEntity("sensor.chambre_humidite", "39", {
+          friendly_name: "Chambre Humidité",
+          unit_of_measurement: "%",
+          device_class: "humidity",
+        }),
+        "sun.sun": createMockEntity("sun.sun", "above_horizon", {
+          friendly_name: "Soleil",
+          next_rising: forecastDate(15),
+          next_setting: forecastDate(4),
         }),
       };
+      const WEATHER_CONFIG_ENTRY_ID = "dev-weather-entry";
+      const WEATHER_DEVICE_ID = "dev-weather-device";
+      const entityRegistry = Object.entries(states).map(([entityId, entity]) => {
+        const isWeatherSource = entityId === "weather.val_d_or_previsions"
+          || entityId.startsWith("sensor.val_d_or_");
+        return {
+          entity_id: entityId,
+          platform: isWeatherSource ? "environment_canada" : "mha_dev",
+          config_entry_id: isWeatherSource ? WEATHER_CONFIG_ENTRY_ID : "dev-general-entry",
+          device_id: isWeatherSource ? WEATHER_DEVICE_ID : "dev-general-device",
+          disabled_by: null,
+          hidden_by: null,
+          entity_category: null,
+          original_name: entity.attributes?.friendly_name || entityId,
+          original_device_class: entity.attributes?.device_class || null,
+        };
+      });
+      const deviceRegistry = [
+        {
+          id: WEATHER_DEVICE_ID,
+          name: "Station météo Val-d'Or",
+          config_entries: [WEATHER_CONFIG_ENTRY_ID],
+        },
+        {
+          id: "dev-general-device",
+          name: "MHA Dev",
+          config_entries: ["dev-general-entry"],
+        },
+      ];
 
       return {
         states,
         language: "fr",
-        user: { id: "dev-user", name: "Dev local" },
+        locale: { language: "fr-CA", number_format: "comma_decimal" },
+        config: {
+          unit_system: {
+            temperature: "°C",
+            wind_speed: "km/h",
+            pressure: "hPa",
+            length: "km",
+            precipitation: "mm",
+          },
+        },
+        user: { id: "dev-user", name: "Dev local", is_admin: true },
         callWS(payload = {}) {
           console.info("[MHA dev] callWS", payload);
           if (payload.type === "mha_widget_hub/entity_visibility/get") {
@@ -316,6 +457,29 @@
           }
           if (payload.type === "mha_widget_hub/users/list") {
             return Promise.resolve({ users: [{ id: "dev-user", name: "Dev local" }] });
+          }
+          if (payload.type === "config/entity_registry/list") {
+            return Promise.resolve(entityRegistry);
+          }
+          if (payload.type === "config/device_registry/list") {
+            return Promise.resolve(deviceRegistry);
+          }
+          if (
+            payload.type === "call_service"
+            && payload.domain === "weather"
+            && payload.service === "get_forecasts"
+          ) {
+            const entityId = Array.isArray(payload.target?.entity_id)
+              ? payload.target.entity_id[0]
+              : payload.target?.entity_id || "weather.val_d_or_previsions";
+            const forecast = payload.service_data?.type === "hourly"
+              ? hourlyForecast
+              : dailyForecast;
+            return Promise.resolve({
+              response: {
+                [entityId]: { forecast },
+              },
+            });
           }
           return Promise.resolve({});
         },
@@ -372,8 +536,14 @@
       };
     };
 
-        window.__MHA_DEV__ = {
+    window.__MHA_DEV__ = {
       hub,
+      createMockHass,
+      resetMockHass() {
+        hub.hass = createMockHass();
+        hub.requestRender?.();
+        return hub.hass;
+      },
       setTheme,
       toggleTheme,
       setThemeStyle,

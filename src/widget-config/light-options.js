@@ -1,6 +1,5 @@
-import { getEntityDomain, isEntityAvailable } from "../ha/entity.js";
+import { getAvailableEntitiesForDomain } from "../ha/entity-filters.js";
 import { supportsLightBrightness } from "../ha/capabilities.js";
-import { filterEntitiesForCurrentUser } from "../admin/entity-permissions.js";
 
 export function humanizeEntityId(entityId = "") {
   const objectId = String(entityId).split(".").slice(1).join(".") || String(entityId);
@@ -31,19 +30,10 @@ export function getLightOptions(hass, visibilityConfig) {
 }
 
 export function getEntityOptionsByDomain(hass, domain, visibilityConfig) {
-  const options = Object.entries(hass?.states || {})
-    .filter(([entityId, entityState]) => (
-      getEntityDomain(entityId) === domain
-      && (
-        isEntityAvailable(entityState)
-        || (domain === "button" && entityState?.state === "unknown")
-      )
-    ))
-    .map(([entityId, entityState]) => ({
+  return getAvailableEntitiesForDomain(hass, domain, visibilityConfig)
+    .map(({ entity_id: entityId, name, state }) => ({
       value: entityId,
-      label: getEntityDisplayName(entityState, entityId),
-      entityState,
-    }))
-    .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" }));
-  return filterEntitiesForCurrentUser(hass, options, visibilityConfig);
+      label: name,
+      entityState: state,
+    }));
 }

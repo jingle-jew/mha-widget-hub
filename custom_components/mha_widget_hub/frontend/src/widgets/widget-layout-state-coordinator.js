@@ -15,6 +15,7 @@ export class WidgetLayoutStateCoordinator {
     getRuntimeGridPreset = () => ({ columns: 1, rows: 1 }),
     getWidgetAreaMetrics = () => ({}),
     isMobileLayout = () => false,
+    allowUnboundedRows = () => false,
     recordPersistenceResult = value => value,
     writeWidgetPositions = () => false,
     getRoot = () => null,
@@ -36,6 +37,7 @@ export class WidgetLayoutStateCoordinator {
       : (...args) => this.getLogicalGridPreset(...args);
     this.getWidgetAreaMetrics = (...args) => getWidgetAreaMetrics(...args);
     this.isMobileLayout = (...args) => isMobileLayout(...args);
+    this.allowUnboundedRows = (...args) => allowUnboundedRows(...args);
     this.recordPersistenceResult = (...args) => recordPersistenceResult(...args);
     this.writeWidgetPositions = (...args) => writeWidgetPositions(...args);
     this.getRoot = (...args) => getRoot(...args);
@@ -59,13 +61,20 @@ export class WidgetLayoutStateCoordinator {
     };
   }
 
+  allowsUnboundedRows() {
+    return this.isMobileLayout() || this.allowUnboundedRows();
+  }
+
   isPositionMapValidForWidgets(positions, widgets, units, rowUnits) {
     return this.isPositionMapValidForWidgetsFn(
       positions,
       widgets,
       units,
       rowUnits,
-      { allowUnboundedRows: this.isMobileLayout() },
+      {
+        allowUnboundedRows: this.allowsUnboundedRows(),
+        layout: this.isMobileLayout() ? "mobile" : "desktop",
+      },
     );
   }
 
@@ -159,7 +168,7 @@ export class WidgetLayoutStateCoordinator {
   packWidgetsForCurrentGrid() {
     const { units, rowUnits } = this.getGridBounds();
     return this.packWidgetsFn(this.getWidgets(), units, rowUnits, {
-      allowUnboundedRows: this.isMobileLayout(),
+      allowUnboundedRows: this.allowsUnboundedRows(),
       layout: this.isMobileLayout() ? "mobile" : "desktop",
     });
   }
@@ -195,7 +204,9 @@ export class WidgetLayoutStateCoordinator {
     const x = Number(widget?.x ?? widget?.col ?? widget?.column ?? 1) || 1;
     const y = Number(widget?.y ?? widget?.row ?? widget?.rowIndex ?? 1) || 1;
     const maxW = Math.max(1, bounds.units - x + 1);
-    const maxH = Math.max(1, bounds.rowUnits - y + 1);
+    const maxH = this.allowsUnboundedRows()
+      ? Number.POSITIVE_INFINITY
+      : Math.max(1, bounds.rowUnits - y + 1);
 
     return {
       ...normalizedSize,
@@ -210,7 +221,9 @@ export class WidgetLayoutStateCoordinator {
     const w = Math.max(1, Number(size?.w) || 1);
     const h = Math.max(1, Number(size?.h) || 1);
     const maxX = Math.max(1, bounds.units - w + 1);
-    const maxY = Math.max(1, bounds.rowUnits - h + 1);
+    const maxY = this.allowsUnboundedRows()
+      ? Number.POSITIVE_INFINITY
+      : Math.max(1, bounds.rowUnits - h + 1);
 
     return {
       ...position,
