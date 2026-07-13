@@ -16,7 +16,6 @@
   border-radius: var(--mha-widget-radius);
   background: var(--mha-widget-shell-surface, var(--mha-surface-primary));
   color: var(--mha-text-primary);
-  backdrop-filter: blur(var(--mha-surface-blur)) saturate(var(--mha-surface-saturation));
   box-shadow: var(--mha-widget-shell-shadow, var(--mha-shadow-primary));
   overflow: hidden;
 }

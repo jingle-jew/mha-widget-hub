@@ -53,8 +53,6 @@
   border: 1px solid var(--mha-shell-border, var(--mha-border-secondary));
   border-radius: clamp(1.45rem, 3vw, var(--mha-dock-radius));
   background: var(--mha-shell-dock-surface, var(--mha-surface-glass));
-  -webkit-backdrop-filter: blur(var(--mha-shell-blur, var(--mha-blur-primary))) saturate(var(--mha-surface-saturation));
-  backdrop-filter: blur(var(--mha-shell-blur, var(--mha-blur-primary))) saturate(var(--mha-surface-saturation));
   box-shadow: var(--mha-shell-shadow, var(--mha-shadow-floating));
   pointer-events: auto;
 

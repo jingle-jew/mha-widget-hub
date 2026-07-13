@@ -44,6 +44,7 @@
 .mha-dock,
 .mha-status-bar,
 .mha-screensaver-nowbar-tile {
+  isolation: isolate;
   -webkit-backdrop-filter: var(--mha-glass-surface-fallback-filter);
   backdrop-filter: var(--mha-glass-surface-fallback-filter);
 }
@@ -57,6 +58,7 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
+  z-index: 0;
   pointer-events: none;
   background-image: var(--mha-glass-noise-image);
   background-position: center;
@@ -64,6 +66,24 @@
   background-size: var(--mha-glass-noise-size);
   opacity: var(--mha-glass-noise-opacity);
   mix-blend-mode: var(--mha-glass-noise-blend-mode);
+}
+
+.mha-widget::after,
+.mha-dock::after,
+.mha-status-bar::after,
+.mha-screensaver-nowbar-tile::after {
+  z-index: 1;
+}
+
+.mha-dock::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: var(--mha-widget-shell-highlight, var(--mha-highlight-primary, none));
+  opacity: var(--mha-widget-reflection-opacity, 0);
+  mix-blend-mode: var(--mha-glass-reflection-blend-mode, screen);
 }
 
 @supports (backdrop-filter: blur(1px)) {
@@ -94,7 +114,6 @@
   :host,
   :root {
     --mha-glass-reflection-blend-mode: normal;
-    --mha-glass-noise-blend-mode: normal;
   }
 
   .mha-glass-surface,
