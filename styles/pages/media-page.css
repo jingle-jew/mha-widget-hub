@@ -394,8 +394,8 @@
   --mha-media-toggle-font-size: clamp(.68rem, 1.4cqi, .82rem);
   --mha-media-control-gap: clamp(.25rem, .7cqi, .42rem);
   --mha-media-progress-height: .22rem;
-  flex: 0 0 6.25rem;
-  block-size: 6.25rem;
+  flex: 0 0 7.5rem;
+  block-size: 7.5rem;
   min-block-size: 0;
   border-radius: clamp(.85rem, 1.8cqi, 1.15rem);
   background: color-mix(in srgb, var(--mha-widget-surface) 78%, transparent);
@@ -551,28 +551,55 @@
   grid-row: 1;
   min-inline-size: 0;
   min-block-size: 0;
-  display: grid;
-  grid-template-rows: max-content minmax(0, 1fr) max-content;
-  align-content: center;
-  gap: .24rem;
+  display: contents;
 }
 
-.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-info .mha-media-widget-source-badge {
-  grid-column: auto;
-  grid-row: auto;
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-info .mha-media-page-player-meta-header {
+  grid-column: 2;
+  grid-row: 1;
+  min-inline-size: 0;
+  align-self: start;
   justify-self: start;
+  margin-block-start: .42rem;
+  display: flex;
+  align-items: center;
+  gap: clamp(.35rem, .8cqi, .56rem);
+  overflow: hidden;
+}
+
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-info .mha-media-page-player-meta-header .mha-media-widget-source-badge {
+  flex: 0 0 auto;
+  justify-self: start;
+  inline-size: max-content;
+  max-inline-size: none;
+  white-space: nowrap;
+  overflow: visible;
 }
 
 .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-info .mha-media-widget-text {
-  grid-column: auto;
-  grid-row: auto;
+  grid-column: 2;
+  grid-row: 1;
+  min-inline-size: 0;
   align-self: center;
   padding-inline: 0;
 }
 
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-info .mha-media-page-player-meta-header .mha-media-page-player-name {
+  min-inline-size: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  color: var(--mha-text-primary);
+  font-size: clamp(.72rem, 1.4cqi, .86rem);
+  font-weight: 760;
+  line-height: 1.08;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-info .mha-media-widget-progress-shell {
-  grid-column: auto;
-  grid-row: auto;
+  grid-column: 2;
+  grid-row: 1;
+  align-self: end;
   margin-block-start: .1rem;
 }
 
@@ -632,8 +659,67 @@
 }
 
 .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget .mha-media-widget-artist {
+  display: block;
   color: var(--mha-text-secondary, var(--mha-muted));
   font-size: clamp(.7rem, 1.35cqi, .82rem);
+}
+
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget .mha-media-widget-artist[hidden],
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-info .mha-media-widget-text[hidden],
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-info .mha-media-page-player-meta-header .mha-media-page-player-name[hidden] {
+  display: none;
+}
+
+/* Volume mode uses the center/right area for one compact control row. Keep
+ * the state badge available, but remove metadata that would force the row to
+ * wrap or push the fixed toggle out of the card. */
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player > .mha-media-widget.mha-media-page-player-widget[data-media-controls-mode="volume"] .mha-media-page-player-info {
+  position: static;
+  inset: auto;
+  display: contents;
+}
+
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player > .mha-media-widget.mha-media-page-player-widget[data-media-controls-mode="volume"] .mha-media-page-player-info .mha-media-page-player-meta-header {
+  inline-size: max-content;
+  max-inline-size: none;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player > .mha-media-widget.mha-media-page-player-widget[data-media-controls-mode="volume"] .mha-media-page-player-info .mha-media-page-player-meta-header .mha-media-widget-source-badge {
+  flex: 0 0 auto;
+  inline-size: max-content;
+  max-inline-size: none;
+  white-space: nowrap;
+  overflow: visible;
+}
+
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player > .mha-media-widget.mha-media-page-player-widget[data-media-controls-mode="volume"] .mha-media-page-player-info .mha-media-widget-text,
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player > .mha-media-widget.mha-media-page-player-widget[data-media-controls-mode="volume"] .mha-media-page-player-info .mha-media-widget-progress-shell {
+  display: none;
+}
+
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player > .mha-media-widget.mha-media-page-player-widget[data-media-controls-mode="volume"] > .mha-media-widget-controls-shell {
+  grid-column: 2 / span 2;
+  grid-row: 1;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  inline-size: 100%;
+  min-inline-size: 0;
+  gap: clamp(.42rem, 1cqi, .7rem);
+}
+
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player > .mha-media-widget.mha-media-page-player-widget[data-media-controls-mode="volume"] > .mha-media-widget-controls-shell > .mha-media-widget-controls-group {
+  grid-column: 1;
+  grid-row: 1;
+  grid-template-columns: repeat(3, minmax(0, max-content));
+  justify-content: center;
+  gap: clamp(.45rem, 1cqi, .7rem);
+}
+
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player > .mha-media-widget.mha-media-page-player-widget[data-media-controls-mode="volume"] > .mha-media-widget-controls-shell > .mha-media-widget-control-toggle {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
 }
 
 :host([data-theme-style="oneui"]) .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player {

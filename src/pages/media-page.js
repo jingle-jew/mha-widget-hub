@@ -73,6 +73,11 @@ function isPlayerPlaying(hass, playerId = "") {
   return String(hass?.states?.[playerId]?.state || "").trim().toLowerCase() === "playing";
 }
 
+function isPlayerSelectedMediaState(hass, playerId = "") {
+  const state = String(hass?.states?.[playerId]?.state || "").trim().toLowerCase();
+  return state === "playing" || state === "paused";
+}
+
 function getEnabledPlayerIdSet(enabledPlayers = []) {
   return new Set(enabledPlayers.map(player => player.entity_id).filter(Boolean));
 }
@@ -97,7 +102,7 @@ export function resolveMediaPageNowPlayingId({
   }
 
   const configuredSelectedId = String(config?.selectedPlayerId || "").trim();
-  if (configuredSelectedId && ids.has(configuredSelectedId) && isPlayerPlaying(hass, configuredSelectedId)) {
+  if (configuredSelectedId && ids.has(configuredSelectedId) && isPlayerSelectedMediaState(hass, configuredSelectedId)) {
     return configuredSelectedId;
   }
 
@@ -321,9 +326,11 @@ export function createMediaPage(page = {}, {
     lastPlayingPlayerId: "",
   };
   const initialSelectedPlayerId = String(page?.config?.selectedPlayerId || "").trim();
-  if (initialSelectedPlayerId && isPlayerPlaying(hass, initialSelectedPlayerId)) {
+  if (initialSelectedPlayerId && isPlayerSelectedMediaState(hass, initialSelectedPlayerId)) {
     selectionState.committedPlayerId = initialSelectedPlayerId;
-    selectionState.lastPlayingPlayerId = initialSelectedPlayerId;
+    if (isPlayerPlaying(hass, initialSelectedPlayerId)) {
+      selectionState.lastPlayingPlayerId = initialSelectedPlayerId;
+    }
   }
   const context = {
     page,
@@ -369,11 +376,13 @@ export function createMediaPage(page = {}, {
     const player = context.view.enabledPlayers.find(candidate => candidate.entity_id === normalizedPlayerId);
     if (!player) return;
 
-    if (isPlayerPlaying(context.hass, normalizedPlayerId)) {
+    if (isPlayerSelectedMediaState(context.hass, normalizedPlayerId)) {
       clearInactiveSelectionTimer();
       selectionState.transientPlayerId = "";
       selectionState.committedPlayerId = normalizedPlayerId;
-      selectionState.lastPlayingPlayerId = normalizedPlayerId;
+      if (isPlayerPlaying(context.hass, normalizedPlayerId)) {
+        selectionState.lastPlayingPlayerId = normalizedPlayerId;
+      }
       onSelectPlayer(normalizedPlayerId);
       refresh();
       return;

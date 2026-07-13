@@ -220,6 +220,29 @@ test("media page keeps a playing selection and falls back from inactive selectio
   assert.equal(MEDIA_PAGE_INACTIVE_FALLBACK_MS, 10_000);
 });
 
+test("media page keeps a paused selected player instead of falling back", () => {
+  const pausedPlayerId = "media_player.office";
+  assert.equal(
+    resolveMediaPageNowPlayingId({
+      config: {
+        selectedPlayerId: pausedPlayerId,
+        defaultPlayerId: "media_player.salon",
+      },
+      enabledPlayers: [
+        { entity_id: "media_player.salon" },
+        { entity_id: pausedPlayerId },
+      ],
+      hass: {
+        states: {
+          "media_player.salon": { state: "playing" },
+          [pausedPlayerId]: { state: "paused" },
+        },
+      },
+    }),
+    pausedPlayerId,
+  );
+});
+
 test("media page panel keeps responsive sizes on supported themes and downgrades elsewhere", () => {
   const widget = {
     kind: "media",
