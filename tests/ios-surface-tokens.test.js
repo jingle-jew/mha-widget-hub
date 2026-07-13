@@ -2,78 +2,69 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
+import { getStyleManifest } from "../src/styles/style-manifest.js";
+
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
-test("iOS exposes one shared surface contract for Liquid and Frosted glass", async () => {
-  const ios = await read("styles/themes/ios.css");
-  const requiredTokens = [
-    "--mha-ios-liquid-surface",
-    "--mha-ios-liquid-primary-surface",
-    "--mha-ios-liquid-surface-active",
-    "--mha-ios-liquid-surface-muted",
-    "--mha-ios-liquid-border",
-    "--mha-ios-liquid-primary-border",
-    "--mha-ios-liquid-border-active",
-    "--mha-ios-liquid-blur",
-    "--mha-ios-liquid-shadow",
-    "--mha-ios-frosted-surface",
-    "--mha-ios-frosted-surface-active",
-    "--mha-ios-frosted-surface-muted",
-    "--mha-ios-frosted-border",
-    "--mha-ios-frosted-border-active",
-    "--mha-ios-frosted-blur",
-    "--mha-ios-frosted-shadow",
-    "--mha-ios-frosted-tile-surface",
-    "--mha-ios-frosted-tile-surface-hover",
-    "--mha-ios-frosted-tile-border",
-    "--mha-ios-frosted-tile-shadow",
-  ];
-
-  for (const token of requiredTokens) {
-    assert.match(ios, new RegExp(`${token.replaceAll("-", "\\-")}:`), `${token} is missing`);
-  }
-
-  assert.match(ios, /--mha-ios-liquid-blur:\s*6px/);
-  assert.match(ios, /--mha-ios-frosted-blur:\s*24px/);
-  assert.match(ios, /--mha-widget-shell-border:\s*transparent/);
-  assert.match(ios, /--mha-widget-surface:\s*var\(--mha-ios-liquid-surface\)/);
-  assert.match(ios, /--mha-widget-surface:\s*var\(--mha-ios-frosted-surface\)/);
-});
-
-test("iOS surface consumers reuse the shared contract", async () => {
-  const [semantic, surfaceMap, settings, manager, slider2, sliderWidget, widgets, weather, status] = await Promise.all([
-    read("styles/themes/semantic-tokens.css"),
+test("iOS Liquid uses the raw hybrid material as its single source of truth", async () => {
+  const [ios, raw, surfaceMap] = await Promise.all([
+    read("styles/themes/ios.css"),
+    read("styles/themes/ios-raw-materials.css"),
     read("styles/themes/ios-surface-map.css"),
-    read("styles/settings/settings-panel.css"),
-    read("styles/widget-manager/widget-manager.css"),
-    read("styles/components/slider2.css"),
-    read("styles/widgets/slider-widget.css"),
-    read("styles/widgets/widget-shell.css"),
-    read("styles/widgets/weather-widget.css"),
-    read("styles/layout/status-bar.css"),
   ]);
 
-  assert.match(semantic, /--mha-ios-slider-track-surface:\s*var\(--mha-ios-frosted-surface-muted\)/);
-  assert.match(semantic, /--mha-primary-surface:\s*var\(--mha-ios-liquid-primary-surface\)/);
-  assert.match(semantic, /--mha-primary-border:\s*var\(--mha-ios-liquid-primary-border\)/);
-  assert.match(surfaceMap, /--mha-widget-shell-surface:\s*var\(--mha-surface-primary\)/);
-  assert.match(settings, /background:\s*var\(--mha-primary-surface\)/);
-  assert.match(settings, /\[data-ios-glass="frosted"\]\[data-theme="light"\]\) \.mha-settings-sheet \{[\s\S]*?var\(--mha-surface-panel\) 92%/);
-  assert.match(settings, /\[data-ios-glass="frosted"\]\[data-theme="dark"\]\) \.mha-settings-sheet \{[\s\S]*?var\(--mha-surface-panel\) 68%/);
-  assert.match(manager, /mha-widget-manager-sheet\.mha-settings-sheet \{[\s\S]*?background:\s*var\(--mha-primary-surface\)/);
-  assert.match(manager, /background:\s*var\(--mha-on-primary-surface\)/);
-  assert.match(slider2, /--mha-ios-slider-track-surface:\s*var\(--mha-ios-frosted-surface-muted\)/);
-  assert.match(sliderWidget, /\[data-ios-glass="frosted"\]\[data-theme="light"\]\) \.mha-widget\[data-widget-kind="slider"\] \{[\s\S]*?background:\s*var\(--mha-primary-surface\) !important;[\s\S]*?border-color:\s*var\(--mha-primary-border\)/);
-  assert.doesNotMatch(sliderWidget, /\[data-ios-glass="frosted"\]\[data-theme="dark"\]\) \.mha-widget\[data-widget-kind="slider"\] \{[\s\S]*?background:\s*var\(--mha-primary-surface\)/);
-  assert.match(widgets, /\[data-ios-glass="frosted"\]\[data-theme="light"\]\) \.mha-widget \{[\s\S]*?background:\s*var\(--mha-primary-surface\);[\s\S]*?border-color:\s*var\(--mha-primary-border\)/);
-  assert.doesNotMatch(widgets, /\[data-ios-glass="frosted"\]\[data-theme="dark"\]\) \.mha-widget \{[\s\S]*?background:\s*var\(--mha-primary-surface\)/);
-  assert.match(widgets, /\[data-ios-glass="liquid"\]\[data-theme\]\) \.mha-widget \{[\s\S]*?background:\s*var\(--mha-widget-shell-surface, var\(--mha-primary-surface\)\)/);
-  assert.doesNotMatch(weather, /\[data-theme-style="ios"\]\) \.mha-widget\[data-widget-kind="weather"\]/);
-  assert.doesNotMatch(weather, /\[data-ios-glass="liquid"\][^}]*\.mha-widget\[data-widget-kind="weather"\][^{]*\{[^}]*--mha-weather-bg-(?:start|end)/);
-  assert.match(weather, /\[data-ios-glass="frosted"\]\) \.mha-widget\[data-widget-kind="weather"\] \{[\s\S]*?--mha-weather-bg-start:\s*#8edcff/);
-  assert.match(weather, /\[data-theme-style="oneui"\]\) \.mha-widget\[data-widget-kind="weather"\] \{[\s\S]*?--mha-weather-bg-start:\s*#8edcff/);
-  assert.match(status, /\[data-ios-glass="liquid"\]\[data-theme\]\) \.mha-status-bar \{[\s\S]*?background:\s*var\(--mha-primary-surface\)/);
-  assert.match(settings, /\[data-ios-glass="liquid"\]\[data-theme\]\) \.mha-settings-sheet \{[\s\S]*?border-color:\s*var\(--mha-primary-border\)/);
-  assert.match(manager, /\[data-ios-glass="liquid"\]\) \.mha-widget-manager-category,[\s\S]*?border-color:\s*transparent/);
-  assert.match(settings, /\.mha-settings-sheet::before \{[\s\S]*?background:\s*none/);
+  assert.match(raw, /--mha-ios-raw-liquid-shell-blur:\s*14px/);
+  assert.match(raw, /--mha-ios-raw-liquid-shell-saturation:\s*165%/);
+  assert.match(raw, /--mha-glass-noise-opacity:\s*\.072/);
+  assert.match(raw, /--mha-glass-noise-size:\s*80px 80px/);
+  assert.match(raw, /--mha-glass-noise-blend-mode:\s*soft-light/);
+  assert.match(raw, /--mha-ios-raw-liquid-shell-highlight-opacity:\s*\.56/);
+  assert.match(raw, /--mha-ios-liquid-blur:\s*var\(--mha-ios-raw-liquid-shell-blur\)/);
+  assert.match(raw, /--mha-widget-surface:\s*var\(--mha-ios-liquid-surface\)/);
+  assert.match(raw, /--mha-widget-shell-highlight:\s*var\(--mha-ios-raw-liquid-shell-highlight\)/);
+
+  assert.doesNotMatch(ios, /--mha-surface-blur:\s*6px/);
+  assert.doesNotMatch(ios, /--mha-surface-saturation:\s*190%/);
+  assert.doesNotMatch(ios, /--mha-widget-reflection-opacity:\s*0/);
+  assert.match(surfaceMap, /--mha-blur-primary:\s*var\(--mha-ios-raw-liquid-primary-blur\)/);
+  assert.match(surfaceMap, /--mha-saturation-primary:\s*var\(--mha-ios-raw-liquid-primary-saturation\)/);
+});
+
+test("iOS glass applies one shared filter path and preserves layered optics", async () => {
+  const [glass, shell, shellContract, dock, status, dockContract, statusContract] = await Promise.all([
+    read("styles/core/glass-surface.css"),
+    read("styles/widgets/widget-shell.css"),
+    read("styles/widgets/widget-shell-contract.css"),
+    read("styles/layout/dock.css"),
+    read("styles/layout/status-bar.css"),
+    read("styles/layout/dock-contract.css"),
+    read("styles/layout/status-bar-contract.css"),
+  ]);
+
+  assert.match(glass, /\.mha-widget::before[\s\S]*background-image:\s*var\(--mha-glass-noise-image\)/);
+  assert.match(glass, /\.mha-widget::after,[\s\S]*z-index:\s*1/);
+  assert.match(glass, /\.mha-dock::after[\s\S]*var\(--mha-widget-reflection-opacity, 0\)/);
+  assert.match(glass, /@supports \(backdrop-filter: blur\(1px\)\)[\s\S]*\.mha-widget[\s\S]*var\(--mha-glass-surface-filter\)/);
+  assert.match(glass, /@supports \(-webkit-backdrop-filter: blur\(1px\)\)[\s\S]*\.mha-widget[\s\S]*var\(--mha-glass-surface-filter\)/);
+  assert.doesNotMatch(glass, /@-moz-document[\s\S]*--mha-glass-noise-blend-mode:\s*normal/);
+
+  const widgetBaseRule = shell.match(/\.mha-widget\s*\{([\s\S]*?)\n\}/)?.[1] || "";
+  assert.doesNotMatch(widgetBaseRule, /backdrop-filter/);
+  assert.doesNotMatch(dock, /\.mha-dock\s*\{[\s\S]*backdrop-filter/);
+  assert.doesNotMatch(status, /data-ios-glass="(?:liquid|frosted)"[^}]*\{[\s\S]*backdrop-filter/);
+  assert.doesNotMatch(status, /saturate\(190%\)/);
+  assert.match(shellContract, /-webkit-backdrop-filter:\s*var\([\s\S]*--mha-widget-shell-filter/);
+  assert.match(shellContract, /backdrop-filter:\s*var\([\s\S]*--mha-widget-shell-filter/);
+  assert.match(dockContract, /--mha-shell-filter/);
+  assert.match(statusContract, /--mha-statusbar-filter/);
+});
+
+test("the manifest loads raw mappings before the shared glass and widget contracts", () => {
+  const paths = getStyleManifest().map(([path]) => path);
+  const indexOf = (path) => paths.indexOf(path);
+
+  assert(indexOf("styles/themes/ios-raw-materials.css") < indexOf("styles/themes/ios-surface-map.css"));
+  assert(indexOf("styles/themes/ios-surface-map.css") < indexOf("styles/core/glass-surface.css"));
+  assert(indexOf("styles/core/glass-surface.css") < indexOf("styles/widgets/widget-shell.css"));
+  assert(indexOf("styles/widgets/widget-shell.css") < indexOf("styles/widgets/widget-shell-contract.css"));
 });

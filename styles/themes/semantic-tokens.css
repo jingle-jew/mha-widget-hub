@@ -324,11 +324,6 @@
   --mha-widget-shell-highlight: var(--mha-highlight-primary);
 }
 
-:host([data-theme-style="ios"]:is([data-ios-glass="liquid"], [data-ios-glass="frosted"])),
-:root[data-theme-style="ios"]:is([data-ios-glass="liquid"], [data-ios-glass="frosted"]) {
-  --mha-widget-shell-highlight: transparent;
-}
-
 :host([data-theme-style="ios"][data-ios-glass="liquid"]),
 :root[data-theme-style="ios"][data-ios-glass="liquid"] {
   /* Weather supplies the same optical highlight over its own blue gradient.
