@@ -22,6 +22,14 @@ const MEDIA_STATE_LABEL_KEYS = Object.freeze({
   none: "states.unknown",
 });
 
+const MEDIA_INACTIVE_STATES = new Set([
+  "idle",
+  "off",
+  "unavailable",
+  "unknown",
+  "none",
+]);
+
 function cleanText(value = "") {
   return String(value || "").trim();
 }
@@ -33,6 +41,10 @@ function clamp(value, min, max) {
 export function getMediaStateLabel(state = "") {
   const normalized = normalizeEntityStateValue(state);
   return MEDIA_STATE_LABEL_KEYS[normalized] ? t(MEDIA_STATE_LABEL_KEYS[normalized]) : normalized;
+}
+
+export function isMediaPlayerInactiveState(state = "") {
+  return MEDIA_INACTIVE_STATES.has(normalizeEntityStateValue(state));
 }
 
 export function resolveHomeAssistantMediaUrl(url = "", origin = globalThis.window?.location?.origin || "") {

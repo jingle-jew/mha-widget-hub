@@ -10,7 +10,11 @@ import {
   resolveMediaTransitionData,
 } from "../src/widgets/media-widget.js";
 import { normalizeWidgetForKind } from "../src/layout/layout-engine.js";
-import { swapOrderedIds } from "../src/pages/media-page.js";
+import {
+  MEDIA_PAGE_INACTIVE_FALLBACK_MS,
+  resolveMediaPageNowPlayingId,
+  swapOrderedIds,
+} from "../src/pages/media-page.js";
 
 const REPO_ROOT = process.cwd();
 
@@ -151,6 +155,69 @@ test("media page player editing swaps two selected players without changing the 
     ),
     ["media_player.corridor", "media_player.kids", "media_player.tv", "media_player.studio"],
   );
+});
+
+test("media page keeps a playing selection and falls back from inactive selections", () => {
+  const enabledPlayers = [
+    { entity_id: "media_player.salon" },
+    { entity_id: "media_player.office" },
+    { entity_id: "media_player.bedroom" },
+  ];
+  const hass = {
+    states: {
+      "media_player.salon": { state: "idle" },
+      "media_player.office": { state: "playing" },
+      "media_player.bedroom": { state: "off" },
+    },
+  };
+
+  assert.equal(
+    resolveMediaPageNowPlayingId({
+      config: {
+        selectedPlayerId: "media_player.office",
+        defaultPlayerId: "media_player.salon",
+      },
+      enabledPlayers,
+      hass,
+    }),
+    "media_player.office",
+  );
+  assert.equal(
+    resolveMediaPageNowPlayingId({
+      config: {
+        selectedPlayerId: "media_player.salon",
+        defaultPlayerId: "media_player.office",
+      },
+      enabledPlayers,
+      hass,
+    }),
+    "media_player.office",
+  );
+  assert.equal(
+    resolveMediaPageNowPlayingId({
+      config: {
+        selectedPlayerId: "media_player.salon",
+        defaultPlayerId: "media_player.bedroom",
+      },
+      enabledPlayers,
+      hass,
+      transientPlayerId: "media_player.bedroom",
+    }),
+    "media_player.bedroom",
+  );
+  assert.equal(
+    resolveMediaPageNowPlayingId({
+      config: {
+        selectedPlayerId: "media_player.salon",
+        defaultPlayerId: "media_player.bedroom",
+      },
+      enabledPlayers,
+      hass,
+      lastPlayingPlayerId: "media_player.office",
+    }),
+    "media_player.office",
+  );
+  assert.equal(MEDIA_PAGE_INACTIVE_FALLBACK_MS, 10_000);
 });
 
 test("media page panel keeps responsive sizes on supported themes and downgrades elsewhere", () => {

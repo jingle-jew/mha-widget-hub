@@ -3,11 +3,10 @@ import {
   createCriticalBootStyleElement,
   createFrontendStyleElements,
 } from "../core/mha-frontend-assets.js";
-import { getMediaArtworkUrl } from "../ha/media.js";
+import { getMediaArtworkUrl, isMediaPlayerInactiveState } from "../ha/media.js";
 import {
   getAvailableMediaPlayers,
   resolveEnabledMediaPlayers,
-  resolveSelectedMediaPlayerId,
 } from "../ha/media-players.js?v=media-persistence-v2";
 import { t } from "../i18n/index.js";
 import { createMobileDock } from "./mobile-dock.js";
@@ -25,7 +24,10 @@ import {
 } from "./layout-engine.js";
 import { getLayoutForWidth } from "./responsive.js";
 import { createPagePanel } from "../pages/page-panel.js";
-import { createMediaPage } from "../pages/media-page.js?v=media-page-ios-cards-v2";
+import {
+  createMediaPage,
+  resolveMediaPageNowPlayingId,
+} from "../pages/media-page.js?v=media-page-ios-cards-v3";
 import { syncMediaPageSettingsPanel } from "../pages/media-page-settings.js?v=media-persistence-v4";
 import { isMediaPageExperienceActive, isWeatherPage } from "../pages/page-types.js?v=media-persistence-v2";
 import { WEATHER_PAGE_WIDGET_MANAGER_CATEGORY_ID } from "../pages/weather-page-widget-catalog.js";
@@ -140,6 +142,7 @@ export function createRenderPipeline(host, options = {}) {
   function syncMediaPageBackdropState({
     activePage = getActivePage(host),
     artworkUrl = "",
+    artworkUrlProvided = false,
     blurBackground = activePage?.config?.blurBackground !== false,
     themeStyle = host?.dataset?.themeStyle || "",
   } = {}) {
@@ -151,7 +154,9 @@ export function createRenderPipeline(host, options = {}) {
     host.dataset.mediaPageActive = String(isMediaPage);
     host.dataset.mediaPageBackgroundBlur = String(isMediaPage && blurBackground);
 
-    const resolvedArtworkUrl = artworkUrl || resolveMediaPageArtworkUrl(activePage);
+    const resolvedArtworkUrl = artworkUrlProvided
+      ? artworkUrl
+      : (artworkUrl || resolveMediaPageArtworkUrl(activePage));
 
     if (isMediaPage && resolvedArtworkUrl) {
       clearTimeout(host._mediaPageWallpaperClearTimer || 0);
@@ -179,8 +184,13 @@ export function createRenderPipeline(host, options = {}) {
 
     const availablePlayers = getAvailableMediaPlayers(host._hass, host._entityVisibilityConfig);
     const enabledPlayers = resolveEnabledMediaPlayers(activePage?.config, availablePlayers);
-    const selectedPlayerId = resolveSelectedMediaPlayerId(activePage?.config, enabledPlayers);
+    const selectedPlayerId = resolveMediaPageNowPlayingId({
+      config: activePage?.config,
+      enabledPlayers,
+      hass: host._hass,
+    });
     const entity = selectedPlayerId ? host._hass?.states?.[selectedPlayerId] || null : null;
+    if (isMediaPlayerInactiveState(entity?.state)) return "";
     return getMediaArtworkUrl(entity);
   }
 
@@ -512,6 +522,7 @@ export function createRenderPipeline(host, options = {}) {
         syncMediaPageBackdropState({
           activePage: page,
           artworkUrl,
+          artworkUrlProvided: true,
           blurBackground: options.blurBackground,
           themeStyle: host.dataset.themeStyle || "",
         });

@@ -1,9 +1,12 @@
 import { runMediaPlayerAction } from "../ha/actions.js";
-import { formatMediaDuration, getMediaStateLabel } from "../ha/media.js";
+import {
+  formatMediaDuration,
+  getMediaStateLabel,
+  isMediaPlayerInactiveState,
+} from "../ha/media.js";
 import {
   getAvailableMediaPlayers,
   resolveEnabledMediaPlayers,
-  resolveSelectedMediaPlayerId,
 } from "../ha/media-players.js?v=media-persistence-v2";
 import { t } from "../i18n/index.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
@@ -64,12 +67,75 @@ function buildStatusLine({
   });
 }
 
-function buildViewState(page = {}, hass, visibilityConfig, cache = null) {
+export const MEDIA_PAGE_INACTIVE_FALLBACK_MS = 10_000;
+
+function isPlayerPlaying(hass, playerId = "") {
+  return String(hass?.states?.[playerId]?.state || "").trim().toLowerCase() === "playing";
+}
+
+function getEnabledPlayerIdSet(enabledPlayers = []) {
+  return new Set(enabledPlayers.map(player => player.entity_id).filter(Boolean));
+}
+
+export function resolveMediaPageNowPlayingId({
+  config = {},
+  enabledPlayers = [],
+  hass = null,
+  transientPlayerId = "",
+  committedPlayerId = "",
+  lastPlayingPlayerId = "",
+} = {}) {
+  const ids = getEnabledPlayerIdSet(enabledPlayers);
+  const candidates = [
+    transientPlayerId,
+    committedPlayerId,
+    lastPlayingPlayerId,
+  ];
+
+  for (const candidate of candidates) {
+    if (candidate && ids.has(candidate)) return candidate;
+  }
+
+  const configuredSelectedId = String(config?.selectedPlayerId || "").trim();
+  if (configuredSelectedId && ids.has(configuredSelectedId) && isPlayerPlaying(hass, configuredSelectedId)) {
+    return configuredSelectedId;
+  }
+
+  const configuredDefaultId = String(config?.defaultPlayerId || "").trim();
+  if (configuredDefaultId && ids.has(configuredDefaultId)) return configuredDefaultId;
+  return enabledPlayers[0]?.entity_id || "";
+}
+
+function normalizeInactiveNowPlayingMedia(media = {}) {
+  if (!isMediaPlayerInactiveState(media.entity?.state)) return media;
+
+  return {
+    ...media,
+    state: String(media.entity?.state || media.state || "unknown").trim().toLowerCase(),
+    playing: false,
+    title: media.name,
+    subtitle: getMediaStateLabel(media.entity?.state || media.state),
+    artist: "",
+    artworkUrl: "",
+    hasLiveMetadata: false,
+    progress: { available: false, current: 0, duration: 0, ratio: 0 },
+    usingGraceCache: false,
+  };
+}
+
+function buildViewState(page = {}, hass, visibilityConfig, cache = null, selection = {}) {
   const availablePlayers = getAvailableMediaPlayers(hass, visibilityConfig);
   const enabledPlayers = resolveEnabledMediaPlayers(page.config, availablePlayers);
-  const selectedPlayerId = resolveSelectedMediaPlayerId(page.config, enabledPlayers);
+  const selectedPlayerId = resolveMediaPageNowPlayingId({
+    config: page.config,
+    enabledPlayers,
+    hass,
+    ...selection,
+  });
   const selectedPlayer = enabledPlayers.find(player => player.entity_id === selectedPlayerId) || null;
-  const media = buildMediaWidgetData({ entityId: selectedPlayerId }, hass, cache);
+  const media = normalizeInactiveNowPlayingMedia(
+    buildMediaWidgetData({ entityId: selectedPlayerId }, hass, cache),
+  );
   const themeStyle = findThemeStyleId(globalThis.document?.documentElement?.dataset?.themeStyle || "oneui");
   const effectiveVisualStyle = resolveEffectiveVisualStyle(
     themeStyle,
@@ -247,18 +313,75 @@ export function createMediaPage(page = {}, {
   let visualTransitionTimer = 0;
   let automaticPlayerCards = [];
   let draggedPlayerId = "";
+  let inactiveSelectionTimer = 0;
   const transitionCache = createMediaTransitionCache();
+  const selectionState = {
+    transientPlayerId: "",
+    committedPlayerId: "",
+    lastPlayingPlayerId: "",
+  };
+  const initialSelectedPlayerId = String(page?.config?.selectedPlayerId || "").trim();
+  if (initialSelectedPlayerId && isPlayerPlaying(hass, initialSelectedPlayerId)) {
+    selectionState.committedPlayerId = initialSelectedPlayerId;
+    selectionState.lastPlayingPlayerId = initialSelectedPlayerId;
+  }
   const context = {
     page,
     hass,
     visibilityConfig,
-    view: buildViewState(page, hass, visibilityConfig, transitionCache),
+    view: buildViewState(page, hass, visibilityConfig, transitionCache, selectionState),
     artwork,
   };
 
   const onAction = (action) => {
     if (!context.view.media.entity) return;
     runMediaPlayerAction(context.hass, context.view.media.entity, action);
+  };
+
+  const clearInactiveSelectionTimer = () => {
+    if (!inactiveSelectionTimer) return;
+    clearTimeout(inactiveSelectionTimer);
+    inactiveSelectionTimer = 0;
+  };
+
+  const restoreLastPlayingSelection = () => {
+    inactiveSelectionTimer = 0;
+    selectionState.transientPlayerId = "";
+    const enabledIds = getEnabledPlayerIdSet(context.view.enabledPlayers);
+    const defaultPlayerId = String(context.page?.config?.defaultPlayerId || "").trim();
+    selectionState.committedPlayerId = enabledIds.has(selectionState.lastPlayingPlayerId)
+      ? selectionState.lastPlayingPlayerId
+      : (enabledIds.has(defaultPlayerId) ? defaultPlayerId : context.view.enabledPlayers[0]?.entity_id || "");
+    refresh();
+  };
+
+  const scheduleInactiveSelectionRestore = () => {
+    clearInactiveSelectionTimer();
+    inactiveSelectionTimer = globalThis.setTimeout(
+      restoreLastPlayingSelection,
+      MEDIA_PAGE_INACTIVE_FALLBACK_MS,
+    );
+  };
+
+  const selectPlayer = (playerId = "") => {
+    const normalizedPlayerId = String(playerId || "").trim();
+    if (!normalizedPlayerId) return;
+    const player = context.view.enabledPlayers.find(candidate => candidate.entity_id === normalizedPlayerId);
+    if (!player) return;
+
+    if (isPlayerPlaying(context.hass, normalizedPlayerId)) {
+      clearInactiveSelectionTimer();
+      selectionState.transientPlayerId = "";
+      selectionState.committedPlayerId = normalizedPlayerId;
+      selectionState.lastPlayingPlayerId = normalizedPlayerId;
+      onSelectPlayer(normalizedPlayerId);
+      refresh();
+      return;
+    }
+
+    selectionState.transientPlayerId = normalizedPlayerId;
+    refresh();
+    scheduleInactiveSelectionRestore();
   };
 
   const applyProgress = (view) => {
@@ -334,6 +457,9 @@ export function createMediaPage(page = {}, {
     }
 
     applySurfaceState(view);
+    if (view.media.playing && !selectionState.transientPlayerId) {
+      selectionState.lastPlayingPlayerId = view.selectedPlayerId;
+    }
     if (automaticPlayerCards.length !== view.enabledPlayers.length
       || automaticPlayerCards.some((card, index) => card.dataset.mediaPlayerId !== view.enabledPlayers[index]?.entity_id)) {
       automaticPlayerCards.forEach((card) => {
@@ -395,7 +521,7 @@ export function createMediaPage(page = {}, {
           widgetH: widget.h,
           hass: context.hass,
           onSelect: playerId => {
-            if (!isEditing()) onSelectPlayer(playerId);
+            if (!isEditing()) selectPlayer(playerId);
           },
         }));
         card.setAttribute("role", "listitem");
@@ -434,7 +560,13 @@ export function createMediaPage(page = {}, {
   };
 
   const refresh = ({ progressOnly = false } = {}) => {
-    const nextView = buildViewState(context.page, context.hass, context.visibilityConfig, transitionCache);
+    const nextView = buildViewState(
+      context.page,
+      context.hass,
+      context.visibilityConfig,
+      transitionCache,
+      selectionState,
+    );
     applyView(nextView, { progressOnly });
   };
 
@@ -472,9 +604,29 @@ export function createMediaPage(page = {}, {
 
   root.__mhaUpdatePage = (nextPage, options = {}) => {
     context.page = nextPage || context.page;
+    const enabledIds = getEnabledPlayerIdSet(resolveEnabledMediaPlayers(
+      context.page.config,
+      getAvailableMediaPlayers(context.hass, context.visibilityConfig),
+    ));
+    if (selectionState.transientPlayerId && !enabledIds.has(selectionState.transientPlayerId)) {
+      selectionState.transientPlayerId = "";
+      clearInactiveSelectionTimer();
+    }
+    if (selectionState.committedPlayerId && !enabledIds.has(selectionState.committedPlayerId)) {
+      selectionState.committedPlayerId = "";
+    }
+    if (selectionState.lastPlayingPlayerId && !enabledIds.has(selectionState.lastPlayingPlayerId)) {
+      selectionState.lastPlayingPlayerId = "";
+    }
     const styleOnly = options?.styleOnly === true;
     if (styleOnly) {
-      const nextView = buildViewState(context.page, context.hass, context.visibilityConfig, transitionCache);
+      const nextView = buildViewState(
+        context.page,
+        context.hass,
+        context.visibilityConfig,
+        transitionCache,
+        selectionState,
+      );
       applyView(nextView, { styleOnly: true });
       return;
     }
@@ -485,6 +637,7 @@ export function createMediaPage(page = {}, {
   root.__mhaDestroy = () => {
     if (progressTimer) clearInterval(progressTimer);
     progressTimer = 0;
+    clearInactiveSelectionTimer();
     if (visualTransitionTimer) clearTimeout(visualTransitionTimer);
     visualTransitionTimer = 0;
     automaticPlayerCards.forEach((card) => card.__mhaDestroy?.());
