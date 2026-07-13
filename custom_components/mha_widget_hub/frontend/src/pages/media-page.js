@@ -13,6 +13,8 @@ import {
   createMediaArtwork,
   createMediaPlaybackButtons,
   createMediaProgress,
+  createMediaPagePlayerWidget,
+  createMediaWidgetContent,
   createMediaTitleStack,
   createMediaTransitionCache,
   setMediaArtworkImage,
@@ -104,6 +106,7 @@ export function createMediaPage(page = {}, {
   hass = null,
   visibilityConfig = null,
   onOpenSettings = () => {},
+  onSelectPlayer = () => {},
   onToggleEditMode = () => {},
   onOpenWidgetManager = () => {},
   onCloseEditMode = () => {},
@@ -237,6 +240,7 @@ export function createMediaPage(page = {}, {
 
   let progressTimer = 0;
   let visualTransitionTimer = 0;
+  let automaticPlayerCards = [];
   const transitionCache = createMediaTransitionCache();
   const context = {
     page,
@@ -295,6 +299,39 @@ export function createMediaPage(page = {}, {
     }
 
     applySurfaceState(view);
+    if (automaticPlayerCards.length !== view.enabledPlayers.length
+      || automaticPlayerCards.some((card, index) => card.dataset.mediaPlayerId !== view.enabledPlayers[index]?.entity_id)) {
+      automaticPlayerCards.forEach((card) => {
+        card.__mhaDestroy?.();
+        card.remove();
+      });
+      automaticPlayerCards = view.enabledPlayers.map((player) => {
+        const card = document.createElement("article");
+        card.className = "mha-widget mha-media-page-auto-player";
+        card.dataset.widgetKind = "media";
+        card.dataset.mediaPlayerId = player.entity_id;
+        const widget = createMediaPagePlayerWidget({entityId: player.entity_id});
+        card.dataset.widgetId = widget.id;
+        card.dataset.mediaPagePlayer = "true";
+        card.dataset.widgetW = String(widget.w);
+        card.dataset.widgetH = String(widget.h);
+        card.dataset.widgetSize = `${widget.w}x${widget.h}`;
+        card.style.setProperty("--mha-widget-w", String(widget.w));
+        card.style.setProperty("--mha-widget-configured-w", String(widget.w));
+        card.style.setProperty("--mha-widget-h", String(widget.h));
+        card.append(createMediaWidgetContent(widget, {
+          widgetW: widget.w,
+          widgetH: widget.h,
+          hass: context.hass,
+          onSelect: onSelectPlayer,
+        }));
+        grid.append(card);
+        return card;
+      });
+    } else {
+      automaticPlayerCards.forEach((card) => card.querySelector(".mha-media-widget")?.__mhaUpdateFromHass?.(context.hass));
+    }
+    emptyState.hidden = view.enabledPlayers.length > 0;
     if (styleOnly) {
       const visualStyleChanged = previousView?.effectiveVisualStyle !== view.effectiveVisualStyle;
       const blurChanged = previousView?.blurBackground !== view.blurBackground;
@@ -373,6 +410,8 @@ export function createMediaPage(page = {}, {
     progressTimer = 0;
     if (visualTransitionTimer) clearTimeout(visualTransitionTimer);
     visualTransitionTimer = 0;
+    automaticPlayerCards.forEach((card) => card.__mhaDestroy?.());
+    automaticPlayerCards = [];
   };
 
   return root;

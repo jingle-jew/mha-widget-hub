@@ -4,6 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import {
   createMediaTransitionCache,
+  createMediaPagePlayerWidget,
   MEDIA_WIDGET_CONTENT_RENDERER,
   MEDIA_TRANSITION_GRACE_MS,
   resolveMediaTransitionData,
@@ -112,6 +113,32 @@ test("media transition cache expires when idle is not temporary", () => {
   assert.equal(expiredIdle.playing, false);
   assert.equal(expiredIdle.artworkUrl, "");
   assert.equal(expiredIdle.usingGraceCache, undefined);
+});
+
+test("media page player widgets default to 4x2 and support a compact 2x2 variant", () => {
+  assert.deepEqual(
+    createMediaPagePlayerWidget({ entityId: "media_player.salon" }),
+    {
+      id: "media-page-player-media_player-salon",
+      kind: "media",
+      type: "media",
+      component: "media-widget",
+      category: "media",
+      variant: "media-page-player",
+      mediaPagePlayer: true,
+      entityId: "media_player.salon",
+      entity_id: "media_player.salon",
+      mediaEntityId: "media_player.salon",
+      w: 4,
+      h: 2,
+    },
+  );
+  const compact = createMediaPagePlayerWidget({
+    entityId: "media_player.salon",
+    variant: "2x2",
+  });
+  assert.equal(compact.w, 2);
+  assert.equal(compact.h, 2);
 });
 
 test("media page panel keeps responsive sizes on supported themes and downgrades elsewhere", () => {

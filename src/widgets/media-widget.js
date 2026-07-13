@@ -325,6 +325,31 @@ export function createMediaVolumeButtons(data, { interactive = true, onAction } 
   ];
 }
 
+export const MEDIA_PAGE_PLAYER_VARIANTS = Object.freeze(["4x2", "2x2"]);
+
+export function createMediaPagePlayerWidget({
+  entityId = "",
+  variant = "4x2",
+} = {}) {
+  const normalizedEntityId = String(entityId || "").trim();
+  const normalizedVariant = MEDIA_PAGE_PLAYER_VARIANTS.includes(variant) ? variant : "4x2";
+  const size = normalizedVariant === "2x2" ? { w: 2, h: 2 } : { w: 4, h: 2 };
+
+  return {
+    id: `media-page-player-${normalizedEntityId.replace(/[^a-z0-9_-]/gi, "-")}`,
+    kind: "media",
+    type: "media",
+    component: "media-widget",
+    category: "media",
+    variant: "media-page-player",
+    mediaPagePlayer: true,
+    entityId: normalizedEntityId,
+    entity_id: normalizedEntityId,
+    mediaEntityId: normalizedEntityId,
+    ...size,
+  };
+}
+
 export function renderMediaControls(controls, data, { mode = "playback", interactive = true, onAction } = {}) {
   const group = controls.querySelector(".mha-media-widget-controls-group");
   const toggle = controls.querySelector(".mha-media-widget-control-toggle");
@@ -334,18 +359,20 @@ export function renderMediaControls(controls, data, { mode = "playback", interac
   group.replaceChildren(...(
     mode === "volume"
       ? createMediaVolumeButtons(data, { interactive, onAction })
-      : createMediaPlaybackButtons(data, { interactive, onAction })
+      : mode === "volume-only"
+        ? []
+        : createMediaPlaybackButtons(data, { interactive, onAction })
   ));
 
-  const showingPlaybackReturn = mode === "volume";
-  toggle.textContent = showingPlaybackReturn ? "♪" : data.volumeLabel;
+  const showingVolumeReturn = mode === "volume";
+  toggle.textContent = showingVolumeReturn ? "♪" : data.volumeLabel;
   toggle.dataset.action = "toggleVolume";
-  toggle.dataset.mode = showingPlaybackReturn ? "playback" : "volume";
+  toggle.dataset.mode = showingVolumeReturn ? "volume-only" : "volume";
   toggle.removeAttribute("data-primary");
   toggle.classList.remove("mha-media-widget-play-toggle");
   toggle.setAttribute(
     "aria-label",
-    showingPlaybackReturn
+    showingVolumeReturn
       ? t("widgets.mediaControls.backToMediaControls", "Back to media controls")
       : t("widgets.mediaControls.showVolumeControls", "Show volume controls ({volume})", { volume: data.volumeLabel }),
   );
@@ -515,6 +542,7 @@ export function createMediaWidgetContent(widget = {}, {
   widgetH = Number(widget?.h) || 2,
   hass,
   interactive = true,
+  onSelect = () => {},
 } = {}) {
   const themeStyle = resolveMediaThemeStyle();
   const useMediaPagePanel = isMediaPagePanelWidget(widget, themeStyle);
@@ -525,7 +553,7 @@ export function createMediaWidgetContent(widget = {}, {
     hass,
     entity: data.entity,
     data,
-    controlsMode: "playback",
+    controlsMode: widget?.mediaPagePlayer ? "volume-only" : "playback",
   };
   const variantKey = mediaVariantKey({ widgetW, widgetH });
   const root = document.createElement("div");
@@ -540,7 +568,7 @@ export function createMediaWidgetContent(widget = {}, {
   const onAction = action => {
     if (!interactive) return;
     if (action === "toggleVolume") {
-      context.controlsMode = context.controlsMode === "volume" ? "playback" : "volume";
+      context.controlsMode = context.controlsMode === "volume" ? "volume-only" : "volume";
       renderMediaControls(controls, context.data, {
         mode: context.controlsMode,
         interactive,
@@ -626,6 +654,11 @@ export function createMediaWidgetContent(widget = {}, {
     transport.append(createMediaMetaRows(data), progress, controls);
 
     root.append(artwork, info, transport);
+  }
+
+  if (widget?.mediaPagePlayer) {
+    root.dataset.mediaPagePlayer = "true";
+    root.addEventListener("click", () => onSelect(widget.entityId || widget.entity_id || widget.mediaEntityId || ""));
   }
 
   if (!interactive) {

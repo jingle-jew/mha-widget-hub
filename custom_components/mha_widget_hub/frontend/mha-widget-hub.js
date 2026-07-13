@@ -18,7 +18,7 @@ import {
 import {destroyDomSubtree} from "./src/core/dom-lifecycle.js";
 import { createBootLifecycleCoordinator } from "./src/core/boot-lifecycle-coordinator.js";
 import {ICONS} from "./src/components/icons.js";
-import { createRenderPipeline } from "./src/layout/render-pipeline.js?v=media-persistence-v2";
+import { createRenderPipeline } from "./src/layout/render-pipeline.js?v=media-persistence-v3";
 import { createResponsiveDockCoordinator } from "./src/layout/responsive-dock-coordinator.js";
 import {
   captureDockRenderState,

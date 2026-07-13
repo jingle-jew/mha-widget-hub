@@ -25,7 +25,7 @@ import {
 } from "./layout-engine.js";
 import { getLayoutForWidth } from "./responsive.js";
 import { createPagePanel } from "../pages/page-panel.js";
-import { createMediaPage } from "../pages/media-page.js";
+import { createMediaPage } from "../pages/media-page.js?v=media-persistence-v3";
 import { syncMediaPageSettingsPanel } from "../pages/media-page-settings.js?v=media-persistence-v4";
 import { isMediaPageExperienceActive, isWeatherPage } from "../pages/page-types.js?v=media-persistence-v2";
 import { WEATHER_PAGE_WIDGET_MANAGER_CATEGORY_ID } from "../pages/weather-page-widget-catalog.js";
