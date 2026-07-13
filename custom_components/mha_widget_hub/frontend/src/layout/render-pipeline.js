@@ -8,7 +8,7 @@ import {
   getAvailableMediaPlayers,
   resolveEnabledMediaPlayers,
   resolveSelectedMediaPlayerId,
-} from "../ha/media-players.js";
+} from "../ha/media-players.js?v=media-persistence-v2";
 import { t } from "../i18n/index.js";
 import { createMobileDock } from "./mobile-dock.js";
 import { createIosOrganicWallpaper } from "./ios-organic-wallpaper.js?v=ios-wallpaper-svg-1";
@@ -26,8 +26,8 @@ import {
 import { getLayoutForWidth } from "./responsive.js";
 import { createPagePanel } from "../pages/page-panel.js";
 import { createMediaPage } from "../pages/media-page.js";
-import { syncMediaPageSettingsPanel } from "../pages/media-page-settings.js";
-import { isMediaPageExperienceActive, isWeatherPage } from "../pages/page-types.js";
+import { syncMediaPageSettingsPanel } from "../pages/media-page-settings.js?v=media-persistence-v4";
+import { isMediaPageExperienceActive, isWeatherPage } from "../pages/page-types.js?v=media-persistence-v2";
 import { WEATHER_PAGE_WIDGET_MANAGER_CATEGORY_ID } from "../pages/weather-page-widget-catalog.js";
 import {
   captureSettingsPanelsUiState,

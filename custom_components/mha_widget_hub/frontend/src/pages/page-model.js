@@ -6,7 +6,7 @@ import {
   normalizePageConfig,
   normalizePageType,
   PAGE_TYPES,
-} from "./page-types.js";
+} from "./page-types.js?v=media-persistence-v2";
 
 function identity(value) {
   return value;
@@ -32,19 +32,28 @@ function resolveMediaPageConfig(page = {}, widgets = []) {
     || mediaPagePanelWidget?.entity_id
     || "",
   ).trim();
-  const configuredEnabledIds = Array.isArray(page?.config?.enabledPlayerIds)
+  const hasConfiguredEnabledIds = Array.isArray(page?.config?.enabledPlayerIds)
+    && (page.config.enabledPlayerIds.length > 0
+      || page.config.enabledPlayerIdsConfigured === true);
+  const hasConfiguredDefaultPlayer = Object.hasOwn(page?.config || {}, "defaultPlayerId");
+  const hasConfiguredSelectedPlayer = Object.hasOwn(page?.config || {}, "selectedPlayerId");
+  const configuredEnabledIds = hasConfiguredEnabledIds
     ? page.config.enabledPlayerIds
     : [];
 
   return normalizePageConfig(PAGE_TYPES.MEDIA_PLAYERS, {
     ...(page.config || {}),
-    enabledPlayerIds: configuredEnabledIds.length
+    enabledPlayerIds: hasConfiguredEnabledIds
       ? configuredEnabledIds
       : widgetEntityId
         ? [widgetEntityId]
         : [],
-    defaultPlayerId: page?.config?.defaultPlayerId || widgetEntityId,
-    selectedPlayerId: page?.config?.selectedPlayerId || widgetEntityId,
+    defaultPlayerId: hasConfiguredDefaultPlayer
+      ? page.config.defaultPlayerId
+      : widgetEntityId,
+    selectedPlayerId: hasConfiguredSelectedPlayer
+      ? page.config.selectedPlayerId
+      : widgetEntityId,
   });
 }
 

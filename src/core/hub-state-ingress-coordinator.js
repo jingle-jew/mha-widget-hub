@@ -17,7 +17,7 @@ import {
   readHubPages,
   saveHubPages,
   syncActivePageWidgets,
-} from "./mha-state.js";
+} from "./mha-state.js?v=media-persistence-v2";
 import { loadEntityVisibilityConfig } from "../admin/entity-visibility-store.js";
 
 function getDeviceInsightsPublisher(host) {

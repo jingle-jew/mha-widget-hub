@@ -1,7 +1,7 @@
 import {
   getAvailableMediaPlayers,
   resolveEnabledMediaPlayerIds,
-} from "../ha/media-players.js";
+} from "../ha/media-players.js?v=media-persistence-v2";
 import { t } from "../i18n/index.js";
 import { createPanelShell } from "../panels/panel-shell.js";
 import { syncPanelVisibility } from "../panels/panel-visibility-controller.js";
@@ -16,7 +16,7 @@ import {
   applyWidgetSurfaceHostLayoutState,
   syncWidgetSurfaceOpenState,
 } from "../widgets/widget-placement-orchestrator.js";
-import { getMediaPageVisualStyleOptions } from "./page-types.js";
+import { getMediaPageVisualStyleOptions } from "./page-types.js?v=media-persistence-v2";
 
 function syncDataset(target, source) {
   if (!target?.dataset || !source?.dataset) return;
@@ -119,6 +119,11 @@ export function createMediaPageSettingsPanel({
   const availablePlayers = getAvailableMediaPlayers(hass, visibilityConfig);
   const enabledPlayerIds = resolveEnabledMediaPlayerIds(page?.config, availablePlayers);
   const enabledSet = new Set(enabledPlayerIds);
+  const buildConfigPatch = (patch = {}) => ({
+    enabledPlayerIds: [...enabledPlayerIds],
+    enabledPlayerIdsConfigured: true,
+    ...patch,
+  });
 
   const root = applyPanelSurfaceContract(createPanelShell({
     open,
@@ -153,7 +158,10 @@ export function createMediaPageSettingsPanel({
         const nextEnabled = checked
           ? [...new Set([...enabledPlayerIds, player.entity_id])]
           : enabledPlayerIds.filter(id => id !== player.entity_id);
-        onConfigChange({ enabledPlayerIds: nextEnabled });
+        onConfigChange({
+          enabledPlayerIds: nextEnabled,
+          enabledPlayerIdsConfigured: true,
+        });
       },
     }))
     : [createEmptyState(t("mediaPage.noPlayersAvailable", "No media players available"))];
@@ -171,7 +179,7 @@ export function createMediaPageSettingsPanel({
             .filter(player => enabledSet.has(player.entity_id))
             .map(player => ({ value: player.entity_id, label: player.name })),
         ],
-        onChange: value => onConfigChange({ defaultPlayerId: value }),
+        onChange: value => onConfigChange(buildConfigPatch({ defaultPlayerId: value })),
       }),
     ]),
     createSection(t("mediaPage.appearance", "Appearance"), [
@@ -180,13 +188,13 @@ export function createMediaPageSettingsPanel({
         value: page?.config?.visualStyle || "theme",
         controlId: "visual-style",
         options: getMediaPageVisualStyleOptions(),
-        onChange: value => onConfigChange({ visualStyle: value }),
+        onChange: value => onConfigChange(buildConfigPatch({ visualStyle: value })),
       }),
       createCheckboxRow({
         label: t("mediaPage.blurBackground", "Blur artwork in the background"),
         checked: page?.config?.blurBackground !== false,
         controlId: "blur-background",
-        onChange: checked => onConfigChange({ blurBackground: checked }),
+        onChange: checked => onConfigChange(buildConfigPatch({ blurBackground: checked })),
       }),
     ]),
   );

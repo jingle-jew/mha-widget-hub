@@ -93,3 +93,27 @@ test("media page selection falls back when configured players become unavailable
     "media_player.bedroom",
   );
 });
+
+test("media page keeps an explicit empty enabled-player list instead of restoring all players", () => {
+  const availablePlayers = [
+    { entity_id: "media_player.bedroom", name: "Bedroom" },
+    { entity_id: "media_player.kitchen", name: "Kitchen" },
+  ];
+
+  assert.deepEqual(
+    resolveEnabledMediaPlayers({ enabledPlayerIds: [], enabledPlayerIdsConfigured: true }, availablePlayers),
+    [],
+  );
+  assert.deepEqual(
+    resolveEnabledMediaPlayers({}, availablePlayers).map(player => player.entity_id),
+    ["media_player.bedroom", "media_player.kitchen"],
+  );
+  assert.deepEqual(
+    resolveEnabledMediaPlayers({ enabledPlayerIds: [] }, availablePlayers).map(player => player.entity_id),
+    ["media_player.bedroom", "media_player.kitchen"],
+  );
+  assert.deepEqual(
+    resolveEnabledMediaPlayers({ enabledPlayerIds: [], enabledPlayerIdsConfigured: true }, availablePlayers),
+    [],
+  );
+});

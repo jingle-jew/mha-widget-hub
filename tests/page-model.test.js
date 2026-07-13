@@ -123,3 +123,27 @@ test("legacy single-widget media pages are promoted to the dedicated page type",
   assert.equal(migrated.config.selectedPlayerId, "media_player.salon");
   assert.deepEqual(migrated.config.enabledPlayerIds, ["media_player.salon"]);
 });
+
+test("media page normalization preserves an explicit empty enabled-player list", () => {
+  const normalized = normalizePage({
+    id: "media",
+    type: "media-players",
+    config: {
+      enabledPlayerIds: [],
+      enabledPlayerIdsConfigured: true,
+      defaultPlayerId: "",
+      selectedPlayerId: "",
+    },
+    widgets: [{
+      id: "widget-media-page-media",
+      kind: "media",
+      variant: "media-page-panel",
+      responsiveSizeMode: "media-page-panel",
+      entityId: "media_player.salon",
+    }],
+  }, 2);
+
+  assert.deepEqual(normalized.config.enabledPlayerIds, []);
+  assert.equal(normalized.config.defaultPlayerId, "");
+  assert.equal(normalized.config.selectedPlayerId, "");
+});

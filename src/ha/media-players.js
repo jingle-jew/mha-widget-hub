@@ -5,10 +5,11 @@ export function getAvailableMediaPlayers(hass, visibilityConfig) {
 }
 
 export function resolveEnabledMediaPlayerIds(config = {}, availablePlayers = []) {
-  const ids = Array.isArray(config?.enabledPlayerIds)
-    ? config.enabledPlayerIds.filter(Boolean)
-    : [];
-  return ids.length ? ids : availablePlayers.map(player => player.entity_id);
+  if (Array.isArray(config?.enabledPlayerIds)
+    && (config.enabledPlayerIds.length || config.enabledPlayerIdsConfigured === true)) {
+    return config.enabledPlayerIds.filter(Boolean);
+  }
+  return availablePlayers.map(player => player.entity_id);
 }
 
 export function resolveEnabledMediaPlayers(config = {}, availablePlayers = []) {

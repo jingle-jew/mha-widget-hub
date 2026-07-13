@@ -4,7 +4,7 @@ import {
   getAvailableMediaPlayers,
   resolveEnabledMediaPlayers,
   resolveSelectedMediaPlayerId,
-} from "../ha/media-players.js";
+} from "../ha/media-players.js?v=media-persistence-v2";
 import { t } from "../i18n/index.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
 import { findThemeStyleId } from "../settings/theme-registry.js";

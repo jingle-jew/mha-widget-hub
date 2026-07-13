@@ -49,6 +49,13 @@ test("media page settings selects assign the selected value after their options 
   );
 });
 
+test("media page settings persist the effective player selection with non-player changes", () => {
+  assert.match(source, /const buildConfigPatch = \(patch = \{\}\) => \(\{[\s\S]*enabledPlayerIds: \[\.\.\.enabledPlayerIds\][\s\S]*enabledPlayerIdsConfigured: true/);
+  assert.match(source, /onChange: value => onConfigChange\(buildConfigPatch\(\{ defaultPlayerId: value \}\)\)/);
+  assert.match(source, /onChange: value => onConfigChange\(buildConfigPatch\(\{ visualStyle: value \}\)\)/);
+  assert.match(source, /onChange: checked => onConfigChange\(buildConfigPatch\(\{ blurBackground: checked \}\)\)/);
+});
+
 test("media page settings panel restores its own scrim instead of inheriting the transparent settings sub-panel scrim", () => {
   assert.match(
     mediaPageCss,

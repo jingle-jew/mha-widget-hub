@@ -75,19 +75,22 @@ export function normalizeMediaPageConfig(config = {}) {
       .map(id => String(id || "").trim())
       .filter(Boolean),
   )];
+  const enabledPlayerIdsConfigured = config.enabledPlayerIdsConfigured === true;
   const defaultPlayerId = String(config.defaultPlayerId || "").trim();
   const selectedPlayerId = String(config.selectedPlayerId || "").trim();
   const visualStyle = MEDIA_PAGE_VISUAL_STYLES.includes(config.visualStyle)
     ? config.visualStyle
     : "theme";
 
-  return {
+  const normalized = {
     enabledPlayerIds,
     defaultPlayerId,
     selectedPlayerId,
     visualStyle,
     blurBackground: config.blurBackground !== false,
   };
+  if (enabledPlayerIdsConfigured) normalized.enabledPlayerIdsConfigured = true;
+  return normalized;
 }
 
 export function normalizePageConfig(type = PAGE_TYPES.GRID, config = {}) {

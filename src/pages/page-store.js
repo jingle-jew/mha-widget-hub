@@ -14,7 +14,7 @@ import {
   createDefaultPages,
   normalizePage,
   normalizePages,
-} from "./page-model.js";
+} from "./page-model.js?v=media-persistence-v2";
 
 function identity(value) {
   return value;
