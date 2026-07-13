@@ -100,7 +100,7 @@
   --mha-weather-metric-unit-weight: var(--mha-type-widget-state-weight);
   --mha-weather-metric-unit-line-height: var(--mha-type-widget-state-line-height);
   --mha-weather-metric-unit-tracking: var(--mha-type-widget-state-tracking);
-  --mha-weather-metric-sun-time-size: var(--mha-type-widget-value-size);
+  --mha-weather-metric-sun-time-size: var(--mha-weather-metric-caption-size);
   --mha-weather-metric-sun-time-weight: var(--mha-type-widget-value-weight);
   --mha-weather-summary-temperature-size: var(--mha-type-weather-summary-temp-size);
   position: absolute;
@@ -419,7 +419,7 @@
   color: var(--mha-text-primary);
   font-size: var(--mha-weather-metric-sun-time-size);
   font-weight: var(--mha-weather-metric-sun-time-weight);
-  line-height: var(--mha-type-widget-value-line-height);
+  line-height: var(--mha-weather-metric-caption-line-height);
 }
 
 .mha-weather-metric-sun-arc {
@@ -463,7 +463,6 @@
   --mha-weather-metric-body-size: var(--mha-type-widget-body-compact-size);
   --mha-weather-metric-value-size: var(--mha-type-weather-temp-compact-size);
   --mha-weather-metric-unit-size: var(--mha-type-widget-state-compact-size);
-  --mha-weather-metric-sun-time-size: var(--mha-type-widget-value-compact-size);
   --mha-weather-summary-temperature-size: var(--mha-type-weather-summary-temp-compact-size);
 }
 
@@ -618,7 +617,6 @@
 }
 
 .mha-weather-metric-widget[data-weather-metric-size="4x1"] {
-  --mha-weather-metric-sun-time-size: clamp(.98rem, min(5.2cqi, 15cqb), 1.34rem);
   --mha-weather-metric-sun-time-weight: 760;
   grid-template-columns: minmax(4.35rem, .62fr) minmax(0, 1.32fr) minmax(4.85rem, 1.18fr);
   grid-template-rows: repeat(2, minmax(0, 1fr));
