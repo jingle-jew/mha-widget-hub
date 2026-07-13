@@ -41,8 +41,9 @@ test("iOS exposes one shared surface contract for Liquid and Frosted glass", asy
 });
 
 test("iOS surface consumers reuse the shared contract", async () => {
-  const [semantic, settings, manager, slider2, sliderWidget, widgets, weather, status] = await Promise.all([
+  const [semantic, surfaceMap, settings, manager, slider2, sliderWidget, widgets, weather, status] = await Promise.all([
     read("styles/themes/semantic-tokens.css"),
+    read("styles/themes/ios-surface-map.css"),
     read("styles/settings/settings-panel.css"),
     read("styles/widget-manager/widget-manager.css"),
     read("styles/components/slider2.css"),
@@ -55,6 +56,7 @@ test("iOS surface consumers reuse the shared contract", async () => {
   assert.match(semantic, /--mha-ios-slider-track-surface:\s*var\(--mha-ios-frosted-surface-muted\)/);
   assert.match(semantic, /--mha-primary-surface:\s*var\(--mha-ios-liquid-primary-surface\)/);
   assert.match(semantic, /--mha-primary-border:\s*var\(--mha-ios-liquid-primary-border\)/);
+  assert.match(surfaceMap, /--mha-widget-shell-surface:\s*var\(--mha-surface-primary\)/);
   assert.match(settings, /background:\s*var\(--mha-primary-surface\)/);
   assert.match(settings, /\[data-ios-glass="frosted"\]\[data-theme="light"\]\) \.mha-settings-sheet \{[\s\S]*?var\(--mha-surface-panel\) 92%/);
   assert.match(settings, /\[data-ios-glass="frosted"\]\[data-theme="dark"\]\) \.mha-settings-sheet \{[\s\S]*?var\(--mha-surface-panel\) 68%/);
@@ -65,7 +67,7 @@ test("iOS surface consumers reuse the shared contract", async () => {
   assert.doesNotMatch(sliderWidget, /\[data-ios-glass="frosted"\]\[data-theme="dark"\]\) \.mha-widget\[data-widget-kind="slider"\] \{[\s\S]*?background:\s*var\(--mha-primary-surface\)/);
   assert.match(widgets, /\[data-ios-glass="frosted"\]\[data-theme="light"\]\) \.mha-widget \{[\s\S]*?background:\s*var\(--mha-primary-surface\);[\s\S]*?border-color:\s*var\(--mha-primary-border\)/);
   assert.doesNotMatch(widgets, /\[data-ios-glass="frosted"\]\[data-theme="dark"\]\) \.mha-widget \{[\s\S]*?background:\s*var\(--mha-primary-surface\)/);
-  assert.match(widgets, /\[data-ios-glass="liquid"\]\[data-theme\]\) \.mha-widget \{[\s\S]*?background:\s*var\(--mha-primary-surface\)/);
+  assert.match(widgets, /\[data-ios-glass="liquid"\]\[data-theme\]\) \.mha-widget \{[\s\S]*?background:\s*var\(--mha-widget-shell-surface, var\(--mha-primary-surface\)\)/);
   assert.doesNotMatch(weather, /\[data-theme-style="ios"\]\) \.mha-widget\[data-widget-kind="weather"\]/);
   assert.doesNotMatch(weather, /\[data-ios-glass="liquid"\][^}]*\.mha-widget\[data-widget-kind="weather"\][^{]*\{[^}]*--mha-weather-bg-(?:start|end)/);
   assert.match(weather, /\[data-ios-glass="frosted"\]\) \.mha-widget\[data-widget-kind="weather"\] \{[\s\S]*?--mha-weather-bg-start:\s*#8edcff/);
