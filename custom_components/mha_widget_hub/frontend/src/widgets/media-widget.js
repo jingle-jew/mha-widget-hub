@@ -11,6 +11,7 @@ import {
   formatMediaDuration,
   getMediaArtworkUrl,
   getMediaStateLabel,
+  isMediaPlayerInactiveState,
   resolveMediaProgress,
 } from "../ha/media.js";
 import { runMediaPlayerAction } from "../ha/actions.js";
@@ -115,7 +116,9 @@ export function buildMediaWidgetData(widget = {}, hass, cache = null, now = getM
   const attributes = entity?.attributes || {};
   const model = buildMediaDisplayModel(entity, widget, previewData);
   const state = model.state;
-  const volume = attributes.volume_level ?? widget.volume ?? previewData.volume;
+  const volume = isMediaPlayerInactiveState(state)
+    ? 0
+    : attributes.volume_level ?? widget.volume ?? previewData.volume;
   const volumeNumber = Number(volume);
   const hasVolume = Number.isFinite(volumeNumber);
   const volumePercent = hasVolume
@@ -167,9 +170,54 @@ export function setMediaArtworkImage(artwork, artworkUrl = "") {
   if (hasArtwork) {
     image.src = artworkUrl;
     image.alt = "";
+    syncMediaArtworkTone(artwork.closest(".mha-media-widget"), image);
   } else {
     image.removeAttribute("src");
+    artwork.closest(".mha-media-widget")?.removeAttribute("data-artwork-tone");
   }
+}
+
+function readArtworkTone(image) {
+  if (!image?.naturalWidth || !image.naturalHeight) return "";
+  try {
+    const canvas = document.createElement("canvas");
+    const size = 24;
+    canvas.width = size;
+    canvas.height = size;
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    context.drawImage(image, 0, 0, size, size);
+    const pixels = context.getImageData(0, 0, size, size).data;
+    let luminance = 0;
+    let weight = 0;
+    for (let index = 0; index < pixels.length; index += 4) {
+      const alpha = pixels[index + 3] / 255;
+      if (alpha === 0) continue;
+      const red = pixels[index] / 255;
+      const green = pixels[index + 1] / 255;
+      const blue = pixels[index + 2] / 255;
+      const sample = 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+      luminance += sample * alpha;
+      weight += alpha;
+    }
+    return weight > 0 && luminance / weight >= 0.52 ? "light" : "dark";
+  } catch {
+    // Cross-origin artwork can make canvas sampling unavailable. Keep theme defaults.
+    return "";
+  }
+}
+
+export function syncMediaArtworkTone(root, artworkOrImage) {
+  if (!root || !artworkOrImage) return;
+  const image = artworkOrImage.matches?.("img")
+    ? artworkOrImage
+    : artworkOrImage.querySelector?.(".mha-media-widget-artwork-image");
+  if (!image) return;
+  const applyTone = () => {
+    const tone = readArtworkTone(image);
+    if (tone) root.dataset.artworkTone = tone;
+  };
+  image.addEventListener("load", applyTone, { once: true });
+  if (image.complete) applyTone();
 }
 
 export function setMediaBackgroundImage(root, artworkUrl = "") {
@@ -439,7 +487,7 @@ export function setMediaProgressState(progress, data) {
   if (!progress) return;
   const width = data.progress?.available
     ? `${Math.max(0, Math.min(100, data.progress.ratio * 100))}%`
-    : "54%";
+    : "0%";
   progress.style.setProperty("--mha-media-progress-fill-width", width);
 }
 

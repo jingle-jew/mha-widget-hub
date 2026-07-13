@@ -22,6 +22,7 @@ import {
   createMediaTransitionCache,
   setMediaArtworkImage,
   setMediaProgressState,
+  syncMediaArtworkTone,
 } from "../widgets/media-widget.js?media-page-ios-card-v1";
 
 function createIconButton({ label, icon, className = "", onClick = () => {} } = {}) {
@@ -226,7 +227,7 @@ export function createMediaPage(page = {}, {
     className: "mha-media-page-artwork-settings",
     onClick: onOpenSettings,
   });
-  artworkSection.append(artwork, settingsButton);
+  artworkSection.append(artwork);
 
   const primary = document.createElement("div");
   primary.className = "mha-media-page-primary";
@@ -288,7 +289,8 @@ export function createMediaPage(page = {}, {
     className: "mha-media-page-widget-panel-close",
     onClick: onCloseEditMode,
   });
-  widgetPanelActions.append(editButton, closeEditButton);
+  settingsButton.className = "mha-media-page-icon-button mha-media-page-widget-panel-settings";
+  widgetPanelActions.append(editButton, settingsButton, closeEditButton);
 
   const widgetPanelBody = document.createElement("div");
   widgetPanelBody.className = "mha-media-page-widget-panel-body";
@@ -410,6 +412,7 @@ export function createMediaPage(page = {}, {
   const applySurfaceState = (view) => {
     root.dataset.visualStyle = view.effectiveVisualStyle;
     root.dataset.hasArtwork = String(Boolean(view.media.artworkUrl));
+    if (!view.media.artworkUrl) root.removeAttribute("data-artwork-tone");
     root.dataset.backgroundBlur = String(view.blurBackground);
     onBackgroundArtworkChange(view.media.artworkUrl || "", {
       blurBackground: view.blurBackground,
@@ -559,6 +562,8 @@ export function createMediaPage(page = {}, {
         : view.statusLine;
     }
     setMediaArtworkImage(context.artwork, view.media.artworkUrl);
+    if (view.media.artworkUrl) root.removeAttribute("data-artwork-tone");
+    syncMediaArtworkTone(root, context.artwork);
     context.artwork.dataset.playing = String(view.media.playing);
 
     syncControlGroup(

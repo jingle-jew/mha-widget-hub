@@ -16,6 +16,7 @@ const MEDIA_STATE_LABEL_KEYS = Object.freeze({
   playing: "states.playing",
   paused: "states.paused",
   idle: "states.idle",
+  stopped: "states.idle",
   off: "states.off",
   unavailable: "states.unavailable",
   unknown: "states.unknown",
@@ -24,6 +25,7 @@ const MEDIA_STATE_LABEL_KEYS = Object.freeze({
 
 const MEDIA_INACTIVE_STATES = new Set([
   "idle",
+  "stopped",
   "off",
   "unavailable",
   "unknown",
@@ -78,6 +80,9 @@ export function formatMediaDuration(totalSeconds) {
 }
 
 export function resolveMediaProgress(entityState) {
+  if (isMediaPlayerInactiveState(entityState?.state)) {
+    return { available: false, current: 0, duration: 0, ratio: 0 };
+  }
   const attributes = entityState?.attributes || {};
   const duration = Number(attributes.media_duration);
   const position = Number(attributes.media_position);
@@ -129,7 +134,7 @@ export function buildMediaDisplayModel(entityState, widget = {}, fallback = {}) 
     };
   }
 
-  if (mediaTitle && !["idle", "off", "unavailable", "unknown", "none"].includes(state)) {
+  if (mediaTitle && !isMediaPlayerInactiveState(state)) {
     return {
       entityId,
       name: friendlyName,

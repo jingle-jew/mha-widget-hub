@@ -93,6 +93,31 @@
   --mha-media-title-letter-spacing: -.035em;
   --mha-media-subtitle-weight: 650;
   --mha-media-text-shadow: none;
+  --mha-media-artwork-foreground: var(--mha-text-primary, var(--mha-text));
+  --mha-media-artwork-muted: var(--mha-media-artist-color);
+  --mha-media-artwork-control-surface: var(--mha-media-control-surface);
+  --mha-media-artwork-control-active-surface: var(--mha-media-control-active-surface);
+  --mha-media-artwork-control-active-color: var(--mha-media-control-active-color);
+}
+
+.mha-media-page[data-artwork-tone="dark"] {
+  --mha-media-page-on-surface: #fff;
+  --mha-media-artist-color: rgba(255, 255, 255, .76);
+  --mha-media-artwork-foreground: #fff;
+  --mha-media-artwork-muted: rgba(255, 255, 255, .76);
+  --mha-media-artwork-control-surface: rgba(255, 255, 255, .16);
+  --mha-media-artwork-control-active-surface: #fff;
+  --mha-media-artwork-control-active-color: #111;
+}
+
+.mha-media-page[data-artwork-tone="light"] {
+  --mha-media-page-on-surface: #111;
+  --mha-media-artist-color: rgba(17, 17, 17, .72);
+  --mha-media-artwork-foreground: #111;
+  --mha-media-artwork-muted: rgba(17, 17, 17, .72);
+  --mha-media-artwork-control-surface: rgba(17, 17, 17, .12);
+  --mha-media-artwork-control-active-surface: #111;
+  --mha-media-artwork-control-active-color: #fff;
 }
 
 .mha-media-page-layout,
@@ -316,7 +341,7 @@
   font-weight: 760;
   letter-spacing: .08em;
   text-transform: uppercase;
-  color: var(--mha-text-secondary, var(--mha-muted));
+  color: var(--mha-media-artwork-muted, var(--mha-text-secondary, var(--mha-muted)));
 }
 
 .mha-media-page-widget-panel-actions {
@@ -681,6 +706,58 @@
   display: block;
   color: var(--mha-text-secondary, var(--mha-muted));
   font-size: clamp(.7rem, 1.35cqi, .82rem);
+}
+
+/* Artwork-driven contrast. The image is sampled once it has loaded and the
+ * result is exposed as data-artwork-tone on the owning media surface. */
+:host .mha-media-page[data-artwork-tone="dark"] .mha-media-widget-title,
+:host .mha-media-page[data-artwork-tone="dark"] .mha-media-widget-artist {
+  color: #fff;
+}
+
+:host .mha-media-page[data-artwork-tone="light"] .mha-media-widget-title,
+:host .mha-media-page[data-artwork-tone="light"] .mha-media-widget-artist {
+  color: #111;
+}
+
+:host .mha-media-page[data-artwork-tone] .mha-media-page-widget-panel-title,
+:host .mha-media-page[data-artwork-tone] .mha-media-widget-control,
+:host .mha-media-page[data-artwork-tone] .mha-media-widget-progress-fill {
+  color: var(--mha-media-artwork-foreground);
+}
+
+:host .mha-media-page[data-artwork-tone] .mha-media-widget-control {
+  background: var(--mha-media-artwork-control-surface);
+}
+
+:host .mha-media-page[data-artwork-tone] .mha-media-widget-control[data-primary="true"],
+:host .mha-media-page[data-artwork-tone] .mha-media-widget-control[data-primary] {
+  background: var(--mha-media-artwork-control-active-surface);
+  color: var(--mha-media-artwork-control-active-color);
+}
+
+:host .mha-media-page[data-artwork-tone] .mha-media-widget-progress {
+  background: var(--mha-media-artwork-control-surface);
+}
+
+:host .mha-media-page[data-artwork-tone] .mha-media-widget-progress-fill {
+  background: var(--mha-media-artwork-foreground);
+}
+
+:host .mha-media-page .mha-media-page-player-widget[data-artwork-tone="dark"] .mha-media-widget-title,
+:host .mha-media-page .mha-media-page-player-widget[data-artwork-tone="dark"] .mha-media-widget-artist {
+  color: #fff;
+}
+
+:host .mha-media-page .mha-media-page-player-widget[data-artwork-tone="light"] .mha-media-widget-title,
+:host .mha-media-page .mha-media-page-player-widget[data-artwork-tone="light"] .mha-media-widget-artist {
+  color: #111;
+}
+
+/* Available-player cards are selectors, so they do not need a second
+ * transport indicator. */
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-widget-progress-shell {
+  display: none;
 }
 
 .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget .mha-media-widget-artist[hidden],
@@ -1113,4 +1190,42 @@
 
 :host([data-layout-variant="mobile-landscape"]) .mha-media-page-controls {
   justify-content: center;
+}
+
+/* Keep artwork contrast overrides after theme-specific media rules. */
+:host .mha-media-page[data-artwork-tone="dark"] .mha-media-widget-title,
+:host .mha-media-page[data-artwork-tone="dark"] .mha-media-widget-artist,
+:host .mha-media-page .mha-media-page-player-widget[data-artwork-tone="dark"] .mha-media-widget-title,
+:host .mha-media-page .mha-media-page-player-widget[data-artwork-tone="dark"] .mha-media-widget-artist {
+  color: #fff;
+}
+
+:host .mha-media-page[data-artwork-tone="light"] .mha-media-widget-title,
+:host .mha-media-page[data-artwork-tone="light"] .mha-media-widget-artist,
+:host .mha-media-page .mha-media-page-player-widget[data-artwork-tone="light"] .mha-media-widget-title,
+:host .mha-media-page .mha-media-page-player-widget[data-artwork-tone="light"] .mha-media-widget-artist {
+  color: #111;
+}
+
+:host .mha-media-page[data-artwork-tone] .mha-media-widget-control {
+  background: var(--mha-media-artwork-control-surface);
+  color: var(--mha-media-artwork-foreground);
+}
+
+:host .mha-media-page[data-artwork-tone] .mha-media-widget-control[data-primary="true"],
+:host .mha-media-page[data-artwork-tone] .mha-media-widget-control[data-primary] {
+  background: var(--mha-media-artwork-control-active-surface);
+  color: var(--mha-media-artwork-control-active-color);
+}
+
+:host .mha-media-page[data-artwork-tone] .mha-media-widget-progress {
+  background: var(--mha-media-artwork-control-surface);
+}
+
+:host .mha-media-page[data-artwork-tone] .mha-media-widget-progress-fill {
+  background: var(--mha-media-artwork-foreground);
+}
+
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-widget-progress-shell {
+  display: none;
 }
