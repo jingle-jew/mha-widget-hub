@@ -241,7 +241,7 @@ export const fr = Object.freeze({
     settingsTitle: "Réglages de la page média",
     closeSettings: "Fermer les réglages de la page média",
     availablePlayers: "Lecteurs disponibles",
-    widgetGridHint: "Les lecteurs sélectionnés apparaissent automatiquement ici.",
+    widgetGridHint: "Les lecteurs sélectionnés apparaissent ici. En mode édition, fais-les glisser pour les réorganiser.",
     defaultPlayer: "Lecteur par défaut",
     autoPlayerFallback: "Fallback automatique",
     appearance: "Apparence",

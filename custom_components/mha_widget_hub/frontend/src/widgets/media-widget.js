@@ -637,7 +637,14 @@ export function createMediaWidgetContent(widget = {}, {
   root.append(background);
   setMediaBackgroundImage(root, data.artworkUrl);
 
-  if (variantKey === "2x2") {
+  if (widget?.mediaPagePlayer) {
+    root.classList.add("mha-media-page-player-widget");
+    root.dataset.mediaPageVariant = variantKey;
+    const info = document.createElement("div");
+    info.className = "mha-media-page-player-info";
+    info.append(createMediaSourceBadge(data), text, progress);
+    root.append(artwork, info, controls);
+  } else if (variantKey === "2x2") {
     root.append(artwork, createMediaSourceBadge(data), text, controls);
   } else if (variantKey === "4x2") {
     const info = document.createElement("div");

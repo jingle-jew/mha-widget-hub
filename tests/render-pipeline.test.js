@@ -1306,7 +1306,6 @@ test("immediate UI mounts the dedicated media page instead of a widget grid", as
 
   assert.deepEqual(calls, [
     ["wireDockAutoHide", "mha-media-page"],
-    ["wireTouchEditLongPress", "mha-grid mha-media-page-widget-grid"],
     "updateStatusDom",
   ]);
   assert.equal(pageStage.appended.length, 1);
@@ -1314,8 +1313,13 @@ test("immediate UI mounts the dedicated media page instead of a widget grid", as
   assert.equal(pageStage.appended[0]?.querySelector?.(".mha-media-page")?.className, "mha-media-page");
   assert.equal(
     pageStage.appended[0]?.querySelector?.(".mha-media-page-widget-panel")?.className,
-    "mha-media-page-widget-panel mha-page-panel--grid",
+    "mha-media-page-widget-panel",
   );
+  assert.equal(
+    pageStage.appended[0]?.querySelector?.(".mha-media-page-player-list")?.className,
+    "mha-media-page-player-list",
+  );
+  assert.equal(pageStage.appended[0]?.querySelector?.(".mha-media-page-widget-grid"), null);
   assert.equal(
     pageStage.appended[0]?.querySelector?.(".mha-media-page-artwork-settings")?.className,
     "mha-media-page-icon-button mha-media-page-artwork-settings",
@@ -1323,10 +1327,6 @@ test("immediate UI mounts the dedicated media page instead of a widget grid", as
   assert.equal(
     pageStage.appended[0]?.querySelector?.(".mha-media-page-widget-panel-edit")?.className,
     "mha-media-page-icon-button mha-media-page-widget-panel-edit",
-  );
-  assert.equal(
-    pageStage.appended[0]?.querySelector?.(".mha-media-page-widget-panel-add")?.className,
-    "mha-media-page-icon-button mha-media-page-widget-panel-add",
   );
   assert.equal(
     pageStage.appended[0]?.querySelector?.(".mha-media-page-widget-panel-close")?.className,

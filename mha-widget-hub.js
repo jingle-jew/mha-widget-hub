@@ -519,6 +519,7 @@ _buildMediaPageProps(){
     hass:this._hass,
     visibilityConfig:this._entityVisibilityConfig,
     onSelectPlayer:(playerId)=>this._selectMediaPagePlayer(playerId),
+    onReorderPlayers:(playerIds)=>this._updateActiveMediaPageConfig({enabledPlayerIds:playerIds}),
     onOpenSettings:()=>this._openMediaPageSettings(),
     onToggleEditMode:()=>this.toggleEditMode(),
     onOpenWidgetManager:()=>this._openWidgetManager("media"),

@@ -67,6 +67,11 @@ export function createWidgetInteractionSurfaceCoordinator(host) {
       });
     }
     host.shadowRoot?.querySelectorAll?.(".mha-widget")?.forEach((element) => {
+      if (element.dataset?.mediaPagePlayer === "true") {
+        element.draggable = host._isEditing;
+        element.classList.toggle("is-editing", host._isEditing);
+        return;
+      }
       element.draggable = false;
       element.removeAttribute("draggable");
       element.classList.toggle("is-editing", host._isEditing);

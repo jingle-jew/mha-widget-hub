@@ -102,11 +102,22 @@ function syncControlGroup(container, buttons = []) {
   container.replaceChildren(...buttons);
 }
 
+export function swapOrderedIds(ids = [], sourceId = "", targetId = "") {
+  const nextOrder = Array.isArray(ids) ? [...ids] : [];
+  if (!sourceId || !targetId || sourceId === targetId) return nextOrder;
+  const sourceIndex = nextOrder.indexOf(sourceId);
+  const targetIndex = nextOrder.indexOf(targetId);
+  if (sourceIndex < 0 || targetIndex < 0) return nextOrder;
+  [nextOrder[sourceIndex], nextOrder[targetIndex]] = [nextOrder[targetIndex], nextOrder[sourceIndex]];
+  return nextOrder;
+}
+
 export function createMediaPage(page = {}, {
   hass = null,
   visibilityConfig = null,
   onOpenSettings = () => {},
   onSelectPlayer = () => {},
+  onReorderPlayers = () => {},
   onToggleEditMode = () => {},
   onOpenWidgetManager = () => {},
   onCloseEditMode = () => {},
@@ -181,7 +192,7 @@ export function createMediaPage(page = {}, {
   nowPlaying.append(nowPlayingShell);
 
   const widgetPanel = document.createElement("aside");
-  widgetPanel.className = "mha-media-page-widget-panel mha-page-panel--grid";
+  widgetPanel.className = "mha-media-page-widget-panel";
 
   const widgetPanelHeader = document.createElement("div");
   widgetPanelHeader.className = "mha-media-page-widget-panel-header";
@@ -200,47 +211,42 @@ export function createMediaPage(page = {}, {
     onClick: onToggleEditMode,
   });
 
-  const addButton = createIconButton({
-    label: t("settings.addWidget", "Add widget"),
-    icon: "plus",
-    className: "mha-media-page-widget-panel-add",
-    onClick: onOpenWidgetManager,
-  });
-
   const closeEditButton = createIconButton({
     label: t("common.close", "Close"),
     icon: "close",
     className: "mha-media-page-widget-panel-close",
     onClick: onCloseEditMode,
   });
-  widgetPanelActions.append(editButton, addButton, closeEditButton);
+  widgetPanelActions.append(editButton, closeEditButton);
 
   const widgetPanelBody = document.createElement("div");
   widgetPanelBody.className = "mha-media-page-widget-panel-body";
 
-  const grid = document.createElement("section");
-  grid.className = "mha-grid mha-media-page-widget-grid";
-  grid.setAttribute("aria-label", t("settings.widgetGrid", "Widget grid"));
-  if (grid.dataset) grid.dataset.pageType = page?.type || "media-players";
+  const playerList = document.createElement("section");
+  playerList.className = "mha-media-page-player-list";
+  playerList.setAttribute("aria-label", t("mediaPage.availablePlayers", "Available players"));
+  playerList.setAttribute("role", "list");
 
   const emptyState = document.createElement("p");
   emptyState.className = "mha-media-page-widget-empty";
   emptyState.textContent = t(
     "mediaPage.widgetGridHint",
-    "Add media widgets here to build the player list.",
+    "Selected players appear here automatically.",
   );
 
   widgetPanelHeader.append(widgetPanelTitle, widgetPanelActions);
-  widgetPanelBody.append(grid, emptyState);
+  widgetPanelBody.append(playerList, emptyState);
   widgetPanel.append(widgetPanelHeader, widgetPanelBody);
 
   layout.append(nowPlaying, widgetPanel);
   root.append(background, layout);
-  root.__mhaGrid = grid;
+  root.__mhaGrid = null;
+  root.__mhaPlayerList = playerList;
 
   let progressTimer = 0;
   let visualTransitionTimer = 0;
   let automaticPlayerCards = [];
+  let draggedPlayerId = "";
   const transitionCache = createMediaTransitionCache();
   const context = {
     page,
@@ -278,6 +284,35 @@ export function createMediaPage(page = {}, {
     });
   };
 
+  const isEditing = () => Boolean(root.getRootNode?.()?.host?.classList?.contains?.("is-editing"));
+
+  const clearPlayerDragState = () => {
+    draggedPlayerId = "";
+    automaticPlayerCards.forEach((card) => {
+      card.dataset.dragging = "false";
+      card.dataset.dropTarget = "false";
+    });
+  };
+
+  const findPlayerCardAtPoint = (clientX, clientY) => {
+    return automaticPlayerCards.find((card) => {
+      const bounds = card.getBoundingClientRect();
+      return clientX >= bounds.left
+        && clientX <= bounds.right
+        && clientY >= bounds.top
+        && clientY <= bounds.bottom;
+    }) || null;
+  };
+
+  const swapPlayers = (playerId, targetId) => {
+    if (!playerId || !targetId || playerId === targetId) return;
+    onReorderPlayers(swapOrderedIds(
+      automaticPlayerCards.map((card) => card.dataset.mediaPlayerId),
+      playerId,
+      targetId,
+    ));
+  };
+
   const beginVisualTransition = () => {
     clearTimeout(visualTransitionTimer);
     root.dataset.visualTransition = "false";
@@ -313,24 +348,66 @@ export function createMediaPage(page = {}, {
         const widget = createMediaPagePlayerWidget({entityId: player.entity_id});
         card.dataset.widgetId = widget.id;
         card.dataset.mediaPagePlayer = "true";
+        card.dataset.mediaPageDensity = "compact";
         card.dataset.widgetW = String(widget.w);
         card.dataset.widgetH = String(widget.h);
         card.dataset.widgetSize = `${widget.w}x${widget.h}`;
         card.style.setProperty("--mha-widget-w", String(widget.w));
         card.style.setProperty("--mha-widget-configured-w", String(widget.w));
         card.style.setProperty("--mha-widget-h", String(widget.h));
+        card.dataset.selected = String(player.entity_id === view.selectedPlayerId);
+        card.draggable = false;
+        card.addEventListener("pointerdown", (event) => {
+          if (!isEditing() || event.target?.closest?.("button")) return;
+          if (event.isPrimary === false) return;
+          draggedPlayerId = player.entity_id;
+          card.dataset.dragging = "true";
+          card.dataset.pointerDragging = "true";
+          card.setPointerCapture?.(event.pointerId);
+          event.preventDefault();
+        });
+        card.addEventListener("pointermove", (event) => {
+          if (card.dataset.pointerDragging !== "true") return;
+          event.preventDefault();
+          automaticPlayerCards.forEach((candidate) => {
+            candidate.dataset.dropTarget = String(candidate === findPlayerCardAtPoint(event.clientX, event.clientY));
+          });
+        });
+        card.addEventListener("pointerup", (event) => {
+          if (card.dataset.pointerDragging !== "true") return;
+          const target = findPlayerCardAtPoint(event.clientX, event.clientY);
+          if (target && target !== card) {
+            swapPlayers(
+              draggedPlayerId,
+              target.dataset.mediaPlayerId,
+            );
+          }
+          card.releasePointerCapture?.(event.pointerId);
+          delete card.dataset.pointerDragging;
+          clearPlayerDragState();
+        });
+        card.addEventListener("pointercancel", () => {
+          delete card.dataset.pointerDragging;
+          clearPlayerDragState();
+        });
         card.append(createMediaWidgetContent(widget, {
           widgetW: widget.w,
           widgetH: widget.h,
           hass: context.hass,
-          onSelect: onSelectPlayer,
+          onSelect: playerId => {
+            if (!isEditing()) onSelectPlayer(playerId);
+          },
         }));
-        grid.append(card);
+        card.setAttribute("role", "listitem");
+        playerList.append(card);
         return card;
       });
     } else {
       automaticPlayerCards.forEach((card) => card.querySelector(".mha-media-widget")?.__mhaUpdateFromHass?.(context.hass));
     }
+    automaticPlayerCards.forEach((card) => {
+      card.dataset.selected = String(card.dataset.mediaPlayerId === view.selectedPlayerId);
+    });
     emptyState.hidden = view.enabledPlayers.length > 0;
     if (styleOnly) {
       const visualStyleChanged = previousView?.effectiveVisualStyle !== view.effectiveVisualStyle;

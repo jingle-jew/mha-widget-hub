@@ -341,14 +341,23 @@
   min-block-size: 0;
 }
 
-.mha-media-page-widget-grid {
+.mha-media-page-player-list {
   inline-size: 100%;
-  block-size: 100%;
+  block-size: auto;
   min-block-size: 0;
   max-inline-size: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(.45rem, 1cqi, .68rem);
+  padding-inline: var(--mha-media-page-widget-panel-padding);
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--mha-text-primary) 22%, transparent) transparent;
 }
 
-.mha-media-page-widget-grid:not(:empty) + .mha-media-page-widget-empty {
+.mha-media-page-player-list:not(:empty) + .mha-media-page-widget-empty {
   display: none;
 }
 
@@ -362,6 +371,376 @@
   font-size: clamp(.82rem, 1.55cqi, .94rem);
   line-height: 1.45;
   pointer-events: none;
+}
+
+/* Available players are a selector, not a second Now Playing surface. Keep
+ * the page-owned media cards compact while preserving their media widget
+ * contract and shared interaction behavior. */
+.mha-media-page-widget-panel-body {
+  overflow: hidden;
+}
+
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player {
+  --mha-widget-content-inset: clamp(.5rem, 1.2cqi, .72rem);
+  --mha-widget-inner-padding: var(--mha-widget-content-inset);
+  --mha-widget-shell-filter: none;
+  --mha-widget-shell-shadow: none;
+  --mha-media-padding: var(--mha-widget-content-inset);
+  --mha-media-gap: clamp(.35rem, 1cqi, .58rem);
+  --mha-media-artwork-radius: clamp(.65rem, 1.5cqi, .9rem);
+  --mha-media-control-size: clamp(2.2rem, 4.2cqi, 2.75rem);
+  --mha-media-control-icon-size: clamp(.88rem, 1.8cqi, 1.08rem);
+  --mha-media-toggle-control-size: clamp(2.35rem, 5.2cqi, 3.1rem);
+  --mha-media-toggle-font-size: clamp(.68rem, 1.4cqi, .82rem);
+  --mha-media-control-gap: clamp(.25rem, .7cqi, .42rem);
+  --mha-media-progress-height: .22rem;
+  flex: 0 0 6.25rem;
+  block-size: 6.25rem;
+  min-block-size: 0;
+  border-radius: clamp(.85rem, 1.8cqi, 1.15rem);
+  background: color-mix(in srgb, var(--mha-widget-surface) 78%, transparent);
+  border-color: color-mix(in srgb, var(--mha-widget-border) 72%, transparent);
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player[data-selected="true"] {
+  background: color-mix(in srgb, var(--mha-accent) 16%, var(--mha-widget-surface));
+  border-color: color-mix(in srgb, var(--mha-accent) 55%, var(--mha-widget-border));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--mha-accent) 18%, transparent);
+}
+
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player > .mha-media-widget {
+  grid-template-columns: clamp(3.55rem, 12cqi, 4.45rem) minmax(0, 1fr) max-content;
+  grid-template-rows: minmax(0, 1fr);
+  align-items: center;
+  gap: var(--mha-media-gap);
+}
+
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-widget-artwork {
+  grid-column: 1;
+  grid-row: 1 / span 3;
+  inline-size: clamp(3.55rem, 12cqi, 4.45rem);
+  block-size: auto;
+  aspect-ratio: 1;
+  align-self: center;
+}
+
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-widget-info {
+  display: contents;
+}
+
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-widget-source-badge {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: start;
+  max-inline-size: 100%;
+  padding-block: .18rem;
+  padding-inline: .42rem;
+  font-size: var(--mha-type-widget-caption-compact-size, .68rem);
+}
+
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-widget-text {
+  grid-column: 2;
+  grid-row: 2;
+  min-inline-size: 0;
+  align-self: center;
+  display: block;
+  padding-inline: 0;
+}
+
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-widget-title,
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-widget-artist {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-widget-title {
+  font-size: var(--mha-type-widget-label-compact-size, .8rem);
+  line-height: 1.1;
+}
+
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-widget-artist {
+  margin-block-start: .16rem;
+  font-size: var(--mha-type-widget-state-compact-size, .72rem);
+  line-height: 1.05;
+}
+
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-widget-progress-shell {
+  grid-column: 2;
+  grid-row: 3;
+  inline-size: 100%;
+  margin-block-start: .18rem;
+}
+
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-widget-progress-labels {
+  display: none;
+}
+
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player[data-selected="false"] .mha-media-widget-progress-shell {
+  display: none;
+}
+
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-widget-controls-shell {
+  position: static;
+  inline-size: auto;
+  grid-column: 3;
+  grid-row: 1 / span 3;
+  grid-template-columns: max-content;
+  gap: 0;
+}
+
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-widget-controls-group:empty {
+  display: none;
+}
+
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-widget-control-toggle {
+  position: static;
+  inset: auto;
+  min-block-size: 2.15rem;
+  min-inline-size: 2.15rem;
+  padding-inline: .3rem;
+  border-radius: .72rem;
+}
+
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-widget-background {
+  opacity: .22;
+}
+
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-widget-background-image {
+  filter: blur(18px) saturate(120%);
+}
+
+/* Dedicated media-page markup. This intentionally does not reuse the
+ * standard 4x2 internal layout: Safari otherwise applies the generic absolute
+ * volume toggle and crops the compact card. */
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player > .mha-media-widget.mha-media-page-player-widget {
+  --mha-media-padding: .72rem;
+  --mha-media-gap: .72rem;
+  --mha-media-control-gap: .4rem;
+  --mha-media-toggle-control-size: 2.8rem;
+  --mha-media-control-size: 2.8rem;
+  --mha-media-control-row-height: 2.8rem;
+  --mha-media-side-control-size: 2.8rem;
+  --mha-media-main-control-size: 2.8rem;
+  --mha-media-play-button-scale: 1;
+  color: var(--mha-text-primary);
+  position: relative;
+  inset: auto;
+  inline-size: 100%;
+  block-size: 100%;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: clamp(3.55rem, 12cqi, 4.45rem) minmax(0, 1fr) max-content;
+  grid-template-rows: minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(.65rem, 1.5cqi, .9rem);
+  overflow: hidden;
+}
+
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-info {
+  grid-column: 2;
+  grid-row: 1;
+  min-inline-size: 0;
+  min-block-size: 0;
+  display: grid;
+  grid-template-rows: max-content minmax(0, 1fr) max-content;
+  align-content: center;
+  gap: .24rem;
+}
+
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-info .mha-media-widget-source-badge {
+  grid-column: auto;
+  grid-row: auto;
+  justify-self: start;
+}
+
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-info .mha-media-widget-text {
+  grid-column: auto;
+  grid-row: auto;
+  align-self: center;
+  padding-inline: 0;
+}
+
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-info .mha-media-widget-progress-shell {
+  grid-column: auto;
+  grid-row: auto;
+  margin-block-start: .1rem;
+}
+
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget > .mha-media-widget-controls-shell {
+  position: static;
+  grid-column: 3;
+  grid-row: 1;
+  inline-size: auto;
+  min-inline-size: 0;
+  display: grid;
+  grid-template-columns: max-content;
+  justify-content: end;
+  gap: 0;
+}
+
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget > .mha-media-widget-controls-shell .mha-media-widget-control-toggle {
+  position: static;
+  inset: auto;
+  inline-size: 2.8rem;
+  block-size: 2.8rem;
+  min-inline-size: 2.8rem;
+  min-block-size: 2.8rem;
+  padding: 0;
+  border-radius: 50%;
+  font-size: .78rem;
+}
+
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget > .mha-media-widget-artwork {
+  position: relative;
+  inset: auto;
+  z-index: 1;
+  grid-column: 1;
+  grid-row: 1;
+  inline-size: clamp(3.55rem, 12cqi, 4.45rem);
+  block-size: clamp(3.55rem, 12cqi, 4.45rem);
+  aspect-ratio: 1;
+  align-self: center;
+  justify-self: start;
+  max-inline-size: 100%;
+  max-block-size: 100%;
+  border: 1px solid var(--mha-media-artwork-border);
+  box-shadow: var(--mha-media-artwork-shadow);
+}
+
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget .mha-media-widget-source-badge {
+  max-inline-size: 100%;
+  overflow: hidden;
+  color: var(--mha-text-secondary, var(--mha-muted));
+  background: color-mix(in srgb, var(--mha-text-primary) 9%, transparent);
+  border-color: color-mix(in srgb, var(--mha-text-primary) 10%, transparent);
+}
+
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget .mha-media-widget-title {
+  color: var(--mha-text-primary);
+  font-size: clamp(.86rem, 1.7cqi, 1.05rem);
+}
+
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget .mha-media-widget-artist {
+  color: var(--mha-text-secondary, var(--mha-muted));
+  font-size: clamp(.7rem, 1.35cqi, .82rem);
+}
+
+:host([data-theme-style="oneui"]) .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player {
+  /* The page cards are a dedicated compact surface. They must not inherit
+   * OneUI's dark full-bleed media-card treatment. */
+  background: color-mix(in srgb, rgba(255,255,255,.84) 90%, transparent);
+  border-color: color-mix(in srgb, rgba(255,255,255,.72) 76%, transparent);
+}
+
+:host([data-theme-style="oneui"]) .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget {
+  color: rgba(22,24,30,.94);
+  --mha-media-artist-color: rgba(22,24,30,.68);
+  --mha-media-artwork-bg: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--mha-accent) 54%, rgba(255,255,255,.42)),
+    color-mix(in srgb, var(--mha-accent) 24%, rgba(255,255,255,.18))
+  );
+  --mha-media-artwork-border: rgba(255,255,255,.48);
+  --mha-media-artwork-shadow: inset 0 1px 0 rgba(255,255,255,.24), 0 6px 18px rgba(0,0,0,.08);
+  --mha-media-control-surface: rgba(255,255,255,.38);
+  --mha-media-control-border: rgba(255,255,255,.48);
+  --mha-media-control-shadow: inset 0 1px 0 rgba(255,255,255,.22), 0 4px 12px rgba(0,0,0,.06);
+  --mha-media-progress-track: rgba(22,24,30,.12);
+  --mha-media-progress-fill: color-mix(in srgb, var(--mha-accent) 76%, rgba(255,255,255,.18));
+  --mha-media-text-shadow: none;
+}
+
+:host([data-theme-style="oneui"]) .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget .mha-media-widget-artwork::after {
+  display: none;
+}
+
+:host([data-theme-style="oneui"]) .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget .mha-media-widget-title {
+  color: rgba(22,24,30,.96);
+}
+
+:host([data-theme-style="oneui"]) .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget .mha-media-widget-artist,
+:host([data-theme-style="oneui"]) .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget .mha-media-widget-source-badge {
+  color: rgba(22,24,30,.68);
+}
+
+:host([data-theme-style="oneui"]) .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget .mha-media-widget-source-badge {
+  background: rgba(22,24,30,.08);
+  border-color: rgba(22,24,30,.08);
+}
+
+:host([data-theme-style="oneui"]) .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget .mha-media-widget-progress {
+  background: rgba(22,24,30,.12);
+}
+
+:host([data-theme-style="oneui"]) .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget .mha-media-widget-progress-fill {
+  background: var(--mha-media-progress-fill);
+}
+
+:host([data-theme-style="oneui"]) .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget .mha-media-widget-control {
+  color: rgba(22,24,30,.9);
+  background: rgba(255,255,255,.38);
+  border-color: rgba(255,255,255,.48);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.22), 0 4px 12px rgba(0,0,0,.06);
+}
+
+:host([data-theme-style="oneui"]) .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget .mha-media-widget-control-toggle {
+  color: rgba(22,24,30,.9);
+  background: rgba(255,255,255,.48);
+}
+
+:host([data-theme-style="oneui"]) .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player[data-selected="true"] {
+  background: color-mix(in srgb, var(--mha-accent) 13%, rgba(255,255,255,.88));
+  border-color: color-mix(in srgb, var(--mha-accent) 48%, rgba(255,255,255,.72));
+}
+
+:host(.is-editing) .mha-media-page-player-list > .mha-media-page-auto-player {
+  cursor: grab;
+  touch-action: none;
+}
+
+:host(.is-editing) .mha-media-page-player-list > .mha-media-page-auto-player:active {
+  cursor: grabbing;
+}
+
+.mha-media-page-player-list > .mha-media-page-auto-player[data-dragging="true"] {
+  opacity: .48;
+  transform: scale(.98);
+}
+
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-widget-control-toggle {
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.mha-media-page-player-list > .mha-media-page-auto-player[data-drop-target="true"] {
+  border-color: var(--mha-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--mha-accent) 24%, transparent);
+}
+
+@media (max-width: 767px) {
+  .mha-media-page-player-list {
+    padding-inline: var(--mha-media-page-widget-panel-padding);
+  }
+
+  .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player {
+    --mha-media-padding: .5rem;
+    flex-basis: 4.75rem;
+    block-size: 4.75rem;
+  }
+
+  .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget > .mha-media-widget-controls-shell .mha-media-widget-control-toggle {
+    inline-size: 2.55rem;
+    block-size: 2.55rem;
+    min-inline-size: 2.55rem;
+    min-block-size: 2.55rem;
+  }
 }
 
 .mha-media-page[data-visual-style="liquid-glass"],

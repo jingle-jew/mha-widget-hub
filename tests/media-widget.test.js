@@ -10,6 +10,7 @@ import {
   resolveMediaTransitionData,
 } from "../src/widgets/media-widget.js";
 import { normalizeWidgetForKind } from "../src/layout/layout-engine.js";
+import { swapOrderedIds } from "../src/pages/media-page.js";
 
 const REPO_ROOT = process.cwd();
 
@@ -139,6 +140,17 @@ test("media page player widgets default to 4x2 and support a compact 2x2 variant
   });
   assert.equal(compact.w, 2);
   assert.equal(compact.h, 2);
+});
+
+test("media page player editing swaps two selected players without changing the other positions", () => {
+  assert.deepEqual(
+    swapOrderedIds(
+      ["media_player.corridor", "media_player.studio", "media_player.tv", "media_player.kids"],
+      "media_player.studio",
+      "media_player.kids",
+    ),
+    ["media_player.corridor", "media_player.kids", "media_player.tv", "media_player.studio"],
+  );
 });
 
 test("media page panel keeps responsive sizes on supported themes and downgrades elsewhere", () => {

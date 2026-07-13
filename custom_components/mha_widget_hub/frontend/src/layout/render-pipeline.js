@@ -644,7 +644,7 @@ export function createRenderPipeline(host, options = {}) {
       }
       appendPrimaryControls();
       host._wireDockAutoHide(activeSurface);
-      host._wireTouchEditLongPress?.(grid);
+      if (grid) host._wireTouchEditLongPress?.(grid);
       host._updateStatusDom?.();
       return { positions, grid, activeSurface };
     }

@@ -241,7 +241,7 @@ export const en = Object.freeze({
     settingsTitle: "Media page settings",
     closeSettings: "Close media page settings",
     availablePlayers: "Available players",
-    widgetGridHint: "Selected players appear here automatically.",
+    widgetGridHint: "Selected players appear here. In edit mode, drag them to reorder.",
     defaultPlayer: "Default player",
     autoPlayerFallback: "Automatic fallback",
     appearance: "Appearance",
