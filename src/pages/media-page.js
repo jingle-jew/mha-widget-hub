@@ -81,9 +81,11 @@ export function resolveMobileMediaPagePane(scrollTop = 0) {
 export function shouldReturnToMobileMediaNowPlaying({
   playerListScrollTop = 0,
   gestureStartedAtTop = false,
+  returnGestureArmed = false,
   gestureDeltaY = 0,
 } = {}) {
-  return Boolean(gestureStartedAtTop)
+  return Boolean(returnGestureArmed)
+    && Boolean(gestureStartedAtTop)
     && Number(playerListScrollTop || 0) <= MOBILE_MEDIA_PAGE_SCROLL_THRESHOLD
     && Number(gestureDeltaY || 0) <= -MOBILE_MEDIA_PAGE_RETURN_GESTURE_THRESHOLD;
 }
@@ -108,6 +110,13 @@ function scrollMobileMediaPageToNowPlaying(root) {
 function createMobileMediaPageScrollCoordinator(root, playerList) {
   let touchStartY = null;
   let gestureStartedAtTop = false;
+  let returnGestureArmed = false;
+  let previousPlayerListScrollTop = Number(playerList?.scrollTop || 0);
+
+  const setReturnGestureArmed = (armed) => {
+    returnGestureArmed = Boolean(armed);
+    root.dataset.mobileMediaReturnReady = String(returnGestureArmed);
+  };
 
   const syncDockState = () => {
     const host = getMediaPageHost(root);
@@ -130,17 +139,38 @@ function createMobileMediaPageScrollCoordinator(root, playerList) {
   const reset = () => {
     root.scrollTop = 0;
     if (playerList) playerList.scrollTop = 0;
+    previousPlayerListScrollTop = 0;
+    setReturnGestureArmed(false);
     syncDockState();
+  };
+
+  const onPlayerListScroll = () => {
+    const currentScrollTop = Number(playerList?.scrollTop || 0);
+    if (currentScrollTop > MOBILE_MEDIA_PAGE_SCROLL_THRESHOLD) {
+      setReturnGestureArmed(false);
+    } else if (previousPlayerListScrollTop > MOBILE_MEDIA_PAGE_SCROLL_THRESHOLD) {
+      /* Reaching the list top is a deliberate stop. A new gesture is needed
+       * before the outer page may snap back to Now Playing. */
+      setReturnGestureArmed(true);
+    }
+    previousPlayerListScrollTop = currentScrollTop;
   };
 
   const onWheel = (event) => {
     if (!isMobileMediaPage(root)) return;
+    const atTop = Number(playerList?.scrollTop || 0) <= MOBILE_MEDIA_PAGE_SCROLL_THRESHOLD;
+    if (!atTop || Number(event.deltaY || 0) >= 0) return;
+    event.preventDefault?.();
     if (!shouldReturnToMobileMediaNowPlaying({
       playerListScrollTop: playerList?.scrollTop,
       gestureStartedAtTop: true,
+      returnGestureArmed,
       gestureDeltaY: event.deltaY,
-    })) return;
-    event.preventDefault?.();
+    })) {
+      setReturnGestureArmed(true);
+      return;
+    }
+    setReturnGestureArmed(false);
     scrollMobileMediaPageToNowPlaying(root);
   };
 
@@ -161,14 +191,24 @@ function createMobileMediaPageScrollCoordinator(root, playerList) {
     const shouldReturn = shouldReturnToMobileMediaNowPlaying({
       playerListScrollTop: playerList?.scrollTop,
       gestureStartedAtTop,
+      returnGestureArmed,
       gestureDeltaY: touchStartY - touchEndY,
     });
+    const canArmReturn = gestureStartedAtTop
+      && Number(playerList?.scrollTop || 0) <= MOBILE_MEDIA_PAGE_SCROLL_THRESHOLD
+      && touchStartY - touchEndY <= -MOBILE_MEDIA_PAGE_RETURN_GESTURE_THRESHOLD;
     touchStartY = null;
     gestureStartedAtTop = false;
-    if (shouldReturn) scrollMobileMediaPageToNowPlaying(root);
+    if (shouldReturn) {
+      setReturnGestureArmed(false);
+      scrollMobileMediaPageToNowPlaying(root);
+    } else if (canArmReturn) {
+      setReturnGestureArmed(true);
+    }
   };
 
   root.addEventListener("scroll", syncDockState, { passive: true });
+  playerList?.addEventListener("scroll", onPlayerListScroll, { passive: true });
   playerList?.addEventListener("wheel", onWheel, { passive: false });
   playerList?.addEventListener("touchstart", onTouchStart, { passive: true });
   playerList?.addEventListener("touchend", onTouchEnd, { passive: true });
@@ -179,6 +219,7 @@ function createMobileMediaPageScrollCoordinator(root, playerList) {
     syncDockState,
     destroy() {
       root.removeEventListener("scroll", syncDockState);
+      playerList?.removeEventListener("scroll", onPlayerListScroll);
       playerList?.removeEventListener("wheel", onWheel);
       playerList?.removeEventListener("touchstart", onTouchStart);
       playerList?.removeEventListener("touchend", onTouchEnd);

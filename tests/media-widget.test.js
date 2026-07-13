@@ -170,6 +170,7 @@ test("mobile media page returns to now playing only after a new upward gesture a
     shouldReturnToMobileMediaNowPlaying({
       playerListScrollTop: 0,
       gestureStartedAtTop: true,
+      returnGestureArmed: true,
       gestureDeltaY: -24,
     }),
     true,
@@ -178,6 +179,7 @@ test("mobile media page returns to now playing only after a new upward gesture a
     shouldReturnToMobileMediaNowPlaying({
       playerListScrollTop: 0,
       gestureStartedAtTop: false,
+      returnGestureArmed: true,
       gestureDeltaY: -24,
     }),
     false,
@@ -186,6 +188,16 @@ test("mobile media page returns to now playing only after a new upward gesture a
     shouldReturnToMobileMediaNowPlaying({
       playerListScrollTop: 16,
       gestureStartedAtTop: true,
+      returnGestureArmed: true,
+      gestureDeltaY: -24,
+    }),
+    false,
+  );
+  assert.equal(
+    shouldReturnToMobileMediaNowPlaying({
+      playerListScrollTop: 0,
+      gestureStartedAtTop: true,
+      returnGestureArmed: false,
       gestureDeltaY: -24,
     }),
     false,
