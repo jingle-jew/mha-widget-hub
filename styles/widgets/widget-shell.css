@@ -793,9 +793,9 @@
 /* Liquid primary widgets reuse the weather card's glass optics without its
  * blue sky gradient. Weather restores its expressive color in its own CSS. */
 :host([data-theme-style="ios"][data-ios-glass="liquid"][data-theme]) .mha-widget {
-  background: var(--mha-primary-surface);
-  border-color: var(--mha-primary-border);
-  box-shadow: var(--mha-shadow-primary);
+  background: var(--mha-widget-shell-surface, var(--mha-primary-surface));
+  border-color: var(--mha-widget-shell-border, var(--mha-primary-border));
+  box-shadow: var(--mha-widget-shell-shadow, var(--mha-shadow-primary));
 }
 
 /* OneUI removes the shell border entirely instead of tinting a 1px frame. */

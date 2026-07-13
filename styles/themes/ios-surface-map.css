@@ -59,9 +59,9 @@
   --mha-shell-shadow: var(--mha-shadow-shell);
   --mha-shell-blur: var(--mha-blur-shell);
 
-  --mha-widget-shell-surface: var(--mha-surface-shell);
-  --mha-widget-shell-border: var(--mha-border-shell);
-  --mha-widget-shell-shadow: var(--mha-shadow-shell);
+  --mha-widget-shell-surface: var(--mha-surface-primary);
+  --mha-widget-shell-border: var(--mha-border-primary);
+  --mha-widget-shell-shadow: var(--mha-shadow-primary);
   --mha-widget-control-surface: var(--mha-surface-control);
 }
 
