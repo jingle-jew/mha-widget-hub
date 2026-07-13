@@ -389,32 +389,6 @@ function getMinutesUntil(value = "", now = Date.now()) {
   return (timestamp - now) / 60000;
 }
 
-function getMinutesSincePreviousDailyEvent(value = "", now = Date.now()) {
-  const timestamp = new Date(value).getTime();
-  if (!Number.isFinite(timestamp)) return null;
-  const previousTimestamp = timestamp > now ? timestamp - 24 * 60 * 60 * 1000 : timestamp;
-  return (now - previousTimestamp) / 60000;
-}
-
-function getSunAtmospherePhase(model = {}, now = Date.now()) {
-  const minutesToSunrise = getMinutesUntil(model.nextRising, now);
-  const minutesToSunset = getMinutesUntil(model.nextSetting, now);
-  const minutesSinceSunrise = getMinutesSincePreviousDailyEvent(model.nextRising, now);
-  const minutesSinceSunset = getMinutesSincePreviousDailyEvent(model.nextSetting, now);
-
-  if (model.isDay) {
-    if (minutesSinceSunrise != null && minutesSinceSunrise >= 0 && minutesSinceSunrise <= 30) return "sunrise";
-    if (minutesToSunset != null && minutesToSunset >= 0 && minutesToSunset <= 30) return "sunset";
-    return "day";
-  }
-
-  if (minutesToSunrise != null && minutesToSunrise >= 0 && minutesToSunrise <= 30) return "sunrise";
-  if (minutesToSunrise != null && minutesToSunrise >= 0 && minutesToSunrise <= 120) return "dawn";
-  if (minutesSinceSunset != null && minutesSinceSunset >= 0 && minutesSinceSunset <= 30) return "sunset";
-  if (minutesSinceSunset != null && minutesSinceSunset >= 0 && minutesSinceSunset <= 120) return "dusk";
-  return "night";
-}
-
 function getFallbackSummaryDayPhase(date = new Date()) {
   const hour = date.getHours();
   if (hour >= 5 && hour < 8) return "dawn";
@@ -469,8 +443,6 @@ function renderSummaryMetric(root, model, weather = {}, hass) {
 }
 
 function renderSunMetric(root, model, header) {
-  root.dataset.sunPhase = getSunAtmospherePhase(model);
-
   const sunValues = document.createElement("div");
   sunValues.className = "mha-weather-metric-sun-values";
   const sunrise = document.createElement("span");

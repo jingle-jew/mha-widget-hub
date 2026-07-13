@@ -184,47 +184,6 @@ test("weather summary metric exposes atmosphere data for adaptive gradients", ()
   assert.equal(content.dataset.summarySky, "precipitation");
 });
 
-test("sun metric exposes distinct atmosphere phases for gradient selection", () => {
-  installDom();
-
-  const fromNow = (minutes) => new Date(Date.now() + minutes * 60 * 1000).toISOString();
-  const cases = [
-    ["night", "below_horizon", 360, 1080],
-    ["dawn", "below_horizon", 90, 990],
-    ["sunrise", "below_horizon", 20, 920],
-    ["day", "above_horizon", 1080, 360],
-    ["sunset", "above_horizon", 720, 20],
-    ["dusk", "below_horizon", 600, 1380],
-  ];
-
-  cases.forEach(([expectedPhase, state, nextRisingMinutes, nextSettingMinutes]) => {
-    const content = createWeatherMetricWidgetContent({
-      kind: "weather-metric",
-      metricKey: "sun",
-      sourceType: "sun",
-      entityId: "sun.sun",
-    }, {
-      widgetW: 4,
-      widgetH: 1,
-      hass: {
-        states: {
-          "sun.sun": {
-            entity_id: "sun.sun",
-            state,
-            attributes: {
-              next_rising: fromNow(nextRisingMinutes),
-              next_setting: fromNow(nextSettingMinutes),
-            },
-          },
-        },
-      },
-    });
-
-    assert.equal(content.dataset.metricLayout, "sun");
-    assert.equal(content.dataset.sunPhase, expectedPhase);
-  });
-});
-
 test("weather summary metric uses its weather attribute entity for current conditions", () => {
   installDom();
 
