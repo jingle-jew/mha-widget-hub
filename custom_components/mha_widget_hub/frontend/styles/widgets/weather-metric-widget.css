@@ -35,6 +35,14 @@
   --mha-widget-shell-filter: none;
 }
 
+/* iOS paints its glass surface directly on the widget shell. Summary widgets
+ * own their complete surface, so the atmospheric gradient replaces that glass
+ * and its resting border instead of appearing as an inset card. */
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="weather-metric"]:has(> .mha-weather-metric-widget[data-metric-layout="summary"]) {
+  background: var(--mha-widget-shell-surface);
+  border-color: transparent;
+}
+
 .mha-widget[data-widget-kind="weather-metric"]:has(> .mha-weather-metric-widget[data-metric-layout="summary"][data-summary-phase="dawn"]) {
   --mha-weather-summary-gradient-top: #9fcfff;
   --mha-weather-summary-gradient-mid: #f5bfd0;
@@ -713,6 +721,12 @@
   align-items: stretch;
   gap: clamp(.55rem, 2.6cqb, .9rem);
   isolation: isolate;
+}
+
+/* Match the generic weather-metric selector specificity so its content inset
+ * cannot pull the summary gradient away from the shell edges. */
+.mha-widget[data-widget-kind="weather-metric"] > .mha-weather-metric-widget[data-metric-layout="summary"] {
+  inset: 0;
 }
 
 .mha-weather-metric-widget[data-metric-layout="summary"]::before {
