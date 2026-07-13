@@ -1,7 +1,7 @@
 """Constants for MHA Widget Hub."""
 
 DOMAIN = "mha_widget_hub"
-VERSION = "0.2.1"
+VERSION = "0.2.2"
 
 PANEL_COMPONENT = "mha-widget-hub"
 PANEL_URL_PATH = "mha-widget-hub"

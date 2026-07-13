@@ -1,7 +1,7 @@
 {
   "domain": "mha_widget_hub",
   "name": "MHA Widget Hub",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "documentation": "https://github.com/jingle-jew/mha-widget-hub",
   "issue_tracker": "https://github.com/jingle-jew/mha-widget-hub/issues",
   "codeowners": [

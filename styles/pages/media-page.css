@@ -509,11 +509,14 @@
 }
 
 .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-widget-background {
-  opacity: .22;
+  /* Page cards use the same square artwork treatment as iOS. The generic
+   * media backdrop is intentionally disabled here; otherwise the artwork is
+   * painted once as a full-card background and once as the square thumbnail. */
+  display: none;
 }
 
 .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-widget-background-image {
-  filter: blur(18px) saturate(120%);
+  display: none;
 }
 
 /* Dedicated media-page markup. This intentionally does not reuse the
@@ -610,6 +613,7 @@
   justify-self: start;
   max-inline-size: 100%;
   max-block-size: 100%;
+  border-radius: var(--mha-media-artwork-radius);
   border: 1px solid var(--mha-media-artwork-border);
   box-shadow: var(--mha-media-artwork-shadow);
 }
@@ -659,6 +663,23 @@
 
 :host([data-theme-style="oneui"]) .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget .mha-media-widget-artwork::after {
   display: none;
+}
+
+/* The generic OneUI 4x2 selector has the same specificity as the original
+ * compact rule and is loaded later. Add the page-player marker so OneUI
+ * cannot turn this square thumbnail back into a full-card artwork layer. */
+:host([data-theme-style="oneui"]) .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player > .mha-media-widget.mha-media-page-player-widget[data-media-page-player="true"] > .mha-media-widget-artwork {
+  position: relative;
+  inset: auto;
+  inline-size: clamp(3.55rem, 12cqi, 4.45rem);
+  block-size: clamp(3.55rem, 12cqi, 4.45rem);
+  max-inline-size: 100%;
+  max-block-size: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--mha-media-artwork-radius);
+  border: 1px solid var(--mha-media-artwork-border);
+  box-shadow: var(--mha-media-artwork-shadow);
+  background: var(--mha-media-artwork-bg);
 }
 
 :host([data-theme-style="oneui"]) .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget .mha-media-widget-title {

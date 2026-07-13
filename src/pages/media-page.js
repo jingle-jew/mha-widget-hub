@@ -19,7 +19,7 @@ import {
   createMediaTransitionCache,
   setMediaArtworkImage,
   setMediaProgressState,
-} from "../widgets/media-widget.js";
+} from "../widgets/media-widget.js?media-page-ios-card-v1";
 
 function createIconButton({ label, icon, className = "", onClick = () => {} } = {}) {
   const button = document.createElement("button");
