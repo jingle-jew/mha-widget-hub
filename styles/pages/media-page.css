@@ -1007,7 +1007,10 @@
     --mha-media-page-safe-block-start: clamp(.8rem, 1.8svh, 1.2rem);
     --mha-media-page-safe-block-end: max(
       clamp(.75rem, 1.8svh, 1rem),
-      calc(var(--mha-safe-bottom, 0px) + 1svh)
+      calc(
+        var(--mha-mobile-dock-footprint, var(--mha-safe-bottom, 0px))
+        + 1svh
+      )
     );
   }
 

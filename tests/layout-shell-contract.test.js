@@ -386,7 +386,7 @@ test("media page mobile layout scrolls as snapped sheets in portrait and landsca
   );
   assert.match(
     gridSource,
-    /:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\[data-media-page-active="true"\]\)\s+\.mha-page-stage\s*\{[\s\S]*block-size:\s*calc\([\s\S]*100%[\s\S]*var\(--mha-shell-content-bottom-inset,\s*var\(--mha-mobile-dock-footprint,\s*0px\)\)[\s\S]*\);/,
+    /:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\[data-media-page-active="true"\]\)\s+\.mha-page-stage\s*\{[\s\S]*block-size:\s*100%;[\s\S]*min-block-size:\s*0;/,
   );
   assert.match(
     gridSource,
@@ -411,6 +411,10 @@ test("media page mobile layout scrolls as snapped sheets in portrait and landsca
   assert.match(
     source,
     /:host\(\[data-layout="mobile"\]\) \.mha-media-page\s*\{[\s\S]*overflow-y:\s*auto;[\s\S]*scroll-snap-type:\s*y mandatory;[\s\S]*touch-action:\s*pan-y;/,
+  );
+  assert.match(
+    source,
+    /--mha-media-page-safe-block-end:\s*max\([\s\S]*var\(--mha-mobile-dock-footprint,\s*var\(--mha-safe-bottom,\s*0px\)\)/,
   );
   assert.match(
     source,

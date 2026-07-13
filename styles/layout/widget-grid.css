@@ -398,10 +398,9 @@
 }
 
 :host([data-layout="mobile"]:not([data-layout-variant="mobile-landscape"])[data-media-page-active="true"]) .mha-page-stage {
-  block-size: calc(
-    100%
-    - var(--mha-shell-content-bottom-inset, var(--mha-mobile-dock-footprint, 0px))
-  );
+  /* The mobile dock is viewport-fixed. Let the media page extend beneath it
+   * and use its own scrollable bottom padding to reveal the final content. */
+  block-size: 100%;
   min-block-size: 0;
 }
 
