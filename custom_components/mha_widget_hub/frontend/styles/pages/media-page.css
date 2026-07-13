@@ -377,7 +377,26 @@
  * the page-owned media cards compact while preserving their media widget
  * contract and shared interaction behavior. */
 .mha-media-page-widget-panel-body {
+  --mha-media-page-list-fade-size: clamp(1rem, 2.8cqi, 2rem);
   overflow: hidden;
+}
+
+.mha-media-page-widget-panel-body > .mha-media-page-player-list {
+  padding-block: var(--mha-media-page-list-fade-size);
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 var(--mha-media-page-list-fade-size),
+    #000 calc(100% - var(--mha-media-page-list-fade-size)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 var(--mha-media-page-list-fade-size),
+    #000 calc(100% - var(--mha-media-page-list-fade-size)),
+    transparent 100%
+  );
 }
 
 .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player {
