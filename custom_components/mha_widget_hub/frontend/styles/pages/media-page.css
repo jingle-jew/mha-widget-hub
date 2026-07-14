@@ -1318,11 +1318,13 @@
 }
 
 /* Available-player metadata sits on the card surface, not on its artwork.
- * Keep iOS page styles readable regardless of the thumbnail tone. */
+ * Keep light page styles readable regardless of the thumbnail tone. */
 .mha-media-page[data-visual-style="liquid-glass"] .mha-media-page-player-list .mha-media-page-player-widget .mha-media-widget-title,
 .mha-media-page[data-visual-style="liquid-glass"] .mha-media-page-player-list .mha-media-page-player-widget .mha-media-widget-artist,
 .mha-media-page[data-visual-style="frosted-glass"] .mha-media-page-player-list .mha-media-page-player-widget .mha-media-widget-title,
-.mha-media-page[data-visual-style="frosted-glass"] .mha-media-page-player-list .mha-media-page-player-widget .mha-media-widget-artist {
+.mha-media-page[data-visual-style="frosted-glass"] .mha-media-page-player-list .mha-media-page-player-widget .mha-media-widget-artist,
+.mha-media-page[data-visual-style="material-you"] .mha-media-page-player-list .mha-media-page-player-widget .mha-media-widget-title,
+.mha-media-page[data-visual-style="material-you"] .mha-media-page-player-list .mha-media-page-player-widget .mha-media-widget-artist {
   color: #111;
 }
 

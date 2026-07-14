@@ -454,7 +454,7 @@ test("media page mobile layout scrolls as snapped sheets in portrait and landsca
   );
   assert.match(
     source,
-    /\.mha-media-page\[data-visual-style="liquid-glass"\][\s\S]*\.mha-media-widget-title,[\s\S]*\.mha-media-page\[data-visual-style="frosted-glass"\][\s\S]*\.mha-media-widget-artist\s*\{[\s\S]*color:\s*#111;/,
+    /\.mha-media-page\[data-visual-style="liquid-glass"\][\s\S]*\.mha-media-widget-title,[\s\S]*\.mha-media-page\[data-visual-style="frosted-glass"\][\s\S]*\.mha-media-widget-artist,[\s\S]*\.mha-media-page\[data-visual-style="material-you"\][\s\S]*\.mha-media-widget-artist\s*\{[\s\S]*color:\s*#111;/,
   );
   assert.match(
     source,
