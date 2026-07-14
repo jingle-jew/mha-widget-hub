@@ -252,6 +252,11 @@ export const fr = Object.freeze({
     notDetected: "Aucune entité Home Assistant correspondante détectée",
     sunrise: "Lever",
     sunset: "Coucher",
+    radar: Object.freeze({
+      title: "Carte radar",
+      imageAlt: "Carte radar météo",
+      unavailable: "Image radar indisponible",
+    }),
     current: Object.freeze({
       title: "Conditions actuelles",
       calm: "Conditions confortables",
@@ -395,6 +400,8 @@ export const fr = Object.freeze({
       hourlyForecastDescription: "Prochaines heures de l’intégration sélectionnée.",
       dailyForecast: "Prévisions journalières",
       dailyForecastDescription: "Prochains jours de l’intégration sélectionnée.",
+      radar: "Carte radar",
+      radarDescription: "Image radar en direct provenant de Home Assistant.",
       narrative: "Bref météo",
       narrativeDescription: "Narratif contextuel de l’intégration sélectionnée.",
       weatherAttributeDescription: "Fourni par l’entité météo sélectionnée.",

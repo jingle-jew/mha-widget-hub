@@ -38,6 +38,8 @@ export function normalizeWeatherPageConfig(config = {}) {
 
   const normalized = {
     weatherEntityId: String(config.weatherEntityId || "").trim(),
+    radarEntityId: String(config.radarEntityId || "").trim(),
+    radarDiscoveryCompleted: config.radarDiscoveryCompleted === true,
     autoDetectedMetricKeys,
     discoveryMode,
     registryLinked: config.registryLinked === true,

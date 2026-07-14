@@ -102,45 +102,73 @@ export function createHubStateIngressCoordinator(host, {
       && page.config?.autoPopulatePending === true
       && !page.widgets?.length
     ));
-    if (!pendingPage || !host._hass) return false;
+    const radarPendingPage = host._pages?.find(page => (
+      isWeatherPage(page)
+      && page.config?.radarDiscoveryCompleted !== true
+    ));
+    const targetPage = pendingPage || radarPendingPage;
+    if (!targetPage || !host._hass) return false;
     if (defaultWeatherPopulationPromise) {
       return defaultWeatherPopulationPromise;
     }
 
-    const pageId = pendingPage.id;
+    const pageId = targetPage.id;
+    const isInitialPopulation = pendingPage?.id === pageId;
     const populationPromise = discoverWeatherPageWidgets({
       hass: host._hass,
       visibilityConfig: host._entityVisibilityConfig,
       pageId,
-      pageName: pendingPage.name,
+      pageName: targetPage.name,
     }).then((weatherSeed) => {
       const currentPage = host._pages?.find(page => page.id === pageId);
-      if (!currentPage
-        || currentPage.config?.autoPopulatePending !== true
-        || currentPage.widgets?.length) {
+      if (!currentPage) return false;
+      if (isInitialPopulation) {
+        if (currentPage.config?.autoPopulatePending !== true || currentPage.widgets?.length) return false;
+      } else if (currentPage.config?.radarDiscoveryCompleted === true) {
         return false;
       }
 
       const previousPages = host._pages;
-      host._pages = previousPages.map(page => page.id === pageId
-        ? {
+      const radarWidget = weatherSeed.widgets.find(widget => widget.kind === "weather-radar") || null;
+      let radarAdded = false;
+      host._pages = previousPages.map((page) => {
+        if (page.id !== pageId) return page;
+        if (isInitialPopulation) {
+          return {
             ...page,
             config: weatherSeed.config,
             widgets: weatherSeed.widgets.map(widget => normalizeWidget(widget)),
-          }
-        : page);
+          };
+        }
+
+        const hasRadarWidget = page.widgets?.some(widget => (
+          widget.kind === "weather-radar" || widget.type === "weather-radar"
+        ));
+        radarAdded = Boolean(radarWidget && !hasRadarWidget);
+        return {
+          ...page,
+          config: {
+            ...page.config,
+            radarEntityId: radarWidget?.entityId || "",
+            radarDiscoveryCompleted: true,
+          },
+          widgets: radarAdded
+            ? [...(page.widgets || []), normalizeWidget(radarWidget)]
+            : page.widgets,
+        };
+      });
       if (!savePages()) {
         host._pages = previousPages;
         return false;
       }
 
-      if (host._activePageId === pageId) {
+      if (host._activePageId === pageId && (isInitialPopulation || radarAdded)) {
         host._widgets = readWidgets();
         host._refreshActiveGridOnly?.();
       }
       return true;
     }).catch((error) => {
-      console.warn("[MHA] Default weather page could not be populated.", error);
+      console.warn("[MHA] Weather page discovery could not be completed.", error);
       return false;
     }).finally(() => {
       if (defaultWeatherPopulationPromise === populationPromise) {

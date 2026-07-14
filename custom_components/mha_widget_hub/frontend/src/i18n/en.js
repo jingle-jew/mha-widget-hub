@@ -252,6 +252,11 @@ export const en = Object.freeze({
     notDetected: "No matching Home Assistant entity detected",
     sunrise: "Sunrise",
     sunset: "Sunset",
+    radar: Object.freeze({
+      title: "Radar map",
+      imageAlt: "Weather radar map",
+      unavailable: "Radar image unavailable",
+    }),
     current: Object.freeze({
       title: "Current conditions",
       calm: "Comfortable conditions",
@@ -395,6 +400,8 @@ export const en = Object.freeze({
       hourlyForecastDescription: "Next hours from the selected integration.",
       dailyForecast: "Daily forecast",
       dailyForecastDescription: "Next days from the selected integration.",
+      radar: "Radar map",
+      radarDescription: "Live radar image from Home Assistant.",
       narrative: "Weather brief",
       narrativeDescription: "Contextual narrative from the selected integration.",
       weatherAttributeDescription: "Provided by the selected weather entity.",

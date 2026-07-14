@@ -4,6 +4,7 @@ import {
 } from "../ha/weather-page-data.js";
 import {
   createWeatherPageMetricWidget,
+  createWeatherPageRadarWidget,
   createWeatherPageWeatherWidget,
 } from "./weather-page-seed.js";
 
@@ -149,6 +150,22 @@ function createNarrativeCatalogItem(weatherEntityId = "") {
   };
 }
 
+function createRadarCatalogItem(source = {}) {
+  const widget = createWeatherPageRadarWidget({
+    pageId: "catalog",
+    source,
+  });
+  return {
+    ...widget,
+    label: "Radar map",
+    labelKey: "widgets.weatherManager.radar",
+    description: "Live radar image from Home Assistant.",
+    descriptionKey: "widgets.weatherManager.radarDescription",
+    size: { w: 4, h: 3 },
+    order: 35,
+  };
+}
+
 function createMetricCatalogItem(source = {}, index = 0) {
   const widget = createWeatherPageMetricWidget({
     pageId: "catalog",
@@ -178,6 +195,7 @@ export function buildWeatherPageWidgetManagerCategoryFromSources(sources = {}, {
   const widgets = entityId
     ? [
         ...WEATHER_PAGE_BASE_WIDGETS.map(definition => createWeatherCatalogItem(definition, entityId)),
+        ...(sources.radar ? [createRadarCatalogItem(sources.radar)] : []),
         createNarrativeCatalogItem(entityId),
         ...metricItems,
       ].sort((a, b) => (a.order || 0) - (b.order || 0))
