@@ -59,7 +59,7 @@
 .mha-weather-narrative-secondary {
   color: var(--mha-weather-narrative-muted);
   font-size: var(--mha-type-widget-caption-size, .7rem);
-  font-weight: var(--mha-typography-weight, 700);
+  font-weight: var(--mha-typography-weight, var(--mha-font-weight-bold));
   letter-spacing: .02em;
 }
 
@@ -79,7 +79,7 @@
   color: var(--mha-weather-narrative-text);
   font-size: clamp(1rem, 2.8cqi, 1.46rem);
   line-height: 1.08;
-  font-weight: var(--mha-type-weather-summary-weight, 760);
+  font-weight: var(--mha-type-weather-summary-weight, var(--mha-font-weight-heavy));
   letter-spacing: -.025em;
   text-wrap: balance;
 }
@@ -110,7 +110,7 @@
   color: var(--mha-weather-narrative-text);
   font-size: clamp(1.15rem, 4.4cqi, 1.9rem);
   line-height: .9;
-  font-weight: 780;
+  font-weight: var(--mha-font-weight-heavy);
   letter-spacing: -.06em;
 }
 
@@ -192,7 +192,7 @@
 
 .mha-weather-narrative-chart-time {
   color: rgba(255, 255, 255, .78);
-  font-weight: 650;
+  font-weight: var(--mha-font-weight-semibold);
 }
 
 .mha-weather-narrative-chart-bars {
@@ -245,7 +245,7 @@
 .mha-weather-narrative-chart-value {
   max-inline-size: 100%;
   color: rgba(255, 255, 255, .94);
-  font-weight: 760;
+  font-weight: var(--mha-font-weight-heavy);
 }
 
 .mha-weather-narrative-chart-legend {
@@ -305,7 +305,7 @@
   color: var(--mha-weather-narrative-text);
   font-size: var(--mha-type-widget-label-size, .82rem);
   line-height: 1.16;
-  font-weight: 720;
+  font-weight: var(--mha-font-weight-bold);
 }
 
 .mha-weather-narrative-empty-visual {
@@ -317,7 +317,7 @@
 
 .mha-weather-narrative-empty-label {
   font-size: var(--mha-type-widget-label-size, .82rem);
-  font-weight: 720;
+  font-weight: var(--mha-font-weight-bold);
 }
 
 .mha-widget[data-widget-kind="weather-narrative"]:has(.mha-weather-narrative-widget[data-weather-narrative-mood="rain"]) {

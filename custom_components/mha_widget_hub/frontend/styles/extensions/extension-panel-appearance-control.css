@@ -31,7 +31,7 @@
   gap: 5px;
   color: var(--mha-secondary-text, rgba(255,255,255,.72));
   font-size: 12px;
-  font-weight: 760;
+  font-weight: var(--mha-font-weight-heavy);
 }
 
 .mha-extension-field select,
@@ -42,7 +42,7 @@
   background: var(--mha-secondary-surface, rgba(255,255,255,.10));
   color: var(--mha-primary-text, #fff);
   font: inherit;
-  font-weight: 760;
+  font-weight: var(--mha-font-weight-heavy);
 }
 
 .mha-extension-field select {

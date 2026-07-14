@@ -53,7 +53,7 @@ export function getCriticalBootCss() {
       white-space: pre-wrap;
       line-height: 1.3;
       font-size: .92rem;
-      font-weight: 650;
+      font-weight: var(--mha-font-weight-semibold);
       letter-spacing: .01em;
       backdrop-filter: blur(14px) saturate(135%);
       -webkit-backdrop-filter: blur(14px) saturate(135%);

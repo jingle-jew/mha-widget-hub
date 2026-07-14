@@ -43,7 +43,7 @@
 .mha-slider-label {
   font-size: var(--mha-type-widget-state-size, .76rem);
   color: var(--mha-text-secondary);
-  font-weight: 700;
+  font-weight: var(--mha-font-weight-bold);
 }
 
 .mha-slider-oneui-track {

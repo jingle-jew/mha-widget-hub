@@ -42,12 +42,12 @@
   --mha-type-widget-body-compact-size: var(--mha-font-size-widget-body-compact, .86rem);
   --mha-type-widget-value-compact-size: var(--mha-font-size-widget-value-compact, 1.2rem);
 
-  --mha-type-widget-label-weight: 680;
-  --mha-type-widget-state-weight: 650;
-  --mha-type-widget-caption-weight: 580;
-  --mha-type-widget-body-weight: 580;
-  --mha-type-widget-value-weight: 740;
-  --mha-type-widget-display-weight: 780;
+  --mha-type-widget-label-weight: var(--mha-font-weight-semibold);
+  --mha-type-widget-state-weight: var(--mha-font-weight-semibold);
+  --mha-type-widget-caption-weight: var(--mha-font-weight-semibold);
+  --mha-type-widget-body-weight: var(--mha-font-weight-semibold);
+  --mha-type-widget-value-weight: var(--mha-font-weight-bold);
+  --mha-type-widget-display-weight: var(--mha-font-weight-heavy);
   --mha-type-widget-label-line-height: 1.05;
   --mha-type-widget-state-line-height: 1.05;
   --mha-type-widget-caption-line-height: 1.1;
@@ -62,7 +62,7 @@
 
   --mha-type-control-label-size: var(--mha-type-widget-label-size);
   --mha-type-control-state-size: var(--mha-type-widget-state-size);
-  --mha-type-control-label-weight: var(--mha-typography-weight, 750);
+  --mha-type-control-label-weight: var(--mha-typography-weight, var(--mha-font-weight-heavy));
   --mha-type-control-state-weight: var(--mha-type-widget-state-weight);
   --mha-type-control-line-height: var(--mha-type-widget-label-line-height);
   --mha-type-control-label-tracking: -.025em;
@@ -75,7 +75,7 @@
   --mha-type-weather-summary-temp-size: var(--mha-font-size-weather-summary-temp, clamp(1.8rem, min(8.8cqi, 12cqb), 3rem));
   --mha-type-weather-summary-temp-compact-size: var(--mha-font-size-weather-summary-temp-compact, clamp(1.52rem, min(7.8cqi, 10.5cqb), 2.5rem));
   --mha-type-weather-summary-weight: var(--mha-type-widget-state-weight);
-  --mha-type-chip-weight: 720;
+  --mha-type-chip-weight: var(--mha-font-weight-bold);
   --mha-type-clock-time-size: var(--mha-font-size-clock-time, var(--mha-type-widget-display-lg));
   --mha-type-clock-date-size: var(--mha-font-size-clock-date, var(--mha-type-widget-state-size));
   --mha-type-clock-number-size: var(--mha-font-size-clock-number, .62rem);

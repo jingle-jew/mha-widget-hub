@@ -14,8 +14,8 @@
   --mha-toggle-widget-icon-shadow: var(--mha-icon-shadow, inset 0 1px 0 color-mix(in srgb, var(--mha-text-primary) 18%, transparent));
   --mha-toggle-widget-label-size: var(--mha-type-control-label-size, var(--mha-font-size-control-label, 1rem));
   --mha-toggle-widget-state-size: var(--mha-type-control-state-size, var(--mha-font-size-control-state, .76rem));
-  --mha-toggle-widget-label-weight: var(--mha-type-control-label-weight, var(--mha-typography-weight, 750));
-  --mha-toggle-widget-state-weight: var(--mha-type-control-state-weight, 650);
+  --mha-toggle-widget-label-weight: var(--mha-type-control-label-weight, var(--mha-typography-weight, var(--mha-font-weight-heavy)));
+  --mha-toggle-widget-state-weight: var(--mha-type-control-state-weight, var(--mha-font-weight-semibold));
   --mha-toggle-widget-line-height: var(--mha-type-control-line-height, 1.05);
   --mha-toggle-widget-stack-gap: var(--mha-type-stack-gap, .28rem);
   --mha-toggle-slider-gap: var(--mha-control-gap, clamp(.55rem, 4cqi, .9rem));

@@ -91,9 +91,9 @@
   --mha-media-progress-fill: var(--mha-accent);
   --mha-media-progress-height: var(--mha-media-page-progress-height);
   --mha-media-artist-color: var(--mha-text-secondary, var(--mha-muted));
-  --mha-media-title-weight: 820;
+  --mha-media-title-weight: var(--mha-font-weight-extra-bold);
   --mha-media-title-letter-spacing: -.035em;
-  --mha-media-subtitle-weight: 650;
+  --mha-media-subtitle-weight: var(--mha-font-weight-semibold);
   --mha-media-text-shadow: none;
   --mha-media-artwork-foreground: var(--mha-text-primary, var(--mha-text));
   --mha-media-artwork-muted: var(--mha-media-artist-color);
@@ -360,7 +360,7 @@
 .mha-media-page-widget-panel-title {
   margin: 0;
   font-size: clamp(.82rem, 1.65cqi, .95rem);
-  font-weight: 760;
+  font-weight: var(--mha-font-weight-heavy);
   letter-spacing: .08em;
   text-transform: uppercase;
   color: var(--mha-text-secondary, var(--mha-muted));
@@ -689,7 +689,7 @@
   overflow: hidden;
   color: var(--mha-text-primary);
   font-size: clamp(.72rem, 1.4cqi, .86rem);
-  font-weight: 760;
+  font-weight: var(--mha-font-weight-heavy);
   line-height: 1.08;
   text-overflow: ellipsis;
   white-space: nowrap;

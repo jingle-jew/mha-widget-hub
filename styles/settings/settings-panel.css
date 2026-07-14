@@ -175,7 +175,7 @@
 .mha-settings-eyebrow {
   color: var(--mha-text-tertiary);
   font-size: .78rem;
-  font-weight: 800;
+  font-weight: var(--mha-font-weight-extra-bold);
   letter-spacing: .12em;
   text-transform: uppercase;
 }
@@ -239,7 +239,7 @@
   margin: 0 0 .15rem;
   color: var(--mha-text-primary);
   font-size: .9rem;
-  font-weight: 820;
+  font-weight: var(--mha-font-weight-extra-bold);
 }
 
 .mha-settings-field,
@@ -279,7 +279,7 @@
 .mha-settings-label {
   color: var(--mha-text-primary);
   font-size: .9rem;
-  font-weight: 700;
+  font-weight: var(--mha-font-weight-bold);
 }
 
 .mha-settings-text {
@@ -323,7 +323,7 @@
   background: var(--mha-surface-secondary);
   color: var(--mha-text-primary);
   font: inherit;
-  font-weight: 800;
+  font-weight: var(--mha-font-weight-extra-bold);
   cursor: pointer;
 }
 
@@ -624,7 +624,7 @@
   color: var(--mha-text-primary);
   font: inherit;
   font-size: 1rem;
-  font-weight: 800;
+  font-weight: var(--mha-font-weight-extra-bold);
   line-height: 1;
   place-items: center;
   cursor: pointer;
@@ -1010,7 +1010,7 @@
   place-items: center;
   color: #fff;
   font-size: clamp(.95rem, 2.6vw, 1.25rem);
-  font-weight: 950;
+  font-weight: var(--mha-font-weight-black);
   line-height: 1;
   text-shadow:
     0 1px 3px rgba(0,0,0,.55),
@@ -1361,7 +1361,7 @@
 .mha-settings-nav-text strong,
 .mha-settings-dock-row-text strong {
   font-size: .95rem;
-  font-weight: 680;
+  font-weight: var(--mha-font-weight-semibold);
   letter-spacing: -.01em;
 }
 
@@ -1429,7 +1429,7 @@
 .mha-settings-back {
   justify-self: start;
   margin-block-end: .25rem;
-  font-weight: 650;
+  font-weight: var(--mha-font-weight-semibold);
 }
 
 .mha-settings-dock-editor {
@@ -1600,7 +1600,7 @@
 .mha-settings-accent-swatch-auto {
   color: var(--mha-text);
   font-size: 12px;
-  font-weight: 800;
+  font-weight: var(--mha-font-weight-extra-bold);
   letter-spacing: -.02em;
   background:
     linear-gradient(135deg,

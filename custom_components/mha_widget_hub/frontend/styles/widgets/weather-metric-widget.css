@@ -625,7 +625,7 @@
 }
 
 .mha-weather-metric-widget[data-weather-metric-size="4x1"] {
-  --mha-weather-metric-sun-time-weight: 760;
+  --mha-weather-metric-sun-time-weight: var(--mha-font-weight-heavy);
   grid-template-columns: minmax(4.35rem, .62fr) minmax(0, 1.32fr) minmax(4.85rem, 1.18fr);
   grid-template-rows: repeat(2, minmax(0, 1fr));
   align-items: center;

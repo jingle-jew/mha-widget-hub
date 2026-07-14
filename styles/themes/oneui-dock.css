@@ -66,7 +66,7 @@
     --mha-dock-item-label-padding-inline: 0;
     --mha-dock-item-label-font-size: clamp(.84rem, .78rem + .18vw, 1rem);
     --mha-dock-item-label-line-height: 1.08;
-    --mha-dock-item-label-font-weight: 500;
+    --mha-dock-item-label-font-weight: var(--mha-font-weight-medium);
     --mha-dock-item-label-letter-spacing: -.03em;
 
     box-sizing: border-box;
@@ -187,7 +187,7 @@
   box-sizing: border-box;
   font-size: clamp(.53rem, .52rem + .16vw, .58rem);
   line-height: .98;
-  font-weight: 600;
+  font-weight: var(--mha-font-weight-semibold);
   letter-spacing: -.01em;
   color: var(--mha-oneui-dock-item-label-color, color-mix(in srgb, var(--mha-text) 84%, transparent));
   pointer-events: none;
@@ -442,7 +442,7 @@
   opacity: .92;
   font-size: clamp(.53rem, .52rem + .16vw, .58rem);
   line-height: .98;
-  font-weight: 600;
+  font-weight: var(--mha-font-weight-semibold);
   letter-spacing: -.01em;
   padding-inline: var(--mha-mobile-dock-item-label-padding-inline);
 }

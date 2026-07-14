@@ -107,7 +107,7 @@
   overflow-wrap: anywhere;
   line-height: 1.08;
   font-size: var(--mha-scenes-label-size);
-  font-weight: 700;
+  font-weight: var(--mha-font-weight-bold);
 }
 
 .mha-scenes-widget-button[data-has-entity="false"] {

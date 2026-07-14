@@ -28,7 +28,7 @@
   --mha-dock-item-label-padding-inline: 0;
   --mha-dock-item-label-font-size: .58rem;
   --mha-dock-item-label-line-height: 1;
-  --mha-dock-item-label-font-weight: 600;
+  --mha-dock-item-label-font-weight: var(--mha-font-weight-semibold);
   --mha-dock-item-label-letter-spacing: -.01em;
   --mha-dock-gap: clamp(0.35rem, 1.1vw, 0.8rem);
 
