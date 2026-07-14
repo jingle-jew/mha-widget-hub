@@ -93,9 +93,29 @@ test("media page local widget editing hides redundant global/category controls",
   );
 });
 
-test("media page player actions keep settings left of edit and close", () => {
+test("media page player sheet keeps gear, edit, and shared sheet close behavior", () => {
   assert.match(
     mediaPageSource,
-    /widgetPanelActions\.append\(settingsButton, editButton, closeEditButton\);/,
+    /rootClassName:\s*"mha-media-page-widget-panel-surface mha-settings-panel"/,
+  );
+  assert.match(
+    mediaPageSource,
+    /shellActions\.replaceChildren\(settingsButton, editButton, closeEditButton\);/,
+  );
+  assert.match(
+    mediaPageSource,
+    /const shellCloseButton = widgetPanel\?\.querySelector\("\.mha-media-page-widget-panel-close"\);\s*shellCloseButton\?\.remove\(\);/,
+  );
+  assert.match(
+    mediaPageSource,
+    /headerClassName:\s*"mha-media-page-widget-panel-header mha-settings-header"/,
+  );
+  assert.match(
+    mediaPageCss,
+    /\.mha-media-page-widget-panel-header\.mha-settings-header\s*\{[\s\S]*touch-action:\s*none;/,
+  );
+  assert.doesNotMatch(
+    widgetPlacementSource,
+    /mha-media-page-widget-panel-surface/,
   );
 });

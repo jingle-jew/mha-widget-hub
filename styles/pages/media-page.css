@@ -325,12 +325,33 @@
   overflow: hidden;
 }
 
-.mha-media-page-widget-panel-header {
+.mha-media-page-widget-panel-surface {
+  position: static;
+  inset: auto;
+  z-index: auto;
+  inline-size: 100%;
+  min-inline-size: 0;
+  pointer-events: auto;
+  overflow: visible;
+}
+
+/* The shared panel controller uses the hidden attribute after the close
+ * transition. The surface remains in the page flow as the mobile scroll
+ * target; its dialog itself is what gets translated off-screen. */
+.mha-media-page-widget-panel-surface[hidden] {
+  display: block !important;
+  pointer-events: none;
+}
+
+.mha-media-page-widget-panel-header.mha-settings-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: .8rem;
   padding-inline: var(--mha-media-page-widget-panel-padding);
+  /* The header belongs exclusively to the shared sheet swipe gesture. Letting
+   * the outer media page pan at the same time makes the sheet snap back. */
+  touch-action: none;
 }
 
 .mha-media-page-widget-panel-title {
@@ -990,6 +1011,26 @@
     grid-column: 8 / span 5;
   }
 
+  .mha-media-page-widget-panel-surface {
+    grid-column: 8 / span 5;
+    min-block-size: 0;
+  }
+
+  .mha-media-page-widget-panel-surface > .mha-media-page-widget-panel {
+    position: relative;
+    inset: auto;
+    inline-size: 100%;
+    max-inline-size: 100%;
+    block-size: 100%;
+    max-block-size: none;
+    transform: none;
+    pointer-events: auto;
+  }
+
+  .mha-media-page-widget-panel-surface > .mha-media-page-widget-panel-scrim {
+    display: none;
+  }
+
   .mha-media-page-now-playing-shell {
     justify-items: center;
   }
@@ -1037,7 +1078,7 @@
 }
 
 :host([data-layout="mobile"]) .mha-media-page-now-playing,
-:host([data-layout="mobile"]) .mha-media-page-widget-panel {
+:host([data-layout="mobile"]) .mha-media-page-widget-panel-surface {
   grid-column: 1 / -1;
   scroll-snap-align: start;
   scroll-snap-stop: always;
@@ -1052,26 +1093,10 @@
     var(--mha-media-page-safe-block-end);
 }
 
-:host([data-layout="mobile"]) .mha-media-page-widget-panel {
-  block-size: calc(
-    var(--mha-media-page-mobile-sheet-block-size)
-    - var(--mha-media-page-safe-block-start)
-    - var(--mha-media-page-player-sheet-block-end)
-  );
-  min-block-size: calc(
-    var(--mha-media-page-mobile-sheet-block-size)
-    - var(--mha-media-page-safe-block-start)
-    - var(--mha-media-page-player-sheet-block-end)
-  );
-  max-block-size: calc(
-    var(--mha-media-page-mobile-sheet-block-size)
-    - var(--mha-media-page-safe-block-start)
-    - var(--mha-media-page-player-sheet-block-end)
-  );
-  margin-block:
-    var(--mha-media-page-safe-block-start)
-    var(--mha-media-page-player-sheet-block-end);
-  overflow: hidden;
+:host([data-layout="mobile"]) .mha-media-page-widget-panel-surface {
+  block-size: var(--mha-media-page-mobile-sheet-block-size);
+  min-block-size: var(--mha-media-page-mobile-sheet-block-size);
+  margin-block: 0;
 }
 
 :host([data-layout="mobile"]) .mha-media-page-widget-panel-body,

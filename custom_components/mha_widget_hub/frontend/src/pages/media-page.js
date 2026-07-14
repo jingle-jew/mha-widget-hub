@@ -9,6 +9,14 @@ import {
   resolveEnabledMediaPlayers,
 } from "../ha/media-players.js?v=media-persistence-v2";
 import { t } from "../i18n/index.js";
+import { createPanelShell } from "../panels/panel-shell.js";
+import {
+  applyPanelSurfaceContract,
+  PANEL_MOBILE_PRESENTATIONS,
+  PANEL_SURFACE_ROLES,
+} from "../panels/panel-surface-contract.js";
+import { syncPanelVisibility } from "../panels/panel-visibility-controller.js";
+import { SETTINGS_PANEL_VISIBILITY_TRANSITION_MS } from "../panels/panel-transition-timing.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
 import { findThemeStyleId } from "../settings/theme-registry.js";
 import {
@@ -70,24 +78,11 @@ function buildStatusLine({
 
 export const MEDIA_PAGE_INACTIVE_FALLBACK_MS = 10_000;
 const MOBILE_MEDIA_PAGE_SCROLL_THRESHOLD = 4;
-const MOBILE_MEDIA_PAGE_RETURN_GESTURE_THRESHOLD = 12;
 
 export function resolveMobileMediaPagePane(scrollTop = 0) {
   return Number(scrollTop || 0) <= MOBILE_MEDIA_PAGE_SCROLL_THRESHOLD
     ? "now-playing"
     : "available-players";
-}
-
-export function shouldReturnToMobileMediaNowPlaying({
-  playerListScrollTop = 0,
-  gestureStartedAtTop = false,
-  returnGestureArmed = false,
-  gestureDeltaY = 0,
-} = {}) {
-  return Boolean(returnGestureArmed)
-    && Boolean(gestureStartedAtTop)
-    && Number(playerListScrollTop || 0) <= MOBILE_MEDIA_PAGE_SCROLL_THRESHOLD
-    && Number(gestureDeltaY || 0) <= -MOBILE_MEDIA_PAGE_RETURN_GESTURE_THRESHOLD;
 }
 
 function getMediaPageHost(root) {
@@ -107,28 +102,20 @@ function scrollMobileMediaPageToNowPlaying(root) {
   if (root) root.scrollTop = 0;
 }
 
-function createMobileMediaPageScrollCoordinator(root, playerList) {
-  let touchStartY = null;
-  let gestureStartedAtTop = false;
-  let returnGestureArmed = false;
-  let previousPlayerListScrollTop = Number(playerList?.scrollTop || 0);
-
-  const setReturnGestureArmed = (armed) => {
-    returnGestureArmed = Boolean(armed);
-    root.dataset.mobileMediaReturnReady = String(returnGestureArmed);
-  };
-
+function createMobileMediaPageScrollCoordinator(root, playerList, { onPaneChange = () => {} } = {}) {
   const syncDockState = () => {
     const host = getMediaPageHost(root);
     if (!host?.classList) return "disabled";
     if (!isMobileMediaPage(root)) {
       root.dataset.mobileMediaPane = "disabled";
+      onPaneChange("disabled");
       host.classList.remove("is-mobile-floating-controls-hidden");
       return "disabled";
     }
 
     const pane = resolveMobileMediaPagePane(root.scrollTop);
     root.dataset.mobileMediaPane = pane;
+    onPaneChange(pane);
     host.classList.toggle(
       "is-mobile-floating-controls-hidden",
       pane !== "now-playing",
@@ -139,91 +126,16 @@ function createMobileMediaPageScrollCoordinator(root, playerList) {
   const reset = () => {
     root.scrollTop = 0;
     if (playerList) playerList.scrollTop = 0;
-    previousPlayerListScrollTop = 0;
-    setReturnGestureArmed(false);
     syncDockState();
   };
 
-  const onPlayerListScroll = () => {
-    const currentScrollTop = Number(playerList?.scrollTop || 0);
-    if (currentScrollTop > MOBILE_MEDIA_PAGE_SCROLL_THRESHOLD) {
-      setReturnGestureArmed(false);
-    } else if (previousPlayerListScrollTop > MOBILE_MEDIA_PAGE_SCROLL_THRESHOLD) {
-      /* Reaching the list top is a deliberate stop. A new gesture is needed
-       * before the outer page may snap back to Now Playing. */
-      setReturnGestureArmed(true);
-    }
-    previousPlayerListScrollTop = currentScrollTop;
-  };
-
-  const onWheel = (event) => {
-    if (!isMobileMediaPage(root)) return;
-    const atTop = Number(playerList?.scrollTop || 0) <= MOBILE_MEDIA_PAGE_SCROLL_THRESHOLD;
-    if (!atTop || Number(event.deltaY || 0) >= 0) return;
-    event.preventDefault?.();
-    if (!shouldReturnToMobileMediaNowPlaying({
-      playerListScrollTop: playerList?.scrollTop,
-      gestureStartedAtTop: true,
-      returnGestureArmed,
-      gestureDeltaY: event.deltaY,
-    })) {
-      setReturnGestureArmed(true);
-      return;
-    }
-    setReturnGestureArmed(false);
-    scrollMobileMediaPageToNowPlaying(root);
-  };
-
-  const onTouchStart = (event) => {
-    if (!isMobileMediaPage(root)) return;
-    touchStartY = event.touches?.[0]?.clientY ?? null;
-    gestureStartedAtTop = Number(playerList?.scrollTop || 0) <= MOBILE_MEDIA_PAGE_SCROLL_THRESHOLD;
-  };
-
-  const onTouchEnd = (event) => {
-    const touchEndY = event.changedTouches?.[0]?.clientY;
-    if (touchStartY === null || !Number.isFinite(touchEndY)) {
-      touchStartY = null;
-      gestureStartedAtTop = false;
-      return;
-    }
-
-    const shouldReturn = shouldReturnToMobileMediaNowPlaying({
-      playerListScrollTop: playerList?.scrollTop,
-      gestureStartedAtTop,
-      returnGestureArmed,
-      gestureDeltaY: touchStartY - touchEndY,
-    });
-    const canArmReturn = gestureStartedAtTop
-      && Number(playerList?.scrollTop || 0) <= MOBILE_MEDIA_PAGE_SCROLL_THRESHOLD
-      && touchStartY - touchEndY <= -MOBILE_MEDIA_PAGE_RETURN_GESTURE_THRESHOLD;
-    touchStartY = null;
-    gestureStartedAtTop = false;
-    if (shouldReturn) {
-      setReturnGestureArmed(false);
-      scrollMobileMediaPageToNowPlaying(root);
-    } else if (canArmReturn) {
-      setReturnGestureArmed(true);
-    }
-  };
-
   root.addEventListener("scroll", syncDockState, { passive: true });
-  playerList?.addEventListener("scroll", onPlayerListScroll, { passive: true });
-  playerList?.addEventListener("wheel", onWheel, { passive: false });
-  playerList?.addEventListener("touchstart", onTouchStart, { passive: true });
-  playerList?.addEventListener("touchend", onTouchEnd, { passive: true });
-  playerList?.addEventListener("touchcancel", onTouchEnd, { passive: true });
 
   return {
     reset,
     syncDockState,
     destroy() {
       root.removeEventListener("scroll", syncDockState);
-      playerList?.removeEventListener("scroll", onPlayerListScroll);
-      playerList?.removeEventListener("wheel", onWheel);
-      playerList?.removeEventListener("touchstart", onTouchStart);
-      playerList?.removeEventListener("touchend", onTouchEnd);
-      playerList?.removeEventListener("touchcancel", onTouchEnd);
     },
   };
 }
@@ -421,19 +333,6 @@ export function createMediaPage(page = {}, {
   nowPlayingShell.append(artworkSection, primary, controls);
   nowPlaying.append(nowPlayingShell);
 
-  const widgetPanel = document.createElement("aside");
-  widgetPanel.className = "mha-media-page-widget-panel";
-
-  const widgetPanelHeader = document.createElement("div");
-  widgetPanelHeader.className = "mha-media-page-widget-panel-header";
-
-  const widgetPanelTitle = document.createElement("h2");
-  widgetPanelTitle.className = "mha-media-page-widget-panel-title";
-  widgetPanelTitle.textContent = t("mediaPage.availablePlayers", "Available players");
-
-  const widgetPanelActions = document.createElement("div");
-  widgetPanelActions.className = "mha-media-page-widget-panel-actions";
-
   const editButton = createIconButton({
     label: t("common.edit", "Edit"),
     icon: "edit",
@@ -448,7 +347,6 @@ export function createMediaPage(page = {}, {
     onClick: onCloseEditMode,
   });
   settingsButton.className = "mha-media-page-icon-button mha-media-page-widget-panel-settings";
-  widgetPanelActions.append(settingsButton, editButton, closeEditButton);
 
   const widgetPanelBody = document.createElement("div");
   widgetPanelBody.className = "mha-media-page-widget-panel-body";
@@ -465,15 +363,80 @@ export function createMediaPage(page = {}, {
     "Selected players appear here automatically.",
   );
 
-  widgetPanelHeader.append(widgetPanelTitle, widgetPanelActions);
   widgetPanelBody.append(playerList, emptyState);
-  widgetPanel.append(widgetPanelHeader, widgetPanelBody);
 
-  layout.append(nowPlaying, widgetPanel);
+  let availablePlayersPanel = null;
+  let availablePlayersSheetCloseRequested = false;
+  const closeAvailablePlayersSheet = () => {
+    availablePlayersSheetCloseRequested = true;
+    syncPanelVisibility(availablePlayersPanel, false, {
+      transitionMs: SETTINGS_PANEL_VISIBILITY_TRANSITION_MS,
+      closeStateDatasetKey: "panelCloseState",
+    });
+    scrollMobileMediaPageToNowPlaying(root);
+  };
+
+  availablePlayersPanel = applyPanelSurfaceContract(createPanelShell({
+    open: false,
+    rootClassName: "mha-media-page-widget-panel-surface mha-settings-panel",
+    scrimClassName: "mha-media-page-widget-panel-scrim mha-settings-scrim",
+    sheetClassName: "mha-media-page-widget-panel mha-settings-sheet",
+    headerClassName: "mha-media-page-widget-panel-header mha-settings-header",
+    closeClassName: "mha-media-page-widget-panel-close",
+    title: t("mediaPage.availablePlayers", "Available players"),
+    ariaLabel: t("mediaPage.availablePlayers", "Available players"),
+    closeLabel: t("common.close", "Close"),
+    scrimLabel: t("mediaPage.closeAvailablePlayers", "Close available players"),
+    onClose: closeAvailablePlayersSheet,
+  }), {
+    surfaceRole: PANEL_SURFACE_ROLES.PANEL,
+    mobilePresentation: PANEL_MOBILE_PRESENTATIONS.SHEET,
+  });
+  const syncAvailablePlayersSheetLayout = () => {
+    const host = getMediaPageHost(root);
+    const layout = String(host?.dataset?.layout || "");
+    availablePlayersPanel.dataset.layout = layout;
+    availablePlayersPanel.dataset.mobileLayout = String(layout === "mobile");
+    availablePlayersPanel.dataset.mobileLandscape = String(
+      host?.dataset?.layoutVariant === "mobile-landscape",
+    );
+  };
+  syncAvailablePlayersSheetLayout();
+
+  const widgetPanel = availablePlayersPanel.querySelector(".mha-media-page-widget-panel");
+  const shellCloseButton = widgetPanel?.querySelector(".mha-media-page-widget-panel-close");
+  shellCloseButton?.remove();
+  const shellHeader = widgetPanel?.querySelector(".mha-media-page-widget-panel-header");
+  const shellTitle = shellHeader?.querySelector("h2");
+  if (shellTitle) {
+    shellTitle.className = "mha-media-page-widget-panel-title";
+  }
+  const shellActions = shellHeader?.querySelector(".mha-media-page-widget-panel-actions")
+    || document.createElement("div");
+  shellActions.className = "mha-media-page-widget-panel-actions";
+  if (!shellActions.parentNode) shellHeader?.append(shellActions);
+  shellActions.replaceChildren(settingsButton, editButton, closeEditButton);
+  shellHeader?.append(shellTitle, shellActions);
+  widgetPanel?.append(widgetPanelBody);
+
+  layout.append(nowPlaying, availablePlayersPanel);
   root.append(background, layout);
   root.__mhaGrid = null;
   root.__mhaPlayerList = playerList;
-  const mobileScrollCoordinator = createMobileMediaPageScrollCoordinator(root, playerList);
+  const mobileScrollCoordinator = createMobileMediaPageScrollCoordinator(root, playerList, {
+    onPaneChange: (pane) => {
+      syncAvailablePlayersSheetLayout();
+      if (pane === "now-playing" || pane === "disabled") {
+        availablePlayersSheetCloseRequested = false;
+      }
+      const shouldOpen = !availablePlayersSheetCloseRequested
+        && (!isMobileMediaPage(root) || pane === "available-players");
+      syncPanelVisibility(availablePlayersPanel, shouldOpen, {
+        transitionMs: SETTINGS_PANEL_VISIBILITY_TRANSITION_MS,
+        closeStateDatasetKey: "panelCloseState",
+      });
+    },
+  });
   root.__mhaSyncMobileDockState = mobileScrollCoordinator.syncDockState;
 
   let progressTimer = 0;

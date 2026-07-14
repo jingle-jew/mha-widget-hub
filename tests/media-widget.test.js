@@ -15,7 +15,6 @@ import {
   MEDIA_PAGE_INACTIVE_FALLBACK_MS,
   resolveMediaPageNowPlayingId,
   resolveMobileMediaPagePane,
-  shouldReturnToMobileMediaNowPlaying,
   swapOrderedIds,
 } from "../src/pages/media-page.js";
 
@@ -194,45 +193,6 @@ test("mobile media page exposes now playing and available players as separate sc
   assert.equal(resolveMobileMediaPagePane(0), "now-playing");
   assert.equal(resolveMobileMediaPagePane(4), "now-playing");
   assert.equal(resolveMobileMediaPagePane(5), "available-players");
-});
-
-test("mobile media page returns to now playing only after a new upward gesture at the list top", () => {
-  assert.equal(
-    shouldReturnToMobileMediaNowPlaying({
-      playerListScrollTop: 0,
-      gestureStartedAtTop: true,
-      returnGestureArmed: true,
-      gestureDeltaY: -24,
-    }),
-    true,
-  );
-  assert.equal(
-    shouldReturnToMobileMediaNowPlaying({
-      playerListScrollTop: 0,
-      gestureStartedAtTop: false,
-      returnGestureArmed: true,
-      gestureDeltaY: -24,
-    }),
-    false,
-  );
-  assert.equal(
-    shouldReturnToMobileMediaNowPlaying({
-      playerListScrollTop: 16,
-      gestureStartedAtTop: true,
-      returnGestureArmed: true,
-      gestureDeltaY: -24,
-    }),
-    false,
-  );
-  assert.equal(
-    shouldReturnToMobileMediaNowPlaying({
-      playerListScrollTop: 0,
-      gestureStartedAtTop: true,
-      returnGestureArmed: false,
-      gestureDeltaY: -24,
-    }),
-    false,
-  );
 });
 
 test("media page keeps a playing selection and falls back from inactive selections", () => {
