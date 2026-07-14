@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import {
+  buildMediaWidgetData,
   createMediaTransitionCache,
   createMediaPagePlayerWidget,
   MEDIA_WIDGET_CONTENT_RENDERER,
@@ -19,6 +20,36 @@ import {
 } from "../src/pages/media-page.js";
 
 const REPO_ROOT = process.cwd();
+
+test("media volume falls back to zero only when the player is off", () => {
+  const buildForState = (state, attributes = {}) => buildMediaWidgetData(
+    { entityId: "media_player.salon" },
+    {
+      states: {
+        "media_player.salon": {
+          entity_id: "media_player.salon",
+          state,
+          attributes: {
+            friendly_name: "Salon",
+            volume_level: 0.41,
+            ...attributes,
+          },
+        },
+      },
+    },
+  );
+
+  for (const state of ["playing", "paused", "idle", "stopped", "unavailable", "unknown"]) {
+    const data = buildForState(state);
+    assert.equal(data.volumePercent, 41, `${state} should preserve the HA volume`);
+    assert.equal(data.volumeLabel, "41%", `${state} should preserve the HA volume label`);
+  }
+
+  const off = buildForState("off", { is_volume_muted: true });
+  assert.equal(off.volumePercent, 0);
+  assert.equal(off.volumeLabel, "0%");
+  assert.equal(off.muted, false);
+});
 
 function mediaData(overrides = {}) {
   return {

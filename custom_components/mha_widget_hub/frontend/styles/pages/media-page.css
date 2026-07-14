@@ -690,6 +690,7 @@
 }
 
 .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget .mha-media-widget-source-badge {
+  display: inline-flex;
   max-inline-size: 100%;
   overflow: hidden;
   color: var(--mha-text-secondary, var(--mha-muted));
@@ -1313,6 +1314,15 @@
 :host .mha-media-page[data-artwork-tone="light"] .mha-media-widget-artist,
 :host .mha-media-page .mha-media-page-player-widget[data-artwork-tone="light"] .mha-media-widget-title,
 :host .mha-media-page .mha-media-page-player-widget[data-artwork-tone="light"] .mha-media-widget-artist {
+  color: #111;
+}
+
+/* Available-player metadata sits on the card surface, not on its artwork.
+ * Keep iOS page styles readable regardless of the thumbnail tone. */
+.mha-media-page[data-visual-style="liquid-glass"] .mha-media-page-player-list .mha-media-page-player-widget .mha-media-widget-title,
+.mha-media-page[data-visual-style="liquid-glass"] .mha-media-page-player-list .mha-media-page-player-widget .mha-media-widget-artist,
+.mha-media-page[data-visual-style="frosted-glass"] .mha-media-page-player-list .mha-media-page-player-widget .mha-media-widget-title,
+.mha-media-page[data-visual-style="frosted-glass"] .mha-media-page-player-list .mha-media-page-player-widget .mha-media-widget-artist {
   color: #111;
 }
 

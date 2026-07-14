@@ -116,7 +116,8 @@ export function buildMediaWidgetData(widget = {}, hass, cache = null, now = getM
   const attributes = entity?.attributes || {};
   const model = buildMediaDisplayModel(entity, widget, previewData);
   const state = model.state;
-  const volume = isMediaPlayerInactiveState(state)
+  const poweredOff = state === "off";
+  const volume = poweredOff
     ? 0
     : attributes.volume_level ?? widget.volume ?? previewData.volume;
   const volumeNumber = Number(volume);
@@ -124,7 +125,7 @@ export function buildMediaWidgetData(widget = {}, hass, cache = null, now = getM
   const volumePercent = hasVolume
     ? Math.max(0, Math.min(100, Math.round(volumeNumber * 100)))
     : 0;
-  const muted = attributes.is_volume_muted === true;
+  const muted = !poweredOff && attributes.is_volume_muted === true;
   const volumeLabel = muted ? t("widgets.mediaControls.mute", "Mute") : hasVolume ? `${volumePercent}%` : "Vol";
 
   const data = {
