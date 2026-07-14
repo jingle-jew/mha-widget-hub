@@ -17,9 +17,9 @@
     (var(--mha-media-page-grid-cell-size) * 2)
     + var(--mha-grid-gap, 0px)
   );
-  --mha-media-page-surface: color-mix(in srgb, var(--mha-surface-panel, var(--mha-widget-surface)) 92%, transparent);
-  --mha-media-page-panel-surface: color-mix(in srgb, var(--mha-media-page-surface) 94%, transparent);
-  --mha-media-page-panel-border: color-mix(in srgb, var(--mha-widget-border) 82%, transparent);
+  --mha-media-page-surface: var(--mha-surface-panel, var(--mha-widget-surface));
+  --mha-media-page-panel-surface: var(--mha-panel-surface, var(--mha-media-page-surface));
+  --mha-media-page-panel-border: var(--mha-panel-border, var(--mha-border-primary, var(--mha-widget-border)));
   --mha-media-page-on-surface: var(--mha-text-primary, var(--mha-text));
   --mha-media-page-safe-inline-start: clamp(1.1rem, 2.8cqi, 2.1rem);
   --mha-media-page-safe-inline-end: clamp(1.1rem, 2.8cqi, 2.1rem);
@@ -70,22 +70,24 @@
   --mha-media-toggle-control-size: clamp(3rem, 5.2cqi, 4rem);
   --mha-media-toggle-font-size: clamp(.84rem, 1.8cqi, 1rem);
   --mha-media-artwork-radius: var(--mha-media-page-artwork-radius);
-  --mha-media-artwork-bg: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--mha-accent) 64%, var(--mha-surface-secondary) 36%),
-    color-mix(in srgb, var(--mha-accent) 28%, var(--mha-surface-primary) 72%)
-  );
+  --mha-media-artwork-bg:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--mha-accent) 24%, transparent),
+      color-mix(in srgb, var(--mha-accent) 8%, transparent)
+    ),
+    var(--mha-surface-secondary, var(--mha-control-surface, var(--mha-widget-surface)));
   --mha-media-artwork-border: color-mix(in srgb, var(--mha-text-primary) 14%, transparent);
-  --mha-media-artwork-shadow: 0 18px 40px rgba(0,0,0,.16);
-  --mha-media-control-surface: color-mix(in srgb, var(--mha-text-primary) 10%, transparent);
-  --mha-media-control-border: transparent;
-  --mha-media-control-shadow: none;
+  --mha-media-artwork-shadow: var(--mha-shadow-primary, none);
+  --mha-media-control-surface: var(--mha-control-surface, var(--mha-surface-secondary));
+  --mha-media-control-border: var(--mha-control-border, var(--mha-border-secondary, transparent));
+  --mha-media-control-shadow: var(--mha-control-shadow, none);
   --mha-media-control-active-surface: var(--mha-accent);
   --mha-media-control-active-color: var(--mha-accent-contrast, #fff);
-  --mha-media-chip-surface: color-mix(in srgb, var(--mha-text-primary) 8%, transparent);
-  --mha-media-chip-border: transparent;
-  --mha-media-chip-shadow: none;
-  --mha-media-progress-track: color-mix(in srgb, var(--mha-media-page-on-surface) 14%, transparent);
+  --mha-media-chip-surface: var(--mha-control-surface, var(--mha-surface-secondary));
+  --mha-media-chip-border: var(--mha-control-border, var(--mha-border-secondary, transparent));
+  --mha-media-chip-shadow: var(--mha-control-shadow, none);
+  --mha-media-progress-track: var(--mha-border-secondary, var(--mha-widget-border));
   --mha-media-progress-fill: var(--mha-accent);
   --mha-media-progress-height: var(--mha-media-page-progress-height);
   --mha-media-artist-color: var(--mha-text-secondary, var(--mha-muted));
@@ -101,8 +103,6 @@
 }
 
 .mha-media-page[data-artwork-tone="dark"] {
-  --mha-media-page-on-surface: #fff;
-  --mha-media-artist-color: rgba(255, 255, 255, .76);
   --mha-media-artwork-foreground: #fff;
   --mha-media-artwork-muted: rgba(255, 255, 255, .76);
   --mha-media-artwork-control-surface: rgba(255, 255, 255, .16);
@@ -111,8 +111,6 @@
 }
 
 .mha-media-page[data-artwork-tone="light"] {
-  --mha-media-page-on-surface: #111;
-  --mha-media-artist-color: rgba(17, 17, 17, .72);
   --mha-media-artwork-foreground: #111;
   --mha-media-artwork-muted: rgba(17, 17, 17, .72);
   --mha-media-artwork-control-surface: rgba(17, 17, 17, .12);
@@ -242,9 +240,9 @@
   display: grid;
   place-items: center;
   border-radius: 999px;
-  border: 1px solid var(--mha-media-page-panel-border);
-  background: color-mix(in srgb, var(--mha-media-page-surface) 94%, transparent);
-  color: inherit;
+  border: 1px solid var(--mha-control-border, var(--mha-media-page-panel-border));
+  background: var(--mha-control-surface, var(--mha-surface-secondary));
+  color: var(--mha-text-primary, var(--mha-text));
   cursor: pointer;
 }
 
@@ -341,7 +339,7 @@
   font-weight: 760;
   letter-spacing: .08em;
   text-transform: uppercase;
-  color: var(--mha-media-artwork-muted, var(--mha-text-secondary, var(--mha-muted)));
+  color: var(--mha-text-secondary, var(--mha-muted));
 }
 
 .mha-media-page-widget-panel-actions {
@@ -424,7 +422,15 @@
   );
 }
 
-.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player {
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player[data-media-page-player="true"] {
+  --mha-media-page-player-card-surface: var(
+    --mha-widget-shell-surface,
+    var(--mha-surface-primary, var(--mha-widget-surface))
+  );
+  --mha-media-page-player-card-border: var(
+    --mha-widget-shell-border,
+    var(--mha-border-primary, var(--mha-widget-border))
+  );
   --mha-widget-content-inset: clamp(.5rem, 1.2cqi, .72rem);
   --mha-widget-inner-padding: var(--mha-widget-content-inset);
   --mha-widget-shell-filter: none;
@@ -442,8 +448,8 @@
   block-size: 7.5rem;
   min-block-size: 0;
   border-radius: clamp(.85rem, 1.8cqi, 1.15rem);
-  background: color-mix(in srgb, var(--mha-widget-surface) 78%, transparent);
-  border-color: color-mix(in srgb, var(--mha-widget-border) 72%, transparent);
+  background: var(--mha-media-page-player-card-surface);
+  border-color: var(--mha-media-page-player-card-border);
   transition:
     background-color 180ms ease,
     border-color 180ms ease,
@@ -451,9 +457,14 @@
     transform 180ms ease;
 }
 
-.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player[data-selected="true"] {
-  background: color-mix(in srgb, var(--mha-accent) 16%, var(--mha-widget-surface));
-  border-color: color-mix(in srgb, var(--mha-accent) 55%, var(--mha-widget-border));
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player[data-media-page-player="true"][data-selected="true"] {
+  background:
+    linear-gradient(
+      color-mix(in srgb, var(--mha-accent) 16%, transparent),
+      color-mix(in srgb, var(--mha-accent) 16%, transparent)
+    ),
+    var(--mha-media-page-player-card-surface);
+  border-color: color-mix(in srgb, var(--mha-accent) 55%, var(--mha-media-page-player-card-border));
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--mha-accent) 18%, transparent);
 }
 
@@ -567,7 +578,10 @@
  * standard 4x2 internal layout: Safari otherwise applies the generic absolute
  * volume toggle and crops the compact card. */
 .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player > .mha-media-widget.mha-media-page-player-widget {
-  --mha-media-padding: .72rem;
+  --mha-media-padding: var(--mha-widget-content-inset);
+  --mha-media-page-player-artwork-size: calc(
+    100cqb - var(--mha-media-padding) - var(--mha-media-padding)
+  );
   --mha-media-gap: .72rem;
   --mha-media-control-gap: .4rem;
   --mha-media-toggle-control-size: 2.8rem;
@@ -583,11 +597,25 @@
   block-size: 100%;
   box-sizing: border-box;
   display: grid;
-  grid-template-columns: clamp(3.55rem, 12cqi, 4.45rem) minmax(0, 1fr) max-content;
+  grid-template-columns: var(--mha-media-page-player-artwork-size) minmax(0, 1fr) max-content;
   grid-template-rows: minmax(0, 1fr);
   align-items: center;
   gap: clamp(.65rem, 1.5cqi, .9rem);
   overflow: hidden;
+}
+
+/* Available-player artwork is a thumbnail, not a background. Its sampled tone
+ * must never replace the theme's surface, text, or control color contract. */
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget[data-media-page-player="true"] {
+  color: var(--mha-text-primary, var(--mha-text));
+  --mha-media-artist-color: var(--mha-text-secondary, var(--mha-muted));
+  --mha-media-artwork-foreground: var(--mha-text-primary, var(--mha-text));
+  --mha-media-artwork-muted: var(--mha-text-secondary, var(--mha-muted));
+  --mha-media-artwork-control-surface: var(--mha-control-surface, var(--mha-surface-secondary));
+  --mha-media-artwork-control-active-surface: var(--mha-accent);
+  --mha-media-artwork-control-active-color: var(--mha-accent-contrast);
+  --mha-media-progress-track: var(--mha-border-secondary, var(--mha-widget-border));
+  --mha-media-progress-fill: var(--mha-accent);
 }
 
 .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-info {
@@ -604,7 +632,7 @@
   min-inline-size: 0;
   align-self: start;
   justify-self: start;
-  margin-block-start: .42rem;
+  margin-block-start: 0;
   display: flex;
   align-items: center;
   gap: clamp(.35rem, .8cqi, .56rem);
@@ -624,8 +652,11 @@
   grid-column: 2;
   grid-row: 1;
   min-inline-size: 0;
-  align-self: center;
+  inline-size: 100%;
+  align-self: end;
+  justify-self: stretch;
   padding-inline: 0;
+  text-align: start;
 }
 
 .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-info .mha-media-page-player-meta-header .mha-media-page-player-name {
@@ -659,6 +690,10 @@
   gap: 0;
 }
 
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget[data-media-controls-mode="volume-only"] > .mha-media-widget-controls-shell {
+  align-self: end;
+}
+
 .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget > .mha-media-widget-controls-shell .mha-media-widget-control-toggle {
   position: static;
   inset: auto;
@@ -671,88 +706,65 @@
   font-size: .78rem;
 }
 
-.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget > .mha-media-widget-artwork {
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget[data-media-page-player="true"] > .mha-media-widget-artwork {
   position: relative;
   inset: auto;
   z-index: 1;
   grid-column: 1;
   grid-row: 1;
-  inline-size: clamp(3.55rem, 12cqi, 4.45rem);
-  block-size: clamp(3.55rem, 12cqi, 4.45rem);
+  inline-size: 100%;
+  block-size: 100%;
+  min-inline-size: 0;
   aspect-ratio: 1;
-  align-self: center;
+  align-self: stretch;
   justify-self: start;
-  max-inline-size: 100%;
-  max-block-size: 100%;
+  max-inline-size: none;
+  max-block-size: none;
+  box-sizing: border-box;
   border-radius: var(--mha-media-artwork-radius);
   border: 1px solid var(--mha-media-artwork-border);
   box-shadow: var(--mha-media-artwork-shadow);
 }
 
-.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget .mha-media-widget-source-badge {
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget[data-media-page-player="true"] .mha-media-widget-source-badge {
   display: inline-flex;
   max-inline-size: 100%;
   overflow: hidden;
   color: var(--mha-text-secondary, var(--mha-muted));
-  background: color-mix(in srgb, var(--mha-text-primary) 9%, transparent);
-  border-color: color-mix(in srgb, var(--mha-text-primary) 10%, transparent);
+  background: var(--mha-control-surface, var(--mha-surface-secondary));
+  border-color: var(--mha-control-border, var(--mha-border-secondary, transparent));
 }
 
-.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget .mha-media-widget-title {
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget[data-media-page-player="true"] .mha-media-widget-title {
   color: var(--mha-text-primary);
   font-size: clamp(.86rem, 1.7cqi, 1.05rem);
 }
 
-.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget .mha-media-widget-artist {
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget[data-media-page-player="true"] .mha-media-widget-artist {
   display: block;
   color: var(--mha-text-secondary, var(--mha-muted));
   font-size: clamp(.7rem, 1.35cqi, .82rem);
 }
 
-/* Artwork-driven contrast. The image is sampled once it has loaded and the
- * result is exposed as data-artwork-tone on the owning media surface. */
-:host .mha-media-page[data-artwork-tone="dark"] .mha-media-widget-title,
-:host .mha-media-page[data-artwork-tone="dark"] .mha-media-widget-artist {
-  color: #fff;
-}
-
-:host .mha-media-page[data-artwork-tone="light"] .mha-media-widget-title,
-:host .mha-media-page[data-artwork-tone="light"] .mha-media-widget-artist {
-  color: #111;
-}
-
-:host .mha-media-page[data-artwork-tone] .mha-media-page-widget-panel-title,
-:host .mha-media-page[data-artwork-tone] .mha-media-widget-control,
-:host .mha-media-page[data-artwork-tone] .mha-media-widget-progress-fill {
-  color: var(--mha-media-artwork-foreground);
-}
-
-:host .mha-media-page[data-artwork-tone] .mha-media-widget-control {
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget[data-media-page-player="true"] .mha-media-widget-control {
+  color: var(--mha-text-primary, var(--mha-text));
   background: var(--mha-media-artwork-control-surface);
+  border-color: var(--mha-control-border, var(--mha-border-secondary, transparent));
+  box-shadow: var(--mha-control-shadow, none);
 }
 
-:host .mha-media-page[data-artwork-tone] .mha-media-widget-control[data-primary="true"],
-:host .mha-media-page[data-artwork-tone] .mha-media-widget-control[data-primary] {
-  background: var(--mha-media-artwork-control-active-surface);
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget[data-media-page-player="true"] .mha-media-widget-control[data-primary="true"],
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget[data-media-page-player="true"] .mha-media-widget-control[data-primary] {
   color: var(--mha-media-artwork-control-active-color);
+  background: var(--mha-media-artwork-control-active-surface);
 }
 
-:host .mha-media-page[data-artwork-tone] .mha-media-widget-progress {
-  background: var(--mha-media-artwork-control-surface);
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget[data-media-page-player="true"] .mha-media-widget-progress {
+  background: var(--mha-media-progress-track);
 }
 
-:host .mha-media-page[data-artwork-tone] .mha-media-widget-progress-fill {
-  background: var(--mha-media-artwork-foreground);
-}
-
-:host .mha-media-page .mha-media-page-player-widget[data-artwork-tone="dark"] .mha-media-widget-title,
-:host .mha-media-page .mha-media-page-player-widget[data-artwork-tone="dark"] .mha-media-widget-artist {
-  color: #fff;
-}
-
-:host .mha-media-page .mha-media-page-player-widget[data-artwork-tone="light"] .mha-media-widget-title,
-:host .mha-media-page .mha-media-page-player-widget[data-artwork-tone="light"] .mha-media-widget-artist {
-  color: #111;
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget[data-media-page-player="true"] .mha-media-widget-progress-fill {
+  background: var(--mha-media-progress-fill);
 }
 
 /* Available-player cards are selectors, so they do not need a second
@@ -819,89 +831,8 @@
   justify-self: end;
 }
 
-:host([data-theme-style="oneui"]) .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player {
-  /* The page cards are a dedicated compact surface. They must not inherit
-   * OneUI's dark full-bleed media-card treatment. */
-  background: color-mix(in srgb, rgba(255,255,255,.84) 90%, transparent);
-  border-color: color-mix(in srgb, rgba(255,255,255,.72) 76%, transparent);
-}
-
-:host([data-theme-style="oneui"]) .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget {
-  color: rgba(22,24,30,.94);
-  --mha-media-artist-color: rgba(22,24,30,.68);
-  --mha-media-artwork-bg: linear-gradient(
-    145deg,
-    color-mix(in srgb, var(--mha-accent) 54%, rgba(255,255,255,.42)),
-    color-mix(in srgb, var(--mha-accent) 24%, rgba(255,255,255,.18))
-  );
-  --mha-media-artwork-border: rgba(255,255,255,.48);
-  --mha-media-artwork-shadow: inset 0 1px 0 rgba(255,255,255,.24), 0 6px 18px rgba(0,0,0,.08);
-  --mha-media-control-surface: rgba(255,255,255,.38);
-  --mha-media-control-border: rgba(255,255,255,.48);
-  --mha-media-control-shadow: inset 0 1px 0 rgba(255,255,255,.22), 0 4px 12px rgba(0,0,0,.06);
-  --mha-media-progress-track: rgba(22,24,30,.12);
-  --mha-media-progress-fill: color-mix(in srgb, var(--mha-accent) 76%, rgba(255,255,255,.18));
-  --mha-media-text-shadow: none;
-}
-
-:host([data-theme-style="oneui"]) .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget .mha-media-widget-artwork::after {
+.mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget[data-media-page-player="true"] .mha-media-widget-artwork::after {
   display: none;
-}
-
-/* The generic OneUI 4x2 selector has the same specificity as the original
- * compact rule and is loaded later. Add the page-player marker so OneUI
- * cannot turn this square thumbnail back into a full-card artwork layer. */
-:host([data-theme-style="oneui"]) .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player > .mha-media-widget.mha-media-page-player-widget[data-media-page-player="true"] > .mha-media-widget-artwork {
-  position: relative;
-  inset: auto;
-  inline-size: clamp(3.55rem, 12cqi, 4.45rem);
-  block-size: clamp(3.55rem, 12cqi, 4.45rem);
-  max-inline-size: 100%;
-  max-block-size: 100%;
-  aspect-ratio: 1;
-  border-radius: var(--mha-media-artwork-radius);
-  border: 1px solid var(--mha-media-artwork-border);
-  box-shadow: var(--mha-media-artwork-shadow);
-  background: var(--mha-media-artwork-bg);
-}
-
-:host([data-theme-style="oneui"]) .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget .mha-media-widget-title {
-  color: rgba(22,24,30,.96);
-}
-
-:host([data-theme-style="oneui"]) .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget .mha-media-widget-artist,
-:host([data-theme-style="oneui"]) .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget .mha-media-widget-source-badge {
-  color: rgba(22,24,30,.68);
-}
-
-:host([data-theme-style="oneui"]) .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget .mha-media-widget-source-badge {
-  background: rgba(22,24,30,.08);
-  border-color: rgba(22,24,30,.08);
-}
-
-:host([data-theme-style="oneui"]) .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget .mha-media-widget-progress {
-  background: rgba(22,24,30,.12);
-}
-
-:host([data-theme-style="oneui"]) .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget .mha-media-widget-progress-fill {
-  background: var(--mha-media-progress-fill);
-}
-
-:host([data-theme-style="oneui"]) .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget .mha-media-widget-control {
-  color: rgba(22,24,30,.9);
-  background: rgba(255,255,255,.38);
-  border-color: rgba(255,255,255,.48);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.22), 0 4px 12px rgba(0,0,0,.06);
-}
-
-:host([data-theme-style="oneui"]) .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget .mha-media-widget-control-toggle {
-  color: rgba(22,24,30,.9);
-  background: rgba(255,255,255,.48);
-}
-
-:host([data-theme-style="oneui"]) .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player[data-selected="true"] {
-  background: color-mix(in srgb, var(--mha-accent) 13%, rgba(255,255,255,.88));
-  border-color: color-mix(in srgb, var(--mha-accent) 48%, rgba(255,255,255,.72));
 }
 
 :host(.is-editing) .mha-media-page-player-list > .mha-media-page-auto-player {
@@ -942,13 +873,6 @@
 
   :host([data-layout="mobile"]:not([data-layout-variant="mobile-landscape"]))
   .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player
-  > .mha-media-page-player-widget {
-    grid-template-rows: repeat(2, minmax(0, 1fr));
-    row-gap: .12rem;
-  }
-
-  :host([data-layout="mobile"]:not([data-layout-variant="mobile-landscape"]))
-  .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player
   .mha-media-page-player-widget > .mha-media-widget-artwork,
   :host([data-layout="mobile"]:not([data-layout-variant="mobile-landscape"]))
   .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player
@@ -960,7 +884,7 @@
   .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player
   .mha-media-page-player-meta-header {
     grid-row: 1;
-    align-self: end;
+    align-self: start;
     margin-block-start: 0;
   }
 
@@ -976,11 +900,9 @@
   :host([data-layout="mobile"]:not([data-layout-variant="mobile-landscape"]))
   .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player
   .mha-media-page-player-info .mha-media-widget-text {
-    grid-row: 2;
-    align-self: start;
+    grid-row: 1;
+    align-self: end;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
     line-height: 1.08;
   }
 
@@ -990,23 +912,17 @@
   :host([data-layout="mobile"]:not([data-layout-variant="mobile-landscape"]))
   .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player
   .mha-media-page-player-info .mha-media-widget-artist:not([hidden]) {
-    display: inline;
-    overflow: visible;
+    display: block;
+    overflow: hidden;
     font-size: var(--mha-media-page-player-mobile-meta-size);
     line-height: inherit;
-    text-overflow: clip;
+    text-overflow: ellipsis;
   }
 
   :host([data-layout="mobile"]:not([data-layout-variant="mobile-landscape"]))
   .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player
   .mha-media-page-player-info .mha-media-widget-artist:not([hidden]) {
-    margin-block-start: 0;
-  }
-
-  :host([data-layout="mobile"]:not([data-layout-variant="mobile-landscape"]))
-  .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player
-  .mha-media-page-player-info .mha-media-widget-artist:not([hidden]):not(:empty)::before {
-    content: " · ";
+    margin-block-start: .12rem;
   }
 
   .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget > .mha-media-widget-controls-shell .mha-media-widget-control-toggle {
@@ -1021,50 +937,6 @@
 .mha-media-page[data-visual-style="frosted-glass"] {
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
-}
-
-.mha-media-page[data-visual-style="liquid-glass"] {
-  --mha-media-page-surface: color-mix(in srgb, rgba(255,255,255,.18) 88%, transparent);
-}
-
-.mha-media-page[data-visual-style="frosted-glass"] {
-  --mha-media-page-surface: color-mix(in srgb, rgba(255,255,255,.12) 92%, transparent);
-}
-
-.mha-media-page[data-visual-style="oneui"] {
-  --mha-media-page-panel-surface:
-    linear-gradient(
-      160deg,
-      color-mix(in srgb, var(--mha-accent) 30%, var(--mha-oneui-panel-surface, var(--mha-media-page-surface))),
-      color-mix(in srgb, var(--mha-accent) 16%, rgba(18,18,18,.88))
-    );
-  --mha-media-page-panel-border: color-mix(in srgb, var(--mha-accent) 24%, rgba(255,255,255,.14));
-}
-
-.mha-media-page[data-visual-style="oneui"] .mha-media-widget-progress-track {
-  background: color-mix(in srgb, rgba(255,255,255,.24) 82%, transparent);
-}
-
-.mha-media-page[data-visual-style="oneui"] .mha-media-widget-progress-fill {
-  background: rgba(255,255,255,.96);
-}
-
-.mha-media-page[data-visual-style="oneui"] .mha-media-widget-control {
-  background: color-mix(in srgb, rgba(255,255,255,.16) 88%, transparent);
-}
-
-.mha-media-page[data-visual-style="oneui"] .mha-media-widget-control[data-primary="true"] {
-  background: rgba(255,255,255,.98);
-  color: rgba(18,18,18,.96);
-}
-
-.mha-media-page[data-visual-style="material-you"] {
-  --mha-media-page-panel-surface: color-mix(in srgb, var(--mha-media-page-surface) 96%, transparent);
-}
-
-.mha-media-page[data-visual-style="alexa"] {
-  --mha-media-page-surface: color-mix(in srgb, rgba(9,18,28,.88) 92%, transparent);
-  --mha-media-page-panel-surface: color-mix(in srgb, rgba(9,18,28,.92) 94%, transparent);
 }
 
 @media (max-width: 767px) {
@@ -1302,48 +1174,33 @@
   justify-content: center;
 }
 
-/* Keep artwork contrast overrides after theme-specific media rules. */
-:host .mha-media-page[data-artwork-tone="dark"] .mha-media-widget-title,
-:host .mha-media-page[data-artwork-tone="dark"] .mha-media-widget-artist,
-:host .mha-media-page .mha-media-page-player-widget[data-artwork-tone="dark"] .mha-media-widget-title,
-:host .mha-media-page .mha-media-page-player-widget[data-artwork-tone="dark"] .mha-media-widget-artist {
-  color: #fff;
+/* Only content drawn directly over the Now Playing wallpaper follows the
+ * sampled artwork tone. Cards and panels keep their theme token colors. */
+:host .mha-media-page[data-artwork-tone] .mha-media-page-now-playing .mha-media-widget-title {
+  color: var(--mha-media-artwork-foreground);
 }
 
-:host .mha-media-page[data-artwork-tone="light"] .mha-media-widget-title,
-:host .mha-media-page[data-artwork-tone="light"] .mha-media-widget-artist,
-:host .mha-media-page .mha-media-page-player-widget[data-artwork-tone="light"] .mha-media-widget-title,
-:host .mha-media-page .mha-media-page-player-widget[data-artwork-tone="light"] .mha-media-widget-artist {
-  color: #111;
+:host .mha-media-page[data-artwork-tone] .mha-media-page-now-playing .mha-media-widget-artist,
+:host .mha-media-page[data-artwork-tone] .mha-media-page-now-playing .mha-media-widget-progress-labels {
+  color: var(--mha-media-artwork-muted);
 }
 
-/* Available-player metadata sits on the card surface, not on its artwork.
- * Keep light page styles readable regardless of the thumbnail tone. */
-.mha-media-page[data-visual-style="liquid-glass"] .mha-media-page-player-list .mha-media-page-player-widget .mha-media-widget-title,
-.mha-media-page[data-visual-style="liquid-glass"] .mha-media-page-player-list .mha-media-page-player-widget .mha-media-widget-artist,
-.mha-media-page[data-visual-style="frosted-glass"] .mha-media-page-player-list .mha-media-page-player-widget .mha-media-widget-title,
-.mha-media-page[data-visual-style="frosted-glass"] .mha-media-page-player-list .mha-media-page-player-widget .mha-media-widget-artist,
-.mha-media-page[data-visual-style="material-you"] .mha-media-page-player-list .mha-media-page-player-widget .mha-media-widget-title,
-.mha-media-page[data-visual-style="material-you"] .mha-media-page-player-list .mha-media-page-player-widget .mha-media-widget-artist {
-  color: #111;
-}
-
-:host .mha-media-page[data-artwork-tone] .mha-media-widget-control {
+:host .mha-media-page[data-artwork-tone] .mha-media-page-now-playing .mha-media-widget-control {
   background: var(--mha-media-artwork-control-surface);
   color: var(--mha-media-artwork-foreground);
 }
 
-:host .mha-media-page[data-artwork-tone] .mha-media-widget-control[data-primary="true"],
-:host .mha-media-page[data-artwork-tone] .mha-media-widget-control[data-primary] {
+:host .mha-media-page[data-artwork-tone] .mha-media-page-now-playing .mha-media-widget-control[data-primary="true"],
+:host .mha-media-page[data-artwork-tone] .mha-media-page-now-playing .mha-media-widget-control[data-primary] {
   background: var(--mha-media-artwork-control-active-surface);
   color: var(--mha-media-artwork-control-active-color);
 }
 
-:host .mha-media-page[data-artwork-tone] .mha-media-widget-progress {
+:host .mha-media-page[data-artwork-tone] .mha-media-page-now-playing .mha-media-widget-progress {
   background: var(--mha-media-artwork-control-surface);
 }
 
-:host .mha-media-page[data-artwork-tone] .mha-media-widget-progress-fill {
+:host .mha-media-page[data-artwork-tone] .mha-media-page-now-playing .mha-media-widget-progress-fill {
   background: var(--mha-media-artwork-foreground);
 }
 

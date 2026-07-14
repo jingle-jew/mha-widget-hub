@@ -448,7 +448,7 @@ export function createMediaPage(page = {}, {
     onClick: onCloseEditMode,
   });
   settingsButton.className = "mha-media-page-icon-button mha-media-page-widget-panel-settings";
-  widgetPanelActions.append(editButton, settingsButton, closeEditButton);
+  widgetPanelActions.append(settingsButton, editButton, closeEditButton);
 
   const widgetPanelBody = document.createElement("div");
   widgetPanelBody.className = "mha-media-page-widget-panel-body";

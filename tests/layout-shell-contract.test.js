@@ -442,20 +442,46 @@ test("media page mobile layout scrolls as snapped sheets in portrait and landsca
   );
   assert.match(
     source,
-    /:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\)[\s\S]*> \.mha-media-page-player-widget\s*\{[\s\S]*grid-template-rows:\s*repeat\(2, minmax\(0, 1fr\)\);/,
+    /> \.mha-media-widget\.mha-media-page-player-widget\s*\{[\s\S]*--mha-media-padding:\s*var\(--mha-widget-content-inset\);[\s\S]*--mha-media-page-player-artwork-size:\s*calc\([\s\S]*100cqb[\s\S]*var\(--mha-media-padding\)[\s\S]*\);[\s\S]*grid-template-columns:\s*var\(--mha-media-page-player-artwork-size\) minmax\(0, 1fr\) max-content;/,
   );
   assert.match(
     source,
-    /:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\)[\s\S]*\.mha-media-page-player-info \.mha-media-widget-text\s*\{[\s\S]*grid-row:\s*2;[\s\S]*text-overflow:\s*ellipsis;[\s\S]*white-space:\s*nowrap;/,
+    /\.mha-media-page-player-widget\[data-media-page-player="true"\] > \.mha-media-widget-artwork\s*\{[\s\S]*inline-size:\s*100%;[\s\S]*block-size:\s*100%;[\s\S]*min-inline-size:\s*0;[\s\S]*aspect-ratio:\s*1;[\s\S]*align-self:\s*stretch;/,
   );
   assert.match(
     source,
-    /\.mha-media-page \.mha-media-page-player-list > \.mha-media-page-auto-player \.mha-media-page-player-widget \.mha-media-widget-source-badge\s*\{[\s\S]*display:\s*inline-flex;/,
+    /\.mha-media-page-player-info \.mha-media-widget-text\s*\{[\s\S]*align-self:\s*end;[\s\S]*justify-self:\s*stretch;[\s\S]*text-align:\s*start;/,
   );
   assert.match(
     source,
-    /\.mha-media-page\[data-visual-style="liquid-glass"\][\s\S]*\.mha-media-widget-title,[\s\S]*\.mha-media-page\[data-visual-style="frosted-glass"\][\s\S]*\.mha-media-widget-artist,[\s\S]*\.mha-media-page\[data-visual-style="material-you"\][\s\S]*\.mha-media-widget-artist\s*\{[\s\S]*color:\s*#111;/,
+    /\.mha-media-page-player-widget\[data-media-controls-mode="volume-only"\] > \.mha-media-widget-controls-shell\s*\{[\s\S]*align-self:\s*end;/,
   );
+  assert.match(
+    source,
+    /:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\)[\s\S]*\.mha-media-page-player-info \.mha-media-widget-text\s*\{[\s\S]*grid-row:\s*1;[\s\S]*align-self:\s*end;/,
+  );
+  assert.match(
+    source,
+    /\.mha-media-page \.mha-media-page-player-list > \.mha-media-page-auto-player \.mha-media-page-player-widget\[data-media-page-player="true"\] \.mha-media-widget-source-badge\s*\{[\s\S]*display:\s*inline-flex;[\s\S]*background:\s*var\(--mha-control-surface, var\(--mha-surface-secondary\)\);/,
+  );
+  assert.match(
+    source,
+    /--mha-media-page-surface:\s*var\(--mha-surface-panel, var\(--mha-widget-surface\)\);[\s\S]*--mha-media-page-panel-surface:\s*var\(--mha-panel-surface, var\(--mha-media-page-surface\)\);[\s\S]*--mha-media-page-on-surface:\s*var\(--mha-text-primary, var\(--mha-text\)\);/,
+  );
+  assert.match(
+    source,
+    /\.mha-media-page-player-list > \.mha-media-page-auto-player\[data-media-page-player="true"\]\s*\{[\s\S]*--mha-media-page-player-card-surface:\s*var\([\s\S]*--mha-widget-shell-surface,[\s\S]*--mha-surface-primary[\s\S]*background:\s*var\(--mha-media-page-player-card-surface\);/,
+  );
+  assert.match(
+    source,
+    /\.mha-media-page-player-widget\[data-media-page-player="true"\]\s*\{[\s\S]*color:\s*var\(--mha-text-primary, var\(--mha-text\)\);[\s\S]*--mha-media-artwork-foreground:\s*var\(--mha-text-primary, var\(--mha-text\)\);[\s\S]*--mha-media-artwork-control-surface:\s*var\(--mha-control-surface, var\(--mha-surface-secondary\)\);/,
+  );
+  assert.match(
+    source,
+    /\.mha-media-page\[data-artwork-tone\] \.mha-media-page-now-playing \.mha-media-widget-title\s*\{[\s\S]*color:\s*var\(--mha-media-artwork-foreground\);/,
+  );
+  assert.doesNotMatch(source, /\.mha-media-page-player-widget\[data-artwork-tone=/);
+  assert.doesNotMatch(source, /:host\(\[data-theme-style="oneui"\]\) \.mha-media-page \.mha-media-page-player-list/);
   assert.match(
     source,
     /:host\(\[data-layout-variant="mobile-landscape"\]\[data-media-page-active="true"\]\.is-mobile-floating-controls-hidden\) \.mha-dock\s*\{[\s\S]*opacity:\s*0;[\s\S]*pointer-events:\s*none;/,

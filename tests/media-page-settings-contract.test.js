@@ -6,6 +6,10 @@ const source = readFileSync(
   new URL("../src/pages/media-page-settings.js", import.meta.url),
   "utf8",
 );
+const mediaPageSource = readFileSync(
+  new URL("../src/pages/media-page.js", import.meta.url),
+  "utf8",
+);
 const widgetPlacementSource = readFileSync(
   new URL("../src/widgets/widget-placement-orchestrator.js", import.meta.url),
   "utf8",
@@ -86,5 +90,12 @@ test("media page local widget editing hides redundant global/category controls",
   assert.match(
     widgetManagerCss,
     /:host\(\[data-media-page-active="true"\]\) \.mha-widget-manager-back\s*\{[\s\S]*display:\s*none !important;/,
+  );
+});
+
+test("media page player actions keep settings left of edit and close", () => {
+  assert.match(
+    mediaPageSource,
+    /widgetPanelActions\.append\(settingsButton, editButton, closeEditButton\);/,
   );
 });
