@@ -629,7 +629,7 @@ export function createRenderPipeline(host, options = {}) {
     return { links, pageStage };
   }
 
-  function mountImmediateUi({ layout, pageStage, units, rows }) {
+  function mountActivePagePanel({ layout, pageStage, units, rows }) {
     const activePage = getActivePage(host);
     const positions = host._getActiveWidgetPositions({ create: true });
     let grid = null;
@@ -649,14 +649,8 @@ export function createRenderPipeline(host, options = {}) {
         });
       }
       activeSurface = mediaPanel.content;
-      if (layout === "mobile") {
-        host.shadowRoot.append(createMobileDock(host._getDockProps()));
-        host._scheduleMobileDockOverflowState?.();
-      }
-      appendPrimaryControls();
       host._wireDockAutoHide(activeSurface);
       if (grid) host._wireTouchEditLongPress?.(grid);
-      host._updateStatusDom?.();
       return { positions, grid, activeSurface };
     }
     const gridPanel = createGridPanel(activePage);
@@ -670,15 +664,56 @@ export function createRenderPipeline(host, options = {}) {
       positions,
     });
     activeSurface = grid;
+    host._wireDockAutoHide(activeSurface);
+    host._wireTouchEditLongPress?.(grid);
+    return { positions, grid, activeSurface };
+  }
+
+  function mountImmediateUi({ layout, pageStage, units, rows }) {
+    const mounted = mountActivePagePanel({ layout, pageStage, units, rows });
     if (layout === "mobile") {
       host.shadowRoot.append(createMobileDock(host._getDockProps()));
       host._scheduleMobileDockOverflowState?.();
     }
     appendPrimaryControls();
-    host._wireDockAutoHide(activeSurface);
-    host._wireTouchEditLongPress?.(grid);
     host._updateStatusDom?.();
-    return { positions, grid, activeSurface };
+    return mounted;
+  }
+
+  function replaceActivePagePanel() {
+    const pageStage = host.shadowRoot?.querySelector?.(".mha-page-stage") || null;
+    const currentPanel = pageStage?.querySelector?.(".mha-page-panel") || null;
+    if (!pageStage || !currentPanel) return false;
+
+    const themeState = host._themeController.read();
+    const context = buildRenderContext(themeState);
+    host._renderId = context.renderId;
+    cancelAnimationFrame(host._widgetRenderFrame);
+    host._clearGridScrollListener();
+    host._clearTouchEditLongPress?.();
+    host.dataset.widgetsState = "pending";
+    syncMediaPageBackdropState({ themeStyle: context.themeStyle });
+    applyRenderDatasetsAndRuntimeVars(context);
+
+    destroyDomSubtree(currentPanel);
+    currentPanel.remove();
+
+    const { positions, grid } = mountActivePagePanel({ ...context, pageStage });
+    schedulePrimaryWidgetRender({
+      grid,
+      units: context.units,
+      rows: context.rows,
+      layout: context.layout,
+      positions,
+      renderId: context.renderId,
+    });
+    host._updateStatusDom?.();
+    host._syncMediaPageSettingsDom?.();
+    host._syncEditModeDom?.();
+    host._scheduleSquareUnitSync?.();
+    host._scheduleMobileDockOverflowState?.();
+    host._scheduleIconSymbolRefresh?.();
+    return true;
   }
 
   function schedulePrimaryWidgetRender({
@@ -814,7 +849,9 @@ export function createRenderPipeline(host, options = {}) {
     prepareRenderCycle,
     applyRenderDatasetsAndRuntimeVars,
     mountRenderShell,
+    mountActivePagePanel,
     mountImmediateUi,
+    replaceActivePagePanel,
     schedulePrimaryWidgetRender,
     startProgressiveWidgetRender,
     appendWidgetPlaceholders,

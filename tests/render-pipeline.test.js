@@ -92,6 +92,17 @@ function createMockElement(tag = "div", namespace = null) {
       }
       return null;
     },
+    closest(selector) {
+      if (!selector.startsWith(".")) return null;
+      const className = selector.slice(1);
+      let current = this;
+      while (current) {
+        const classes = String(current.className || "").split(/\s+/).filter(Boolean);
+        if (classes.includes(className)) return current;
+        current = current.parentNode;
+      }
+      return null;
+    },
     remove() {
       if (!Array.isArray(this.parentNode?.appended)) return;
       const index = this.parentNode.appended.indexOf(this);
@@ -1313,7 +1324,7 @@ test("immediate UI mounts the dedicated media page instead of a widget grid", as
   assert.equal(pageStage.appended[0]?.querySelector?.(".mha-media-page")?.className, "mha-media-page");
   assert.equal(
     pageStage.appended[0]?.querySelector?.(".mha-media-page-widget-panel")?.className,
-    "mha-media-page-widget-panel",
+    "mha-media-page-widget-panel mha-settings-sheet",
   );
   assert.equal(
     pageStage.appended[0]?.querySelector?.(".mha-media-page-player-list")?.className,
@@ -1321,8 +1332,8 @@ test("immediate UI mounts the dedicated media page instead of a widget grid", as
   );
   assert.equal(pageStage.appended[0]?.querySelector?.(".mha-media-page-widget-grid"), null);
   assert.equal(
-    pageStage.appended[0]?.querySelector?.(".mha-media-page-artwork-settings")?.className,
-    "mha-media-page-icon-button mha-media-page-artwork-settings",
+    pageStage.appended[0]?.querySelector?.(".mha-media-page-widget-panel-settings")?.className,
+    "mha-media-page-icon-button mha-media-page-widget-panel-settings",
   );
   assert.equal(
     pageStage.appended[0]?.querySelector?.(".mha-media-page-widget-panel-edit")?.className,
@@ -1335,7 +1346,7 @@ test("immediate UI mounts the dedicated media page instead of a widget grid", as
   globalThis.document = previousDocument;
 });
 
-test("page transition forces a full render when entering the dedicated media page", async () => {
+test("page transition replaces only the active panel when entering the dedicated media page", async () => {
   const prototype = await loadHubPrototype();
   const previousMatchMedia = globalThis.window.matchMedia;
   globalThis.window.matchMedia = () => ({ matches: false });
@@ -1373,6 +1384,10 @@ test("page transition forces a full render when entering the dedicated media pag
       return "right";
     },
     _updateDockActiveState() {},
+    _replaceActivePagePanel() {
+      calls.push("replaceActivePagePanel");
+      return true;
+    },
     render() {
       calls.push("render");
     },
@@ -1388,10 +1403,10 @@ test("page transition forces a full render when entering the dedicated media pag
     globalThis.window.matchMedia = previousMatchMedia;
   }
 
-  assert.deepEqual(calls, ["render"]);
+  assert.deepEqual(calls, ["replaceActivePagePanel"]);
 });
 
-test("page transition forces a full render when leaving the dedicated media page", async () => {
+test("page transition replaces only the active panel when leaving the dedicated media page", async () => {
   const prototype = await loadHubPrototype();
   const previousMatchMedia = globalThis.window.matchMedia;
   globalThis.window.matchMedia = () => ({ matches: false });
@@ -1433,6 +1448,10 @@ test("page transition forces a full render when leaving the dedicated media page
       return "left";
     },
     _updateDockActiveState() {},
+    _replaceActivePagePanel() {
+      calls.push("replaceActivePagePanel");
+      return true;
+    },
     render() {
       calls.push("render");
     },
@@ -1448,7 +1467,7 @@ test("page transition forces a full render when leaving the dedicated media page
     globalThis.window.matchMedia = previousMatchMedia;
   }
 
-  assert.deepEqual(calls, ["render"]);
+  assert.deepEqual(calls, ["replaceActivePagePanel"]);
 });
 
 test("deferred UI rebuilds settings through syncSettingsDom instead of appending raw panels", async () => {

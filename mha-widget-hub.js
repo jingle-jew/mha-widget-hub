@@ -969,12 +969,15 @@ _getPageTransitionDirection(previousPage=null,nextPage=null){
         });
       }
     }else{
-      this._skipStabilizingRenderOnce=true;
-      this.render();
-      restoreDockRenderState(this.shadowRoot,dockRenderState,{
-        scheduleMobileDockOverflowState:()=>this._scheduleMobileDockOverflowState(),
-        updateDockActiveState:()=>this._updateDockActiveState(),
-      });
+      const replaced=this._replaceActivePagePanel();
+      if(!replaced){
+        this._skipStabilizingRenderOnce=true;
+        this.render();
+        restoreDockRenderState(this.shadowRoot,dockRenderState,{
+          scheduleMobileDockOverflowState:()=>this._scheduleMobileDockOverflowState(),
+          updateDockActiveState:()=>this._updateDockActiveState(),
+        });
+      }
     }
 
 	  if(prefersReducedMotion)return;
@@ -1069,6 +1072,9 @@ _scheduleMobileDockOverflowState(){
 }
 _refreshActiveGridOnly(){
   return this._widgetSurfaceCoordinator.refreshActiveGridOnly();
+}
+_replaceActivePagePanel(){
+  return getRenderPipelineForHost(this).replaceActivePagePanel();
 }
 _syncActivePageBackdropState({
   activePage=this._getActivePage(),
