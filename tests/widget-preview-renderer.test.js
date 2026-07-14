@@ -71,6 +71,29 @@ test("weather exposes a live preview renderer", () => {
   assert.equal(preview?.childNodes.length, 1);
 });
 
+test("weather narrative exposes a live preview renderer", () => {
+  installDom();
+  const setInterval = globalThis.setInterval;
+  globalThis.setInterval = () => null;
+  let preview;
+  try {
+    preview = createLiveWidgetPreview({
+      kind: "weather-narrative",
+      variant: "weather-narrative",
+      size: { w: 4, h: 2 },
+    });
+  } finally {
+    globalThis.setInterval = setInterval;
+  }
+
+  assert.equal(getWidgetPreviewRenderer({ kind: "weather-narrative" }).mode, "live");
+  assert.equal(hasLiveWidgetPreview({ kind: "weather-narrative" }), true);
+  assert.equal(preview?.className, "mha-widget-manager-live-preview");
+  assert.equal(preview?.dataset.kind, "weather-narrative");
+  assert.equal(preview?.dataset.size, "4x2");
+  assert.equal(preview?.childNodes.length, 1);
+});
+
 test("weather metric exposes a live preview renderer with fallback preview data", () => {
   installDom();
   const preview = createLiveWidgetPreview({
