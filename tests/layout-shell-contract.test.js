@@ -571,6 +571,14 @@ test("floating controls and settings sheet consume responsive variants instead o
     /:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\.is-mobile-floating-controls-hidden\) \.mha-main-edit-button/,
   );
   assert.match(
+    floatingControlsSource,
+    /:host\(\[data-layout="tablet"\]\) \.mha-primary-edit-button\[data-touch-edit-close="true"\]\s*\{[\s\S]*position:\s*absolute;/,
+  );
+  assert.match(
+    floatingControlsSource,
+    /:host\(\[data-layout="tablet"\]\.is-editing\) \.mha-add-widget-button:not\(\[hidden\]\)\s*\{[\s\S]*position:\s*absolute;[\s\S]*inset-inline-start:\s*max\(/,
+  );
+  assert.match(
     settingsPanelSource,
     /\.mha-settings-sheet\s*\{[\s\S]*--mha-settings-sheet-hidden-transform:\s*translateX\(calc\(100% \+ clamp\(1rem, 2\.6vw, 2rem\)\)\);[\s\S]*transform:\s*var\(--mha-settings-sheet-hidden-transform\);[\s\S]*transform-origin:\s*right center;/,
   );

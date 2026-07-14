@@ -417,7 +417,10 @@
 }
 
 :host([data-layout="tablet"]) .mha-primary-edit-button[data-touch-edit-close="true"] {
-  position: fixed;
+  /* Tablet controls are direct children of the MHA host. Anchoring them to
+   * that host keeps them inside HA's content viewport when its sidebar is
+   * visible, collapsed, or expanded. */
+  position: absolute;
   z-index: 95;
   inset-inline-start: auto;
   inset-inline-end: max(
@@ -437,7 +440,7 @@
 }
 
 :host([data-layout="tablet"].is-editing) .mha-add-widget-button:not([hidden]) {
-  position: fixed;
+  position: absolute;
   z-index: 95;
   inset-inline-start: max(
     var(--mha-safe-left, 0px),
