@@ -31,6 +31,8 @@ const args = [
   "--delete",
   "--exclude=.DS_Store",
   "--exclude=__MACOSX",
+  "--exclude=__pycache__/",
+  "--exclude=*.py[cod]",
   "-e",
   `ssh -p ${port}`,
   source,

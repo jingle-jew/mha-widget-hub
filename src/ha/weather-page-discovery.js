@@ -436,7 +436,8 @@ function resolveWeatherAttributeUnit(attributes = {}, attribute = "", fallbackUn
 
 function createMetricSourceFromWeather(weatherEntity, definition) {
   const attributes = weatherEntity?.state?.attributes || {};
-  const attribute = definition.attributes.find(name => hasValue(attributes[name]));
+  const attribute = definition.attributes.find(name => hasValue(attributes[name]))
+    || (definition.key === "summary" ? "summary" : "");
   if (!attribute) return null;
 
   return {

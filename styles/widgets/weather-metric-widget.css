@@ -843,7 +843,8 @@
 .mha-weather-summary-condition,
 .mha-weather-summary-metadata,
 .mha-weather-summary-eyebrow,
-.mha-weather-summary-text {
+.mha-weather-summary-text,
+.mha-weather-summary-narrative-secondary {
   min-inline-size: 0;
   max-inline-size: 100%;
   overflow: hidden;
@@ -861,7 +862,8 @@
 
 .mha-weather-summary-location,
 .mha-weather-summary-metadata,
-.mha-weather-summary-eyebrow {
+.mha-weather-summary-eyebrow,
+.mha-weather-summary-narrative-secondary {
   color: var(--mha-text-secondary);
   font-size: var(--mha-weather-metric-caption-size);
   font-weight: var(--mha-weather-metric-caption-weight);
@@ -891,21 +893,33 @@
 
 .mha-weather-summary-body {
   align-content: start;
-  gap: clamp(.3rem, 1.5cqb, .5rem);
+  gap: clamp(.2rem, 1.05cqb, .38rem);
 }
 
 .mha-weather-summary-eyebrow {
-  text-transform: none;
+  letter-spacing: .055em;
+  text-transform: uppercase;
 }
 
 .mha-weather-summary-text {
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 5;
+  -webkit-line-clamp: 3;
   color: var(--mha-text-primary);
-  font-size: var(--mha-weather-metric-body-size);
-  font-weight: var(--mha-weather-metric-body-weight);
-  line-height: var(--mha-weather-metric-body-line-height);
+  font-size: clamp(1rem, min(4cqi, 5.5cqb), 1.42rem);
+  font-weight: var(--mha-type-weather-summary-weight, var(--mha-font-weight-heavy));
+  line-height: 1.12;
+  letter-spacing: -.022em;
+  text-wrap: balance;
+  white-space: normal;
+}
+
+.mha-weather-summary-narrative-secondary {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  color: var(--mha-text-secondary);
+  line-height: var(--mha-weather-metric-caption-line-height);
   white-space: normal;
 }
 
@@ -940,6 +954,10 @@
   -webkit-line-clamp: 2;
   font-size: var(--mha-weather-metric-label-size);
   line-height: var(--mha-type-widget-label-line-height);
+}
+
+.mha-weather-metric-widget[data-weather-metric-size="4x1"][data-metric-layout="summary"] .mha-weather-summary-narrative-secondary {
+  display: none;
 }
 
 @container (max-width: 12rem) {

@@ -457,7 +457,7 @@ test("OpenWeatherMap profile resolves condition sensors and separate air quality
 
   assert.equal(sources.discoveryMode, "registry");
   assert.equal(byKey.get("apparent-temperature")?.entityId, "sensor.quebec_feels_like_temperature");
-  assert.equal(byKey.get("summary")?.entityId, "sensor.quebec_weather");
+  assert.equal(byKey.get("summary")?.entityId, "weather.quebec");
   assert.equal(byKey.get("precipitation")?.entityId, "sensor.quebec_rain");
   assert.equal(byKey.get("air-quality")?.entityId, "sensor.quebec_air_quality_index");
   assert.equal(byKey.get("air-quality-pm25")?.entityId, "sensor.quebec_pm2_5");
@@ -501,7 +501,8 @@ test("weather page widget manager category exposes semantic integration capabili
   assert.equal(byKey.has("current-daily"), true);
   assert.equal(byKey.has("forecast-hourly"), true);
   assert.equal(byKey.has("forecast-daily"), true);
-  assert.equal(category.widgets.some(widget => widget.kind === "weather-narrative"), true);
+  assert.equal(category.widgets.some(widget => widget.kind === "weather-narrative"), false);
+  assert.equal(byKey.has("summary"), true);
   assert.equal(byKey.get("humidity")?.labelKey, "weatherPage.metrics.humidity");
   assert.equal(byKey.get("uv")?.labelKey, "weatherPage.metrics.uv");
   assert.equal(byKey.get("precipitation-probability")?.labelKey, "weatherPage.metrics.precipitationProbability");

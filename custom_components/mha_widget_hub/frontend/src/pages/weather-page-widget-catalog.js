@@ -132,24 +132,6 @@ function createWeatherCatalogItem(definition, weatherEntityId = "") {
   };
 }
 
-function createNarrativeCatalogItem(weatherEntityId = "") {
-  return {
-    kind: "weather-narrative",
-    type: "weather-narrative",
-    component: "weather-narrative-widget",
-    category: "climate",
-    variant: "weather-narrative",
-    label: "Weather brief",
-    labelKey: "widgets.weatherManager.narrative",
-    description: "Contextual narrative from the selected integration.",
-    descriptionKey: "widgets.weatherManager.narrativeDescription",
-    size: { w: 4, h: 2 },
-    entityId: weatherEntityId,
-    entity_id: weatherEntityId,
-    order: 40,
-  };
-}
-
 function createRadarCatalogItem(source = {}) {
   const widget = createWeatherPageRadarWidget({
     pageId: "catalog",
@@ -196,7 +178,6 @@ export function buildWeatherPageWidgetManagerCategoryFromSources(sources = {}, {
     ? [
         ...WEATHER_PAGE_BASE_WIDGETS.map(definition => createWeatherCatalogItem(definition, entityId)),
         ...(sources.radar ? [createRadarCatalogItem(sources.radar)] : []),
-        createNarrativeCatalogItem(entityId),
         ...metricItems,
       ].sort((a, b) => (a.order || 0) - (b.order || 0))
     : [];

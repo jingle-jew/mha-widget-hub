@@ -1,5 +1,6 @@
 import { buildWeatherMetricModel } from "../ha/weather-page-data.js";
-import { buildWeatherModel } from "../ha/weather.js";
+import { buildWeatherNarrativeModel } from "../ha/weather-narrative.js";
+import { buildWeatherModel, fetchWeatherForecastBundle } from "../ha/weather.js";
 import { t } from "../i18n/index.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
 import { createCurrentWeatherIcon } from "./weather-current-icons.js";
@@ -7,6 +8,7 @@ import { css, freezeSize, isLocalWidgetKind, variant } from "./widget-definition
 import { WIDGET_PREVIEW_DATA } from "./widget-preview-data.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
+const FORECAST_REFRESH_MS = 10 * 60 * 1000;
 
 const METRIC_LABELS = Object.freeze({
   humidity: Object.freeze(["weatherPage.metrics.humidity", "Humidity"]),
@@ -421,8 +423,11 @@ function applySummaryAtmosphere(root, weather = {}, hass) {
   root.dataset.summarySky = getSummarySkyKind(weather.condition);
 }
 
-function renderSummaryMetric(root, model, weather = {}, hass) {
+function renderSummaryMetric(root, weather = {}, hass) {
+  const narrative = buildWeatherNarrativeModel(weather);
   root.dataset.metricLayout = "summary";
+  root.dataset.summaryNarrativeKind = narrative.kind || "summary";
+  root.dataset.summaryNarrativeMood = narrative.mood || "neutral";
   applySummaryAtmosphere(root, weather, hass);
 
   const divider = document.createElement("span");
@@ -434,10 +439,13 @@ function renderSummaryMetric(root, model, weather = {}, hass) {
   body.append(
     createText(
       "mha-weather-summary-eyebrow",
-      getMetricLabel("summary", model.title || "Weather summary"),
+      t("widgets.weatherManager.narrative", "Weather brief"),
     ),
-    createText("mha-weather-summary-text", model.value || "--"),
+    createText("mha-weather-summary-text", narrative.headline || "--"),
   );
+  if (narrative.secondary) {
+    body.append(createText("mha-weather-summary-narrative-secondary", narrative.secondary));
+  }
 
   root.append(createSummaryWeatherHeader(weather), divider, body);
 }
@@ -518,7 +526,7 @@ function renderMetric(root, model, { weatherModel = null, hass = null } = {}) {
   }
 
   if (model.metricKey === "summary") {
-    renderSummaryMetric(root, model, weatherModel || {}, hass);
+    renderSummaryMetric(root, weatherModel || {}, hass);
     return;
   }
 
@@ -654,7 +662,15 @@ export function createWeatherMetricWidgetContent(widget = {}, {
   hass,
   entityVisibilityConfig,
 } = {}) {
-  const context = { hass, widgetW, widgetH };
+  const context = {
+    hass,
+    widgetW,
+    widgetH,
+    forecastBundle: null,
+    forecastEntityId: "",
+    forecastCheckedAt: 0,
+    forecastRequestId: 0,
+  };
   const root = document.createElement("div");
   root.className = "mha-weather-metric-widget";
   root.dataset.widgetComponent = "weather-metric";
@@ -673,14 +689,35 @@ export function createWeatherMetricWidgetContent(widget = {}, {
     const weatherModel = widget.metricKey === "summary"
       ? buildWeatherModel(context.hass, {
         entityId: getSummaryWeatherEntityId(widget, context.hass),
-      }, entityVisibilityConfig)
+      }, entityVisibilityConfig, context.forecastBundle)
       : null;
     renderMetric(root, model, { weatherModel, hass: context.hass });
+  };
+
+  const hydrateSummaryForecasts = nextHass => {
+    if (widget.metricKey !== "summary") return;
+    const entityId = getSummaryWeatherEntityId(widget, nextHass);
+    if (!entityId) return;
+
+    const now = Date.now();
+    const sameEntity = context.forecastEntityId === entityId;
+    if (sameEntity && context.forecastBundle && now - context.forecastCheckedAt < FORECAST_REFRESH_MS) return;
+    if (!sameEntity) context.forecastBundle = null;
+
+    context.forecastEntityId = entityId;
+    context.forecastCheckedAt = now;
+    const requestId = ++context.forecastRequestId;
+    fetchWeatherForecastBundle(nextHass, entityId).then(bundle => {
+      if (requestId !== context.forecastRequestId) return;
+      context.forecastBundle = bundle;
+      renderCurrent();
+    });
   };
 
   root.__mhaUpdateFromHass = nextHass => {
     context.hass = nextHass;
     renderCurrent();
+    hydrateSummaryForecasts(nextHass);
   };
   root.__mhaUpdateWidgetSize = ({ widgetW: nextW = widgetW, widgetH: nextH = widgetH } = {}) => {
     context.widgetW = nextW;
@@ -688,10 +725,13 @@ export function createWeatherMetricWidgetContent(widget = {}, {
     renderCurrent();
   };
   root.__mhaDestroy = () => {
+    context.forecastRequestId += 1;
     delete root.__mhaUpdateFromHass;
     delete root.__mhaUpdateWidgetSize;
+    delete root.__mhaDestroy;
   };
   renderCurrent();
+  hydrateSummaryForecasts(hass);
   return root;
 }
 

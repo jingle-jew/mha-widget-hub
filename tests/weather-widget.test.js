@@ -44,7 +44,7 @@ function installDom() {
   };
 }
 
-test("weather summary metric combines current weather with narrative text", () => {
+test("weather summary metric combines current weather with the contextual brief", () => {
   installDom();
 
   const hass = {
@@ -95,8 +95,9 @@ test("weather summary metric combines current weather with narrative text", () =
   assert.equal(findByClass(content, "mha-weather-summary-location")?.textContent, "Val-d'Or");
   assert.equal(
     findByClass(content, "mha-weather-summary-text")?.textContent,
-    "Alternance de soleil et de nuages aujourd’hui.",
+    "A generally calm day with mild conditions.",
   );
+  assert.equal(content.dataset.summaryNarrativeKind, "summary");
 });
 
 test("weather summary metric falls back to an available weather entity for legacy sensor widgets", () => {
@@ -224,8 +225,60 @@ test("weather summary metric uses its weather attribute entity for current condi
   assert.equal(findByClass(content, "mha-weather-summary-location")?.textContent, "Maison");
   assert.equal(
     findByClass(content, "mha-weather-summary-text")?.textContent,
-    "Pensez à vous protéger ce soir.",
+    "The sky will stay clear today.",
   );
+});
+
+test("weather summary metric hydrates forecasts for priority narratives without a chart", async () => {
+  installDom();
+
+  const forecastTime = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+  const hass = {
+    states: {
+      "weather.home": {
+        entity_id: "weather.home",
+        state: "cloudy",
+        attributes: {
+          friendly_name: "Maison",
+          temperature: 18,
+          temperature_unit: "°C",
+        },
+      },
+    },
+    config: { unit_system: { temperature: "°C" } },
+    callWS: async ({ service_data: { type } }) => ({
+      "weather.home": {
+        forecast: type === "hourly"
+          ? [{
+            datetime: forecastTime,
+            condition: "rainy",
+            temperature: 17,
+            precipitation_probability: 80,
+          }]
+          : [],
+      },
+    }),
+  };
+
+  const content = createWeatherMetricWidgetContent({
+    kind: "weather-metric",
+    metricKey: "summary",
+    valueKind: "text",
+    sourceType: "weather-attribute",
+    entityId: "weather.home",
+    attribute: "summary",
+  }, {
+    widgetW: 4,
+    widgetH: 2,
+    hass,
+  });
+
+  await new Promise(resolve => setImmediate(resolve));
+
+  assert.equal(content.dataset.summaryNarrativeKind, "rain");
+  assert.equal(findByClass(content, "mha-weather-summary-text")?.textContent.startsWith("Rain is expected"), true);
+  assert.equal(findByClass(content, "mha-weather-narrative-chart"), null);
+  content.__mhaDestroy();
 });
 
 test("weather metric 2x2 renders progress visuals for humidity and precipitation probability", () => {
@@ -475,6 +528,7 @@ test("weather narrative widget renders honestly when forecasts are unavailable",
   });
 
   assert.equal(content.dataset.weatherNarrativeKind, "summary");
-  assert.equal(content.childNodes.length, 2);
+  assert.equal(content.childNodes.length, 1);
+  assert.equal(findByClass(content, "mha-weather-narrative-chart"), null);
   content.__mhaDestroy();
 });
