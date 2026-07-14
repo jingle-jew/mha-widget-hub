@@ -227,6 +227,15 @@
   padding-top: .55rem;
 }
 
+.mha-widget-icon-picker-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: transparent;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
 .mha-widget-icon-picker-tabs {
   display: grid;
   grid-auto-flow: column;

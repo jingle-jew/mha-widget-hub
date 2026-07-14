@@ -1,5 +1,6 @@
 import { createIconSymbol } from "../ui/icon-symbol.js";
 import { resolveTablerIconName, TABLER_ICON_CATALOG } from "../ui/tabler-icons.js";
+import { RESPONSIVE_BREAKPOINTS } from "../layout/responsive.js";
 
 const CATEGORY_ORDER = Object.freeze([
   "suggested",
@@ -112,6 +113,12 @@ export function filterIconPickerInventory(query = "") {
   if (!normalizedQuery) return ICON_PICKER_INVENTORY;
 
   return ICON_PICKER_INVENTORY.filter(item => item.searchText.includes(normalizedQuery));
+}
+
+export function shouldAutoFocusIconPickerSearch({ layout = "", viewportWidth = 0 } = {}) {
+  const normalizedLayout = String(layout || "").trim().toLowerCase();
+  if (normalizedLayout) return normalizedLayout === "desktop";
+  return (Number(viewportWidth) || 0) >= RESPONSIVE_BREAKPOINTS.desktop;
 }
 
 function createPickerTile({
@@ -264,6 +271,10 @@ export function createIconPickerControl({
   panel.className = "mha-widget-icon-picker-panel";
   panel.setAttribute("role", "dialog");
 
+  const backdrop = document.createElement("div");
+  backdrop.className = "mha-widget-icon-picker-backdrop";
+  backdrop.setAttribute("aria-hidden", "true");
+
   const searchWrap = document.createElement("label");
   searchWrap.className = "mha-widget-icon-picker-search";
 
@@ -310,6 +321,20 @@ export function createIconPickerControl({
     return viewportWidth <= MOBILE_BREAKPOINT_PX;
   }
 
+  function shouldAutoFocusSearch() {
+    const rootNode = root.getRootNode?.();
+    return shouldAutoFocusIconPickerSearch({
+      layout: rootNode?.host?.dataset?.layout || "",
+      viewportWidth: ownerWindow?.innerWidth || ownerDocument?.documentElement?.clientWidth || 0,
+    });
+  }
+
+  function focusSearchInput() {
+    if (!shouldAutoFocusSearch()) return;
+    searchInput.focus({ preventScroll: true });
+    searchInput.select();
+  }
+
   function dispatchInput() {
     root.dispatchEvent(new Event("input", { bubbles: true }));
   }
@@ -326,12 +351,25 @@ export function createIconPickerControl({
     return ownerDocument?.body || null;
   }
 
+  function syncMobileBackdrop() {
+    if (!isExpanded() || !panel.isConnected || !isMobileViewport()) {
+      backdrop.remove();
+      return;
+    }
+
+    if (!backdrop.isConnected) {
+      getPanelHost()?.append(backdrop);
+    }
+  }
+
   function placePanel() {
     if (!root.isConnected) {
       closePanel();
       return;
     }
     if (!ownerDocument?.body || !panel.isConnected) return;
+
+    syncMobileBackdrop();
 
     if (isMobileViewport()) {
       panel.dataset.mobilePresentation = "sheet";
@@ -405,6 +443,7 @@ export function createIconPickerControl({
     removeFloatingListeners();
     cleanupMutationObserver?.disconnect();
     cleanupMutationObserver = null;
+    backdrop.remove();
     panel.remove();
   }
 
@@ -433,12 +472,10 @@ export function createIconPickerControl({
 
     ownerWindow?.requestAnimationFrame?.(() => {
       placePanel();
-      searchInput.focus({ preventScroll: true });
-      searchInput.select();
+      focusSearchInput();
     });
     if (!ownerWindow?.requestAnimationFrame) {
-      searchInput.focus({ preventScroll: true });
-      searchInput.select();
+      focusSearchInput();
     }
   }
 
@@ -530,8 +567,10 @@ export function createIconPickerControl({
     if (
       root.contains(event.target)
       || panel.contains(event.target)
+      || backdrop.contains(event.target)
       || eventPath.includes(root)
       || eventPath.includes(panel)
+      || eventPath.includes(backdrop)
     ) return;
     closePanel();
   }
@@ -548,6 +587,16 @@ export function createIconPickerControl({
     event.stopPropagation();
     if (isExpanded()) closePanel();
     else openPanel();
+  });
+
+  backdrop.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+  });
+  backdrop.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    closePanel();
   });
 
   root.dataset.expanded = "false";
