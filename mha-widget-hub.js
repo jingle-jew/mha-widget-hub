@@ -1211,6 +1211,9 @@ _placePendingWidgetAtSlot(x,y){
 _moveWidgetToDropSlot(id,x,y){
   return this._placementController.moveToDropSlot(id,x,y);
 }
+_swapWidgets(sourceId,targetId){
+  return this._placementController.swapWidgets(sourceId,targetId);
+}
 _moveWidgetByDirection(id,direction){
   return this._placementController.moveByDirection(id,direction);
 }

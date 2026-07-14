@@ -206,6 +206,32 @@ test("drop-slot moves finish move mode after persistence", () => {
   ]);
 });
 
+test("widget swaps exchange positions and finish move mode", () => {
+  const positions = {
+    active: { x: 1, y: 1 },
+    target: { x: 3, y: 1 },
+  };
+  const harness = createHarness({
+    widgets: [widget("active"), widget("target")],
+    positions,
+  });
+
+  assert.equal(harness.controller.swapWidgets("active", "target"), true);
+  assert.deepEqual(harness.effects[0], ["save", {
+    active: { x: 3, y: 1 },
+    target: { x: 1, y: 1 },
+  }]);
+  assert.equal(harness.getActiveMoveWidgetId(), "");
+  assert.deepEqual(harness.effects.map(([name]) => name), [
+    "save",
+    "setActive",
+    "apply",
+    "refreshDropSlots",
+    "syncEditMode",
+    "scheduleLayout",
+  ]);
+});
+
 test("invalid drop-slot moves do not trigger callbacks", () => {
   const harness = createHarness({
     units: 2,
