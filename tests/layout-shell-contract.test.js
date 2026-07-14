@@ -442,11 +442,19 @@ test("media page mobile layout scrolls as snapped sheets in portrait and landsca
   );
   assert.match(
     source,
+    /:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\)[\s\S]*> \.mha-media-page-player-widget\s*\{[\s\S]*grid-template-rows:\s*repeat\(2, minmax\(0, 1fr\)\);/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\)[\s\S]*\.mha-media-page-player-info \.mha-media-widget-text\s*\{[\s\S]*grid-row:\s*2;[\s\S]*text-overflow:\s*ellipsis;[\s\S]*white-space:\s*nowrap;/,
+  );
+  assert.match(
+    source,
     /:host\(\[data-layout-variant="mobile-landscape"\]\[data-media-page-active="true"\]\.is-mobile-floating-controls-hidden\) \.mha-dock\s*\{[\s\S]*opacity:\s*0;[\s\S]*pointer-events:\s*none;/,
   );
   assert.match(
     source,
-    /:host\(\[data-layout-variant="mobile-landscape"\]\)\s+\.mha-media-page-now-playing-shell\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*\.9fr\) minmax\(0,\s*1fr\);[\s\S]*grid-template-rows:\s*minmax\(0,\s*1fr\) auto;/,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\)\s+\.mha-media-page-now-playing-shell\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*\.9fr\) minmax\(0,\s*1fr\);[\s\S]*grid-template-rows:\s*auto auto auto;[\s\S]*align-content:\s*center;/,
   );
   assert.match(
     source,
@@ -454,7 +462,11 @@ test("media page mobile layout scrolls as snapped sheets in portrait and landsca
   );
   assert.match(
     source,
-    /:host\(\[data-layout-variant="mobile-landscape"\]\) \.mha-media-page-transport\s*\{[\s\S]*grid-row:\s*1;[\s\S]*align-self:\s*end;/,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\) \.mha-media-page \.mha-media-widget-text\s*\{[\s\S]*grid-column:\s*2;[\s\S]*grid-row:\s*1;[\s\S]*text-align:\s*start;/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\) \.mha-media-page-transport\s*\{[\s\S]*grid-row:\s*2;[\s\S]*align-self:\s*center;/,
   );
 });
 
