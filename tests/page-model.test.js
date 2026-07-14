@@ -69,7 +69,7 @@ test("fallback and active-page lookup remain independent from storage", () => {
   assert.equal(getActivePage([], "missing"), null);
 });
 
-test("default first-launch pages are two grids plus one media page", () => {
+test("default first-launch pages are one grid, one weather page, and one media page", () => {
   const pages = createDefaultPages();
 
   assert.deepEqual(
@@ -79,11 +79,12 @@ test("default first-launch pages are two grids plus one media page", () => {
       icon: page.icon,
       type: page.type || "grid",
       widgets: page.widgets.length,
+      autoPopulatePending: page.config?.autoPopulatePending === true,
     })),
     [
-      { id: "home", name: "Home", icon: "home", type: "grid", widgets: 0 },
-      { id: "page-2", name: "Page 2", icon: "grid", type: "grid", widgets: 0 },
-      { id: "media", name: "Media Players", icon: "media-player", type: "media-players", widgets: 0 },
+      { id: "home", name: "Home", icon: "home", type: "grid", widgets: 0, autoPopulatePending: false },
+      { id: "weather", name: "Weather", icon: "weather", type: "weather", widgets: 0, autoPopulatePending: true },
+      { id: "media", name: "Media Players", icon: "media-player", type: "media-players", widgets: 0, autoPopulatePending: false },
     ],
   );
 });

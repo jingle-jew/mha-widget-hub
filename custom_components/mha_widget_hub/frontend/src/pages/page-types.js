@@ -36,12 +36,14 @@ export function normalizeWeatherPageConfig(config = {}) {
     ? "registry"
     : "state-fallback";
 
-  return {
+  const normalized = {
     weatherEntityId: String(config.weatherEntityId || "").trim(),
     autoDetectedMetricKeys,
     discoveryMode,
     registryLinked: config.registryLinked === true,
   };
+  if (config.autoPopulatePending === true) normalized.autoPopulatePending = true;
+  return normalized;
 }
 
 export function createDefaultPageConfig(type = PAGE_TYPES.GRID, {

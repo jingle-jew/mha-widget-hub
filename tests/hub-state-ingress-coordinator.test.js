@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { createHubStateIngressCoordinator } from "../src/core/hub-state-ingress-coordinator.js";
+import { createDefaultPages } from "../src/pages/page-model.js";
 
 test("hub state ingress coordinator initializes persisted shell state", () => {
   globalThis.localStorage = {
@@ -127,4 +128,58 @@ test("hub state ingress coordinator updates hass and refresh hooks", () => {
     ["ensureMounted", { reason: "hass update" }],
     "scheduleHassUpdate",
   ]);
+});
+
+test("first-launch weather page is populated once from available Home Assistant entities", async () => {
+  const stored = new Map();
+  globalThis.localStorage = {
+    getItem(key) {
+      return stored.get(key) ?? null;
+    },
+    setItem(key, value) {
+      stored.set(key, String(value));
+    },
+    removeItem(key) {
+      stored.delete(key);
+    },
+  };
+
+  const host = {
+    _hass: {
+      states: {
+        "weather.home": {
+          entity_id: "weather.home",
+          state: "partlycloudy",
+          attributes: {
+            friendly_name: "Home weather",
+            temperature: 22,
+            humidity: 61,
+          },
+        },
+      },
+    },
+    _entityVisibilityConfig: null,
+    _pages: createDefaultPages(),
+    _activePageId: "home",
+    dataset: {},
+    _deviceInsightsPublisher: {
+      schedulePublish() {},
+    },
+  };
+  const coordinator = createHubStateIngressCoordinator(host, {
+    normalizeWidget: widget => widget,
+    normalizeWidgetForGrid: widget => widget,
+  });
+
+  assert.equal(await coordinator.populateDefaultWeatherPage(), true);
+
+  const weatherPage = host._pages.find(page => page.id === "weather");
+  assert.equal(weatherPage.config.autoPopulatePending, undefined);
+  assert.equal(weatherPage.config.weatherEntityId, "weather.home");
+  assert.equal(weatherPage.widgets.filter(widget => widget.kind === "weather").length, 3);
+  assert.equal(weatherPage.widgets.some(widget => (
+    widget.kind === "weather-metric" && widget.entityId === "weather.home"
+  )), true);
+  assert.equal(await coordinator.populateDefaultWeatherPage(), false);
+  assert.equal(JSON.parse(stored.get("mha-grid-pages"))[1].widgets.length, weatherPage.widgets.length);
 });

@@ -145,9 +145,14 @@ export function createDefaultPages({ normalizeWidget = identity } = {}) {
       widgets: [],
     },
     {
-      id: "page-2",
-      name: "Page 2",
-      icon: "grid",
+      id: "weather",
+      name: "Weather",
+      icon: "weather",
+      type: PAGE_TYPES.WEATHER,
+      config: {
+        ...createDefaultPageConfig(PAGE_TYPES.WEATHER),
+        autoPopulatePending: true,
+      },
       widgets: [],
     },
     {
