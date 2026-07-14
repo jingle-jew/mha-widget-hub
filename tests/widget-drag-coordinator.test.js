@@ -724,6 +724,87 @@ test("widget drag can drop onto the floating trash target to delete the widget",
   }
 });
 
+test("widget drag can swap with an occupied widget target", () => {
+  const widget = createWidgetElement();
+  const target = {
+    dataset: { widgetId: "target" },
+    classList: createClassList(),
+    closest(selector) {
+      return selector === ".mha-widget" ? this : null;
+    },
+  };
+  const host = {
+    _isEditing: true,
+    _activeMoveWidgetId: "",
+    _pendingWidgetPlacement: null,
+    swapped: null,
+    _isMobileLandscapeLayout() {
+      return false;
+    },
+    _isResizeHandleEvent() {
+      return false;
+    },
+    _swapWidgets(sourceId, targetId) {
+      this.swapped = { sourceId, targetId };
+      return true;
+    },
+    _syncEditModeDom() {},
+    _syncWidgetDropSlots() {},
+    classList: createClassList(),
+    shadowRoot: {
+      elementFromPoint() {
+        return target;
+      },
+      querySelector() {
+        return null;
+      },
+    },
+  };
+
+  const previousSetTimeout = globalThis.setTimeout;
+  const previousClearTimeout = globalThis.clearTimeout;
+  let armedCallback = null;
+  globalThis.setTimeout = callback => {
+    armedCallback = callback;
+    return 1;
+  };
+  globalThis.clearTimeout = () => {
+    armedCallback = null;
+  };
+
+  try {
+    const coordinator = createWidgetDragCoordinator(host);
+    coordinator.wireWidget(widget, { id: "clock" });
+    widget.listeners.get("pointerdown")?.({
+      pointerId: 61,
+      button: 0,
+      clientX: 10,
+      clientY: 20,
+      target: widget,
+    });
+    armedCallback?.();
+    widget.listeners.get("pointermove")?.({
+      pointerId: 61,
+      clientX: 20,
+      clientY: 30,
+      preventDefault() {},
+      stopPropagation() {},
+    });
+
+    assert.equal(target.classList.contains("is-drag-swap-target"), true);
+    widget.listeners.get("pointerup")?.({
+      pointerId: 61,
+      preventDefault() {},
+      stopPropagation() {},
+    });
+    assert.deepEqual(host.swapped, { sourceId: "clock", targetId: "target" });
+    assert.equal(target.classList.contains("is-drag-swap-target"), false);
+  } finally {
+    globalThis.setTimeout = previousSetTimeout;
+    globalThis.clearTimeout = previousClearTimeout;
+  }
+});
+
 test("widget drag resyncs edit controls after dropping onto a grid slot", () => {
   const widget = createWidgetElement();
   const dropSlot = {

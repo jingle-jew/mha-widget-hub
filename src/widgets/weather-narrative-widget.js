@@ -366,6 +366,7 @@ export const WIDGET_MODULE = Object.freeze({
   renderer: WEATHER_NARRATIVE_WIDGET_CONTENT_RENDERER,
   config: WEATHER_NARRATIVE_WIDGET_CONFIG_MANIFEST,
   preview: Object.freeze({
-    mode: "static",
+    mode: "live",
+    createWidget: createWeatherNarrativePreviewWidget,
   }),
 });

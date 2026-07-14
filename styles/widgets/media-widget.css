@@ -70,6 +70,11 @@
   padding: var(--mha-media-padding);
   overflow: hidden;
   color: var(--mha-text-primary);
+  --mha-media-artwork-foreground: var(--mha-text-primary);
+  --mha-media-artwork-muted: var(--mha-media-artist-color);
+  --mha-media-artwork-control-surface: var(--mha-media-control-surface);
+  --mha-media-artwork-control-active-surface: var(--mha-media-control-active-surface);
+  --mha-media-artwork-control-active-color: var(--mha-media-control-active-color);
 }
 
 .mha-widget[data-widget-kind="media"][data-media-variant="media-page-panel"] {
@@ -253,7 +258,7 @@
 }
 
 .mha-media-widget-artist {
-  color: var(--mha-media-artist-color);
+  color: var(--mha-media-artwork-muted);
   font-size: clamp(.72rem, min(4.8cqi, 5.2cqb), .95rem);
   font-weight: var(--mha-media-subtitle-weight);
   text-shadow: var(--mha-media-text-shadow);
@@ -287,7 +292,7 @@
   align-items: center;
   justify-content: space-between;
   gap: clamp(.45rem, 2.6cqb, .72rem);
-  color: var(--mha-media-artist-color);
+  color: var(--mha-media-artwork-muted);
   font-size: clamp(.68rem, min(3.7cqi, 3.8cqb), .82rem);
   font-weight: 650;
 }
@@ -323,8 +328,8 @@
   border-radius: var(--mha-media-control-radius);
   display: grid;
   place-items: center;
-  background: var(--mha-media-control-surface);
-  color: var(--mha-text-primary);
+  background: var(--mha-media-artwork-control-surface);
+  color: var(--mha-media-artwork-foreground);
   font: inherit;
   font-size: var(--mha-media-control-icon-size);
   font-weight: 780;
@@ -414,8 +419,8 @@
 
 .mha-media-widget-control[data-primary="true"],
 .mha-media-widget-control[data-primary] {
-  background: var(--mha-media-control-active-surface);
-  color: var(--mha-media-control-active-color);
+  background: var(--mha-media-artwork-control-active-surface);
+  color: var(--mha-media-artwork-control-active-color);
   transform: scale(var(--mha-media-play-button-scale));
 }
 
@@ -534,7 +539,7 @@
   padding: .42em .7em;
   border-radius: 999px;
   background: var(--mha-media-chip-surface);
-  color: var(--mha-text-secondary);
+  color: var(--mha-media-artwork-muted);
   font-size: clamp(.68rem, min(3.6cqi, 3.8cqb), .82rem);
   font-weight: 680;
   white-space: nowrap;
@@ -1553,4 +1558,27 @@
 :host([data-theme-style="alexa"]) .mha-media-widget[data-media-size="2x2"] .mha-media-widget-controls,
 :host([data-theme-style="alexa"]) .mha-media-widget[data-media-size="2x2"] .mha-media-widget-controls-shell {
   justify-content: stretch;
+}
+
+/* Artwork contrast is applied per widget after its image has loaded. */
+.mha-media-widget[data-artwork-tone="dark"] {
+  color: #fff;
+  --mha-media-artwork-foreground: #fff;
+  --mha-media-artwork-muted: rgba(255, 255, 255, .76);
+  --mha-media-artwork-control-surface: rgba(255, 255, 255, .16);
+  --mha-media-artwork-control-active-surface: #fff;
+  --mha-media-artwork-control-active-color: #111;
+  --mha-media-progress-track: rgba(255, 255, 255, .16);
+  --mha-media-progress-fill: #fff;
+}
+
+.mha-media-widget[data-artwork-tone="light"] {
+  color: #111;
+  --mha-media-artwork-foreground: #111;
+  --mha-media-artwork-muted: rgba(17, 17, 17, .72);
+  --mha-media-artwork-control-surface: rgba(17, 17, 17, .12);
+  --mha-media-artwork-control-active-surface: #111;
+  --mha-media-artwork-control-active-color: #fff;
+  --mha-media-progress-track: rgba(17, 17, 17, .12);
+  --mha-media-progress-fill: #111;
 }

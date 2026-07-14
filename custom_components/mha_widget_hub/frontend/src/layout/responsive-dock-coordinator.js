@@ -235,6 +235,13 @@ export function createResponsiveDockCoordinator(host) {
   function wireDockAutoHide(grid) {
     clearGridScrollListener();
     host.classList.remove("is-dock-hidden", "is-mobile-floating-controls-hidden");
+    const mediaPage = grid?.classList?.contains?.("mha-media-page")
+      ? grid
+      : host.shadowRoot?.querySelector?.(".mha-media-page");
+    if (mediaPage?.__mhaSyncMobileDockState) {
+      mediaPage.__mhaSyncMobileDockState();
+      return;
+    }
     if (!grid) return;
 
     const widgetArea = grid.closest(".mha-widget-area");

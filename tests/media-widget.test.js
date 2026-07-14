@@ -3,14 +3,52 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import {
+  buildMediaWidgetData,
   createMediaTransitionCache,
+  createMediaPagePlayerWidget,
   MEDIA_WIDGET_CONTENT_RENDERER,
   MEDIA_TRANSITION_GRACE_MS,
   resolveMediaTransitionData,
 } from "../src/widgets/media-widget.js";
 import { normalizeWidgetForKind } from "../src/layout/layout-engine.js";
+import {
+  MEDIA_PAGE_INACTIVE_FALLBACK_MS,
+  resolveMediaPageNowPlayingId,
+  resolveMobileMediaPagePane,
+  swapOrderedIds,
+} from "../src/pages/media-page.js";
 
 const REPO_ROOT = process.cwd();
+
+test("media volume falls back to zero only when the player is off", () => {
+  const buildForState = (state, attributes = {}) => buildMediaWidgetData(
+    { entityId: "media_player.salon" },
+    {
+      states: {
+        "media_player.salon": {
+          entity_id: "media_player.salon",
+          state,
+          attributes: {
+            friendly_name: "Salon",
+            volume_level: 0.41,
+            ...attributes,
+          },
+        },
+      },
+    },
+  );
+
+  for (const state of ["playing", "paused", "idle", "stopped", "unavailable", "unknown"]) {
+    const data = buildForState(state);
+    assert.equal(data.volumePercent, 41, `${state} should preserve the HA volume`);
+    assert.equal(data.volumeLabel, "41%", `${state} should preserve the HA volume label`);
+  }
+
+  const off = buildForState("off", { is_volume_muted: true });
+  assert.equal(off.volumePercent, 0);
+  assert.equal(off.volumeLabel, "0%");
+  assert.equal(off.muted, false);
+});
 
 function mediaData(overrides = {}) {
   return {
@@ -112,6 +150,135 @@ test("media transition cache expires when idle is not temporary", () => {
   assert.equal(expiredIdle.playing, false);
   assert.equal(expiredIdle.artworkUrl, "");
   assert.equal(expiredIdle.usingGraceCache, undefined);
+});
+
+test("media page player widgets default to 4x2 and support a compact 2x2 variant", () => {
+  assert.deepEqual(
+    createMediaPagePlayerWidget({ entityId: "media_player.salon" }),
+    {
+      id: "media-page-player-media_player-salon",
+      kind: "media",
+      type: "media",
+      component: "media-widget",
+      category: "media",
+      variant: "media-page-player",
+      mediaPagePlayer: true,
+      entityId: "media_player.salon",
+      entity_id: "media_player.salon",
+      mediaEntityId: "media_player.salon",
+      w: 4,
+      h: 2,
+    },
+  );
+  const compact = createMediaPagePlayerWidget({
+    entityId: "media_player.salon",
+    variant: "2x2",
+  });
+  assert.equal(compact.w, 2);
+  assert.equal(compact.h, 2);
+});
+
+test("media page player editing swaps two selected players without changing the other positions", () => {
+  assert.deepEqual(
+    swapOrderedIds(
+      ["media_player.corridor", "media_player.studio", "media_player.tv", "media_player.kids"],
+      "media_player.studio",
+      "media_player.kids",
+    ),
+    ["media_player.corridor", "media_player.kids", "media_player.tv", "media_player.studio"],
+  );
+});
+
+test("mobile media page exposes now playing and available players as separate scroll states", () => {
+  assert.equal(resolveMobileMediaPagePane(0), "now-playing");
+  assert.equal(resolveMobileMediaPagePane(4), "now-playing");
+  assert.equal(resolveMobileMediaPagePane(5), "available-players");
+});
+
+test("media page keeps a playing selection and falls back from inactive selections", () => {
+  const enabledPlayers = [
+    { entity_id: "media_player.salon" },
+    { entity_id: "media_player.office" },
+    { entity_id: "media_player.bedroom" },
+  ];
+  const hass = {
+    states: {
+      "media_player.salon": { state: "idle" },
+      "media_player.office": { state: "playing" },
+      "media_player.bedroom": { state: "off" },
+    },
+  };
+
+  assert.equal(
+    resolveMediaPageNowPlayingId({
+      config: {
+        selectedPlayerId: "media_player.office",
+        defaultPlayerId: "media_player.salon",
+      },
+      enabledPlayers,
+      hass,
+    }),
+    "media_player.office",
+  );
+  assert.equal(
+    resolveMediaPageNowPlayingId({
+      config: {
+        selectedPlayerId: "media_player.salon",
+        defaultPlayerId: "media_player.office",
+      },
+      enabledPlayers,
+      hass,
+    }),
+    "media_player.office",
+  );
+  assert.equal(
+    resolveMediaPageNowPlayingId({
+      config: {
+        selectedPlayerId: "media_player.salon",
+        defaultPlayerId: "media_player.bedroom",
+      },
+      enabledPlayers,
+      hass,
+      transientPlayerId: "media_player.bedroom",
+    }),
+    "media_player.bedroom",
+  );
+  assert.equal(
+    resolveMediaPageNowPlayingId({
+      config: {
+        selectedPlayerId: "media_player.salon",
+        defaultPlayerId: "media_player.bedroom",
+      },
+      enabledPlayers,
+      hass,
+      lastPlayingPlayerId: "media_player.office",
+    }),
+    "media_player.office",
+  );
+  assert.equal(MEDIA_PAGE_INACTIVE_FALLBACK_MS, 10_000);
+});
+
+test("media page keeps a paused selected player instead of falling back", () => {
+  const pausedPlayerId = "media_player.office";
+  assert.equal(
+    resolveMediaPageNowPlayingId({
+      config: {
+        selectedPlayerId: pausedPlayerId,
+        defaultPlayerId: "media_player.salon",
+      },
+      enabledPlayers: [
+        { entity_id: "media_player.salon" },
+        { entity_id: pausedPlayerId },
+      ],
+      hass: {
+        states: {
+          "media_player.salon": { state: "playing" },
+          [pausedPlayerId]: { state: "paused" },
+        },
+      },
+    }),
+    pausedPlayerId,
+  );
 });
 
 test("media page panel keeps responsive sizes on supported themes and downgrades elsewhere", () => {

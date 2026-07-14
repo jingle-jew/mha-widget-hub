@@ -127,7 +127,7 @@ test("selecting a page closes placement state and reloads widgets", () => {
   assert.equal(calls.syncDocks, 1);
 });
 
-test("selecting a media page keeps edit mode available while still forcing a full render", () => {
+test("selecting a media page keeps edit mode available while using the dedicated transition", () => {
   const { coordinator, state, calls } = createHarness({
     state: {
       pages: [

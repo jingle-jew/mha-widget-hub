@@ -10,6 +10,8 @@ import {
   buildMediaPlayerServiceCall,
   formatMediaDuration,
   getMediaArtworkUrl,
+  getMediaStateLabel,
+  isMediaPlayerInactiveState,
   resolveMediaProgress,
 } from "../ha/media.js";
 import { runMediaPlayerAction } from "../ha/actions.js";
@@ -114,13 +116,16 @@ export function buildMediaWidgetData(widget = {}, hass, cache = null, now = getM
   const attributes = entity?.attributes || {};
   const model = buildMediaDisplayModel(entity, widget, previewData);
   const state = model.state;
-  const volume = attributes.volume_level ?? widget.volume ?? previewData.volume;
+  const poweredOff = state === "off";
+  const volume = poweredOff
+    ? 0
+    : attributes.volume_level ?? widget.volume ?? previewData.volume;
   const volumeNumber = Number(volume);
   const hasVolume = Number.isFinite(volumeNumber);
   const volumePercent = hasVolume
     ? Math.max(0, Math.min(100, Math.round(volumeNumber * 100)))
     : 0;
-  const muted = attributes.is_volume_muted === true;
+  const muted = !poweredOff && attributes.is_volume_muted === true;
   const volumeLabel = muted ? t("widgets.mediaControls.mute", "Mute") : hasVolume ? `${volumePercent}%` : "Vol";
 
   const data = {
@@ -166,9 +171,54 @@ export function setMediaArtworkImage(artwork, artworkUrl = "") {
   if (hasArtwork) {
     image.src = artworkUrl;
     image.alt = "";
+    syncMediaArtworkTone(artwork.closest(".mha-media-widget"), image);
   } else {
     image.removeAttribute("src");
+    artwork.closest(".mha-media-widget")?.removeAttribute("data-artwork-tone");
   }
+}
+
+function readArtworkTone(image) {
+  if (!image?.naturalWidth || !image.naturalHeight) return "";
+  try {
+    const canvas = document.createElement("canvas");
+    const size = 24;
+    canvas.width = size;
+    canvas.height = size;
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    context.drawImage(image, 0, 0, size, size);
+    const pixels = context.getImageData(0, 0, size, size).data;
+    let luminance = 0;
+    let weight = 0;
+    for (let index = 0; index < pixels.length; index += 4) {
+      const alpha = pixels[index + 3] / 255;
+      if (alpha === 0) continue;
+      const red = pixels[index] / 255;
+      const green = pixels[index + 1] / 255;
+      const blue = pixels[index + 2] / 255;
+      const sample = 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+      luminance += sample * alpha;
+      weight += alpha;
+    }
+    return weight > 0 && luminance / weight >= 0.52 ? "light" : "dark";
+  } catch {
+    // Cross-origin artwork can make canvas sampling unavailable. Keep theme defaults.
+    return "";
+  }
+}
+
+export function syncMediaArtworkTone(root, artworkOrImage) {
+  if (!root || !artworkOrImage) return;
+  const image = artworkOrImage.matches?.("img")
+    ? artworkOrImage
+    : artworkOrImage.querySelector?.(".mha-media-widget-artwork-image");
+  if (!image) return;
+  const applyTone = () => {
+    const tone = readArtworkTone(image);
+    if (tone) root.dataset.artworkTone = tone;
+  };
+  image.addEventListener("load", applyTone, { once: true });
+  if (image.complete) applyTone();
 }
 
 export function setMediaBackgroundImage(root, artworkUrl = "") {
@@ -235,12 +285,12 @@ export function createMediaMetaDetails(data) {
   return details;
 }
 
-export function createMediaSourceBadge(data) {
+export function createMediaSourceBadge(data, { label = data.app } = {}) {
   const badge = document.createElement("div");
   badge.className = "mha-media-widget-source-badge";
   badge.append(
-    createIconSymbol({ name: "speaker", label: data.app }),
-    createText("mha-media-widget-source-badge-label", data.app),
+    createIconSymbol({ name: "speaker", label }),
+    createText("mha-media-widget-source-badge-label", label),
   );
   return badge;
 }
@@ -325,27 +375,56 @@ export function createMediaVolumeButtons(data, { interactive = true, onAction } 
   ];
 }
 
+export const MEDIA_PAGE_PLAYER_VARIANTS = Object.freeze(["4x2", "2x2"]);
+
+export function createMediaPagePlayerWidget({
+  entityId = "",
+  variant = "4x2",
+} = {}) {
+  const normalizedEntityId = String(entityId || "").trim();
+  const normalizedVariant = MEDIA_PAGE_PLAYER_VARIANTS.includes(variant) ? variant : "4x2";
+  const size = normalizedVariant === "2x2" ? { w: 2, h: 2 } : { w: 4, h: 2 };
+
+  return {
+    id: `media-page-player-${normalizedEntityId.replace(/[^a-z0-9_-]/gi, "-")}`,
+    kind: "media",
+    type: "media",
+    component: "media-widget",
+    category: "media",
+    variant: "media-page-player",
+    mediaPagePlayer: true,
+    entityId: normalizedEntityId,
+    entity_id: normalizedEntityId,
+    mediaEntityId: normalizedEntityId,
+    ...size,
+  };
+}
+
 export function renderMediaControls(controls, data, { mode = "playback", interactive = true, onAction } = {}) {
   const group = controls.querySelector(".mha-media-widget-controls-group");
   const toggle = controls.querySelector(".mha-media-widget-control-toggle");
   if (!group || !toggle) return;
 
   controls.dataset.mode = mode;
+  const widgetRoot = controls.closest(".mha-media-page-player-widget");
+  if (widgetRoot) widgetRoot.dataset.mediaControlsMode = mode;
   group.replaceChildren(...(
     mode === "volume"
       ? createMediaVolumeButtons(data, { interactive, onAction })
-      : createMediaPlaybackButtons(data, { interactive, onAction })
+      : mode === "volume-only"
+        ? []
+        : createMediaPlaybackButtons(data, { interactive, onAction })
   ));
 
-  const showingPlaybackReturn = mode === "volume";
-  toggle.textContent = showingPlaybackReturn ? "♪" : data.volumeLabel;
+  const showingVolumeReturn = mode === "volume";
+  toggle.textContent = showingVolumeReturn ? "♪" : data.volumeLabel;
   toggle.dataset.action = "toggleVolume";
-  toggle.dataset.mode = showingPlaybackReturn ? "playback" : "volume";
+  toggle.dataset.mode = showingVolumeReturn ? "volume-only" : "volume";
   toggle.removeAttribute("data-primary");
   toggle.classList.remove("mha-media-widget-play-toggle");
   toggle.setAttribute(
     "aria-label",
-    showingPlaybackReturn
+    showingVolumeReturn
       ? t("widgets.mediaControls.backToMediaControls", "Back to media controls")
       : t("widgets.mediaControls.showVolumeControls", "Show volume controls ({volume})", { volume: data.volumeLabel }),
   );
@@ -373,11 +452,43 @@ export function createMediaControls(data, { mode = "playback", interactive = tru
   return controls;
 }
 
+function hasMediaPagePlayerMetadata(data = {}) {
+  return Boolean(data.entity && data.title && data.name && data.title !== data.name);
+}
+
+function getMediaPagePlayerMetadataSubtitle(data = {}) {
+  if (data.artist) return data.artist;
+  if (data.album && data.album !== "Preview Album") return data.album;
+  return "";
+}
+
+function syncMediaPagePlayerMetadata(root, data = {}) {
+  if (!root?.classList?.contains("mha-media-page-player-widget")) return;
+
+  const playerNameNode = root.querySelector(".mha-media-page-player-name");
+  if (playerNameNode) {
+    playerNameNode.textContent = data.name || "";
+    playerNameNode.hidden = !data.name;
+  }
+
+  const textNode = root.querySelector(".mha-media-widget-text");
+  if (textNode) {
+    textNode.hidden = !hasMediaPagePlayerMetadata(data);
+  }
+
+  const artistNode = root.querySelector(".mha-media-widget-artist");
+  if (artistNode) {
+    const metadataSubtitle = getMediaPagePlayerMetadataSubtitle(data);
+    artistNode.textContent = metadataSubtitle;
+    artistNode.hidden = !hasMediaPagePlayerMetadata(data) || !metadataSubtitle;
+  }
+}
+
 export function setMediaProgressState(progress, data) {
   if (!progress) return;
   const width = data.progress?.available
     ? `${Math.max(0, Math.min(100, data.progress.ratio * 100))}%`
-    : "54%";
+    : "0%";
   progress.style.setProperty("--mha-media-progress-fill-width", width);
 }
 
@@ -515,6 +626,7 @@ export function createMediaWidgetContent(widget = {}, {
   widgetH = Number(widget?.h) || 2,
   hass,
   interactive = true,
+  onSelect = () => {},
 } = {}) {
   const themeStyle = resolveMediaThemeStyle();
   const useMediaPagePanel = isMediaPagePanelWidget(widget, themeStyle);
@@ -525,7 +637,7 @@ export function createMediaWidgetContent(widget = {}, {
     hass,
     entity: data.entity,
     data,
-    controlsMode: "playback",
+    controlsMode: widget?.mediaPagePlayer ? "volume-only" : "playback",
   };
   const variantKey = mediaVariantKey({ widgetW, widgetH });
   const root = document.createElement("div");
@@ -540,7 +652,7 @@ export function createMediaWidgetContent(widget = {}, {
   const onAction = action => {
     if (!interactive) return;
     if (action === "toggleVolume") {
-      context.controlsMode = context.controlsMode === "volume" ? "playback" : "volume";
+      context.controlsMode = context.controlsMode === "volume" ? "volume-only" : "volume";
       renderMediaControls(controls, context.data, {
         mode: context.controlsMode,
         interactive,
@@ -560,10 +672,15 @@ export function createMediaWidgetContent(widget = {}, {
     root.dataset.hasArtwork = String(Boolean(nextData.artworkUrl));
     root.querySelector(".mha-media-widget-title").textContent = nextData.title;
     root.querySelector(".mha-media-widget-artist").textContent = nextData.subtitle;
+    syncMediaPagePlayerMetadata(root, nextData);
     const sourceNode = root.querySelector(".mha-media-widget-source");
     if (sourceNode) sourceNode.textContent = nextData.app;
     const sourceBadgeNode = root.querySelector(".mha-media-widget-source-badge-label");
-    if (sourceBadgeNode) sourceBadgeNode.textContent = nextData.app;
+    if (sourceBadgeNode) {
+      sourceBadgeNode.textContent = widget?.mediaPagePlayer
+        ? getMediaStateLabel(nextData.state)
+        : nextData.app;
+    }
     const artworkNode = root.querySelector(".mha-media-widget-artwork");
     artworkNode?.setAttribute("data-playing", String(nextData.playing));
     if (artworkNode) setMediaArtworkImage(artworkNode, nextData.artworkUrl);
@@ -609,7 +726,26 @@ export function createMediaWidgetContent(widget = {}, {
   root.append(background);
   setMediaBackgroundImage(root, data.artworkUrl);
 
-  if (variantKey === "2x2") {
+  if (widget?.mediaPagePlayer) {
+    root.classList.add("mha-media-page-player-widget");
+    root.dataset.mediaPageVariant = variantKey;
+    root.dataset.mediaControlsMode = context.controlsMode;
+    const info = document.createElement("div");
+    info.className = "mha-media-page-player-info";
+    const playerMetaHeader = document.createElement("div");
+    playerMetaHeader.className = "mha-media-page-player-meta-header";
+    const playerName = createText("mha-media-page-player-name", data.name);
+    const pageText = createMediaTitleStack({
+      ...data,
+      subtitle: getMediaPagePlayerMetadataSubtitle(data),
+    });
+    playerMetaHeader.append(createMediaSourceBadge(data, {
+      label: getMediaStateLabel(data.state),
+    }), playerName);
+    info.append(playerMetaHeader, pageText, progress);
+    root.append(artwork, info, controls);
+    syncMediaPagePlayerMetadata(root, data);
+  } else if (variantKey === "2x2") {
     root.append(artwork, createMediaSourceBadge(data), text, controls);
   } else if (variantKey === "4x2") {
     const info = document.createElement("div");
@@ -626,6 +762,11 @@ export function createMediaWidgetContent(widget = {}, {
     transport.append(createMediaMetaRows(data), progress, controls);
 
     root.append(artwork, info, transport);
+  }
+
+  if (widget?.mediaPagePlayer) {
+    root.dataset.mediaPagePlayer = "true";
+    root.addEventListener("click", () => onSelect(widget.entityId || widget.entity_id || widget.mediaEntityId || ""));
   }
 
   if (!interactive) {

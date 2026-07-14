@@ -10,6 +10,7 @@ import {
   createWidgetConfigPanel,
   syncWidgetManagerPanel,
   syncPageCreatorPanel,
+  syncWidgetSurfaceOpenState,
 } from "../src/widgets/widget-placement-orchestrator.js";
 
 test("widget manager panel props retain state and callback routing", () => {
@@ -51,6 +52,40 @@ test("widget config panel props rerender only when the popup requests it", () =>
 
   props.onChange({ rerender: true });
   assert.equal(rerenders, 1);
+
+  const rebuiltProps = buildWidgetConfigPanelProps(props);
+  rebuiltProps.onChange({ rerender: true });
+  assert.equal(rerenders, 2);
+});
+
+test("widget surface open state includes panels waiting for their opening frame", () => {
+  const toggles = [];
+  const host = {
+    classList: {
+      toggle(name, value) {
+        toggles.push([name, value]);
+      },
+    },
+    dataset: {},
+  };
+  const panel = {
+    _mhaDesiredOpenState: true,
+    hidden: false,
+  };
+  const root = {
+    host,
+    querySelector() {
+      return null;
+    },
+    querySelectorAll() {
+      return [panel];
+    },
+  };
+
+  syncWidgetSurfaceOpenState(root);
+
+  assert.deepEqual(toggles, [["is-widget-surface-open", true]]);
+  assert.equal(host.dataset.widgetSurfaceOpen, "true");
 });
 
 test("page creator panel props retain state and callback routing", () => {

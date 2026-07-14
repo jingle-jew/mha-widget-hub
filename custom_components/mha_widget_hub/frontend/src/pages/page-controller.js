@@ -1,4 +1,4 @@
-import { normalizePage } from "./page-model.js";
+import { normalizePage } from "./page-model.js?v=media-persistence-v2";
 import {
   createDefaultPageConfig,
   getDefaultPageIcon,
@@ -6,7 +6,7 @@ import {
   normalizePageConfig,
   normalizePageType,
   PAGE_TYPES,
-} from "./page-types.js";
+} from "./page-types.js?v=media-persistence-v2";
 
 export function selectPage(pages, activePageId, pageId) {
   if (

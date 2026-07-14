@@ -17,8 +17,12 @@ import {
   readHubPages,
   saveHubPages,
   syncActivePageWidgets,
-} from "./mha-state.js";
+} from "./mha-state.js?v=media-persistence-v2";
 import { loadEntityVisibilityConfig } from "../admin/entity-visibility-store.js";
+import {
+  discoverWeatherPageWidgets,
+  isWeatherPage,
+} from "../pages/page-types.js";
 
 function getDeviceInsightsPublisher(host) {
   if (!host._deviceInsightsPublisher) {
@@ -32,6 +36,9 @@ export function createHubStateIngressCoordinator(host, {
   normalizeWidget,
   normalizeWidgetForGrid,
 } = {}) {
+  let entityVisibilityLoadPromise = null;
+  let defaultWeatherPopulationPromise = null;
+
   function recordPersistenceResult(success) {
     host.dataset.persistenceState = success ? "saved" : "error";
     return success;
@@ -89,6 +96,62 @@ export function createHubStateIngressCoordinator(host, {
     });
   }
 
+  async function populateDefaultWeatherPage() {
+    const pendingPage = host._pages?.find(page => (
+      isWeatherPage(page)
+      && page.config?.autoPopulatePending === true
+      && !page.widgets?.length
+    ));
+    if (!pendingPage || !host._hass) return false;
+    if (defaultWeatherPopulationPromise) {
+      return defaultWeatherPopulationPromise;
+    }
+
+    const pageId = pendingPage.id;
+    const populationPromise = discoverWeatherPageWidgets({
+      hass: host._hass,
+      visibilityConfig: host._entityVisibilityConfig,
+      pageId,
+      pageName: pendingPage.name,
+    }).then((weatherSeed) => {
+      const currentPage = host._pages?.find(page => page.id === pageId);
+      if (!currentPage
+        || currentPage.config?.autoPopulatePending !== true
+        || currentPage.widgets?.length) {
+        return false;
+      }
+
+      const previousPages = host._pages;
+      host._pages = previousPages.map(page => page.id === pageId
+        ? {
+            ...page,
+            config: weatherSeed.config,
+            widgets: weatherSeed.widgets.map(widget => normalizeWidget(widget)),
+          }
+        : page);
+      if (!savePages()) {
+        host._pages = previousPages;
+        return false;
+      }
+
+      if (host._activePageId === pageId) {
+        host._widgets = readWidgets();
+        host._refreshActiveGridOnly?.();
+      }
+      return true;
+    }).catch((error) => {
+      console.warn("[MHA] Default weather page could not be populated.", error);
+      return false;
+    }).finally(() => {
+      if (defaultWeatherPopulationPromise === populationPromise) {
+        defaultWeatherPopulationPromise = null;
+      }
+    });
+
+    defaultWeatherPopulationPromise = populationPromise;
+    return populationPromise;
+  }
+
   function syncActivePageWidgetsToStorage() {
     const success = syncActivePageWidgets({
       pages: host._pages,
@@ -140,24 +203,31 @@ export function createHubStateIngressCoordinator(host, {
 
   async function loadEntityVisibilityConfigForHass(hass) {
     const userId = String(hass?.user?.id || "");
-    if (!userId || userId === host._entityVisibilityUserId) return;
+    if (!userId) return;
+    if (userId === host._entityVisibilityUserId) return entityVisibilityLoadPromise;
     host._entityVisibilityUserId = userId;
-    try {
-      const config = await loadEntityVisibilityConfig(hass);
+    const loadPromise = loadEntityVisibilityConfig(hass).then((config) => {
       if (host._entityVisibilityUserId !== userId) return;
       host._entityVisibilityConfig = config;
       if (host._widgetConfigSession) host._syncWidgetConfigDom();
       host._syncSettingsDom();
       if (host.isConnected) host._refreshActiveGridOnly();
-    } catch (error) {
+    }).catch((error) => {
       console.warn("[MHA] Entity visibility configuration could not be loaded.", error);
-    }
+    }).finally(() => {
+      if (entityVisibilityLoadPromise === loadPromise) {
+        entityVisibilityLoadPromise = null;
+      }
+    });
+    entityVisibilityLoadPromise = loadPromise;
+    return loadPromise;
   }
 
   function setHass(hass) {
     host._hass = hass;
     host._configureI18n();
-    loadEntityVisibilityConfigForHass(hass);
+    const visibilityLoad = loadEntityVisibilityConfigForHass(hass);
+    visibilityLoad.then(() => populateDefaultWeatherPage());
     host.dataset.dataState = hass ? "ready" : "loading";
     if (host._widgetConfigSession && hass && !host._widgetConfigHassReady) {
       host._widgetConfigHassReady = true;
@@ -180,6 +250,7 @@ export function createHubStateIngressCoordinator(host, {
     syncActivePageWidgets: syncActivePageWidgetsToStorage,
     initialize,
     loadEntityVisibilityConfig: loadEntityVisibilityConfigForHass,
+    populateDefaultWeatherPage,
     setHass,
   };
 }

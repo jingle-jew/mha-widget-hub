@@ -1,6 +1,6 @@
-import { ICON_SYMBOL_CATALOG, ICON_SYMBOLS_BY_NAME } from "../icons/icon-symbol-catalog.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
-import { MHA_TABLER_ICON_REGISTRY } from "../ui/tabler-icons.js";
+import { resolveTablerIconName, TABLER_ICON_CATALOG } from "../ui/tabler-icons.js";
+import { RESPONSIVE_BREAKPOINTS } from "../layout/responsive.js";
 
 const CATEGORY_ORDER = Object.freeze([
   "suggested",
@@ -37,31 +37,21 @@ const CATEGORY_LABELS = Object.freeze({
 const CATEGORY_TABS = Object.freeze([
   Object.freeze({ id: "suggested", icon: "gear" }),
   Object.freeze({ id: "home", icon: "home" }),
-  Object.freeze({ id: "lighting", icon: "lamp" }),
-  Object.freeze({ id: "switch", icon: "toggle" }),
-  Object.freeze({ id: "climate", icon: "temperature" }),
+  Object.freeze({ id: "lighting", icon: "bulb" }),
+  Object.freeze({ id: "switch", icon: "toggle-right" }),
+  Object.freeze({ id: "climate", icon: "thermometer" }),
   Object.freeze({ id: "media_player", icon: "media-player" }),
   Object.freeze({ id: "security", icon: "shield" }),
+  Object.freeze({ id: "network", icon: "wifi" }),
+  Object.freeze({ id: "energy", icon: "bolt" }),
+  Object.freeze({ id: "weather", icon: "sun" }),
   Object.freeze({ id: "utility", icon: "search" }),
+  Object.freeze({ id: "navigation", icon: "compass" }),
+  Object.freeze({ id: "system", icon: "cpu" }),
 ]);
 
-const TABLER_ONLY_ICON_CATEGORIES = Object.freeze({
-  coffee: "utility",
-  "device-tv": "media_player",
-  lamp: "lighting",
-  flame: "climate",
-  snowflake: "climate",
-  propeller: "climate",
-  door: "home",
-  lock: "security",
-  music: "media_player",
-  camera: "security",
-  plug: "switch",
-  power: "switch",
-  movie: "media_player",
-});
-
 const MOBILE_BREAKPOINT_PX = 767;
+const TABLER_ICONS_BY_NAME = new Map(TABLER_ICON_CATALOG.map(icon => [icon.name, icon]));
 
 function titleCase(value = "") {
   return String(value || "")
@@ -86,15 +76,14 @@ function humanizeIconName(name = "") {
 }
 
 function resolveIconCategory(name = "") {
-  return ICON_SYMBOLS_BY_NAME[name]?.category
-    || TABLER_ONLY_ICON_CATEGORIES[name]
-    || "utility";
+  return TABLER_ICONS_BY_NAME.get(resolveTablerIconName(name))?.category || "utility";
 }
 
-function buildInventoryItem(name = "") {
-  const category = resolveIconCategory(name);
-  const label = humanizeIconName(name);
-  const searchText = normalizeQuery(`${name} ${label} ${category}`);
+function buildInventoryItem(icon = {}) {
+  const name = icon.name || "";
+  const category = icon.category || "utility";
+  const label = icon.label || humanizeIconName(name);
+  const searchText = normalizeQuery(`${name} ${label} ${category} ${(icon.tags || []).join(" ")}`);
   return Object.freeze({
     name,
     label,
@@ -104,15 +93,10 @@ function buildInventoryItem(name = "") {
 }
 
 function buildInventory() {
-  const names = new Set([
-    ...ICON_SYMBOL_CATALOG.map(icon => icon.name),
-    ...Object.keys(MHA_TABLER_ICON_REGISTRY),
-  ]);
-
   return Object.freeze(
-    [...names]
-      .filter(Boolean)
-      .sort((left, right) => left.localeCompare(right))
+    [...TABLER_ICON_CATALOG]
+      .filter(icon => icon.name)
+      .sort((left, right) => left.name.localeCompare(right.name))
       .map(buildInventoryItem),
   );
 }
@@ -129,6 +113,12 @@ export function filterIconPickerInventory(query = "") {
   if (!normalizedQuery) return ICON_PICKER_INVENTORY;
 
   return ICON_PICKER_INVENTORY.filter(item => item.searchText.includes(normalizedQuery));
+}
+
+export function shouldAutoFocusIconPickerSearch({ layout = "", viewportWidth = 0 } = {}) {
+  const normalizedLayout = String(layout || "").trim().toLowerCase();
+  if (normalizedLayout) return normalizedLayout === "desktop";
+  return (Number(viewportWidth) || 0) >= RESPONSIVE_BREAKPOINTS.desktop;
 }
 
 function createPickerTile({
@@ -281,6 +271,10 @@ export function createIconPickerControl({
   panel.className = "mha-widget-icon-picker-panel";
   panel.setAttribute("role", "dialog");
 
+  const backdrop = document.createElement("div");
+  backdrop.className = "mha-widget-icon-picker-backdrop";
+  backdrop.setAttribute("aria-hidden", "true");
+
   const searchWrap = document.createElement("label");
   searchWrap.className = "mha-widget-icon-picker-search";
 
@@ -327,6 +321,20 @@ export function createIconPickerControl({
     return viewportWidth <= MOBILE_BREAKPOINT_PX;
   }
 
+  function shouldAutoFocusSearch() {
+    const rootNode = root.getRootNode?.();
+    return shouldAutoFocusIconPickerSearch({
+      layout: rootNode?.host?.dataset?.layout || "",
+      viewportWidth: ownerWindow?.innerWidth || ownerDocument?.documentElement?.clientWidth || 0,
+    });
+  }
+
+  function focusSearchInput() {
+    if (!shouldAutoFocusSearch()) return;
+    searchInput.focus({ preventScroll: true });
+    searchInput.select();
+  }
+
   function dispatchInput() {
     root.dispatchEvent(new Event("input", { bubbles: true }));
   }
@@ -343,12 +351,25 @@ export function createIconPickerControl({
     return ownerDocument?.body || null;
   }
 
+  function syncMobileBackdrop() {
+    if (!isExpanded() || !panel.isConnected || !isMobileViewport()) {
+      backdrop.remove();
+      return;
+    }
+
+    if (!backdrop.isConnected) {
+      getPanelHost()?.append(backdrop);
+    }
+  }
+
   function placePanel() {
     if (!root.isConnected) {
       closePanel();
       return;
     }
     if (!ownerDocument?.body || !panel.isConnected) return;
+
+    syncMobileBackdrop();
 
     if (isMobileViewport()) {
       panel.dataset.mobilePresentation = "sheet";
@@ -422,6 +443,7 @@ export function createIconPickerControl({
     removeFloatingListeners();
     cleanupMutationObserver?.disconnect();
     cleanupMutationObserver = null;
+    backdrop.remove();
     panel.remove();
   }
 
@@ -450,12 +472,10 @@ export function createIconPickerControl({
 
     ownerWindow?.requestAnimationFrame?.(() => {
       placePanel();
-      searchInput.focus({ preventScroll: true });
-      searchInput.select();
+      focusSearchInput();
     });
     if (!ownerWindow?.requestAnimationFrame) {
-      searchInput.focus({ preventScroll: true });
-      searchInput.select();
+      focusSearchInput();
     }
   }
 
@@ -547,8 +567,10 @@ export function createIconPickerControl({
     if (
       root.contains(event.target)
       || panel.contains(event.target)
+      || backdrop.contains(event.target)
       || eventPath.includes(root)
       || eventPath.includes(panel)
+      || eventPath.includes(backdrop)
     ) return;
     closePanel();
   }
@@ -565,6 +587,16 @@ export function createIconPickerControl({
     event.stopPropagation();
     if (isExpanded()) closePanel();
     else openPanel();
+  });
+
+  backdrop.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+  });
+  backdrop.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    closePanel();
   });
 
   root.dataset.expanded = "false";

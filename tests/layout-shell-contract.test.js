@@ -358,11 +358,19 @@ test("mobile shell keeps the background viewport-anchored while widget content o
   );
   assert.match(
     gridSource,
-    /:host\(\[data-layout-variant="mobile-landscape"\]\) \.mha-workspace\s*\{[\s\S]*grid-template-columns:\s*var\(--mha-dock-zone-width\) minmax\(0, 1fr\);/,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\) \.mha-workspace\s*\{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\);/,
   );
   assert.match(
     gridSource,
-    /:host\(\[data-layout-variant="mobile-landscape"\]\) \.mha-dock-zone\s*\{[\s\S]*display:\s*grid;[\s\S]*grid-column:\s*1;/,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\) \.mha-dock-zone\s*\{[\s\S]*display:\s*none;/,
+  );
+  assert.match(
+    gridSource,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\) \.mha-widget-area\s*\{[\s\S]*grid-column:\s*1;[\s\S]*grid-row:\s*1;/,
+  );
+  assert.match(
+    gridSource,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\) \.mha-page-stage\s*\{[\s\S]*min-block-size:\s*100%;/,
   );
   assert.match(
     backgroundSource,
@@ -371,6 +379,10 @@ test("mobile shell keeps the background viewport-anchored while widget content o
 });
 
 test("media page mobile layout scrolls as snapped sheets in portrait and landscape", () => {
+  const androidEdgeSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "core", "android-edge-to-edge.css"),
+    "utf8",
+  );
   const gridSource = fs.readFileSync(
     path.join(REPO_ROOT, "styles", "layout", "widget-grid.css"),
     "utf8",
@@ -386,7 +398,7 @@ test("media page mobile layout scrolls as snapped sheets in portrait and landsca
   );
   assert.match(
     gridSource,
-    /:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\[data-media-page-active="true"\]\)\s+\.mha-page-stage\s*\{[\s\S]*block-size:\s*calc\([\s\S]*100%[\s\S]*var\(--mha-shell-content-bottom-inset,\s*var\(--mha-mobile-dock-footprint,\s*0px\)\)[\s\S]*\);/,
+    /:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\[data-media-page-active="true"\]\)\s+\.mha-page-stage\s*\{[\s\S]*block-size:\s*100%;[\s\S]*min-block-size:\s*0;/,
   );
   assert.match(
     gridSource,
@@ -406,23 +418,101 @@ test("media page mobile layout scrolls as snapped sheets in portrait and landsca
   );
   assert.match(
     source,
+    /@media \(min-width:\s*768px\)\s*\{[\s\S]*\.mha-media-page-widget-panel-surface\s*\{[\s\S]*display:\s*contents;/,
+  );
+  assert.match(
+    source,
     /\.mha-media-page\s*\{[\s\S]*overflow-anchor:\s*none;/,
   );
   assert.match(
     source,
-    /:host\(\[data-layout="mobile"\]\) \.mha-media-page\s*\{[\s\S]*overflow-y:\s*auto;[\s\S]*scroll-snap-type:\s*y mandatory;[\s\S]*touch-action:\s*pan-y;/,
+    /:host\(\[data-layout="mobile"\]\) \.mha-media-page\s*\{[\s\S]*--mha-media-page-mobile-sheet-block-size:\s*100dvh;[\s\S]*padding-block:\s*0;[\s\S]*overflow-y:\s*auto;[\s\S]*scroll-snap-type:\s*y mandatory;[\s\S]*touch-action:\s*pan-y;/,
   );
   assert.match(
     source,
-    /:host\(\[data-layout="mobile"\]\) \.mha-media-page-now-playing,\s*:host\(\[data-layout="mobile"\]\) \.mha-media-page-widget-panel\s*\{[\s\S]*scroll-snap-align:\s*start;[\s\S]*scroll-snap-stop:\s*always;/,
+    /--mha-media-page-safe-block-end:\s*max\([\s\S]*var\(--mha-mobile-dock-footprint,\s*var\(--mha-safe-bottom,\s*0px\)\)/,
   );
   assert.match(
     source,
-    /:host\(\[data-layout="mobile"\]\) \.mha-media-page-widget-panel\s*\{[\s\S]*min-block-size:\s*max\([\s\S]*var\(--mha-media-page-mobile-sheet-block-size\),[\s\S]*var\(--mha-grid-track-height, 100%\)/,
+    /:host\(\[data-layout="mobile"\]\) \.mha-media-page-now-playing,\s*:host\(\[data-layout="mobile"\]\) \.mha-media-page-widget-panel-surface\s*\{[\s\S]*scroll-snap-align:\s*start;[\s\S]*scroll-snap-stop:\s*always;/,
   );
   assert.match(
     source,
-    /:host\(\[data-layout-variant="mobile-landscape"\]\)\s+\.mha-media-page-now-playing-shell\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*\.9fr\) minmax\(0,\s*1fr\);[\s\S]*grid-template-rows:\s*minmax\(0,\s*1fr\) auto;/,
+    /:host\(\[data-layout="mobile"\]\) \.mha-media-page-now-playing\s*\{[\s\S]*block-size:\s*var\(--mha-media-page-mobile-sheet-block-size\);[\s\S]*padding-block:\s*var\(--mha-media-page-safe-block-start\)\s+var\(--mha-media-page-safe-block-end\);/,
+  );
+  assert.match(
+    androidEdgeSource,
+    /:host\(\.mha-android-edge-to-edge\)\s*\{[\s\S]*--mha-statusbar-fill-bleed:\s*clamp\(/,
+  );
+  assert.match(
+    source,
+    /:host\(\.mha-android-edge-to-edge\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\) \.mha-media-page\s*\{[\s\S]*--mha-media-page-safe-block-start:\s*calc\([\s\S]*var\(--mha-safe-top,\s*0px\)[\s\S]*var\(--mha-statusbar-fill-bleed,\s*0px\)/,
+  );
+  assert.match(
+    source,
+    /:host\(\.mha-android-edge-to-edge\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\) \.mha-media-page-widget-panel\.mha-settings-sheet\s*\{[\s\S]*--mha-mobile-sheet-top-gap:\s*calc\([\s\S]*var\(--mha-safe-top,\s*0px\)[\s\S]*var\(--mha-statusbar-fill-bleed,\s*0px\)[\s\S]*--mha-mobile-sheet-max-height:\s*calc\(100dvh - var\(--mha-mobile-sheet-top-gap\)\);/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-layout="mobile"\]\) \.mha-media-page-widget-panel-surface\s*\{[\s\S]*block-size:\s*var\(--mha-media-page-mobile-sheet-block-size\);[\s\S]*min-block-size:\s*var\(--mha-media-page-mobile-sheet-block-size\);/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-layout="mobile"\]\) \.mha-media-page-widget-panel-body,\s*:host\(\[data-layout="mobile"\]\) \.mha-media-page-player-list\s*\{[\s\S]*block-size:\s*100%;[\s\S]*min-block-size:\s*0;/,
+  );
+  assert.match(
+    source,
+    /\.mha-media-page-widget-panel-surface\s*\{[\s\S]*position:\s*static;[\s\S]*pointer-events:\s*auto;/,
+  );
+  assert.match(
+    source,
+    /> \.mha-media-widget\.mha-media-page-player-widget\s*\{[\s\S]*--mha-media-padding:\s*var\(--mha-widget-content-inset\);[\s\S]*--mha-media-page-player-artwork-size:\s*calc\([\s\S]*100cqb[\s\S]*var\(--mha-media-padding\)[\s\S]*\);[\s\S]*grid-template-columns:\s*var\(--mha-media-page-player-artwork-size\) minmax\(0, 1fr\) max-content;/,
+  );
+  assert.match(
+    source,
+    /\.mha-media-page-player-widget\[data-media-page-player="true"\] > \.mha-media-widget-artwork\s*\{[\s\S]*inline-size:\s*100%;[\s\S]*block-size:\s*100%;[\s\S]*min-inline-size:\s*0;[\s\S]*aspect-ratio:\s*1;[\s\S]*align-self:\s*stretch;/,
+  );
+  assert.match(
+    source,
+    /\.mha-media-page-player-info \.mha-media-widget-text\s*\{[\s\S]*align-self:\s*end;[\s\S]*justify-self:\s*stretch;[\s\S]*text-align:\s*start;/,
+  );
+  assert.match(
+    source,
+    /\.mha-media-page-player-widget\[data-media-controls-mode="volume-only"\] > \.mha-media-widget-controls-shell\s*\{[\s\S]*align-self:\s*end;/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\)[\s\S]*\.mha-media-page-player-info \.mha-media-widget-text\s*\{[\s\S]*grid-row:\s*1;[\s\S]*align-self:\s*end;/,
+  );
+  assert.match(
+    source,
+    /\.mha-media-page \.mha-media-page-player-list > \.mha-media-page-auto-player \.mha-media-page-player-widget\[data-media-page-player="true"\] \.mha-media-widget-source-badge\s*\{[\s\S]*display:\s*inline-flex;[\s\S]*background:\s*var\(--mha-control-surface, var\(--mha-surface-secondary\)\);/,
+  );
+  assert.match(
+    source,
+    /--mha-media-page-surface:\s*var\(--mha-surface-panel, var\(--mha-widget-surface\)\);[\s\S]*--mha-media-page-panel-surface:\s*var\(--mha-panel-surface, var\(--mha-media-page-surface\)\);[\s\S]*--mha-media-page-on-surface:\s*var\(--mha-text-primary, var\(--mha-text\)\);/,
+  );
+  assert.match(
+    source,
+    /\.mha-media-page-player-list > \.mha-media-page-auto-player\[data-media-page-player="true"\]\s*\{[\s\S]*--mha-media-page-player-card-surface:\s*var\([\s\S]*--mha-widget-shell-surface,[\s\S]*--mha-surface-primary[\s\S]*background:\s*var\(--mha-media-page-player-card-surface\);/,
+  );
+  assert.match(
+    source,
+    /\.mha-media-page-player-widget\[data-media-page-player="true"\]\s*\{[\s\S]*color:\s*var\(--mha-text-primary, var\(--mha-text\)\);[\s\S]*--mha-media-artwork-foreground:\s*var\(--mha-text-primary, var\(--mha-text\)\);[\s\S]*--mha-media-artwork-control-surface:\s*var\(--mha-control-surface, var\(--mha-surface-secondary\)\);/,
+  );
+  assert.match(
+    source,
+    /\.mha-media-page\[data-artwork-tone\] \.mha-media-page-now-playing \.mha-media-widget-title\s*\{[\s\S]*color:\s*var\(--mha-media-artwork-foreground\);/,
+  );
+  assert.doesNotMatch(source, /\.mha-media-page-player-widget\[data-artwork-tone=/);
+  assert.doesNotMatch(source, /:host\(\[data-theme-style="oneui"\]\) \.mha-media-page \.mha-media-page-player-list/);
+  assert.match(
+    source,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\[data-media-page-active="true"\]\.is-mobile-floating-controls-hidden\) \.mha-dock\s*\{[\s\S]*opacity:\s*0;[\s\S]*pointer-events:\s*none;/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\)\s+\.mha-media-page-now-playing-shell\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*\.9fr\) minmax\(0,\s*1fr\);[\s\S]*grid-template-rows:\s*auto auto auto;[\s\S]*align-content:\s*center;/,
   );
   assert.match(
     source,
@@ -430,7 +520,11 @@ test("media page mobile layout scrolls as snapped sheets in portrait and landsca
   );
   assert.match(
     source,
-    /:host\(\[data-layout-variant="mobile-landscape"\]\) \.mha-media-page-transport\s*\{[\s\S]*grid-row:\s*1;[\s\S]*align-self:\s*end;/,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\) \.mha-media-page \.mha-media-widget-text\s*\{[\s\S]*grid-column:\s*2;[\s\S]*grid-row:\s*1;[\s\S]*text-align:\s*start;/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\) \.mha-media-page-transport\s*\{[\s\S]*grid-row:\s*2;[\s\S]*align-self:\s*center;/,
   );
 });
 
@@ -475,6 +569,14 @@ test("floating controls and settings sheet consume responsive variants instead o
   assert.match(
     floatingControlsSource,
     /:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\.is-mobile-floating-controls-hidden\) \.mha-main-edit-button/,
+  );
+  assert.match(
+    floatingControlsSource,
+    /:host\(\[data-layout="tablet"\]\) \.mha-primary-edit-button\[data-touch-edit-close="true"\]\s*\{[\s\S]*position:\s*absolute;/,
+  );
+  assert.match(
+    floatingControlsSource,
+    /:host\(\[data-layout="tablet"\]\.is-editing\) \.mha-add-widget-button:not\(\[hidden\]\)\s*\{[\s\S]*position:\s*absolute;[\s\S]*inset-inline-start:\s*max\(/,
   );
   assert.match(
     settingsPanelSource,

@@ -2,7 +2,7 @@ import {
   writeJson,
   writeStorageValue,
 } from "./src/core/storage.js?v=storage-v1";
-import { createHubStateIngressCoordinator } from "./src/core/hub-state-ingress-coordinator.js";
+import { createHubStateIngressCoordinator } from "./src/core/hub-state-ingress-coordinator.js?v=media-persistence-v2";
 import {
   createCriticalBootStyle,
 } from "./src/core/mha-frontend-assets.js?v=phase1";
@@ -18,7 +18,7 @@ import {
 import {destroyDomSubtree} from "./src/core/dom-lifecycle.js";
 import { createBootLifecycleCoordinator } from "./src/core/boot-lifecycle-coordinator.js";
 import {ICONS} from "./src/components/icons.js";
-import { createRenderPipeline } from "./src/layout/render-pipeline.js?v=ios-wallpaper-svg-1";
+import { createRenderPipeline } from "./src/layout/render-pipeline.js?v=media-page-ios-cards-v3";
 import { createResponsiveDockCoordinator } from "./src/layout/responsive-dock-coordinator.js";
 import {
   captureDockRenderState,
@@ -84,8 +84,9 @@ import { applyHideHaSidebarSetting } from "./src/settings/ha-sidebar-setting.js"
 import { applyDockLabelsSetting } from "./src/settings/dock-labels-setting.js";
 import { applyStatusBarModeSetting } from "./src/settings/status-bar-mode-setting.js";
 import { openDockPageSettingsForPage } from "./src/settings/dock-page-settings.js";
+import { updatePageConfig } from "./src/pages/page-controller.js?v=media-persistence-v2";
 import { getStyleManifest } from "./src/styles/style-manifest.js";
-import { syncMediaPageSettingsPanel } from "./src/pages/media-page-settings.js";
+import { syncMediaPageSettingsPanel } from "./src/pages/media-page-settings.js?v=media-persistence-v4";
 import {
   createDefaultPageConfig,
   isMediaPageExperienceActive,
@@ -93,7 +94,7 @@ import {
   isWeatherPage,
   normalizeMediaPageConfig,
   PAGE_TYPES,
-} from "./src/pages/page-types.js";
+} from "./src/pages/page-types.js?v=media-persistence-v2";
 
 const MHA_FRONTEND_ROOT_URL = window.__MHA_FRONTEND_ROOT_URL__
   ? new URL(window.__MHA_FRONTEND_ROOT_URL__)
@@ -518,6 +519,7 @@ _buildMediaPageProps(){
     hass:this._hass,
     visibilityConfig:this._entityVisibilityConfig,
     onSelectPlayer:(playerId)=>this._selectMediaPagePlayer(playerId),
+    onReorderPlayers:(playerIds)=>this._updateActiveMediaPageConfig({enabledPlayerIds:playerIds}),
     onOpenSettings:()=>this._openMediaPageSettings(),
     onToggleEditMode:()=>this.toggleEditMode(),
     onOpenWidgetManager:()=>this._openWidgetManager("media"),
@@ -967,12 +969,15 @@ _getPageTransitionDirection(previousPage=null,nextPage=null){
         });
       }
     }else{
-      this._skipStabilizingRenderOnce=true;
-      this.render();
-      restoreDockRenderState(this.shadowRoot,dockRenderState,{
-        scheduleMobileDockOverflowState:()=>this._scheduleMobileDockOverflowState(),
-        updateDockActiveState:()=>this._updateDockActiveState(),
-      });
+      const replaced=this._replaceActivePagePanel();
+      if(!replaced){
+        this._skipStabilizingRenderOnce=true;
+        this.render();
+        restoreDockRenderState(this.shadowRoot,dockRenderState,{
+          scheduleMobileDockOverflowState:()=>this._scheduleMobileDockOverflowState(),
+          updateDockActiveState:()=>this._updateDockActiveState(),
+        });
+      }
     }
 
 	  if(prefersReducedMotion)return;
@@ -1067,6 +1072,9 @@ _scheduleMobileDockOverflowState(){
 }
 _refreshActiveGridOnly(){
   return this._widgetSurfaceCoordinator.refreshActiveGridOnly();
+}
+_replaceActivePagePanel(){
+  return getRenderPipelineForHost(this).replaceActivePagePanel();
 }
 _syncActivePageBackdropState({
   activePage=this._getActivePage(),
@@ -1208,6 +1216,9 @@ _placePendingWidgetAtSlot(x,y){
 }
 _moveWidgetToDropSlot(id,x,y){
   return this._placementController.moveToDropSlot(id,x,y);
+}
+_swapWidgets(sourceId,targetId){
+  return this._placementController.swapWidgets(sourceId,targetId);
 }
 _moveWidgetByDirection(id,direction){
   return this._placementController.moveByDirection(id,direction);

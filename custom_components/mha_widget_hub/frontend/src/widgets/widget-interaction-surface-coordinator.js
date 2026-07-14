@@ -67,6 +67,14 @@ export function createWidgetInteractionSurfaceCoordinator(host) {
       });
     }
     host.shadowRoot?.querySelectorAll?.(".mha-widget")?.forEach((element) => {
+      if (element.dataset?.mediaPagePlayer === "true") {
+        // Media-page cards use their own pointer-capture swap interaction.
+        // Enabling native HTML drag here steals the pointer stream before
+        // media-page.js can resolve the drop target and commit the swap.
+        element.draggable = false;
+        element.classList.toggle("is-editing", host._isEditing);
+        return;
+      }
       element.draggable = false;
       element.removeAttribute("draggable");
       element.classList.toggle("is-editing", host._isEditing);

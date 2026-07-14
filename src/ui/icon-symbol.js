@@ -8,38 +8,18 @@
  * Any symbol can be placed in any icon shape later.
  */
 
-import { getIconSymbol } from "../icons/icon-symbol-catalog.js";
-import { resolveTablerIconForMhaName } from "./tabler-icons.js";
+import { getTablerIcon, resolveTablerIconName } from "./tabler-icons.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
-function createSvgPath(d = "") {
-  const path = document.createElementNS(SVG_NS, "path");
-  path.setAttribute("d", d);
-  return path;
+function resolveIconSymbolDefinition(name = "") {
+  return getTablerIcon(name);
 }
 
-function resolveIconSymbolDefinition(name = "") {
-  const tablerIcon = resolveTablerIconForMhaName(name);
-  if (tablerIcon) return tablerIcon;
-
-  const localIcon = getIconSymbol(name);
-  if (localIcon) {
-    return {
-      provider: "local",
-      renderMode: "fill",
-      viewBox: localIcon.viewBox || "0 0 24 24",
-      paths: localIcon.path ? [localIcon.path] : [],
-    };
-  }
-
-  const fallbackIcon = getIconSymbol("grid");
-  return {
-    provider: fallbackIcon ? "local" : "empty",
-    renderMode: "fill",
-    viewBox: fallbackIcon?.viewBox || "0 0 24 24",
-    paths: fallbackIcon?.path ? [fallbackIcon.path] : [],
-  };
+function createSvgNode([tagName = "path", attributes = {}] = []) {
+  const node = document.createElementNS(SVG_NS, tagName);
+  Object.entries(attributes).forEach(([name, value]) => node.setAttribute(name, String(value)));
+  return node;
 }
 
 export function createIconSymbol({
@@ -48,11 +28,13 @@ export function createIconSymbol({
   className = "",
 } = {}) {
   const symbolDefinition = resolveIconSymbolDefinition(name);
+  const resolvedName = resolveTablerIconName(name);
 
   const symbol = document.createElement("span");
   symbol.className = ["mha-icon-symbol", className].filter(Boolean).join(" ");
   symbol.dataset.iconSymbol = name;
-  symbol.dataset.iconProvider = symbolDefinition.provider || "local";
+  symbol.dataset.iconResolved = resolvedName;
+  symbol.dataset.iconProvider = "tabler";
 
   if (label) {
     symbol.setAttribute("role", "img");
@@ -78,8 +60,8 @@ export function createIconSymbol({
     svg.setAttribute("stroke", "none");
   }
 
-  for (const pathDefinition of symbolDefinition?.paths || []) {
-    svg.append(createSvgPath(pathDefinition));
+  for (const nodeDefinition of symbolDefinition?.nodes || []) {
+    svg.append(createSvgNode(nodeDefinition));
   }
 
   symbol.append(svg);

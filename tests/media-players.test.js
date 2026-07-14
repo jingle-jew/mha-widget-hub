@@ -85,11 +85,51 @@ test("media page selection falls back when configured players become unavailable
   }, availablePlayers);
 
   assert.deepEqual(enabledPlayers.map(player => player.entity_id), [
-    "media_player.bedroom",
     "media_player.kitchen",
+    "media_player.bedroom",
   ]);
   assert.equal(
     resolveSelectedMediaPlayerId({ defaultPlayerId: "media_player.office" }, enabledPlayers),
+    "media_player.kitchen",
+  );
+});
+
+test("media page preserves the configured player order", () => {
+  const availablePlayers = [
+    { entity_id: "media_player.bedroom", name: "Bedroom" },
+    { entity_id: "media_player.kitchen", name: "Kitchen" },
+  ];
+
+  const enabledPlayers = resolveEnabledMediaPlayers({
+    enabledPlayerIds: ["media_player.kitchen", "media_player.bedroom"],
+  }, availablePlayers);
+
+  assert.deepEqual(enabledPlayers.map(player => player.entity_id), [
+    "media_player.kitchen",
     "media_player.bedroom",
+  ]);
+});
+
+test("media page keeps an explicit empty enabled-player list instead of restoring all players", () => {
+  const availablePlayers = [
+    { entity_id: "media_player.bedroom", name: "Bedroom" },
+    { entity_id: "media_player.kitchen", name: "Kitchen" },
+  ];
+
+  assert.deepEqual(
+    resolveEnabledMediaPlayers({ enabledPlayerIds: [], enabledPlayerIdsConfigured: true }, availablePlayers),
+    [],
+  );
+  assert.deepEqual(
+    resolveEnabledMediaPlayers({}, availablePlayers).map(player => player.entity_id),
+    ["media_player.bedroom", "media_player.kitchen"],
+  );
+  assert.deepEqual(
+    resolveEnabledMediaPlayers({ enabledPlayerIds: [] }, availablePlayers).map(player => player.entity_id),
+    ["media_player.bedroom", "media_player.kitchen"],
+  );
+  assert.deepEqual(
+    resolveEnabledMediaPlayers({ enabledPlayerIds: [], enabledPlayerIdsConfigured: true }, availablePlayers),
+    [],
   );
 });

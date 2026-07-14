@@ -15,6 +15,13 @@ const OPEN_WIDGET_SURFACE_SELECTOR = [
   '.mha-media-page-settings-panel[data-open="true"]:not([hidden])',
 ].join(",");
 
+const WIDGET_SURFACE_SELECTOR = [
+  ".mha-widget-manager-panel",
+  "section.mha-page-creator:not(.mha-widget-config-popup)",
+  ".mha-widget-config-popup",
+  ".mha-media-page-settings-panel",
+].join(",");
+
 export function applyWidgetSurfaceHostLayoutState(root, panel) {
   const host = root?.host;
   if (!host || !panel?.dataset) return panel;
@@ -47,7 +54,10 @@ export function applyWidgetSurfaceHostLayoutState(root, panel) {
 export function syncWidgetSurfaceOpenState(root) {
   const host = root?.host;
   if (!host) return;
-  const open = Boolean(root?.querySelector?.(OPEN_WIDGET_SURFACE_SELECTOR));
+  const open = Boolean(root?.querySelector?.(OPEN_WIDGET_SURFACE_SELECTOR))
+    || [...root?.querySelectorAll?.(WIDGET_SURFACE_SELECTOR) || []].some(panel => (
+      panel?._mhaDesiredOpenState === true && !panel.hidden
+    ));
   host.classList.toggle("is-widget-surface-open", open);
   host.dataset.widgetSurfaceOpen = String(open);
 }
@@ -95,6 +105,7 @@ export function buildWidgetConfigPanelProps({
   visibilityConfig = null,
   onCancel = () => {},
   onSave = () => {},
+  onChange,
   onRerender = () => {},
 } = {}) {
   return {
@@ -105,9 +116,9 @@ export function buildWidgetConfigPanelProps({
     }),
     onCancel,
     onSave,
-    onChange: (change) => {
+    onChange: onChange || ((change) => {
       if (change?.rerender) onRerender();
-    },
+    }),
   };
 }
 

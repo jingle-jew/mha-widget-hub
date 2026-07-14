@@ -258,6 +258,36 @@ export class PlacementController {
     return true;
   }
 
+  swapWidgets(sourceId, targetId) {
+    if (!this.canMoveWidget(sourceId) || !sourceId || !targetId || sourceId === targetId) {
+      return false;
+    }
+
+    const positions = this.getPositions();
+    const widgets = this.getWidgets();
+    const sourcePosition = positions?.[sourceId];
+    const targetPosition = positions?.[targetId];
+    if (!sourcePosition || !targetPosition) return false;
+    if (!widgets.some(widget => widget.id === sourceId)
+      || !widgets.some(widget => widget.id === targetId)) return false;
+
+    const next = {
+      ...positions,
+      [sourceId]: { ...targetPosition },
+      [targetId]: { ...sourcePosition },
+    };
+    const { units, rowUnits } = this.getGridBounds();
+    if (!this.isPositionMapValid(next, widgets, units, rowUnits)) return false;
+
+    this.savePositions(next);
+    this.setActiveMoveWidgetId("");
+    this.applyPositions(next);
+    this.refreshDropSlots();
+    this.syncEditMode();
+    this.scheduleLayoutSync();
+    return true;
+  }
+
   moveByDirection(widgetId, direction) {
     if (!this.canMoveWidget(widgetId)) return false;
 

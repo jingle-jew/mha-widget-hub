@@ -1,11 +1,22 @@
 import { runMediaPlayerAction } from "../ha/actions.js";
-import { formatMediaDuration, getMediaStateLabel } from "../ha/media.js";
+import {
+  formatMediaDuration,
+  getMediaStateLabel,
+  isMediaPlayerInactiveState,
+} from "../ha/media.js";
 import {
   getAvailableMediaPlayers,
   resolveEnabledMediaPlayers,
-  resolveSelectedMediaPlayerId,
-} from "../ha/media-players.js";
+} from "../ha/media-players.js?v=media-persistence-v2";
 import { t } from "../i18n/index.js";
+import { createPanelShell } from "../panels/panel-shell.js";
+import {
+  applyPanelSurfaceContract,
+  PANEL_MOBILE_PRESENTATIONS,
+  PANEL_SURFACE_ROLES,
+} from "../panels/panel-surface-contract.js";
+import { syncPanelVisibility } from "../panels/panel-visibility-controller.js";
+import { SETTINGS_PANEL_VISIBILITY_TRANSITION_MS } from "../panels/panel-transition-timing.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
 import { findThemeStyleId } from "../settings/theme-registry.js";
 import {
@@ -13,11 +24,14 @@ import {
   createMediaArtwork,
   createMediaPlaybackButtons,
   createMediaProgress,
+  createMediaPagePlayerWidget,
+  createMediaWidgetContent,
   createMediaTitleStack,
   createMediaTransitionCache,
   setMediaArtworkImage,
   setMediaProgressState,
-} from "../widgets/media-widget.js";
+  syncMediaArtworkTone,
+} from "../widgets/media-widget.js?media-page-ios-card-v1";
 
 function createIconButton({ label, icon, className = "", onClick = () => {} } = {}) {
   const button = document.createElement("button");
@@ -62,12 +76,142 @@ function buildStatusLine({
   });
 }
 
-function buildViewState(page = {}, hass, visibilityConfig, cache = null) {
+export const MEDIA_PAGE_INACTIVE_FALLBACK_MS = 10_000;
+const MOBILE_MEDIA_PAGE_SCROLL_THRESHOLD = 4;
+
+export function resolveMobileMediaPagePane(scrollTop = 0) {
+  return Number(scrollTop || 0) <= MOBILE_MEDIA_PAGE_SCROLL_THRESHOLD
+    ? "now-playing"
+    : "available-players";
+}
+
+function getMediaPageHost(root) {
+  return root?.getRootNode?.()?.host || null;
+}
+
+function isMobileMediaPage(root) {
+  const host = getMediaPageHost(root);
+  return host?.dataset?.layout === "mobile";
+}
+
+function scrollMobileMediaPageToNowPlaying(root) {
+  if (typeof root?.scrollTo === "function") {
+    root.scrollTo({ top: 0, behavior: "smooth" });
+    return;
+  }
+  if (root) root.scrollTop = 0;
+}
+
+function createMobileMediaPageScrollCoordinator(root, playerList, { onPaneChange = () => {} } = {}) {
+  const syncDockState = () => {
+    const host = getMediaPageHost(root);
+    if (!host?.classList) return "disabled";
+    if (!isMobileMediaPage(root)) {
+      root.dataset.mobileMediaPane = "disabled";
+      onPaneChange("disabled");
+      host.classList.remove("is-mobile-floating-controls-hidden");
+      return "disabled";
+    }
+
+    const pane = resolveMobileMediaPagePane(root.scrollTop);
+    root.dataset.mobileMediaPane = pane;
+    onPaneChange(pane);
+    host.classList.toggle(
+      "is-mobile-floating-controls-hidden",
+      pane !== "now-playing",
+    );
+    return pane;
+  };
+
+  const reset = () => {
+    root.scrollTop = 0;
+    if (playerList) playerList.scrollTop = 0;
+    syncDockState();
+  };
+
+  root.addEventListener("scroll", syncDockState, { passive: true });
+
+  return {
+    reset,
+    syncDockState,
+    destroy() {
+      root.removeEventListener("scroll", syncDockState);
+    },
+  };
+}
+
+function isPlayerPlaying(hass, playerId = "") {
+  return String(hass?.states?.[playerId]?.state || "").trim().toLowerCase() === "playing";
+}
+
+function isPlayerSelectedMediaState(hass, playerId = "") {
+  const state = String(hass?.states?.[playerId]?.state || "").trim().toLowerCase();
+  return state === "playing" || state === "paused";
+}
+
+function getEnabledPlayerIdSet(enabledPlayers = []) {
+  return new Set(enabledPlayers.map(player => player.entity_id).filter(Boolean));
+}
+
+export function resolveMediaPageNowPlayingId({
+  config = {},
+  enabledPlayers = [],
+  hass = null,
+  transientPlayerId = "",
+  committedPlayerId = "",
+  lastPlayingPlayerId = "",
+} = {}) {
+  const ids = getEnabledPlayerIdSet(enabledPlayers);
+  const candidates = [
+    transientPlayerId,
+    committedPlayerId,
+    lastPlayingPlayerId,
+  ];
+
+  for (const candidate of candidates) {
+    if (candidate && ids.has(candidate)) return candidate;
+  }
+
+  const configuredSelectedId = String(config?.selectedPlayerId || "").trim();
+  if (configuredSelectedId && ids.has(configuredSelectedId) && isPlayerSelectedMediaState(hass, configuredSelectedId)) {
+    return configuredSelectedId;
+  }
+
+  const configuredDefaultId = String(config?.defaultPlayerId || "").trim();
+  if (configuredDefaultId && ids.has(configuredDefaultId)) return configuredDefaultId;
+  return enabledPlayers[0]?.entity_id || "";
+}
+
+function normalizeInactiveNowPlayingMedia(media = {}) {
+  if (!isMediaPlayerInactiveState(media.entity?.state)) return media;
+
+  return {
+    ...media,
+    state: String(media.entity?.state || media.state || "unknown").trim().toLowerCase(),
+    playing: false,
+    title: media.name,
+    subtitle: getMediaStateLabel(media.entity?.state || media.state),
+    artist: "",
+    artworkUrl: "",
+    hasLiveMetadata: false,
+    progress: { available: false, current: 0, duration: 0, ratio: 0 },
+    usingGraceCache: false,
+  };
+}
+
+function buildViewState(page = {}, hass, visibilityConfig, cache = null, selection = {}) {
   const availablePlayers = getAvailableMediaPlayers(hass, visibilityConfig);
   const enabledPlayers = resolveEnabledMediaPlayers(page.config, availablePlayers);
-  const selectedPlayerId = resolveSelectedMediaPlayerId(page.config, enabledPlayers);
+  const selectedPlayerId = resolveMediaPageNowPlayingId({
+    config: page.config,
+    enabledPlayers,
+    hass,
+    ...selection,
+  });
   const selectedPlayer = enabledPlayers.find(player => player.entity_id === selectedPlayerId) || null;
-  const media = buildMediaWidgetData({ entityId: selectedPlayerId }, hass, cache);
+  const media = normalizeInactiveNowPlayingMedia(
+    buildMediaWidgetData({ entityId: selectedPlayerId }, hass, cache),
+  );
   const themeStyle = findThemeStyleId(globalThis.document?.documentElement?.dataset?.themeStyle || "oneui");
   const effectiveVisualStyle = resolveEffectiveVisualStyle(
     themeStyle,
@@ -100,10 +244,22 @@ function syncControlGroup(container, buttons = []) {
   container.replaceChildren(...buttons);
 }
 
+export function swapOrderedIds(ids = [], sourceId = "", targetId = "") {
+  const nextOrder = Array.isArray(ids) ? [...ids] : [];
+  if (!sourceId || !targetId || sourceId === targetId) return nextOrder;
+  const sourceIndex = nextOrder.indexOf(sourceId);
+  const targetIndex = nextOrder.indexOf(targetId);
+  if (sourceIndex < 0 || targetIndex < 0) return nextOrder;
+  [nextOrder[sourceIndex], nextOrder[targetIndex]] = [nextOrder[targetIndex], nextOrder[sourceIndex]];
+  return nextOrder;
+}
+
 export function createMediaPage(page = {}, {
   hass = null,
   visibilityConfig = null,
   onOpenSettings = () => {},
+  onSelectPlayer = () => {},
+  onReorderPlayers = () => {},
   onToggleEditMode = () => {},
   onOpenWidgetManager = () => {},
   onCloseEditMode = () => {},
@@ -141,7 +297,7 @@ export function createMediaPage(page = {}, {
     className: "mha-media-page-artwork-settings",
     onClick: onOpenSettings,
   });
-  artworkSection.append(artwork, settingsButton);
+  artworkSection.append(artwork);
 
   const primary = document.createElement("div");
   primary.className = "mha-media-page-primary";
@@ -177,31 +333,11 @@ export function createMediaPage(page = {}, {
   nowPlayingShell.append(artworkSection, primary, controls);
   nowPlaying.append(nowPlayingShell);
 
-  const widgetPanel = document.createElement("aside");
-  widgetPanel.className = "mha-media-page-widget-panel mha-page-panel--grid";
-
-  const widgetPanelHeader = document.createElement("div");
-  widgetPanelHeader.className = "mha-media-page-widget-panel-header";
-
-  const widgetPanelTitle = document.createElement("h2");
-  widgetPanelTitle.className = "mha-media-page-widget-panel-title";
-  widgetPanelTitle.textContent = t("mediaPage.availablePlayers", "Available players");
-
-  const widgetPanelActions = document.createElement("div");
-  widgetPanelActions.className = "mha-media-page-widget-panel-actions";
-
   const editButton = createIconButton({
     label: t("common.edit", "Edit"),
     icon: "edit",
     className: "mha-media-page-widget-panel-edit",
     onClick: onToggleEditMode,
-  });
-
-  const addButton = createIconButton({
-    label: t("settings.addWidget", "Add widget"),
-    icon: "plus",
-    className: "mha-media-page-widget-panel-add",
-    onClick: onOpenWidgetManager,
   });
 
   const closeEditButton = createIconButton({
@@ -210,45 +346,205 @@ export function createMediaPage(page = {}, {
     className: "mha-media-page-widget-panel-close",
     onClick: onCloseEditMode,
   });
-  widgetPanelActions.append(editButton, addButton, closeEditButton);
+  settingsButton.className = "mha-media-page-icon-button mha-media-page-widget-panel-settings";
 
   const widgetPanelBody = document.createElement("div");
   widgetPanelBody.className = "mha-media-page-widget-panel-body";
 
-  const grid = document.createElement("section");
-  grid.className = "mha-grid mha-media-page-widget-grid";
-  grid.setAttribute("aria-label", t("settings.widgetGrid", "Widget grid"));
-  if (grid.dataset) grid.dataset.pageType = page?.type || "media-players";
+  const playerList = document.createElement("section");
+  playerList.className = "mha-media-page-player-list";
+  playerList.setAttribute("aria-label", t("mediaPage.availablePlayers", "Available players"));
+  playerList.setAttribute("role", "list");
 
   const emptyState = document.createElement("p");
   emptyState.className = "mha-media-page-widget-empty";
   emptyState.textContent = t(
     "mediaPage.widgetGridHint",
-    "Add media widgets here to build the player list.",
+    "Selected players appear here automatically.",
   );
 
-  widgetPanelHeader.append(widgetPanelTitle, widgetPanelActions);
-  widgetPanelBody.append(grid, emptyState);
-  widgetPanel.append(widgetPanelHeader, widgetPanelBody);
+  widgetPanelBody.append(playerList, emptyState);
 
-  layout.append(nowPlaying, widgetPanel);
+  let availablePlayersPanel = null;
+  let availablePlayersSheetCloseRequested = false;
+  const closeAvailablePlayersSheet = () => {
+    availablePlayersSheetCloseRequested = true;
+    syncPanelVisibility(availablePlayersPanel, false, {
+      transitionMs: SETTINGS_PANEL_VISIBILITY_TRANSITION_MS,
+      closeStateDatasetKey: "panelCloseState",
+    });
+    scrollMobileMediaPageToNowPlaying(root);
+  };
+
+  availablePlayersPanel = createPanelShell({
+    open: false,
+    rootClassName: "mha-media-page-widget-panel-surface",
+    scrimClassName: "mha-media-page-widget-panel-scrim",
+    sheetClassName: "mha-media-page-widget-panel",
+    headerClassName: "mha-media-page-widget-panel-header",
+    closeClassName: "mha-media-page-widget-panel-close",
+    title: t("mediaPage.availablePlayers", "Available players"),
+    ariaLabel: t("mediaPage.availablePlayers", "Available players"),
+    closeLabel: t("common.close", "Close"),
+    scrimLabel: t("mediaPage.closeAvailablePlayers", "Close available players"),
+    onClose: closeAvailablePlayersSheet,
+  });
+  const syncAvailablePlayersSheetLayout = () => {
+    const host = getMediaPageHost(root);
+    const layout = String(host?.dataset?.layout || "");
+    const isMobileLayout = layout === "mobile";
+    const widgetPanel = availablePlayersPanel.querySelector(".mha-media-page-widget-panel");
+    const scrim = availablePlayersPanel.querySelector(".mha-media-page-widget-panel-scrim");
+    const header = widgetPanel?.querySelector(".mha-media-page-widget-panel-header");
+
+    availablePlayersPanel.dataset.layout = layout;
+    availablePlayersPanel.dataset.mobileLayout = String(isMobileLayout);
+    availablePlayersPanel.dataset.mobileLandscape = String(
+      host?.dataset?.layoutVariant === "mobile-landscape",
+    );
+
+    /* The shared overlay contract belongs to the mobile presentation only.
+     * Desktop and tablet keep the original inline media panel semantics. */
+    availablePlayersPanel.classList.toggle("mha-settings-panel", isMobileLayout);
+    scrim?.classList.toggle("mha-settings-scrim", isMobileLayout);
+    widgetPanel?.classList.toggle("mha-settings-sheet", isMobileLayout);
+    header?.classList.toggle("mha-settings-header", isMobileLayout);
+    if (scrim) scrim.hidden = !isMobileLayout;
+
+    if (isMobileLayout) {
+      widgetPanel?.setAttribute("role", "dialog");
+      widgetPanel?.setAttribute("aria-modal", "true");
+      applyPanelSurfaceContract(availablePlayersPanel, {
+        surfaceRole: PANEL_SURFACE_ROLES.PANEL,
+        mobilePresentation: PANEL_MOBILE_PRESENTATIONS.SHEET,
+      });
+      return;
+    }
+
+    widgetPanel?.setAttribute("role", "complementary");
+    widgetPanel?.removeAttribute("aria-modal");
+    delete availablePlayersPanel.dataset.surfaceRole;
+    delete availablePlayersPanel.dataset.mobilePresentation;
+    if (widgetPanel?.dataset) {
+      delete widgetPanel.dataset.surfaceRole;
+      delete widgetPanel.dataset.mobilePresentation;
+    }
+  };
+  syncAvailablePlayersSheetLayout();
+
+  const widgetPanel = availablePlayersPanel.querySelector(".mha-media-page-widget-panel");
+  const shellCloseButton = widgetPanel?.querySelector(".mha-media-page-widget-panel-close");
+  shellCloseButton?.remove();
+  const shellHeader = widgetPanel?.querySelector(".mha-media-page-widget-panel-header");
+  const shellTitle = shellHeader?.querySelector("h2");
+  if (shellTitle) {
+    shellTitle.className = "mha-media-page-widget-panel-title";
+  }
+  const shellActions = shellHeader?.querySelector(".mha-media-page-widget-panel-actions")
+    || document.createElement("div");
+  shellActions.className = "mha-media-page-widget-panel-actions";
+  if (!shellActions.parentNode) shellHeader?.append(shellActions);
+  shellActions.replaceChildren(settingsButton, editButton, closeEditButton);
+  shellHeader?.append(shellTitle, shellActions);
+  widgetPanel?.append(widgetPanelBody);
+
+  layout.append(nowPlaying, availablePlayersPanel);
   root.append(background, layout);
-  root.__mhaGrid = grid;
+  root.__mhaGrid = null;
+  root.__mhaPlayerList = playerList;
+  const mobileScrollCoordinator = createMobileMediaPageScrollCoordinator(root, playerList, {
+    onPaneChange: (pane) => {
+      syncAvailablePlayersSheetLayout();
+      if (pane === "now-playing" || pane === "disabled") {
+        availablePlayersSheetCloseRequested = false;
+      }
+      const shouldOpen = !availablePlayersSheetCloseRequested
+        && (!isMobileMediaPage(root) || pane === "available-players");
+      syncPanelVisibility(availablePlayersPanel, shouldOpen, {
+        transitionMs: SETTINGS_PANEL_VISIBILITY_TRANSITION_MS,
+        closeStateDatasetKey: "panelCloseState",
+      });
+    },
+  });
+  root.__mhaSyncMobileDockState = mobileScrollCoordinator.syncDockState;
 
   let progressTimer = 0;
   let visualTransitionTimer = 0;
+  let automaticPlayerCards = [];
+  let draggedPlayerId = "";
+  let inactiveSelectionTimer = 0;
   const transitionCache = createMediaTransitionCache();
+  const selectionState = {
+    transientPlayerId: "",
+    committedPlayerId: "",
+    lastPlayingPlayerId: "",
+  };
+  const initialSelectedPlayerId = String(page?.config?.selectedPlayerId || "").trim();
+  if (initialSelectedPlayerId && isPlayerSelectedMediaState(hass, initialSelectedPlayerId)) {
+    selectionState.committedPlayerId = initialSelectedPlayerId;
+    if (isPlayerPlaying(hass, initialSelectedPlayerId)) {
+      selectionState.lastPlayingPlayerId = initialSelectedPlayerId;
+    }
+  }
   const context = {
     page,
     hass,
     visibilityConfig,
-    view: buildViewState(page, hass, visibilityConfig, transitionCache),
+    view: buildViewState(page, hass, visibilityConfig, transitionCache, selectionState),
     artwork,
   };
 
   const onAction = (action) => {
     if (!context.view.media.entity) return;
     runMediaPlayerAction(context.hass, context.view.media.entity, action);
+  };
+
+  const clearInactiveSelectionTimer = () => {
+    if (!inactiveSelectionTimer) return;
+    clearTimeout(inactiveSelectionTimer);
+    inactiveSelectionTimer = 0;
+  };
+
+  const restoreLastPlayingSelection = () => {
+    inactiveSelectionTimer = 0;
+    selectionState.transientPlayerId = "";
+    const enabledIds = getEnabledPlayerIdSet(context.view.enabledPlayers);
+    const defaultPlayerId = String(context.page?.config?.defaultPlayerId || "").trim();
+    selectionState.committedPlayerId = enabledIds.has(selectionState.lastPlayingPlayerId)
+      ? selectionState.lastPlayingPlayerId
+      : (enabledIds.has(defaultPlayerId) ? defaultPlayerId : context.view.enabledPlayers[0]?.entity_id || "");
+    refresh();
+  };
+
+  const scheduleInactiveSelectionRestore = () => {
+    clearInactiveSelectionTimer();
+    inactiveSelectionTimer = globalThis.setTimeout(
+      restoreLastPlayingSelection,
+      MEDIA_PAGE_INACTIVE_FALLBACK_MS,
+    );
+  };
+
+  const selectPlayer = (playerId = "") => {
+    const normalizedPlayerId = String(playerId || "").trim();
+    if (!normalizedPlayerId) return;
+    const player = context.view.enabledPlayers.find(candidate => candidate.entity_id === normalizedPlayerId);
+    if (!player) return;
+
+    if (isPlayerSelectedMediaState(context.hass, normalizedPlayerId)) {
+      clearInactiveSelectionTimer();
+      selectionState.transientPlayerId = "";
+      selectionState.committedPlayerId = normalizedPlayerId;
+      if (isPlayerPlaying(context.hass, normalizedPlayerId)) {
+        selectionState.lastPlayingPlayerId = normalizedPlayerId;
+      }
+      onSelectPlayer(normalizedPlayerId);
+      refresh();
+      return;
+    }
+
+    selectionState.transientPlayerId = normalizedPlayerId;
+    refresh();
+    scheduleInactiveSelectionRestore();
   };
 
   const applyProgress = (view) => {
@@ -268,10 +564,40 @@ export function createMediaPage(page = {}, {
   const applySurfaceState = (view) => {
     root.dataset.visualStyle = view.effectiveVisualStyle;
     root.dataset.hasArtwork = String(Boolean(view.media.artworkUrl));
+    if (!view.media.artworkUrl) root.removeAttribute("data-artwork-tone");
     root.dataset.backgroundBlur = String(view.blurBackground);
     onBackgroundArtworkChange(view.media.artworkUrl || "", {
       blurBackground: view.blurBackground,
     });
+  };
+
+  const isEditing = () => Boolean(root.getRootNode?.()?.host?.classList?.contains?.("is-editing"));
+
+  const clearPlayerDragState = () => {
+    draggedPlayerId = "";
+    automaticPlayerCards.forEach((card) => {
+      card.dataset.dragging = "false";
+      card.dataset.dropTarget = "false";
+    });
+  };
+
+  const findPlayerCardAtPoint = (clientX, clientY) => {
+    return automaticPlayerCards.find((card) => {
+      const bounds = card.getBoundingClientRect();
+      return clientX >= bounds.left
+        && clientX <= bounds.right
+        && clientY >= bounds.top
+        && clientY <= bounds.bottom;
+    }) || null;
+  };
+
+  const swapPlayers = (playerId, targetId) => {
+    if (!playerId || !targetId || playerId === targetId) return;
+    onReorderPlayers(swapOrderedIds(
+      automaticPlayerCards.map((card) => card.dataset.mediaPlayerId),
+      playerId,
+      targetId,
+    ));
   };
 
   const beginVisualTransition = () => {
@@ -295,6 +621,84 @@ export function createMediaPage(page = {}, {
     }
 
     applySurfaceState(view);
+    if (view.media.playing && !selectionState.transientPlayerId) {
+      selectionState.lastPlayingPlayerId = view.selectedPlayerId;
+    }
+    if (automaticPlayerCards.length !== view.enabledPlayers.length
+      || automaticPlayerCards.some((card, index) => card.dataset.mediaPlayerId !== view.enabledPlayers[index]?.entity_id)) {
+      automaticPlayerCards.forEach((card) => {
+        card.__mhaDestroy?.();
+        card.remove();
+      });
+      automaticPlayerCards = view.enabledPlayers.map((player) => {
+        const card = document.createElement("article");
+        card.className = "mha-widget mha-media-page-auto-player";
+        card.dataset.widgetKind = "media";
+        card.dataset.mediaPlayerId = player.entity_id;
+        const widget = createMediaPagePlayerWidget({entityId: player.entity_id});
+        card.dataset.widgetId = widget.id;
+        card.dataset.mediaPagePlayer = "true";
+        card.dataset.mediaPageDensity = "compact";
+        card.dataset.widgetW = String(widget.w);
+        card.dataset.widgetH = String(widget.h);
+        card.dataset.widgetSize = `${widget.w}x${widget.h}`;
+        card.style.setProperty("--mha-widget-w", String(widget.w));
+        card.style.setProperty("--mha-widget-configured-w", String(widget.w));
+        card.style.setProperty("--mha-widget-h", String(widget.h));
+        card.dataset.selected = String(player.entity_id === view.selectedPlayerId);
+        card.draggable = false;
+        card.addEventListener("pointerdown", (event) => {
+          if (!isEditing() || event.target?.closest?.("button")) return;
+          if (event.isPrimary === false) return;
+          draggedPlayerId = player.entity_id;
+          card.dataset.dragging = "true";
+          card.dataset.pointerDragging = "true";
+          card.setPointerCapture?.(event.pointerId);
+          event.preventDefault();
+        });
+        card.addEventListener("pointermove", (event) => {
+          if (card.dataset.pointerDragging !== "true") return;
+          event.preventDefault();
+          automaticPlayerCards.forEach((candidate) => {
+            candidate.dataset.dropTarget = String(candidate === findPlayerCardAtPoint(event.clientX, event.clientY));
+          });
+        });
+        card.addEventListener("pointerup", (event) => {
+          if (card.dataset.pointerDragging !== "true") return;
+          const target = findPlayerCardAtPoint(event.clientX, event.clientY);
+          if (target && target !== card) {
+            swapPlayers(
+              draggedPlayerId,
+              target.dataset.mediaPlayerId,
+            );
+          }
+          card.releasePointerCapture?.(event.pointerId);
+          delete card.dataset.pointerDragging;
+          clearPlayerDragState();
+        });
+        card.addEventListener("pointercancel", () => {
+          delete card.dataset.pointerDragging;
+          clearPlayerDragState();
+        });
+        card.append(createMediaWidgetContent(widget, {
+          widgetW: widget.w,
+          widgetH: widget.h,
+          hass: context.hass,
+          onSelect: playerId => {
+            if (!isEditing()) selectPlayer(playerId);
+          },
+        }));
+        card.setAttribute("role", "listitem");
+        playerList.append(card);
+        return card;
+      });
+    } else {
+      automaticPlayerCards.forEach((card) => card.querySelector(".mha-media-widget")?.__mhaUpdateFromHass?.(context.hass));
+    }
+    automaticPlayerCards.forEach((card) => {
+      card.dataset.selected = String(card.dataset.mediaPlayerId === view.selectedPlayerId);
+    });
+    emptyState.hidden = view.enabledPlayers.length > 0;
     if (styleOnly) {
       const visualStyleChanged = previousView?.effectiveVisualStyle !== view.effectiveVisualStyle;
       const blurChanged = previousView?.blurBackground !== view.blurBackground;
@@ -310,6 +714,8 @@ export function createMediaPage(page = {}, {
         : view.statusLine;
     }
     setMediaArtworkImage(context.artwork, view.media.artworkUrl);
+    if (view.media.artworkUrl) root.removeAttribute("data-artwork-tone");
+    syncMediaArtworkTone(root, context.artwork);
     context.artwork.dataset.playing = String(view.media.playing);
 
     syncControlGroup(
@@ -320,12 +726,18 @@ export function createMediaPage(page = {}, {
   };
 
   const refresh = ({ progressOnly = false } = {}) => {
-    const nextView = buildViewState(context.page, context.hass, context.visibilityConfig, transitionCache);
+    const nextView = buildViewState(
+      context.page,
+      context.hass,
+      context.visibilityConfig,
+      transitionCache,
+      selectionState,
+    );
     applyView(nextView, { progressOnly });
   };
 
   const resetScrollPosition = () => {
-    root.scrollTop = 0;
+    mobileScrollCoordinator.reset();
   };
 
   const scheduleScrollReset = () => {
@@ -358,9 +770,29 @@ export function createMediaPage(page = {}, {
 
   root.__mhaUpdatePage = (nextPage, options = {}) => {
     context.page = nextPage || context.page;
+    const enabledIds = getEnabledPlayerIdSet(resolveEnabledMediaPlayers(
+      context.page.config,
+      getAvailableMediaPlayers(context.hass, context.visibilityConfig),
+    ));
+    if (selectionState.transientPlayerId && !enabledIds.has(selectionState.transientPlayerId)) {
+      selectionState.transientPlayerId = "";
+      clearInactiveSelectionTimer();
+    }
+    if (selectionState.committedPlayerId && !enabledIds.has(selectionState.committedPlayerId)) {
+      selectionState.committedPlayerId = "";
+    }
+    if (selectionState.lastPlayingPlayerId && !enabledIds.has(selectionState.lastPlayingPlayerId)) {
+      selectionState.lastPlayingPlayerId = "";
+    }
     const styleOnly = options?.styleOnly === true;
     if (styleOnly) {
-      const nextView = buildViewState(context.page, context.hass, context.visibilityConfig, transitionCache);
+      const nextView = buildViewState(
+        context.page,
+        context.hass,
+        context.visibilityConfig,
+        transitionCache,
+        selectionState,
+      );
       applyView(nextView, { styleOnly: true });
       return;
     }
@@ -371,8 +803,12 @@ export function createMediaPage(page = {}, {
   root.__mhaDestroy = () => {
     if (progressTimer) clearInterval(progressTimer);
     progressTimer = 0;
+    clearInactiveSelectionTimer();
     if (visualTransitionTimer) clearTimeout(visualTransitionTimer);
     visualTransitionTimer = 0;
+    mobileScrollCoordinator.destroy();
+    automaticPlayerCards.forEach((card) => card.__mhaDestroy?.());
+    automaticPlayerCards = [];
   };
 
   return root;

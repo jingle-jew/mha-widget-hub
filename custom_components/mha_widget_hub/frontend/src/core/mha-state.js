@@ -1,10 +1,10 @@
-import { getActivePage, normalizePage } from "../pages/page-model.js";
+import { getActivePage, normalizePage } from "../pages/page-model.js?v=media-persistence-v2";
 import {
   migratePageStorage,
   readActivePageId,
   readPages,
   savePages,
-} from "../pages/page-store.js";
+} from "../pages/page-store.js?v=media-persistence-v2";
 
 function identity(value) {
   return value;

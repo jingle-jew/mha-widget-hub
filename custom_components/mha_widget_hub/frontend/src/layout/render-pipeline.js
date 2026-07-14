@@ -3,12 +3,11 @@ import {
   createCriticalBootStyleElement,
   createFrontendStyleElements,
 } from "../core/mha-frontend-assets.js";
-import { getMediaArtworkUrl } from "../ha/media.js";
+import { getMediaArtworkUrl, isMediaPlayerInactiveState } from "../ha/media.js";
 import {
   getAvailableMediaPlayers,
   resolveEnabledMediaPlayers,
-  resolveSelectedMediaPlayerId,
-} from "../ha/media-players.js";
+} from "../ha/media-players.js?v=media-persistence-v2";
 import { t } from "../i18n/index.js";
 import { createMobileDock } from "./mobile-dock.js";
 import { createIosOrganicWallpaper } from "./ios-organic-wallpaper.js?v=ios-wallpaper-svg-1";
@@ -25,9 +24,12 @@ import {
 } from "./layout-engine.js";
 import { getLayoutForWidth } from "./responsive.js";
 import { createPagePanel } from "../pages/page-panel.js";
-import { createMediaPage } from "../pages/media-page.js";
-import { syncMediaPageSettingsPanel } from "../pages/media-page-settings.js";
-import { isMediaPageExperienceActive, isWeatherPage } from "../pages/page-types.js";
+import {
+  createMediaPage,
+  resolveMediaPageNowPlayingId,
+} from "../pages/media-page.js?v=media-page-ios-cards-v3";
+import { syncMediaPageSettingsPanel } from "../pages/media-page-settings.js?v=media-persistence-v4";
+import { isMediaPageExperienceActive, isWeatherPage } from "../pages/page-types.js?v=media-persistence-v2";
 import { WEATHER_PAGE_WIDGET_MANAGER_CATEGORY_ID } from "../pages/weather-page-widget-catalog.js";
 import {
   captureSettingsPanelsUiState,
@@ -140,6 +142,7 @@ export function createRenderPipeline(host, options = {}) {
   function syncMediaPageBackdropState({
     activePage = getActivePage(host),
     artworkUrl = "",
+    artworkUrlProvided = false,
     blurBackground = activePage?.config?.blurBackground !== false,
     themeStyle = host?.dataset?.themeStyle || "",
   } = {}) {
@@ -151,7 +154,9 @@ export function createRenderPipeline(host, options = {}) {
     host.dataset.mediaPageActive = String(isMediaPage);
     host.dataset.mediaPageBackgroundBlur = String(isMediaPage && blurBackground);
 
-    const resolvedArtworkUrl = artworkUrl || resolveMediaPageArtworkUrl(activePage);
+    const resolvedArtworkUrl = artworkUrlProvided
+      ? artworkUrl
+      : (artworkUrl || resolveMediaPageArtworkUrl(activePage));
 
     if (isMediaPage && resolvedArtworkUrl) {
       clearTimeout(host._mediaPageWallpaperClearTimer || 0);
@@ -179,8 +184,13 @@ export function createRenderPipeline(host, options = {}) {
 
     const availablePlayers = getAvailableMediaPlayers(host._hass, host._entityVisibilityConfig);
     const enabledPlayers = resolveEnabledMediaPlayers(activePage?.config, availablePlayers);
-    const selectedPlayerId = resolveSelectedMediaPlayerId(activePage?.config, enabledPlayers);
+    const selectedPlayerId = resolveMediaPageNowPlayingId({
+      config: activePage?.config,
+      enabledPlayers,
+      hass: host._hass,
+    });
     const entity = selectedPlayerId ? host._hass?.states?.[selectedPlayerId] || null : null;
+    if (isMediaPlayerInactiveState(entity?.state)) return "";
     return getMediaArtworkUrl(entity);
   }
 
@@ -512,6 +522,7 @@ export function createRenderPipeline(host, options = {}) {
         syncMediaPageBackdropState({
           activePage: page,
           artworkUrl,
+          artworkUrlProvided: true,
           blurBackground: options.blurBackground,
           themeStyle: host.dataset.themeStyle || "",
         });
@@ -618,7 +629,7 @@ export function createRenderPipeline(host, options = {}) {
     return { links, pageStage };
   }
 
-  function mountImmediateUi({ layout, pageStage, units, rows }) {
+  function mountActivePagePanel({ layout, pageStage, units, rows }) {
     const activePage = getActivePage(host);
     const positions = host._getActiveWidgetPositions({ create: true });
     let grid = null;
@@ -638,14 +649,8 @@ export function createRenderPipeline(host, options = {}) {
         });
       }
       activeSurface = mediaPanel.content;
-      if (layout === "mobile") {
-        host.shadowRoot.append(createMobileDock(host._getDockProps()));
-        host._scheduleMobileDockOverflowState?.();
-      }
-      appendPrimaryControls();
       host._wireDockAutoHide(activeSurface);
-      host._wireTouchEditLongPress?.(grid);
-      host._updateStatusDom?.();
+      if (grid) host._wireTouchEditLongPress?.(grid);
       return { positions, grid, activeSurface };
     }
     const gridPanel = createGridPanel(activePage);
@@ -659,15 +664,56 @@ export function createRenderPipeline(host, options = {}) {
       positions,
     });
     activeSurface = grid;
+    host._wireDockAutoHide(activeSurface);
+    host._wireTouchEditLongPress?.(grid);
+    return { positions, grid, activeSurface };
+  }
+
+  function mountImmediateUi({ layout, pageStage, units, rows }) {
+    const mounted = mountActivePagePanel({ layout, pageStage, units, rows });
     if (layout === "mobile") {
       host.shadowRoot.append(createMobileDock(host._getDockProps()));
       host._scheduleMobileDockOverflowState?.();
     }
     appendPrimaryControls();
-    host._wireDockAutoHide(activeSurface);
-    host._wireTouchEditLongPress?.(grid);
     host._updateStatusDom?.();
-    return { positions, grid, activeSurface };
+    return mounted;
+  }
+
+  function replaceActivePagePanel() {
+    const pageStage = host.shadowRoot?.querySelector?.(".mha-page-stage") || null;
+    const currentPanel = pageStage?.querySelector?.(".mha-page-panel") || null;
+    if (!pageStage || !currentPanel) return false;
+
+    const themeState = host._themeController.read();
+    const context = buildRenderContext(themeState);
+    host._renderId = context.renderId;
+    cancelAnimationFrame(host._widgetRenderFrame);
+    host._clearGridScrollListener();
+    host._clearTouchEditLongPress?.();
+    host.dataset.widgetsState = "pending";
+    syncMediaPageBackdropState({ themeStyle: context.themeStyle });
+    applyRenderDatasetsAndRuntimeVars(context);
+
+    destroyDomSubtree(currentPanel);
+    currentPanel.remove();
+
+    const { positions, grid } = mountActivePagePanel({ ...context, pageStage });
+    schedulePrimaryWidgetRender({
+      grid,
+      units: context.units,
+      rows: context.rows,
+      layout: context.layout,
+      positions,
+      renderId: context.renderId,
+    });
+    host._updateStatusDom?.();
+    host._syncMediaPageSettingsDom?.();
+    host._syncEditModeDom?.();
+    host._scheduleSquareUnitSync?.();
+    host._scheduleMobileDockOverflowState?.();
+    host._scheduleIconSymbolRefresh?.();
+    return true;
   }
 
   function schedulePrimaryWidgetRender({
@@ -803,7 +849,9 @@ export function createRenderPipeline(host, options = {}) {
     prepareRenderCycle,
     applyRenderDatasetsAndRuntimeVars,
     mountRenderShell,
+    mountActivePagePanel,
     mountImmediateUi,
+    replaceActivePagePanel,
     schedulePrimaryWidgetRender,
     startProgressiveWidgetRender,
     appendWidgetPlaceholders,

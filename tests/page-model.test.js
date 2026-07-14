@@ -69,7 +69,7 @@ test("fallback and active-page lookup remain independent from storage", () => {
   assert.equal(getActivePage([], "missing"), null);
 });
 
-test("default first-launch pages are two grids plus one media page", () => {
+test("default first-launch pages are one grid, one weather page, and one media page", () => {
   const pages = createDefaultPages();
 
   assert.deepEqual(
@@ -79,11 +79,12 @@ test("default first-launch pages are two grids plus one media page", () => {
       icon: page.icon,
       type: page.type || "grid",
       widgets: page.widgets.length,
+      autoPopulatePending: page.config?.autoPopulatePending === true,
     })),
     [
-      { id: "home", name: "Home", icon: "home", type: "grid", widgets: 0 },
-      { id: "page-2", name: "Page 2", icon: "grid", type: "grid", widgets: 0 },
-      { id: "media", name: "Media Players", icon: "media-player", type: "media-players", widgets: 0 },
+      { id: "home", name: "Home", icon: "home", type: "grid", widgets: 0, autoPopulatePending: false },
+      { id: "weather", name: "Weather", icon: "weather", type: "weather", widgets: 0, autoPopulatePending: true },
+      { id: "media", name: "Media Players", icon: "media-player", type: "media-players", widgets: 0, autoPopulatePending: false },
     ],
   );
 });
@@ -122,4 +123,28 @@ test("legacy single-widget media pages are promoted to the dedicated page type",
   assert.equal(migrated.widgets.length, 1);
   assert.equal(migrated.config.selectedPlayerId, "media_player.salon");
   assert.deepEqual(migrated.config.enabledPlayerIds, ["media_player.salon"]);
+});
+
+test("media page normalization preserves an explicit empty enabled-player list", () => {
+  const normalized = normalizePage({
+    id: "media",
+    type: "media-players",
+    config: {
+      enabledPlayerIds: [],
+      enabledPlayerIdsConfigured: true,
+      defaultPlayerId: "",
+      selectedPlayerId: "",
+    },
+    widgets: [{
+      id: "widget-media-page-media",
+      kind: "media",
+      variant: "media-page-panel",
+      responsiveSizeMode: "media-page-panel",
+      entityId: "media_player.salon",
+    }],
+  }, 2);
+
+  assert.deepEqual(normalized.config.enabledPlayerIds, []);
+  assert.equal(normalized.config.defaultPlayerId, "");
+  assert.equal(normalized.config.selectedPlayerId, "");
 });

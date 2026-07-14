@@ -308,6 +308,19 @@
   transform: none;
 }
 
+/* When Now Playing has no active artwork, keep the theme background visible.
+ * The media-page blur setting still applies to that background layer without
+ * blurring the page content above it. */
+:host([data-media-page-active="true"][data-media-page-wallpaper="false"][data-media-page-background-blur="true"]) .mha-background {
+  filter: blur(var(--mha-blur-primary, 18px));
+  transform: scale(1.02);
+}
+
+:host([data-media-page-active="true"][data-media-page-wallpaper="false"][data-media-page-background-blur="false"]) .mha-background {
+  filter: none;
+  transform: none;
+}
+
 /* ACTIVE WALLPAPER
  * Priority is resolved in JS:
  * 1. user custom wallpaper;

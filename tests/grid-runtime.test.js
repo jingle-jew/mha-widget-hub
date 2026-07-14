@@ -156,7 +156,7 @@ test("runtime grid preset ignores stale published orientation datasets", () => {
     availableContentRect: { width: 844, height: 390 },
   });
 
-  assert.equal(preset.columns, 8);
+  assert.equal(preset.columns, 9);
   assert.equal(preset.rows, 5);
 });
 

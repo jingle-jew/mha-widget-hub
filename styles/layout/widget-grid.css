@@ -398,10 +398,9 @@
 }
 
 :host([data-layout="mobile"]:not([data-layout-variant="mobile-landscape"])[data-media-page-active="true"]) .mha-page-stage {
-  block-size: calc(
-    100%
-    - var(--mha-shell-content-bottom-inset, var(--mha-mobile-dock-footprint, 0px))
-  );
+  /* The mobile dock is viewport-fixed. Let the media page extend beneath it
+   * and use its own scrollable bottom padding to reveal the final content. */
+  block-size: 100%;
   min-block-size: 0;
 }
 
@@ -443,30 +442,25 @@
 
 :host([data-layout-variant="mobile-landscape"]) .mha-workspace {
   --mha-shell-content-bottom-inset: 0px !important;
-  grid-template-columns: var(--mha-dock-zone-width) minmax(0, 1fr);
+  /* Landscape mobile has no visible dock. Let the page use the full width. */
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr);
 }
 
 :host([data-layout-variant="mobile-landscape"]) .mha-dock-zone {
-  display: grid;
-  grid-column: 1;
-  grid-row: 1;
+  display: none;
 }
 
 :host([data-layout-variant="mobile-landscape"]) .mha-widget-area {
   --mha-widget-area-edge-padding: var(--mha-mobile-grid-gutter) !important;
   --mha-widget-area-top-gutter: var(--mha-mobile-landscape-dock-top-offset) !important;
   --mha-widget-area-bottom-gutter: var(--mha-mobile-grid-gutter) !important;
-  grid-column: 2;
+  grid-column: 1;
   grid-row: 1;
 }
 
 :host([data-layout-variant="mobile-landscape"]) .mha-page-stage {
-  min-block-size: calc(
-    100%
-    + var(--mha-mobile-landscape-dock-top-offset, 0px)
-    + var(--mha-mobile-landscape-dock-bottom-offset, 0px)
-  );
+  min-block-size: 100%;
 }
 
 :host([data-layout-variant="mobile-landscape"][data-media-page-active="true"]) .mha-page-stage {
@@ -623,5 +617,23 @@
     max-inline-size: 100%;
     overflow: visible;
     place-items: initial;
+  }
+}
+
+/* Mobile landscape can use the compact-tablet CSS width while still being a
+ * mobile responsive variant. Its hidden dock must not leave the persisted
+ * left-dock column active through the desktop/tablet rules above. */
+@media (min-width: 768px) {
+  :host([data-layout-variant="mobile-landscape"]) .mha-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  :host([data-layout-variant="mobile-landscape"]) .mha-dock-zone {
+    display: none;
+  }
+
+  :host([data-layout-variant="mobile-landscape"]) .mha-widget-area {
+    grid-column: 1;
+    grid-row: 1;
   }
 }

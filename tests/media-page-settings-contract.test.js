@@ -6,6 +6,10 @@ const source = readFileSync(
   new URL("../src/pages/media-page-settings.js", import.meta.url),
   "utf8",
 );
+const mediaPageSource = readFileSync(
+  new URL("../src/pages/media-page.js", import.meta.url),
+  "utf8",
+);
 const widgetPlacementSource = readFileSync(
   new URL("../src/widgets/widget-placement-orchestrator.js", import.meta.url),
   "utf8",
@@ -49,6 +53,13 @@ test("media page settings selects assign the selected value after their options 
   );
 });
 
+test("media page settings persist the effective player selection with non-player changes", () => {
+  assert.match(source, /const buildConfigPatch = \(patch = \{\}\) => \(\{[\s\S]*enabledPlayerIds: \[\.\.\.enabledPlayerIds\][\s\S]*enabledPlayerIdsConfigured: true/);
+  assert.match(source, /onChange: value => onConfigChange\(buildConfigPatch\(\{ defaultPlayerId: value \}\)\)/);
+  assert.match(source, /onChange: value => onConfigChange\(buildConfigPatch\(\{ visualStyle: value \}\)\)/);
+  assert.match(source, /onChange: checked => onConfigChange\(buildConfigPatch\(\{ blurBackground: checked \}\)\)/);
+});
+
 test("media page settings panel restores its own scrim instead of inheriting the transparent settings sub-panel scrim", () => {
   assert.match(
     mediaPageCss,
@@ -79,5 +90,40 @@ test("media page local widget editing hides redundant global/category controls",
   assert.match(
     widgetManagerCss,
     /:host\(\[data-media-page-active="true"\]\) \.mha-widget-manager-back\s*\{[\s\S]*display:\s*none !important;/,
+  );
+});
+
+test("media page player panel applies shared sheet behavior only on mobile", () => {
+  assert.match(
+    mediaPageSource,
+    /rootClassName:\s*"mha-media-page-widget-panel-surface"/,
+  );
+  assert.match(
+    mediaPageSource,
+    /availablePlayersPanel\.classList\.toggle\("mha-settings-panel", isMobileLayout\);[\s\S]*widgetPanel\?\.classList\.toggle\("mha-settings-sheet", isMobileLayout\);[\s\S]*header\?\.classList\.toggle\("mha-settings-header", isMobileLayout\);/,
+  );
+  assert.match(
+    mediaPageSource,
+    /if \(isMobileLayout\) \{[\s\S]*applyPanelSurfaceContract\(availablePlayersPanel,[\s\S]*return;[\s\S]*widgetPanel\?\.setAttribute\("role", "complementary"\);[\s\S]*delete availablePlayersPanel\.dataset\.surfaceRole;/,
+  );
+  assert.match(
+    mediaPageSource,
+    /shellActions\.replaceChildren\(settingsButton, editButton, closeEditButton\);/,
+  );
+  assert.match(
+    mediaPageSource,
+    /const shellCloseButton = widgetPanel\?\.querySelector\("\.mha-media-page-widget-panel-close"\);\s*shellCloseButton\?\.remove\(\);/,
+  );
+  assert.match(
+    mediaPageSource,
+    /headerClassName:\s*"mha-media-page-widget-panel-header"/,
+  );
+  assert.match(
+    mediaPageCss,
+    /:host\(\[data-layout="mobile"\]\) \.mha-media-page-widget-panel-header\.mha-settings-header\s*\{[\s\S]*touch-action:\s*none;/,
+  );
+  assert.doesNotMatch(
+    widgetPlacementSource,
+    /mha-media-page-widget-panel-surface/,
   );
 });

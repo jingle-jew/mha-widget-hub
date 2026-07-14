@@ -26,7 +26,7 @@ import {
   isMediaPlayersPage,
   PAGE_TYPES,
   supportsMediaPageTheme,
-} from "./page-types.js";
+} from "./page-types.js?v=media-persistence-v2";
 
 export class PageUiCoordinator {
   constructor({
