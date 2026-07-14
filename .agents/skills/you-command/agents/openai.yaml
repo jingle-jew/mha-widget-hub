@@ -1,0 +1,6 @@
+interface:
+  display_name: "You Command"
+  short_description: "Consolide la mémoire durable du projet"
+  default_prompt: "Utilise $you-command pour consolider les apprentissages de cette tâche dans la mémoire du projet."
+policy:
+  allow_implicit_invocation: false

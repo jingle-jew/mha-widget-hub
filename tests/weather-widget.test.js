@@ -5,6 +5,11 @@ import { readFileSync } from "node:fs";
 import { createWeatherMetricWidgetContent } from "../src/widgets/weather-metric-widget.js";
 import { createWeatherWidgetContent } from "../src/widgets/weather-widget.js";
 import { createWeatherNarrativeWidgetContent } from "../src/widgets/weather-narrative-widget.js";
+import { setLanguage } from "../src/i18n/index.js";
+
+test.beforeEach(() => {
+  setLanguage("en");
+});
 
 function findByClass(node, className) {
   if (!node) return null;
