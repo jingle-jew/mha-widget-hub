@@ -343,12 +343,15 @@
   pointer-events: none;
 }
 
-.mha-media-page-widget-panel-header.mha-settings-header {
+.mha-media-page-widget-panel-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: .8rem;
   padding-inline: var(--mha-media-page-widget-panel-padding);
+}
+
+:host([data-layout="mobile"]) .mha-media-page-widget-panel-header.mha-settings-header {
   /* The header belongs exclusively to the shared sheet swipe gesture. Letting
    * the outer media page pan at the same time makes the sheet snap back. */
   touch-action: none;
@@ -1012,19 +1015,9 @@
   }
 
   .mha-media-page-widget-panel-surface {
-    grid-column: 8 / span 5;
-    min-block-size: 0;
-  }
-
-  .mha-media-page-widget-panel-surface > .mha-media-page-widget-panel {
-    position: relative;
-    inset: auto;
-    inline-size: 100%;
-    max-inline-size: 100%;
-    block-size: 100%;
-    max-block-size: none;
-    transform: none;
-    pointer-events: auto;
+    /* Neutralize the mobile-only shell wrapper so the panel participates in
+     * the original 12-column media grid on desktop and tablet. */
+    display: contents;
   }
 
   .mha-media-page-widget-panel-surface > .mha-media-page-widget-panel-scrim {

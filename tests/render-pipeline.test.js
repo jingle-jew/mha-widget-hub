@@ -1324,7 +1324,11 @@ test("immediate UI mounts the dedicated media page instead of a widget grid", as
   assert.equal(pageStage.appended[0]?.querySelector?.(".mha-media-page")?.className, "mha-media-page");
   assert.equal(
     pageStage.appended[0]?.querySelector?.(".mha-media-page-widget-panel")?.className,
-    "mha-media-page-widget-panel mha-settings-sheet",
+    "mha-media-page-widget-panel",
+  );
+  assert.equal(
+    pageStage.appended[0]?.querySelector?.(".mha-media-page-widget-panel-surface")?.className,
+    "mha-media-page-widget-panel-surface",
   );
   assert.equal(
     pageStage.appended[0]?.querySelector?.(".mha-media-page-player-list")?.className,

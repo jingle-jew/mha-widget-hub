@@ -376,30 +376,59 @@ export function createMediaPage(page = {}, {
     scrollMobileMediaPageToNowPlaying(root);
   };
 
-  availablePlayersPanel = applyPanelSurfaceContract(createPanelShell({
+  availablePlayersPanel = createPanelShell({
     open: false,
-    rootClassName: "mha-media-page-widget-panel-surface mha-settings-panel",
-    scrimClassName: "mha-media-page-widget-panel-scrim mha-settings-scrim",
-    sheetClassName: "mha-media-page-widget-panel mha-settings-sheet",
-    headerClassName: "mha-media-page-widget-panel-header mha-settings-header",
+    rootClassName: "mha-media-page-widget-panel-surface",
+    scrimClassName: "mha-media-page-widget-panel-scrim",
+    sheetClassName: "mha-media-page-widget-panel",
+    headerClassName: "mha-media-page-widget-panel-header",
     closeClassName: "mha-media-page-widget-panel-close",
     title: t("mediaPage.availablePlayers", "Available players"),
     ariaLabel: t("mediaPage.availablePlayers", "Available players"),
     closeLabel: t("common.close", "Close"),
     scrimLabel: t("mediaPage.closeAvailablePlayers", "Close available players"),
     onClose: closeAvailablePlayersSheet,
-  }), {
-    surfaceRole: PANEL_SURFACE_ROLES.PANEL,
-    mobilePresentation: PANEL_MOBILE_PRESENTATIONS.SHEET,
   });
   const syncAvailablePlayersSheetLayout = () => {
     const host = getMediaPageHost(root);
     const layout = String(host?.dataset?.layout || "");
+    const isMobileLayout = layout === "mobile";
+    const widgetPanel = availablePlayersPanel.querySelector(".mha-media-page-widget-panel");
+    const scrim = availablePlayersPanel.querySelector(".mha-media-page-widget-panel-scrim");
+    const header = widgetPanel?.querySelector(".mha-media-page-widget-panel-header");
+
     availablePlayersPanel.dataset.layout = layout;
-    availablePlayersPanel.dataset.mobileLayout = String(layout === "mobile");
+    availablePlayersPanel.dataset.mobileLayout = String(isMobileLayout);
     availablePlayersPanel.dataset.mobileLandscape = String(
       host?.dataset?.layoutVariant === "mobile-landscape",
     );
+
+    /* The shared overlay contract belongs to the mobile presentation only.
+     * Desktop and tablet keep the original inline media panel semantics. */
+    availablePlayersPanel.classList.toggle("mha-settings-panel", isMobileLayout);
+    scrim?.classList.toggle("mha-settings-scrim", isMobileLayout);
+    widgetPanel?.classList.toggle("mha-settings-sheet", isMobileLayout);
+    header?.classList.toggle("mha-settings-header", isMobileLayout);
+    if (scrim) scrim.hidden = !isMobileLayout;
+
+    if (isMobileLayout) {
+      widgetPanel?.setAttribute("role", "dialog");
+      widgetPanel?.setAttribute("aria-modal", "true");
+      applyPanelSurfaceContract(availablePlayersPanel, {
+        surfaceRole: PANEL_SURFACE_ROLES.PANEL,
+        mobilePresentation: PANEL_MOBILE_PRESENTATIONS.SHEET,
+      });
+      return;
+    }
+
+    widgetPanel?.setAttribute("role", "complementary");
+    widgetPanel?.removeAttribute("aria-modal");
+    delete availablePlayersPanel.dataset.surfaceRole;
+    delete availablePlayersPanel.dataset.mobilePresentation;
+    if (widgetPanel?.dataset) {
+      delete widgetPanel.dataset.surfaceRole;
+      delete widgetPanel.dataset.mobilePresentation;
+    }
   };
   syncAvailablePlayersSheetLayout();
 

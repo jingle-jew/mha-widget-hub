@@ -93,10 +93,18 @@ test("media page local widget editing hides redundant global/category controls",
   );
 });
 
-test("media page player sheet keeps gear, edit, and shared sheet close behavior", () => {
+test("media page player panel applies shared sheet behavior only on mobile", () => {
   assert.match(
     mediaPageSource,
-    /rootClassName:\s*"mha-media-page-widget-panel-surface mha-settings-panel"/,
+    /rootClassName:\s*"mha-media-page-widget-panel-surface"/,
+  );
+  assert.match(
+    mediaPageSource,
+    /availablePlayersPanel\.classList\.toggle\("mha-settings-panel", isMobileLayout\);[\s\S]*widgetPanel\?\.classList\.toggle\("mha-settings-sheet", isMobileLayout\);[\s\S]*header\?\.classList\.toggle\("mha-settings-header", isMobileLayout\);/,
+  );
+  assert.match(
+    mediaPageSource,
+    /if \(isMobileLayout\) \{[\s\S]*applyPanelSurfaceContract\(availablePlayersPanel,[\s\S]*return;[\s\S]*widgetPanel\?\.setAttribute\("role", "complementary"\);[\s\S]*delete availablePlayersPanel\.dataset\.surfaceRole;/,
   );
   assert.match(
     mediaPageSource,
@@ -108,11 +116,11 @@ test("media page player sheet keeps gear, edit, and shared sheet close behavior"
   );
   assert.match(
     mediaPageSource,
-    /headerClassName:\s*"mha-media-page-widget-panel-header mha-settings-header"/,
+    /headerClassName:\s*"mha-media-page-widget-panel-header"/,
   );
   assert.match(
     mediaPageCss,
-    /\.mha-media-page-widget-panel-header\.mha-settings-header\s*\{[\s\S]*touch-action:\s*none;/,
+    /:host\(\[data-layout="mobile"\]\) \.mha-media-page-widget-panel-header\.mha-settings-header\s*\{[\s\S]*touch-action:\s*none;/,
   );
   assert.doesNotMatch(
     widgetPlacementSource,

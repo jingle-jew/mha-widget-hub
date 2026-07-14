@@ -418,6 +418,10 @@ test("media page mobile layout scrolls as snapped sheets in portrait and landsca
   );
   assert.match(
     source,
+    /@media \(min-width:\s*768px\)\s*\{[\s\S]*\.mha-media-page-widget-panel-surface\s*\{[\s\S]*display:\s*contents;/,
+  );
+  assert.match(
+    source,
     /\.mha-media-page\s*\{[\s\S]*overflow-anchor:\s*none;/,
   );
   assert.match(
