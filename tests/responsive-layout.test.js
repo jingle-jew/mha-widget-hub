@@ -74,7 +74,7 @@ test("responsive state formalizes mobile landscape as a distinct variant", () =>
   assert.equal(state.dockFamily, "side");
   assert.equal(state.dockPosition, "left");
   assert.equal(state.statusBarVisible, false);
-  assert.equal(state.gridPreset.columns, 8);
+  assert.equal(state.gridPreset.columns, 9);
   assert.equal(state.scrollModel, "widget-area");
   assert.equal(state.settingsCapabilities.supportsDockPosition, false);
   assert.equal(state.settingsCapabilities.showsStatusBarOptions, false);
@@ -191,7 +191,7 @@ test("mobile grid presets expose direct widget-grid columns", () => {
   );
   assert.equal(
     getGridPreset(null, "mobile", { width: 844, height: 390 }).columns,
-    8,
+    9,
   );
 });
 

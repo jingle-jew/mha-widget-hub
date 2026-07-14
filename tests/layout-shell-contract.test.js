@@ -358,11 +358,19 @@ test("mobile shell keeps the background viewport-anchored while widget content o
   );
   assert.match(
     gridSource,
-    /:host\(\[data-layout-variant="mobile-landscape"\]\) \.mha-workspace\s*\{[\s\S]*grid-template-columns:\s*var\(--mha-dock-zone-width\) minmax\(0, 1fr\);/,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\) \.mha-workspace\s*\{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\);/,
   );
   assert.match(
     gridSource,
-    /:host\(\[data-layout-variant="mobile-landscape"\]\) \.mha-dock-zone\s*\{[\s\S]*display:\s*grid;[\s\S]*grid-column:\s*1;/,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\) \.mha-dock-zone\s*\{[\s\S]*display:\s*none;/,
+  );
+  assert.match(
+    gridSource,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\) \.mha-widget-area\s*\{[\s\S]*grid-column:\s*1;[\s\S]*grid-row:\s*1;/,
+  );
+  assert.match(
+    gridSource,
+    /:host\(\[data-layout-variant="mobile-landscape"\]\) \.mha-page-stage\s*\{[\s\S]*min-block-size:\s*100%;/,
   );
   assert.match(
     backgroundSource,
