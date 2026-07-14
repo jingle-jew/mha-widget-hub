@@ -167,15 +167,16 @@ docs/theme-template.css
 Then:
 
 1. Copy it to `styles/themes/<theme-id>.css`.
-2. Add a matching frontend copy under `custom_components/mha_widget_hub/frontend/styles/themes/<theme-id>.css`.
-3. Register the theme in `src/settings/theme-registry.js`.
-4. Mirror the registry change in `custom_components/mha_widget_hub/frontend/src/settings/theme-registry.js`.
-5. Run:
+2. Register the theme in `src/settings/theme-registry.js`.
+3. Run:
 
 ```bash
 npm run check:syntax
 npm test
-npm run check:sync
+npm run check:package
 ```
 
-6. Validate visuals manually.
+4. Validate visuals manually.
+
+Do not edit `custom_components/mha_widget_hub/frontend/`: it is an ignored build
+artifact generated from the canonical root sources when needed.

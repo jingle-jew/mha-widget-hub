@@ -7,9 +7,8 @@
  * 1. Copy this file to styles/themes/<theme-id>.css.
  * 2. Replace <theme-id> and <Theme Name>.
  * 3. Add the theme to src/settings/theme-registry.js.
- * 4. Mirror the CSS file under custom_components/mha_widget_hub/frontend/styles/themes/.
- * 5. Run npm run check:syntax, npm test and npm run check:sync.
- * 6. Validate visuals manually.
+ * 4. Run npm run check:syntax, npm test and npm run check:package.
+ * 5. Validate visuals manually.
  *
  * Theme authoring rule:
  * Prefer feeding the surface contract below instead of styling components directly.

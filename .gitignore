@@ -2,3 +2,6 @@
 AGENTS.md
 node_modules/
 test-results/
+.DS_Store
+/dist/
+/custom_components/mha_widget_hub/frontend/

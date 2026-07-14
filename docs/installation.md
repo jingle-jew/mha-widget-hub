@@ -13,10 +13,17 @@ Before installing MHA Widget Hub, ensure you have:
 ## Install through HACS
 
 1. Open HACS.
-2. Navigate to Frontend.
+2. Navigate to Integrations.
 3. Add the MHA Widget Hub repository as a custom repository.
 4. Install MHA Widget Hub.
 5. Restart Home Assistant if required.
+
+Published HACS versions use the `mha-widget-hub-hacs.zip` release asset, whose
+root is the complete integration including its generated frontend. The separate
+`mha-widget-hub.zip` archive is intended for manual extraction at the Home
+Assistant configuration root and therefore contains `custom_components/`.
+Installing a source archive from the default branch is not supported because
+generated frontend files are intentionally not versioned.
 
 ---
 

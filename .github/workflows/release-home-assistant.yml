@@ -1,0 +1,51 @@
+name: Publish Home Assistant Release Package
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release-home-assistant-package:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate source and package contracts
+        run: npm run check
+
+      - name: Build Home Assistant release ZIP
+        run: npm run release:zip
+
+      - name: Attach ZIP to GitHub Release
+        if: ${{ github.event_name == 'release' }}
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/mha-widget-hub.zip
+            dist/mha-widget-hub-hacs.zip
+          fail_on_unmatched_files: true
+          overwrite_files: true
+
+      - name: Upload ZIP artifact for manual runs
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: mha-widget-hub-home-assistant-package
+          path: dist/*.zip
+          if-no-files-found: error

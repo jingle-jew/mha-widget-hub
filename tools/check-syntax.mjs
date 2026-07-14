@@ -7,11 +7,11 @@ const repoRoot = fileURLToPath(new URL("../", import.meta.url));
 const roots = [
   "mha-widget-hub-loader.js",
   "mha-admin-loader.js",
+  "mha-diagnostics-loader.js",
   "mha-widget-hub.js",
   "src",
   "tools",
   "tests",
-  "custom_components/mha_widget_hub/frontend",
 ];
 
 async function collectJavaScriptFiles(entry) {
