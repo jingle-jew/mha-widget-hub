@@ -10,9 +10,11 @@
     "test": "node --test",
     "check:syntax": "node tools/check-syntax.mjs",
     "check:sync": "node tools/sync-integration-frontend.mjs --check",
-    "check": "npm run check:syntax && npm test && npm run check:sync",
+    "check": "npm run check:syntax && npm run check:icons && npm test && npm run check:sync",
     "check:layout": "playwright test tests/geometry",
     "sync:frontend": "node tools/sync-integration-frontend.mjs",
+    "generate:icons": "node tools/generate-tabler-icon-catalog.mjs",
+    "check:icons": "node tools/generate-tabler-icon-catalog.mjs --check",
     "dev": "npm run sync:frontend",
     "build": "npm run check && npm run sync:frontend",
     "release:zip": "node tools/create-release-zip.mjs",
@@ -22,6 +24,7 @@
     "theme-studio:test": "node --test tests/theme-studio.test.js"
   },
   "devDependencies": {
-    "@playwright/test": "^1.61.0"
+    "@playwright/test": "^1.61.0",
+    "@tabler/icons": "3.44.0"
   }
 }

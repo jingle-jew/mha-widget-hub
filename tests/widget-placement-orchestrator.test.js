@@ -52,6 +52,10 @@ test("widget config panel props rerender only when the popup requests it", () =>
 
   props.onChange({ rerender: true });
   assert.equal(rerenders, 1);
+
+  const rebuiltProps = buildWidgetConfigPanelProps(props);
+  rebuiltProps.onChange({ rerender: true });
+  assert.equal(rerenders, 2);
 });
 
 test("widget surface open state includes panels waiting for their opening frame", () => {

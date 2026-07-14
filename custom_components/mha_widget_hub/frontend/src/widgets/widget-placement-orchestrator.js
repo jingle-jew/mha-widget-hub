@@ -105,6 +105,7 @@ export function buildWidgetConfigPanelProps({
   visibilityConfig = null,
   onCancel = () => {},
   onSave = () => {},
+  onChange,
   onRerender = () => {},
 } = {}) {
   return {
@@ -115,9 +116,9 @@ export function buildWidgetConfigPanelProps({
     }),
     onCancel,
     onSave,
-    onChange: (change) => {
+    onChange: onChange || ((change) => {
       if (change?.rerender) onRerender();
-    },
+    }),
   };
 }
 

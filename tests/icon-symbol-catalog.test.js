@@ -1,7 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { getIconSymbol } from "../src/icons/icon-symbol-catalog.js";
-import { resolveTablerIconForMhaName } from "../src/ui/tabler-icons.js";
+import {
+  resolveTablerIconForMhaName,
+  TABLER_ICON_CATALOG,
+  TABLER_ICON_REGISTRY,
+} from "../src/ui/tabler-icons.js";
+import { ICON_PICKER_INVENTORY } from "../src/widget-config/icon-picker.js";
 
 test("icon symbol catalog exposes the new media and system icons", () => {
   const requiredIcons = [
@@ -80,18 +85,47 @@ test("Tabler provider resolves the first migrated MHA icon names", () => {
   assert.equal(resolveTablerIconForMhaName("media-player")?.name, "device-speaker");
   assert.equal(resolveTablerIconForMhaName("play")?.name, "player-play");
   assert.equal(resolveTablerIconForMhaName("volume-off")?.name, "volume-off");
-  assert.equal(resolveTablerIconForMhaName("humidity")?.name, "droplet-percent");
+  assert.equal(resolveTablerIconForMhaName("humidity")?.name, "droplet");
   assert.equal(resolveTablerIconForMhaName("wind")?.name, "wind");
   assert.equal(resolveTablerIconForMhaName("pressure")?.name, "gauge");
   assert.equal(resolveTablerIconForMhaName("uv")?.name, "sun-high");
-  assert.equal(resolveTablerIconForMhaName("air-quality")?.name, "air");
+  assert.equal(resolveTablerIconForMhaName("air-quality")?.name, "wind");
   assert.equal(resolveTablerIconForMhaName("visibility")?.name, "eye");
   assert.equal(resolveTablerIconForMhaName("fog")?.name, "mist");
   assert.equal(resolveTablerIconForMhaName("sunrise")?.name, "sunrise");
   assert.equal(resolveTablerIconForMhaName("sunset")?.name, "sunset");
 });
 
-test("Tabler provider stays opt-in and preserves local fallback for unmapped icons", () => {
-  assert.equal(resolveTablerIconForMhaName("dashboard"), null);
-  assert.equal(getIconSymbol("dashboard")?.name, "dashboard");
+test("Tabler provider owns the full runtime fallback path", () => {
+  assert.equal(resolveTablerIconForMhaName("dashboard")?.name, "layout-dashboard");
+  assert.equal(resolveTablerIconForMhaName("unknown-icon")?.name, "layout-grid");
+});
+
+test("curated Tabler catalog exposes 500 outlined icons across every MHA category", () => {
+  assert.equal(TABLER_ICON_CATALOG.length, 500);
+  assert.equal(ICON_PICKER_INVENTORY.length, 500);
+  assert.deepEqual(
+    [...new Set(TABLER_ICON_CATALOG.map(icon => icon.category))].sort(),
+    [
+      "climate",
+      "energy",
+      "home",
+      "lighting",
+      "media_player",
+      "navigation",
+      "network",
+      "security",
+      "switch",
+      "system",
+      "utility",
+      "weather",
+    ],
+  );
+
+  TABLER_ICON_CATALOG.forEach(({ name }) => {
+    const definition = TABLER_ICON_REGISTRY[name];
+    assert.equal(definition?.provider, "tabler", `${name} should use Tabler`);
+    assert.equal(definition?.renderMode, "stroke", `${name} should stay outlined`);
+    assert.ok(definition?.nodes?.length, `${name} should expose SVG nodes`);
+  });
 });

@@ -105,6 +105,7 @@
 .mha-system-button .mha-system-icon .mha-system-icon-symbol svg,
 .mha-system-button .mha-system-icon .mha-system-icon-symbol path {
   color: var(--mha-system-button-color);
-  fill: currentColor;
-  stroke: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: var(--mha-icon-symbol-stroke-width, 2);
 }
