@@ -198,6 +198,24 @@
   gap: .28em;
 }
 
+.mha-weather-metric-value-block[data-wind-direction="true"] {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: baseline;
+  justify-items: end;
+  column-gap: .28em;
+  row-gap: .08rem;
+}
+
+.mha-weather-metric-wind-direction {
+  grid-column: 1 / -1;
+  color: var(--mha-text-secondary);
+  font-size: var(--mha-weather-metric-unit-size);
+  font-weight: var(--mha-font-weight-heavy);
+  line-height: var(--mha-weather-metric-unit-line-height);
+  letter-spacing: .055em;
+}
+
 .mha-weather-metric-value {
   min-inline-size: 0;
   overflow: hidden;
@@ -372,6 +390,32 @@
   fill: var(--mha-weather-metric-accent);
   stroke: color-mix(in srgb, var(--mha-text-primary) 30%, transparent);
   stroke-width: 1;
+}
+
+/* The wind compass acts as contextual information rather than a separate
+ * layout row: keep it centered as a quiet watermark behind the metric copy. */
+.mha-weather-metric-widget[data-weather-metric-size="2x2"][data-metric-key="wind"][data-metric-layout="visual"] {
+  isolation: isolate;
+}
+
+.mha-weather-metric-widget[data-weather-metric-size="2x2"][data-metric-key="wind"][data-metric-layout="visual"] .mha-weather-metric-compass {
+  --mha-weather-compass-edge-gap: .65rem;
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: 50%;
+  inline-size: calc(100% - var(--mha-weather-compass-edge-gap));
+  block-size: calc(100% - var(--mha-weather-compass-edge-gap));
+  translate: -50% -50%;
+  opacity: .16;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.mha-weather-metric-widget[data-weather-metric-size="2x2"][data-metric-key="wind"][data-metric-layout="visual"] .mha-weather-metric-header,
+.mha-weather-metric-widget[data-weather-metric-size="2x2"][data-metric-key="wind"][data-metric-layout="visual"] .mha-weather-metric-description,
+.mha-weather-metric-widget[data-weather-metric-size="2x2"][data-metric-key="wind"][data-metric-layout="visual"] .mha-weather-metric-value-block {
+  position: relative;
+  z-index: 1;
 }
 
 .mha-weather-metric-horizon::before,

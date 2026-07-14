@@ -335,6 +335,43 @@ test("weather metric 2x2 renders progress visuals for humidity and precipitation
   assert.equal(precipitationProgress?.style["--mha-weather-metric-progress"], "60%");
 });
 
+test("weather metric 2x2 renders the localized wind direction above its speed", () => {
+  installDom();
+  setLanguage("fr");
+
+  const content = createWeatherMetricWidgetContent({
+    kind: "weather-metric",
+    metricKey: "wind",
+    sourceType: "weather-attribute",
+    entityId: "weather.home",
+    attribute: "wind_speed",
+    unit: "km/h",
+  }, {
+    widgetW: 2,
+    widgetH: 2,
+    hass: {
+      states: {
+        "weather.home": {
+          entity_id: "weather.home",
+          state: "windy",
+          attributes: {
+            wind_speed: 11,
+            wind_bearing: 202.5,
+            wind_speed_unit: "km/h",
+          },
+        },
+      },
+    },
+  });
+
+  const valueBlock = findByClass(content, "mha-weather-metric-value-block");
+  assert.equal(valueBlock?.dataset.windDirection, "true");
+  assert.equal(valueBlock?.childNodes[0].className, "mha-weather-metric-wind-direction");
+  assert.equal(valueBlock?.childNodes[0].textContent, "SSO");
+  assert.equal(valueBlock?.childNodes[1].textContent, "11");
+  assert.equal(valueBlock?.childNodes[2].textContent, "km/h");
+});
+
 test("weather metric progress accents keep a fallback when the theme accent token is absent", () => {
   const css = readFileSync(new URL("../styles/widgets/weather-metric-widget.css", import.meta.url), "utf8");
 

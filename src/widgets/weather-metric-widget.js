@@ -9,6 +9,24 @@ import { WIDGET_PREVIEW_DATA } from "./widget-preview-data.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 const FORECAST_REFRESH_MS = 10 * 60 * 1000;
+const WIND_DIRECTIONS = Object.freeze([
+  Object.freeze(["north", "N"]),
+  Object.freeze(["northNortheast", "NNE"]),
+  Object.freeze(["northeast", "NE"]),
+  Object.freeze(["eastNortheast", "ENE"]),
+  Object.freeze(["east", "E"]),
+  Object.freeze(["eastSoutheast", "ESE"]),
+  Object.freeze(["southeast", "SE"]),
+  Object.freeze(["southSoutheast", "SSE"]),
+  Object.freeze(["south", "S"]),
+  Object.freeze(["southSouthwest", "SSW"]),
+  Object.freeze(["southwest", "SW"]),
+  Object.freeze(["westSouthwest", "WSW"]),
+  Object.freeze(["west", "W"]),
+  Object.freeze(["westNorthwest", "WNW"]),
+  Object.freeze(["northwest", "NW"]),
+  Object.freeze(["northNorthwest", "NNW"]),
+]);
 
 const METRIC_LABELS = Object.freeze({
   humidity: Object.freeze(["weatherPage.metrics.humidity", "Humidity"]),
@@ -130,6 +148,13 @@ function normalizeWindKmh(value, unit = "") {
   if (normalizedUnit.includes("mph")) return value * 1.60934;
   if (normalizedUnit.includes("kn") || normalizedUnit.includes("kt")) return value * 1.852;
   return value;
+}
+
+function formatWindDirection(bearing) {
+  if (!Number.isFinite(bearing)) return "";
+  const normalizedBearing = ((bearing % 360) + 360) % 360;
+  const [key, fallback] = WIND_DIRECTIONS[Math.round(normalizedBearing / 22.5) % WIND_DIRECTIONS.length];
+  return t(`weatherPage.windDirections.${key}`, fallback);
 }
 
 function normalizePressureHpa(value, unit = "") {
@@ -315,10 +340,17 @@ function createMetricVisual(model) {
   return null;
 }
 
-function createValueBlock(model) {
+function createValueBlock(model, { includeWindDirection = true } = {}) {
   const block = document.createElement("div");
   block.className = "mha-weather-metric-value-block";
   const number = model.rawValue == null || model.rawValue === "" ? "--" : String(model.rawValue);
+  const windDirection = includeWindDirection && model.metricKey === "wind"
+    ? formatWindDirection(model.windBearing)
+    : "";
+  if (windDirection) {
+    block.dataset.windDirection = "true";
+    block.append(createText("mha-weather-metric-wind-direction", windDirection));
+  }
   block.append(createText("mha-weather-metric-value", number));
   if (model.unit) block.append(createText("mha-weather-metric-unit", model.unit));
   return block;
@@ -541,7 +573,7 @@ function renderMetric(root, model, { weatherModel = null, hass = null } = {}) {
     return;
   }
 
-  const valueBlock = createValueBlock(model);
+  const valueBlock = createValueBlock(model, { includeWindDirection: !isCompact });
   if (isCompact) {
     renderCompactMetric(root, iconBubble, labelElement, valueBlock);
     return;

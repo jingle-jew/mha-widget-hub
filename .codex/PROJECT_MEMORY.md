@@ -36,7 +36,11 @@ _Aucun piège propre au code du projet n’a encore été consolidé._
 
 ## Préférences UX et produit
 
-_Aucune préférence propre au produit n’a encore été consolidée._
+- Sur la carte météo Vent 2×2, la boussole est une information contextuelle de
+  fond : elle doit rester centrée, atténuée, derrière les textes et remplir la
+  carte à une échelle proche des cadrans ClockWidget analogiques. La direction
+  cardinale localisée doit apparaître au-dessus de la vitesse. La boussole ne
+  doit pas constituer une rangée de contenu distincte.
 
 ## Approches remplacées ou rejetées
 
