@@ -1099,6 +1099,24 @@
   margin-block: 0;
 }
 
+/* The Android status-bar fill extends slightly below the physical safe inset.
+ * Media content is nested below that fill's stacking context, so reserve the
+ * complete ramp instead of allowing artwork or the sheet header underneath it. */
+:host(.mha-android-edge-to-edge[data-layout="mobile"]:not([data-layout-variant="mobile-landscape"])) .mha-media-page {
+  --mha-media-page-safe-block-start: calc(
+    var(--mha-safe-top, 0px)
+    + var(--mha-statusbar-fill-bleed, 0px)
+  );
+}
+
+:host(.mha-android-edge-to-edge[data-layout="mobile"]:not([data-layout-variant="mobile-landscape"])) .mha-media-page-widget-panel.mha-settings-sheet {
+  --mha-mobile-sheet-top-gap: calc(
+    var(--mha-safe-top, 0px)
+    + var(--mha-statusbar-fill-bleed, 0px)
+  );
+  --mha-mobile-sheet-max-height: calc(100dvh - var(--mha-mobile-sheet-top-gap));
+}
+
 :host([data-layout="mobile"]) .mha-media-page-widget-panel-body,
 :host([data-layout="mobile"]) .mha-media-page-player-list {
   block-size: 100%;

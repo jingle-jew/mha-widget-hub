@@ -1,4 +1,5 @@
 :host(.mha-android-edge-to-edge) {
+  --mha-statusbar-fill-bleed: clamp(.58rem, 2.1vh, .96rem);
   min-block-size: 100dvh;
 }
 
@@ -7,7 +8,6 @@
 }
 
 :host(.mha-android-edge-to-edge) .mha-statusbar-fill {
-  --mha-statusbar-fill-bleed: clamp(.58rem, 2.1vh, .96rem);
   position: fixed;
   inset-block-start: 0;
   inset-inline: 0;

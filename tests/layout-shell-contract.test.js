@@ -379,6 +379,10 @@ test("mobile shell keeps the background viewport-anchored while widget content o
 });
 
 test("media page mobile layout scrolls as snapped sheets in portrait and landscape", () => {
+  const androidEdgeSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "core", "android-edge-to-edge.css"),
+    "utf8",
+  );
   const gridSource = fs.readFileSync(
     path.join(REPO_ROOT, "styles", "layout", "widget-grid.css"),
     "utf8",
@@ -431,6 +435,18 @@ test("media page mobile layout scrolls as snapped sheets in portrait and landsca
   assert.match(
     source,
     /:host\(\[data-layout="mobile"\]\) \.mha-media-page-now-playing\s*\{[\s\S]*block-size:\s*var\(--mha-media-page-mobile-sheet-block-size\);[\s\S]*padding-block:\s*var\(--mha-media-page-safe-block-start\)\s+var\(--mha-media-page-safe-block-end\);/,
+  );
+  assert.match(
+    androidEdgeSource,
+    /:host\(\.mha-android-edge-to-edge\)\s*\{[\s\S]*--mha-statusbar-fill-bleed:\s*clamp\(/,
+  );
+  assert.match(
+    source,
+    /:host\(\.mha-android-edge-to-edge\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\) \.mha-media-page\s*\{[\s\S]*--mha-media-page-safe-block-start:\s*calc\([\s\S]*var\(--mha-safe-top,\s*0px\)[\s\S]*var\(--mha-statusbar-fill-bleed,\s*0px\)/,
+  );
+  assert.match(
+    source,
+    /:host\(\.mha-android-edge-to-edge\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\) \.mha-media-page-widget-panel\.mha-settings-sheet\s*\{[\s\S]*--mha-mobile-sheet-top-gap:\s*calc\([\s\S]*var\(--mha-safe-top,\s*0px\)[\s\S]*var\(--mha-statusbar-fill-bleed,\s*0px\)[\s\S]*--mha-mobile-sheet-max-height:\s*calc\(100dvh - var\(--mha-mobile-sheet-top-gap\)\);/,
   );
   assert.match(
     source,
