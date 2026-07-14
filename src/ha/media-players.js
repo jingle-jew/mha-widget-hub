@@ -14,7 +14,12 @@ export function resolveEnabledMediaPlayerIds(config = {}, availablePlayers = [])
 
 export function resolveEnabledMediaPlayers(config = {}, availablePlayers = []) {
   const enabledIds = resolveEnabledMediaPlayerIds(config, availablePlayers);
-  return availablePlayers.filter(player => enabledIds.includes(player.entity_id));
+  const playersById = new Map(
+    availablePlayers.map(player => [player.entity_id, player]),
+  );
+  return enabledIds
+    .map(entityId => playersById.get(entityId))
+    .filter(Boolean);
 }
 
 export function resolveSelectedMediaPlayerId(config = {}, players = []) {
