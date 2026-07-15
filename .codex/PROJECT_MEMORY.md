@@ -50,6 +50,9 @@ _Aucun piège propre au code du projet n’a encore été consolidé._
   translucides, floutées et teintées par la couleur d’accent active du thème.
   La pastille de l’élément actif reprend cette teinte avec une intensité plus
   forte pour préserver la hiérarchie de sélection.
+- En OneUI, la section « Lecteurs disponibles » de la page Média réutilise la
+  matière du dock et son lecteur sélectionné réutilise exactement la surface de
+  la pastille active du dock.
 
 ## Approches remplacées ou rejetées
 

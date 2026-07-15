@@ -514,7 +514,14 @@ test("media page mobile layout scrolls as snapped sheets in portrait and landsca
     /\.mha-media-page\[data-artwork-tone\] \.mha-media-page-now-playing \.mha-media-widget-title\s*\{[\s\S]*color:\s*var\(--mha-media-artwork-foreground\);/,
   );
   assert.doesNotMatch(source, /\.mha-media-page-player-widget\[data-artwork-tone=/);
-  assert.doesNotMatch(source, /:host\(\[data-theme-style="oneui"\]\) \.mha-media-page \.mha-media-page-player-list/);
+  assert.match(
+    source,
+    /:host\(\[data-theme-style="oneui"\]\) \.mha-media-page-widget-panel\s*\{[\s\S]*--mha-media-page-available-players-surface:\s*var\([\s\S]*--mha-oneui-mobile-dock-surface,[\s\S]*--mha-shell-dock-surface[\s\S]*--mha-panel-surface:\s*var\(--mha-media-page-available-players-surface\);[\s\S]*--mha-panel-filter:\s*var\(--mha-oneui-dock-filter\);/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-theme-style="oneui"\]\) \.mha-media-page \.mha-media-page-player-list > \.mha-media-page-auto-player\[data-media-page-player="true"\]\[data-selected="true"\]\s*\{[\s\S]*background:\s*var\(--mha-oneui-dock-active-surface\);[\s\S]*border-color:\s*transparent;[\s\S]*box-shadow:\s*none;/,
+  );
   assert.match(
     source,
     /:host\(\[data-layout-variant="mobile-landscape"\]\[data-media-page-active="true"\]\.is-mobile-floating-controls-hidden\) \.mha-dock\s*\{[\s\S]*opacity:\s*0;[\s\S]*pointer-events:\s*none;/,
