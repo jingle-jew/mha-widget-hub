@@ -61,6 +61,9 @@ appartiennent à `AGENTS.md`.
 - Le canvas généré de OneUI clair reste légèrement assombri par ses couleurs de
   base, sans réduire l’intensité des blobs, afin que les surfaces primary
   laiteuses conservent un contraste lisible avec le fond.
+- Le screensaver OneUI floute le véritable wallpaper dans les deux modes. Le
+  reset `filter: none` du canvas clair ne s’applique que lorsque le screensaver
+  est masqué, afin de ne pas neutraliser son blur commun de `18px`.
 - `primary-surface` OneUI reproduit le matériau fortement diffusé de One UI
   Home : clair froid et laiteux, sombre bleu nuit très absorbant, blur `46px`
   et saturation `118%`. Sa couleur et celle du dock OneUI latéral/compact

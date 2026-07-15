@@ -236,7 +236,7 @@
 /* Theme background is fully token-driven in OneUI. */
 
 /* 6. Exceptions strictement necessaires */
-:host([data-theme-style="oneui"][data-theme="light"]) .mha-background,
+:host([data-theme-style="oneui"][data-theme="light"]:not(.is-screensaver-visible)) .mha-background,
 :host([data-theme-style="oneui"][data-theme="light"]) .mha-shell,
 :host([data-theme-style="oneui"][data-theme="light"]) .mha-grid {
   box-shadow: none !important;

@@ -98,6 +98,23 @@ test("OneUI light canvas uses subdued base colors behind primary surfaces", () =
   );
 });
 
+test("OneUI light releases its background filter reset while the screensaver is visible", () => {
+  const themeSource = fs.readFileSync(path.join(THEME_ROOT, "oneui.css"), "utf8");
+  const screensaverSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "screensaver", "screensaver.css"),
+    "utf8",
+  );
+
+  assert.match(
+    themeSource,
+    /:host\(\[data-theme-style="oneui"\]\[data-theme="light"\]:not\(\.is-screensaver-visible\)\) \.mha-background,[\s\S]*filter:\s*none;/,
+  );
+  assert.match(
+    screensaverSource,
+    /:host\(\[data-theme="light"\]\)\s*\{[\s\S]*--mha-screensaver-background-filter:\s*blur\(18px\)\s*saturate\(\.82\)\s*brightness\(\.88\);/,
+  );
+});
+
 test("OneUI primary surface reuses the dock colors at reduced opacity", () => {
   const source = fs.readFileSync(path.join(THEME_ROOT, "oneui.css"), "utf8");
   const semanticSource = fs.readFileSync(path.join(THEME_ROOT, "semantic-tokens.css"), "utf8");
