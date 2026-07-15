@@ -623,6 +623,10 @@ test("media page mobile layout scrolls as snapped sheets in portrait and landsca
   );
   assert.match(
     source,
+    /:host\(\[data-theme-style="oneui"\]\) \.mha-media-page \.mha-media-page-player-list > \.mha-media-page-auto-player\[data-media-page-player="true"\]\s*\{[\s\S]*--mha-media-page-player-card-surface:\s*var\(--mha-oneui-dock-item-surface\);[\s\S]*--mha-media-page-player-card-border:\s*var\(--mha-oneui-dock-item-border\);[\s\S]*box-shadow:\s*var\(--mha-oneui-dock-item-shadow\);/,
+  );
+  assert.match(
+    source,
     /:host\(\[data-theme-style="oneui"\]\) \.mha-media-page \.mha-media-page-player-list > \.mha-media-page-auto-player\[data-media-page-player="true"\]\[data-selected="true"\]\s*\{[\s\S]*background:\s*var\(--mha-oneui-dock-active-surface\);[\s\S]*border-color:\s*transparent;[\s\S]*box-shadow:\s*none;/,
   );
   assert.match(

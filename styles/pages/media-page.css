@@ -502,6 +502,14 @@
     transform 180ms ease;
 }
 
+:host([data-theme-style="oneui"]) .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player[data-media-page-player="true"] {
+  --mha-media-page-player-card-surface: var(--mha-oneui-dock-item-surface);
+  --mha-media-page-player-card-border: var(--mha-oneui-dock-item-border);
+  background: var(--mha-media-page-player-card-surface);
+  border-color: var(--mha-media-page-player-card-border);
+  box-shadow: var(--mha-oneui-dock-item-shadow);
+}
+
 .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player[data-media-page-player="true"][data-selected="true"] {
   background:
     linear-gradient(
