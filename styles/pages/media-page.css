@@ -32,6 +32,7 @@
   --mha-media-page-grid-gap: var(--mha-grid-gap, var(--mha-media-page-content-gap));
   --mha-media-page-panel-gap: clamp(.85rem, 1.5cqi, 1.35rem);
   --mha-media-page-palette-fade-duration: 1000ms;
+  --mha-media-page-wallpaper-fade-duration: 1000ms;
   --mha-media-page-widget-panel-padding: clamp(1rem, 2.2cqi, 1.4rem);
   --mha-media-page-grid-cell-size: var(--mha-grid-row-size, var(--mha-square-unit, 72px));
   --mha-media-page-metadata-min-height: calc(
@@ -212,7 +213,7 @@
   transition:
     background-color var(--mha-media-page-palette-fade-duration) ease,
     border-color 220ms ease,
-    color 220ms ease,
+    color var(--mha-media-page-palette-fade-duration) ease,
     box-shadow 220ms ease,
     opacity 220ms ease,
     -webkit-backdrop-filter 220ms ease,
@@ -1455,22 +1456,32 @@
 }
 
 :host .mha-media-page[data-artwork-tone] .mha-media-page-now-playing .mha-media-widget-control {
-  background: var(--mha-media-artwork-control-surface);
+  background-image: none;
+  background-color: var(--mha-media-artwork-control-surface);
+  border-color: color-mix(
+    in srgb,
+    var(--mha-media-artwork-foreground) 16%,
+    transparent
+  );
   color: var(--mha-media-artwork-foreground);
 }
 
 :host .mha-media-page[data-artwork-tone] .mha-media-page-now-playing .mha-media-widget-control[data-primary="true"],
 :host .mha-media-page[data-artwork-tone] .mha-media-page-now-playing .mha-media-widget-control[data-primary] {
-  background: var(--mha-media-artwork-control-active-surface);
+  background-image: none;
+  background-color: var(--mha-media-artwork-control-active-surface);
+  border-color: transparent;
   color: var(--mha-media-artwork-control-active-color);
 }
 
 :host .mha-media-page[data-artwork-tone] .mha-media-page-now-playing .mha-media-widget-progress {
-  background: var(--mha-media-artwork-control-surface);
+  background-image: none;
+  background-color: var(--mha-media-artwork-control-surface);
 }
 
 :host .mha-media-page[data-artwork-tone] .mha-media-page-now-playing .mha-media-widget-progress-fill {
-  background: var(--mha-media-artwork-foreground);
+  background-image: none;
+  background-color: var(--mha-media-artwork-foreground);
 }
 
 .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-widget-progress-shell {

@@ -29,16 +29,18 @@
   display:block;
   visibility:hidden;
   opacity:0;
-  transition:opacity 220ms ease;
+  transition:opacity var(--mha-media-page-wallpaper-fade-duration, 1000ms) ease;
 }
 .mha-background-media{
   background-color:var(--mha-bg-base-1);
-  background-image:var(--mha-media-page-wallpaper-image, none);
   background-position:center;
   background-repeat:no-repeat;
   background-size:cover;
   filter:blur(clamp(24px, 4vw, 42px));
   transform:scale(1.08);
+}
+.mha-background-media:not([data-media-wallpaper-layer]){
+  background-image:var(--mha-media-page-wallpaper-image, none);
 }
 .mha-background-media-overlay{
   background:
@@ -283,6 +285,10 @@
 :host([data-media-page-active="true"][data-media-page-wallpaper="true"]) .mha-background-media,
 :host([data-media-page-active="true"][data-media-page-wallpaper="true"]) .mha-background-media-overlay {
   visibility:visible;
+}
+
+:host([data-media-page-active="true"][data-media-page-wallpaper="true"]) .mha-background-media[data-media-wallpaper-active="true"],
+:host([data-media-page-active="true"][data-media-page-wallpaper="true"]) .mha-background-media-overlay {
   opacity: 1;
 }
 
@@ -297,6 +303,11 @@
 :host([data-page-type-wallpaper-crossfade="true"]) .mha-background-media,
 :host([data-page-type-wallpaper-crossfade="true"]) .mha-background-media-overlay {
   visibility: visible;
+}
+
+:host([data-media-page-active="true"]) .mha-background-media {
+  transition-duration: var(--mha-media-page-wallpaper-fade-duration, 1000ms);
+  transition-timing-function: ease;
 }
 
 :host([data-media-page-active="true"][data-media-page-wallpaper="true"]) .mha-background span {

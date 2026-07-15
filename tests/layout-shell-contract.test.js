@@ -498,6 +498,38 @@ test("mobile shell keeps the background viewport-anchored while widget content o
   );
 });
 
+test("media artwork wallpaper crossfades between two persistent layers", () => {
+  const shellSource = fs.readFileSync(
+    path.join(REPO_ROOT, "src", "layout", "shell.js"),
+    "utf8",
+  );
+  const backgroundSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "core", "background.css"),
+    "utf8",
+  );
+  const mediaPageSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "pages", "media-page.css"),
+    "utf8",
+  );
+
+  assert.match(
+    shellSource,
+    /const mediaLayers = \["primary", "secondary"\]\.map\([\s\S]*layer\.dataset\.mediaWallpaperActive = "false";/,
+  );
+  assert.match(
+    backgroundSource,
+    /\.mha-background-media,[\s\S]*transition:opacity var\(--mha-media-page-wallpaper-fade-duration, 1000ms\) ease;/,
+  );
+  assert.match(
+    backgroundSource,
+    /\.mha-background-media\[data-media-wallpaper-active="true"\],[\s\S]*\.mha-background-media-overlay\s*\{[\s\S]*opacity:\s*1;/,
+  );
+  assert.match(
+    mediaPageSource,
+    /--mha-media-page-wallpaper-fade-duration:\s*1000ms;/,
+  );
+});
+
 test("media page mobile layout scrolls as snapped sheets in portrait and landscape", () => {
   const androidEdgeSource = fs.readFileSync(
     path.join(REPO_ROOT, "styles", "core", "android-edge-to-edge.css"),
@@ -656,6 +688,14 @@ test("media page mobile layout scrolls as snapped sheets in portrait and landsca
   assert.match(
     source,
     /@property --mha-media-page-artwork-panel-tint\s*\{[\s\S]*syntax:\s*"<color>";[\s\S]*inherits:\s*true;[\s\S]*initial-value:\s*transparent;[\s\S]*\.mha-media-page\s*\{[\s\S]*transition:[\s\S]*--mha-media-page-artwork-panel-tint var\(--mha-media-page-palette-fade-duration\) ease,/,
+  );
+  assert.match(
+    source,
+    /\.mha-media-page\[data-artwork-tone\] \.mha-media-page-now-playing \.mha-media-widget-control\s*\{[\s\S]*background-image:\s*none;[\s\S]*background-color:\s*var\(--mha-media-artwork-control-surface\);[\s\S]*border-color:\s*color-mix\([\s\S]*--mha-media-artwork-foreground[\s\S]*color:\s*var\(--mha-media-artwork-foreground\);/,
+  );
+  assert.match(
+    source,
+    /\.mha-media-page\[data-artwork-tone\] \.mha-media-page-now-playing \.mha-media-widget-progress\s*\{[\s\S]*background-image:\s*none;[\s\S]*background-color:\s*var\(--mha-media-artwork-control-surface\);[\s\S]*\.mha-media-widget-progress-fill\s*\{[\s\S]*background-image:\s*none;[\s\S]*background-color:\s*var\(--mha-media-artwork-foreground\);/,
   );
   assert.match(
     source,

@@ -27,7 +27,9 @@ appartiennent à `AGENTS.md`.
   les transitions visuelles; conserver les changements de layout stables et
   animer les propriétés de rendu ciblées. Les interactions directes doivent
   rester immédiatement acquittées, même lorsque leur évolution visuelle se
-  poursuit lentement.
+  poursuit lentement. Pour les médias, l'audio et les commandes ne sont jamais
+  retardés; la représentation visuelle peut volontairement rester en retrait
+  le temps de charger ses ressources et de terminer une animation premium.
 
 ### 2026-07-15 — Garder la page Média autonome
 
@@ -209,7 +211,14 @@ appartiennent à `AGENTS.md`.
   pendant le chargement de la suivante. La nouvelle URL n'est publiée à la
   couche CSS qu'après chargement et décodage, et une requête devenue obsolète ne
   peut pas remplacer un artwork plus récent. Cette continuité évite d'exposer
-  brièvement le wallpaper du thème entre deux chansons.
+  brièvement le wallpaper du thème entre deux chansons. Une fois prête, la
+  nouvelle image apparaît par un crossfade de `1000ms` entre deux couches
+  d'artwork superposées : le fondu ne transite jamais par le fond du thème.
+- Le contraste du contenu Now Playing est calculé contre une approximation de
+  l'artwork une fois composé avec l'overlay sombre du wallpaper, et non contre
+  les pixels bruts de la pochette. La palette des surfaces continue d'utiliser
+  les couleurs originales; seul le choix clair/sombre du texte et des contrôles
+  tient compte de la surface réellement perçue derrière eux.
 - En OneUI, les surfaces locales de repli des lecteurs inactifs restent
   visuellement alignées sur le dock sans dépendre du composant dock.
 - En OneUI et Material, les cartes « Lecteurs disponibles » conservent une

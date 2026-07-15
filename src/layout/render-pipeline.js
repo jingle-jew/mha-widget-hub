@@ -48,7 +48,22 @@ import {
 
 const STYLE_SETTLE_TIMEOUT_MS = 900;
 
+function getMediaPageWallpaperLayers(host) {
+  return [
+    ...(host.shadowRoot?.querySelectorAll?.(".mha-background-media") || []),
+  ];
+}
+
 function applyMediaPageWallpaperArtwork(host, artworkUrl) {
+  const mediaLayers = getMediaPageWallpaperLayers(host);
+  if (mediaLayers.length >= 2) {
+    const currentLayer = mediaLayers.find(layer => layer.dataset.mediaWallpaperActive === "true") || null;
+    const nextLayer = mediaLayers.find(layer => layer !== currentLayer) || mediaLayers[0];
+    nextLayer.style.backgroundImage = `url("${artworkUrl}")`;
+    nextLayer.dataset.mediaWallpaperArtworkUrl = artworkUrl;
+    nextLayer.dataset.mediaWallpaperActive = "true";
+    if (currentLayer) currentLayer.dataset.mediaWallpaperActive = "false";
+  }
   host.dataset.mediaPageWallpaper = "true";
   host.style?.setProperty?.("--mha-media-page-wallpaper-image", `url("${artworkUrl}")`);
   host._mediaPageWallpaperArtworkUrl = artworkUrl;
@@ -65,6 +80,13 @@ export function requestMediaPageWallpaperArtwork(host, artworkUrl, {
       host._mediaPageWallpaperRequestId = (host._mediaPageWallpaperRequestId || 0) + 1;
       host._mediaPageWallpaperPendingUrl = "";
       host._mediaPageWallpaperPendingPromise = null;
+    }
+    const matchingLayer = getMediaPageWallpaperLayers(host)
+      .find(layer => layer.dataset.mediaWallpaperArtworkUrl === nextArtworkUrl);
+    if (matchingLayer) {
+      getMediaPageWallpaperLayers(host).forEach((layer) => {
+        layer.dataset.mediaWallpaperActive = String(layer === matchingLayer);
+      });
     }
     host.dataset.mediaPageWallpaper = "true";
     return Promise.resolve(true);
@@ -245,6 +267,9 @@ export function createRenderPipeline(host, options = {}) {
     host._mediaPageWallpaperPendingUrl = "";
     host._mediaPageWallpaperPendingPromise = null;
     host.dataset.mediaPageWallpaper = "false";
+    getMediaPageWallpaperLayers(host).forEach((layer) => {
+      layer.dataset.mediaWallpaperActive = "false";
+    });
     clearTimeout(host._mediaPageWallpaperClearTimer || 0);
     if (host._pageTypeWallpaperCrossfadeActive) {
       host._mediaPageWallpaperClearTimer = setTimeout(() => {

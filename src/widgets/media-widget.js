@@ -30,6 +30,8 @@ const MEDIA_ARTWORK_PALETTE_PROPERTIES = Object.freeze([
   "--mha-media-palette-on-strong",
 ]);
 const MEDIA_ARTWORK_PALETTE_ROOT_SELECTOR = ".mha-media-widget, .mha-media-page";
+const MEDIA_PAGE_WALLPAPER_OVERLAY_COLOR = Object.freeze([10, 14, 24]);
+const MEDIA_PAGE_WALLPAPER_OVERLAY_WEIGHT = 0.44;
 
 const MEDIA_TRANSIENT_STATES = new Set(["idle", "off", "unavailable", "unknown", "none"]);
 
@@ -329,6 +331,16 @@ export function deriveMediaArtworkPaletteFromPixels(pixels = []) {
   const lightContrast = getMediaColorContrastRatio(sampledSurface, [255, 255, 255]);
   const darkContrast = getMediaColorContrastRatio(sampledSurface, [0, 0, 0]);
   const preferLight = lightContrast >= darkContrast;
+  /* Now Playing is drawn over the enlarged artwork plus the dark wallpaper
+   * overlay, not over the raw image sampled above. Model that composition
+   * separately so a medium or dark cover cannot incorrectly select black UI. */
+  const wallpaperSurface = mixRgb(
+    sampledSurface,
+    MEDIA_PAGE_WALLPAPER_OVERLAY_COLOR,
+    MEDIA_PAGE_WALLPAPER_OVERLAY_WEIGHT,
+  );
+  const wallpaperLightContrast = getMediaColorContrastRatio(wallpaperSurface, [255, 255, 255]);
+  const wallpaperDarkContrast = getMediaColorContrastRatio(wallpaperSurface, [0, 0, 0]);
   const surface = mixRgb(sampledSurface, preferLight ? [0, 0, 0] : [255, 255, 255], 0.16);
   const foreground = deriveContrastingTone(surface, hue, tonalSaturation, preferLight);
   const muted = mixRgb(surface, foreground, 0.72);
@@ -342,6 +354,7 @@ export function deriveMediaArtworkPaletteFromPixels(pixels = []) {
 
   return {
     tone: preferLight ? "dark" : "light",
+    wallpaperTone: wallpaperLightContrast >= wallpaperDarkContrast ? "dark" : "light",
     legacyTone: ((0.2126 * sampledSurface[0]) + (0.7152 * sampledSurface[1]) + (0.0722 * sampledSurface[2])) / 255 >= 0.52
       ? "light"
       : "dark",
@@ -386,7 +399,9 @@ function resolveMediaArtworkPaletteRoot(rootOrArtwork) {
 
 function applyMediaArtworkPalette(root, palette) {
   if (!root || !palette) return;
-  root.dataset.artworkTone = palette.legacyTone;
+  root.dataset.artworkTone = root.matches?.(".mha-media-page")
+    ? palette.wallpaperTone || palette.legacyTone
+    : palette.legacyTone;
   if (root.dataset.mediaSize === "4x4") {
     root.removeAttribute("data-artwork-palette");
     MEDIA_ARTWORK_PALETTE_PROPERTIES.forEach(property => root.style.removeProperty(property));

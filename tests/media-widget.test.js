@@ -118,6 +118,21 @@ test("artwork palettes adapt to the source colors", () => {
   assert.notEqual(warm.surface, cool.surface);
 });
 
+test("Now Playing contrast accounts for the dark wallpaper composition", () => {
+  const mediumArtwork = deriveMediaArtworkPaletteFromPixels(Uint8ClampedArray.from([
+    170, 170, 170, 255,
+    166, 166, 166, 255,
+  ]));
+  const brightArtwork = deriveMediaArtworkPaletteFromPixels(Uint8ClampedArray.from([
+    248, 248, 248, 255,
+    242, 242, 242, 255,
+  ]));
+
+  assert.equal(mediumArtwork.legacyTone, "light");
+  assert.equal(mediumArtwork.wallpaperTone, "dark");
+  assert.equal(brightArtwork.wallpaperTone, "light");
+});
+
 test("artwork tone can target the media page Now Playing surface", async () => {
   const properties = new Map();
   const page = {
@@ -146,7 +161,7 @@ test("artwork tone can target the media page Now Playing surface", async () => {
   syncMediaArtworkTone(page, image);
   await Promise.resolve();
 
-  assert.equal(page.dataset.artworkTone, palette.legacyTone);
+  assert.equal(page.dataset.artworkTone, palette.wallpaperTone);
   assert.equal(page.dataset.artworkPalette, "true");
   assert.equal(properties.get("--mha-media-palette-foreground"), palette.foreground);
 });
