@@ -32,7 +32,11 @@ appartiennent à `AGENTS.md`.
 
 ## Pièges connus
 
-_Aucun piège propre au code du projet n’a encore été consolidé._
+- Dans `semantic-tokens.css`, ne pas redéfinir le `--mha-primary-surface`
+  spécialisé de OneUI avec `var(--mha-surface-primary)` : OneUI mappe déjà
+  `--mha-surface-primary` vers `--mha-primary-surface`. La double référence
+  forme un cycle de custom properties, invalide la surface calculée et fait
+  retomber les widgets sur leurs anciens fallbacks visuels.
 
 ## Préférences UX et produit
 
@@ -56,8 +60,11 @@ _Aucun piège propre au code du projet n’a encore été consolidé._
   ajouter de bordure ou d’ombre.
 - `primary-surface` OneUI reproduit le matériau fortement diffusé de One UI
   Home : clair froid et laiteux, sombre bleu nuit très absorbant, blur `46px`
-  et saturation `118%`. Les rôles dock, panel et `on-primary` restent
-  indépendants tant qu’ils ne sont pas explicitement remappés.
+  et saturation `118%`. Sa couleur consomme la surface effectivement affichée
+  par le dock OneUI latéral/compact, `--mha-oneui-mobile-dock-surface`, avec
+  `--mha-shell-dock-surface` comme fallback. Son blur et sa brightness restent
+  propres au rôle primary. Les rôles panel et `on-primary` restent indépendants
+  tant qu’ils ne sont pas explicitement remappés.
 - En OneUI, la section « Lecteurs disponibles » de la page Média réutilise la
   matière du dock et son lecteur sélectionné réutilise exactement la surface de
   la pastille active du dock.

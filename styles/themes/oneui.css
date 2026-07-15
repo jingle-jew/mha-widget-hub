@@ -38,14 +38,7 @@
   /* 2. Mode clair */
   --mha-text: rgba(0,0,0,.88);
   --mha-muted: rgba(0,0,0,.52);
-  --mha-oneui-primary-surface:
-    linear-gradient(
-      180deg,
-      rgba(232,238,247,.68) 0%,
-      rgba(211,220,233,.61) 54%,
-      rgba(196,207,220,.56) 100%
-    );
-  --mha-oneui-primary-brightness: 1.04;
+  --mha-oneui-primary-brightness: .99;
   --mha-widget-surface: linear-gradient(145deg, rgba(255,255,255,.76), rgba(255,246,238,.58));
   --mha-widget-surface-edit: linear-gradient(145deg, rgba(255,255,255,.88), rgba(255,240,230,.70));
   --mha-widget-border: rgba(110,92,78,.12);
@@ -111,14 +104,7 @@
   /* 3. Mode sombre */
   --mha-text: rgba(255,255,255,.96);
   --mha-muted: rgba(255,255,255,.58);
-  --mha-oneui-primary-surface:
-    linear-gradient(
-      180deg,
-      rgba(7,27,63,.84) 0%,
-      rgba(5,20,47,.82) 52%,
-      rgba(4,14,31,.86) 100%
-    );
-  --mha-oneui-primary-brightness: .88;
+  --mha-oneui-primary-brightness: .90;
   --mha-widget-surface: linear-gradient(145deg, rgba(255,240,226,.18), rgba(255,255,255,.105));
   --mha-widget-surface-edit: linear-gradient(145deg, rgba(255,236,219,.26), rgba(255,255,255,.15));
   --mha-widget-border: rgba(255,236,219,.18);

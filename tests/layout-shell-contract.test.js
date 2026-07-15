@@ -67,7 +67,7 @@ test("theme stylesheets do not override structural geometry variables", () => {
   assert.deepEqual(offenders, []);
 });
 
-test("OneUI dock surfaces and active pill derive their visible tint from the theme accent", () => {
+test("OneUI dock and active pill derive their visible tint from the theme accent", () => {
   const source = fs.readFileSync(path.join(THEME_ROOT, "oneui.css"), "utf8");
   const tintConsumers = source.match(/var\(--mha-oneui-dock-tint\)/g) || [];
 
@@ -89,24 +89,23 @@ test("OneUI glass uses a dense fine-grain texture across persistent and panel su
   );
 });
 
-test("OneUI primary surface uses the strongly diffused Home-screen material", () => {
+test("OneUI primary surface reuses only the dock background color recipe", () => {
   const source = fs.readFileSync(path.join(THEME_ROOT, "oneui.css"), "utf8");
   const semanticSource = fs.readFileSync(path.join(THEME_ROOT, "semantic-tokens.css"), "utf8");
+  const sharedAdapter = semanticSource.match(
+    /\/\* iOS and OneUI canonical layer adapters\.[\s\S]*?\n\}/,
+  )?.[0] || "";
 
   assert.match(source, /--mha-oneui-primary-blur:\s*46px;/);
   assert.match(source, /--mha-oneui-primary-saturation:\s*118%;/);
-  assert.match(
-    source,
-    /:host\(\[data-theme-style="oneui"\]\[data-theme="light"\]\)\s*\{[\s\S]*--mha-oneui-primary-surface:[\s\S]*rgba\(232,238,247,\.68\)[\s\S]*rgba\(196,207,220,\.56\)[\s\S]*--mha-oneui-primary-brightness:\s*1\.04;/,
-  );
-  assert.match(
-    source,
-    /:host\(\[data-theme-style="oneui"\]\[data-theme="dark"\]\)\s*\{[\s\S]*--mha-oneui-primary-surface:[\s\S]*rgba\(7,27,63,\.84\)[\s\S]*rgba\(4,14,31,\.86\)[\s\S]*--mha-oneui-primary-brightness:\s*\.88;/,
-  );
+  assert.doesNotMatch(source, /--mha-oneui-primary-surface:/);
+  assert.match(source, /--mha-oneui-primary-brightness:\s*\.99;/);
+  assert.match(source, /--mha-oneui-primary-brightness:\s*\.90;/);
   assert.match(
     semanticSource,
-    /:host\(\[data-theme-style="oneui"\]\),\s*:root\[data-theme-style="oneui"\]\s*\{[\s\S]*--mha-primary-surface:\s*var\(--mha-oneui-primary-surface\);[\s\S]*--mha-surface-primary:\s*var\(--mha-primary-surface\);[\s\S]*--mha-blur-primary:\s*var\(--mha-oneui-primary-blur\);[\s\S]*--mha-brightness-primary:\s*var\(--mha-oneui-primary-brightness\);/,
+    /:host\(\[data-theme-style="oneui"\]\),\s*:root\[data-theme-style="oneui"\]\s*\{[\s\S]*--mha-primary-surface:\s*var\(\s*--mha-oneui-mobile-dock-surface,\s*var\(--mha-shell-dock-surface\)\s*\);[\s\S]*--mha-surface-primary:\s*var\(--mha-primary-surface\);[\s\S]*--mha-blur-primary:\s*var\(--mha-oneui-primary-blur\);[\s\S]*--mha-brightness-primary:\s*var\(--mha-oneui-primary-brightness\);/,
   );
+  assert.doesNotMatch(sharedAdapter, /--mha-primary-surface:/);
 });
 
 test("OneUI dark panels keep a flat outer frame", () => {
