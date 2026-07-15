@@ -385,6 +385,22 @@ test("weather metric progress accents keep a fallback when the theme accent toke
   );
 });
 
+test("selected long weather metric labels use the two-line wrapping contract", () => {
+  const css = readFileSync(new URL("../styles/widgets/weather-metric-widget.css", import.meta.url), "utf8");
+
+  ["cloud-coverage", "precipitation-rate", "solar-radiation", "sunshine-duration"].forEach(metricKey => {
+    assert.equal(css.includes(`[data-metric-key="${metricKey}"]`), true);
+  });
+  assert.match(
+    css,
+    /\.mha-weather-metric-widget:is\([\s\S]*?\) \.mha-weather-metric-label\s*\{[\s\S]*?-webkit-line-clamp:\s*2;[\s\S]*?white-space:\s*normal;[\s\S]*?text-overflow:\s*clip;/,
+  );
+  assert.match(
+    css,
+    /\.mha-weather-metric-widget:is\([\s\S]*?\) \.mha-weather-metric-header\s*\{\s*align-items:\s*flex-start;/,
+  );
+});
+
 test("weather metric 2x1 uses the simple-button sibling layout", () => {
   installDom();
 

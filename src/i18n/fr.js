@@ -275,7 +275,7 @@ export const fr = Object.freeze({
       precipitationProbability: "Prob. de pluie",
       precipitation: "Précipitations",
       precipitationRate: "Intensité des précipitations",
-      snowDepth: "Hauteur de neige",
+      snowDepth: "Accumulations",
       wind: "Vent",
       windGust: "Rafales",
       pressure: "Pression",

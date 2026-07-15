@@ -41,6 +41,11 @@ _Aucun piège propre au code du projet n’a encore été consolidé._
   carte à une échelle proche des cadrans ClockWidget analogiques. La direction
   cardinale localisée doit apparaître au-dessus de la vitesse. La boussole ne
   doit pas constituer une rangée de contenu distincte.
+- Les libellés météo longs « Couverture nuageuse », « Intensité des
+  précipitations », « Rayonnement solaire » et « Durée d’ensoleillement »
+  utilisent jusqu’à deux lignes plutôt qu’une troncature sur une seule ligne.
+  Leur icône reste alignée avec la première ligne. En français, la hauteur de
+  neige est libellée « Accumulations ».
 
 ## Approches remplacées ou rejetées
 

@@ -171,6 +171,29 @@
   letter-spacing: var(--mha-weather-metric-label-tracking);
 }
 
+.mha-weather-metric-widget:is(
+  [data-metric-key="cloud-coverage"],
+  [data-metric-key="precipitation-rate"],
+  [data-metric-key="solar-radiation"],
+  [data-metric-key="sunshine-duration"]
+) .mha-weather-metric-header {
+  align-items: flex-start;
+}
+
+.mha-weather-metric-widget:is(
+  [data-metric-key="cloud-coverage"],
+  [data-metric-key="precipitation-rate"],
+  [data-metric-key="solar-radiation"],
+  [data-metric-key="sunshine-duration"]
+) .mha-weather-metric-label {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  white-space: normal;
+  text-overflow: clip;
+  text-wrap: balance;
+}
+
 .mha-weather-metric-description {
   color: var(--mha-text-secondary);
   font-size: var(--mha-weather-metric-caption-size);
