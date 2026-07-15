@@ -89,6 +89,15 @@ test("OneUI glass uses a dense fine-grain texture across persistent and panel su
   );
 });
 
+test("OneUI light canvas uses subdued base colors behind primary surfaces", () => {
+  const source = fs.readFileSync(path.join(THEME_ROOT, "oneui.css"), "utf8");
+
+  assert.match(
+    source,
+    /:host\(\[data-theme-style="oneui"\]\[data-theme="light"\]\)\s*\{[\s\S]*--mha-bg-base-1:\s*color-mix\(in srgb, var\(--mha-accent\) 16%, #eef0f2\);[\s\S]*--mha-bg-base-2:\s*color-mix\(in srgb, var\(--mha-accent\) 24%, #e0e7f2\);/,
+  );
+});
+
 test("OneUI primary surface reuses only the dock background color recipe", () => {
   const source = fs.readFileSync(path.join(THEME_ROOT, "oneui.css"), "utf8");
   const semanticSource = fs.readFileSync(path.join(THEME_ROOT, "semantic-tokens.css"), "utf8");

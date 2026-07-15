@@ -67,8 +67,8 @@
       color-mix(in srgb, var(--mha-accent) 10%, rgba(255,255,255,.88)),
       color-mix(in srgb, var(--mha-accent) 6%, rgba(246,248,255,.78))
     );
-  --mha-bg-base-1: color-mix(in srgb, var(--mha-accent) 16%, #fbf8f5);
-  --mha-bg-base-2: color-mix(in srgb, var(--mha-accent) 24%, #eef3ff);
+  --mha-bg-base-1: color-mix(in srgb, var(--mha-accent) 16%, #eef0f2);
+  --mha-bg-base-2: color-mix(in srgb, var(--mha-accent) 24%, #e0e7f2);
   --mha-bg-radial-1: color-mix(in srgb, var(--mha-bg-blob-1) 32%, transparent);
   --mha-bg-radial-2: color-mix(in srgb, var(--mha-bg-blob-2) 24%, transparent);
   --mha-bg-radial-3: color-mix(in srgb, var(--mha-bg-blob-3) 18%, transparent);

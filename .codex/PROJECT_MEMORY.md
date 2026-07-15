@@ -58,6 +58,9 @@ appartiennent à `AGENTS.md`.
   texture fractale dense à quatre octaves, répétée à `56px`, opacité `.14` et
   fusion `soft-light`. Ce voile couvre aussi les sheets/panels OneUI sans leur
   ajouter de bordure ou d’ombre.
+- Le canvas généré de OneUI clair reste légèrement assombri par ses couleurs de
+  base, sans réduire l’intensité des blobs, afin que les surfaces primary
+  laiteuses conservent un contraste lisible avec le fond.
 - `primary-surface` OneUI reproduit le matériau fortement diffusé de One UI
   Home : clair froid et laiteux, sombre bleu nuit très absorbant, blur `46px`
   et saturation `118%`. Sa couleur consomme la surface effectivement affichée
