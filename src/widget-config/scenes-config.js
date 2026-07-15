@@ -191,7 +191,7 @@ export function getScenesConfigHint(session, { t } = {}) {
 }
 
 export function renderScenesConfigFields(session, hass, visibilityConfig, onChange, helpers) {
-  const { createField, t } = helpers;
+  const { createField, createSelectControl, t } = helpers;
   const emptySlotLabel = t("widgets.modesRoutines.add", "Add");
   const reconciled = reconcileScenesConfigDraft(session.draft, hass, visibilityConfig);
   const fields = document.createElement("div");
@@ -213,41 +213,34 @@ export function renderScenesConfigFields(session, hass, visibilityConfig, onChan
     heading.textContent = t("widgets.config.buttonIndex", "Button {count}", { count: index + 1 });
     group.append(heading);
 
-    const typeSelect = document.createElement("select");
-    typeSelect.className = "mha-widget-config-control";
-    SCENES_BUTTON_TYPES.forEach((type) => {
-      const item = document.createElement("option");
-      item.value = type.value;
-      item.textContent = type.value === "mode"
-        ? t("widgets.modesRoutines.mode", type.label)
-        : t("widgets.modesRoutines.routine", type.label);
-      item.selected = type.value === draft.type;
-      typeSelect.append(item);
-    });
-    typeSelect.addEventListener("change", (event) => {
-      updateScenesButtonType(reconciled.draft, index, event.currentTarget.value, hass, visibilityConfig);
-      onChange?.({ rerender: true });
+    const typeLabel = "Type";
+    const typeSelect = createSelectControl({
+      label: typeLabel,
+      value: draft.type,
+      options: SCENES_BUTTON_TYPES.map(type => ({
+        value: type.value,
+        label: type.value === "mode"
+          ? t("widgets.modesRoutines.mode", type.label)
+          : t("widgets.modesRoutines.routine", type.label),
+      })),
+      onChange: (value) => {
+        updateScenesButtonType(reconciled.draft, index, value, hass, visibilityConfig);
+        onChange?.({ rerender: true });
+      },
     });
 
-    const entitySelect = document.createElement("select");
-    entitySelect.className = "mha-widget-config-control";
-    const empty = document.createElement("option");
-    empty.value = "";
-    empty.textContent = draft.type === "mode"
+    const entityLabel = t("widgets.modesRoutines.modeOrRoutine", "Mode or routine");
+    const emptyEntityLabel = draft.type === "mode"
       ? t("widgets.config.noModeSelected", "No Mode selected")
       : t("widgets.config.noRoutineSelected", "No Routine selected");
-    empty.selected = !draft.entityId;
-    entitySelect.append(empty);
-    options.forEach((option) => {
-      const item = document.createElement("option");
-      item.value = option.value;
-      item.textContent = option.label;
-      item.selected = option.value === draft.entityId;
-      entitySelect.append(item);
-    });
-    entitySelect.addEventListener("change", (event) => {
-      updateScenesButtonEntity(reconciled.draft, index, event.currentTarget.value, options);
-      onChange?.({ rerender: true });
+    const entitySelect = createSelectControl({
+      label: entityLabel,
+      value: draft.entityId,
+      options: [{ value: "", label: emptyEntityLabel }, ...options],
+      onChange: (value) => {
+        updateScenesButtonEntity(reconciled.draft, index, value, options);
+        onChange?.({ rerender: true });
+      },
     });
 
     const nameInput = document.createElement("input");
@@ -283,8 +276,8 @@ export function renderScenesConfigFields(session, hass, visibilityConfig, onChan
     const iconNameRow = createInlineIconNameRow(nameInput, iconPicker);
 
     group.append(
-      createField("Type", typeSelect),
-      createField(t("widgets.modesRoutines.modeOrRoutine", "Mode or routine"), entitySelect),
+      createField(typeLabel, typeSelect),
+      createField(entityLabel, entitySelect),
       createField(t("widgets.modesRoutines.displayName", "Display name"), iconNameRow),
     );
     fields.append(group);

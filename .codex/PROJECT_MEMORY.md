@@ -28,6 +28,10 @@ appartiennent à `AGENTS.md`.
   clavier et accessibilité sans renoncer à une UX MHA cohérente.
 - **Conséquence :** éviter de recréer localement un `select`, une checkbox ou un
   radio visible; étendre ces primitives quand un nouveau besoin commun apparaît.
+  Les renderers de `src/widget-config/` consomment les adaptateurs
+  `createSelectControl` et `createRadioControl` fournis par
+  `widget-config-popup.js`, afin de rester découplés du DOM interne des contrôles
+  partagés.
 
 ### 2026-07-14 — Séparer instructions et connaissances
 

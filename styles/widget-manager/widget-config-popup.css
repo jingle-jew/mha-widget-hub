@@ -16,6 +16,11 @@
   gap: .45rem;
 }
 
+.mha-widget-config-select {
+  inline-size: 100%;
+  justify-self: stretch;
+}
+
 .mha-widget-config-choice-group {
   min-inline-size: 0;
   display: grid;
@@ -33,7 +38,8 @@
 
 .mha-widget-config-choice {
   min-block-size: 2.8rem;
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: .65rem;
   padding: .65rem .8rem;
@@ -49,12 +55,14 @@
   background: var(--mha-control-surface-hover, var(--mha-popup-control-surface));
 }
 
-.mha-widget-config-choice-input {
-  inline-size: 1.05rem;
-  block-size: 1.05rem;
-  flex: 0 0 auto;
-  margin: 0;
-  accent-color: var(--mha-accent);
+.mha-widget-config-choice .mha-choice-indicator {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.mha-widget-config-choice-label {
+  grid-column: 2;
+  grid-row: 1;
 }
 
 /* OneUI surface choices stay visually unboxed until selected. The selected
@@ -72,22 +80,23 @@
   box-shadow: none;
 }
 
-:host([data-theme-style="oneui"]) .mha-widget-config-choice-input {
-  appearance: none;
+:host([data-theme-style="oneui"]) .mha-widget-config-choice .mha-choice-indicator {
   box-sizing: border-box;
   border: 1px solid rgba(0,0,0,.56);
   border-radius: 50%;
   background: #fff;
 }
 
-:host([data-theme-style="oneui"]) .mha-widget-config-choice-input:checked {
+:host([data-theme-style="oneui"]) .mha-widget-config-choice-input:checked ~ .mha-choice-indicator {
   border-color: rgba(0,0,0,.56);
-  background:
-    radial-gradient(circle at center, #111 0 22%, transparent 24%),
-    #fff;
+  background: #fff;
 }
 
-:host([data-theme-style="oneui"]) .mha-widget-config-choice-input:focus-visible {
+:host([data-theme-style="oneui"]) .mha-widget-config-choice-input:checked ~ .mha-choice-indicator::after {
+  background: #111;
+}
+
+:host([data-theme-style="oneui"]) .mha-widget-config-choice-input:focus-visible ~ .mha-choice-indicator {
   outline: 2px solid var(--mha-text-primary);
   outline-offset: 2px;
 }

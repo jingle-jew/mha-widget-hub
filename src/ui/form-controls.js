@@ -154,7 +154,9 @@ export function createMhaSelect({
 
   const updatePlacement = () => {
     const triggerRect = trigger.getBoundingClientRect?.();
-    const boundaryRect = root.closest?.(".mha-settings-body")?.getBoundingClientRect?.();
+    const boundary = root.closest?.("[data-mha-select-boundary]")
+      || root.closest?.(".mha-settings-body");
+    const boundaryRect = boundary?.getBoundingClientRect?.();
     if (!triggerRect || !boundaryRect) return;
     const spaceBelow = boundaryRect.bottom - triggerRect.bottom;
     const spaceAbove = triggerRect.top - boundaryRect.top;
@@ -214,7 +216,8 @@ export function createMhaSelect({
     removeOutsideListener = () => ownerDocument?.removeEventListener?.("pointerdown", onOutsidePointerDown, true);
 
     if (isPortaled) {
-      const scrollContainer = root.closest?.(".mha-settings-body");
+      const scrollContainer = root.closest?.("[data-mha-select-boundary]")
+        || root.closest?.(".mha-settings-body");
       const onPositionChange = () => updatePlacement();
       scrollContainer?.addEventListener?.("scroll", onPositionChange, { passive: true });
       globalThis.addEventListener?.("resize", onPositionChange, { passive: true });

@@ -104,26 +104,26 @@ export function buildButtonWidgetConfig(widget, draft, hass, visibilityConfig) {
 }
 
 export function renderButtonConfigFields(session, hass, visibilityConfig, onChange, helpers) {
-  const { createField, configOptionLabel, t } = helpers;
+  const { createField, createSelectControl, configOptionLabel, t } = helpers;
   const reconciled = reconcileButtonConfigDraft(session.draft, hass, visibilityConfig);
   const { draft } = reconciled;
   const fields = document.createElement("div");
   fields.className = "mha-widget-config-fields";
 
-  const typeSelect = document.createElement("select");
-  typeSelect.className = "mha-widget-config-control";
-  BUTTON_TYPES.forEach((type) => {
-    const item = document.createElement("option");
-    item.value = type.value;
-    item.textContent = configOptionLabel("widgets.config.buttonTypes", type);
-    item.selected = type.value === draft.buttonType;
-    typeSelect.append(item);
+  const actionTypeLabel = t("widgets.config.actionType", "Action type");
+  const typeSelect = createSelectControl({
+    label: actionTypeLabel,
+    value: draft.buttonType,
+    options: BUTTON_TYPES.map(type => ({
+      value: type.value,
+      label: configOptionLabel("widgets.config.buttonTypes", type),
+    })),
+    onChange: (value) => {
+      updateButtonType(draft, value, hass, visibilityConfig);
+      onChange?.({ rerender: true });
+    },
   });
-  typeSelect.addEventListener("change", (event) => {
-    updateButtonType(draft, event.currentTarget.value, hass, visibilityConfig);
-    onChange?.({ rerender: true });
-  });
-  fields.append(createField(t("widgets.config.actionType", "Action type"), typeSelect));
+  fields.append(createField(actionTypeLabel, typeSelect));
 
   if (draft.buttonType === "action") {
     const domain = document.createElement("input");
@@ -174,27 +174,20 @@ export function renderButtonConfigFields(session, hass, visibilityConfig, onChan
       }),
     );
   } else {
-    const entitySelect = document.createElement("select");
-    entitySelect.className = "mha-widget-config-control";
-    entitySelect.disabled = !reconciled.options.length;
-    if (!reconciled.options.length) {
-      const empty = document.createElement("option");
-      empty.textContent = t("widgets.config.noEntity", "No authorized and available entity.");
-      entitySelect.append(empty);
-    } else {
-      reconciled.options.forEach((option) => {
-        const item = document.createElement("option");
-        item.value = option.value;
-        item.textContent = option.label;
-        item.selected = option.value === draft.entityId;
-        entitySelect.append(item);
-      });
-    }
-    entitySelect.addEventListener("change", (event) => {
-      updateButtonEntity(draft, event.currentTarget.value, reconciled.options);
-      onChange?.({ rerender: true });
+    const entityLabel = t("widgets.config.entity", "Entity");
+    const entitySelect = createSelectControl({
+      label: entityLabel,
+      value: draft.entityId,
+      disabled: !reconciled.options.length,
+      options: reconciled.options.length
+        ? reconciled.options
+        : [{ value: "", label: t("widgets.config.noEntity", "No authorized and available entity.") }],
+      onChange: (value) => {
+        updateButtonEntity(draft, value, reconciled.options);
+        onChange?.({ rerender: true });
+      },
     });
-    fields.append(createField(t("widgets.config.entity", "Entity"), entitySelect));
+    fields.append(createField(entityLabel, entitySelect));
   }
 
   const label = document.createElement("input");

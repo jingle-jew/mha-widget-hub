@@ -75,7 +75,7 @@ export function buildWeatherWidgetConfig(widget, draft, hass, visibilityConfig) 
 }
 
 function createWeatherSurfaceModeField(draft, onChange, helpers) {
-  const { configOptionLabel, t } = helpers;
+  const { createRadioControl, configOptionLabel, t } = helpers;
   const group = document.createElement("fieldset");
   group.className = "mha-widget-config-choice-group";
 
@@ -87,24 +87,16 @@ function createWeatherSurfaceModeField(draft, onChange, helpers) {
   const choices = document.createElement("div");
   choices.className = "mha-widget-config-choices";
   WEATHER_SURFACE_OPTIONS.forEach((option) => {
-    const choice = document.createElement("label");
-    choice.className = "mha-widget-config-choice";
-
-    const input = document.createElement("input");
-    input.className = "mha-widget-config-choice-input";
-    input.type = "radio";
-    input.name = "weather-surface-mode";
-    input.value = option.value;
-    input.checked = option.value === draft.surfaceMode;
-    input.addEventListener("change", (event) => {
-      if (!event.currentTarget.checked) return;
-      updateWeatherSurfaceMode(draft, event.currentTarget.value);
-      onChange?.();
+    const choice = createRadioControl({
+      label: configOptionLabel("widgets.weather.surfaceModes", option),
+      name: "weather-surface-mode",
+      value: option.value,
+      checked: option.value === draft.surfaceMode,
+      onChange: (value) => {
+        updateWeatherSurfaceMode(draft, value);
+        onChange?.();
+      },
     });
-
-    const label = document.createElement("span");
-    label.textContent = configOptionLabel("widgets.weather.surfaceModes", option);
-    choice.append(input, label);
     choices.append(choice);
   });
   group.append(choices);
@@ -112,7 +104,7 @@ function createWeatherSurfaceModeField(draft, onChange, helpers) {
 }
 
 export function renderWeatherConfigFields(session, hass, visibilityConfig, onChange, helpers) {
-  const { createField, configOptionLabel, t } = helpers;
+  const { createField, createSelectControl, configOptionLabel, t } = helpers;
   const { draft, options, selected } = reconcileWeatherConfigDraft(
     session.draft,
     hass,
@@ -121,44 +113,40 @@ export function renderWeatherConfigFields(session, hass, visibilityConfig, onCha
   const fields = document.createElement("div");
   fields.className = "mha-widget-config-fields";
 
-  const select = document.createElement("select");
-  select.className = "mha-widget-config-control";
-  select.disabled = !options.length;
-  if (!options.length) {
-    const empty = document.createElement("option");
-    empty.textContent = t("widgets.config.noWeatherEntity", "No authorized and available weather entity.");
-    select.append(empty);
-  } else {
-    options.forEach((option) => {
-      const item = document.createElement("option");
-      item.value = option.value;
-      item.textContent = option.label;
-      item.selected = option.value === draft.entityId;
-      select.append(item);
-    });
-  }
-  select.addEventListener("change", (event) => {
-    updateWeatherEntity(draft, event.currentTarget.value);
-    onChange?.({ rerender: true });
+  const entityLabel = t("widgets.config.weatherEntity", "Weather entity");
+  const select = createSelectControl({
+    label: entityLabel,
+    value: draft.entityId,
+    disabled: !options.length,
+    options: options.length
+      ? options
+      : [{
+        value: "",
+        label: t("widgets.config.noWeatherEntity", "No authorized and available weather entity."),
+      }],
+    onChange: (value) => {
+      updateWeatherEntity(draft, value);
+      onChange?.({ rerender: true });
+    },
   });
 
-  const forecastSelect = document.createElement("select");
-  forecastSelect.className = "mha-widget-config-control";
-  WEATHER_FORECAST_OPTIONS.forEach((option) => {
-    const item = document.createElement("option");
-    item.value = option.value;
-    item.textContent = configOptionLabel("widgets.weather.forecastTypes", option);
-    item.selected = option.value === draft.forecastType;
-    forecastSelect.append(item);
-  });
-  forecastSelect.addEventListener("change", (event) => {
-    updateWeatherForecastType(draft, event.currentTarget.value);
-    onChange?.();
+  const forecastLabel = t("widgets.weather.forecast", "Forecasts");
+  const forecastSelect = createSelectControl({
+    label: forecastLabel,
+    value: draft.forecastType,
+    options: WEATHER_FORECAST_OPTIONS.map(option => ({
+      value: option.value,
+      label: configOptionLabel("widgets.weather.forecastTypes", option),
+    })),
+    onChange: (value) => {
+      updateWeatherForecastType(draft, value);
+      onChange?.();
+    },
   });
 
   fields.append(
-    createField(t("widgets.config.weatherEntity", "Weather entity"), select),
-    createField(t("widgets.weather.forecast", "Forecasts"), forecastSelect),
+    createField(entityLabel, select),
+    createField(forecastLabel, forecastSelect),
   );
   if (supportsWeatherSurfaceModeConfig(session.widget, session.themeStyle)) {
     fields.append(createWeatherSurfaceModeField(draft, onChange, helpers));

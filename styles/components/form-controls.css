@@ -207,6 +207,11 @@
   min-inline-size: 0;
 }
 
+.mha-choice:not([data-indicator-placement="end"]) .mha-choice-label {
+  grid-column: 2;
+  grid-row: 1;
+}
+
 .mha-choice-indicator {
   grid-column: 1;
   grid-row: 1;

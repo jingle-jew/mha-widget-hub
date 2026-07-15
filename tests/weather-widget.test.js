@@ -577,11 +577,11 @@ test("OneUI weather surface choices highlight only the selected option", () => {
   );
   assert.match(
     css,
-    /:host\(\[data-theme-style="oneui"\]\) \.mha-widget-config-choice-input\s*\{[\s\S]*?appearance:\s*none;[\s\S]*?border:\s*1px solid rgba\(0,0,0,\.56\);[\s\S]*?background:\s*#fff;/,
+    /:host\(\[data-theme-style="oneui"\]\) \.mha-widget-config-choice \.mha-choice-indicator\s*\{[\s\S]*?border:\s*1px solid rgba\(0,0,0,\.56\);[\s\S]*?background:\s*#fff;/,
   );
   assert.match(
     css,
-    /:host\(\[data-theme-style="oneui"\]\) \.mha-widget-config-choice-input:checked\s*\{[\s\S]*?radial-gradient\(circle at center, #111 0 22%, transparent 24%\),[\s\S]*?#fff;/,
+    /:host\(\[data-theme-style="oneui"\]\) \.mha-widget-config-choice-input:checked ~ \.mha-choice-indicator::after\s*\{[\s\S]*?background:\s*#111;/,
   );
 });
 
