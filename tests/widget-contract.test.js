@@ -112,7 +112,7 @@ test("normalization preserves button and weather entity bindings", () => {
   assert.equal(button.entityId, "switch.coffee");
   assert.equal(weather.entityId, "weather.home");
   assert.equal(weather.forecastType, "hourly");
-  assert.equal(weather.surfaceMode, "default");
+  assert.equal(weather.surfaceMode, "dynamic");
   assert.equal(scenes.buttons[0].entityId, "scene.movie_time");
   assert.equal(scenes.buttons[1].entityId, "script.good_night");
   assert.equal(clock.entityId, "weather.home");
@@ -125,6 +125,15 @@ test("weather storage preserves the explicit dynamic surface mode", () => {
   }, normalizeWidgetSize);
 
   assert.equal(weather.surfaceMode, "dynamic");
+});
+
+test("weather storage preserves the explicit default surface mode", () => {
+  const weather = normalizeWidgetContract({
+    kind: "weather",
+    surfaceMode: "default",
+  }, normalizeWidgetSize);
+
+  assert.equal(weather.surfaceMode, "default");
 });
 
 test("normalization migrates toggle-slider entity aliases", () => {

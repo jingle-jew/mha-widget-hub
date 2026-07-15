@@ -49,7 +49,7 @@ export function createWeatherPageWeatherWidget({
   entityId,
   displayMode,
   forecastType = "daily",
-  surfaceMode = "default",
+  surfaceMode = "dynamic",
   w = 4,
   h = 2,
 }) {

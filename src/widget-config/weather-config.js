@@ -15,7 +15,7 @@ export function normalizeWeatherForecastType(value) {
 }
 
 export function normalizeWeatherSurfaceMode(value) {
-  return value === "dynamic" ? "dynamic" : "default";
+  return value === "default" ? "default" : "dynamic";
 }
 
 export function supportsWeatherSurfaceModeConfig(widget = {}, themeStyle = "") {

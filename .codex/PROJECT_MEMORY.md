@@ -54,11 +54,12 @@ appartiennent à `AGENTS.md`.
   dashboard sont masqués, tandis que le contrôle reste au premier plan à sa
   position stable pour permettre un aperçu direct des surfaces.
 - Les widgets météo principaux (`kind: weather`) proposent, uniquement sous
-  OneUI, un mode de surface `default` ou `dynamic`. Le mode par défaut
-  consomme `--mha-primary-surface` et adapte les tokens de contenu au contraste
-  sémantique sans assombrir les icônes météo, d'humidité ou de précipitations,
-  dont les parties monochromes restent blanches; le mode dynamique conserve la
-  surface météo bleue expressive.
+  OneUI, un mode de surface `default` ou `dynamic`. `dynamic` est le défaut de
+  création et de normalisation; un choix explicite `default` reste préservé.
+  Le mode `default` consomme `--mha-primary-surface` et adapte les tokens de
+  contenu au contraste sémantique sans assombrir les icônes météo, d'humidité
+  ou de précipitations, dont les parties monochromes restent blanches; le mode
+  dynamique conserve la surface météo bleue expressive.
   Ce réglage partagé couvre les conditions actuelles et les prévisions horaires
   ou journalières, sans s'étendre à iOS, aux métriques, au radar ou au bref météo.
 - Sur la carte météo Vent 2×2, la boussole est une information contextuelle de

@@ -539,12 +539,12 @@ test("weather widget updates its internal layout while resizing", () => {
 });
 
 test("weather widget shell exposes the normalized surface mode to CSS", () => {
-  const defaultShell = { dataset: {} };
+  const implicitShell = { dataset: {} };
   WEATHER_WIDGET_CONTENT_RENDERER.decorateShell({
-    shell: defaultShell,
+    shell: implicitShell,
     widget: { kind: "weather" },
   });
-  assert.equal(defaultShell.dataset.weatherSurfaceMode, "default");
+  assert.equal(implicitShell.dataset.weatherSurfaceMode, "dynamic");
 
   const dynamicShell = { dataset: {} };
   WEATHER_WIDGET_CONTENT_RENDERER.decorateShell({
@@ -552,6 +552,13 @@ test("weather widget shell exposes the normalized surface mode to CSS", () => {
     widget: { kind: "weather", surfaceMode: "dynamic" },
   });
   assert.equal(dynamicShell.dataset.weatherSurfaceMode, "dynamic");
+
+  const defaultShell = { dataset: {} };
+  WEATHER_WIDGET_CONTENT_RENDERER.decorateShell({
+    shell: defaultShell,
+    widget: { kind: "weather", surfaceMode: "default" },
+  });
+  assert.equal(defaultShell.dataset.weatherSurfaceMode, "default");
 });
 
 test("default OneUI weather surfaces consume the primary surface token", () => {

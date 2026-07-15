@@ -518,9 +518,9 @@ test("weather configuration defaults and persists forecast and surface modes", (
 
   const created = createWeatherConfigDraft({}, hass);
   assert.equal(created.draft.forecastType, "daily");
-  assert.equal(created.draft.surfaceMode, "default");
+  assert.equal(created.draft.surfaceMode, "dynamic");
   assert.equal(normalizeWeatherForecastType("weird"), "daily");
-  assert.equal(normalizeWeatherSurfaceMode("weird"), "default");
+  assert.equal(normalizeWeatherSurfaceMode("weird"), "dynamic");
   const configured = buildWeatherWidgetConfig({ kind: "weather" }, {
     ...created.draft,
     forecastType: "hourly",

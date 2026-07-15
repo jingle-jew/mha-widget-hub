@@ -484,6 +484,10 @@ test("weather page seed creates grid-compatible sections", () => {
   assert.equal(seed.widgets[0].w, 4);
   assert.equal(seed.widgets[0].h, 2);
   assert.equal(seed.widgets.filter(widget => widget.kind === "weather").length, 3);
+  assert.equal(
+    seed.widgets.filter(widget => widget.kind === "weather").every(widget => widget.surfaceMode === "dynamic"),
+    true,
+  );
   assert.equal(seed.widgets.some(widget => widget.kind === "weather-metric"), true);
   assert.equal(seed.widgets.every(widget => [2, 4].includes(widget.w)), true);
   assert.equal(seed.widgets.every(widget => [1, 2].includes(widget.h)), true);
