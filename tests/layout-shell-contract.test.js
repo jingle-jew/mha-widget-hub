@@ -76,6 +76,31 @@ test("OneUI dock surfaces and active pill derive their visible tint from the the
   assert.equal(tintConsumers.length, 12);
 });
 
+test("OneUI dark panels keep a flat outer frame", () => {
+  const themeSource = fs.readFileSync(path.join(THEME_ROOT, "oneui.css"), "utf8");
+  const settingsSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "settings", "settings-panel.css"),
+    "utf8",
+  );
+  const mediaSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "pages", "media-page.css"),
+    "utf8",
+  );
+
+  assert.match(
+    themeSource,
+    /:host\(\[data-theme-style="oneui"\]\[data-theme="dark"\]\)\s*\{[\s\S]*--mha-oneui-panel-border:\s*transparent;[\s\S]*--mha-panel-border:\s*var\(--mha-oneui-panel-border\);[\s\S]*--mha-popup-border:\s*var\(--mha-oneui-panel-border\);[\s\S]*--mha-panel-shadow:\s*none;[\s\S]*--mha-popup-shadow:\s*none;/,
+  );
+  assert.match(
+    settingsSource,
+    /:host\(\[data-theme-style="oneui"\]\[data-theme="dark"\]\) \.mha-settings-sheet\s*\{[\s\S]*border-color:\s*var\(--mha-oneui-panel-border\);[\s\S]*box-shadow:\s*none;/,
+  );
+  assert.match(
+    mediaSource,
+    /:host\(\[data-theme-style="oneui"\]\[data-theme="dark"\]\) \.mha-media-page-widget-panel\s*\{[\s\S]*--mha-panel-border:\s*var\(--mha-oneui-panel-border\);[\s\S]*--mha-panel-shadow:\s*none;/,
+  );
+});
+
 test("side docks do not keep a mirrored bottom inset once the shell top reserve is applied", () => {
   const source = fs.readFileSync(
     path.join(REPO_ROOT, "styles", "layout", "widget-grid.css"),

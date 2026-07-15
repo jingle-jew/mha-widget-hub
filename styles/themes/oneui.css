@@ -142,6 +142,11 @@
     );
   --mha-shell-border: color-mix(in srgb, rgba(255,255,255,.18) 78%, var(--mha-accent) 6%);
   --mha-shell-shadow: 0 10px 24px rgba(0,0,0,.18);
+  --mha-oneui-panel-border: transparent;
+  --mha-panel-border: var(--mha-oneui-panel-border);
+  --mha-popup-border: var(--mha-oneui-panel-border);
+  --mha-panel-shadow: none;
+  --mha-popup-shadow: none;
   --mha-oneui-dock-active-surface:
     linear-gradient(
       145deg,

@@ -1103,10 +1103,8 @@
 
 :host([data-theme-style="oneui"][data-theme="dark"]) .mha-settings-sheet {
   background: var(--mha-oneui-panel-surface, var(--mha-surface-panel));
-  border-color: color-mix(in srgb, var(--mha-border-secondary) 76%, rgba(255,255,255,.10));
-  box-shadow:
-    0 22px 62px rgba(0,0,0,.34),
-    inset 0 1px 0 rgba(255,255,255,.10);
+  border-color: var(--mha-oneui-panel-border);
+  box-shadow: none;
   -webkit-backdrop-filter: blur(calc(var(--mha-blur-strong) * 1.08)) saturate(145%);
   backdrop-filter: blur(calc(var(--mha-blur-strong) * 1.08)) saturate(145%);
 }

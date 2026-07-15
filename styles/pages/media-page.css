@@ -341,6 +341,11 @@
   backdrop-filter: var(--mha-panel-filter);
 }
 
+:host([data-theme-style="oneui"][data-theme="dark"]) .mha-media-page-widget-panel {
+  --mha-panel-border: var(--mha-oneui-panel-border);
+  --mha-panel-shadow: none;
+}
+
 .mha-media-page-widget-panel-surface {
   position: static;
   inset: auto;
