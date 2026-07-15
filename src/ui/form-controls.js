@@ -111,6 +111,7 @@ export function createMhaSelect({
   });
 
   let removeOutsideListener = () => {};
+  let removePositionListeners = () => {};
 
   const syncValue = (nextValue) => {
     const normalizedValue = String(nextValue ?? "");
@@ -137,6 +138,17 @@ export function createMhaSelect({
     menu.hidden = true;
     removeOutsideListener();
     removeOutsideListener = () => {};
+    removePositionListeners();
+    removePositionListeners = () => {};
+    if (menu.dataset.portaled === "true") {
+      root.append(menu);
+      delete menu.dataset.portaled;
+      delete menu.dataset.placement;
+      menu.style.removeProperty?.("--mha-select-menu-left");
+      menu.style.removeProperty?.("--mha-select-menu-top");
+      menu.style.removeProperty?.("--mha-select-menu-width");
+      menu.style.removeProperty?.("--mha-select-menu-max-height");
+    }
     if (restoreFocus) trigger.focus?.({ preventScroll: true });
   };
 
@@ -147,7 +159,36 @@ export function createMhaSelect({
     const spaceBelow = boundaryRect.bottom - triggerRect.bottom;
     const spaceAbove = triggerRect.top - boundaryRect.top;
     const preferredHeight = Math.min(menu.scrollHeight || 240, 240) + 8;
-    root.dataset.placement = spaceBelow < preferredHeight && spaceAbove > spaceBelow ? "top" : "bottom";
+    const placement = spaceBelow < preferredHeight && spaceAbove > spaceBelow ? "top" : "bottom";
+    root.dataset.placement = placement;
+    menu.dataset.placement = placement;
+
+    if (menu.dataset.portaled !== "true") return;
+    const gap = 7;
+    const boundaryWidth = Math.max(0, boundaryRect.right - boundaryRect.left);
+    const menuWidth = Math.min(Math.max(triggerRect.width || 0, 160), Math.max(0, boundaryWidth - 8));
+    const left = Math.min(
+      Math.max(triggerRect.left, boundaryRect.left + 4),
+      Math.max(boundaryRect.left + 4, boundaryRect.right - menuWidth - 4),
+    );
+    const availableHeight = Math.max(80, (placement === "top" ? spaceAbove : spaceBelow) - gap - 4);
+    const menuHeight = Math.min(menu.scrollHeight || 240, 240, availableHeight);
+    const top = placement === "top"
+      ? Math.max(boundaryRect.top + 4, triggerRect.top - gap - menuHeight)
+      : triggerRect.bottom + gap;
+
+    menu.style.setProperty("--mha-select-menu-left", `${left}px`);
+    menu.style.setProperty("--mha-select-menu-top", `${top}px`);
+    menu.style.setProperty("--mha-select-menu-width", `${menuWidth}px`);
+    menu.style.setProperty("--mha-select-menu-max-height", `${availableHeight}px`);
+  };
+
+  const portalMenu = () => {
+    const renderRoot = root.getRootNode?.();
+    if (!renderRoot?.host || typeof renderRoot.append !== "function") return false;
+    renderRoot.append(menu);
+    menu.dataset.portaled = "true";
+    return true;
   };
 
   const openMenu = ({ focus = "selected" } = {}) => {
@@ -157,16 +198,31 @@ export function createMhaSelect({
     if (stackingContainer) stackingContainer.dataset.selectOpen = "true";
     trigger.setAttribute("aria-expanded", "true");
     menu.hidden = false;
+    const isPortaled = portalMenu();
     updatePlacement();
 
     const ownerDocument = root.ownerDocument || globalThis.document;
     const onOutsidePointerDown = (event) => {
       const composedPath = event.composedPath?.() || [];
-      const isInside = composedPath.includes(root) || root.contains?.(event.target);
+      const isInside = composedPath.includes(root)
+        || composedPath.includes(menu)
+        || root.contains?.(event.target)
+        || menu.contains?.(event.target);
       if (!isInside) closeMenu();
     };
     ownerDocument?.addEventListener?.("pointerdown", onOutsidePointerDown, true);
     removeOutsideListener = () => ownerDocument?.removeEventListener?.("pointerdown", onOutsidePointerDown, true);
+
+    if (isPortaled) {
+      const scrollContainer = root.closest?.(".mha-settings-body");
+      const onPositionChange = () => updatePlacement();
+      scrollContainer?.addEventListener?.("scroll", onPositionChange, { passive: true });
+      globalThis.addEventListener?.("resize", onPositionChange, { passive: true });
+      removePositionListeners = () => {
+        scrollContainer?.removeEventListener?.("scroll", onPositionChange);
+        globalThis.removeEventListener?.("resize", onPositionChange);
+      };
+    }
 
     if (focus) {
       const enabled = optionButtons.filter(option => !option.disabled);
@@ -218,6 +274,12 @@ export function createMhaSelect({
     }
   });
   root.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape" || root.dataset.open !== "true") return;
+    event.preventDefault();
+    event.stopPropagation();
+    closeMenu({ restoreFocus: true });
+  });
+  menu.addEventListener("keydown", (event) => {
     if (event.key !== "Escape" || root.dataset.open !== "true") return;
     event.preventDefault();
     event.stopPropagation();

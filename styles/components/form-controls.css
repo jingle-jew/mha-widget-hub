@@ -114,6 +114,17 @@
   inset-block-end: calc(100% + .42rem);
 }
 
+.mha-select-menu[data-portaled="true"] {
+  position: fixed;
+  z-index: 1000;
+  inset: auto;
+  inset-inline-start: var(--mha-select-menu-left);
+  inset-block-start: var(--mha-select-menu-top);
+  inline-size: var(--mha-select-menu-width);
+  min-inline-size: 0;
+  max-block-size: var(--mha-select-menu-max-height, min(15rem, 48vh));
+}
+
 .mha-select-menu[hidden] {
   display: none;
 }
@@ -274,6 +285,9 @@
 }
 
 :host([data-theme-style="oneui"]) .mha-select-menu {
+  background: var(--mha-surface-popup, var(--mha-oneui-panel-surface, var(--mha-surface-panel)));
+  -webkit-backdrop-filter: var(--mha-popup-filter, blur(var(--mha-blur-popup, 24px)) saturate(var(--mha-saturation-popup, 145%)));
+  backdrop-filter: var(--mha-popup-filter, blur(var(--mha-blur-popup, 24px)) saturate(var(--mha-saturation-popup, 145%)));
   box-shadow: 0 .8rem 2.2rem color-mix(in srgb, black 22%, transparent);
 }
 
@@ -284,9 +298,30 @@
   --mha-checkbox-radius: .36rem;
 }
 
+:host([data-theme-style="ios"][data-theme="light"]) {
+  --mha-select-menu-glass-tint:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--mha-accent) 4%, rgba(255,255,255,.58)),
+      color-mix(in srgb, var(--mha-accent) 3%, rgba(235,242,255,.42))
+    );
+}
+
+:host([data-theme-style="ios"][data-theme="dark"]) {
+  --mha-select-menu-glass-tint:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--mha-accent) 7%, rgba(28,32,43,.72)),
+      color-mix(in srgb, var(--mha-accent) 5%, rgba(16,19,28,.62))
+    );
+}
+
 :host([data-theme-style="ios"]) .mha-select-menu {
-  -webkit-backdrop-filter: blur(var(--mha-blur-primary, 18px)) saturate(175%);
-  backdrop-filter: blur(var(--mha-blur-primary, 18px)) saturate(175%);
+  background:
+    var(--mha-select-menu-glass-tint, linear-gradient(rgba(28,32,43,.58), rgba(20,23,32,.52))),
+    var(--mha-surface-popup, var(--mha-surface-panel));
+  -webkit-backdrop-filter: var(--mha-popup-filter, blur(var(--mha-blur-popup, 14px)) saturate(var(--mha-saturation-popup, 165%)));
+  backdrop-filter: var(--mha-popup-filter, blur(var(--mha-blur-popup, 14px)) saturate(var(--mha-saturation-popup, 165%)));
 }
 
 /* iOS glass sections are independent stacking contexts because they blur. */

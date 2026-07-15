@@ -445,6 +445,29 @@ test("settings selectors use the controlled MHA listbox and keep the native valu
     composedPath: () => [],
   });
   assert.equal(control.dataset.open, "false");
+
+  const menu = control.querySelector(".mha-select-menu");
+  const settingsBody = control.closest(".mha-settings-body");
+  const shadowRoot = createMockNode("shadow-root");
+  shadowRoot.host = createMockNode("mha-control-hub");
+  control.getRootNode = () => shadowRoot;
+  trigger.getBoundingClientRect = () => ({ left: 220, right: 412, top: 180, bottom: 224, width: 192 });
+  settingsBody.getBoundingClientRect = () => ({ left: 160, right: 440, top: 100, bottom: 700 });
+  menu.scrollHeight = 180;
+
+  trigger.listeners.click();
+  assert.equal(menu.dataset.portaled, "true");
+  assert.equal(shadowRoot.children.includes(menu), true);
+
+  globalThis.document.listeners.pointerdown({
+    target: shadowRoot.host,
+    composedPath: () => [darkOption, menu, shadowRoot, shadowRoot.host],
+  });
+  assert.equal(control.dataset.open, "true");
+
+  darkOption.listeners.click();
+  assert.equal(control.dataset.open, "false");
+  assert.equal(menu.dataset.portaled, undefined);
 }));
 
 test("MHA checkbox and radio primitives keep native semantics behind custom indicators", () => withMockDocument(() => {

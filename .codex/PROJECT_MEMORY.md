@@ -54,6 +54,11 @@ appartiennent à `AGENTS.md`.
   d'empilement à cause de leur `backdrop-filter`. Un menu local doit donc
   relever temporairement sa section parente; augmenter uniquement le `z-index`
   interne de la liste ne peut pas la faire dépasser les sections suivantes.
+- Un `backdrop-filter` enfant ne produit pas un blur fiable lorsqu'il reste
+  imbriqué dans les sections et la sheet iOS déjà filtrées. Les listboxes MHA
+  ouvertes sont donc portalisées à la racine du même Shadow DOM, positionnées
+  en `fixed`, puis réattachées à leur contrôle à la fermeture. Elles échappent
+  ainsi au backdrop root imbriqué sans perdre leurs événements ni leurs styles.
 - Dans `semantic-tokens.css`, ne pas redéfinir le `--mha-primary-surface`
   spécialisé de OneUI avec `var(--mha-surface-primary)` : OneUI mappe déjà
   `--mha-surface-primary` vers `--mha-primary-surface`. La double référence
