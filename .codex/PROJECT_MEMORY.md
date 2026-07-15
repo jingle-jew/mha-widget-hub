@@ -177,11 +177,19 @@ appartiennent à `AGENTS.md`.
   contenu. Son blur et sa brightness restent propres au rôle primary. Les rôles
   panel et `on-primary` restent indépendants tant qu’ils ne sont pas
   explicitement remappés.
+- La section « Lecteurs disponibles » consomme la couleur dominante de
+  l'artwork principal par des voiles locaux subtils, sans remplacer ses matières
+  de thème. La hiérarchie d'intensité reste panneau < cartes < carte sélectionnée;
+  sous iOS, ces voiles sont environ deux fois plus faibles pour préserver le
+  verre transparent et son blur.
 - En OneUI, la section « Lecteurs disponibles » de la page Média possède une
   matière locale visuellement alignée sur le dock, et son lecteur sélectionné
   reprend localement l'apparence de la pastille active sans dépendre du composant
-  dock. Ses lecteurs inactifs ou éteints conservent une vignette d'artwork vide
-  avec glyphe, comme en iOS, au lieu de masquer la colonne d'artwork.
+  dock.
+- En OneUI et Material, les cartes « Lecteurs disponibles » conservent une
+  vignette carrée locale : artwork réel pendant la lecture, vignette vide avec
+  glyphe pour les lecteurs inactifs ou éteints, comme en iOS. Elles ne doivent
+  pas hériter de la composition immersive des widgets média `4×2`.
 - En OneUI, les tuiles de la Now Bar réutilisent la matière canonique du dock
   latéral/compact : même surface, bordure, ombre et filtre. Les autres thèmes
   conservent leur contrat de surface propre.

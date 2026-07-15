@@ -848,9 +848,10 @@
 }
 
 /* media-widget.css is loaded after this page stylesheet and turns active
- * OneUI 4x2 artwork into an immersive full-card layer. Available players are
- * selectors: keep their artwork in the dedicated square grid cell, like iOS. */
-:host([data-theme-style="oneui"]) .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget[data-media-page-player="true"] > .mha-media-widget-artwork {
+ * OneUI/Material 4x2 artwork into an immersive full-card layer. Available
+ * players are selectors: keep their artwork in the dedicated square grid cell,
+ * like iOS, including the empty placeholder for inactive players. */
+:host(:is([data-theme-style="oneui"], [data-theme-style="material"])) .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget[data-media-page-player="true"] > .mha-media-widget-artwork {
   display: grid;
   position: relative;
   inset: auto;
