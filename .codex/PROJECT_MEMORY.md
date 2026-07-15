@@ -130,6 +130,10 @@ appartiennent à `AGENTS.md`.
   révèlent la surface primaire normale du widget. Leur palette de contenu est
   dérivée de l'artwork avec un contraste minimal de 4.5:1 et mise en cache par
   URL. Le contrat visuel `4×4` reste indépendant et inchangé.
+- Dans les widgets média standard `2×2` et `4×2`, le bouton volume alterne entre
+  les modes `playback` et `volume`. Le mode de repos `volume-only` appartient
+  uniquement aux cartes de la section « Lecteurs disponibles »; il ne doit pas
+  être utilisé comme mode de retour d'un widget standard.
 - Dans les réglages d’apparence OneUI, « Opacité des widgets » contrôle
   `--mha-oneui-primary-surface-opacity` de 0 à 100 %. La valeur est persistée
   localement sous `mha-oneui-primary-surface-opacity`; son défaut reste 68 %.

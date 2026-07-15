@@ -11,6 +11,7 @@ import {
   MEDIA_WIDGET_CONTENT_RENDERER,
   MEDIA_TRANSITION_GRACE_MS,
   resolveMediaTransitionData,
+  resolveMediaControlsToggleMode,
   setMediaArtworkImage,
   syncMediaArtworkTone,
 } from "../src/widgets/media-widget.js";
@@ -53,6 +54,19 @@ test("media volume falls back to zero only when the player is off", () => {
   assert.equal(off.volumePercent, 0);
   assert.equal(off.volumeLabel, "0%");
   assert.equal(off.muted, false);
+});
+
+test("standard media widgets return from volume to playback controls", () => {
+  assert.equal(resolveMediaControlsToggleMode("playback"), "volume");
+  assert.equal(resolveMediaControlsToggleMode("volume"), "playback");
+  assert.equal(
+    resolveMediaControlsToggleMode("volume", { mediaPagePlayer: true }),
+    "volume-only",
+  );
+  assert.equal(
+    resolveMediaControlsToggleMode("volume-only", { mediaPagePlayer: true }),
+    "volume",
+  );
 });
 
 function mediaData(overrides = {}) {

@@ -696,6 +696,13 @@ export function renderMediaControls(controls, data, { mode = "playback", interac
   toggle.tabIndex = interactive ? 0 : -1;
 }
 
+export function resolveMediaControlsToggleMode(currentMode = "playback", {
+  mediaPagePlayer = false,
+} = {}) {
+  if (currentMode !== "volume") return "volume";
+  return mediaPagePlayer ? "volume-only" : "playback";
+}
+
 export function createMediaControls(data, { mode = "playback", interactive = true, onAction } = {}) {
   const controls = document.createElement("div");
   controls.className = "mha-media-widget-controls-shell";
@@ -900,6 +907,7 @@ export function createMediaWidgetContent(widget = {}, {
     hass,
     entity: data.entity,
     data,
+    mediaPagePlayer: Boolean(widget?.mediaPagePlayer),
     controlsMode: widget?.mediaPagePlayer ? "volume-only" : "playback",
   };
   const variantKey = mediaVariantKey({ widgetW, widgetH });
@@ -915,7 +923,9 @@ export function createMediaWidgetContent(widget = {}, {
   const onAction = action => {
     if (!interactive) return;
     if (action === "toggleVolume") {
-      context.controlsMode = context.controlsMode === "volume" ? "volume-only" : "volume";
+      context.controlsMode = resolveMediaControlsToggleMode(context.controlsMode, {
+        mediaPagePlayer: context.mediaPagePlayer,
+      });
       renderMediaControls(controls, context.data, {
         mode: context.controlsMode,
         interactive,
