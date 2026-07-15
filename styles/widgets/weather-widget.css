@@ -341,7 +341,7 @@
 }
 
 :host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-widget[data-widget-kind="weather"] {
-  /* iOS Frosted fait exception: surface météo expressive, façon OneUI. */
+  /* Surface expressive conservée par le mode Couleur dynamique. */
   --mha-weather-bg-start: #8edcff;
   --mha-weather-bg-end: #4d8dff;
   --mha-weather-bg-glow: rgba(255,255,255,.44);
@@ -381,10 +381,7 @@
   box-shadow: inset 0 1px 0 rgba(255,255,255,.16);
 }
 
-/* OneUI reprend la surface meteo expressive de iOS Frosted.
- * Le widget meteo reste une exception volontaire a la couche Primary Surface
- * pour conserver un point focal bleu dans la grille.
- */
+/* Surface météo expressive conservée par le mode Couleur dynamique. */
 :host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="weather"] {
   --mha-weather-bg-start: #8edcff;
   --mha-weather-bg-end: #4d8dff;
@@ -412,6 +409,28 @@
     radial-gradient(circle at 88% 18%, rgba(122, 135, 255, .26), transparent 38%),
     linear-gradient(145deg, var(--mha-weather-bg-start), var(--mha-weather-bg-end));
   border-color: rgba(255,255,255,.18);
+}
+
+/* OneUI utilise la surface primaire tant que la couleur dynamique
+ * n'est pas explicitement choisie dans la configuration du widget. */
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="weather"][data-weather-surface-mode="default"] {
+  --mha-weather-text: var(--mha-text-primary);
+  --mha-weather-muted: var(--mha-text-secondary);
+  --mha-weather-chip-bg: var(--mha-surface-on-primary);
+  --mha-weather-chip-border: var(--mha-border-on-primary);
+  --mha-weather-cloud: color-mix(in srgb, var(--mha-text-primary) 88%, white 12%);
+  --mha-weather-cloud-shade: var(--mha-text-secondary);
+  --mha-weather-rain: var(--mha-accent);
+  --mha-weather-snow: var(--mha-text-primary);
+  --mha-weather-fog: var(--mha-text-secondary);
+  --mha-widget-reflection-opacity: var(--mha-highlight-opacity-primary, 0);
+  background: var(--mha-primary-surface);
+  border-color: var(--mha-primary-border);
+  box-shadow: var(--mha-widget-shell-shadow, var(--mha-shadow-primary));
+}
+
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="weather"][data-weather-surface-mode="default"] .mha-weather-widget-icon {
+  color: var(--mha-weather-text);
 }
 
 /* 4. Consommation des tokens de theme */

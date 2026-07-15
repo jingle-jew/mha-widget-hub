@@ -501,9 +501,14 @@ export const fr = Object.freeze({
       forecastDaily: "Journalières",
       forecastHourly: "Horaires",
       forecastUnavailable: "Prévisions indisponibles",
+      surface: "Fond du widget",
       forecastTypes: Object.freeze({
         daily: "Journalières",
         hourly: "Horaires",
+      }),
+      surfaceModes: Object.freeze({
+        default: "Par défaut",
+        dynamic: "Couleur dynamique",
       }),
     }),
     weatherNarrative: Object.freeze({

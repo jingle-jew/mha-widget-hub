@@ -46,6 +46,12 @@ appartiennent à `AGENTS.md`.
   Pendant un geste actif sur ce slider, le panel, son scrim et le blur du
   dashboard sont masqués, tandis que le contrôle reste au premier plan à sa
   position stable pour permettre un aperçu direct des surfaces.
+- Les widgets météo principaux (`kind: weather`) proposent, uniquement sous
+  OneUI, un mode de surface `default` ou `dynamic`. Le mode par défaut
+  consomme `--mha-primary-surface` et adapte les tokens de contenu au contraste
+  sémantique; le mode dynamique conserve la surface météo bleue expressive.
+  Ce réglage partagé couvre les conditions actuelles et les prévisions horaires
+  ou journalières, sans s'étendre à iOS, aux métriques, au radar ou au bref météo.
 - Sur la carte météo Vent 2×2, la boussole est une information contextuelle de
   fond : elle doit rester centrée, atténuée, derrière les textes et remplir la
   carte à une échelle proche des cadrans ClockWidget analogiques. La direction

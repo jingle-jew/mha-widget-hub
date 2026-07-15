@@ -16,6 +16,47 @@
   gap: .45rem;
 }
 
+.mha-widget-config-choice-group {
+  min-inline-size: 0;
+  display: grid;
+  gap: .45rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.mha-widget-config-choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .6rem;
+}
+
+.mha-widget-config-choice {
+  min-block-size: 2.8rem;
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  padding: .65rem .8rem;
+  border: 1px solid var(--mha-popup-control-border, var(--mha-control-border));
+  border-radius: .9rem;
+  background: var(--mha-popup-control-surface, var(--mha-control-surface));
+  color: var(--mha-text-primary);
+  cursor: pointer;
+}
+
+.mha-widget-config-choice:has(.mha-widget-config-choice-input:checked) {
+  border-color: var(--mha-border-focus, var(--mha-accent));
+  background: var(--mha-control-surface-hover, var(--mha-popup-control-surface));
+}
+
+.mha-widget-config-choice-input {
+  inline-size: 1.05rem;
+  block-size: 1.05rem;
+  flex: 0 0 auto;
+  margin: 0;
+  accent-color: var(--mha-accent);
+}
+
 .mha-widget-config-group {
   display: grid;
   gap: .85rem;

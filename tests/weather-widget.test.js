@@ -3,7 +3,10 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 import { createWeatherMetricWidgetContent } from "../src/widgets/weather-metric-widget.js";
-import { createWeatherWidgetContent } from "../src/widgets/weather-widget.js";
+import {
+  createWeatherWidgetContent,
+  WEATHER_WIDGET_CONTENT_RENDERER,
+} from "../src/widgets/weather-widget.js";
 import { createWeatherNarrativeWidgetContent } from "../src/widgets/weather-narrative-widget.js";
 import { setLanguage } from "../src/i18n/index.js";
 
@@ -532,6 +535,33 @@ test("weather widget updates its internal layout while resizing", () => {
   assert.equal(
     content.childNodes[0].childNodes.some((node) => node.className === "mha-weather-widget-details"),
     true,
+  );
+});
+
+test("weather widget shell exposes the normalized surface mode to CSS", () => {
+  const defaultShell = { dataset: {} };
+  WEATHER_WIDGET_CONTENT_RENDERER.decorateShell({
+    shell: defaultShell,
+    widget: { kind: "weather" },
+  });
+  assert.equal(defaultShell.dataset.weatherSurfaceMode, "default");
+
+  const dynamicShell = { dataset: {} };
+  WEATHER_WIDGET_CONTENT_RENDERER.decorateShell({
+    shell: dynamicShell,
+    widget: { kind: "weather", surfaceMode: "dynamic" },
+  });
+  assert.equal(dynamicShell.dataset.weatherSurfaceMode, "dynamic");
+});
+
+test("default OneUI weather surfaces consume the primary surface token", () => {
+  const css = readFileSync(new URL("../styles/widgets/weather-widget.css", import.meta.url), "utf8");
+
+  assert.match(css, /data-theme-style="oneui"[^\n]*data-weather-surface-mode="default"/);
+  assert.doesNotMatch(css, /data-theme-style="ios"[^\n]*data-weather-surface-mode="default"/);
+  assert.match(
+    css,
+    /data-weather-surface-mode="default"[\s\S]*?background:\s*var\(--mha-primary-surface\);/,
   );
 });
 

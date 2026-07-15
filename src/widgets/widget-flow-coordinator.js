@@ -175,6 +175,9 @@ export function createWidgetFlowCoordinator({
   function createSession(widget, options = {}) {
     return createWidgetConfigSession(widget, getHass(), {
       visibilityConfig: getEntityVisibilityConfig(),
+      themeStyle: getRoot()?.host?.dataset?.themeStyle
+        || globalThis.document?.documentElement?.dataset?.themeStyle
+        || "",
       ...options,
     });
   }
