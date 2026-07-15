@@ -1,3 +1,27 @@
+@property --mha-media-page-artwork-panel-tint {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: transparent;
+}
+
+@property --mha-media-page-artwork-card-tint {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: transparent;
+}
+
+@property --mha-media-page-artwork-selected-tint {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: transparent;
+}
+
+@property --mha-media-page-artwork-control-tint {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: transparent;
+}
+
 :host {
   --mha-media-page-artwork-size: clamp(16rem, 28cqi, 24rem);
   --mha-media-page-artwork-radius: clamp(1.35rem, 3.2cqi, 2.2rem);
@@ -7,6 +31,7 @@
   --mha-media-page-content-gap: clamp(.9rem, 1.8cqi, 1.6rem);
   --mha-media-page-grid-gap: var(--mha-grid-gap, var(--mha-media-page-content-gap));
   --mha-media-page-panel-gap: clamp(.85rem, 1.5cqi, 1.35rem);
+  --mha-media-page-palette-fade-duration: 1000ms;
   --mha-media-page-widget-panel-padding: clamp(1rem, 2.2cqi, 1.4rem);
   --mha-media-page-grid-cell-size: var(--mha-grid-row-size, var(--mha-square-unit, 72px));
   --mha-media-page-metadata-min-height: calc(
@@ -56,6 +81,11 @@
   overflow: hidden;
   overflow-anchor: none;
   isolation: isolate;
+  transition:
+    --mha-media-page-artwork-panel-tint var(--mha-media-page-palette-fade-duration) ease,
+    --mha-media-page-artwork-card-tint var(--mha-media-page-palette-fade-duration) ease,
+    --mha-media-page-artwork-selected-tint var(--mha-media-page-palette-fade-duration) ease,
+    --mha-media-page-artwork-control-tint var(--mha-media-page-palette-fade-duration) ease;
 
   --mha-media-gap: var(--mha-media-page-panel-gap);
   --mha-media-title-gap: clamp(.22rem, .55cqi, .42rem);
@@ -180,7 +210,7 @@
 .mha-media-page .mha-media-widget-progress,
 .mha-media-page .mha-media-widget-progress-fill {
   transition:
-    background-color 220ms ease,
+    background-color var(--mha-media-page-palette-fade-duration) ease,
     border-color 220ms ease,
     color 220ms ease,
     box-shadow 220ms ease,
@@ -416,11 +446,13 @@
 }
 
 :host(:is([data-theme-style="oneui"], [data-theme-style="material"])) .mha-media-page[data-artwork-palette="true"] .mha-media-page-widget-panel {
-  background: var(--mha-media-page-dynamic-panel-surface);
+  background-image: none;
+  background-color: var(--mha-media-page-dynamic-panel-surface);
 }
 
 :host(:is([data-theme-style="oneui"], [data-theme-style="material"])) .mha-media-page[data-artwork-palette="true"] .mha-media-page-widget-panel .mha-media-page-icon-button {
-  background: var(--mha-media-page-dynamic-control-surface);
+  background-image: none;
+  background-color: var(--mha-media-page-dynamic-control-surface);
 }
 
 .mha-media-page-widget-panel-surface {
@@ -584,8 +616,8 @@
     var(--mha-media-page-player-card-surface);
   border-color: var(--mha-media-page-player-card-border);
   transition:
-    background-color 180ms ease,
-    border-color 180ms ease,
+    background-color var(--mha-media-page-palette-fade-duration) ease,
+    border-color var(--mha-media-page-palette-fade-duration) ease,
     box-shadow 180ms ease,
     transform 180ms ease;
 }
@@ -632,13 +664,15 @@
 /* Only playing/paused cards replace their theme surface. Idle, off,
  * unavailable and unknown players deliberately keep the surfaces above. */
 :host(:is([data-theme-style="oneui"], [data-theme-style="material"])) .mha-media-page[data-artwork-palette="true"] .mha-media-page-player-list > .mha-media-page-auto-player[data-media-page-player="true"]:has(> .mha-media-page-player-widget:is([data-media-state="playing"], [data-media-state="paused"])) {
-  background: var(--mha-media-page-dynamic-card-surface);
+  background-image: none;
+  background-color: var(--mha-media-page-dynamic-card-surface);
   border-color: var(--mha-media-page-dynamic-card-border);
   box-shadow: none;
 }
 
 :host(:is([data-theme-style="oneui"], [data-theme-style="material"])) .mha-media-page[data-artwork-palette="true"] .mha-media-page-player-list > .mha-media-page-auto-player[data-media-page-player="true"][data-selected="true"]:has(> .mha-media-page-player-widget:is([data-media-state="playing"], [data-media-state="paused"])) {
-  background: var(--mha-media-page-dynamic-selected-surface);
+  background-image: none;
+  background-color: var(--mha-media-page-dynamic-selected-surface);
   border-color: var(--mha-media-page-dynamic-selected-border);
   box-shadow: none;
 }
@@ -933,6 +967,9 @@
     ),
     var(--mha-control-surface, var(--mha-surface-secondary));
   border-color: var(--mha-control-border, var(--mha-border-secondary, transparent));
+  transition:
+    background-color var(--mha-media-page-palette-fade-duration) ease,
+    border-color var(--mha-media-page-palette-fade-duration) ease;
 }
 
 .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget[data-media-page-player="true"] .mha-media-widget-title {
@@ -966,7 +1003,8 @@
 
 :host(:is([data-theme-style="oneui"], [data-theme-style="material"])) .mha-media-page[data-artwork-palette="true"] .mha-media-page-auto-player:has(> .mha-media-page-player-widget:is([data-media-state="playing"], [data-media-state="paused"])) .mha-media-widget-source-badge,
 :host(:is([data-theme-style="oneui"], [data-theme-style="material"])) .mha-media-page[data-artwork-palette="true"] .mha-media-page-auto-player:has(> .mha-media-page-player-widget:is([data-media-state="playing"], [data-media-state="paused"])) .mha-media-widget-control {
-  background: var(--mha-media-page-dynamic-control-surface);
+  background-image: none;
+  background-color: var(--mha-media-page-dynamic-control-surface);
 }
 
 .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget[data-media-page-player="true"] .mha-media-widget-progress {

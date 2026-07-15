@@ -11,6 +11,7 @@ import {
   MEDIA_WIDGET_CONTENT_RENDERER,
   MEDIA_TRANSITION_GRACE_MS,
   resolveMediaTransitionData,
+  setMediaArtworkImage,
   syncMediaArtworkTone,
 } from "../src/widgets/media-widget.js";
 import { normalizeWidgetForKind } from "../src/layout/layout-engine.js";
@@ -148,6 +149,39 @@ test("artwork tone can target the media page Now Playing surface", async () => {
   assert.equal(page.dataset.artworkTone, palette.legacyTone);
   assert.equal(page.dataset.artworkPalette, "true");
   assert.equal(properties.get("--mha-media-palette-foreground"), palette.foreground);
+});
+
+test("media page keeps the previous artwork palette until its replacement loads", () => {
+  const page = {
+    dataset: { artworkTone: "dark", artworkPalette: "true" },
+    matches: selector => selector === ".mha-media-page",
+    removeAttribute: (name) => {
+      if (name === "data-artwork-tone") delete page.dataset.artworkTone;
+      if (name === "data-artwork-palette") delete page.dataset.artworkPalette;
+    },
+    style: { removeProperty: () => {} },
+  };
+  const listeners = new Map();
+  const image = {
+    dataset: { artworkUrl: "/old-artwork.jpg" },
+    complete: false,
+    matches: selector => selector === "img",
+    addEventListener: (type, listener) => listeners.set(type, listener),
+    removeEventListener: type => listeners.delete(type),
+    removeAttribute: () => {},
+  };
+  const artwork = {
+    dataset: {},
+    querySelector: () => image,
+    closest: () => page,
+  };
+
+  setMediaArtworkImage(artwork, "/new-artwork.jpg");
+
+  assert.equal(page.dataset.artworkTone, "dark");
+  assert.equal(page.dataset.artworkPalette, "true");
+  assert.equal(image.dataset.artworkUrl, "/new-artwork.jpg");
+  assert.equal(typeof listeners.get("load"), "function");
 });
 
 test("media transition cache hides temporary idle metadata and artwork gaps", () => {

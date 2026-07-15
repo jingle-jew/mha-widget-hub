@@ -647,7 +647,15 @@ test("media page mobile layout scrolls as snapped sheets in portrait and landsca
   );
   assert.match(
     source,
-    /:host\(:is\(\[data-theme-style="oneui"\], \[data-theme-style="material"\]\)\) \.mha-media-page\[data-artwork-palette="true"\] \.mha-media-page-widget-panel\s*\{[\s\S]*background:\s*var\(--mha-media-page-dynamic-panel-surface\);/,
+    /:host\(:is\(\[data-theme-style="oneui"\], \[data-theme-style="material"\]\)\) \.mha-media-page\[data-artwork-palette="true"\] \.mha-media-page-widget-panel\s*\{[\s\S]*background-image:\s*none;[\s\S]*background-color:\s*var\(--mha-media-page-dynamic-panel-surface\);/,
+  );
+  assert.match(
+    source,
+    /--mha-media-page-palette-fade-duration:\s*1000ms;[\s\S]*\.mha-media-page-widget-panel,[\s\S]*transition:[\s\S]*background-color\s+var\(--mha-media-page-palette-fade-duration\) ease,/,
+  );
+  assert.match(
+    source,
+    /@property --mha-media-page-artwork-panel-tint\s*\{[\s\S]*syntax:\s*"<color>";[\s\S]*inherits:\s*true;[\s\S]*initial-value:\s*transparent;[\s\S]*\.mha-media-page\s*\{[\s\S]*transition:[\s\S]*--mha-media-page-artwork-panel-tint var\(--mha-media-page-palette-fade-duration\) ease,/,
   );
   assert.match(
     source,
@@ -663,7 +671,7 @@ test("media page mobile layout scrolls as snapped sheets in portrait and landsca
   );
   assert.match(
     source,
-    /\.mha-media-page\[data-artwork-palette="true"\] \.mha-media-page-player-list > \.mha-media-page-auto-player\[data-media-page-player="true"\]:has\(> \.mha-media-page-player-widget:is\(\[data-media-state="playing"\], \[data-media-state="paused"\]\)\)\s*\{[\s\S]*background:\s*var\(--mha-media-page-dynamic-card-surface\);[\s\S]*border-color:\s*var\(--mha-media-page-dynamic-card-border\);/,
+    /\.mha-media-page\[data-artwork-palette="true"\] \.mha-media-page-player-list > \.mha-media-page-auto-player\[data-media-page-player="true"\]:has\(> \.mha-media-page-player-widget:is\(\[data-media-state="playing"\], \[data-media-state="paused"\]\)\)\s*\{[\s\S]*background-image:\s*none;[\s\S]*background-color:\s*var\(--mha-media-page-dynamic-card-surface\);[\s\S]*border-color:\s*var\(--mha-media-page-dynamic-card-border\);/,
   );
   assert.match(
     source,

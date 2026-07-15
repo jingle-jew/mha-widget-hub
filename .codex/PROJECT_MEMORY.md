@@ -15,6 +15,20 @@ appartiennent à `AGENTS.md`.
 
 ## Décisions et raisons
 
+### 2026-07-15 — Faire du mouvement une signature visuelle MHA
+
+- **Statut :** confirmé.
+- **Décision :** les animations MHA sont volontairement lentes, lisibles et
+  perceptibles. Le mouvement ne sert pas seulement à masquer une transition :
+  il participe à la signature visuelle du produit.
+- **Pourquoi :** une animation trop brève devient un simple changement d'état
+  et perd sa valeur d'orientation, de continuité et d'identité.
+- **Conséquence :** privilégier des durées longues et des courbes douces pour
+  les transitions visuelles; conserver les changements de layout stables et
+  animer les propriétés de rendu ciblées. Les interactions directes doivent
+  rester immédiatement acquittées, même lorsque leur évolution visuelle se
+  poursuit lentement.
+
 ### 2026-07-15 — Garder la page Média autonome
 
 - **Statut :** confirmé.
@@ -185,6 +199,17 @@ appartiennent à `AGENTS.md`.
   Les surfaces thématiques préexistantes restent réservées aux lecteurs
   inactifs, éteints, indisponibles ou inconnus. Sous iOS seulement, la teinte
   reste un voile très faible afin de préserver le verre transparent et son blur.
+  Lorsqu'un nouvel artwork change la palette, les couleurs du panneau, de la
+  carte active et de ses contrôles évoluent par un fondu local de `1000ms`, sans
+  animation de layout ni recalcul du blur. L'ancienne palette reste active tant
+  que le nouvel artwork n'a pas été chargé et échantillonné; elle n'est retirée
+  qu'en l'absence d'artwork ou en cas d'échec, afin d'éviter un flash de la
+  surface thématique entre deux lecteurs.
+- Le wallpaper d'artwork de la page Média conserve lui aussi l'image précédente
+  pendant le chargement de la suivante. La nouvelle URL n'est publiée à la
+  couche CSS qu'après chargement et décodage, et une requête devenue obsolète ne
+  peut pas remplacer un artwork plus récent. Cette continuité évite d'exposer
+  brièvement le wallpaper du thème entre deux chansons.
 - En OneUI, les surfaces locales de repli des lecteurs inactifs restent
   visuellement alignées sur le dock sans dépendre du composant dock.
 - En OneUI et Material, les cartes « Lecteurs disponibles » conservent une

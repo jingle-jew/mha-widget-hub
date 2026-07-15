@@ -179,7 +179,14 @@ export function setMediaArtworkImage(artwork, artworkUrl = "") {
   if (!image) return;
   if (hasArtwork) {
     if (image.dataset.artworkUrl && image.dataset.artworkUrl !== artworkUrl) {
-      clearMediaArtworkPalette(resolveMediaArtworkPaletteRoot(artwork));
+      const paletteRoot = resolveMediaArtworkPaletteRoot(artwork);
+      /* Keep the media page's previous palette until the next artwork is
+       * sampled. Clearing it here makes the available-players panel flash back
+       * to its theme surface between two tracks. Standalone widgets retain
+       * their existing eager reset behavior. */
+      if (!paletteRoot?.matches?.(".mha-media-page")) {
+        clearMediaArtworkPalette(paletteRoot);
+      }
     }
     image.dataset.artworkUrl = artworkUrl;
     image.src = artworkUrl;
@@ -412,6 +419,7 @@ export function syncMediaArtworkTone(rootOrArtwork, artworkOrImage) {
       image.__mhaArtworkPaletteCache = { artworkUrl: expectedArtworkUrl, palette };
     }
     if (palette) applyMediaArtworkPalette(root, palette);
+    else clearMediaArtworkPalette(root);
   };
   detachMediaArtworkPaletteListener(image);
   if (image.complete && image.naturalWidth) {
@@ -423,7 +431,11 @@ export function syncMediaArtworkTone(rootOrArtwork, artworkOrImage) {
     detachMediaArtworkPaletteListener(image);
     applyPalette();
   };
-  const onError = () => detachMediaArtworkPaletteListener(image);
+  const onError = () => {
+    detachMediaArtworkPaletteListener(image);
+    if (expectedArtworkUrl !== (image.dataset.artworkUrl || "")) return;
+    clearMediaArtworkPalette(resolveMediaArtworkPaletteRoot(rootOrArtwork));
+  };
   image.__mhaArtworkPaletteListener = { onLoad, onError };
   image.addEventListener("load", onLoad);
   image.addEventListener("error", onError);

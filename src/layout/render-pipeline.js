@@ -48,6 +48,82 @@ import {
 
 const STYLE_SETTLE_TIMEOUT_MS = 900;
 
+function applyMediaPageWallpaperArtwork(host, artworkUrl) {
+  host.dataset.mediaPageWallpaper = "true";
+  host.style?.setProperty?.("--mha-media-page-wallpaper-image", `url("${artworkUrl}")`);
+  host._mediaPageWallpaperArtworkUrl = artworkUrl;
+}
+
+export function requestMediaPageWallpaperArtwork(host, artworkUrl, {
+  createImage = () => (typeof globalThis.Image === "function" ? new globalThis.Image() : null),
+} = {}) {
+  const nextArtworkUrl = String(artworkUrl || "").trim();
+  if (!host || !nextArtworkUrl) return Promise.resolve(false);
+
+  if (host._mediaPageWallpaperArtworkUrl === nextArtworkUrl) {
+    if (host._mediaPageWallpaperPendingUrl !== nextArtworkUrl) {
+      host._mediaPageWallpaperRequestId = (host._mediaPageWallpaperRequestId || 0) + 1;
+      host._mediaPageWallpaperPendingUrl = "";
+      host._mediaPageWallpaperPendingPromise = null;
+    }
+    host.dataset.mediaPageWallpaper = "true";
+    return Promise.resolve(true);
+  }
+
+  if (
+    host._mediaPageWallpaperPendingUrl === nextArtworkUrl
+    && host._mediaPageWallpaperPendingPromise
+  ) {
+    return host._mediaPageWallpaperPendingPromise;
+  }
+
+  const requestId = (host._mediaPageWallpaperRequestId || 0) + 1;
+  host._mediaPageWallpaperRequestId = requestId;
+  host._mediaPageWallpaperPendingUrl = nextArtworkUrl;
+
+  let image = null;
+  try {
+    image = createImage?.() || null;
+  } catch {
+    image = null;
+  }
+
+  if (!image) {
+    applyMediaPageWallpaperArtwork(host, nextArtworkUrl);
+    host._mediaPageWallpaperPendingUrl = "";
+    host._mediaPageWallpaperPendingPromise = null;
+    return Promise.resolve(true);
+  }
+
+  const pendingPromise = new Promise((resolve) => {
+    let settled = false;
+    const settle = (loaded) => {
+      if (settled) return;
+      settled = true;
+      image.onload = null;
+      image.onerror = null;
+      if (host._mediaPageWallpaperRequestId !== requestId) {
+        resolve(false);
+        return;
+      }
+      host._mediaPageWallpaperPendingUrl = "";
+      host._mediaPageWallpaperPendingPromise = null;
+      if (loaded) applyMediaPageWallpaperArtwork(host, nextArtworkUrl);
+      resolve(loaded);
+    };
+    image.onload = () => {
+      Promise.resolve(image.decode?.())
+        .catch(() => {})
+        .then(() => settle(true));
+    };
+    image.onerror = () => settle(false);
+    image.src = nextArtworkUrl;
+    if (image.complete && image.naturalWidth) queueMicrotask(() => image.onload?.());
+  });
+  host._mediaPageWallpaperPendingPromise = pendingPromise;
+  return pendingPromise;
+}
+
 function getActivePage(host) {
   return host._getActivePage?.() || null;
 }
@@ -161,11 +237,13 @@ export function createRenderPipeline(host, options = {}) {
     if (isMediaPage && resolvedArtworkUrl) {
       clearTimeout(host._mediaPageWallpaperClearTimer || 0);
       host._mediaPageWallpaperClearTimer = 0;
-      host.dataset.mediaPageWallpaper = "true";
-      host.style?.setProperty?.("--mha-media-page-wallpaper-image", `url("${resolvedArtworkUrl}")`);
+      requestMediaPageWallpaperArtwork(host, resolvedArtworkUrl);
       return;
     }
 
+    host._mediaPageWallpaperRequestId = (host._mediaPageWallpaperRequestId || 0) + 1;
+    host._mediaPageWallpaperPendingUrl = "";
+    host._mediaPageWallpaperPendingPromise = null;
     host.dataset.mediaPageWallpaper = "false";
     clearTimeout(host._mediaPageWallpaperClearTimer || 0);
     if (host._pageTypeWallpaperCrossfadeActive) {
@@ -173,10 +251,12 @@ export function createRenderPipeline(host, options = {}) {
         host._mediaPageWallpaperClearTimer = 0;
         if (host.dataset.mediaPageWallpaper === "true") return;
         host.style?.removeProperty?.("--mha-media-page-wallpaper-image");
+        host._mediaPageWallpaperArtworkUrl = "";
       }, host._pageTypeWallpaperCrossfadeDurationMs || 480);
       return;
     }
     host.style?.removeProperty?.("--mha-media-page-wallpaper-image");
+    host._mediaPageWallpaperArtworkUrl = "";
   }
 
   function resolveMediaPageArtworkUrl(activePage = getActivePage(host)) {
