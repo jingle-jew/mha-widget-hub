@@ -678,7 +678,7 @@ export const es = Object.freeze({
       }),
       "media-panel": Object.freeze({
         label: "Panel de media",
-        description: "Controles y detalles.",
+        description: "Carátula, detalles y controles.",
       }),
       "light-tile": Object.freeze({
         label: "Tile de luz",

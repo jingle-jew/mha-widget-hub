@@ -201,11 +201,9 @@ export function setMediaArtworkImage(artwork, artworkUrl = "") {
   if (hasArtwork) {
     if (image.dataset.artworkUrl && image.dataset.artworkUrl !== artworkUrl) {
       const paletteRoot = resolveMediaArtworkPaletteRoot(artwork);
-      /* Keep the media page's previous palette until the next artwork is
-       * sampled. Clearing it here makes the available-players panel flash back
-       * to its theme surface between two tracks. Standalone widgets retain
-       * their existing eager reset behavior. */
-      if (!paletteRoot?.matches?.(".mha-media-page")) {
+      /* Keep continuity for surfaces whose complete visual contract is driven
+       * by the artwork palette. Compact widgets still reset eagerly. */
+      if (!shouldPreserveMediaArtworkPalette(paletteRoot)) {
         clearMediaArtworkPalette(paletteRoot);
       }
     }
@@ -412,10 +410,13 @@ function clearMediaArtworkPalette(root) {
   MEDIA_ARTWORK_PALETTE_PROPERTIES.forEach(property => root.style.removeProperty(property));
 }
 
-function shouldPreserveMediaPagePalette(root) {
+function shouldPreserveMediaArtworkPalette(root) {
   return Boolean(
-    root?.matches?.(".mha-media-page")
-    && root.dataset.artworkPalette === "true",
+    root?.dataset?.artworkPalette === "true"
+    && (
+      root.matches?.(".mha-media-page")
+      || root.dataset.mediaSize === "4x6"
+    ),
   );
 }
 
@@ -429,11 +430,6 @@ function applyMediaArtworkPalette(root, palette) {
   root.dataset.artworkTone = root.matches?.(".mha-media-page")
     ? palette.wallpaperTone || palette.legacyTone
     : palette.legacyTone;
-  if (root.dataset.mediaSize === "4x4") {
-    root.removeAttribute("data-artwork-palette");
-    MEDIA_ARTWORK_PALETTE_PROPERTIES.forEach(property => root.style.removeProperty(property));
-    return;
-  }
   root.dataset.artworkPalette = "true";
   root.style.setProperty("--mha-media-palette-surface", palette.surface);
   root.style.setProperty("--mha-media-palette-foreground", palette.foreground);
@@ -461,7 +457,7 @@ export function syncMediaArtworkTone(rootOrArtwork, artworkOrImage) {
       image.__mhaArtworkPaletteCache = { artworkUrl: expectedArtworkUrl, palette };
     }
     if (palette) applyMediaArtworkPalette(root, palette);
-    else if (!shouldPreserveMediaPagePalette(root)) clearMediaArtworkPalette(root);
+    else if (!shouldPreserveMediaArtworkPalette(root)) clearMediaArtworkPalette(root);
   };
   detachMediaArtworkPaletteListener(image);
   if (image.complete && image.naturalWidth) {
@@ -477,7 +473,7 @@ export function syncMediaArtworkTone(rootOrArtwork, artworkOrImage) {
     detachMediaArtworkPaletteListener(image);
     if (expectedArtworkUrl !== (image.dataset.artworkUrl || "")) return;
     const root = resolveMediaArtworkPaletteRoot(rootOrArtwork);
-    if (!shouldPreserveMediaPagePalette(root)) clearMediaArtworkPalette(root);
+    if (!shouldPreserveMediaArtworkPalette(root)) clearMediaArtworkPalette(root);
   };
   image.__mhaArtworkPaletteListener = { onLoad, onError };
   image.addEventListener("load", onLoad);
@@ -556,6 +552,10 @@ export function createMediaSourceBadge(data, { label = data.app } = {}) {
     createText("mha-media-widget-source-badge-label", label),
   );
   return badge;
+}
+
+export function getMediaSourceBadgeLabel(data = {}, { showState = false } = {}) {
+  return showState ? getMediaStateLabel(data.state) : data.app;
 }
 
 export function createMediaControlButton(label, symbol, {
@@ -732,6 +732,11 @@ function getMediaPagePlayerMetadataSubtitle(data = {}) {
   return "";
 }
 
+function getMediaPanelMetadataSubtitle(data = {}) {
+  if (data.album && data.album !== "Preview Album") return data.album;
+  return data.artist || data.subtitle || "";
+}
+
 function syncMediaPagePlayerMetadata(root, data = {}) {
   if (!root?.classList?.contains("mha-media-page-player-widget")) return;
 
@@ -799,7 +804,7 @@ export function createMediaMetaRows(data) {
 function mediaVariantKey({ widgetW = 2, widgetH = 2 } = {}) {
   const w = Number(widgetW) || 2;
   const h = Number(widgetH) || 2;
-  if (w >= 4 && h >= 4) return "4x4";
+  if (w >= 4 && h >= 4) return "4x6";
   if (w >= 4 && h >= 2) return "4x2";
   return "2x2";
 }
@@ -835,7 +840,7 @@ function resolveMediaPagePanelSize({
   if (!supportsMediaPagePanelTheme(themeStyle)) {
     return {
       w: 4,
-      h: 4,
+      h: 6,
     };
   }
 
@@ -911,6 +916,7 @@ export function createMediaWidgetContent(widget = {}, {
     controlsMode: widget?.mediaPagePlayer ? "volume-only" : "playback",
   };
   const variantKey = mediaVariantKey({ widgetW, widgetH });
+  const usesStateBadge = Boolean(widget?.mediaPagePlayer) || variantKey === "4x6";
   const root = document.createElement("div");
   root.className = "mha-media-widget";
   root.dataset.widgetComponent = "media";
@@ -944,15 +950,20 @@ export function createMediaWidgetContent(widget = {}, {
     root.dataset.playing = String(nextData.playing);
     root.dataset.hasArtwork = String(Boolean(nextData.artworkUrl));
     root.querySelector(".mha-media-widget-title").textContent = nextData.title;
-    root.querySelector(".mha-media-widget-artist").textContent = nextData.subtitle;
+    root.querySelector(".mha-media-widget-artist").textContent = variantKey === "4x6"
+      ? getMediaPanelMetadataSubtitle(nextData)
+      : nextData.subtitle;
     syncMediaPagePlayerMetadata(root, nextData);
     const sourceNode = root.querySelector(".mha-media-widget-source");
     if (sourceNode) sourceNode.textContent = nextData.app;
     const sourceBadgeNode = root.querySelector(".mha-media-widget-source-badge-label");
     if (sourceBadgeNode) {
-      sourceBadgeNode.textContent = widget?.mediaPagePlayer
-        ? getMediaStateLabel(nextData.state)
-        : nextData.app;
+      const badgeLabel = getMediaSourceBadgeLabel(nextData, {
+        showState: usesStateBadge,
+      });
+      sourceBadgeNode.textContent = badgeLabel;
+      root.querySelector(".mha-media-widget-source-badge .mha-icon-symbol")
+        ?.setAttribute("aria-label", badgeLabel);
     }
     const artworkNode = root.querySelector(".mha-media-widget-artwork");
     artworkNode?.setAttribute("data-playing", String(nextData.playing));
@@ -987,14 +998,13 @@ export function createMediaWidgetContent(widget = {}, {
   const background = createMediaArtworkBackground(data);
   const artwork = createMediaArtwork(data);
   const text = createMediaTitleStack(data);
-  const metaDetails = createMediaMetaDetails(data);
   const controls = createMediaControls(data, {
     mode: context.controlsMode,
     interactive,
     onAction,
   });
   const progress = createMediaProgress(data, {
-    includeLabels: variantKey === "2x2" || variantKey === "4x2" || useMediaPagePanel,
+    includeLabels: ["2x2", "4x2", "4x6"].includes(variantKey) || useMediaPagePanel,
   });
   root.append(background);
   setMediaBackgroundImage(root, data.artworkUrl);
@@ -1026,13 +1036,16 @@ export function createMediaWidgetContent(widget = {}, {
     info.append(createMediaSourceBadge(data), text, progress, controls);
     root.append(artwork, info);
   } else {
+    text.querySelector(".mha-media-widget-artist").textContent = getMediaPanelMetadataSubtitle(data);
     const info = document.createElement("div");
     info.className = "mha-media-widget-info";
-    info.append(text, metaDetails);
+    info.append(text);
 
     const transport = document.createElement("div");
     transport.className = "mha-media-widget-transport";
-    transport.append(createMediaMetaRows(data), progress, controls);
+    transport.append(createMediaSourceBadge(data, {
+      label: getMediaSourceBadgeLabel(data, { showState: true }),
+    }), progress, controls);
 
     root.append(artwork, info, transport);
   }
@@ -1102,7 +1115,7 @@ export const MEDIA_WIDGET_DEFINITION = Object.freeze({
     entries: Object.freeze([
       Object.freeze({ category: "media", variant: "media-compact", label: "Compact media", size: freezeSize(2, 2), description: "Quick playback.", order: 10 }),
       Object.freeze({ category: "media", variant: "media-wide", label: "Wide media", size: freezeSize(4, 2), description: "Now playing.", order: 20 }),
-      Object.freeze({ category: "media", variant: "media-panel", label: "Media panel", size: freezeSize(4, 4), description: "Controls and details.", order: 30 }),
+      Object.freeze({ category: "media", variant: "media-panel", label: "Media panel", size: freezeSize(4, 6), description: "Artwork, details and controls.", order: 30 }),
     ]),
   }),
   renderer: "media",
@@ -1120,7 +1133,7 @@ export const MEDIA_WIDGET_DEFINITION = Object.freeze({
         fallbackSize: rawSize || size,
       });
     }
-    if (size.w >= 4 && size.h >= 4) return { w: 4, h: 4 };
+    if (size.w >= 4 && size.h >= 4) return { w: 4, h: 6 };
     if (size.w >= 4 || size.h >= 3) return { w: 4, h: 2 };
     return { w: 2, h: 2 };
   },
@@ -1146,7 +1159,7 @@ export const MEDIA_WIDGET_DEFINITION = Object.freeze({
   variants: [
     variant("media-compact", "Compact 2×2", 2, 2),
     variant("media-wide", "Large 4×2", 4, 2),
-    variant("media-panel", "Panel 4×4", 4, 4),
+    variant("media-panel", "Panel 4×6", 4, 6),
   ],
 });
 

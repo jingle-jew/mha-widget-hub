@@ -8,7 +8,9 @@ import {
   createMediaPagePlayerWidget,
   deriveMediaArtworkPaletteFromPixels,
   getMediaColorContrastRatio,
+  getMediaSourceBadgeLabel,
   MEDIA_WIDGET_CONTENT_RENDERER,
+  MEDIA_WIDGET_DEFINITION,
   MEDIA_TRANSITION_GRACE_MS,
   resolveMediaTransitionData,
   resolveMediaControlsToggleMode,
@@ -66,6 +68,29 @@ test("standard media widgets return from volume to playback controls", () => {
   assert.equal(
     resolveMediaControlsToggleMode("volume-only", { mediaPagePlayer: true }),
     "volume",
+  );
+});
+
+test("media panel source badge displays the localized player state", () => {
+  const data = mediaData({ app: "MHA Media", state: "playing" });
+
+  assert.equal(getMediaSourceBadgeLabel(data), "MHA Media");
+  assert.equal(getMediaSourceBadgeLabel(data, { showState: true }), "Playing");
+});
+
+test("media panel migrates the legacy 4x4 contract to 4x6", () => {
+  const managerEntry = MEDIA_WIDGET_DEFINITION.manager.entries.find(
+    entry => entry.variant === "media-panel",
+  );
+  const panelVariant = MEDIA_WIDGET_DEFINITION.variants.find(
+    entry => entry.variant === "media-panel",
+  );
+
+  assert.deepEqual(managerEntry.size, { w: 4, h: 6 });
+  assert.deepEqual(panelVariant.size, { w: 4, h: 6 });
+  assert.deepEqual(
+    normalizeWidgetForKind({ kind: "media", variant: "media-panel", w: 4, h: 4 }),
+    { w: 4, h: 6 },
   );
 });
 
@@ -179,6 +204,39 @@ test("artwork tone can target the media page Now Playing surface", async () => {
   assert.equal(page.dataset.artworkTone, palette.wallpaperTone);
   assert.equal(page.dataset.artworkPalette, "true");
   assert.equal(properties.get("--mha-media-palette-foreground"), palette.foreground);
+});
+
+test("media 4x6 reuses the Now Playing artwork palette", async () => {
+  const properties = new Map();
+  const widget = {
+    dataset: { mediaSize: "4x6" },
+    matches: selector => selector.includes(".mha-media-widget"),
+    style: {
+      setProperty: (property, value) => properties.set(property, value),
+      removeProperty: property => properties.delete(property),
+    },
+  };
+  const palette = deriveMediaArtworkPaletteFromPixels(Uint8ClampedArray.from([
+    26, 34, 48, 255,
+    42, 56, 74, 255,
+  ]));
+  const image = {
+    dataset: { artworkUrl: "/api/media_player_proxy/media_player.salon" },
+    complete: true,
+    naturalWidth: 512,
+    matches: selector => selector === "img",
+    __mhaArtworkPaletteCache: {
+      artworkUrl: "/api/media_player_proxy/media_player.salon",
+      palette,
+    },
+  };
+
+  syncMediaArtworkTone(widget, image);
+  await Promise.resolve();
+
+  assert.equal(widget.dataset.artworkPalette, "true");
+  assert.equal(properties.get("--mha-media-palette-foreground"), palette.foreground);
+  assert.equal(properties.get("--mha-media-palette-on-strong"), palette.onStrong);
 });
 
 test("media page keeps the previous artwork palette until its replacement loads", () => {
@@ -481,7 +539,7 @@ test("media page panel keeps responsive sizes on supported themes and downgrades
 
   assert.deepEqual(
     normalizeWidgetForKind(widget, { units: 4, rowUnits: 12, layout: "mobile" }),
-    { w: 4, h: 4 },
+    { w: 4, h: 6 },
   );
   assert.deepEqual(
     normalizeWidgetForKind(widget, {
@@ -511,7 +569,7 @@ test("media page panel keeps responsive sizes on supported themes and downgrades
       themeStyle: "alexa",
       viewportHeight: 900,
     }),
-    { w: 4, h: 4 },
+    { w: 4, h: 6 },
   );
   assert.deepEqual(
     normalizeWidgetForKind(widget, {
@@ -653,15 +711,15 @@ test("media page panel css clears the mobile dock and anchors transport in lands
 
   assert.match(
     source,
-    /:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\[data-theme-style="oneui"\]\)\s+\.mha-widget\[data-widget-kind="media"\]\[data-media-variant="media-page-panel"\]\s*>\s*\.mha-media-widget\[data-media-size="4x4"\],[\s\S]*?:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\[data-theme-style="material"\]\)\s+\.mha-widget\[data-widget-kind="media"\]\[data-media-variant="media-page-panel"\]\s*>\s*\.mha-media-widget\[data-media-size="4x4"\]\s*\{[\s\S]*grid-template-rows:\s*auto minmax\(0,\s*1fr\) auto;[\s\S]*block-size:\s*calc\([\s\S]*var\(--mha-shell-content-bottom-inset,\s*var\(--mha-mobile-dock-footprint,\s*0px\)\)[\s\S]*\);/,
+    /:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\[data-theme-style="oneui"\]\)\s+\.mha-widget\[data-widget-kind="media"\]\[data-media-variant="media-page-panel"\]\s*>\s*\.mha-media-widget\[data-media-size="4x6"\],[\s\S]*?:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\[data-theme-style="material"\]\)\s+\.mha-widget\[data-widget-kind="media"\]\[data-media-variant="media-page-panel"\]\s*>\s*\.mha-media-widget\[data-media-size="4x6"\]\s*\{[\s\S]*grid-template-rows:\s*auto minmax\(0,\s*1fr\) auto;[\s\S]*block-size:\s*calc\([\s\S]*var\(--mha-shell-content-bottom-inset,\s*var\(--mha-mobile-dock-footprint,\s*0px\)\)[\s\S]*\);/,
   );
   assert.match(
     source,
-    /:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\[data-theme-style="oneui"\]\)\s+\.mha-widget\[data-widget-kind="media"\]\[data-media-variant="media-page-panel"\]\s+\.mha-media-widget-artwork\s*\{[\s\S]*inline-size:\s*min\(100%,\s*var\(--mha-media-4x4-artwork-size\)\);/,
+    /:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\[data-theme-style="oneui"\]\)\s+\.mha-widget\[data-widget-kind="media"\]\[data-media-variant="media-page-panel"\]\s+\.mha-media-widget-artwork\s*\{[\s\S]*inline-size:\s*min\(100%,\s*var\(--mha-media-4x6-artwork-size\)\);/,
   );
   assert.match(
     source,
-    /:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\[data-theme-style="oneui"\]\)\s+\.mha-widget\[data-widget-kind="media"\]\[data-media-variant="media-page-panel"\]\s*>\s*\.mha-media-widget\[data-media-size="4x4"\]\s*\{[\s\S]*--mha-media-gap:\s*clamp\(\.58rem,\s*min\(4\.6cqi,\s*4\.6cqb\),\s*\.94rem\);[\s\S]*--mha-media-progress-height:\s*clamp\(\.34rem,\s*2\.4cqb,\s*\.58rem\);/,
+    /:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\[data-theme-style="oneui"\]\)\s+\.mha-widget\[data-widget-kind="media"\]\[data-media-variant="media-page-panel"\]\s*>\s*\.mha-media-widget\[data-media-size="4x6"\]\s*\{[\s\S]*--mha-media-gap:\s*clamp\(\.58rem,\s*min\(4\.6cqi,\s*4\.6cqb\),\s*\.94rem\);[\s\S]*--mha-media-progress-height:\s*clamp\(\.34rem,\s*2\.4cqb,\s*\.58rem\);/,
   );
   assert.match(
     source,
@@ -690,7 +748,8 @@ test("premium media layouts scope immersive states and artwork palettes to 2x2 a
     path.join(REPO_ROOT, "styles", "widgets", "media-widget.css"),
     "utf8",
   );
-  const premiumSection = source.split("Premium compact and wide compositions")[1] || "";
+  const premiumSection = (source.split("Premium compact and wide compositions")[1] || "")
+    .split("Media panel 4x6")[0];
 
   assert.match(
     premiumSection,
@@ -704,5 +763,23 @@ test("premium media layouts scope immersive states and artwork palettes to 2x2 a
     premiumSection,
     /:not\(:is\(\[data-media-state="playing"\], \[data-media-state="paused"\]\)\) \.mha-media-widget-artwork\s*\{\s*display:\s*none;/,
   );
-  assert.doesNotMatch(premiumSection, /data-media-size="4x4"/);
+  assert.doesNotMatch(premiumSection, /data-media-size="4x6"/);
+});
+
+test("media 4x6 panel keeps artwork, metadata and transport as separate zones", () => {
+  const source = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "widgets", "media-widget.css"),
+    "utf8",
+  );
+  const panelSection = source.split("Media panel 4x6")[1] || "";
+
+  assert.match(panelSection, /grid-template-rows:\s*minmax\(0, 1fr\) auto auto;/);
+  assert.match(panelSection, /\.mha-media-widget-artwork\s*\{[\s\S]*grid-row:\s*1;/);
+  assert.match(panelSection, /\.mha-media-widget-info\s*\{[\s\S]*grid-row:\s*2;/);
+  assert.match(panelSection, /\.mha-media-widget-transport\s*\{[\s\S]*grid-row:\s*3;/);
+  assert.match(panelSection, /\.mha-media-widget-source-badge\s*\{[\s\S]*display:\s*inline-flex;/);
+  assert.match(panelSection, /\.mha-media-widget-controls-shell\s*\{[\s\S]*display:\s*contents;/);
+  assert.match(panelSection, /data-artwork-palette="true"[\s\S]*--mha-media-artwork-foreground:\s*var\(--mha-media-palette-foreground\);/);
+  assert.match(panelSection, /--mha-media-progress-fill:\s*var\(--mha-media-palette-foreground\);/);
+  assert.match(panelSection, /--mha-media-panel-transport-surface:\s*color-mix\(/);
 });

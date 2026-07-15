@@ -129,7 +129,15 @@ appartiennent à `AGENTS.md`.
   déclinant avec ses propres tokens. Dans les autres états, OneUI et Material
   révèlent la surface primaire normale du widget. Leur palette de contenu est
   dérivée de l'artwork avec un contraste minimal de 4.5:1 et mise en cache par
-  URL. Le contrat visuel `4×4` reste indépendant et inchangé.
+  URL. Le grand variant conserve l'identifiant persistant `media-panel`, mais
+  normalise désormais les anciens `4×4` vers un contrat vertical `4×6` en
+  trois zones : artwork flexible en haut, titre/album au centre et surface de
+  transport compacte en bas. Sa pastille de transport affiche l'état localisé
+  du lecteur plutôt que le nom générique de l'application. Le widget réutilise
+  la palette de contraste extraite pour Now Playing afin de piloter ensemble le
+  texte, la progression, les contrôles et la surface de transport; l'ancienne
+  palette reste active jusqu'à l'échantillonnage du prochain artwork. Les
+  contrats `2×2` et `4×2` restent indépendants.
 - Dans les widgets média standard `2×2` et `4×2`, le bouton volume alterne entre
   les modes `playback` et `volume`. Le mode de repos `volume-only` appartient
   uniquement aux cartes de la section « Lecteurs disponibles »; il ne doit pas
