@@ -418,19 +418,19 @@
   --mha-weather-muted: var(--mha-text-secondary);
   --mha-weather-chip-bg: var(--mha-surface-on-primary);
   --mha-weather-chip-border: var(--mha-border-on-primary);
-  --mha-weather-cloud: color-mix(in srgb, var(--mha-text-primary) 88%, white 12%);
-  --mha-weather-cloud-shade: var(--mha-text-secondary);
-  --mha-weather-rain: var(--mha-accent);
-  --mha-weather-snow: var(--mha-text-primary);
-  --mha-weather-fog: var(--mha-text-secondary);
   --mha-widget-reflection-opacity: var(--mha-highlight-opacity-primary, 0);
   background: var(--mha-primary-surface);
   border-color: var(--mha-primary-border);
   box-shadow: var(--mha-widget-shell-shadow, var(--mha-shadow-primary));
 }
 
-:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="weather"][data-weather-surface-mode="default"] .mha-weather-widget-icon {
-  color: var(--mha-weather-text);
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="weather"][data-weather-surface-mode="default"] .mha-weather-current-icon,
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="weather"][data-weather-surface-mode="default"] .mha-weather-icon {
+  color: rgba(255,255,255,.98);
+}
+
+:host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="weather"][data-weather-surface-mode="default"] .mha-icon-symbol {
+  --mha-icon-symbol-color: rgba(255,255,255,.98);
 }
 
 /* 4. Consommation des tokens de theme */

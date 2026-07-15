@@ -6,6 +6,8 @@ import {
   buildMediaWidgetData,
   createMediaTransitionCache,
   createMediaPagePlayerWidget,
+  deriveMediaArtworkPaletteFromPixels,
+  getMediaColorContrastRatio,
   MEDIA_WIDGET_CONTENT_RENDERER,
   MEDIA_TRANSITION_GRACE_MS,
   resolveMediaTransitionData,
@@ -76,6 +78,43 @@ function mediaData(overrides = {}) {
     ...overrides,
   };
 }
+
+function parsePaletteRgb(value = "") {
+  return String(value).match(/\d+/g)?.slice(0, 3).map(Number) || [];
+}
+
+test("artwork palettes stay tonal while meeting readable text contrast", () => {
+  const pixels = Uint8ClampedArray.from([
+    24, 48, 82, 255,
+    38, 74, 112, 255,
+    186, 92, 54, 255,
+    16, 34, 62, 255,
+  ]);
+  const palette = deriveMediaArtworkPaletteFromPixels(pixels);
+  const surface = parsePaletteRgb(palette.surface);
+  const foreground = parsePaletteRgb(palette.foreground);
+
+  assert.ok(palette);
+  assert.ok(palette.contrast >= 4.5);
+  assert.ok(getMediaColorContrastRatio(surface, foreground) >= 4.5);
+  assert.notEqual(palette.foreground, "rgb(255 255 255)");
+  assert.notEqual(palette.foreground, "rgb(0 0 0)");
+  assert.equal(palette.strong, palette.foreground);
+});
+
+test("artwork palettes adapt to the source colors", () => {
+  const warm = deriveMediaArtworkPaletteFromPixels(Uint8ClampedArray.from([
+    142, 54, 28, 255,
+    206, 116, 52, 255,
+  ]));
+  const cool = deriveMediaArtworkPaletteFromPixels(Uint8ClampedArray.from([
+    18, 68, 122, 255,
+    42, 132, 168, 255,
+  ]));
+
+  assert.notEqual(warm.foreground, cool.foreground);
+  assert.notEqual(warm.surface, cool.surface);
+});
 
 test("media transition cache hides temporary idle metadata and artwork gaps", () => {
   const cache = createMediaTransitionCache();
@@ -494,4 +533,26 @@ test("media page panel css clears the mobile dock and anchors transport in lands
     source,
     /:host\(\[data-layout-variant="mobile-landscape"\]\[data-theme-style="oneui"\]\)\s+\.mha-widget\[data-widget-kind="media"\]\[data-media-variant="media-page-panel"\]\s+\.mha-media-widget-progress-shell,[\s\S]*?:host\(\[data-layout-variant="mobile-landscape"\]\[data-theme-style="material"\]\)\s+\.mha-widget\[data-widget-kind="media"\]\[data-media-variant="media-page-panel"\]\s+\.mha-media-widget-progress-shell\s*\{[\s\S]*margin-block-start:\s*auto;/,
   );
+});
+
+test("premium media layouts scope immersive states and artwork palettes to 2x2 and 4x2", () => {
+  const source = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "widgets", "media-widget.css"),
+    "utf8",
+  );
+  const premiumSection = source.split("Premium compact and wide compositions")[1] || "";
+
+  assert.match(
+    premiumSection,
+    /data-media-size="2x2"\], \[data-media-size="4x2"\].*data-media-state="playing".*data-media-state="paused"/s,
+  );
+  assert.match(
+    premiumSection,
+    /data-artwork-palette="true"[\s\S]*--mha-media-artwork-foreground:\s*var\(--mha-media-palette-foreground\);/,
+  );
+  assert.match(
+    premiumSection,
+    /:not\(:is\(\[data-media-state="playing"\], \[data-media-state="paused"\]\)\) \.mha-media-widget-artwork\s*\{\s*display:\s*none;/,
+  );
+  assert.doesNotMatch(premiumSection, /data-media-size="4x4"/);
 });

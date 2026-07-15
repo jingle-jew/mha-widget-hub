@@ -40,6 +40,13 @@ appartiennent à `AGENTS.md`.
 
 ## Préférences UX et produit
 
+- Les widgets média `2×2` et `4×2` ont trois contrats visuels natifs : iOS
+  conserve l'artwork comme objet sur un champ coloré; OneUI et Material
+  partagent une composition immersive en lecture ou en pause, Material la
+  déclinant avec ses propres tokens. Dans les autres états, OneUI et Material
+  révèlent la surface primaire normale du widget. Leur palette de contenu est
+  dérivée de l'artwork avec un contraste minimal de 4.5:1 et mise en cache par
+  URL. Le contrat visuel `4×4` reste indépendant et inchangé.
 - Dans les réglages d’apparence OneUI, « Opacité des widgets » contrôle
   `--mha-oneui-primary-surface-opacity` de 0 à 100 %. La valeur est persistée
   localement sous `mha-oneui-primary-surface-opacity`; son défaut reste 88 %.
@@ -49,7 +56,9 @@ appartiennent à `AGENTS.md`.
 - Les widgets météo principaux (`kind: weather`) proposent, uniquement sous
   OneUI, un mode de surface `default` ou `dynamic`. Le mode par défaut
   consomme `--mha-primary-surface` et adapte les tokens de contenu au contraste
-  sémantique; le mode dynamique conserve la surface météo bleue expressive.
+  sémantique sans assombrir les icônes météo, d'humidité ou de précipitations,
+  dont les parties monochromes restent blanches; le mode dynamique conserve la
+  surface météo bleue expressive.
   Ce réglage partagé couvre les conditions actuelles et les prévisions horaires
   ou journalières, sans s'étendre à iOS, aux métriques, au radar ou au bref météo.
 - Sur la carte météo Vent 2×2, la boussole est une information contextuelle de

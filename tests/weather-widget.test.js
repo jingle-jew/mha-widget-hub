@@ -563,6 +563,14 @@ test("default OneUI weather surfaces consume the primary surface token", () => {
     css,
     /data-weather-surface-mode="default"[\s\S]*?background:\s*var\(--mha-primary-surface\);/,
   );
+  assert.match(
+    css,
+    /data-weather-surface-mode="default"[^\n]*\.mha-weather-icon\s*\{\s*color:\s*rgba\(255,255,255,\.98\);/,
+  );
+  assert.match(
+    css,
+    /data-weather-surface-mode="default"[^\n]*\.mha-icon-symbol\s*\{\s*--mha-icon-symbol-color:\s*rgba\(255,255,255,\.98\);/,
+  );
 });
 
 test("weather forecast timeline grid matches the rendered forecast cards", () => {

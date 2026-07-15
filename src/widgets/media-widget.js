@@ -22,6 +22,14 @@ import { findThemeStyleId } from "../settings/theme-registry.js";
 export const MEDIA_WIDGET_KIND = "media";
 export const MEDIA_TRANSITION_GRACE_MS = 1200;
 
+const MEDIA_ARTWORK_PALETTE_PROPERTIES = Object.freeze([
+  "--mha-media-palette-surface",
+  "--mha-media-palette-foreground",
+  "--mha-media-palette-muted",
+  "--mha-media-palette-strong",
+  "--mha-media-palette-on-strong",
+]);
+
 const MEDIA_TRANSIENT_STATES = new Set(["idle", "off", "unavailable", "unknown", "none"]);
 
 export function isMediaWidget(widget = {}) {
@@ -169,56 +177,253 @@ export function setMediaArtworkImage(artwork, artworkUrl = "") {
   artwork.dataset.hasArtwork = String(hasArtwork);
   if (!image) return;
   if (hasArtwork) {
+    if (image.dataset.artworkUrl && image.dataset.artworkUrl !== artworkUrl) {
+      clearMediaArtworkPalette(artwork.closest(".mha-media-widget"));
+    }
+    image.dataset.artworkUrl = artworkUrl;
     image.src = artworkUrl;
     image.alt = "";
-    syncMediaArtworkTone(artwork.closest(".mha-media-widget"), image);
+    syncMediaArtworkTone(artwork, image);
   } else {
+    detachMediaArtworkPaletteListener(image);
+    delete image.__mhaArtworkPaletteCache;
+    delete image.dataset.artworkUrl;
     image.removeAttribute("src");
-    artwork.closest(".mha-media-widget")?.removeAttribute("data-artwork-tone");
+    clearMediaArtworkPalette(artwork.closest(".mha-media-widget"));
   }
 }
 
-function readArtworkTone(image) {
-  if (!image?.naturalWidth || !image.naturalHeight) return "";
+function detachMediaArtworkPaletteListener(image) {
+  const pending = image?.__mhaArtworkPaletteListener;
+  if (!pending) return;
+  image.removeEventListener("load", pending.onLoad);
+  image.removeEventListener("error", pending.onError);
+  delete image.__mhaArtworkPaletteListener;
+}
+
+function clampColorChannel(value) {
+  return Math.max(0, Math.min(255, Math.round(Number(value) || 0)));
+}
+
+function rgbToHsl([red, green, blue]) {
+  const r = red / 255;
+  const g = green / 255;
+  const b = blue / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const lightness = (max + min) / 2;
+  const delta = max - min;
+  if (delta === 0) return { hue: 0, saturation: 0, lightness };
+
+  const saturation = delta / (1 - Math.abs((2 * lightness) - 1));
+  let hue = max === r
+    ? ((g - b) / delta) % 6
+    : max === g
+      ? ((b - r) / delta) + 2
+      : ((r - g) / delta) + 4;
+  hue = ((hue * 60) + 360) % 360;
+  return { hue, saturation, lightness };
+}
+
+function hslToRgb({ hue, saturation, lightness }) {
+  const normalizedHue = (((hue % 360) + 360) % 360) / 60;
+  const chroma = (1 - Math.abs((2 * lightness) - 1)) * saturation;
+  const component = chroma * (1 - Math.abs((normalizedHue % 2) - 1));
+  const offset = lightness - (chroma / 2);
+  const [r, g, b] = normalizedHue < 1 ? [chroma, component, 0]
+    : normalizedHue < 2 ? [component, chroma, 0]
+      : normalizedHue < 3 ? [0, chroma, component]
+        : normalizedHue < 4 ? [0, component, chroma]
+          : normalizedHue < 5 ? [component, 0, chroma]
+            : [chroma, 0, component];
+  return [r, g, b].map(channel => clampColorChannel((channel + offset) * 255));
+}
+
+function getRelativeLuminance([red, green, blue]) {
+  const linearize = channel => {
+    const value = channel / 255;
+    return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+  };
+  return (0.2126 * linearize(red)) + (0.7152 * linearize(green)) + (0.0722 * linearize(blue));
+}
+
+export function getMediaColorContrastRatio(first, second) {
+  const firstLuminance = getRelativeLuminance(first);
+  const secondLuminance = getRelativeLuminance(second);
+  const lighter = Math.max(firstLuminance, secondLuminance);
+  const darker = Math.min(firstLuminance, secondLuminance);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+function deriveContrastingTone(surface, hue, saturation, preferLight, minimumContrast = 4.5) {
+  const start = preferLight ? 0.88 : 0.12;
+  const direction = preferLight ? 1 : -1;
+  for (let step = 0; step <= 12; step += 1) {
+    const lightness = Math.max(0, Math.min(1, start + (direction * step * 0.01)));
+    const candidate = hslToRgb({ hue, saturation, lightness });
+    if (getMediaColorContrastRatio(surface, candidate) >= minimumContrast) return candidate;
+  }
+  return preferLight ? [255, 255, 255] : [0, 0, 0];
+}
+
+function mixRgb(first, second, secondWeight) {
+  return first.map((channel, index) => clampColorChannel(
+    channel + ((second[index] - channel) * secondWeight),
+  ));
+}
+
+function formatPaletteColor(color) {
+  return `rgb(${color.map(clampColorChannel).join(" ")})`;
+}
+
+export function deriveMediaArtworkPaletteFromPixels(pixels = []) {
+  if (!pixels || pixels.length < 4) return null;
+
+  let red = 0;
+  let green = 0;
+  let blue = 0;
+  let alphaWeight = 0;
+  let hueX = 0;
+  let hueY = 0;
+  let chromaWeight = 0;
+  let saturationTotal = 0;
+
+  for (let index = 0; index < pixels.length; index += 4) {
+    const alpha = pixels[index + 3] / 255;
+    if (alpha <= 0.02) continue;
+    const sample = [pixels[index], pixels[index + 1], pixels[index + 2]];
+    red += sample[0] * alpha;
+    green += sample[1] * alpha;
+    blue += sample[2] * alpha;
+    alphaWeight += alpha;
+
+    const hsl = rgbToHsl(sample);
+    const hueWeight = hsl.saturation * alpha;
+    if (hueWeight > 0.02) {
+      const radians = hsl.hue * (Math.PI / 180);
+      hueX += Math.cos(radians) * hueWeight;
+      hueY += Math.sin(radians) * hueWeight;
+      saturationTotal += hsl.saturation * hueWeight;
+      chromaWeight += hueWeight;
+    }
+  }
+
+  if (alphaWeight === 0) return null;
+  const sampledSurface = [red, green, blue].map(channel => clampColorChannel(channel / alphaWeight));
+  const surfaceHsl = rgbToHsl(sampledSurface);
+  const hue = chromaWeight > 0
+    ? ((Math.atan2(hueY, hueX) * (180 / Math.PI)) + 360) % 360
+    : surfaceHsl.hue;
+  const artworkSaturation = chromaWeight > 0 ? saturationTotal / chromaWeight : surfaceHsl.saturation;
+  const tonalSaturation = artworkSaturation < 0.08
+    ? artworkSaturation
+    : Math.max(0.18, Math.min(0.58, artworkSaturation * 0.72));
+  const lightContrast = getMediaColorContrastRatio(sampledSurface, [255, 255, 255]);
+  const darkContrast = getMediaColorContrastRatio(sampledSurface, [0, 0, 0]);
+  const preferLight = lightContrast >= darkContrast;
+  const surface = mixRgb(sampledSurface, preferLight ? [0, 0, 0] : [255, 255, 255], 0.16);
+  const foreground = deriveContrastingTone(surface, hue, tonalSaturation, preferLight);
+  const muted = mixRgb(surface, foreground, 0.72);
+  const strong = foreground;
+  const onStrong = deriveContrastingTone(
+    strong,
+    hue,
+    Math.min(0.42, tonalSaturation),
+    !preferLight,
+  );
+
+  return {
+    tone: preferLight ? "dark" : "light",
+    legacyTone: ((0.2126 * sampledSurface[0]) + (0.7152 * sampledSurface[1]) + (0.0722 * sampledSurface[2])) / 255 >= 0.52
+      ? "light"
+      : "dark",
+    surface: formatPaletteColor(surface),
+    foreground: formatPaletteColor(foreground),
+    muted: formatPaletteColor(muted),
+    strong: formatPaletteColor(strong),
+    onStrong: formatPaletteColor(onStrong),
+    contrast: getMediaColorContrastRatio(surface, foreground),
+  };
+}
+
+function readArtworkPalette(image) {
+  if (!image?.naturalWidth || !image.naturalHeight) return null;
   try {
     const canvas = document.createElement("canvas");
-    const size = 24;
+    const size = 32;
     canvas.width = size;
     canvas.height = size;
     const context = canvas.getContext("2d", { willReadFrequently: true });
+    if (!context) return null;
     context.drawImage(image, 0, 0, size, size);
     const pixels = context.getImageData(0, 0, size, size).data;
-    let luminance = 0;
-    let weight = 0;
-    for (let index = 0; index < pixels.length; index += 4) {
-      const alpha = pixels[index + 3] / 255;
-      if (alpha === 0) continue;
-      const red = pixels[index] / 255;
-      const green = pixels[index + 1] / 255;
-      const blue = pixels[index + 2] / 255;
-      const sample = 0.2126 * red + 0.7152 * green + 0.0722 * blue;
-      luminance += sample * alpha;
-      weight += alpha;
-    }
-    return weight > 0 && luminance / weight >= 0.52 ? "light" : "dark";
+    return deriveMediaArtworkPaletteFromPixels(pixels);
   } catch {
     // Cross-origin artwork can make canvas sampling unavailable. Keep theme defaults.
-    return "";
+    return null;
   }
 }
 
-export function syncMediaArtworkTone(root, artworkOrImage) {
-  if (!root || !artworkOrImage) return;
+function clearMediaArtworkPalette(root) {
+  if (!root) return;
+  root.removeAttribute("data-artwork-tone");
+  root.removeAttribute("data-artwork-palette");
+  MEDIA_ARTWORK_PALETTE_PROPERTIES.forEach(property => root.style.removeProperty(property));
+}
+
+function applyMediaArtworkPalette(root, palette) {
+  if (!root || !palette) return;
+  root.dataset.artworkTone = palette.legacyTone;
+  if (root.dataset.mediaSize === "4x4") {
+    root.removeAttribute("data-artwork-palette");
+    MEDIA_ARTWORK_PALETTE_PROPERTIES.forEach(property => root.style.removeProperty(property));
+    return;
+  }
+  root.dataset.artworkPalette = "true";
+  root.style.setProperty("--mha-media-palette-surface", palette.surface);
+  root.style.setProperty("--mha-media-palette-foreground", palette.foreground);
+  root.style.setProperty("--mha-media-palette-muted", palette.muted);
+  root.style.setProperty("--mha-media-palette-strong", palette.strong);
+  root.style.setProperty("--mha-media-palette-on-strong", palette.onStrong);
+}
+
+export function syncMediaArtworkTone(rootOrArtwork, artworkOrImage) {
+  if (!rootOrArtwork || !artworkOrImage) return;
   const image = artworkOrImage.matches?.("img")
     ? artworkOrImage
     : artworkOrImage.querySelector?.(".mha-media-widget-artwork-image");
   if (!image) return;
-  const applyTone = () => {
-    const tone = readArtworkTone(image);
-    if (tone) root.dataset.artworkTone = tone;
+  const expectedArtworkUrl = image.dataset.artworkUrl || "";
+  const resolveRoot = () => rootOrArtwork.matches?.(".mha-media-widget")
+    ? rootOrArtwork
+    : rootOrArtwork.closest?.(".mha-media-widget");
+  const applyPalette = () => {
+    if (expectedArtworkUrl !== (image.dataset.artworkUrl || "")) return;
+    const root = resolveRoot();
+    if (!root) return;
+    const cached = image.__mhaArtworkPaletteCache;
+    const palette = cached?.artworkUrl === expectedArtworkUrl
+      ? cached.palette
+      : readArtworkPalette(image);
+    if (palette && cached?.artworkUrl !== expectedArtworkUrl) {
+      image.__mhaArtworkPaletteCache = { artworkUrl: expectedArtworkUrl, palette };
+    }
+    if (palette) applyMediaArtworkPalette(root, palette);
   };
-  image.addEventListener("load", applyTone, { once: true });
-  if (image.complete) applyTone();
+  detachMediaArtworkPaletteListener(image);
+  if (image.complete && image.naturalWidth) {
+    queueMicrotask(applyPalette);
+    return;
+  }
+
+  const onLoad = () => {
+    detachMediaArtworkPaletteListener(image);
+    applyPalette();
+  };
+  const onError = () => detachMediaArtworkPaletteListener(image);
+  image.__mhaArtworkPaletteListener = { onLoad, onError };
+  image.addEventListener("load", onLoad);
+  image.addEventListener("error", onError);
 }
 
 export function setMediaBackgroundImage(root, artworkUrl = "") {
@@ -721,7 +926,7 @@ export function createMediaWidgetContent(widget = {}, {
     onAction,
   });
   const progress = createMediaProgress(data, {
-    includeLabels: variantKey === "4x2" || useMediaPagePanel,
+    includeLabels: variantKey === "2x2" || variantKey === "4x2" || useMediaPagePanel,
   });
   root.append(background);
   setMediaBackgroundImage(root, data.artworkUrl);
@@ -746,7 +951,7 @@ export function createMediaWidgetContent(widget = {}, {
     root.append(artwork, info, controls);
     syncMediaPagePlayerMetadata(root, data);
   } else if (variantKey === "2x2") {
-    root.append(artwork, createMediaSourceBadge(data), text, controls);
+    root.append(artwork, createMediaSourceBadge(data), text, progress, controls);
   } else if (variantKey === "4x2") {
     const info = document.createElement("div");
     info.className = "mha-media-widget-info";
