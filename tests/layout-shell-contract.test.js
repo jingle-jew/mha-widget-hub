@@ -610,7 +610,7 @@ test("media page mobile layout scrolls as snapped sheets in portrait and landsca
   );
   assert.match(
     source,
-    /\.mha-media-page \.mha-media-page-player-list > \.mha-media-page-auto-player \.mha-media-page-player-widget\[data-media-page-player="true"\] \.mha-media-widget-source-badge\s*\{[\s\S]*display:\s*inline-flex;[\s\S]*background:\s*var\(--mha-control-surface, var\(--mha-surface-secondary\)\);/,
+    /\.mha-media-page \.mha-media-page-player-list > \.mha-media-page-auto-player \.mha-media-page-player-widget\[data-media-page-player="true"\] \.mha-media-widget-source-badge\s*\{[\s\S]*display:\s*inline-flex;[\s\S]*background:\s*linear-gradient\([\s\S]*--mha-media-page-artwork-control-tint[\s\S]*var\(--mha-control-surface, var\(--mha-surface-secondary\)\);/,
   );
   assert.match(
     source,
@@ -618,7 +618,7 @@ test("media page mobile layout scrolls as snapped sheets in portrait and landsca
   );
   assert.match(
     source,
-    /\.mha-media-page-player-list > \.mha-media-page-auto-player\[data-media-page-player="true"\]\s*\{[\s\S]*--mha-media-page-player-card-surface:\s*var\([\s\S]*--mha-widget-shell-surface,[\s\S]*--mha-surface-primary[\s\S]*background:\s*var\(--mha-media-page-player-card-surface\);/,
+    /\.mha-media-page-player-list > \.mha-media-page-auto-player\[data-media-page-player="true"\]\s*\{[\s\S]*--mha-media-page-player-card-surface:\s*var\([\s\S]*--mha-widget-shell-surface,[\s\S]*--mha-surface-primary[\s\S]*background:\s*linear-gradient\([\s\S]*--mha-media-page-artwork-card-tint[\s\S]*var\(--mha-media-page-player-card-surface\);/,
   );
   assert.match(
     source,
@@ -631,6 +631,18 @@ test("media page mobile layout scrolls as snapped sheets in portrait and landsca
   assert.doesNotMatch(source, /\.mha-media-page-player-widget\[data-artwork-tone=/);
   assert.match(
     source,
+    /\.mha-media-page\[data-artwork-palette="true"\]\s*\{[\s\S]*--mha-media-page-artwork-panel-tint:\s*color-mix\(in srgb, var\(--mha-media-palette-surface\) 10%, transparent\);[\s\S]*--mha-media-page-artwork-card-tint:\s*color-mix\(in srgb, var\(--mha-media-palette-surface\) 8%, transparent\);[\s\S]*--mha-media-page-artwork-selected-tint:\s*color-mix\(in srgb, var\(--mha-media-palette-surface\) 14%, transparent\);/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-theme-style="ios"\]\) \.mha-media-page\[data-artwork-palette="true"\]\s*\{[\s\S]*--mha-media-page-artwork-panel-tint:\s*color-mix\(in srgb, var\(--mha-media-palette-surface\) 5%, transparent\);[\s\S]*--mha-media-page-artwork-card-tint:\s*color-mix\(in srgb, var\(--mha-media-palette-surface\) 3%, transparent\);[\s\S]*--mha-media-page-artwork-selected-tint:\s*color-mix\(in srgb, var\(--mha-media-palette-surface\) 6%, transparent\);/,
+  );
+  assert.match(
+    source,
+    /\.mha-media-page-widget-panel\s*\{[\s\S]*background:\s*linear-gradient\([\s\S]*--mha-media-page-artwork-panel-tint[\s\S]*var\(--mha-media-page-panel-surface\);/,
+  );
+  assert.match(
+    source,
     /:host\(\[data-theme-style="oneui"\]\) \.mha-media-page-widget-panel\s*\{[\s\S]*--mha-media-page-available-players-surface:\s*var\([\s\S]*--mha-oneui-mobile-dock-surface,[\s\S]*--mha-shell-dock-surface[\s\S]*--mha-panel-surface:\s*var\(--mha-media-page-available-players-surface\);[\s\S]*--mha-panel-filter:\s*var\(--mha-oneui-dock-filter\);/,
   );
   assert.match(
@@ -639,7 +651,7 @@ test("media page mobile layout scrolls as snapped sheets in portrait and landsca
   );
   assert.match(
     source,
-    /:host\(\[data-theme-style="oneui"\]\) \.mha-media-page \.mha-media-page-player-list > \.mha-media-page-auto-player\[data-media-page-player="true"\]\[data-selected="true"\]\s*\{[\s\S]*background:\s*var\(--mha-oneui-dock-active-surface\);[\s\S]*border-color:\s*transparent;[\s\S]*box-shadow:\s*none;/,
+    /:host\(\[data-theme-style="oneui"\]\) \.mha-media-page \.mha-media-page-player-list > \.mha-media-page-auto-player\[data-media-page-player="true"\]\[data-selected="true"\]\s*\{[\s\S]*background:\s*linear-gradient\([\s\S]*--mha-media-page-artwork-selected-tint[\s\S]*var\(--mha-oneui-dock-active-surface\);[\s\S]*border-color:\s*transparent;[\s\S]*box-shadow:\s*none;/,
   );
   assert.match(
     source,

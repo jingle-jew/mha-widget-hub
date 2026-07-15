@@ -100,6 +100,10 @@
   --mha-media-artwork-control-surface: var(--mha-media-control-surface);
   --mha-media-artwork-control-active-surface: var(--mha-media-control-active-surface);
   --mha-media-artwork-control-active-color: var(--mha-media-control-active-color);
+  --mha-media-page-artwork-panel-tint: transparent;
+  --mha-media-page-artwork-card-tint: transparent;
+  --mha-media-page-artwork-selected-tint: transparent;
+  --mha-media-page-artwork-control-tint: transparent;
 }
 
 .mha-media-page[data-artwork-tone="dark"] {
@@ -116,6 +120,24 @@
   --mha-media-artwork-control-surface: rgba(17, 17, 17, .12);
   --mha-media-artwork-control-active-surface: #111;
   --mha-media-artwork-control-active-color: #fff;
+}
+
+/* The page owns its surface hierarchy and consumes the sampled artwork color
+ * only as a subtle tint input. Theme surfaces remain the material underneath. */
+.mha-media-page[data-artwork-palette="true"] {
+  --mha-media-page-artwork-panel-tint: color-mix(in srgb, var(--mha-media-palette-surface) 10%, transparent);
+  --mha-media-page-artwork-card-tint: color-mix(in srgb, var(--mha-media-palette-surface) 8%, transparent);
+  --mha-media-page-artwork-selected-tint: color-mix(in srgb, var(--mha-media-palette-surface) 14%, transparent);
+  --mha-media-page-artwork-control-tint: color-mix(in srgb, var(--mha-media-palette-surface) 7%, transparent);
+}
+
+/* iOS keeps the transparent glass as the dominant material. The artwork adds
+ * only a restrained chromatic veil instead of becoming the panel surface. */
+:host([data-theme-style="ios"]) .mha-media-page[data-artwork-palette="true"] {
+  --mha-media-page-artwork-panel-tint: color-mix(in srgb, var(--mha-media-palette-surface) 5%, transparent);
+  --mha-media-page-artwork-card-tint: color-mix(in srgb, var(--mha-media-palette-surface) 3%, transparent);
+  --mha-media-page-artwork-selected-tint: color-mix(in srgb, var(--mha-media-palette-surface) 6%, transparent);
+  --mha-media-page-artwork-control-tint: color-mix(in srgb, var(--mha-media-palette-surface) 4%, transparent);
 }
 
 .mha-media-page-layout,
@@ -241,7 +263,12 @@
   place-items: center;
   border-radius: 999px;
   border: 1px solid var(--mha-control-border, var(--mha-media-page-panel-border));
-  background: var(--mha-control-surface, var(--mha-surface-secondary));
+  background:
+    linear-gradient(
+      var(--mha-media-page-artwork-control-tint),
+      var(--mha-media-page-artwork-control-tint)
+    ),
+    var(--mha-control-surface, var(--mha-surface-secondary));
   color: var(--mha-text-primary, var(--mha-text));
   cursor: pointer;
 }
@@ -320,7 +347,12 @@
   padding-block: var(--mha-media-page-widget-panel-padding);
   padding-inline: 0;
   border-radius: clamp(1.4rem, 2.8cqi, 2rem);
-  background: var(--mha-media-page-panel-surface);
+  background:
+    linear-gradient(
+      var(--mha-media-page-artwork-panel-tint),
+      var(--mha-media-page-artwork-panel-tint)
+    ),
+    var(--mha-media-page-panel-surface);
   border: 1px solid var(--mha-media-page-panel-border);
   overflow: hidden;
 }
@@ -334,7 +366,12 @@
   --mha-panel-border: var(--mha-shell-border);
   --mha-panel-shadow: var(--mha-shell-shadow);
   --mha-panel-filter: var(--mha-oneui-dock-filter);
-  background: var(--mha-media-page-available-players-surface);
+  background:
+    linear-gradient(
+      var(--mha-media-page-artwork-panel-tint),
+      var(--mha-media-page-artwork-panel-tint)
+    ),
+    var(--mha-media-page-available-players-surface);
   border-color: var(--mha-panel-border);
   box-shadow: var(--mha-panel-shadow);
   -webkit-backdrop-filter: var(--mha-panel-filter);
@@ -482,6 +519,12 @@
   --mha-widget-shell-shadow: none;
   --mha-media-padding: var(--mha-widget-content-inset);
   --mha-media-gap: clamp(.35rem, 1cqi, .58rem);
+  --mha-media-artwork-bg:
+    linear-gradient(
+      var(--mha-media-page-artwork-control-tint),
+      var(--mha-media-page-artwork-control-tint)
+    ),
+    var(--mha-control-surface, var(--mha-surface-secondary));
   --mha-media-artwork-radius: clamp(.65rem, 1.5cqi, .9rem);
   --mha-media-control-size: clamp(2.2rem, 4.2cqi, 2.75rem);
   --mha-media-control-icon-size: clamp(.88rem, 1.8cqi, 1.08rem);
@@ -493,7 +536,12 @@
   block-size: 7.5rem;
   min-block-size: 0;
   border-radius: clamp(.85rem, 1.8cqi, 1.15rem);
-  background: var(--mha-media-page-player-card-surface);
+  background:
+    linear-gradient(
+      var(--mha-media-page-artwork-card-tint),
+      var(--mha-media-page-artwork-card-tint)
+    ),
+    var(--mha-media-page-player-card-surface);
   border-color: var(--mha-media-page-player-card-border);
   transition:
     background-color 180ms ease,
@@ -505,7 +553,12 @@
 :host([data-theme-style="oneui"]) .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player[data-media-page-player="true"] {
   --mha-media-page-player-card-surface: var(--mha-oneui-dock-item-surface);
   --mha-media-page-player-card-border: var(--mha-oneui-dock-item-border);
-  background: var(--mha-media-page-player-card-surface);
+  background:
+    linear-gradient(
+      var(--mha-media-page-artwork-card-tint),
+      var(--mha-media-page-artwork-card-tint)
+    ),
+    var(--mha-media-page-player-card-surface);
   border-color: var(--mha-media-page-player-card-border);
   box-shadow: var(--mha-oneui-dock-item-shadow);
 }
@@ -516,13 +569,22 @@
       color-mix(in srgb, var(--mha-accent) 16%, transparent),
       color-mix(in srgb, var(--mha-accent) 16%, transparent)
     ),
+    linear-gradient(
+      var(--mha-media-page-artwork-selected-tint),
+      var(--mha-media-page-artwork-selected-tint)
+    ),
     var(--mha-media-page-player-card-surface);
   border-color: color-mix(in srgb, var(--mha-accent) 55%, var(--mha-media-page-player-card-border));
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--mha-accent) 18%, transparent);
 }
 
 :host([data-theme-style="oneui"]) .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player[data-media-page-player="true"][data-selected="true"] {
-  background: var(--mha-oneui-dock-active-surface);
+  background:
+    linear-gradient(
+      var(--mha-media-page-artwork-selected-tint),
+      var(--mha-media-page-artwork-selected-tint)
+    ),
+    var(--mha-oneui-dock-active-surface);
   border-color: transparent;
   box-shadow: none;
 }
@@ -809,7 +871,12 @@
   max-inline-size: 100%;
   overflow: hidden;
   color: var(--mha-text-secondary, var(--mha-muted));
-  background: var(--mha-control-surface, var(--mha-surface-secondary));
+  background:
+    linear-gradient(
+      var(--mha-media-page-artwork-control-tint),
+      var(--mha-media-page-artwork-control-tint)
+    ),
+    var(--mha-control-surface, var(--mha-surface-secondary));
   border-color: var(--mha-control-border, var(--mha-border-secondary, transparent));
 }
 
@@ -826,7 +893,12 @@
 
 .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget[data-media-page-player="true"] .mha-media-widget-control {
   color: var(--mha-text-primary, var(--mha-text));
-  background: var(--mha-media-artwork-control-surface);
+  background:
+    linear-gradient(
+      var(--mha-media-page-artwork-control-tint),
+      var(--mha-media-page-artwork-control-tint)
+    ),
+    var(--mha-media-artwork-control-surface);
   border-color: var(--mha-control-border, var(--mha-border-secondary, transparent));
   box-shadow: var(--mha-control-shadow, none);
 }
