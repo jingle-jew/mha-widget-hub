@@ -57,6 +57,41 @@
   accent-color: var(--mha-accent);
 }
 
+/* OneUI surface choices stay visually unboxed until selected. The selected
+ * option uses the theme accent directly instead of an ambiguous popup layer. */
+:host([data-theme-style="oneui"]) .mha-widget-config-choice {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+
+:host([data-theme-style="oneui"]) .mha-widget-config-choice:has(.mha-widget-config-choice-input:checked) {
+  border-color: transparent;
+  background: var(--mha-accent);
+  color: var(--mha-accent-contrast, #fff);
+  box-shadow: none;
+}
+
+:host([data-theme-style="oneui"]) .mha-widget-config-choice-input {
+  appearance: none;
+  box-sizing: border-box;
+  border: 1px solid rgba(0,0,0,.56);
+  border-radius: 50%;
+  background: #fff;
+}
+
+:host([data-theme-style="oneui"]) .mha-widget-config-choice-input:checked {
+  border-color: rgba(0,0,0,.56);
+  background:
+    radial-gradient(circle at center, #111 0 22%, transparent 24%),
+    #fff;
+}
+
+:host([data-theme-style="oneui"]) .mha-widget-config-choice-input:focus-visible {
+  outline: 2px solid var(--mha-text-primary);
+  outline-offset: 2px;
+}
+
 .mha-widget-config-group {
   display: grid;
   gap: .85rem;

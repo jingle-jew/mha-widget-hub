@@ -40,6 +40,11 @@ appartiennent à `AGENTS.md`.
 
 ## Préférences UX et produit
 
+- Les sélecteurs, menus, radios et cases à cocher visibles doivent privilégier
+  un rendu MHA contrôlé et cohérent entre appareils plutôt que l'apparence
+  native du système. Les primitives HTML natives peuvent rester sous-jacentes
+  pour la sémantique, le clavier et l'accessibilité, mais leur présentation
+  doit appartenir au design system MHA.
 - Les widgets média `2×2` et `4×2` ont trois contrats visuels natifs : iOS
   conserve l'artwork comme objet sur un champ coloré; OneUI et Material
   partagent une composition immersive en lecture ou en pause, Material la

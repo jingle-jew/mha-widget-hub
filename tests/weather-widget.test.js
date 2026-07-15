@@ -561,6 +561,30 @@ test("weather widget shell exposes the normalized surface mode to CSS", () => {
   assert.equal(defaultShell.dataset.weatherSurfaceMode, "default");
 });
 
+test("OneUI weather surface choices highlight only the selected option", () => {
+  const css = readFileSync(
+    new URL("../styles/widget-manager/widget-config-popup.css", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(
+    css,
+    /:host\(\[data-theme-style="oneui"\]\) \.mha-widget-config-choice\s*\{[\s\S]*?border-color:\s*transparent;[\s\S]*?background:\s*transparent;[\s\S]*?box-shadow:\s*none;/,
+  );
+  assert.match(
+    css,
+    /:host\(\[data-theme-style="oneui"\]\) \.mha-widget-config-choice:has\(\.mha-widget-config-choice-input:checked\)\s*\{[\s\S]*?background:\s*var\(--mha-accent\);[\s\S]*?color:\s*var\(--mha-accent-contrast, #fff\);[\s\S]*?box-shadow:\s*none;/,
+  );
+  assert.match(
+    css,
+    /:host\(\[data-theme-style="oneui"\]\) \.mha-widget-config-choice-input\s*\{[\s\S]*?appearance:\s*none;[\s\S]*?border:\s*1px solid rgba\(0,0,0,\.56\);[\s\S]*?background:\s*#fff;/,
+  );
+  assert.match(
+    css,
+    /:host\(\[data-theme-style="oneui"\]\) \.mha-widget-config-choice-input:checked\s*\{[\s\S]*?radial-gradient\(circle at center, #111 0 22%, transparent 24%\),[\s\S]*?#fff;/,
+  );
+});
+
 test("default OneUI weather surfaces consume the primary surface token", () => {
   const css = readFileSync(new URL("../styles/widgets/weather-widget.css", import.meta.url), "utf8");
 
