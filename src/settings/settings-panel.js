@@ -292,6 +292,55 @@ function createSelect({ label, value, options, onChange }) {
   return field;
 }
 
+function createPercentageSlider({
+  label,
+  value = 0,
+  min = 0,
+  max = 100,
+  onInput,
+} = {}) {
+  const normalizedValue = Math.max(min, Math.min(max, Number(value) || 0));
+  const field = document.createElement("label");
+  field.className = "mha-settings-range-field";
+
+  const header = document.createElement("span");
+  header.className = "mha-settings-range-header";
+
+  const text = document.createElement("span");
+  text.className = "mha-settings-label";
+  text.textContent = label;
+
+  const output = document.createElement("output");
+  output.className = "mha-settings-range-value";
+
+  const input = document.createElement("input");
+  input.className = "mha-settings-range-input";
+  input.type = "range";
+  input.min = String(min);
+  input.max = String(max);
+  input.step = "1";
+  input.dataset.settingsControl = label;
+  input.dataset.settingsValueControl = "true";
+  input.setAttribute("aria-label", label);
+
+  const syncValue = (nextValue) => {
+    const numericValue = Math.max(min, Math.min(max, Number(nextValue) || 0));
+    input.value = String(numericValue);
+    input.style.setProperty("--mha-settings-range-value", `${numericValue}%`);
+    output.value = String(numericValue);
+    output.textContent = `${numericValue}%`;
+    return numericValue;
+  };
+
+  input.__mhaSettingsRangeApi = { setValue: syncValue };
+  syncValue(normalizedValue);
+  input.addEventListener("input", () => onInput?.(syncValue(input.value)));
+
+  header.append(text, output);
+  field.append(header, input);
+  return field;
+}
+
 function createSwitch({ label, description = "", checked = false, onChange }) {
   const field = document.createElement("div");
   field.className = "mha-settings-switch";
@@ -781,7 +830,11 @@ function updateMatchedValueControls(existing, next) {
     if (control instanceof HTMLInputElement && source instanceof HTMLInputElement) {
       control.checked = source.checked;
       control.disabled = source.disabled;
-      control.value = source.value;
+      if (control.__mhaSettingsRangeApi) {
+        control.__mhaSettingsRangeApi.setValue(source.value);
+      } else {
+        control.value = source.value;
+      }
       return;
     }
 
@@ -862,6 +915,7 @@ export function createSettingsPanel({
   accentMode = "manual",
   accentPaletteExpanded = false,
   iconShape = "auto",
+  oneUiPrimarySurfaceOpacity = 88,
   effectiveIconShape = "",
   hideHaSidebar = false,
   showDockLabels = false,
@@ -897,6 +951,7 @@ export function createSettingsPanel({
   onAccentModeChange,
   onAccentPaletteExpandedChange,
   onIconShapeChange,
+  onOneUiPrimarySurfaceOpacityChange,
   onHideHaSidebarChange,
   onShowDockLabelsChange,
   onStatusBarModeChange,
@@ -1151,6 +1206,16 @@ export function createSettingsPanel({
         onChange: onIconShapeChange,
       }),
     );
+
+    if (themeStyle === "oneui") {
+      appearanceControls.push(createPercentageSlider({
+        label: t("settings.primarySurfaceOpacity", "Widget opacity"),
+        value: oneUiPrimarySurfaceOpacity,
+        min: 0,
+        max: 100,
+        onInput: onOneUiPrimarySurfaceOpacityChange,
+      }));
+    }
 
     sections.push(createSection(t("settings.appearance", "Appearance"), appearanceControls));
     sections.push(createSection(t("settings.customization", "Customization"), [

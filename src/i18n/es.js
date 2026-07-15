@@ -48,6 +48,7 @@ export const es = Object.freeze({
     accentCollapse: "Contraer la paleta de acento",
     accentExpand: "Mostrar toda la paleta de acento",
     iconShape: "Forma de iconos",
+    primarySurfaceOpacity: "Opacidad de los widgets",
     nowBar: "Now Bar",
     nowBarEnabled: "Activar Now Bar",
     screensaver: "Protector de pantalla",

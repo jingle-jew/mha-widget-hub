@@ -45,6 +45,7 @@ export function buildSettingsPanelState({
     accentMode: themeState.accentMode,
     accentPaletteExpanded,
     iconShape: themeState.iconShapeSetting,
+    oneUiPrimarySurfaceOpacity: themeState.oneUiPrimarySurfaceOpacity ?? 88,
     effectiveIconShape,
     hideHaSidebar,
     showDockLabels,

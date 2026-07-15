@@ -357,3 +357,35 @@ test("settings panel hides the Alexa theme option", () => withMockDocument(() =>
 
   assert.equal(hasText(panel, "Alexa"), false);
 }));
+
+test("settings panel exposes primary surface opacity only for OneUI", () => withMockDocument(() => {
+  const values = [];
+  const oneUiPanel = createSettingsPanel({
+    open: true,
+    scope: "all",
+    settingsPage: "main",
+    themeStyle: "oneui",
+    oneUiPrimarySurfaceOpacity: 42,
+    onOneUiPrimarySurfaceOpacityChange: value => values.push(value),
+  });
+  const iosPanel = createSettingsPanel({
+    open: true,
+    scope: "all",
+    settingsPage: "main",
+    themeStyle: "ios",
+  });
+
+  const slider = oneUiPanel.querySelector(".mha-settings-range-input");
+  assert.ok(slider);
+  assert.equal(slider.type, "range");
+  assert.equal(slider.min, "0");
+  assert.equal(slider.max, "100");
+  assert.equal(slider.value, "42");
+  assert.equal(hasText(oneUiPanel, "Widget opacity"), true);
+  assert.equal(iosPanel.querySelector(".mha-settings-range-input"), null);
+
+  slider.value = "0";
+  slider.listeners.input();
+  assert.deepEqual(values, [0]);
+  assert.equal(oneUiPanel.querySelector(".mha-settings-range-value").textContent, "0%");
+}));

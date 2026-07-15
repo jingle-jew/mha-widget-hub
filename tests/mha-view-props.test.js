@@ -28,6 +28,7 @@ test("settings panel state derives the current scope openness and preserves stat
     accentMode: "manual",
     iconShapeSetting: "auto",
     iconShape: "squircle",
+    oneUiPrimarySurfaceOpacity: 64,
   };
   const screensaverState = {
     enabled: true,
@@ -72,6 +73,7 @@ test("settings panel state derives the current scope openness and preserves stat
     accentMode: "manual",
     accentPaletteExpanded: true,
     iconShape: "auto",
+    oneUiPrimarySurfaceOpacity: 64,
     effectiveIconShape: "circle",
     hideHaSidebar: true,
     showDockLabels: true,

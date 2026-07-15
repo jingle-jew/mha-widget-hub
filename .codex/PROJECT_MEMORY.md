@@ -1,6 +1,6 @@
 # Mémoire persistante — MHA Widget Hub
 
-Dernière consolidation : 2026-07-14
+Dernière consolidation : 2026-07-15
 
 Ce fichier contient les connaissances durables qui seraient coûteuses à redécouvrir.
 Le code et les tests actuels restent la source de vérité. Les instructions de travail
@@ -40,6 +40,9 @@ appartiennent à `AGENTS.md`.
 
 ## Préférences UX et produit
 
+- Dans les réglages d’apparence OneUI, « Opacité des widgets » contrôle
+  `--mha-oneui-primary-surface-opacity` de 0 à 100 %. La valeur est persistée
+  localement sous `mha-oneui-primary-surface-opacity`; son défaut reste 88 %.
 - Sur la carte météo Vent 2×2, la boussole est une information contextuelle de
   fond : elle doit rester centrée, atténuée, derrière les textes et remplir la
   carte à une échelle proche des cadrans ClockWidget analogiques. La direction

@@ -23,6 +23,7 @@ export class AppearanceCoordinator {
     setAccent = () => ({}),
     setAccentMode = () => ({}),
     setIconShape = () => ({}),
+    setOneUiPrimarySurfaceOpacity = () => ({}),
     migrateLegacyWallpaper = () => {},
     readWallpapers = () => ({ light: null, dark: null }),
     applyWallpaperState = () => ({ light: null, dark: null }),
@@ -58,6 +59,7 @@ export class AppearanceCoordinator {
     this.setAccent = (...args) => setAccent(...args);
     this.setAccentMode = (...args) => setAccentMode(...args);
     this.setIconShape = (...args) => setIconShape(...args);
+    this.setOneUiPrimarySurfaceOpacity = (...args) => setOneUiPrimarySurfaceOpacity(...args);
     this.migrateLegacyWallpaper = (...args) => migrateLegacyWallpaper(...args);
     this.readWallpapers = (...args) => readWallpapers(...args);
     this.applyWallpaperState = (...args) => applyWallpaperState(...args);
@@ -278,6 +280,10 @@ export class AppearanceCoordinator {
     this.syncSettingsDom();
     this.scheduleAppearanceDomRefresh();
     return true;
+  }
+
+  applyOneUiPrimarySurfaceOpacityFromSettings(value = 88) {
+    return this.setOneUiPrimarySurfaceOpacity(value);
   }
 
   destroy() {
