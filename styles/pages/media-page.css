@@ -104,6 +104,12 @@
   --mha-media-page-artwork-card-tint: transparent;
   --mha-media-page-artwork-selected-tint: transparent;
   --mha-media-page-artwork-control-tint: transparent;
+  --mha-media-page-dynamic-panel-surface: transparent;
+  --mha-media-page-dynamic-card-surface: transparent;
+  --mha-media-page-dynamic-selected-surface: transparent;
+  --mha-media-page-dynamic-control-surface: transparent;
+  --mha-media-page-dynamic-card-border: transparent;
+  --mha-media-page-dynamic-selected-border: transparent;
 }
 
 .mha-media-page[data-artwork-tone="dark"] {
@@ -122,15 +128,6 @@
   --mha-media-artwork-control-active-color: #fff;
 }
 
-/* The page owns its surface hierarchy and consumes the sampled artwork color
- * only as a subtle tint input. Theme surfaces remain the material underneath. */
-.mha-media-page[data-artwork-palette="true"] {
-  --mha-media-page-artwork-panel-tint: color-mix(in srgb, var(--mha-media-palette-surface) 10%, transparent);
-  --mha-media-page-artwork-card-tint: color-mix(in srgb, var(--mha-media-palette-surface) 8%, transparent);
-  --mha-media-page-artwork-selected-tint: color-mix(in srgb, var(--mha-media-palette-surface) 14%, transparent);
-  --mha-media-page-artwork-control-tint: color-mix(in srgb, var(--mha-media-palette-surface) 7%, transparent);
-}
-
 /* iOS keeps the transparent glass as the dominant material. The artwork adds
  * only a restrained chromatic veil instead of becoming the panel surface. */
 :host([data-theme-style="ios"]) .mha-media-page[data-artwork-palette="true"] {
@@ -138,6 +135,41 @@
   --mha-media-page-artwork-card-tint: color-mix(in srgb, var(--mha-media-palette-surface) 3%, transparent);
   --mha-media-page-artwork-selected-tint: color-mix(in srgb, var(--mha-media-palette-surface) 6%, transparent);
   --mha-media-page-artwork-control-tint: color-mix(in srgb, var(--mha-media-palette-surface) 4%, transparent);
+}
+
+/* OneUI and Material replace their normal panel/active-card surfaces with
+ * page-owned palette surfaces. Theme colors remain available to inactive
+ * players because the overlay tint variables above stay transparent here. */
+:host([data-theme-style="oneui"]) .mha-media-page[data-artwork-palette="true"] {
+  --mha-media-page-dynamic-panel-surface: color-mix(in srgb, var(--mha-media-palette-surface) 22%, rgb(238 244 252 / .82));
+  --mha-media-page-dynamic-card-surface: color-mix(in srgb, var(--mha-media-palette-surface) 28%, rgb(255 255 255 / .58));
+  --mha-media-page-dynamic-selected-surface: color-mix(in srgb, var(--mha-media-palette-surface) 40%, rgb(255 255 255 / .54));
+  --mha-media-page-dynamic-control-surface: color-mix(in srgb, var(--mha-media-palette-surface) 24%, rgb(255 255 255 / .68));
+  --mha-media-page-dynamic-card-border: color-mix(in srgb, var(--mha-media-palette-surface) 42%, transparent);
+  --mha-media-page-dynamic-selected-border: color-mix(in srgb, var(--mha-media-palette-surface) 64%, transparent);
+}
+
+:host([data-theme-style="oneui"][data-theme="dark"]) .mha-media-page[data-artwork-palette="true"] {
+  --mha-media-page-dynamic-panel-surface: color-mix(in srgb, var(--mha-media-palette-surface) 26%, rgb(18 26 38 / .86));
+  --mha-media-page-dynamic-card-surface: color-mix(in srgb, var(--mha-media-palette-surface) 32%, rgb(88 98 112 / .34));
+  --mha-media-page-dynamic-selected-surface: color-mix(in srgb, var(--mha-media-palette-surface) 44%, rgb(96 106 120 / .38));
+  --mha-media-page-dynamic-control-surface: color-mix(in srgb, var(--mha-media-palette-surface) 28%, rgb(255 255 255 / .14));
+}
+
+:host([data-theme-style="material"]) .mha-media-page[data-artwork-palette="true"] {
+  --mha-media-page-dynamic-panel-surface: color-mix(in srgb, var(--mha-media-palette-surface) 18%, rgb(246 243 250));
+  --mha-media-page-dynamic-card-surface: color-mix(in srgb, var(--mha-media-palette-surface) 26%, rgb(250 247 252));
+  --mha-media-page-dynamic-selected-surface: color-mix(in srgb, var(--mha-media-palette-surface) 38%, rgb(248 244 250));
+  --mha-media-page-dynamic-control-surface: color-mix(in srgb, var(--mha-media-palette-surface) 22%, rgb(252 249 253));
+  --mha-media-page-dynamic-card-border: color-mix(in srgb, var(--mha-media-palette-surface) 42%, transparent);
+  --mha-media-page-dynamic-selected-border: color-mix(in srgb, var(--mha-media-palette-surface) 64%, transparent);
+}
+
+:host([data-theme-style="material"][data-theme="dark"]) .mha-media-page[data-artwork-palette="true"] {
+  --mha-media-page-dynamic-panel-surface: color-mix(in srgb, var(--mha-media-palette-surface) 22%, rgb(30 29 36));
+  --mha-media-page-dynamic-card-surface: color-mix(in srgb, var(--mha-media-palette-surface) 30%, rgb(43 41 50));
+  --mha-media-page-dynamic-selected-surface: color-mix(in srgb, var(--mha-media-palette-surface) 42%, rgb(47 44 54));
+  --mha-media-page-dynamic-control-surface: color-mix(in srgb, var(--mha-media-palette-surface) 26%, rgb(55 52 62));
 }
 
 .mha-media-page-layout,
@@ -383,6 +415,14 @@
   --mha-panel-shadow: none;
 }
 
+:host(:is([data-theme-style="oneui"], [data-theme-style="material"])) .mha-media-page[data-artwork-palette="true"] .mha-media-page-widget-panel {
+  background: var(--mha-media-page-dynamic-panel-surface);
+}
+
+:host(:is([data-theme-style="oneui"], [data-theme-style="material"])) .mha-media-page[data-artwork-palette="true"] .mha-media-page-widget-panel .mha-media-page-icon-button {
+  background: var(--mha-media-page-dynamic-control-surface);
+}
+
 .mha-media-page-widget-panel-surface {
   position: static;
   inset: auto;
@@ -586,6 +626,20 @@
     ),
     var(--mha-oneui-dock-active-surface);
   border-color: transparent;
+  box-shadow: none;
+}
+
+/* Only playing/paused cards replace their theme surface. Idle, off,
+ * unavailable and unknown players deliberately keep the surfaces above. */
+:host(:is([data-theme-style="oneui"], [data-theme-style="material"])) .mha-media-page[data-artwork-palette="true"] .mha-media-page-player-list > .mha-media-page-auto-player[data-media-page-player="true"]:has(> .mha-media-page-player-widget:is([data-media-state="playing"], [data-media-state="paused"])) {
+  background: var(--mha-media-page-dynamic-card-surface);
+  border-color: var(--mha-media-page-dynamic-card-border);
+  box-shadow: none;
+}
+
+:host(:is([data-theme-style="oneui"], [data-theme-style="material"])) .mha-media-page[data-artwork-palette="true"] .mha-media-page-player-list > .mha-media-page-auto-player[data-media-page-player="true"][data-selected="true"]:has(> .mha-media-page-player-widget:is([data-media-state="playing"], [data-media-state="paused"])) {
+  background: var(--mha-media-page-dynamic-selected-surface);
+  border-color: var(--mha-media-page-dynamic-selected-border);
   box-shadow: none;
 }
 
@@ -908,6 +962,11 @@
 .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget[data-media-page-player="true"] .mha-media-widget-control[data-primary] {
   color: var(--mha-media-artwork-control-active-color);
   background: var(--mha-media-artwork-control-active-surface);
+}
+
+:host(:is([data-theme-style="oneui"], [data-theme-style="material"])) .mha-media-page[data-artwork-palette="true"] .mha-media-page-auto-player:has(> .mha-media-page-player-widget:is([data-media-state="playing"], [data-media-state="paused"])) .mha-media-widget-source-badge,
+:host(:is([data-theme-style="oneui"], [data-theme-style="material"])) .mha-media-page[data-artwork-palette="true"] .mha-media-page-auto-player:has(> .mha-media-page-player-widget:is([data-media-state="playing"], [data-media-state="paused"])) .mha-media-widget-control {
+  background: var(--mha-media-page-dynamic-control-surface);
 }
 
 .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget[data-media-page-player="true"] .mha-media-widget-progress {

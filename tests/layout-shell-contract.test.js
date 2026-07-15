@@ -631,7 +631,11 @@ test("media page mobile layout scrolls as snapped sheets in portrait and landsca
   assert.doesNotMatch(source, /\.mha-media-page-player-widget\[data-artwork-tone=/);
   assert.match(
     source,
-    /\.mha-media-page\[data-artwork-palette="true"\]\s*\{[\s\S]*--mha-media-page-artwork-panel-tint:\s*color-mix\(in srgb, var\(--mha-media-palette-surface\) 10%, transparent\);[\s\S]*--mha-media-page-artwork-card-tint:\s*color-mix\(in srgb, var\(--mha-media-palette-surface\) 8%, transparent\);[\s\S]*--mha-media-page-artwork-selected-tint:\s*color-mix\(in srgb, var\(--mha-media-palette-surface\) 14%, transparent\);/,
+    /:host\(\[data-theme-style="oneui"\]\) \.mha-media-page\[data-artwork-palette="true"\]\s*\{[\s\S]*--mha-media-page-dynamic-panel-surface:\s*color-mix\(in srgb, var\(--mha-media-palette-surface\) 22%,[\s\S]*--mha-media-page-dynamic-card-surface:\s*color-mix\(in srgb, var\(--mha-media-palette-surface\) 28%,[\s\S]*--mha-media-page-dynamic-selected-surface:\s*color-mix\(in srgb, var\(--mha-media-palette-surface\) 40%,/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-theme-style="material"\]\) \.mha-media-page\[data-artwork-palette="true"\]\s*\{[\s\S]*--mha-media-page-dynamic-panel-surface:\s*color-mix\(in srgb, var\(--mha-media-palette-surface\) 18%,[\s\S]*--mha-media-page-dynamic-card-surface:\s*color-mix\(in srgb, var\(--mha-media-palette-surface\) 26%,[\s\S]*--mha-media-page-dynamic-selected-surface:\s*color-mix\(in srgb, var\(--mha-media-palette-surface\) 38%,/,
   );
   assert.match(
     source,
@@ -640,6 +644,10 @@ test("media page mobile layout scrolls as snapped sheets in portrait and landsca
   assert.match(
     source,
     /\.mha-media-page-widget-panel\s*\{[\s\S]*background:\s*linear-gradient\([\s\S]*--mha-media-page-artwork-panel-tint[\s\S]*var\(--mha-media-page-panel-surface\);/,
+  );
+  assert.match(
+    source,
+    /:host\(:is\(\[data-theme-style="oneui"\], \[data-theme-style="material"\]\)\) \.mha-media-page\[data-artwork-palette="true"\] \.mha-media-page-widget-panel\s*\{[\s\S]*background:\s*var\(--mha-media-page-dynamic-panel-surface\);/,
   );
   assert.match(
     source,
@@ -652,6 +660,10 @@ test("media page mobile layout scrolls as snapped sheets in portrait and landsca
   assert.match(
     source,
     /:host\(\[data-theme-style="oneui"\]\) \.mha-media-page \.mha-media-page-player-list > \.mha-media-page-auto-player\[data-media-page-player="true"\]\[data-selected="true"\]\s*\{[\s\S]*background:\s*linear-gradient\([\s\S]*--mha-media-page-artwork-selected-tint[\s\S]*var\(--mha-oneui-dock-active-surface\);[\s\S]*border-color:\s*transparent;[\s\S]*box-shadow:\s*none;/,
+  );
+  assert.match(
+    source,
+    /\.mha-media-page\[data-artwork-palette="true"\] \.mha-media-page-player-list > \.mha-media-page-auto-player\[data-media-page-player="true"\]:has\(> \.mha-media-page-player-widget:is\(\[data-media-state="playing"\], \[data-media-state="paused"\]\)\)\s*\{[\s\S]*background:\s*var\(--mha-media-page-dynamic-card-surface\);[\s\S]*border-color:\s*var\(--mha-media-page-dynamic-card-border\);/,
   );
   assert.match(
     source,

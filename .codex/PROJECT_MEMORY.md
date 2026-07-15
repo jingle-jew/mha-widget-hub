@@ -178,14 +178,15 @@ appartiennent à `AGENTS.md`.
   panel et `on-primary` restent indépendants tant qu’ils ne sont pas
   explicitement remappés.
 - La section « Lecteurs disponibles » consomme la couleur dominante de
-  l'artwork principal par des voiles locaux subtils, sans remplacer ses matières
-  de thème. La hiérarchie d'intensité reste panneau < cartes < carte sélectionnée;
-  sous iOS, ces voiles sont environ deux fois plus faibles pour préserver le
-  verre transparent et son blur.
-- En OneUI, la section « Lecteurs disponibles » de la page Média possède une
-  matière locale visuellement alignée sur le dock, et son lecteur sélectionné
-  reprend localement l'apparence de la pastille active sans dépendre du composant
-  dock.
+  l'artwork principal avec une hiérarchie panneau < carte active < carte active
+  sélectionnée. En OneUI et Material, ces surfaces locales dérivées de la
+  palette remplacent les surfaces thématiques du panneau et des lecteurs
+  `playing/paused`; elles ne sont pas des voiles composés par-dessus celles-ci.
+  Les surfaces thématiques préexistantes restent réservées aux lecteurs
+  inactifs, éteints, indisponibles ou inconnus. Sous iOS seulement, la teinte
+  reste un voile très faible afin de préserver le verre transparent et son blur.
+- En OneUI, les surfaces locales de repli des lecteurs inactifs restent
+  visuellement alignées sur le dock sans dépendre du composant dock.
 - En OneUI et Material, les cartes « Lecteurs disponibles » conservent une
   vignette carrée locale : artwork réel pendant la lecture, vignette vide avec
   glyphe pour les lecteurs inactifs ou éteints, comme en iOS. Elles ne doivent
