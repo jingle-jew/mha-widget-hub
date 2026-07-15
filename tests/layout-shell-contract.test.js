@@ -67,6 +67,15 @@ test("theme stylesheets do not override structural geometry variables", () => {
   assert.deepEqual(offenders, []);
 });
 
+test("OneUI dock surfaces and active pill derive their visible tint from the theme accent", () => {
+  const source = fs.readFileSync(path.join(THEME_ROOT, "oneui.css"), "utf8");
+  const tintConsumers = source.match(/var\(--mha-oneui-dock-tint\)/g) || [];
+
+  assert.match(source, /--mha-oneui-dock-tint:\s*var\(--mha-accent\);/);
+  assert.match(source, /--mha-oneui-dock-filter:\s*blur\(18px\) saturate\(132%\);/);
+  assert.equal(tintConsumers.length, 12);
+});
+
 test("side docks do not keep a mirrored bottom inset once the shell top reserve is applied", () => {
   const source = fs.readFileSync(
     path.join(REPO_ROOT, "styles", "layout", "widget-grid.css"),

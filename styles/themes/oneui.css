@@ -19,11 +19,13 @@
   --mha-widget-shell-border: transparent;
   --mha-widget-shell-border-edit: transparent;
   --mha-widget-inner-highlight: transparent;
+  --mha-oneui-dock-tint: var(--mha-accent);
+  --mha-oneui-dock-filter: blur(18px) saturate(132%);
   --mha-shell-dock-surface:
     linear-gradient(
       145deg,
-      color-mix(in srgb, rgba(255,255,255,.94) 90%, var(--mha-accent) 5%),
-      color-mix(in srgb, rgba(245,248,255,.86) 92%, var(--mha-accent) 3%)
+      color-mix(in srgb, var(--mha-oneui-dock-tint) 18%, rgba(255,255,255,.82)),
+      color-mix(in srgb, var(--mha-oneui-dock-tint) 12%, rgba(245,248,255,.74))
     );
   --mha-shell-border: color-mix(in srgb, rgba(255,255,255,.72) 84%, var(--mha-accent) 8%);
   --mha-shell-shadow: 0 8px 22px rgba(76,92,120,.075);
@@ -49,8 +51,8 @@
   --mha-oneui-mobile-dock-surface:
     linear-gradient(
       145deg,
-      color-mix(in srgb, rgba(250,251,255,.98) 94%, var(--mha-accent) 3%),
-      color-mix(in srgb, rgba(240,244,250,.94) 96%, var(--mha-accent) 2%)
+      color-mix(in srgb, var(--mha-oneui-dock-tint) 18%, rgba(250,251,255,.86)),
+      color-mix(in srgb, var(--mha-oneui-dock-tint) 12%, rgba(240,244,250,.78))
     );
   --mha-oneui-mobile-dock-border: color-mix(in srgb, rgba(255,255,255,.84) 86%, var(--mha-accent) 6%);
   --mha-control-surface: rgba(255,255,255,.58);
@@ -74,8 +76,8 @@
   --mha-oneui-dock-active-surface:
     linear-gradient(
       145deg,
-      color-mix(in srgb, rgba(216,222,230,.96) 94%, var(--mha-accent) 3%),
-      color-mix(in srgb, rgba(198,206,217,.92) 94%, var(--mha-accent) 3%)
+      color-mix(in srgb, var(--mha-oneui-dock-tint) 34%, rgba(216,222,230,.92)),
+      color-mix(in srgb, var(--mha-oneui-dock-tint) 26%, rgba(198,206,217,.88))
     );
   --mha-oneui-dock-active-border: color-mix(in srgb, rgba(255,255,255,.72) 88%, var(--mha-accent) 8%);
   --mha-oneui-dock-active-shadow:
@@ -110,8 +112,8 @@
   --mha-oneui-mobile-dock-surface:
     linear-gradient(
       145deg,
-      color-mix(in srgb, rgba(34,38,48,.92) 92%, var(--mha-accent) 5%),
-      color-mix(in srgb, rgba(24,28,36,.88) 94%, var(--mha-accent) 3%)
+      color-mix(in srgb, var(--mha-oneui-dock-tint) 20%, rgba(34,38,48,.78)),
+      color-mix(in srgb, var(--mha-oneui-dock-tint) 14%, rgba(24,28,36,.7))
     );
   --mha-oneui-mobile-dock-border: color-mix(in srgb, rgba(255,255,255,.24) 78%, var(--mha-accent) 6%);
   --mha-control-surface: rgba(255,240,226,.16);
@@ -135,16 +137,16 @@
   --mha-shell-dock-surface:
     linear-gradient(
       145deg,
-      color-mix(in srgb, rgba(255,255,255,.28) 90%, var(--mha-accent) 6%),
-      color-mix(in srgb, rgba(255,255,255,.18) 92%, var(--mha-accent) 3%)
+      color-mix(in srgb, var(--mha-oneui-dock-tint) 20%, rgba(255,255,255,.28)),
+      color-mix(in srgb, var(--mha-oneui-dock-tint) 14%, rgba(255,255,255,.18))
     );
   --mha-shell-border: color-mix(in srgb, rgba(255,255,255,.18) 78%, var(--mha-accent) 6%);
   --mha-shell-shadow: 0 10px 24px rgba(0,0,0,.18);
   --mha-oneui-dock-active-surface:
     linear-gradient(
       145deg,
-      color-mix(in srgb, rgba(148,156,168,.34) 88%, var(--mha-accent) 4%),
-      color-mix(in srgb, rgba(108,118,132,.28) 90%, var(--mha-accent) 3%)
+      color-mix(in srgb, var(--mha-oneui-dock-tint) 36%, rgba(148,156,168,.34)),
+      color-mix(in srgb, var(--mha-oneui-dock-tint) 28%, rgba(108,118,132,.28))
     );
   --mha-oneui-dock-active-border: color-mix(in srgb, rgba(255,255,255,.24) 82%, var(--mha-accent) 8%);
   --mha-oneui-dock-active-shadow:

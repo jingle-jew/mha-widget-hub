@@ -1,6 +1,6 @@
 ---
-name: you-command
-description: Consolider les apprentissages durables d’une tâche dans la mémoire persistante du projet. Utiliser explicitement avec $you-command à la fin d’une session, après une décision architecturale importante, après la résolution d’un bug subtil, ou lorsque l’utilisateur demande de rafraîchir la mémoire du projet.
+name: refresh-project-memory
+description: Consolider les apprentissages durables d’une tâche dans la mémoire persistante du projet. Utiliser explicitement avec $refresh-project-memory à la fin d’une session, après une décision architecturale importante, après la résolution d’un bug subtil, ou lorsque l’utilisateur demande de rafraîchir la mémoire du projet.
 ---
 
 # Consolider la mémoire du projet

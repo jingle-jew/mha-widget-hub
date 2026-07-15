@@ -9,7 +9,7 @@ appartiennent à `AGENTS.md`.
 ## Architecture et frontières
 
 - La mémoire persistante est chargée au début de chaque tâche par `AGENTS.md`.
-- `$you-command` consolide les apprentissages ; il ne produit pas un journal exhaustif.
+- `$refresh-project-memory` consolide les apprentissages ; il ne produit pas un journal exhaustif.
 - Les observations encore incertaines restent dans `.codex/LEARNING_INBOX.md` jusqu’à
   confirmation ou rejet.
 
@@ -46,6 +46,10 @@ _Aucun piège propre au code du projet n’a encore été consolidé._
   utilisent jusqu’à deux lignes plutôt qu’une troncature sur une seule ligne.
   Leur icône reste alignée avec la première ligne. En français, la hauteur de
   neige est libellée « Accumulations ».
+- Les surfaces du dock OneUI, standard comme compactes, sont légèrement
+  translucides, floutées et teintées par la couleur d’accent active du thème.
+  La pastille de l’élément actif reprend cette teinte avec une intensité plus
+  forte pour préserver la hiérarchie de sélection.
 
 ## Approches remplacées ou rejetées
 
