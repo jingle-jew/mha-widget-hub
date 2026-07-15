@@ -549,10 +549,7 @@
 .mha-weather-metric-widget[data-weather-metric-size="4x1"] .mha-weather-summary-location,
 .mha-weather-metric-widget[data-weather-metric-size="2x1"] .mha-weather-summary-metadata,
 .mha-weather-metric-widget[data-weather-metric-size="2x2"] .mha-weather-summary-metadata,
-.mha-weather-metric-widget[data-weather-metric-size="4x1"] .mha-weather-summary-metadata,
-.mha-weather-metric-widget[data-weather-metric-size="2x1"] .mha-weather-summary-eyebrow,
-.mha-weather-metric-widget[data-weather-metric-size="2x2"] .mha-weather-summary-eyebrow,
-.mha-weather-metric-widget[data-weather-metric-size="4x1"] .mha-weather-summary-eyebrow {
+.mha-weather-metric-widget[data-weather-metric-size="4x1"] .mha-weather-summary-metadata {
   font-size: var(--mha-weather-metric-caption-size);
   font-weight: var(--mha-weather-metric-caption-weight);
 }
@@ -784,7 +781,7 @@
   padding: var(--mha-widget-inner-padding);
   border-radius: inherit;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
   align-items: stretch;
   gap: clamp(.55rem, 2.6cqb, .9rem);
   isolation: isolate;
@@ -792,8 +789,13 @@
 
 /* Match the generic weather-metric selector specificity so its content inset
  * cannot pull the summary gradient away from the shell edges. */
-.mha-widget[data-widget-kind="weather-metric"] > .mha-weather-metric-widget[data-metric-layout="summary"] {
+.mha-widget[data-widget-kind="weather-metric"] > .mha-weather-metric-widget[data-weather-metric-size="4x2"][data-metric-layout="summary"] {
   inset: 0;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.mha-widget[data-widget-kind="weather-metric"] > .mha-weather-metric-widget[data-weather-metric-size="4x2"][data-metric-layout="summary"]:has(> .mha-weather-summary-advisory) {
+  grid-template-rows: auto minmax(0, 1fr) auto;
 }
 
 .mha-weather-metric-widget[data-metric-layout="summary"]::before {
@@ -909,7 +911,6 @@
 .mha-weather-summary-location,
 .mha-weather-summary-condition,
 .mha-weather-summary-metadata,
-.mha-weather-summary-eyebrow,
 .mha-weather-summary-text,
 .mha-weather-summary-narrative-secondary {
   min-inline-size: 0;
@@ -929,7 +930,6 @@
 
 .mha-weather-summary-location,
 .mha-weather-summary-metadata,
-.mha-weather-summary-eyebrow,
 .mha-weather-summary-narrative-secondary {
   color: var(--mha-text-secondary);
   font-size: var(--mha-weather-metric-caption-size);
@@ -939,8 +939,7 @@
 
 .mha-weather-summary-location,
 .mha-weather-summary-condition,
-.mha-weather-summary-metadata,
-.mha-weather-summary-eyebrow {
+.mha-weather-summary-metadata {
   white-space: nowrap;
 }
 
@@ -952,20 +951,11 @@
   letter-spacing: var(--mha-weather-metric-label-tracking);
 }
 
-.mha-weather-summary-divider {
-  display: block;
-  inline-size: 100%;
-  border-block-start: 1px solid color-mix(in srgb, var(--mha-text-primary) 14%, transparent);
-}
-
 .mha-weather-summary-body {
   align-content: start;
   gap: clamp(.2rem, 1.05cqb, .38rem);
-}
-
-.mha-weather-summary-eyebrow {
-  letter-spacing: .055em;
-  text-transform: uppercase;
+  border-block-start: 1px solid color-mix(in srgb, var(--mha-text-primary) 14%, transparent);
+  padding-block-start: clamp(.55rem, 2.6cqb, .9rem);
 }
 
 .mha-weather-summary-text {
@@ -979,6 +969,21 @@
   letter-spacing: -.022em;
   text-wrap: balance;
   white-space: normal;
+}
+
+.mha-weather-summary-advisory {
+  min-inline-size: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: .3rem;
+}
+
+.mha-weather-summary-advisory-icon {
+  --mha-icon-symbol-size: .78rem;
+  --mha-icon-symbol-min-size: .78rem;
+  color: var(--mha-text-secondary);
+  margin-block-start: .08em;
 }
 
 .mha-weather-summary-narrative-secondary {
@@ -1004,8 +1009,7 @@
 }
 
 .mha-weather-metric-widget[data-weather-metric-size="4x1"][data-metric-layout="summary"] .mha-weather-summary-secondary,
-.mha-weather-metric-widget[data-weather-metric-size="4x1"][data-metric-layout="summary"] .mha-weather-summary-location,
-.mha-weather-metric-widget[data-weather-metric-size="4x1"][data-metric-layout="summary"] .mha-weather-summary-divider {
+.mha-weather-metric-widget[data-weather-metric-size="4x1"][data-metric-layout="summary"] .mha-weather-summary-location {
   display: none;
 }
 
@@ -1013,7 +1017,9 @@
   grid-column: 2;
   grid-row: 1;
   align-self: center;
+  border-block-start: 0;
   border-inline-start: 1px solid color-mix(in srgb, var(--mha-text-primary) 14%, transparent);
+  padding-block-start: 0;
   padding-inline-start: clamp(.55rem, 2.4cqi, .9rem);
 }
 
@@ -1023,7 +1029,7 @@
   line-height: var(--mha-type-widget-label-line-height);
 }
 
-.mha-weather-metric-widget[data-weather-metric-size="4x1"][data-metric-layout="summary"] .mha-weather-summary-narrative-secondary {
+.mha-weather-metric-widget[data-weather-metric-size="4x1"][data-metric-layout="summary"] .mha-weather-summary-advisory {
   display: none;
 }
 

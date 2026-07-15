@@ -503,6 +503,7 @@ test("weather page widget manager category exposes semantic integration capabili
   assert.equal(byKey.has("forecast-daily"), true);
   assert.equal(category.widgets.some(widget => widget.kind === "weather-narrative"), false);
   assert.equal(byKey.has("summary"), true);
+  assert.equal(byKey.get("summary")?.labelKey, "widgets.weatherManager.narrative");
   assert.equal(byKey.get("humidity")?.labelKey, "weatherPage.metrics.humidity");
   assert.equal(byKey.get("uv")?.labelKey, "weatherPage.metrics.uv");
   assert.equal(byKey.get("precipitation-probability")?.labelKey, "weatherPage.metrics.precipitationProbability");

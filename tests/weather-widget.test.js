@@ -96,11 +96,12 @@ test("weather summary metric combines current weather with the contextual brief"
   });
 
   assert.equal(content.dataset.metricLayout, "summary");
+  assert.equal(findByClass(content, "mha-weather-summary-eyebrow"), null);
   assert.equal(findByClass(content, "mha-weather-summary-temperature")?.textContent, "26°C");
   assert.equal(findByClass(content, "mha-weather-summary-location")?.textContent, "Val-d'Or");
-  assert.equal(
+  assert.match(
     findByClass(content, "mha-weather-summary-text")?.textContent,
-    "A generally calm day with mild conditions.",
+    /^Sun and clouds will alternate /,
   );
   assert.equal(content.dataset.summaryNarrativeKind, "summary");
 });
@@ -228,10 +229,7 @@ test("weather summary metric uses its weather attribute entity for current condi
   assert.equal(content.dataset.metricLayout, "summary");
   assert.equal(findByClass(content, "mha-weather-summary-temperature")?.textContent, "28.8°C");
   assert.equal(findByClass(content, "mha-weather-summary-location")?.textContent, "Maison");
-  assert.equal(
-    findByClass(content, "mha-weather-summary-text")?.textContent,
-    "The sky will stay clear today.",
-  );
+  assert.match(findByClass(content, "mha-weather-summary-text")?.textContent, /^Sunshine will dominate /);
 });
 
 test("weather summary metric hydrates forecasts for priority narratives without a chart", async () => {
@@ -281,7 +279,14 @@ test("weather summary metric hydrates forecasts for priority narratives without 
   await new Promise(resolve => setImmediate(resolve));
 
   assert.equal(content.dataset.summaryNarrativeKind, "rain");
-  assert.equal(findByClass(content, "mha-weather-summary-text")?.textContent.startsWith("Rain is expected"), true);
+  assert.match(findByClass(content, "mha-weather-summary-text")?.textContent, /^Rain will accompany /);
+  assert.match(findByClass(content, "mha-weather-summary-narrative-secondary")?.textContent, /^Rain is expected /);
+  const advisory = findByClass(content, "mha-weather-summary-advisory");
+  const body = findByClass(content, "mha-weather-summary-body");
+  assert.notEqual(advisory, null);
+  assert.equal(body.childNodes.includes(advisory), false);
+  assert.equal(advisory.childNodes[0]?.dataset.iconSymbol, "warning");
+  assert.equal(advisory.childNodes[0]?.["aria-hidden"], "true");
   assert.equal(findByClass(content, "mha-weather-narrative-chart"), null);
   content.__mhaDestroy();
 });
@@ -382,6 +387,19 @@ test("weather metric progress accents keep a fallback when the theme accent toke
   assert.match(
     css,
     /\.mha-weather-metric-progress\[data-progress-kind="precipitation"\]\s*\{[\s\S]*var\(--mha-accent-primary,\s*#[0-9a-fA-F]{6}\)/,
+  );
+});
+
+test("weather summary reserves the flexible center row for its main narrative", () => {
+  const css = readFileSync(new URL("../styles/widgets/weather-metric-widget.css", import.meta.url), "utf8");
+
+  assert.match(
+    css,
+    /> \.mha-weather-metric-widget\[data-weather-metric-size="4x2"\]\[data-metric-layout="summary"\]\s*\{[^}]*grid-template-rows:\s*auto minmax\(0, 1fr\);/,
+  );
+  assert.match(
+    css,
+    /\.mha-weather-summary-body\s*\{[^}]*align-content:\s*start;[^}]*border-block-start:/,
   );
 });
 

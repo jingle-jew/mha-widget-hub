@@ -38,7 +38,7 @@ const WEATHER_METRIC_LABEL_KEYS = Object.freeze({
   "air-quality-no2": "weatherPage.metrics.nitrogenDioxide",
   "air-quality-so2": "weatherPage.metrics.sulfurDioxide",
   "air-quality-voc": "weatherPage.metrics.voc",
-  summary: "weatherPage.metrics.summary",
+  summary: "widgets.weatherManager.narrative",
   alerts: "weatherPage.metrics.alerts",
   sun: "weatherPage.metrics.sun",
 });

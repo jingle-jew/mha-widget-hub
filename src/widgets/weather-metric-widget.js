@@ -462,24 +462,22 @@ function renderSummaryMetric(root, weather = {}, hass) {
   root.dataset.summaryNarrativeMood = narrative.mood || "neutral";
   applySummaryAtmosphere(root, weather, hass);
 
-  const divider = document.createElement("span");
-  divider.className = "mha-weather-summary-divider";
-  divider.setAttribute("aria-hidden", "true");
-
   const body = document.createElement("section");
   body.className = "mha-weather-summary-body";
-  body.append(
-    createText(
-      "mha-weather-summary-eyebrow",
-      t("widgets.weatherManager.narrative", "Weather brief"),
-    ),
-    createText("mha-weather-summary-text", narrative.headline || "--"),
-  );
+  body.append(createText("mha-weather-summary-text", narrative.headline || "--"));
+
+  let advisory = null;
   if (narrative.secondary) {
-    body.append(createText("mha-weather-summary-narrative-secondary", narrative.secondary));
+    advisory = document.createElement("div");
+    advisory.className = "mha-weather-summary-advisory";
+    advisory.append(
+      createIconSymbol({ name: "warning", className: "mha-weather-summary-advisory-icon" }),
+      createText("mha-weather-summary-narrative-secondary", narrative.secondary),
+    );
   }
 
-  root.append(createSummaryWeatherHeader(weather), divider, body);
+  root.append(createSummaryWeatherHeader(weather), body);
+  if (advisory) root.append(advisory);
 }
 
 function renderSunMetric(root, model, header) {
