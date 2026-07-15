@@ -63,6 +63,10 @@ appartiennent à `AGENTS.md`.
   ouvertes sont donc portalisées à la racine du même Shadow DOM, positionnées
   en `fixed`, puis réattachées à leur contrôle à la fermeture. Elles échappent
   ainsi au backdrop root imbriqué sans perdre leurs événements ni leurs styles.
+- `media-page.css` est chargé avant les feuilles propres aux widgets. Les
+  exceptions des cartes « Lecteurs disponibles » doivent donc rester strictement
+  ciblées et assez spécifiques pour neutraliser, lorsque nécessaire, les règles
+  immersives tardives de `media-widget.css` sans modifier les vrais widgets média.
 - Dans `semantic-tokens.css`, ne pas redéfinir le `--mha-primary-surface`
   spécialisé de OneUI avec `var(--mha-surface-primary)` : OneUI mappe déjà
   `--mha-surface-primary` vers `--mha-primary-surface`. La double référence

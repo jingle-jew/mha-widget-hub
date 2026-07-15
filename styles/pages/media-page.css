@@ -785,6 +785,24 @@
   box-shadow: var(--mha-media-artwork-shadow);
 }
 
+/* media-widget.css is loaded after this page stylesheet and turns active
+ * OneUI 4x2 artwork into an immersive full-card layer. Available players are
+ * selectors: keep their artwork in the dedicated square grid cell, like iOS. */
+:host([data-theme-style="oneui"]) .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget[data-media-page-player="true"] > .mha-media-widget-artwork {
+  position: relative;
+  inset: auto;
+  inline-size: 100%;
+  block-size: 100%;
+  max-inline-size: none;
+  max-block-size: none;
+  aspect-ratio: 1;
+  border: 1px solid var(--mha-media-artwork-border);
+  border-radius: var(--mha-media-artwork-radius);
+  background: var(--mha-media-artwork-bg);
+  box-shadow: var(--mha-media-artwork-shadow);
+  transform: scale(var(--mha-media-artwork-scale));
+}
+
 .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget[data-media-page-player="true"] .mha-media-widget-source-badge {
   display: inline-flex;
   max-inline-size: 100%;
