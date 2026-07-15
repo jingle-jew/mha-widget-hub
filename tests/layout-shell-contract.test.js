@@ -132,7 +132,7 @@ test("OneUI primary surface reuses the dock colors at reduced opacity", () => {
 
   assert.match(source, /--mha-oneui-primary-blur:\s*46px;/);
   assert.match(source, /--mha-oneui-primary-saturation:\s*118%;/);
-  assert.match(source, /--mha-oneui-primary-surface-opacity:\s*88%;/);
+  assert.match(source, /--mha-oneui-primary-surface-opacity:\s*68%;/);
   assert.match(
     source,
     /--mha-oneui-primary-surface:[\s\S]*var\(--mha-oneui-dock-surface-start\) var\(--mha-oneui-primary-surface-opacity\)[\s\S]*var\(--mha-oneui-dock-surface-end\) var\(--mha-oneui-primary-surface-opacity\)/,

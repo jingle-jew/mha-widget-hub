@@ -71,6 +71,7 @@ function withThemeEnvironment(run) {
 }
 
 test("OneUI primary surface opacity is normalized to a percentage", () => {
+  assert.equal(DEFAULT_ONEUI_PRIMARY_SURFACE_OPACITY, 68);
   assert.equal(normalizeOneUiPrimarySurfaceOpacity(-10), 0);
   assert.equal(normalizeOneUiPrimarySurfaceOpacity(42.6), 43);
   assert.equal(normalizeOneUiPrimarySurfaceOpacity(140), 100);

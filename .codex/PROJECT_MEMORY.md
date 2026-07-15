@@ -49,7 +49,7 @@ appartiennent à `AGENTS.md`.
   URL. Le contrat visuel `4×4` reste indépendant et inchangé.
 - Dans les réglages d’apparence OneUI, « Opacité des widgets » contrôle
   `--mha-oneui-primary-surface-opacity` de 0 à 100 %. La valeur est persistée
-  localement sous `mha-oneui-primary-surface-opacity`; son défaut reste 88 %.
+  localement sous `mha-oneui-primary-surface-opacity`; son défaut reste 68 %.
   Pendant un geste actif sur ce slider, le panel, son scrim et le blur du
   dashboard sont masqués, tandis que le contrôle reste au premier plan à sa
   position stable pour permettre un aperçu direct des surfaces.
@@ -104,7 +104,7 @@ appartiennent à `AGENTS.md`.
 - `primary-surface` OneUI reproduit le matériau fortement diffusé de One UI
   Home : clair froid et laiteux, sombre bleu nuit très absorbant, blur `46px`
   et saturation `118%`. Sa couleur et celle du dock OneUI latéral/compact
-  partagent les mêmes tokens de stops; la surface primary les compose à `88%`
+  partagent les mêmes tokens de stops; la surface primary les compose à `68%`
   pour rester légèrement plus transparente que le dock sans atténuer son
   contenu. Son blur et sa brightness restent propres au rôle primary. Les rôles
   panel et `on-primary` restent indépendants tant qu’ils ne sont pas

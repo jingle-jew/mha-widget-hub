@@ -7,7 +7,7 @@ import {
 } from "./theme-registry.js";
 
 export const THEME_STYLES = Object.freeze(new Set(getThemeStyleIds()));
-export const DEFAULT_ONEUI_PRIMARY_SURFACE_OPACITY = 88;
+export const DEFAULT_ONEUI_PRIMARY_SURFACE_OPACITY = 68;
 export const ONEUI_WIDGET_NOISE_FADE_START = 50;
 export const ONEUI_WIDGET_NOISE_MAX_OPACITY = 0.14;
 

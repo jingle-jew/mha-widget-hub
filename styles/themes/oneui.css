@@ -24,7 +24,7 @@
   --mha-widget-inner-highlight: transparent;
   --mha-oneui-dock-tint: var(--mha-accent);
   --mha-oneui-dock-filter: blur(18px) saturate(132%);
-  --mha-oneui-primary-surface-opacity: 88%;
+  --mha-oneui-primary-surface-opacity: 68%;
   --mha-oneui-primary-surface:
     linear-gradient(
       145deg,
