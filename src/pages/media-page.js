@@ -367,12 +367,18 @@ export function createMediaPage(page = {}, {
 
   let availablePlayersPanel = null;
   let availablePlayersSheetCloseRequested = false;
-  const closeAvailablePlayersSheet = () => {
-    availablePlayersSheetCloseRequested = true;
-    syncPanelVisibility(availablePlayersPanel, false, {
+  const syncAvailablePlayersSheetVisibility = (open) => {
+    const mobileOpen = Boolean(open) && isMobileMediaPage(root);
+    const host = getMediaPageHost(root);
+    if (host?.dataset) host.dataset.mediaPlayersSheetOpen = String(mobileOpen);
+    return syncPanelVisibility(availablePlayersPanel, open, {
       transitionMs: SETTINGS_PANEL_VISIBILITY_TRANSITION_MS,
       closeStateDatasetKey: "panelCloseState",
     });
+  };
+  const closeAvailablePlayersSheet = () => {
+    availablePlayersSheetCloseRequested = true;
+    syncAvailablePlayersSheetVisibility(false);
     scrollMobileMediaPageToNowPlaying(root);
   };
 
@@ -460,10 +466,7 @@ export function createMediaPage(page = {}, {
       }
       const shouldOpen = !availablePlayersSheetCloseRequested
         && (!isMobileMediaPage(root) || pane === "available-players");
-      syncPanelVisibility(availablePlayersPanel, shouldOpen, {
-        transitionMs: SETTINGS_PANEL_VISIBILITY_TRANSITION_MS,
-        closeStateDatasetKey: "panelCloseState",
-      });
+      syncAvailablePlayersSheetVisibility(shouldOpen);
     },
   });
   root.__mhaSyncMobileDockState = mobileScrollCoordinator.syncDockState;
@@ -807,6 +810,8 @@ export function createMediaPage(page = {}, {
     if (visualTransitionTimer) clearTimeout(visualTransitionTimer);
     visualTransitionTimer = 0;
     mobileScrollCoordinator.destroy();
+    const host = getMediaPageHost(root);
+    if (host?.dataset) delete host.dataset.mediaPlayersSheetOpen;
     automaticPlayerCards.forEach((card) => card.__mhaDestroy?.());
     automaticPlayerCards = [];
   };

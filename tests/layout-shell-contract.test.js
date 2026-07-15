@@ -528,6 +528,10 @@ test("media page mobile layout scrolls as snapped sheets in portrait and landsca
   );
   assert.match(
     source,
+    /:host\(\[data-layout="mobile"\]\[data-media-players-sheet-open="true"\]\) \.mha-mobile-dock,[\s\S]*:host\(\[data-layout="mobile"\]\[data-media-players-sheet-open="true"\]\) \.mha-dock\s*\{[\s\S]*opacity:\s*0;[\s\S]*visibility:\s*hidden;[\s\S]*pointer-events:\s*none;/,
+  );
+  assert.match(
+    source,
     /:host\(\[data-layout-variant="mobile-landscape"\]\)\s+\.mha-media-page-now-playing-shell\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*\.9fr\) minmax\(0,\s*1fr\);[\s\S]*grid-template-rows:\s*auto auto auto;[\s\S]*align-content:\s*center;/,
   );
   assert.match(

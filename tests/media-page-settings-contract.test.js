@@ -112,6 +112,14 @@ test("media page player panel applies shared sheet behavior only on mobile", () 
   );
   assert.match(
     mediaPageSource,
+    /const syncAvailablePlayersSheetVisibility = \(open\) => \{[\s\S]*host\.dataset\.mediaPlayersSheetOpen = String\(mobileOpen\);[\s\S]*return syncPanelVisibility\(availablePlayersPanel, open,/,
+  );
+  assert.match(
+    mediaPageSource,
+    /const shouldOpen = [\s\S]*syncAvailablePlayersSheetVisibility\(shouldOpen\);/,
+  );
+  assert.match(
+    mediaPageSource,
     /const shellCloseButton = widgetPanel\?\.querySelector\("\.mha-media-page-widget-panel-close"\);\s*shellCloseButton\?\.remove\(\);/,
   );
   assert.match(

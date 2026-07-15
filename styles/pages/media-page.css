@@ -1173,9 +1173,18 @@
   grid-column: 1 / -1;
 }
 
-/* The landscape dock keeps its structural rail to avoid reflowing the two
- * media sheets mid-snap, but leaves the interaction space while browsing
- * available players. */
+/* The desired-open state is published before the sheet transition starts.
+ * Keep each dock's structural footprint, but remove it from rendering and
+ * interaction for the complete mobile sheet lifecycle. */
+:host([data-layout="mobile"][data-media-players-sheet-open="true"]) .mha-mobile-dock,
+:host([data-layout="mobile"][data-media-players-sheet-open="true"]) .mha-dock {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Landscape also keeps its rail hidden while the media page is snapped to the
+ * available-players pane, including the sheet's closing scroll transition. */
 :host([data-layout-variant="mobile-landscape"][data-media-page-active="true"].is-mobile-floating-controls-hidden) .mha-dock {
   opacity: 0;
   pointer-events: none;

@@ -53,6 +53,9 @@ _Aucun piège propre au code du projet n’a encore été consolidé._
 - En OneUI, la section « Lecteurs disponibles » de la page Média réutilise la
   matière du dock et son lecteur sélectionné réutilise exactement la surface de
   la pastille active du dock.
+- Sur la page Média mobile, le dock reste masqué pendant toute l’ouverture de la
+  sheet « Lecteurs disponibles »; son empreinte structurelle est conservée pour
+  éviter un reflow.
 
 ## Approches remplacées ou rejetées
 
