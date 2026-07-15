@@ -6,13 +6,6 @@ Ce fichier contient les connaissances durables qui seraient coûteuses à redéc
 Le code et les tests actuels restent la source de vérité. Les instructions de travail
 appartiennent à `AGENTS.md`.
 
-## Architecture et frontières
-
-- La mémoire persistante est chargée au début de chaque tâche par `AGENTS.md`.
-- `$refresh-project-memory` consolide les apprentissages ; il ne produit pas un journal exhaustif.
-- Les observations encore incertaines restent dans `.codex/LEARNING_INBOX.md` jusqu’à
-  confirmation ou rejet.
-
 ## Décisions et raisons
 
 ### 2026-07-15 — Faire du mouvement une signature visuelle MHA
@@ -67,21 +60,6 @@ appartiennent à `AGENTS.md`.
   `createSelectControl` et `createRadioControl` fournis par
   `widget-config-popup.js`, afin de rester découplés du DOM interne des contrôles
   partagés.
-
-### 2026-07-14 — Séparer instructions et connaissances
-
-- **Statut :** confirmé.
-- **Décision :** conserver les règles impératives dans `AGENTS.md` et les connaissances
-  historiques dans ce fichier.
-- **Pourquoi :** les instructions doivent rester courtes et stables, tandis que la
-  mémoire doit pouvoir évoluer, être corrigée et conserver le raisonnement architectural.
-- **Conséquence :** une nouvelle règle de comportement ne doit pas être ajoutée ici ; une
-  décision ou un piège de projet ne doit pas gonfler inutilement `AGENTS.md`.
-
-## Invariants et contraintes
-
-- Une connaissance mémorisée ne doit jamais remplacer la vérification du code actuel.
-- Une information issue d’une seule observation incertaine ne devient pas un invariant.
 
 ## Pièges connus
 
@@ -216,9 +194,9 @@ appartiennent à `AGENTS.md`.
   Lorsqu'un nouvel artwork change la palette, les couleurs du panneau, de la
   carte active et de ses contrôles évoluent par un fondu local de `1000ms`, sans
   animation de layout ni recalcul du blur. L'ancienne palette reste active tant
-  que le nouvel artwork n'a pas été chargé et échantillonné; elle n'est retirée
-  qu'en l'absence d'artwork ou en cas d'échec, afin d'éviter un flash de la
-  surface thématique entre deux lecteurs.
+  que le nouvel artwork n'a pas été chargé et échantillonné. Une erreur d'image
+  ou un canvas non lisible conserve cette dernière palette valide; elle n'est
+  retirée qu'après confirmation réelle de l'absence d'artwork.
 - Le wallpaper d'artwork de la page Média conserve lui aussi l'image précédente
   pendant le chargement de la suivante. La nouvelle URL n'est publiée à la
   couche CSS qu'après chargement et décodage, et une requête devenue obsolète ne
@@ -232,11 +210,6 @@ appartiennent à `AGENTS.md`.
   `5000ms`, puis effectue son propre rafraîchissement même sans nouvel événement
   HA. Le cache est vidé après confirmation et n'est jamais partagé entre deux
   entités, afin d'éviter à la fois les flashes et les artworks périmés.
-- La dernière palette valide de la page Média reste active pendant le chargement
-  et l'échantillonnage de l'artwork suivant. Une erreur d'image ou un canvas non
-  lisible ne doit pas faire retomber « Lecteurs disponibles » sur la surface du
-  thème; la palette n'est retirée qu'après confirmation réelle de l'absence
-  d'artwork.
 - Le contraste du contenu Now Playing est calculé contre une approximation de
   l'artwork une fois composé avec l'overlay sombre du wallpaper, et non contre
   les pixels bruts de la pochette. La palette des surfaces continue d'utiliser
@@ -258,10 +231,3 @@ appartiennent à `AGENTS.md`.
 - Sur la page Média mobile, le dock reste masqué pendant toute l’ouverture de la
   sheet « Lecteurs disponibles »; son empreinte structurelle est conservée pour
   éviter un reflow.
-
-## Approches remplacées ou rejetées
-
-- Relire la mémoire avant chaque message a été écarté : elle reste déjà dans le contexte
-  de la tâche. La relecture est réservée aux changements, compactages et incertitudes.
-- Accumuler automatiquement tous les événements de la journée a été écarté : cela crée
-  du bruit, des contradictions et des règles trop spécifiques.

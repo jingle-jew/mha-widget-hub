@@ -232,7 +232,7 @@ export const SLIDER_WIDGET_DEFINITION = Object.freeze({
   component: "slider-widget",
   category: "lights",
   manager: Object.freeze({
-    hidden: false,
+    hidden: true,
     entries: Object.freeze([
       Object.freeze({ category: "lights", variant: "light-slider-wide", label: "Horizontal brightness", size: freezeSize(4, 1), description: "Slider large.", order: 40 }),
       Object.freeze({ category: "lights", variant: "light-slider-vertical", label: "Vertical brightness", size: freezeSize(1, 4), description: "Slider vertical.", order: 50 }),

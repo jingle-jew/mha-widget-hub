@@ -579,8 +579,7 @@ export const es = Object.freeze({
     }),
     categories: Object.freeze({
       utilities: "Utilidades",
-      actions: "Acciones",
-      lights: "Luces",
+      lights: "Luces e interruptores",
       climate: "Clima",
       media: "Media",
       security: "Seguridad",
@@ -588,8 +587,7 @@ export const es = Object.freeze({
     }),
     categoryDescriptions: Object.freeze({
       utilities: "Relojes e información rápida.",
-      actions: "Botones y accesos directos.",
-      lights: "Controles rápidos y brillo.",
+      lights: "Luces, interruptores, botones y brillo.",
       climate: "Temperatura y confort.",
       media: "Reproducción y volumen.",
       security: "Alarmas, cerraduras y estado.",

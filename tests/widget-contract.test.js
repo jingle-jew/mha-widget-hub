@@ -56,6 +56,8 @@ test("widget manager visibility is declared in widget definitions", async () => 
   assert.equal(WIDGET_REGISTRY.empty.manager.hidden, true);
   assert.equal(WIDGET_REGISTRY["toggle-buttons"].manager.hidden, true);
   assert.equal(WIDGET_REGISTRY["weather-narrative"].manager.hidden, true);
+  assert.equal(WIDGET_REGISTRY.scenes.manager.hidden, true);
+  assert.equal(WIDGET_REGISTRY.slider.manager.hidden, true);
   assert.equal(WIDGET_REGISTRY["weather-metric"].manager.hidden, false);
   assert.equal(
     getWidgetCatalogEntries({ kind: "slider" }).some((entry) => entry.variant === "temperature-slider" && entry.hidden),

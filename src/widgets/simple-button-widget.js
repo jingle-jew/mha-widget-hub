@@ -288,12 +288,12 @@ export const SIMPLE_BUTTON_WIDGET_CONFIG_MANIFEST = Object.freeze({
 
 export const SIMPLE_BUTTON_WIDGET_DEFINITION = Object.freeze({
   component: "button-widget",
-  category: "actions",
+  category: "lights",
   manager: Object.freeze({
     hidden: false,
     entries: Object.freeze([
-      Object.freeze({ category: "actions", variant: "simple-button", label: "Simple button", size: freezeSize(2, 1), description: "Icon, label, and state.", order: 10 }),
-      Object.freeze({ category: "actions", variant: "simple-button", label: "Square button", size: freezeSize(2, 2), description: "Home-inspired action tile.", order: 20 }),
+      Object.freeze({ category: "lights", variant: "simple-button", label: "Simple button", size: freezeSize(2, 1), description: "Icon, label, and state.", order: 10 }),
+      Object.freeze({ category: "lights", variant: "simple-button", label: "Square button", size: freezeSize(2, 2), description: "Home-inspired action tile.", order: 20 }),
     ]),
   }),
   renderer: "button",
