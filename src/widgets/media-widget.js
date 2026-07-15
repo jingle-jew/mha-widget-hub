@@ -29,6 +29,7 @@ const MEDIA_ARTWORK_PALETTE_PROPERTIES = Object.freeze([
   "--mha-media-palette-strong",
   "--mha-media-palette-on-strong",
 ]);
+const MEDIA_ARTWORK_PALETTE_ROOT_SELECTOR = ".mha-media-widget, .mha-media-page";
 
 const MEDIA_TRANSIENT_STATES = new Set(["idle", "off", "unavailable", "unknown", "none"]);
 
@@ -178,7 +179,7 @@ export function setMediaArtworkImage(artwork, artworkUrl = "") {
   if (!image) return;
   if (hasArtwork) {
     if (image.dataset.artworkUrl && image.dataset.artworkUrl !== artworkUrl) {
-      clearMediaArtworkPalette(artwork.closest(".mha-media-widget"));
+      clearMediaArtworkPalette(resolveMediaArtworkPaletteRoot(artwork));
     }
     image.dataset.artworkUrl = artworkUrl;
     image.src = artworkUrl;
@@ -189,7 +190,7 @@ export function setMediaArtworkImage(artwork, artworkUrl = "") {
     delete image.__mhaArtworkPaletteCache;
     delete image.dataset.artworkUrl;
     image.removeAttribute("src");
-    clearMediaArtworkPalette(artwork.closest(".mha-media-widget"));
+    clearMediaArtworkPalette(resolveMediaArtworkPaletteRoot(artwork));
   }
 }
 
@@ -371,6 +372,11 @@ function clearMediaArtworkPalette(root) {
   MEDIA_ARTWORK_PALETTE_PROPERTIES.forEach(property => root.style.removeProperty(property));
 }
 
+function resolveMediaArtworkPaletteRoot(rootOrArtwork) {
+  if (rootOrArtwork?.matches?.(MEDIA_ARTWORK_PALETTE_ROOT_SELECTOR)) return rootOrArtwork;
+  return rootOrArtwork?.closest?.(MEDIA_ARTWORK_PALETTE_ROOT_SELECTOR) || null;
+}
+
 function applyMediaArtworkPalette(root, palette) {
   if (!root || !palette) return;
   root.dataset.artworkTone = palette.legacyTone;
@@ -394,12 +400,9 @@ export function syncMediaArtworkTone(rootOrArtwork, artworkOrImage) {
     : artworkOrImage.querySelector?.(".mha-media-widget-artwork-image");
   if (!image) return;
   const expectedArtworkUrl = image.dataset.artworkUrl || "";
-  const resolveRoot = () => rootOrArtwork.matches?.(".mha-media-widget")
-    ? rootOrArtwork
-    : rootOrArtwork.closest?.(".mha-media-widget");
   const applyPalette = () => {
     if (expectedArtworkUrl !== (image.dataset.artworkUrl || "")) return;
-    const root = resolveRoot();
+    const root = resolveMediaArtworkPaletteRoot(rootOrArtwork);
     if (!root) return;
     const cached = image.__mhaArtworkPaletteCache;
     const palette = cached?.artworkUrl === expectedArtworkUrl

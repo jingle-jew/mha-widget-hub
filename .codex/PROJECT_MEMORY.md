@@ -67,6 +67,11 @@ appartiennent à `AGENTS.md`.
   exceptions des cartes « Lecteurs disponibles » doivent donc rester strictement
   ciblées et assez spécifiques pour neutraliser, lorsque nécessaire, les règles
   immersives tardives de `media-widget.css` sans modifier les vrais widgets média.
+- L'artwork principal de la page Média n'est pas imbriqué dans un
+  `.mha-media-widget`. La racine de palette doit donc accepter le parent
+  compatible le plus proche parmi `.mha-media-widget` et `.mha-media-page` : la
+  page récupère ainsi son contraste Now Playing, tandis que les artworks des
+  « Lecteurs disponibles » restent isolés dans leur propre widget.
 - Dans `semantic-tokens.css`, ne pas redéfinir le `--mha-primary-surface`
   spécialisé de OneUI avec `var(--mha-surface-primary)` : OneUI mappe déjà
   `--mha-surface-primary` vers `--mha-primary-surface`. La double référence

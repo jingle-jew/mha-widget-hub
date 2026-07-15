@@ -30,7 +30,6 @@ import {
   createMediaTransitionCache,
   setMediaArtworkImage,
   setMediaProgressState,
-  syncMediaArtworkTone,
 } from "../widgets/media-widget.js?media-page-ios-card-v1";
 
 function createIconButton({ label, icon, className = "", onClick = () => {} } = {}) {
@@ -717,8 +716,6 @@ export function createMediaPage(page = {}, {
         : view.statusLine;
     }
     setMediaArtworkImage(context.artwork, view.media.artworkUrl);
-    if (view.media.artworkUrl) root.removeAttribute("data-artwork-tone");
-    syncMediaArtworkTone(root, context.artwork);
     context.artwork.dataset.playing = String(view.media.playing);
 
     syncControlGroup(

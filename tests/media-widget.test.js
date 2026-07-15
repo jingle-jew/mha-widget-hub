@@ -11,6 +11,7 @@ import {
   MEDIA_WIDGET_CONTENT_RENDERER,
   MEDIA_TRANSITION_GRACE_MS,
   resolveMediaTransitionData,
+  syncMediaArtworkTone,
 } from "../src/widgets/media-widget.js";
 import { normalizeWidgetForKind } from "../src/layout/layout-engine.js";
 import {
@@ -114,6 +115,39 @@ test("artwork palettes adapt to the source colors", () => {
 
   assert.notEqual(warm.foreground, cool.foreground);
   assert.notEqual(warm.surface, cool.surface);
+});
+
+test("artwork tone can target the media page Now Playing surface", async () => {
+  const properties = new Map();
+  const page = {
+    dataset: {},
+    matches: selector => selector.includes(".mha-media-page"),
+    style: {
+      setProperty: (property, value) => properties.set(property, value),
+      removeProperty: property => properties.delete(property),
+    },
+  };
+  const palette = deriveMediaArtworkPaletteFromPixels(Uint8ClampedArray.from([
+    18, 38, 64, 255,
+    28, 52, 84, 255,
+  ]));
+  const image = {
+    dataset: { artworkUrl: "/api/media_player_proxy/media_player.salon" },
+    complete: true,
+    naturalWidth: 512,
+    matches: selector => selector === "img",
+    __mhaArtworkPaletteCache: {
+      artworkUrl: "/api/media_player_proxy/media_player.salon",
+      palette,
+    },
+  };
+
+  syncMediaArtworkTone(page, image);
+  await Promise.resolve();
+
+  assert.equal(page.dataset.artworkTone, palette.legacyTone);
+  assert.equal(page.dataset.artworkPalette, "true");
+  assert.equal(properties.get("--mha-media-palette-foreground"), palette.foreground);
 });
 
 test("media transition cache hides temporary idle metadata and artwork gaps", () => {
