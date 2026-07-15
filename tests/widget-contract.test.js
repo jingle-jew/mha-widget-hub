@@ -32,6 +32,8 @@ test("weather-capable widgets expose configuration without affecting other clock
   assert.equal(getWidgetConfigType({ kind: "scenes" }), "scenes");
   assert.equal(getWidgetConfigType({ kind: "clock", variant: "digital-weather" }), "weather");
   assert.equal(getWidgetConfigType({ kind: "clock", variant: "digital" }), "");
+  assert.equal(getWidgetConfigType({ kind: "weather-metric", metricKey: "summary" }), "weather");
+  assert.equal(getWidgetConfigType({ kind: "weather-metric", metricKey: "humidity" }), "");
 });
 
 test("widget capabilities and flows are read from the widget contract", () => {
@@ -43,6 +45,8 @@ test("widget capabilities and flows are read from the widget contract", () => {
   assert.equal(getWidgetPlacementFlow({ kind: "scenes" }), "slot-config-first");
   assert.equal(getWidgetPlacementFlow({ kind: "button" }), "configure-first");
   assert.equal(getWidgetPlacementFlow({ kind: "clock" }), "direct");
+  assert.equal(getWidgetPlacementFlow({ kind: "weather-metric", metricKey: "summary" }), "configure-first");
+  assert.equal(getWidgetPlacementFlow({ kind: "weather-metric", metricKey: "humidity" }), "direct");
   assert.equal(getWidgetCapabilities({ kind: "weather", displayMode: "current" }).resizable, true);
   assert.equal(getWidgetCapabilities({ kind: "weather", displayMode: "forecast" }).resizable, false);
 });
@@ -51,6 +55,8 @@ test("widget manager visibility is declared in widget definitions", async () => 
   const { WIDGET_REGISTRY } = await import("../src/widgets/widget-registry.js");
   assert.equal(WIDGET_REGISTRY.empty.manager.hidden, true);
   assert.equal(WIDGET_REGISTRY["toggle-buttons"].manager.hidden, true);
+  assert.equal(WIDGET_REGISTRY["weather-narrative"].manager.hidden, true);
+  assert.equal(WIDGET_REGISTRY["weather-metric"].manager.hidden, false);
   assert.equal(
     getWidgetCatalogEntries({ kind: "slider" }).some((entry) => entry.variant === "temperature-slider" && entry.hidden),
     true,

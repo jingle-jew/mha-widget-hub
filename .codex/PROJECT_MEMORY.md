@@ -50,6 +50,11 @@ appartiennent à `AGENTS.md`.
   utilisent jusqu’à deux lignes plutôt qu’une troncature sur une seule ligne.
   Leur icône reste alignée avec la première ligne. En français, la hauteur de
   neige est libellée « Accumulations ».
+- La carte appelée « Bref météo » dans le gestionnaire Grid est le widget
+  `weather-metric` avec `metricKey: summary`, affiché comme « Résumé » dans le
+  gestionnaire spécialisé de la page météo. Elle utilise le format `4×2` et un
+  flux `configure-first` sur Grid. Le widget distinct `weather-narrative` reste
+  masqué des deux catalogues.
 - Les surfaces du dock OneUI, standard comme compactes, sont légèrement
   translucides, floutées et teintées par la couleur d’accent active du thème.
   La pastille de l’élément actif reprend cette teinte avec une intensité plus

@@ -7,12 +7,18 @@ import { hasWidgetContentRenderer } from "../src/widgets/widget-renderers.js";
 test("widget manager only exposes concrete renderable widgets", () => {
   const categories = WIDGET_MANAGER_CATEGORIES;
   const items = categories.flatMap(category => category.widgets);
+  const weatherBrief = items.find(item => item.kind === "weather-metric" && item.metricKey === "summary");
 
   assert.ok(categories.every(category => category.widgets.length > 0));
   assert.ok(items.length > 0);
   assert.ok(items.every(item => item.kind !== "empty"));
   assert.ok(items.every(item => item.kind !== "toggle-buttons"));
   assert.ok(items.every(item => item.variant !== "temperature-slider"));
+  assert.equal(items.some(item => item.kind === "weather-narrative"), false);
+  assert.equal(weatherBrief?.variant, "weather-metric-text-tall");
+  assert.equal(weatherBrief?.sourceType, "weather-attribute");
+  assert.equal(weatherBrief?.valueKind, "text");
+  assert.deepEqual(weatherBrief?.size, { w: 4, h: 2 });
   assert.ok(items.every(item => {
     const renderer = getWidgetRendererName(item);
     return renderer && renderer !== "empty" && hasWidgetContentRenderer(renderer);

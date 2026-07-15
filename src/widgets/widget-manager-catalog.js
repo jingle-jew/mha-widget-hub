@@ -67,6 +67,7 @@ export function buildWidgetManagerCategories(
       if (!category) return;
 
       category.widgets.push({
+        ...entry,
         kind,
         variant: entry.variant,
         label: entry.label,

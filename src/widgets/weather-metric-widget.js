@@ -782,12 +782,30 @@ export const WEATHER_METRIC_WIDGET_DEFINITION = Object.freeze({
   component: "weather-metric-widget",
   category: "climate",
   manager: Object.freeze({
-    hidden: true,
-    entries: Object.freeze([]),
+    hidden: false,
+    entries: Object.freeze([
+      Object.freeze({
+        category: "climate",
+        variant: "weather-metric-text-tall",
+        label: "Weather brief",
+        labelKey: "widgets.weatherManager.narrative",
+        size: freezeSize(4, 2),
+        description: "Contextual narrative from the selected weather integration.",
+        descriptionKey: "widgets.weatherManager.narrativeDescription",
+        order: 45,
+        metricKey: "summary",
+        icon: "weather",
+        sourceType: "weather-attribute",
+        valueKind: "text",
+        attribute: "summary",
+        unit: "",
+      }),
+    ]),
   }),
   renderer: "weather-metric",
   css: css("styles/widgets/weather-metric-widget.css"),
   preview: "weather",
+  config: "weather",
   aliases: ["weather-metric-widget"],
   variantAliases: ["weather-metric-square", "weather-metric-compact", "weather-metric-wide", "weather-metric-text-wide", "weather-metric-text-tall"],
   defaultVariant: "weather-metric-square",
@@ -795,10 +813,10 @@ export const WEATHER_METRIC_WIDGET_DEFINITION = Object.freeze({
   normalizeSize: normalizeWeatherMetricSize,
   resolveVariants: resolveWeatherMetricVariants,
   capabilities: Object.freeze({
-    configurable: false,
+    configurable: widget => widget.metricKey === "summary",
     resizable: true,
     slotConfigurable: false,
-    weatherEntityConfigurable: false,
+    weatherEntityConfigurable: widget => widget.metricKey === "summary",
   }),
   storage: Object.freeze({
     normalize: (widget = {}) => ({
@@ -816,7 +834,7 @@ export const WEATHER_METRIC_WIDGET_DEFINITION = Object.freeze({
   shell: Object.freeze({
     configureMode: "variant",
   }),
-  placementFlow: "direct",
+  placementFlow: widget => widget.metricKey === "summary" ? "configure-first" : "direct",
   variants: [
     WEATHER_METRIC_SQUARE_VARIANT,
     WEATHER_METRIC_COMPACT_VARIANT,
