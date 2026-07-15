@@ -12,10 +12,13 @@
   --mha-status-bar-radius: var(--mha-statusbar-radius);
   --mha-surface-blur: 24px;
   --mha-surface-saturation: 145%;
-  --mha-glass-noise-image: var(--mha-glass-noise-texture);
-  --mha-glass-noise-opacity: .046;
-  --mha-glass-noise-size: 104px 104px;
-  --mha-glass-noise-blend-mode: overlay;
+  --mha-oneui-primary-blur: 46px;
+  --mha-oneui-primary-saturation: 118%;
+  --mha-oneui-glass-noise-texture: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Cfilter id='n' x='0%25' y='0%25' width='100%25' height='100%25' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.96' numOctaves='4' seed='29' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='128' height='128' filter='url(%23n)' opacity='.92'/%3E%3C/svg%3E");
+  --mha-glass-noise-image: var(--mha-oneui-glass-noise-texture);
+  --mha-glass-noise-opacity: .14;
+  --mha-glass-noise-size: 56px 56px;
+  --mha-glass-noise-blend-mode: soft-light;
   --mha-widget-shell-border: transparent;
   --mha-widget-shell-border-edit: transparent;
   --mha-widget-inner-highlight: transparent;
@@ -35,6 +38,14 @@
   /* 2. Mode clair */
   --mha-text: rgba(0,0,0,.88);
   --mha-muted: rgba(0,0,0,.52);
+  --mha-oneui-primary-surface:
+    linear-gradient(
+      180deg,
+      rgba(232,238,247,.68) 0%,
+      rgba(211,220,233,.61) 54%,
+      rgba(196,207,220,.56) 100%
+    );
+  --mha-oneui-primary-brightness: 1.04;
   --mha-widget-surface: linear-gradient(145deg, rgba(255,255,255,.76), rgba(255,246,238,.58));
   --mha-widget-surface-edit: linear-gradient(145deg, rgba(255,255,255,.88), rgba(255,240,230,.70));
   --mha-widget-border: rgba(110,92,78,.12);
@@ -100,6 +111,14 @@
   /* 3. Mode sombre */
   --mha-text: rgba(255,255,255,.96);
   --mha-muted: rgba(255,255,255,.58);
+  --mha-oneui-primary-surface:
+    linear-gradient(
+      180deg,
+      rgba(7,27,63,.84) 0%,
+      rgba(5,20,47,.82) 52%,
+      rgba(4,14,31,.86) 100%
+    );
+  --mha-oneui-primary-brightness: .88;
   --mha-widget-surface: linear-gradient(145deg, rgba(255,240,226,.18), rgba(255,255,255,.105));
   --mha-widget-surface-edit: linear-gradient(145deg, rgba(255,236,219,.26), rgba(255,255,255,.15));
   --mha-widget-border: rgba(255,236,219,.18);
@@ -173,6 +192,35 @@
 /* 4. Panels */
 :host([data-theme-style="oneui"]) .mha-page-creator-sheet {
   background: var(--mha-oneui-panel-surface, var(--mha-surface-panel));
+}
+
+:host([data-theme-style="oneui"]) .mha-settings-sheet,
+:host([data-theme-style="oneui"]) .mha-page-creator-sheet,
+:host([data-theme-style="oneui"]) .mha-media-page-widget-panel,
+:host([data-theme-style="oneui"]) .mha-mobile-dock {
+  isolation: isolate;
+}
+
+:host([data-theme-style="oneui"]) .mha-media-page-widget-panel {
+  position: relative;
+}
+
+:host([data-theme-style="oneui"]) .mha-settings-sheet::before,
+:host([data-theme-style="oneui"]) .mha-page-creator-sheet::before,
+:host([data-theme-style="oneui"]) .mha-media-page-widget-panel::before,
+:host([data-theme-style="oneui"]) .mha-mobile-dock::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  z-index: 0;
+  pointer-events: none;
+  background-image: var(--mha-glass-noise-image);
+  background-position: center;
+  background-repeat: repeat;
+  background-size: var(--mha-glass-noise-size);
+  opacity: var(--mha-glass-noise-opacity);
+  mix-blend-mode: var(--mha-glass-noise-blend-mode);
 }
 
 /* 5. Background */

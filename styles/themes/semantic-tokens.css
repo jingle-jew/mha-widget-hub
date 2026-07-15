@@ -117,6 +117,17 @@
     linear-gradient(135deg, rgba(255,255,255,.08), transparent 58%);
 }
 
+/* OneUI primary is the strongly diffused Home-screen material. Keep panel,
+ * dock and nested-surface roles independent until they are explicitly mapped. */
+:host([data-theme-style="oneui"]),
+:root[data-theme-style="oneui"] {
+  --mha-primary-surface: var(--mha-oneui-primary-surface);
+  --mha-surface-primary: var(--mha-primary-surface);
+  --mha-blur-primary: var(--mha-oneui-primary-blur);
+  --mha-saturation-primary: var(--mha-oneui-primary-saturation);
+  --mha-brightness-primary: var(--mha-oneui-primary-brightness);
+}
+
 /* iOS and OneUI canonical layer adapters.
  *
  * These selectors make the design contract explicit for the two glass themes

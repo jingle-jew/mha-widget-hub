@@ -50,6 +50,14 @@ _Aucun piège propre au code du projet n’a encore été consolidé._
   translucides, floutées et teintées par la couleur d’accent active du thème.
   La pastille de l’élément actif reprend cette teinte avec une intensité plus
   forte pour préserver la hiérarchie de sélection.
+- Le verre OneUI utilise un grain volontairement visible mais fin et poudreux :
+  texture fractale dense à quatre octaves, répétée à `56px`, opacité `.14` et
+  fusion `soft-light`. Ce voile couvre aussi les sheets/panels OneUI sans leur
+  ajouter de bordure ou d’ombre.
+- `primary-surface` OneUI reproduit le matériau fortement diffusé de One UI
+  Home : clair froid et laiteux, sombre bleu nuit très absorbant, blur `46px`
+  et saturation `118%`. Les rôles dock, panel et `on-primary` restent
+  indépendants tant qu’ils ne sont pas explicitement remappés.
 - En OneUI, la section « Lecteurs disponibles » de la page Média réutilise la
   matière du dock et son lecteur sélectionné réutilise exactement la surface de
   la pastille active du dock.

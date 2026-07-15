@@ -76,6 +76,39 @@ test("OneUI dock surfaces and active pill derive their visible tint from the the
   assert.equal(tintConsumers.length, 12);
 });
 
+test("OneUI glass uses a dense fine-grain texture across persistent and panel surfaces", () => {
+  const source = fs.readFileSync(path.join(THEME_ROOT, "oneui.css"), "utf8");
+
+  assert.match(source, /--mha-oneui-glass-noise-texture:\s*url\("data:image\/svg\+xml,[^\n]*baseFrequency='\.96'[^\n]*numOctaves='4'/);
+  assert.match(source, /--mha-glass-noise-opacity:\s*\.14;/);
+  assert.match(source, /--mha-glass-noise-size:\s*56px 56px;/);
+  assert.match(source, /--mha-glass-noise-blend-mode:\s*soft-light;/);
+  assert.match(
+    source,
+    /\.mha-settings-sheet::before,[\s\S]*\.mha-page-creator-sheet::before,[\s\S]*\.mha-media-page-widget-panel::before,[\s\S]*\.mha-mobile-dock::before\s*\{[\s\S]*background-image:\s*var\(--mha-glass-noise-image\);[\s\S]*opacity:\s*var\(--mha-glass-noise-opacity\);/,
+  );
+});
+
+test("OneUI primary surface uses the strongly diffused Home-screen material", () => {
+  const source = fs.readFileSync(path.join(THEME_ROOT, "oneui.css"), "utf8");
+  const semanticSource = fs.readFileSync(path.join(THEME_ROOT, "semantic-tokens.css"), "utf8");
+
+  assert.match(source, /--mha-oneui-primary-blur:\s*46px;/);
+  assert.match(source, /--mha-oneui-primary-saturation:\s*118%;/);
+  assert.match(
+    source,
+    /:host\(\[data-theme-style="oneui"\]\[data-theme="light"\]\)\s*\{[\s\S]*--mha-oneui-primary-surface:[\s\S]*rgba\(232,238,247,\.68\)[\s\S]*rgba\(196,207,220,\.56\)[\s\S]*--mha-oneui-primary-brightness:\s*1\.04;/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-theme-style="oneui"\]\[data-theme="dark"\]\)\s*\{[\s\S]*--mha-oneui-primary-surface:[\s\S]*rgba\(7,27,63,\.84\)[\s\S]*rgba\(4,14,31,\.86\)[\s\S]*--mha-oneui-primary-brightness:\s*\.88;/,
+  );
+  assert.match(
+    semanticSource,
+    /:host\(\[data-theme-style="oneui"\]\),\s*:root\[data-theme-style="oneui"\]\s*\{[\s\S]*--mha-primary-surface:\s*var\(--mha-oneui-primary-surface\);[\s\S]*--mha-surface-primary:\s*var\(--mha-primary-surface\);[\s\S]*--mha-blur-primary:\s*var\(--mha-oneui-primary-blur\);[\s\S]*--mha-brightness-primary:\s*var\(--mha-oneui-primary-brightness\);/,
+  );
+});
+
 test("OneUI dark panels keep a flat outer frame", () => {
   const themeSource = fs.readFileSync(path.join(THEME_ROOT, "oneui.css"), "utf8");
   const settingsSource = fs.readFileSync(
