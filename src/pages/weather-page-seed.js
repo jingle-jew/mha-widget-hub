@@ -49,6 +49,7 @@ export function createWeatherPageWeatherWidget({
   entityId,
   displayMode,
   forecastType = "daily",
+  surfaceMode = "dynamic",
   w = 4,
   h = 2,
 }) {
@@ -67,6 +68,7 @@ export function createWeatherPageWeatherWidget({
     entity_id: entityId,
     forecastType,
     displayMode,
+    surfaceMode,
   };
 }
 
@@ -111,6 +113,25 @@ export function createWeatherPageMetricWidget({ pageId, source }) {
   };
 }
 
+export function createWeatherPageRadarWidget({ pageId, source = {} }) {
+  const entityId = String(source.entityId || "").trim();
+  return {
+    id: `widget-weather-page-${pageId}-radar`,
+    kind: "weather-radar",
+    type: "weather-radar",
+    component: "weather-radar-widget",
+    category: "climate",
+    variant: "weather-radar",
+    w: 4,
+    h: 3,
+    label: source.label || "Radar",
+    title: source.label || "Radar",
+    sourceType: source.sourceType || "radar-entity",
+    entityId,
+    entity_id: entityId,
+  };
+}
+
 function createWeatherPageSeedFromSources({
   pageId = "weather",
   pageName = "Weather",
@@ -141,6 +162,10 @@ function createWeatherPageSeedFromSources({
       displayMode: "forecast",
       forecastType: "daily",
     }),
+    ...(sources.radar ? [createWeatherPageRadarWidget({
+      pageId: normalizedPageId,
+      source: sources.radar,
+    })] : []),
     ...metrics.map(source => createWeatherPageMetricWidget({
       pageId: normalizedPageId,
       source,
@@ -151,6 +176,8 @@ function createWeatherPageSeedFromSources({
     weatherEntityId: entityId,
     config: {
       weatherEntityId: entityId,
+      radarEntityId: sources.radar?.entityId || "",
+      radarDiscoveryCompleted: true,
       autoDetectedMetricKeys: metrics.map(source => source.key),
       discoveryMode: sources.discoveryMode || "state-fallback",
       registryLinked: sources.registryLinked === true,

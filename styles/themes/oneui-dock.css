@@ -2,6 +2,8 @@
 :host([data-theme-style="oneui"]) .mha-mobile-dock {
   --mha-oneui-dock-button-inset: clamp(.04rem, .14vw, .1rem);
   border-radius: 999px;
+  -webkit-backdrop-filter: var(--mha-oneui-dock-filter);
+  backdrop-filter: var(--mha-oneui-dock-filter);
 }
 
 :host([data-theme-style="oneui"]) .mha-dock {
@@ -66,7 +68,7 @@
     --mha-dock-item-label-padding-inline: 0;
     --mha-dock-item-label-font-size: clamp(.84rem, .78rem + .18vw, 1rem);
     --mha-dock-item-label-line-height: 1.08;
-    --mha-dock-item-label-font-weight: 500;
+    --mha-dock-item-label-font-weight: var(--mha-font-weight-medium);
     --mha-dock-item-label-letter-spacing: -.03em;
 
     box-sizing: border-box;
@@ -81,18 +83,8 @@
       var(--mha-shell-dock-surface, var(--mha-shell-surface, var(--mha-surface-shell)))
     );
     box-shadow: var(--mha-shell-shadow, var(--mha-shadow-shell, var(--mha-shadow-floating)));
-    -webkit-backdrop-filter: var(
-      --mha-shell-filter,
-      blur(var(--mha-shell-blur, var(--mha-blur-shell, var(--mha-blur-primary))))
-        saturate(var(--mha-shell-saturation, var(--mha-saturation-shell, var(--mha-surface-saturation))))
-        brightness(var(--mha-shell-brightness, var(--mha-brightness-shell, 1)))
-    );
-    backdrop-filter: var(
-      --mha-shell-filter,
-      blur(var(--mha-shell-blur, var(--mha-blur-shell, var(--mha-blur-primary))))
-        saturate(var(--mha-shell-saturation, var(--mha-saturation-shell, var(--mha-surface-saturation))))
-        brightness(var(--mha-shell-brightness, var(--mha-brightness-shell, 1)))
-    );
+    -webkit-backdrop-filter: var(--mha-oneui-dock-filter);
+    backdrop-filter: var(--mha-oneui-dock-filter);
   }
 
   :host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock.mha-dock {
@@ -187,7 +179,7 @@
   box-sizing: border-box;
   font-size: clamp(.53rem, .52rem + .16vw, .58rem);
   line-height: .98;
-  font-weight: 600;
+  font-weight: var(--mha-font-weight-semibold);
   letter-spacing: -.01em;
   color: var(--mha-oneui-dock-item-label-color, color-mix(in srgb, var(--mha-text) 84%, transparent));
   pointer-events: none;
@@ -442,7 +434,7 @@
   opacity: .92;
   font-size: clamp(.53rem, .52rem + .16vw, .58rem);
   line-height: .98;
-  font-weight: 600;
+  font-weight: var(--mha-font-weight-semibold);
   letter-spacing: -.01em;
   padding-inline: var(--mha-mobile-dock-item-label-padding-inline);
 }

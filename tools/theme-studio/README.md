@@ -24,7 +24,7 @@ npm run theme-studio:test
 - Les sources sont `src/` et `styles/`.
 - `src/settings/theme-registry.js` est le registre canonique : il associe un thème à ses CSS, variantes et CSS de dock.
 - `src/styles/style-manifest.js` dérive le manifest à partir du registre; il n'existe donc pas de liste de thèmes indépendante à maintenir.
-- `tools/sync-integration-frontend.mjs` synchronise les sources vers `custom_components/mha_widget_hub/frontend/`. Le Theme Studio ne fait pas partie du bundle MHA.
+- La racine est la source frontend canonique. `tools/sync-integration-frontend.mjs` peut générer une copie locale ignorée sous `custom_components/mha_widget_hub/frontend/`. Le Theme Studio ne fait pas partie du bundle MHA.
 - `dev.html` initialise le runtime avec un mock Home Assistant; il sert de scène de preview et reçoit les overrides temporaires via les propriétés CSS du custom element.
 - Les styles de dock sont `styles/themes/*-dock.css`, chargés séparément par le manifest.
 
@@ -47,7 +47,7 @@ Les valeurs complexes comme les gradients et `box-shadow` restent volontairement
 
 Les sliders changent uniquement le style de la preview. `Voir le diff` affiche les tokens, valeurs, fichiers et lignes avant toute écriture. `Appliquer au repo` vérifie les valeurs, les chemins autorisés et le hash de chaque fichier lu. Une modification externe provoque un conflit et bloque l'écriture.
 
-La duplication et la création affichent d'abord un plan de fichiers. Le registre est mis à jour; le manifest est recalculé depuis le registre. Après création d'un thème, exécuter `npm run sync:frontend` pour régénérer la copie Home Assistant.
+La duplication et la création affichent d'abord un plan de fichiers. Le registre est mis à jour; le manifest est recalculé depuis le registre. La copie Home Assistant n'a pas à être maintenue manuellement; `npm run sync:frontend` ne sert qu'aux usages locaux qui la demandent.
 
 Import/export utilise un JSON versionné. L'import est validé sans écriture automatique. Les images de preview sont conservées uniquement dans le navigateur et ne sont jamais écrites dans le dépôt.
 

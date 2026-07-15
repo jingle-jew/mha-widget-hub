@@ -38,177 +38,6 @@ function createNarrativeIcon(event, weather) {
   });
 }
 
-function getChartSeries(event, weather) {
-  const items = (event.items || []).filter(item => item?.datetime);
-  const definitions = {
-    temperature: {
-      key: "temperatureValue",
-      label: t("widgets.weatherNarrative.charts.temperature", "Temperature"),
-      unit: weather.temperatureUnit || "°",
-      className: "temperature",
-    },
-    precipitation: {
-      key: "precipitation",
-      fallbackKey: "precipitationProbability",
-      label: t("widgets.weatherNarrative.charts.precipitation", "Precipitation"),
-      unit: "mm",
-      fallbackUnit: "%",
-      className: "precipitation",
-    },
-    wind: {
-      key: "windGustValue",
-      fallbackKey: "windSpeedValue",
-      label: t("widgets.weatherNarrative.charts.wind", "Wind gusts"),
-      unit: weather.windUnit || "",
-      className: "wind",
-    },
-  };
-  const primaryDefinition = event.chartKind === "precipitation-wind"
-    ? definitions.precipitation
-    : definitions[event.chartKind] || definitions.temperature;
-  const series = [primaryDefinition];
-  if (event.chartKind === "precipitation-wind") series.push(definitions.wind);
-
-  return series.map(definition => {
-    const values = items.map(item => {
-      const value = item[definition.key] ?? item[definition.fallbackKey];
-      return Number.isFinite(value) ? value : null;
-    });
-    const hasPrimaryValues = items.some(item => Number.isFinite(item[definition.key]));
-    return {
-      ...definition,
-      items,
-      values,
-      unit: hasPrimaryValues ? definition.unit : definition.fallbackUnit || definition.unit,
-    };
-  }).filter(seriesItem => seriesItem.values.filter(Number.isFinite).length >= 2);
-}
-
-function selectChartItems(series, maxItems = 6) {
-  const indexes = series[0].items
-    .map((_, index) => index)
-    .filter(index => series.some(seriesItem => Number.isFinite(seriesItem.values[index])));
-  if (indexes.length <= maxItems) return indexes.map(index => ({ index, item: series[0].items[index] }));
-
-  const selectedIndexes = Array.from({ length: maxItems }, (_, position) => (
-    indexes[Math.round(position * (indexes.length - 1) / (maxItems - 1))]
-  ));
-  return [...new Set(selectedIndexes)].map(index => ({ index, item: series[0].items[index] }));
-}
-
-function getBarHeight(value, seriesItem) {
-  const values = seriesItem.values.filter(Number.isFinite);
-  if (!values.length || !Number.isFinite(value)) return 0;
-
-  if (seriesItem.className === "temperature") {
-    const min = Math.min(...values);
-    const max = Math.max(...values);
-    const range = max - min;
-    return range < 0.5 ? 52 : 18 + ((value - min) / range) * 70;
-  }
-
-  const max = Math.max(1, ...values);
-  return 10 + (value / max) * 78;
-}
-
-function formatChartValue(value, seriesItem) {
-  if (!Number.isFinite(value)) return "—";
-  const maximumFractionDigits = seriesItem.className === "precipitation" ? 2 : 0;
-  return Number(value).toLocaleString([], { maximumFractionDigits });
-}
-
-function formatChartTime(datetime) {
-  const date = new Date(datetime);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }).replace(/\s/g, "");
-}
-
-function createChart(event, weather) {
-  const series = getChartSeries(event, weather);
-  if (!series.length) return null;
-
-  const chart = document.createElement("div");
-  chart.className = "mha-weather-narrative-chart";
-  chart.setAttribute("role", "img");
-  chart.setAttribute("aria-label", series.map(item => item.label).join(" · "));
-
-  const plot = document.createElement("div");
-  plot.className = "mha-weather-narrative-chart-plot";
-  const columns = document.createElement("div");
-  columns.className = "mha-weather-narrative-chart-columns";
-  selectChartItems(series).forEach(({ index, item }) => {
-    const column = document.createElement("div");
-    column.className = "mha-weather-narrative-chart-column";
-    column.append(createText("mha-weather-narrative-chart-time", formatChartTime(item.datetime)));
-
-    const bars = document.createElement("div");
-    bars.className = "mha-weather-narrative-chart-bars";
-    const values = document.createElement("div");
-    values.className = "mha-weather-narrative-chart-values";
-    series.forEach(seriesItem => {
-      const value = seriesItem.values[index];
-      const bar = document.createElement("span");
-      bar.className = `mha-weather-narrative-bar mha-weather-narrative-bar--${seriesItem.className}`;
-      bar.style.setProperty("--bar-height", `${getBarHeight(value, seriesItem)}%`);
-      if (!Number.isFinite(value)) bar.classList.add("mha-weather-narrative-bar--empty");
-      bars.append(bar);
-
-      const valueLabel = createText(
-        `mha-weather-narrative-chart-value mha-weather-narrative-chart-value--${seriesItem.className}`,
-        formatChartValue(value, seriesItem),
-      );
-      valueLabel.setAttribute("title", seriesItem.unit ? `${valueLabel.textContent} ${seriesItem.unit}` : valueLabel.textContent);
-      values.append(valueLabel);
-    });
-    column.append(bars, values);
-    columns.append(column);
-  });
-  plot.append(columns);
-  chart.append(plot);
-
-  const legend = document.createElement("div");
-  legend.className = "mha-weather-narrative-chart-legend";
-  series.forEach(seriesItem => legend.append(
-    createText(
-      `mha-weather-narrative-legend mha-weather-narrative-legend--${seriesItem.className}`,
-      `${seriesItem.label}${seriesItem.unit ? ` · ${seriesItem.unit}` : ""}`,
-    ),
-  ));
-  chart.append(legend);
-  return chart;
-}
-
-function createAlertVisual(event) {
-  const visual = document.createElement("div");
-  visual.className = "mha-weather-narrative-alert";
-  visual.append(
-    createIconSymbol({ name: "warning", label: event.headline }),
-    createText("mha-weather-narrative-alert-text", event.alert),
-  );
-  return visual;
-}
-
-function createEmptyVisual(event, weather) {
-  const visual = document.createElement("div");
-  visual.className = "mha-weather-narrative-empty-visual";
-  visual.append(
-    createIconSymbol({ name: event.icon || "weather", label: event.headline }),
-    createText("mha-weather-narrative-empty-label", weather.temperature || event.secondary || ""),
-  );
-  return visual;
-}
-
-function createNarrativeVisual(event, weather) {
-  const visual = document.createElement("section");
-  visual.className = "mha-weather-narrative-visual";
-  if (event.chartKind === "alert") {
-    visual.append(createAlertVisual(event));
-  } else {
-    visual.append(createChart(event, weather) || createEmptyVisual(event, weather));
-  }
-  return visual;
-}
-
 function renderWeatherNarrative(root, weather, widget, now = new Date()) {
   const event = buildWeatherNarrativeModel(weather, now);
   root.replaceChildren();
@@ -228,7 +57,7 @@ function renderWeatherNarrative(root, weather, widget, now = new Date()) {
   );
   const icon = createNarrativeIcon(event, weather);
   header.append(copy, icon);
-  root.append(header, createNarrativeVisual(event, weather));
+  root.append(header);
   void widget;
 }
 
@@ -310,7 +139,7 @@ export const WEATHER_NARRATIVE_WIDGET_DEFINITION = Object.freeze({
   component: "weather-narrative-widget",
   category: "climate",
   manager: Object.freeze({
-    hidden: false,
+    hidden: true,
     entries: Object.freeze([
       Object.freeze({
         category: "climate",

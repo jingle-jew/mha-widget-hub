@@ -216,7 +216,7 @@ export const SCENES_WIDGET_DEFINITION = Object.freeze({
   component: "scenes-widget",
   category: "actions",
   manager: Object.freeze({
-    hidden: false,
+    hidden: true,
     entries: Object.freeze([
       Object.freeze({
         category: "actions",

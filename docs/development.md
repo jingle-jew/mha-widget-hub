@@ -75,10 +75,27 @@ npm run dev
 npm run build
 npm test
 npm run check:syntax
-npm run check:sync
+npm run check:package
 npm run check
 npm run check:layout
 ```
+
+The root loaders, `src/`, `styles/`, and `assets/` are the canonical frontend
+sources. `custom_components/mha_widget_hub/frontend/` is generated only by
+`npm run sync:frontend`; it is ignored by Git and must not be edited manually.
+
+Packaging commands have distinct responsibilities:
+
+```bash
+npm run check               # validate through a cleaned temporary package
+npm run sync:frontend       # generate the optional local integration copy
+npm run build:integration   # build dist/integration/custom_components/...
+npm run release:zip         # build staging + manual and HACS ZIPs under dist/
+npm run deploy:dev          # stage temporarily, then deploy with rsync
+```
+
+`npm run build` runs the checks and `build:integration`; it does not regenerate
+the ignored local frontend folder.
 
 Use:
 

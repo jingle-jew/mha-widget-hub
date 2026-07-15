@@ -117,6 +117,26 @@
     linear-gradient(135deg, rgba(255,255,255,.08), transparent 58%);
 }
 
+/* OneUI primary reuses the dock's canonical color recipe while keeping its own
+ * optical treatment. Panel and nested-surface roles remain independent. */
+:host([data-theme-style="oneui"]),
+:root[data-theme-style="oneui"] {
+  --mha-primary-surface: var(--mha-oneui-primary-surface);
+  --mha-surface-primary: var(--mha-primary-surface);
+  --mha-blur-primary: var(--mha-oneui-primary-blur);
+  --mha-saturation-primary: var(--mha-oneui-primary-saturation);
+  --mha-brightness-primary: var(--mha-oneui-primary-brightness);
+}
+
+/* iOS still derives its canonical primary role from its mapped surface. OneUI
+ * owns that role above and must not be reassigned here: its surface-primary
+ * already points back to primary, so doing both would create a CSS variable
+ * cycle and invalidate the widget surface. */
+:host([data-theme-style="ios"]),
+:root[data-theme-style="ios"] {
+  --mha-primary-surface: var(--mha-surface-primary);
+}
+
 /* iOS and OneUI canonical layer adapters.
  *
  * These selectors make the design contract explicit for the two glass themes
@@ -128,7 +148,6 @@
 :root[data-theme-style="ios"],
 :host([data-theme-style="oneui"]),
 :root[data-theme-style="oneui"] {
-  --mha-primary-surface: var(--mha-surface-primary);
   --mha-secondary-surface: var(--mha-surface-secondary);
   --mha-tertiary-surface: var(--mha-surface-tertiary);
   --mha-on-primary-surface: var(--mha-surface-secondary);

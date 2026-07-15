@@ -18,11 +18,11 @@ test("catalog items become complete normalized widget contracts", () => {
   }, deterministicId);
 
   assert.deepEqual(widget, {
-    id: "widget-actions-simple-button-21i3v9-4fzzz",
+    id: "widget-lights-simple-button-21i3v9-4fzzz",
     kind: "button",
     type: "button",
     component: "button-widget",
-    category: "actions",
+    category: "lights",
     variant: "simple-button",
     title: "Lampe",
     w: 4,

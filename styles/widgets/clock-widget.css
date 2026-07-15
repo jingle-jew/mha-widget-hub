@@ -39,14 +39,14 @@
   font-size: var(--mha-type-clock-time-size, var(--mha-type-widget-display-lg, 3.2rem));
   line-height: .9;
   letter-spacing: -.07em;
-  font-weight: 780;
+  font-weight: var(--mha-font-weight-heavy);
   font-variant-numeric: tabular-nums;
 }
 
 .mha-clock-date {
   color: var(--mha-clock-widget-muted);
   font-size: var(--mha-type-clock-date-size, var(--mha-type-widget-state-size, .76rem));
-  font-weight: 720;
+  font-weight: var(--mha-font-weight-bold);
   text-transform: capitalize;
 }
 
@@ -157,7 +157,7 @@
   place-items: start center;
   color: color-mix(in srgb, var(--mha-clock-widget-text) 72%, transparent);
   font-size: var(--mha-type-clock-number-size, .62rem);
-  font-weight: 760;
+  font-weight: var(--mha-font-weight-heavy);
   transform: rotate(var(--mha-clock-number-rotation));
   transform-origin: center;
 }

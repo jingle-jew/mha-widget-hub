@@ -9,6 +9,7 @@ import {
   PANEL_SURFACE_ROLES,
 } from "../panels/panel-surface-contract.js";
 import { t } from "../i18n/index.js";
+import { createMhaRadio, createMhaSelect } from "../ui/form-controls.js";
 
 export function supportsWidgetConfiguration(widget = {}) {
   return Boolean(getWidgetConfigType(widget));
@@ -38,7 +39,7 @@ export function buildConfiguredWidget(session, hass, visibilityConfig) {
 }
 
 function createField(labelText, control, { hint = "" } = {}) {
-  const field = document.createElement("label");
+  const field = document.createElement(control?.classList?.contains?.("mha-select") ? "div" : "label");
   field.className = "mha-widget-config-field";
 
   const label = document.createElement("span");
@@ -55,6 +56,33 @@ function createField(labelText, control, { hint = "" } = {}) {
   return field;
 }
 
+function createSelectControl({ label = "", value = "", options = [], disabled = false, onChange } = {}) {
+  return createMhaSelect({
+    label,
+    value,
+    options,
+    disabled,
+    className: "mha-widget-config-select",
+    triggerClassName: "mha-widget-config-control",
+    onChange,
+  });
+}
+
+function createRadioControl({ label = "", name = "", value = "", checked = false, onChange } = {}) {
+  return createMhaRadio({
+    label,
+    name,
+    value,
+    checked,
+    className: "mha-widget-config-choice",
+    inputClassName: "mha-widget-config-choice-input",
+    labelClassName: "mha-widget-config-choice-label",
+    onChange: (isChecked, event) => {
+      if (isChecked) onChange?.(value, event);
+    },
+  });
+}
+
 function configOptionLabel(group, option = {}) {
   if (!option?.value) return option?.label || "";
   return t(`${group}.${option.value}`, option.label);
@@ -68,6 +96,8 @@ function emptyLabelForConfigOption(group, option = {}) {
 function createRenderHelpers() {
   return Object.freeze({
     createField,
+    createRadioControl,
+    createSelectControl,
     configOptionLabel,
     emptyLabelForConfigOption,
     t,
@@ -166,6 +196,8 @@ export function createWidgetConfigPopup({
     surfaceRole: PANEL_SURFACE_ROLES.POPUP,
     mobilePresentation: PANEL_MOBILE_PRESENTATIONS.SHEET,
   });
+  const sheet = root.querySelector?.(".mha-widget-config-sheet");
+  if (sheet) sheet.dataset.mhaSelectBoundary = "true";
   root.hidden = !session;
   return root;
 }

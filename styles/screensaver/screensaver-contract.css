@@ -26,6 +26,18 @@
   opacity: var(--mha-widget-shell-highlight-opacity, var(--mha-widget-reflection-opacity, 0));
 }
 
+:host([data-theme-style="oneui"]) .mha-screensaver-nowbar-tile {
+  --mha-nowbar-oneui-surface: var(
+    --mha-oneui-mobile-dock-surface,
+    var(--mha-shell-dock-surface, var(--mha-widget-shell-surface))
+  );
+  background: var(--mha-nowbar-oneui-surface);
+  border-color: var(--mha-oneui-mobile-dock-border, var(--mha-shell-border));
+  box-shadow: var(--mha-shell-shadow);
+  -webkit-backdrop-filter: var(--mha-oneui-dock-filter);
+  backdrop-filter: var(--mha-oneui-dock-filter);
+}
+
 :host([data-theme-style="material"]) .mha-screensaver-nowbar-tile {
   background: var(--mha-widget-shell-surface, var(--mha-tile-surface, var(--mha-surface-tonal)));
   border-color: transparent;

@@ -1,9 +1,0 @@
-/* Layout scale contract */
-
-:host {
-  --mha-layout-density: regular;
-  --mha-ui-scale: 1;
-  --mha-widget-scale: var(--mha-ui-scale);
-  --mha-type-scale: var(--mha-ui-scale);
-  --mha-control-scale: var(--mha-ui-scale);
-}

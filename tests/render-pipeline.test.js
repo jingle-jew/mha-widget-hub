@@ -502,6 +502,99 @@ test("mountRenderShell preserves the existing background node across rerenders",
   globalThis.document = previousDocument;
 });
 
+test("media page wallpaper keeps the previous artwork until the next image is decoded", async () => {
+  await loadHubPrototype();
+  const { requestMediaPageWallpaperArtwork } = await import("../src/layout/render-pipeline.js");
+  const values = {
+    "--mha-media-page-wallpaper-image": "url(\"/old-artwork.jpg\")",
+  };
+  const layers = [
+    {
+      dataset: {
+        mediaWallpaperActive: "true",
+        mediaWallpaperArtworkUrl: "/old-artwork.jpg",
+      },
+      style: { backgroundImage: "url(\"/old-artwork.jpg\")" },
+    },
+    {
+      dataset: { mediaWallpaperActive: "false" },
+      style: { backgroundImage: "" },
+    },
+  ];
+  const host = {
+    dataset: { mediaPageWallpaper: "true" },
+    shadowRoot: {
+      querySelectorAll: () => layers,
+    },
+    style: {
+      setProperty: (name, value) => { values[name] = value; },
+    },
+    _mediaPageWallpaperArtworkUrl: "/old-artwork.jpg",
+  };
+  let image = null;
+
+  const pending = requestMediaPageWallpaperArtwork(host, "/new-artwork.jpg", {
+    createImage: () => {
+      image = {
+        complete: false,
+        naturalWidth: 0,
+        decode: () => Promise.resolve(),
+      };
+      return image;
+    },
+  });
+
+  assert.equal(values["--mha-media-page-wallpaper-image"], "url(\"/old-artwork.jpg\")");
+  image.onload();
+  assert.equal(await pending, true);
+  assert.equal(values["--mha-media-page-wallpaper-image"], "url(\"/new-artwork.jpg\")");
+  assert.equal(host.dataset.mediaPageWallpaper, "true");
+  assert.equal(layers[0].dataset.mediaWallpaperActive, "false");
+  assert.equal(layers[1].dataset.mediaWallpaperActive, "true");
+  assert.equal(layers[1].dataset.mediaWallpaperArtworkUrl, "/new-artwork.jpg");
+  assert.equal(layers[1].style.backgroundImage, "url(\"/new-artwork.jpg\")");
+
+  layers[1].dataset.mediaWallpaperActive = "false";
+  assert.equal(await requestMediaPageWallpaperArtwork(host, "/new-artwork.jpg"), true);
+  assert.equal(layers[1].dataset.mediaWallpaperActive, "true");
+});
+
+test("media page wallpaper ignores an artwork load superseded by a newer song", async () => {
+  await loadHubPrototype();
+  const { requestMediaPageWallpaperArtwork } = await import("../src/layout/render-pipeline.js");
+  const values = {
+    "--mha-media-page-wallpaper-image": "url(\"/old-artwork.jpg\")",
+  };
+  const host = {
+    dataset: { mediaPageWallpaper: "true" },
+    style: {
+      setProperty: (name, value) => { values[name] = value; },
+    },
+    _mediaPageWallpaperArtworkUrl: "/old-artwork.jpg",
+  };
+  const images = [];
+  const createImage = () => {
+    const image = {
+      complete: false,
+      naturalWidth: 0,
+      decode: () => Promise.resolve(),
+    };
+    images.push(image);
+    return image;
+  };
+
+  const first = requestMediaPageWallpaperArtwork(host, "/first-artwork.jpg", { createImage });
+  const second = requestMediaPageWallpaperArtwork(host, "/second-artwork.jpg", { createImage });
+  images[0].onload();
+
+  assert.equal(await first, false);
+  assert.equal(values["--mha-media-page-wallpaper-image"], "url(\"/old-artwork.jpg\")");
+
+  images[1].onload();
+  assert.equal(await second, true);
+  assert.equal(values["--mha-media-page-wallpaper-image"], "url(\"/second-artwork.jpg\")");
+});
+
 test("mountRenderShell does not reassign the same wallpaper src on rerender", async () => {
   const prototype = await loadHubPrototype();
   const previousDocument = globalThis.document;

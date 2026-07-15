@@ -219,12 +219,12 @@ export const TOGGLE_WIDGET_CONFIG_MANIFEST = Object.freeze({
 
 export const TOGGLE_WIDGET_DEFINITION = Object.freeze({
   component: "toggle-widget",
-  category: "actions",
+  category: "lights",
   manager: Object.freeze({
     hidden: false,
     entries: Object.freeze([
-      Object.freeze({ category: "actions", variant: "toggle-widget", label: "Toggle", size: freezeSize(3, 1), description: "Icon, state, and switch.", order: 30 }),
-      Object.freeze({ category: "actions", variant: "toggle-widget", label: "Toggle large", size: freezeSize(4, 1), description: "Switch with more space.", order: 40 }),
+      Object.freeze({ category: "lights", variant: "toggle-widget", label: "Toggle", size: freezeSize(3, 1), description: "Icon, state, and switch.", order: 30 }),
+      Object.freeze({ category: "lights", variant: "toggle-widget", label: "Toggle large", size: freezeSize(4, 1), description: "Switch with more space.", order: 40 }),
     ]),
   }),
   renderer: "toggle",

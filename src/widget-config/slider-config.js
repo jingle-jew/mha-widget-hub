@@ -95,46 +95,41 @@ export function buildSliderWidgetConfig(widget, draft, hass, visibilityConfig) {
 }
 
 export function renderSliderConfigFields(session, hass, visibilityConfig, onChange, helpers) {
-  const { createField, configOptionLabel, emptyLabelForConfigOption, t } = helpers;
+  const { createField, createSelectControl, configOptionLabel, emptyLabelForConfigOption, t } = helpers;
   const reconciled = reconcileSliderConfigDraft(session.draft, hass, visibilityConfig);
   const { draft } = reconciled;
   const fields = document.createElement("div");
   fields.className = "mha-widget-config-fields";
 
-  const actionSelect = document.createElement("select");
-  actionSelect.className = "mha-widget-config-control";
-  SLIDER_ACTIONS.forEach((action) => {
-    const item = document.createElement("option");
-    item.value = action.value;
-    item.textContent = configOptionLabel("widgets.config.sliderActions", action);
-    item.selected = action.value === draft.sliderAction;
-    actionSelect.append(item);
-  });
-  actionSelect.addEventListener("change", (event) => {
-    updateSliderAction(draft, event.currentTarget.value, hass, visibilityConfig);
-    onChange?.({ rerender: true });
+  const actionLabel = t("widgets.config.action", "Action");
+  const actionSelect = createSelectControl({
+    label: actionLabel,
+    value: draft.sliderAction,
+    options: SLIDER_ACTIONS.map(action => ({
+      value: action.value,
+      label: configOptionLabel("widgets.config.sliderActions", action),
+    })),
+    onChange: (value) => {
+      updateSliderAction(draft, value, hass, visibilityConfig);
+      onChange?.({ rerender: true });
+    },
   });
 
-  const deviceSelect = document.createElement("select");
-  deviceSelect.className = "mha-widget-config-control";
-  deviceSelect.disabled = !reconciled.options.length;
-  if (!reconciled.options.length) {
-    const empty = document.createElement("option");
-    empty.value = "";
-    empty.textContent = emptyLabelForConfigOption("widgets.config.emptyLabels", reconciled.action);
-    deviceSelect.append(empty);
-  } else {
-    reconciled.options.forEach((option) => {
-      const item = document.createElement("option");
-      item.value = option.value;
-      item.textContent = option.label;
-      item.selected = option.value === draft.entityId;
-      deviceSelect.append(item);
-    });
-  }
-  deviceSelect.addEventListener("change", (event) => {
-    updateSliderEntity(draft, event.currentTarget.value, reconciled.options);
-    onChange?.({ rerender: true });
+  const deviceLabel = t("widgets.config.device", "Device");
+  const deviceSelect = createSelectControl({
+    label: deviceLabel,
+    value: draft.entityId,
+    disabled: !reconciled.options.length,
+    options: reconciled.options.length
+      ? reconciled.options
+      : [{
+        value: "",
+        label: emptyLabelForConfigOption("widgets.config.emptyLabels", reconciled.action),
+      }],
+    onChange: (value) => {
+      updateSliderEntity(draft, value, reconciled.options);
+      onChange?.({ rerender: true });
+    },
   });
 
   const nameInput = document.createElement("input");
@@ -170,8 +165,8 @@ export function renderSliderConfigFields(session, hass, visibilityConfig, onChan
   const iconNameRow = createInlineIconNameRow(nameInput, iconPicker);
 
   fields.append(
-    createField(t("widgets.config.action", "Action"), actionSelect),
-    createField(t("widgets.config.device", "Device"), deviceSelect),
+    createField(actionLabel, actionSelect),
+    createField(deviceLabel, deviceSelect),
     createField(t("widgets.modesRoutines.displayName", "Display name"), iconNameRow),
   );
   return { fields, canSave: Boolean(reconciled.selected) };

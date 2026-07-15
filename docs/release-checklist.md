@@ -219,15 +219,16 @@ Confirm migrations/defaults work safely.
 Confirm packaged files include everything needed:
 
 ```text
-mha-widget-hub.js
-src/*
-styles/*
-assets/*
-custom_components/* if applicable
-hacs.json
-README.md
-LICENSE
-docs/*
+custom_components/mha_widget_hub/__init__.py
+custom_components/mha_widget_hub/manifest.json
+custom_components/mha_widget_hub/brand/*
+custom_components/mha_widget_hub/frontend/mha-widget-hub.js
+custom_components/mha_widget_hub/frontend/mha-widget-hub-loader.js
+custom_components/mha_widget_hub/frontend/mha-admin-loader.js
+custom_components/mha_widget_hub/frontend/mha-diagnostics-loader.js
+custom_components/mha_widget_hub/frontend/src/*
+custom_components/mha_widget_hub/frontend/styles/*
+custom_components/mha_widget_hub/frontend/assets/*
 ```
 
 Confirm packaged files exclude unnecessary files:
@@ -243,6 +244,8 @@ debug output
 If using HACS, verify:
 
 - repository structure is valid;
+- the GitHub release contains `mha-widget-hub.zip` and `mha-widget-hub-hacs.zip`;
+- `hacs.json` points to that ZIP release asset;
 - install path is correct;
 - frontend resources are available;
 - integration/panel registration works;

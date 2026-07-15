@@ -41,6 +41,8 @@ import {
   buildWeatherWidgetConfig,
   createWeatherConfigDraft,
   normalizeWeatherForecastType,
+  normalizeWeatherSurfaceMode,
+  supportsWeatherSurfaceModeConfig,
 } from "../src/widget-config/weather-config.js";
 import {
   buildScenesWidgetConfig,
@@ -507,7 +509,7 @@ test("button and weather configuration only persist authorized selections", () =
   );
 });
 
-test("weather configuration defaults and persists forecast type", () => {
+test("weather configuration defaults and persists forecast and surface modes", () => {
   const hass = {
     states: {
       "weather.home": entity("weather.home", "sunny", { friendly_name: "Maison" }),
@@ -516,14 +518,20 @@ test("weather configuration defaults and persists forecast type", () => {
 
   const created = createWeatherConfigDraft({}, hass);
   assert.equal(created.draft.forecastType, "daily");
+  assert.equal(created.draft.surfaceMode, "dynamic");
   assert.equal(normalizeWeatherForecastType("weird"), "daily");
-  assert.equal(
-    buildWeatherWidgetConfig({ kind: "weather" }, {
-      ...created.draft,
-      forecastType: "hourly",
-    }, hass).forecastType,
-    "hourly",
-  );
+  assert.equal(normalizeWeatherSurfaceMode("weird"), "dynamic");
+  const configured = buildWeatherWidgetConfig({ kind: "weather" }, {
+    ...created.draft,
+    forecastType: "hourly",
+    surfaceMode: "dynamic",
+  }, hass);
+  assert.equal(configured.forecastType, "hourly");
+  assert.equal(configured.surfaceMode, "dynamic");
+  assert.equal(supportsWeatherSurfaceModeConfig({ kind: "weather" }, "oneui"), true);
+  assert.equal(supportsWeatherSurfaceModeConfig({ kind: "weather" }, "ios"), false);
+  assert.equal(supportsWeatherSurfaceModeConfig({ kind: "weather" }, "material"), false);
+  assert.equal(supportsWeatherSurfaceModeConfig({ kind: "weather-narrative" }, "oneui"), false);
 });
 
 test("modes and routines configuration keeps four buttons and preserves missing scenes", () => {

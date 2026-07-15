@@ -4,6 +4,7 @@ import {
 } from "../ha/weather-page-data.js";
 import {
   createWeatherPageMetricWidget,
+  createWeatherPageRadarWidget,
   createWeatherPageWeatherWidget,
 } from "./weather-page-seed.js";
 
@@ -37,7 +38,7 @@ const WEATHER_METRIC_LABEL_KEYS = Object.freeze({
   "air-quality-no2": "weatherPage.metrics.nitrogenDioxide",
   "air-quality-so2": "weatherPage.metrics.sulfurDioxide",
   "air-quality-voc": "weatherPage.metrics.voc",
-  summary: "weatherPage.metrics.summary",
+  summary: "widgets.weatherManager.narrative",
   alerts: "weatherPage.metrics.alerts",
   sun: "weatherPage.metrics.sun",
 });
@@ -131,21 +132,19 @@ function createWeatherCatalogItem(definition, weatherEntityId = "") {
   };
 }
 
-function createNarrativeCatalogItem(weatherEntityId = "") {
+function createRadarCatalogItem(source = {}) {
+  const widget = createWeatherPageRadarWidget({
+    pageId: "catalog",
+    source,
+  });
   return {
-    kind: "weather-narrative",
-    type: "weather-narrative",
-    component: "weather-narrative-widget",
-    category: "climate",
-    variant: "weather-narrative",
-    label: "Weather brief",
-    labelKey: "widgets.weatherManager.narrative",
-    description: "Contextual narrative from the selected integration.",
-    descriptionKey: "widgets.weatherManager.narrativeDescription",
-    size: { w: 4, h: 2 },
-    entityId: weatherEntityId,
-    entity_id: weatherEntityId,
-    order: 40,
+    ...widget,
+    label: "Radar map",
+    labelKey: "widgets.weatherManager.radar",
+    description: "Live radar image from Home Assistant.",
+    descriptionKey: "widgets.weatherManager.radarDescription",
+    size: { w: 4, h: 3 },
+    order: 35,
   };
 }
 
@@ -178,7 +177,7 @@ export function buildWeatherPageWidgetManagerCategoryFromSources(sources = {}, {
   const widgets = entityId
     ? [
         ...WEATHER_PAGE_BASE_WIDGETS.map(definition => createWeatherCatalogItem(definition, entityId)),
-        createNarrativeCatalogItem(entityId),
+        ...(sources.radar ? [createRadarCatalogItem(sources.radar)] : []),
         ...metricItems,
       ].sort((a, b) => (a.order || 0) - (b.order || 0))
     : [];

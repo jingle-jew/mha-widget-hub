@@ -47,7 +47,7 @@ export function buildMediaWidgetConfig(widget, draft, hass, visibilityConfig) {
 }
 
 export function renderMediaConfigFields(session, hass, visibilityConfig, onChange, helpers) {
-  const { createField, t } = helpers;
+  const { createField, createSelectControl, t } = helpers;
   const reconciled = reconcileMediaConfigDraft(session.draft, hass, visibilityConfig);
   const { draft } = reconciled;
   const fields = document.createElement("div");
@@ -64,31 +64,26 @@ export function renderMediaConfigFields(session, hass, visibilityConfig, onChang
     onChange?.();
   });
 
-  const mediaSelect = document.createElement("select");
-  mediaSelect.className = "mha-widget-config-control";
-  mediaSelect.disabled = !reconciled.options.length;
-  if (!reconciled.options.length) {
-    const empty = document.createElement("option");
-    empty.value = "";
-    empty.textContent = t("widgets.config.noMediaPlayer", "No authorized and available media player.");
-    mediaSelect.append(empty);
-  } else {
-    reconciled.options.forEach((option) => {
-      const item = document.createElement("option");
-      item.value = option.value;
-      item.textContent = option.label;
-      item.selected = option.value === draft.mediaEntityId;
-      mediaSelect.append(item);
-    });
-  }
-  mediaSelect.addEventListener("change", (event) => {
-    updateMediaEntity(draft, event.currentTarget.value, reconciled.options);
-    onChange?.({ rerender: true });
+  const mediaPlayerLabel = t("widgets.config.mediaPlayer", "Media player");
+  const mediaSelect = createSelectControl({
+    label: mediaPlayerLabel,
+    value: draft.mediaEntityId,
+    disabled: !reconciled.options.length,
+    options: reconciled.options.length
+      ? reconciled.options
+      : [{
+        value: "",
+        label: t("widgets.config.noMediaPlayer", "No authorized and available media player."),
+      }],
+    onChange: (value) => {
+      updateMediaEntity(draft, value, reconciled.options);
+      onChange?.({ rerender: true });
+    },
   });
 
   fields.append(
     createField(t("widgets.modesRoutines.displayName", "Display name"), nameInput),
-    createField(t("widgets.config.mediaPlayer", "Media player"), mediaSelect),
+    createField(mediaPlayerLabel, mediaSelect),
   );
 
   return { fields, canSave: Boolean(reconciled.selected) };

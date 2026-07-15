@@ -50,6 +50,7 @@ test("i18n translates, interpolates, and falls back to English", () => {
   setLanguage("fr-CA");
   assert.equal(getLanguage(), "fr");
   assert.equal(t("common.save", "Save"), "Enregistrer");
+  assert.equal(t("weatherPage.metrics.snowDepth", "Snow depth"), "Accumulations");
   assert.equal(t("widgets.config.buttonIndex", "Button {count}", { count: 3 }), "Bouton 3");
   assert.equal(t("missing.key", "Fallback text"), "Fallback text");
 

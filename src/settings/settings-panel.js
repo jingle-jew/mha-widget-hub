@@ -1,5 +1,6 @@
 import { ACCENT_REFERENCE_COLORS, getAccentOptions, normalizeAccent, supportsAutoAccent } from "./accent-palettes.js";
 import { createToggle } from "../ui/toggle.js";
+import { createMhaCheckbox, createMhaSelect } from "../ui/form-controls.js";
 import { createIcon } from "../ui/icon.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
 import { createBackButton, createCloseButton, createMoveUpButton, createMoveDownButton, createRemoveButton } from "../system/system-buttons.js";
@@ -261,34 +262,111 @@ const CLOCK_VARIANTS = [
   { value: "ios-analog", label: "Analog iOS", labelKey: "settings.clockVariants.ios-analog" },
 ];
 
-function option(value, label, selectedValue) {
-  const opt = document.createElement("option");
-  opt.value = value;
-  opt.textContent = label;
-  opt.selected = value === selectedValue;
-  return opt;
-}
-
 function optionLabel(item = {}) {
   return item.labelKey ? t(item.labelKey, item.label) : item.label;
 }
 
 function createSelect({ label, value, options, onChange }) {
-  const field = document.createElement("label");
+  const field = document.createElement("div");
   field.className = "mha-settings-field";
 
   const text = document.createElement("span");
   text.className = "mha-settings-label";
   text.textContent = label;
 
-  const select = document.createElement("select");
-  select.className = "mha-settings-select";
+  const control = createMhaSelect({
+    label,
+    value,
+    options: options.map(item => ({ ...item, label: optionLabel(item) })),
+    triggerClassName: "mha-settings-select",
+    onChange,
+  });
+  const select = control.querySelector(".mha-select-native");
+  const trigger = control.querySelector(".mha-select-trigger");
   select.dataset.settingsControl = label;
   select.dataset.settingsValueControl = "true";
-  select.append(...options.map((item) => option(item.value, optionLabel(item), value)));
-  select.addEventListener("change", () => onChange?.(select.value));
+  trigger.dataset.settingsControl = label;
 
-  field.append(text, select);
+  field.append(text, control);
+  return field;
+}
+
+function createPercentageSlider({
+  label,
+  value = 0,
+  min = 0,
+  max = 100,
+  onInput,
+} = {}) {
+  const normalizedValue = Math.max(min, Math.min(max, Number(value) || 0));
+  const field = document.createElement("label");
+  field.className = "mha-settings-range-field";
+
+  const header = document.createElement("span");
+  header.className = "mha-settings-range-header";
+
+  const text = document.createElement("span");
+  text.className = "mha-settings-label";
+  text.textContent = label;
+
+  const output = document.createElement("output");
+  output.className = "mha-settings-range-value";
+
+  const input = document.createElement("input");
+  input.className = "mha-settings-range-input";
+  input.type = "range";
+  input.min = String(min);
+  input.max = String(max);
+  input.step = "1";
+  input.dataset.settingsControl = label;
+  input.dataset.settingsValueControl = "true";
+  input.setAttribute("aria-label", label);
+
+  const syncValue = (nextValue) => {
+    const numericValue = Math.max(min, Math.min(max, Number(nextValue) || 0));
+    input.value = String(numericValue);
+    input.style.setProperty("--mha-settings-range-value", `${numericValue}%`);
+    output.value = String(numericValue);
+    output.textContent = `${numericValue}%`;
+    return numericValue;
+  };
+
+  input.__mhaSettingsRangeApi = { setValue: syncValue };
+  syncValue(normalizedValue);
+  input.addEventListener("input", () => onInput?.(syncValue(input.value)));
+
+  let activePointerId = null;
+  const setPreviewActive = (active) => {
+    const panel = input.closest?.(".mha-settings-panel");
+    const host = input.getRootNode?.()?.host;
+    panel?.classList?.toggle?.("is-oneui-opacity-previewing", active);
+    host?.classList?.toggle?.("is-oneui-opacity-previewing", active);
+  };
+  const finishPreview = (event) => {
+    if (
+      activePointerId !== null
+      && event?.pointerId !== undefined
+      && event.pointerId !== activePointerId
+    ) {
+      return;
+    }
+    activePointerId = null;
+    setPreviewActive(false);
+  };
+
+  input.addEventListener("pointerdown", (event) => {
+    if (event.button !== undefined && event.button !== 0) return;
+    activePointerId = event.pointerId ?? 0;
+    setPreviewActive(true);
+  });
+  input.addEventListener("pointerup", finishPreview);
+  input.addEventListener("pointercancel", finishPreview);
+  input.addEventListener("lostpointercapture", finishPreview);
+  input.addEventListener("change", finishPreview);
+  input.addEventListener("blur", finishPreview);
+
+  header.append(text, output);
+  field.append(header, input);
   return field;
 }
 
@@ -332,22 +410,18 @@ function createSwitch({ label, description = "", checked = false, onChange }) {
 }
 
 function createCheckbox({ label, checked = false, onChange }) {
-  const field = document.createElement("label");
-  field.className = "mha-settings-checkbox";
-
-  const text = document.createElement("span");
-  text.className = "mha-settings-label";
-  text.textContent = label;
-
-  const input = document.createElement("input");
-  input.className = "mha-settings-checkbox-input";
-  input.type = "checkbox";
-  input.checked = Boolean(checked);
+  const field = createMhaCheckbox({
+    label,
+    checked,
+    indicatorPlacement: "end",
+    className: "mha-settings-checkbox",
+    inputClassName: "mha-settings-checkbox-input",
+    labelClassName: "mha-settings-label",
+    onChange,
+  });
+  const input = field.querySelector(".mha-settings-checkbox-input");
   input.dataset.settingsControl = label;
   input.dataset.settingsValueControl = "true";
-  input.addEventListener("change", () => onChange?.(Boolean(input.checked)));
-
-  field.append(text, input);
   return field;
 }
 
@@ -781,13 +855,21 @@ function updateMatchedValueControls(existing, next) {
     if (control instanceof HTMLInputElement && source instanceof HTMLInputElement) {
       control.checked = source.checked;
       control.disabled = source.disabled;
-      control.value = source.value;
+      if (control.__mhaSettingsRangeApi) {
+        control.__mhaSettingsRangeApi.setValue(source.value);
+      } else {
+        control.value = source.value;
+      }
       return;
     }
 
     if (control instanceof HTMLSelectElement && source instanceof HTMLSelectElement) {
-      control.value = source.value;
-      control.disabled = source.disabled;
+      control.__mhaSelectApi?.setValue(source.value);
+      control.__mhaSelectApi?.setDisabled(source.disabled);
+      if (!control.__mhaSelectApi) {
+        control.value = source.value;
+        control.disabled = source.disabled;
+      }
     }
   });
 }
@@ -862,6 +944,7 @@ export function createSettingsPanel({
   accentMode = "manual",
   accentPaletteExpanded = false,
   iconShape = "auto",
+  oneUiPrimarySurfaceOpacity = 88,
   effectiveIconShape = "",
   hideHaSidebar = false,
   showDockLabels = false,
@@ -897,6 +980,7 @@ export function createSettingsPanel({
   onAccentModeChange,
   onAccentPaletteExpandedChange,
   onIconShapeChange,
+  onOneUiPrimarySurfaceOpacityChange,
   onHideHaSidebarChange,
   onShowDockLabelsChange,
   onStatusBarModeChange,
@@ -1151,6 +1235,16 @@ export function createSettingsPanel({
         onChange: onIconShapeChange,
       }),
     );
+
+    if (themeStyle === "oneui") {
+      appearanceControls.push(createPercentageSlider({
+        label: t("settings.primarySurfaceOpacity", "Widget opacity"),
+        value: oneUiPrimarySurfaceOpacity,
+        min: 0,
+        max: 100,
+        onInput: onOneUiPrimarySurfaceOpacityChange,
+      }));
+    }
 
     sections.push(createSection(t("settings.appearance", "Appearance"), appearanceControls));
     sections.push(createSection(t("settings.customization", "Customization"), [

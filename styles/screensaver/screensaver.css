@@ -138,14 +138,14 @@
   font-size: clamp(4.2rem, 15vw, 9rem);
   line-height: .9;
   letter-spacing: -.07em;
-  font-weight: 760;
+  font-weight: var(--mha-font-weight-heavy);
 }
 
 .mha-screensaver-date {
   margin-block-start: clamp(.6rem, 1.7vw, 1.1rem);
   font-size: clamp(.95rem, 2.4vw, 1.35rem);
   color: var(--mha-text-secondary);
-  font-weight: 650;
+  font-weight: var(--mha-font-weight-semibold);
   text-transform: capitalize;
 }
 
@@ -206,7 +206,7 @@
 
 .mha-screensaver-nowbar-title {
   font-size: clamp(.95rem, 2vw, 1.1rem);
-  font-weight: 760;
+  font-weight: var(--mha-font-weight-heavy);
 }
 
 .mha-screensaver-nowbar-subtitle {

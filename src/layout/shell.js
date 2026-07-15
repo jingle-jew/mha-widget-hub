@@ -11,13 +11,18 @@ export function createShell(meta = {}) {
   wallpaper.className = "mha-background-wallpaper";
   wallpaper.alt = "";
   wallpaper.setAttribute("aria-hidden", "true");
-  const mediaLayer = document.createElement("div");
-  mediaLayer.className = "mha-background-media";
+  const mediaLayers = ["primary", "secondary"].map((layerId) => {
+    const layer = document.createElement("div");
+    layer.className = "mha-background-media";
+    layer.dataset.mediaWallpaperLayer = layerId;
+    layer.dataset.mediaWallpaperActive = "false";
+    return layer;
+  });
   const mediaOverlay = document.createElement("div");
   mediaOverlay.className = "mha-background-media-overlay";
   for (let i = 0; i < 4; i++) bg.append(document.createElement("span"));
   bg.append(createIosOrganicWallpaper());
-  bg.append(wallpaper, mediaLayer, mediaOverlay);
+  bg.append(wallpaper, ...mediaLayers, mediaOverlay);
 
   const shell = document.createElement("main");
   shell.className = "mha-shell";

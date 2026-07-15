@@ -16,6 +16,91 @@
   gap: .45rem;
 }
 
+.mha-widget-config-select {
+  inline-size: 100%;
+  justify-self: stretch;
+}
+
+.mha-widget-config-choice-group {
+  min-inline-size: 0;
+  display: grid;
+  gap: .45rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.mha-widget-config-choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .6rem;
+}
+
+.mha-widget-config-choice {
+  min-block-size: 2.8rem;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: .65rem;
+  padding: .65rem .8rem;
+  border: 1px solid var(--mha-popup-control-border, var(--mha-control-border));
+  border-radius: .9rem;
+  background: var(--mha-popup-control-surface, var(--mha-control-surface));
+  color: var(--mha-text-primary);
+  cursor: pointer;
+}
+
+.mha-widget-config-choice:has(.mha-widget-config-choice-input:checked) {
+  border-color: var(--mha-border-focus, var(--mha-accent));
+  background: var(--mha-control-surface-hover, var(--mha-popup-control-surface));
+}
+
+.mha-widget-config-choice .mha-choice-indicator {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.mha-widget-config-choice-label {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+/* OneUI surface choices stay visually unboxed until selected. The selected
+ * option uses the theme accent directly instead of an ambiguous popup layer. */
+:host([data-theme-style="oneui"]) .mha-widget-config-choice {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+
+:host([data-theme-style="oneui"]) .mha-widget-config-choice:has(.mha-widget-config-choice-input:checked) {
+  border-color: transparent;
+  background: var(--mha-accent);
+  color: var(--mha-accent-contrast, #fff);
+  box-shadow: none;
+}
+
+:host([data-theme-style="oneui"]) .mha-widget-config-choice .mha-choice-indicator {
+  box-sizing: border-box;
+  border: 1px solid rgba(0,0,0,.56);
+  border-radius: 50%;
+  background: #fff;
+}
+
+:host([data-theme-style="oneui"]) .mha-widget-config-choice-input:checked ~ .mha-choice-indicator {
+  border-color: rgba(0,0,0,.56);
+  background: #fff;
+}
+
+:host([data-theme-style="oneui"]) .mha-widget-config-choice-input:checked ~ .mha-choice-indicator::after {
+  background: #111;
+}
+
+:host([data-theme-style="oneui"]) .mha-widget-config-choice-input:focus-visible ~ .mha-choice-indicator {
+  outline: 2px solid var(--mha-text-primary);
+  outline-offset: 2px;
+}
+
 .mha-widget-config-group {
   display: grid;
   gap: .85rem;
@@ -29,13 +114,13 @@
   margin: 0;
   color: var(--mha-text-primary, #fff);
   font-size: .92rem;
-  font-weight: 780;
+  font-weight: var(--mha-font-weight-heavy);
 }
 
 .mha-widget-config-label {
   color: var(--mha-text-primary, #fff);
   font-size: .86rem;
-  font-weight: 750;
+  font-weight: var(--mha-font-weight-heavy);
 }
 
 .mha-widget-config-control {

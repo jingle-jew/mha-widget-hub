@@ -3,8 +3,16 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 import { createWeatherMetricWidgetContent } from "../src/widgets/weather-metric-widget.js";
-import { createWeatherWidgetContent } from "../src/widgets/weather-widget.js";
+import {
+  createWeatherWidgetContent,
+  WEATHER_WIDGET_CONTENT_RENDERER,
+} from "../src/widgets/weather-widget.js";
 import { createWeatherNarrativeWidgetContent } from "../src/widgets/weather-narrative-widget.js";
+import { setLanguage } from "../src/i18n/index.js";
+
+test.beforeEach(() => {
+  setLanguage("en");
+});
 
 function findByClass(node, className) {
   if (!node) return null;
@@ -44,7 +52,7 @@ function installDom() {
   };
 }
 
-test("weather summary metric combines current weather with narrative text", () => {
+test("weather summary metric combines current weather with the contextual brief", () => {
   installDom();
 
   const hass = {
@@ -91,12 +99,14 @@ test("weather summary metric combines current weather with narrative text", () =
   });
 
   assert.equal(content.dataset.metricLayout, "summary");
+  assert.equal(findByClass(content, "mha-weather-summary-eyebrow"), null);
   assert.equal(findByClass(content, "mha-weather-summary-temperature")?.textContent, "26°C");
   assert.equal(findByClass(content, "mha-weather-summary-location")?.textContent, "Val-d'Or");
-  assert.equal(
+  assert.match(
     findByClass(content, "mha-weather-summary-text")?.textContent,
-    "Alternance de soleil et de nuages aujourd’hui.",
+    /^Sun and clouds will alternate /,
   );
+  assert.equal(content.dataset.summaryNarrativeKind, "summary");
 });
 
 test("weather summary metric falls back to an available weather entity for legacy sensor widgets", () => {
@@ -222,10 +232,66 @@ test("weather summary metric uses its weather attribute entity for current condi
   assert.equal(content.dataset.metricLayout, "summary");
   assert.equal(findByClass(content, "mha-weather-summary-temperature")?.textContent, "28.8°C");
   assert.equal(findByClass(content, "mha-weather-summary-location")?.textContent, "Maison");
-  assert.equal(
-    findByClass(content, "mha-weather-summary-text")?.textContent,
-    "Pensez à vous protéger ce soir.",
-  );
+  assert.match(findByClass(content, "mha-weather-summary-text")?.textContent, /^Sunshine will dominate /);
+});
+
+test("weather summary metric hydrates forecasts for priority narratives without a chart", async () => {
+  installDom();
+
+  const forecastTime = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+  const hass = {
+    states: {
+      "weather.home": {
+        entity_id: "weather.home",
+        state: "cloudy",
+        attributes: {
+          friendly_name: "Maison",
+          temperature: 18,
+          temperature_unit: "°C",
+        },
+      },
+    },
+    config: { unit_system: { temperature: "°C" } },
+    callWS: async ({ service_data: { type } }) => ({
+      "weather.home": {
+        forecast: type === "hourly"
+          ? [{
+            datetime: forecastTime,
+            condition: "rainy",
+            temperature: 17,
+            precipitation_probability: 80,
+          }]
+          : [],
+      },
+    }),
+  };
+
+  const content = createWeatherMetricWidgetContent({
+    kind: "weather-metric",
+    metricKey: "summary",
+    valueKind: "text",
+    sourceType: "weather-attribute",
+    entityId: "weather.home",
+    attribute: "summary",
+  }, {
+    widgetW: 4,
+    widgetH: 2,
+    hass,
+  });
+
+  await new Promise(resolve => setImmediate(resolve));
+
+  assert.equal(content.dataset.summaryNarrativeKind, "rain");
+  assert.match(findByClass(content, "mha-weather-summary-text")?.textContent, /^Rain will accompany /);
+  assert.match(findByClass(content, "mha-weather-summary-narrative-secondary")?.textContent, /^Rain is expected /);
+  const advisory = findByClass(content, "mha-weather-summary-advisory");
+  const body = findByClass(content, "mha-weather-summary-body");
+  assert.notEqual(advisory, null);
+  assert.equal(body.childNodes.includes(advisory), false);
+  assert.equal(advisory.childNodes[0]?.dataset.iconSymbol, "warning");
+  assert.equal(advisory.childNodes[0]?.["aria-hidden"], "true");
+  assert.equal(findByClass(content, "mha-weather-narrative-chart"), null);
+  content.__mhaDestroy();
 });
 
 test("weather metric 2x2 renders progress visuals for humidity and precipitation probability", () => {
@@ -277,6 +343,43 @@ test("weather metric 2x2 renders progress visuals for humidity and precipitation
   assert.equal(precipitationProgress?.style["--mha-weather-metric-progress"], "60%");
 });
 
+test("weather metric 2x2 renders the localized wind direction above its speed", () => {
+  installDom();
+  setLanguage("fr");
+
+  const content = createWeatherMetricWidgetContent({
+    kind: "weather-metric",
+    metricKey: "wind",
+    sourceType: "weather-attribute",
+    entityId: "weather.home",
+    attribute: "wind_speed",
+    unit: "km/h",
+  }, {
+    widgetW: 2,
+    widgetH: 2,
+    hass: {
+      states: {
+        "weather.home": {
+          entity_id: "weather.home",
+          state: "windy",
+          attributes: {
+            wind_speed: 11,
+            wind_bearing: 202.5,
+            wind_speed_unit: "km/h",
+          },
+        },
+      },
+    },
+  });
+
+  const valueBlock = findByClass(content, "mha-weather-metric-value-block");
+  assert.equal(valueBlock?.dataset.windDirection, "true");
+  assert.equal(valueBlock?.childNodes[0].className, "mha-weather-metric-wind-direction");
+  assert.equal(valueBlock?.childNodes[0].textContent, "SSO");
+  assert.equal(valueBlock?.childNodes[1].textContent, "11");
+  assert.equal(valueBlock?.childNodes[2].textContent, "km/h");
+});
+
 test("weather metric progress accents keep a fallback when the theme accent token is absent", () => {
   const css = readFileSync(new URL("../styles/widgets/weather-metric-widget.css", import.meta.url), "utf8");
 
@@ -287,6 +390,35 @@ test("weather metric progress accents keep a fallback when the theme accent toke
   assert.match(
     css,
     /\.mha-weather-metric-progress\[data-progress-kind="precipitation"\]\s*\{[\s\S]*var\(--mha-accent-primary,\s*#[0-9a-fA-F]{6}\)/,
+  );
+});
+
+test("weather summary reserves the flexible center row for its main narrative", () => {
+  const css = readFileSync(new URL("../styles/widgets/weather-metric-widget.css", import.meta.url), "utf8");
+
+  assert.match(
+    css,
+    /> \.mha-weather-metric-widget\[data-weather-metric-size="4x2"\]\[data-metric-layout="summary"\]\s*\{[^}]*grid-template-rows:\s*auto minmax\(0, 1fr\);/,
+  );
+  assert.match(
+    css,
+    /\.mha-weather-summary-body\s*\{[^}]*align-content:\s*start;[^}]*border-block-start:/,
+  );
+});
+
+test("selected long weather metric labels use the two-line wrapping contract", () => {
+  const css = readFileSync(new URL("../styles/widgets/weather-metric-widget.css", import.meta.url), "utf8");
+
+  ["cloud-coverage", "precipitation-rate", "solar-radiation", "sunshine-duration"].forEach(metricKey => {
+    assert.equal(css.includes(`[data-metric-key="${metricKey}"]`), true);
+  });
+  assert.match(
+    css,
+    /\.mha-weather-metric-widget:is\([\s\S]*?\) \.mha-weather-metric-label\s*\{[\s\S]*?-webkit-line-clamp:\s*2;[\s\S]*?white-space:\s*normal;[\s\S]*?text-overflow:\s*clip;/,
+  );
+  assert.match(
+    css,
+    /\.mha-weather-metric-widget:is\([\s\S]*?\) \.mha-weather-metric-header\s*\{\s*align-items:\s*flex-start;/,
   );
 });
 
@@ -406,6 +538,72 @@ test("weather widget updates its internal layout while resizing", () => {
   );
 });
 
+test("weather widget shell exposes the normalized surface mode to CSS", () => {
+  const implicitShell = { dataset: {} };
+  WEATHER_WIDGET_CONTENT_RENDERER.decorateShell({
+    shell: implicitShell,
+    widget: { kind: "weather" },
+  });
+  assert.equal(implicitShell.dataset.weatherSurfaceMode, "dynamic");
+
+  const dynamicShell = { dataset: {} };
+  WEATHER_WIDGET_CONTENT_RENDERER.decorateShell({
+    shell: dynamicShell,
+    widget: { kind: "weather", surfaceMode: "dynamic" },
+  });
+  assert.equal(dynamicShell.dataset.weatherSurfaceMode, "dynamic");
+
+  const defaultShell = { dataset: {} };
+  WEATHER_WIDGET_CONTENT_RENDERER.decorateShell({
+    shell: defaultShell,
+    widget: { kind: "weather", surfaceMode: "default" },
+  });
+  assert.equal(defaultShell.dataset.weatherSurfaceMode, "default");
+});
+
+test("OneUI weather surface choices highlight only the selected option", () => {
+  const css = readFileSync(
+    new URL("../styles/widget-manager/widget-config-popup.css", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(
+    css,
+    /:host\(\[data-theme-style="oneui"\]\) \.mha-widget-config-choice\s*\{[\s\S]*?border-color:\s*transparent;[\s\S]*?background:\s*transparent;[\s\S]*?box-shadow:\s*none;/,
+  );
+  assert.match(
+    css,
+    /:host\(\[data-theme-style="oneui"\]\) \.mha-widget-config-choice:has\(\.mha-widget-config-choice-input:checked\)\s*\{[\s\S]*?background:\s*var\(--mha-accent\);[\s\S]*?color:\s*var\(--mha-accent-contrast, #fff\);[\s\S]*?box-shadow:\s*none;/,
+  );
+  assert.match(
+    css,
+    /:host\(\[data-theme-style="oneui"\]\) \.mha-widget-config-choice \.mha-choice-indicator\s*\{[\s\S]*?border:\s*1px solid rgba\(0,0,0,\.56\);[\s\S]*?background:\s*#fff;/,
+  );
+  assert.match(
+    css,
+    /:host\(\[data-theme-style="oneui"\]\) \.mha-widget-config-choice-input:checked ~ \.mha-choice-indicator::after\s*\{[\s\S]*?background:\s*#111;/,
+  );
+});
+
+test("default OneUI weather surfaces consume the primary surface token", () => {
+  const css = readFileSync(new URL("../styles/widgets/weather-widget.css", import.meta.url), "utf8");
+
+  assert.match(css, /data-theme-style="oneui"[^\n]*data-weather-surface-mode="default"/);
+  assert.doesNotMatch(css, /data-theme-style="ios"[^\n]*data-weather-surface-mode="default"/);
+  assert.match(
+    css,
+    /data-weather-surface-mode="default"[\s\S]*?background:\s*var\(--mha-primary-surface\);/,
+  );
+  assert.match(
+    css,
+    /data-weather-surface-mode="default"[^\n]*\.mha-weather-icon\s*\{\s*color:\s*rgba\(255,255,255,\.98\);/,
+  );
+  assert.match(
+    css,
+    /data-weather-surface-mode="default"[^\n]*\.mha-icon-symbol\s*\{\s*--mha-icon-symbol-color:\s*rgba\(255,255,255,\.98\);/,
+  );
+});
+
 test("weather forecast timeline grid matches the rendered forecast cards", () => {
   installDom();
 
@@ -475,6 +673,7 @@ test("weather narrative widget renders honestly when forecasts are unavailable",
   });
 
   assert.equal(content.dataset.weatherNarrativeKind, "summary");
-  assert.equal(content.childNodes.length, 2);
+  assert.equal(content.childNodes.length, 1);
+  assert.equal(findByClass(content, "mha-weather-narrative-chart"), null);
   content.__mhaDestroy();
 });

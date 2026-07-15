@@ -32,7 +32,7 @@
 .mha-widget-icon-picker-trigger-title {
   color: var(--mha-text-primary, #fff);
   font-size: .9rem;
-  font-weight: 720;
+  font-weight: var(--mha-font-weight-bold);
 }
 
 .mha-widget-icon-picker-trigger-detail {
@@ -174,7 +174,7 @@
 .mha-widget-icon-picker-auto-title {
   color: rgba(28,28,28,.92);
   font-size: .82rem;
-  font-weight: 700;
+  font-weight: var(--mha-font-weight-bold);
 }
 
 .mha-widget-icon-picker-auto-detail {

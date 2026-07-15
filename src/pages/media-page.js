@@ -28,9 +28,9 @@ import {
   createMediaWidgetContent,
   createMediaTitleStack,
   createMediaTransitionCache,
+  MEDIA_TRANSITION_GRACE_MS,
   setMediaArtworkImage,
   setMediaProgressState,
-  syncMediaArtworkTone,
 } from "../widgets/media-widget.js?media-page-ios-card-v1";
 
 function createIconButton({ label, icon, className = "", onClick = () => {} } = {}) {
@@ -182,8 +182,8 @@ export function resolveMediaPageNowPlayingId({
   return enabledPlayers[0]?.entity_id || "";
 }
 
-function normalizeInactiveNowPlayingMedia(media = {}) {
-  if (!isMediaPlayerInactiveState(media.entity?.state)) return media;
+export function normalizeInactiveNowPlayingMedia(media = {}) {
+  if (!isMediaPlayerInactiveState(media.state)) return media;
 
   return {
     ...media,
@@ -367,12 +367,18 @@ export function createMediaPage(page = {}, {
 
   let availablePlayersPanel = null;
   let availablePlayersSheetCloseRequested = false;
-  const closeAvailablePlayersSheet = () => {
-    availablePlayersSheetCloseRequested = true;
-    syncPanelVisibility(availablePlayersPanel, false, {
+  const syncAvailablePlayersSheetVisibility = (open) => {
+    const mobileOpen = Boolean(open) && isMobileMediaPage(root);
+    const host = getMediaPageHost(root);
+    if (host?.dataset) host.dataset.mediaPlayersSheetOpen = String(mobileOpen);
+    return syncPanelVisibility(availablePlayersPanel, open, {
       transitionMs: SETTINGS_PANEL_VISIBILITY_TRANSITION_MS,
       closeStateDatasetKey: "panelCloseState",
     });
+  };
+  const closeAvailablePlayersSheet = () => {
+    availablePlayersSheetCloseRequested = true;
+    syncAvailablePlayersSheetVisibility(false);
     scrollMobileMediaPageToNowPlaying(root);
   };
 
@@ -460,15 +466,13 @@ export function createMediaPage(page = {}, {
       }
       const shouldOpen = !availablePlayersSheetCloseRequested
         && (!isMobileMediaPage(root) || pane === "available-players");
-      syncPanelVisibility(availablePlayersPanel, shouldOpen, {
-        transitionMs: SETTINGS_PANEL_VISIBILITY_TRANSITION_MS,
-        closeStateDatasetKey: "panelCloseState",
-      });
+      syncAvailablePlayersSheetVisibility(shouldOpen);
     },
   });
   root.__mhaSyncMobileDockState = mobileScrollCoordinator.syncDockState;
 
   let progressTimer = 0;
+  let mediaStateConfirmationTimer = 0;
   let visualTransitionTimer = 0;
   let automaticPlayerCards = [];
   let draggedPlayerId = "";
@@ -714,8 +718,6 @@ export function createMediaPage(page = {}, {
         : view.statusLine;
     }
     setMediaArtworkImage(context.artwork, view.media.artworkUrl);
-    if (view.media.artworkUrl) root.removeAttribute("data-artwork-tone");
-    syncMediaArtworkTone(root, context.artwork);
     context.artwork.dataset.playing = String(view.media.playing);
 
     syncControlGroup(
@@ -725,7 +727,26 @@ export function createMediaPage(page = {}, {
     applyProgress(view);
   };
 
-  const refresh = ({ progressOnly = false } = {}) => {
+  function clearMediaStateConfirmationTimer() {
+    if (!mediaStateConfirmationTimer) return;
+    clearTimeout(mediaStateConfirmationTimer);
+    mediaStateConfirmationTimer = 0;
+  }
+
+  function scheduleMediaStateConfirmation(view) {
+    clearMediaStateConfirmationTimer();
+    if (!view.media.usingGraceCache) return;
+    const now = globalThis.performance?.now?.() ?? Date.now();
+    const elapsed = now - transitionCache.graceStartedTimestamp;
+    const delay = Math.max(0, MEDIA_TRANSITION_GRACE_MS - elapsed + 1);
+    mediaStateConfirmationTimer = globalThis.setTimeout(() => {
+      mediaStateConfirmationTimer = 0;
+      refresh();
+      syncProgressTicker();
+    }, delay);
+  }
+
+  function refresh({ progressOnly = false } = {}) {
     const nextView = buildViewState(
       context.page,
       context.hass,
@@ -734,7 +755,8 @@ export function createMediaPage(page = {}, {
       selectionState,
     );
     applyView(nextView, { progressOnly });
-  };
+    scheduleMediaStateConfirmation(nextView);
+  }
 
   const resetScrollPosition = () => {
     mobileScrollCoordinator.reset();
@@ -757,6 +779,7 @@ export function createMediaPage(page = {}, {
   };
 
   applyView(context.view);
+  scheduleMediaStateConfirmation(context.view);
   syncProgressTicker();
   scheduleScrollReset();
 
@@ -804,9 +827,12 @@ export function createMediaPage(page = {}, {
     if (progressTimer) clearInterval(progressTimer);
     progressTimer = 0;
     clearInactiveSelectionTimer();
+    clearMediaStateConfirmationTimer();
     if (visualTransitionTimer) clearTimeout(visualTransitionTimer);
     visualTransitionTimer = 0;
     mobileScrollCoordinator.destroy();
+    const host = getMediaPageHost(root);
+    if (host?.dataset) delete host.dataset.mediaPlayersSheetOpen;
     automaticPlayerCards.forEach((card) => card.__mhaDestroy?.());
     automaticPlayerCards = [];
   };

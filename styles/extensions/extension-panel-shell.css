@@ -44,7 +44,7 @@
   margin: 0 0 8px;
   color: var(--mha-accent-surface, var(--mha-accent, #5aa2ff));
   font-size: 12px;
-  font-weight: 850;
+  font-weight: var(--mha-font-weight-extra-bold);
   letter-spacing: .12em;
   text-transform: uppercase;
 }
@@ -115,13 +115,13 @@
 .mha-extension-metric small {
   color: var(--mha-secondary-text, rgba(255,255,255,.70));
   font-size: 12px;
-  font-weight: 650;
+  font-weight: var(--mha-font-weight-semibold);
 }
 
 .mha-extension-metric strong {
   color: var(--mha-primary-text, #fff);
   font-size: 20px;
-  font-weight: 850;
+  font-weight: var(--mha-font-weight-extra-bold);
   line-height: 1.1;
 }
 

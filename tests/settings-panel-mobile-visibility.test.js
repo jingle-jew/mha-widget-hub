@@ -4,9 +4,10 @@ import test from "node:test";
 import { setLanguage } from "../src/i18n/index.js";
 import { getPageIconLabel, PAGE_ICON_OPTIONS } from "../src/pages/page-icons.js";
 import { createSettingsPanel, updateSettingsPanel } from "../src/settings/settings-panel.js";
+import { createMhaCheckbox, createMhaRadio } from "../src/ui/form-controls.js";
 
 function createMockNode(tagName, namespaceURI = null) {
-  return {
+  const node = {
     tagName: String(tagName).toUpperCase(),
     namespaceURI,
     className: "",
@@ -20,7 +21,9 @@ function createMockNode(tagName, namespaceURI = null) {
     listeners: {},
     hidden: false,
     append(...nodes) {
-      this.children.push(...nodes.filter(Boolean));
+      const children = nodes.filter(Boolean);
+      children.forEach(child => { child.parentNode = this; });
+      this.children.push(...children);
     },
     setAttribute(name, value) {
       this.attributes[name] = String(value);
@@ -43,15 +46,53 @@ function createMockNode(tagName, namespaceURI = null) {
     },
     focus() {},
   };
+  node.classList = {
+    add(...tokens) {
+      const classes = new Set(String(node.className || "").split(/\s+/u).filter(Boolean));
+      tokens.forEach(token => classes.add(token));
+      node.className = [...classes].join(" ");
+    },
+    remove(...tokens) {
+      const classes = new Set(String(node.className || "").split(/\s+/u).filter(Boolean));
+      tokens.forEach(token => classes.delete(token));
+      node.className = [...classes].join(" ");
+    },
+    contains(token) {
+      return String(node.className || "").split(/\s+/u).includes(token);
+    },
+    toggle(token, force) {
+      const active = force ?? !this.contains(token);
+      if (active) this.add(token);
+      else this.remove(token);
+      return active;
+    },
+  };
+  node.closest = function closest(selector) {
+    let current = this;
+    while (current) {
+      if (matchesSelector(current, selector)) return current;
+      current = current.parentNode;
+    }
+    return null;
+  };
+  return node;
 }
 
 function createMockDocument() {
+  const listeners = {};
   return {
+    listeners,
     createElement(tagName) {
       return createMockNode(tagName);
     },
     createElementNS(namespaceURI, tagName) {
       return createMockNode(tagName, namespaceURI);
+    },
+    addEventListener(type, handler) {
+      listeners[type] = handler;
+    },
+    removeEventListener(type, handler) {
+      if (listeners[type] === handler) delete listeners[type];
     },
   };
 }
@@ -356,4 +397,163 @@ test("settings panel hides the Alexa theme option", () => withMockDocument(() =>
   });
 
   assert.equal(hasText(panel, "Alexa"), false);
+}));
+
+test("settings selectors use the controlled MHA listbox and keep the native value contract", () => withMockDocument(() => {
+  const values = [];
+  const panel = createSettingsPanel({
+    open: true,
+    scope: "all",
+    settingsPage: "main",
+    theme: "auto",
+    onThemeChange: value => values.push(value),
+  });
+  const trigger = panel.querySelectorAll(".mha-select-trigger")
+    .find(control => control.getAttribute("aria-label") === "Theme");
+  const control = trigger.closest(".mha-select");
+  const input = control.querySelector(".mha-select-native");
+  const darkOption = control.querySelectorAll("[role='option']")
+    .find(option => option.dataset.value === "dark");
+
+  assert.ok(trigger);
+  assert.equal(trigger.getAttribute("role"), "combobox");
+  assert.equal(input.tagName, "SELECT");
+  assert.equal(input.value, "auto");
+  assert.equal(control.dataset.open, "false");
+
+  trigger.listeners.click();
+  assert.equal(control.dataset.open, "true");
+  assert.equal(trigger.getAttribute("aria-expanded"), "true");
+  assert.equal(control.closest(".mha-settings-section").dataset.selectOpen, "true");
+
+  globalThis.document.listeners.pointerdown({
+    target: createMockNode("mha-control-hub"),
+    composedPath: () => [darkOption, control],
+  });
+  assert.equal(control.dataset.open, "true");
+
+  darkOption.listeners.click();
+  assert.equal(input.value, "dark");
+  assert.equal(darkOption.getAttribute("aria-selected"), "true");
+  assert.equal(control.dataset.open, "false");
+  assert.equal(control.closest(".mha-settings-section").dataset.selectOpen, undefined);
+  assert.deepEqual(values, ["dark"]);
+
+  trigger.listeners.click();
+  globalThis.document.listeners.pointerdown({
+    target: createMockNode("button"),
+    composedPath: () => [],
+  });
+  assert.equal(control.dataset.open, "false");
+
+  const menu = control.querySelector(".mha-select-menu");
+  const settingsBody = control.closest(".mha-settings-body");
+  const shadowRoot = createMockNode("shadow-root");
+  shadowRoot.host = createMockNode("mha-control-hub");
+  control.getRootNode = () => shadowRoot;
+  trigger.getBoundingClientRect = () => ({ left: 220, right: 412, top: 180, bottom: 224, width: 192 });
+  settingsBody.getBoundingClientRect = () => ({ left: 160, right: 440, top: 100, bottom: 700 });
+  menu.scrollHeight = 180;
+
+  trigger.listeners.click();
+  assert.equal(menu.dataset.portaled, "true");
+  assert.equal(shadowRoot.children.includes(menu), true);
+
+  globalThis.document.listeners.pointerdown({
+    target: shadowRoot.host,
+    composedPath: () => [darkOption, menu, shadowRoot, shadowRoot.host],
+  });
+  assert.equal(control.dataset.open, "true");
+
+  darkOption.listeners.click();
+  assert.equal(control.dataset.open, "false");
+  assert.equal(menu.dataset.portaled, undefined);
+}));
+
+test("MHA checkbox and radio primitives keep native semantics behind custom indicators", () => withMockDocument(() => {
+  const checkboxValues = [];
+  const checkbox = createMhaCheckbox({
+    label: "Calendar",
+    checked: false,
+    onChange: checked => checkboxValues.push(checked),
+  });
+  const radio = createMhaRadio({
+    label: "Dynamic",
+    name: "surface",
+    value: "dynamic",
+    checked: true,
+  });
+  const checkboxInput = checkbox.querySelector(".mha-choice-input");
+  const radioInput = radio.querySelector(".mha-choice-input");
+
+  checkboxInput.checked = true;
+  checkboxInput.listeners.change({ currentTarget: checkboxInput });
+
+  assert.equal(checkboxInput.type, "checkbox");
+  assert.equal(radioInput.type, "radio");
+  assert.equal(radioInput.name, "surface");
+  assert.equal(radioInput.value, "dynamic");
+  assert.equal(radioInput.checked, true);
+  assert.ok(checkbox.querySelector(".mha-choice-indicator"));
+  assert.ok(radio.querySelector(".mha-choice-indicator"));
+  assert.deepEqual(checkboxValues, [true]);
+}));
+
+test("settings panel exposes primary surface opacity only for OneUI", () => withMockDocument(() => {
+  const values = [];
+  const oneUiPanel = createSettingsPanel({
+    open: true,
+    scope: "all",
+    settingsPage: "main",
+    themeStyle: "oneui",
+    oneUiPrimarySurfaceOpacity: 42,
+    onOneUiPrimarySurfaceOpacityChange: value => values.push(value),
+  });
+  const iosPanel = createSettingsPanel({
+    open: true,
+    scope: "all",
+    settingsPage: "main",
+    themeStyle: "ios",
+  });
+
+  const slider = oneUiPanel.querySelector(".mha-settings-range-input");
+  assert.ok(slider);
+  assert.equal(slider.type, "range");
+  assert.equal(slider.min, "0");
+  assert.equal(slider.max, "100");
+  assert.equal(slider.value, "42");
+  assert.equal(hasText(oneUiPanel, "Widget opacity"), true);
+  assert.equal(iosPanel.querySelector(".mha-settings-range-input"), null);
+
+  slider.value = "0";
+  slider.listeners.input();
+  assert.deepEqual(values, [0]);
+  assert.equal(oneUiPanel.querySelector(".mha-settings-range-value").textContent, "0%");
+}));
+
+test("OneUI opacity preview hides panel layers only while the slider is armed", () => withMockDocument(() => {
+  const values = [];
+  const panel = createSettingsPanel({
+    open: true,
+    scope: "all",
+    settingsPage: "main",
+    themeStyle: "oneui",
+    onOneUiPrimarySurfaceOpacityChange: value => values.push(value),
+  });
+  const slider = panel.querySelector(".mha-settings-range-input");
+  const host = createMockNode("mha-control-hub");
+  slider.getRootNode = () => ({ host });
+
+  slider.listeners.pointerdown({ button: 0, pointerId: 7 });
+  assert.equal(panel.classList.contains("is-oneui-opacity-previewing"), true);
+  assert.equal(host.classList.contains("is-oneui-opacity-previewing"), true);
+
+  slider.value = "31";
+  slider.listeners.input();
+  assert.deepEqual(values, [31]);
+  assert.equal(panel.classList.contains("is-oneui-opacity-previewing"), true);
+
+  slider.listeners.pointerup({ pointerId: 7 });
+  assert.equal(panel.classList.contains("is-oneui-opacity-previewing"), false);
+  assert.equal(host.classList.contains("is-oneui-opacity-previewing"), false);
 }));

@@ -38,8 +38,8 @@
    */
   --mha-simple-button-label-size: var(--mha-type-control-label-size, var(--mha-font-size-control-label, 1rem));
   --mha-simple-button-state-size: var(--mha-type-control-state-size, var(--mha-font-size-control-state, .76rem));
-  --mha-simple-button-label-weight: var(--mha-type-control-label-weight, var(--mha-typography-weight, 750));
-  --mha-simple-button-state-weight: var(--mha-type-control-state-weight, 650);
+  --mha-simple-button-label-weight: var(--mha-type-control-label-weight, var(--mha-typography-weight, var(--mha-font-weight-heavy)));
+  --mha-simple-button-state-weight: var(--mha-type-control-state-weight, var(--mha-font-weight-semibold));
   --mha-simple-button-line-height: var(--mha-type-control-line-height, 1.05);
   --mha-simple-button-label-letter-spacing: var(--mha-type-control-label-tracking, -.025em);
   --mha-simple-button-state-letter-spacing: var(--mha-type-control-state-tracking, -.01em);

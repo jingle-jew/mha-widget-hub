@@ -77,6 +77,7 @@ export function createSettingsSurfaceCoordinator(host) {
         onAccentModeChange: (value) => host._applyAccentModeFromSettings(value),
         onAccentPaletteExpandedChange: (value) => host._setAccentPaletteExpanded(value),
         onIconShapeChange: (value) => host._applyIconShapeFromSettings(value),
+        onOneUiPrimarySurfaceOpacityChange: (value) => host._applyOneUiPrimarySurfaceOpacityFromSettings(value),
         onHideHaSidebarChange: (value) => host._applyHideHaSidebarFromSettings(value),
         onShowDockLabelsChange: (value) => host._applyDockLabelsFromSettings(value),
         onStatusBarModeChange: (value) => host._applyStatusBarModeFromSettings(value),

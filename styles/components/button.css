@@ -23,7 +23,7 @@
   box-shadow: var(--mha-button-shadow);
   font: inherit;
   font-size: var(--mha-type-widget-label-size, 1rem);
-  font-weight: 680;
+  font-weight: var(--mha-font-weight-semibold);
   cursor: pointer;
   display: inline-grid;
   place-items: center;

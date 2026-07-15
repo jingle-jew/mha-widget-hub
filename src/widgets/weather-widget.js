@@ -9,6 +9,7 @@ import { WIDGET_PREVIEW_DATA } from "./widget-preview-data.js";
 import {
   buildWeatherWidgetConfig,
   createWeatherConfigDraft,
+  normalizeWeatherSurfaceMode,
   renderWeatherConfigFields,
 } from "../widget-config/weather-config.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
@@ -435,6 +436,9 @@ export function createWeatherWidgetContent(widget = {}, {
 }
 
 export const WEATHER_WIDGET_CONTENT_RENDERER = Object.freeze({
+  decorateShell: ({ shell, widget }) => {
+    shell.dataset.weatherSurfaceMode = normalizeWeatherSurfaceMode(widget.surfaceMode);
+  },
   render: ({ widget, widgetW, widgetH, hass, entityVisibilityConfig }) => createWeatherWidgetContent(widget, {
     widgetW,
     widgetH,
@@ -491,6 +495,7 @@ export const WEATHER_WIDGET_DEFINITION = Object.freeze({
       entityId: widget.entityId || widget.entity_id || "",
       forecastType: widget.forecastType === "hourly" ? "hourly" : "daily",
       displayMode: widget.displayMode === "forecast" ? "forecast" : "current",
+      surfaceMode: normalizeWeatherSurfaceMode(widget.surfaceMode),
     }),
   }),
   shell: Object.freeze({

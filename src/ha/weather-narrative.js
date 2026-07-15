@@ -120,6 +120,8 @@ function createEvent({
   icon = "weather",
   items = [],
   alert = "",
+  periodKey = "",
+  advisory = null,
 } = {}) {
   return {
     kind,
@@ -132,23 +134,138 @@ function createEvent({
     icon,
     items,
     alert,
+    periodKey,
+    advisory,
   };
 }
 
-export function buildWeatherNarrativeModel(weather = {}, now = new Date()) {
-  const currentTime = now instanceof Date && !Number.isNaN(now.getTime()) ? now : new Date();
-  if (!weather.entityId || !weather.entityAllowed || !weather.entityAvailable) {
-    return createEvent({
-      kind: "unavailable",
-      chartKind: "empty",
-      headline: weather.entityId
-        ? t("common.unavailable", "Weather unavailable")
-        : t("widgets.config.noWeatherEntity", "Weather not configured"),
-      mood: "unknown",
-    });
-  }
+function localHour(reference, dayOffset, hour) {
+  return new Date(
+    reference.getFullYear(),
+    reference.getMonth(),
+    reference.getDate() + dayOffset,
+    hour,
+  );
+}
 
-  const items = getForecast(weather, currentTime);
+function getPeriodWindows(now) {
+  return [
+    { key: "night", start: localHour(now, -1, 22), end: localHour(now, 0, 5) },
+    { key: "morning", start: localHour(now, 0, 5), end: localHour(now, 0, 12) },
+    { key: "afternoon", start: localHour(now, 0, 12), end: localHour(now, 0, 18) },
+    { key: "evening", start: localHour(now, 0, 18), end: localHour(now, 0, 22) },
+    { key: "night", start: localHour(now, 0, 22), end: localHour(now, 1, 5) },
+    { key: "morning", start: localHour(now, 1, 5), end: localHour(now, 1, 12) },
+  ];
+}
+
+function resolveNarrativePeriod(now) {
+  const windows = getPeriodWindows(now);
+  const currentIndex = Math.max(0, windows.findIndex(window => (
+    now.getTime() >= window.start.getTime() && now.getTime() < window.end.getTime()
+  )));
+  const current = windows[currentIndex];
+  const elapsed = now.getTime() - current.start.getTime();
+  const remaining = current.end.getTime() - now.getTime();
+  return remaining < elapsed ? windows[currentIndex + 1] || current : current;
+}
+
+function getNarrativePeriodLabel(period, now) {
+  const startsTomorrow = period.start.toDateString() !== now.toDateString();
+  const key = startsTomorrow && period.key === "morning" ? "tomorrowMorning" : period.key;
+  return {
+    key,
+    label: t(`widgets.weatherNarrative.periods.${key}`, key),
+  };
+}
+
+function getPeriodForecastItems(weather, period, now) {
+  const hourly = Array.isArray(weather.hourlyForecast) ? weather.hourlyForecast : [];
+  const effectiveStart = Math.max(period.start.getTime(), now.getTime());
+  return hourly.filter(item => {
+    const date = dateOf(item);
+    return date && date.getTime() >= effectiveStart && date.getTime() < period.end.getTime();
+  });
+}
+
+function getConditionKind(condition = "") {
+  if (conditionIncludes(condition, ["thunder", "lightning", "hail", "freezing rain", "exceptional"])) return "storm";
+  if (conditionIncludes(condition, ["snow", "snowy"])) return "snow";
+  if (conditionIncludes(condition, ["rain", "rainy", "pouring", "shower"])) return "rain";
+  if (conditionIncludes(condition, ["fog", "foggy", "mist"])) return "fog";
+  if (conditionIncludes(condition, ["wind", "windy"])) return "wind";
+  if (conditionIncludes(condition, ["partly cloudy", "partlycloudy"])) return "partlyCloudy";
+  if (conditionIncludes(condition, ["cloud", "cloudy", "overcast"])) return "cloudy";
+  if (conditionIncludes(condition, ["sunny"])) return "sunny";
+  if (conditionIncludes(condition, ["clear"])) return "clear";
+  return "neutral";
+}
+
+function getDominantPeriodCondition(items = [], fallbackCondition = "") {
+  if (!items.length) {
+    return { kind: getConditionKind(fallbackCondition), condition: fallbackCondition || "weather" };
+  }
+  const counts = new Map();
+  items.forEach((item, index) => {
+    const kind = getConditionKind(item.condition);
+    const current = counts.get(kind) || { count: 0, firstIndex: index, condition: item.condition };
+    current.count += 1;
+    counts.set(kind, current);
+  });
+  const [kind, result] = [...counts.entries()].sort((a, b) => (
+    b[1].count - a[1].count || a[1].firstIndex - b[1].firstIndex
+  ))[0];
+  return { kind, condition: result.condition || fallbackCondition || "weather" };
+}
+
+const PERIOD_MESSAGE_FALLBACKS = Object.freeze({
+  sunny: "Sunshine will dominate {period}.",
+  clear: "The sky will stay clear {period}.",
+  partlyCloudy: "Sun and clouds will alternate {period}.",
+  cloudy: "The sky will be cloudy {period}.",
+  rain: "Rain will accompany {period}.",
+  snow: "Snow will accompany {period}.",
+  storm: "Stormy conditions are expected {period}.",
+  fog: "Fog will reduce visibility {period}.",
+  wind: "Wind will shape the conditions {period}.",
+  neutral: "Conditions will remain variable {period}.",
+});
+
+const PERIOD_MOODS = Object.freeze({
+  sunny: "clear",
+  clear: "clear",
+  partlyCloudy: "neutral",
+  cloudy: "neutral",
+  rain: "rain",
+  snow: "snow",
+  storm: "storm",
+  fog: "neutral",
+  wind: "wind",
+  neutral: "neutral",
+});
+
+function buildPeriodSummary(weather, now) {
+  const period = resolveNarrativePeriod(now);
+  const periodItems = getPeriodForecastItems(weather, period, now);
+  const dominant = getDominantPeriodCondition(periodItems, weather.condition);
+  const periodLabel = getNarrativePeriodLabel(period, now);
+  return {
+    key: dominant.kind,
+    periodKey: periodLabel.key,
+    period: periodLabel.label,
+    target: period.start,
+    headline: translateMessage(
+      `period${dominant.kind[0].toUpperCase()}${dominant.kind.slice(1)}`,
+      PERIOD_MESSAGE_FALLBACKS[dominant.kind],
+      { period: periodLabel.label },
+    ),
+    mood: PERIOD_MOODS[dominant.kind],
+    icon: dominant.condition || weather.condition || "weather",
+    items: periodItems,
+  };
+}
+
+function buildWeatherAdvisory(weather, items, currentTime) {
   const first = items[0] || null;
   const alert = weather.alerts?.[0] || "";
   if (alert) {
@@ -289,20 +406,42 @@ export function buildWeatherNarrativeModel(weather = {}, now = new Date()) {
     });
   }
 
-  const currentCondition = normalizeText(weather.condition);
-  const isClear = conditionIncludes(currentCondition, ["sunny", "clear"]);
-  const period = getPeriodLabel(dateOf(first), currentTime);
+  return null;
+}
+
+function getAdvisoryText(advisory) {
+  if (!advisory) return "";
+  return [advisory.headline, advisory.secondary].filter(Boolean).join(" · ");
+}
+
+export function buildWeatherNarrativeModel(weather = {}, now = new Date()) {
+  const currentTime = now instanceof Date && !Number.isNaN(now.getTime()) ? now : new Date();
+  if (!weather.entityId || !weather.entityAllowed || !weather.entityAvailable) {
+    return createEvent({
+      kind: "unavailable",
+      chartKind: "empty",
+      headline: weather.entityId
+        ? t("common.unavailable", "Weather unavailable")
+        : t("widgets.config.noWeatherEntity", "Weather not configured"),
+      mood: "unknown",
+    });
+  }
+
+  const items = getForecast(weather, currentTime);
+  const summary = buildPeriodSummary(weather, currentTime);
+  const advisory = buildWeatherAdvisory(weather, items, currentTime);
   return createEvent({
-    kind: "summary",
-    chartKind: items.length >= 2 ? "temperature" : "empty",
-    target: dateOf(first),
-    period,
-    headline: isClear
-      ? translateMessage("clear", "The sky will stay clear {period}.", { period })
-      : translateMessage("calm", "A generally calm day with mild conditions."),
-    secondary: weather.summary || t("widgets.weather.title", "Weather"),
-    mood: isClear ? "clear" : "neutral",
-    icon: weather.condition || "weather",
+    kind: advisory?.kind || "summary",
+    chartKind: advisory?.chartKind || (summary.items.length >= 2 ? "temperature" : "empty"),
+    target: summary.target,
+    period: summary.period,
+    periodKey: summary.periodKey,
+    headline: summary.headline,
+    secondary: getAdvisoryText(advisory),
+    mood: advisory?.mood || summary.mood,
+    icon: advisory?.icon || summary.icon,
     items,
+    alert: advisory?.alert || "",
+    advisory,
   });
 }

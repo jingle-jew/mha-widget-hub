@@ -46,7 +46,7 @@ button, input, select { font: inherit; }
 
 .mha-admin-eyebrow {
   font-size: .78rem;
-  font-weight: 800;
+  font-weight: var(--mha-font-weight-extra-bold);
   letter-spacing: .12em;
   text-transform: uppercase;
 }
@@ -70,7 +70,7 @@ h1, h2, p, label, button, select, input, span { overflow-wrap: anywhere; }
   border-radius: 999px;
   color: var(--mha-accent-contrast, #fff);
   background: var(--mha-accent, #4ba3ff);
-  font-weight: 800;
+  font-weight: var(--mha-font-weight-extra-bold);
 }
 
 .mha-admin-save:disabled { opacity: .55; cursor: default; }
@@ -115,7 +115,7 @@ h1, h2, p, label, button, select, input, span { overflow-wrap: anywhere; }
 .mha-admin-sidebar > label {
   display: grid;
   gap: 8px;
-  font-weight: 750;
+  font-weight: var(--mha-font-weight-heavy);
 }
 
 .mha-admin-mode {

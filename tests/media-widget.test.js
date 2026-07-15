@@ -6,13 +6,21 @@ import {
   buildMediaWidgetData,
   createMediaTransitionCache,
   createMediaPagePlayerWidget,
+  deriveMediaArtworkPaletteFromPixels,
+  getMediaColorContrastRatio,
+  getMediaSourceBadgeLabel,
   MEDIA_WIDGET_CONTENT_RENDERER,
+  MEDIA_WIDGET_DEFINITION,
   MEDIA_TRANSITION_GRACE_MS,
   resolveMediaTransitionData,
+  resolveMediaControlsToggleMode,
+  setMediaArtworkImage,
+  syncMediaArtworkTone,
 } from "../src/widgets/media-widget.js";
 import { normalizeWidgetForKind } from "../src/layout/layout-engine.js";
 import {
   MEDIA_PAGE_INACTIVE_FALLBACK_MS,
+  normalizeInactiveNowPlayingMedia,
   resolveMediaPageNowPlayingId,
   resolveMobileMediaPagePane,
   swapOrderedIds,
@@ -50,6 +58,42 @@ test("media volume falls back to zero only when the player is off", () => {
   assert.equal(off.muted, false);
 });
 
+test("standard media widgets return from volume to playback controls", () => {
+  assert.equal(resolveMediaControlsToggleMode("playback"), "volume");
+  assert.equal(resolveMediaControlsToggleMode("volume"), "playback");
+  assert.equal(
+    resolveMediaControlsToggleMode("volume", { mediaPagePlayer: true }),
+    "volume-only",
+  );
+  assert.equal(
+    resolveMediaControlsToggleMode("volume-only", { mediaPagePlayer: true }),
+    "volume",
+  );
+});
+
+test("media panel source badge displays the localized player state", () => {
+  const data = mediaData({ app: "MHA Media", state: "playing" });
+
+  assert.equal(getMediaSourceBadgeLabel(data), "MHA Media");
+  assert.equal(getMediaSourceBadgeLabel(data, { showState: true }), "Playing");
+});
+
+test("media panel migrates the legacy 4x4 contract to 4x6", () => {
+  const managerEntry = MEDIA_WIDGET_DEFINITION.manager.entries.find(
+    entry => entry.variant === "media-panel",
+  );
+  const panelVariant = MEDIA_WIDGET_DEFINITION.variants.find(
+    entry => entry.variant === "media-panel",
+  );
+
+  assert.deepEqual(managerEntry.size, { w: 4, h: 6 });
+  assert.deepEqual(panelVariant.size, { w: 4, h: 6 });
+  assert.deepEqual(
+    normalizeWidgetForKind({ kind: "media", variant: "media-panel", w: 4, h: 4 }),
+    { w: 4, h: 6 },
+  );
+});
+
 function mediaData(overrides = {}) {
   return {
     entity: null,
@@ -77,7 +121,163 @@ function mediaData(overrides = {}) {
   };
 }
 
+function parsePaletteRgb(value = "") {
+  return String(value).match(/\d+/g)?.slice(0, 3).map(Number) || [];
+}
+
+test("artwork palettes stay tonal while meeting readable text contrast", () => {
+  const pixels = Uint8ClampedArray.from([
+    24, 48, 82, 255,
+    38, 74, 112, 255,
+    186, 92, 54, 255,
+    16, 34, 62, 255,
+  ]);
+  const palette = deriveMediaArtworkPaletteFromPixels(pixels);
+  const surface = parsePaletteRgb(palette.surface);
+  const foreground = parsePaletteRgb(palette.foreground);
+
+  assert.ok(palette);
+  assert.ok(palette.contrast >= 4.5);
+  assert.ok(getMediaColorContrastRatio(surface, foreground) >= 4.5);
+  assert.notEqual(palette.foreground, "rgb(255 255 255)");
+  assert.notEqual(palette.foreground, "rgb(0 0 0)");
+  assert.equal(palette.strong, palette.foreground);
+});
+
+test("artwork palettes adapt to the source colors", () => {
+  const warm = deriveMediaArtworkPaletteFromPixels(Uint8ClampedArray.from([
+    142, 54, 28, 255,
+    206, 116, 52, 255,
+  ]));
+  const cool = deriveMediaArtworkPaletteFromPixels(Uint8ClampedArray.from([
+    18, 68, 122, 255,
+    42, 132, 168, 255,
+  ]));
+
+  assert.notEqual(warm.foreground, cool.foreground);
+  assert.notEqual(warm.surface, cool.surface);
+});
+
+test("Now Playing contrast accounts for the dark wallpaper composition", () => {
+  const mediumArtwork = deriveMediaArtworkPaletteFromPixels(Uint8ClampedArray.from([
+    170, 170, 170, 255,
+    166, 166, 166, 255,
+  ]));
+  const brightArtwork = deriveMediaArtworkPaletteFromPixels(Uint8ClampedArray.from([
+    248, 248, 248, 255,
+    242, 242, 242, 255,
+  ]));
+
+  assert.equal(mediumArtwork.legacyTone, "light");
+  assert.equal(mediumArtwork.wallpaperTone, "dark");
+  assert.equal(brightArtwork.wallpaperTone, "light");
+});
+
+test("artwork tone can target the media page Now Playing surface", async () => {
+  const properties = new Map();
+  const page = {
+    dataset: {},
+    matches: selector => selector.includes(".mha-media-page"),
+    style: {
+      setProperty: (property, value) => properties.set(property, value),
+      removeProperty: property => properties.delete(property),
+    },
+  };
+  const palette = deriveMediaArtworkPaletteFromPixels(Uint8ClampedArray.from([
+    18, 38, 64, 255,
+    28, 52, 84, 255,
+  ]));
+  const image = {
+    dataset: { artworkUrl: "/api/media_player_proxy/media_player.salon" },
+    complete: true,
+    naturalWidth: 512,
+    matches: selector => selector === "img",
+    __mhaArtworkPaletteCache: {
+      artworkUrl: "/api/media_player_proxy/media_player.salon",
+      palette,
+    },
+  };
+
+  syncMediaArtworkTone(page, image);
+  await Promise.resolve();
+
+  assert.equal(page.dataset.artworkTone, palette.wallpaperTone);
+  assert.equal(page.dataset.artworkPalette, "true");
+  assert.equal(properties.get("--mha-media-palette-foreground"), palette.foreground);
+});
+
+test("media 4x6 reuses the Now Playing artwork palette", async () => {
+  const properties = new Map();
+  const widget = {
+    dataset: { mediaSize: "4x6" },
+    matches: selector => selector.includes(".mha-media-widget"),
+    style: {
+      setProperty: (property, value) => properties.set(property, value),
+      removeProperty: property => properties.delete(property),
+    },
+  };
+  const palette = deriveMediaArtworkPaletteFromPixels(Uint8ClampedArray.from([
+    26, 34, 48, 255,
+    42, 56, 74, 255,
+  ]));
+  const image = {
+    dataset: { artworkUrl: "/api/media_player_proxy/media_player.salon" },
+    complete: true,
+    naturalWidth: 512,
+    matches: selector => selector === "img",
+    __mhaArtworkPaletteCache: {
+      artworkUrl: "/api/media_player_proxy/media_player.salon",
+      palette,
+    },
+  };
+
+  syncMediaArtworkTone(widget, image);
+  await Promise.resolve();
+
+  assert.equal(widget.dataset.artworkPalette, "true");
+  assert.equal(properties.get("--mha-media-palette-foreground"), palette.foreground);
+  assert.equal(properties.get("--mha-media-palette-on-strong"), palette.onStrong);
+});
+
+test("media page keeps the previous artwork palette until its replacement loads", () => {
+  const page = {
+    dataset: { artworkTone: "dark", artworkPalette: "true" },
+    matches: selector => selector === ".mha-media-page",
+    removeAttribute: (name) => {
+      if (name === "data-artwork-tone") delete page.dataset.artworkTone;
+      if (name === "data-artwork-palette") delete page.dataset.artworkPalette;
+    },
+    style: { removeProperty: () => {} },
+  };
+  const listeners = new Map();
+  const image = {
+    dataset: { artworkUrl: "/old-artwork.jpg" },
+    complete: false,
+    matches: selector => selector === "img",
+    addEventListener: (type, listener) => listeners.set(type, listener),
+    removeEventListener: type => listeners.delete(type),
+    removeAttribute: () => {},
+  };
+  const artwork = {
+    dataset: {},
+    querySelector: () => image,
+    closest: () => page,
+  };
+
+  setMediaArtworkImage(artwork, "/new-artwork.jpg");
+
+  assert.equal(page.dataset.artworkTone, "dark");
+  assert.equal(page.dataset.artworkPalette, "true");
+  assert.equal(image.dataset.artworkUrl, "/new-artwork.jpg");
+  assert.equal(typeof listeners.get("load"), "function");
+
+  listeners.get("error")();
+  assert.equal(page.dataset.artworkTone, "dark");
+  assert.equal(page.dataset.artworkPalette, "true");
+});
+
 test("media transition cache hides temporary idle metadata and artwork gaps", () => {
+  assert.equal(MEDIA_TRANSITION_GRACE_MS, 5000);
   const cache = createMediaTransitionCache();
   const playing = resolveMediaTransitionData(mediaData({
     title: "Ocean Drive",
@@ -150,6 +350,53 @@ test("media transition cache expires when idle is not temporary", () => {
   assert.equal(expiredIdle.playing, false);
   assert.equal(expiredIdle.artworkUrl, "");
   assert.equal(expiredIdle.usingGraceCache, undefined);
+
+  const stillIdle = resolveMediaTransitionData(mediaData({ state: "idle" }), cache, 1100 + MEDIA_TRANSITION_GRACE_MS + 500);
+  assert.equal(stillIdle.usingGraceCache, undefined);
+  assert.equal(cache.lastArtwork, "");
+});
+
+test("media transition cache never carries artwork to another player", () => {
+  const cache = createMediaTransitionCache();
+  resolveMediaTransitionData(mediaData({
+    state: "playing",
+    playing: true,
+    artworkUrl: "/salon.jpg",
+    hasLiveMetadata: true,
+  }), cache, 1000);
+
+  const office = resolveMediaTransitionData(mediaData({
+    entityId: "media_player.office",
+    name: "Office",
+    title: "Office",
+    state: "idle",
+  }), cache, 1100);
+
+  assert.equal(office.artworkUrl, "");
+  assert.equal(office.usingGraceCache, undefined);
+  assert.equal(cache.entityId, "media_player.office");
+});
+
+test("media page preserves cached playback while HA is only provisionally idle", () => {
+  const provisionalIdle = normalizeInactiveNowPlayingMedia(mediaData({
+    entity: { state: "idle" },
+    state: "playing",
+    playing: true,
+    title: "Current song",
+    artworkUrl: "/current-song.jpg",
+    usingGraceCache: true,
+  }));
+  const confirmedIdle = normalizeInactiveNowPlayingMedia(mediaData({
+    entity: { state: "idle" },
+    state: "idle",
+    title: "Current song",
+    artworkUrl: "/current-song.jpg",
+  }));
+
+  assert.equal(provisionalIdle.artworkUrl, "/current-song.jpg");
+  assert.equal(provisionalIdle.state, "playing");
+  assert.equal(confirmedIdle.artworkUrl, "");
+  assert.equal(confirmedIdle.state, "idle");
 });
 
 test("media page player widgets default to 4x2 and support a compact 2x2 variant", () => {
@@ -292,7 +539,7 @@ test("media page panel keeps responsive sizes on supported themes and downgrades
 
   assert.deepEqual(
     normalizeWidgetForKind(widget, { units: 4, rowUnits: 12, layout: "mobile" }),
-    { w: 4, h: 4 },
+    { w: 4, h: 6 },
   );
   assert.deepEqual(
     normalizeWidgetForKind(widget, {
@@ -322,7 +569,7 @@ test("media page panel keeps responsive sizes on supported themes and downgrades
       themeStyle: "alexa",
       viewportHeight: 900,
     }),
-    { w: 4, h: 4 },
+    { w: 4, h: 6 },
   );
   assert.deepEqual(
     normalizeWidgetForKind(widget, {
@@ -464,15 +711,15 @@ test("media page panel css clears the mobile dock and anchors transport in lands
 
   assert.match(
     source,
-    /:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\[data-theme-style="oneui"\]\)\s+\.mha-widget\[data-widget-kind="media"\]\[data-media-variant="media-page-panel"\]\s*>\s*\.mha-media-widget\[data-media-size="4x4"\],[\s\S]*?:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\[data-theme-style="material"\]\)\s+\.mha-widget\[data-widget-kind="media"\]\[data-media-variant="media-page-panel"\]\s*>\s*\.mha-media-widget\[data-media-size="4x4"\]\s*\{[\s\S]*grid-template-rows:\s*auto minmax\(0,\s*1fr\) auto;[\s\S]*block-size:\s*calc\([\s\S]*var\(--mha-shell-content-bottom-inset,\s*var\(--mha-mobile-dock-footprint,\s*0px\)\)[\s\S]*\);/,
+    /:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\[data-theme-style="oneui"\]\)\s+\.mha-widget\[data-widget-kind="media"\]\[data-media-variant="media-page-panel"\]\s*>\s*\.mha-media-widget\[data-media-size="4x6"\],[\s\S]*?:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\[data-theme-style="material"\]\)\s+\.mha-widget\[data-widget-kind="media"\]\[data-media-variant="media-page-panel"\]\s*>\s*\.mha-media-widget\[data-media-size="4x6"\]\s*\{[\s\S]*grid-template-rows:\s*auto minmax\(0,\s*1fr\) auto;[\s\S]*block-size:\s*calc\([\s\S]*var\(--mha-shell-content-bottom-inset,\s*var\(--mha-mobile-dock-footprint,\s*0px\)\)[\s\S]*\);/,
   );
   assert.match(
     source,
-    /:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\[data-theme-style="oneui"\]\)\s+\.mha-widget\[data-widget-kind="media"\]\[data-media-variant="media-page-panel"\]\s+\.mha-media-widget-artwork\s*\{[\s\S]*inline-size:\s*min\(100%,\s*var\(--mha-media-4x4-artwork-size\)\);/,
+    /:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\[data-theme-style="oneui"\]\)\s+\.mha-widget\[data-widget-kind="media"\]\[data-media-variant="media-page-panel"\]\s+\.mha-media-widget-artwork\s*\{[\s\S]*inline-size:\s*min\(100%,\s*var\(--mha-media-4x6-artwork-size\)\);/,
   );
   assert.match(
     source,
-    /:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\[data-theme-style="oneui"\]\)\s+\.mha-widget\[data-widget-kind="media"\]\[data-media-variant="media-page-panel"\]\s*>\s*\.mha-media-widget\[data-media-size="4x4"\]\s*\{[\s\S]*--mha-media-gap:\s*clamp\(\.58rem,\s*min\(4\.6cqi,\s*4\.6cqb\),\s*\.94rem\);[\s\S]*--mha-media-progress-height:\s*clamp\(\.34rem,\s*2\.4cqb,\s*\.58rem\);/,
+    /:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\[data-theme-style="oneui"\]\)\s+\.mha-widget\[data-widget-kind="media"\]\[data-media-variant="media-page-panel"\]\s*>\s*\.mha-media-widget\[data-media-size="4x6"\]\s*\{[\s\S]*--mha-media-gap:\s*clamp\(\.58rem,\s*min\(4\.6cqi,\s*4\.6cqb\),\s*\.94rem\);[\s\S]*--mha-media-progress-height:\s*clamp\(\.34rem,\s*2\.4cqb,\s*\.58rem\);/,
   );
   assert.match(
     source,
@@ -494,4 +741,45 @@ test("media page panel css clears the mobile dock and anchors transport in lands
     source,
     /:host\(\[data-layout-variant="mobile-landscape"\]\[data-theme-style="oneui"\]\)\s+\.mha-widget\[data-widget-kind="media"\]\[data-media-variant="media-page-panel"\]\s+\.mha-media-widget-progress-shell,[\s\S]*?:host\(\[data-layout-variant="mobile-landscape"\]\[data-theme-style="material"\]\)\s+\.mha-widget\[data-widget-kind="media"\]\[data-media-variant="media-page-panel"\]\s+\.mha-media-widget-progress-shell\s*\{[\s\S]*margin-block-start:\s*auto;/,
   );
+});
+
+test("premium media layouts scope immersive states and artwork palettes to 2x2 and 4x2", () => {
+  const source = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "widgets", "media-widget.css"),
+    "utf8",
+  );
+  const premiumSection = (source.split("Premium compact and wide compositions")[1] || "")
+    .split("Media panel 4x6")[0];
+
+  assert.match(
+    premiumSection,
+    /data-media-size="2x2"\], \[data-media-size="4x2"\].*data-media-state="playing".*data-media-state="paused"/s,
+  );
+  assert.match(
+    premiumSection,
+    /data-artwork-palette="true"[\s\S]*--mha-media-artwork-foreground:\s*var\(--mha-media-palette-foreground\);/,
+  );
+  assert.match(
+    premiumSection,
+    /:not\(:is\(\[data-media-state="playing"\], \[data-media-state="paused"\]\)\) \.mha-media-widget-artwork\s*\{\s*display:\s*none;/,
+  );
+  assert.doesNotMatch(premiumSection, /data-media-size="4x6"/);
+});
+
+test("media 4x6 panel keeps artwork, metadata and transport as separate zones", () => {
+  const source = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "widgets", "media-widget.css"),
+    "utf8",
+  );
+  const panelSection = source.split("Media panel 4x6")[1] || "";
+
+  assert.match(panelSection, /grid-template-rows:\s*minmax\(0, 1fr\) auto auto;/);
+  assert.match(panelSection, /\.mha-media-widget-artwork\s*\{[\s\S]*grid-row:\s*1;/);
+  assert.match(panelSection, /\.mha-media-widget-info\s*\{[\s\S]*grid-row:\s*2;/);
+  assert.match(panelSection, /\.mha-media-widget-transport\s*\{[\s\S]*grid-row:\s*3;/);
+  assert.match(panelSection, /\.mha-media-widget-source-badge\s*\{[\s\S]*display:\s*inline-flex;/);
+  assert.match(panelSection, /\.mha-media-widget-controls-shell\s*\{[\s\S]*display:\s*contents;/);
+  assert.match(panelSection, /data-artwork-palette="true"[\s\S]*--mha-media-artwork-foreground:\s*var\(--mha-media-palette-foreground\);/);
+  assert.match(panelSection, /--mha-media-progress-fill:\s*var\(--mha-media-palette-foreground\);/);
+  assert.match(panelSection, /--mha-media-panel-transport-surface:\s*color-mix\(/);
 });

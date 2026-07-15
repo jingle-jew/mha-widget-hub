@@ -7,6 +7,23 @@ import {
 } from "./theme-registry.js";
 
 export const THEME_STYLES = Object.freeze(new Set(getThemeStyleIds()));
+export const DEFAULT_ONEUI_PRIMARY_SURFACE_OPACITY = 68;
+export const ONEUI_WIDGET_NOISE_FADE_START = 50;
+export const ONEUI_WIDGET_NOISE_MAX_OPACITY = 0.14;
+
+const ONEUI_PRIMARY_SURFACE_OPACITY_STORAGE_KEY = "mha-oneui-primary-surface-opacity";
+
+export function normalizeOneUiPrimarySurfaceOpacity(value = DEFAULT_ONEUI_PRIMARY_SURFACE_OPACITY) {
+  const numericValue = Number(value);
+  if (!Number.isFinite(numericValue)) return DEFAULT_ONEUI_PRIMARY_SURFACE_OPACITY;
+  return Math.round(Math.max(0, Math.min(100, numericValue)));
+}
+
+export function resolveOneUiWidgetNoiseOpacity(value = DEFAULT_ONEUI_PRIMARY_SURFACE_OPACITY) {
+  const surfaceOpacity = normalizeOneUiPrimarySurfaceOpacity(value);
+  const fadeProgress = Math.min(surfaceOpacity / ONEUI_WIDGET_NOISE_FADE_START, 1);
+  return Math.round(ONEUI_WIDGET_NOISE_MAX_OPACITY * fadeProgress * 10000) / 10000;
+}
 
 function getSystemThemePreference() {
   if (window.matchMedia?.("(prefers-color-scheme: dark)")?.matches) {
@@ -147,6 +164,15 @@ export function getStoredIconShapeSetting(host) {
   return normalizeIconShapeSetting(stored);
 }
 
+export function getStoredOneUiPrimarySurfaceOpacity(host) {
+  const stored = localStorage.getItem(ONEUI_PRIMARY_SURFACE_OPACITY_STORAGE_KEY)
+    ?? document.documentElement.dataset.oneUiPrimarySurfaceOpacity
+    ?? host?.dataset?.oneUiPrimarySurfaceOpacity
+    ?? DEFAULT_ONEUI_PRIMARY_SURFACE_OPACITY;
+
+  return normalizeOneUiPrimarySurfaceOpacity(stored);
+}
+
 export function readThemeState(host) {
   const themeSetting = getStoredThemeSetting(host);
   const theme = resolveTheme(themeSetting);
@@ -157,6 +183,7 @@ export function readThemeState(host) {
   const accent = getStoredAccent(host, themeStyle);
   const iconShapeSetting = getStoredIconShapeSetting(host);
   const iconShape = resolveIconShape(themeStyle, iconShapeSetting);
+  const oneUiPrimarySurfaceOpacity = getStoredOneUiPrimarySurfaceOpacity(host);
 
   return {
     themeSetting,
@@ -168,6 +195,7 @@ export function readThemeState(host) {
     accentMode,
     iconShapeSetting,
     iconShape,
+    oneUiPrimarySurfaceOpacity,
   };
 }
 
@@ -201,6 +229,26 @@ function syncOneUiBlobPalette(host, state) {
   host.style.setProperty("--mha-bg-blob-4", palette.blob4);
 }
 
+function syncOneUiPrimarySurfaceOpacity(host, state) {
+  const property = "--mha-oneui-primary-surface-opacity";
+  const widgetNoiseProperty = "--mha-oneui-adaptive-widget-noise-opacity";
+
+  if (state.themeStyle !== "oneui") {
+    host?.style?.removeProperty?.(property);
+    host?.style?.removeProperty?.(widgetNoiseProperty);
+    document.documentElement.style?.removeProperty?.(property);
+    document.documentElement.style?.removeProperty?.(widgetNoiseProperty);
+    return;
+  }
+
+  const value = `${state.oneUiPrimarySurfaceOpacity}%`;
+  const widgetNoiseOpacity = resolveOneUiWidgetNoiseOpacity(state.oneUiPrimarySurfaceOpacity);
+  host?.style?.setProperty?.(property, value);
+  host?.style?.setProperty?.(widgetNoiseProperty, String(widgetNoiseOpacity));
+  document.documentElement.style?.setProperty?.(property, value);
+  document.documentElement.style?.setProperty?.(widgetNoiseProperty, String(widgetNoiseOpacity));
+}
+
 export function syncThemeAttributes(host) {
   const state = readThemeState(host);
   const root = document.documentElement;
@@ -214,6 +262,7 @@ export function syncThemeAttributes(host) {
   setAttribute(host, "accentMode", state.accentMode);
   setAttribute(host, "iconShapeSetting", state.iconShapeSetting);
   setAttribute(host, "iconShape", state.iconShape);
+  setAttribute(host, "oneUiPrimarySurfaceOpacity", String(state.oneUiPrimarySurfaceOpacity));
 
   setAttribute(root, "themeSetting", state.themeSetting);
   setAttribute(root, "theme", state.theme);
@@ -224,8 +273,10 @@ export function syncThemeAttributes(host) {
   setAttribute(root, "accentMode", state.accentMode);
   setAttribute(root, "iconShapeSetting", state.iconShapeSetting);
   setAttribute(root, "iconShape", state.iconShape);
+  setAttribute(root, "oneUiPrimarySurfaceOpacity", String(state.oneUiPrimarySurfaceOpacity));
 
   syncOneUiBlobPalette(host, state);
+  syncOneUiPrimarySurfaceOpacity(host, state);
 
   return state;
 }
@@ -317,6 +368,12 @@ export class ThemeController {
     const iconShape = normalizeIconShapeSetting(value);
     localStorage.setItem("mha-icon-shape", iconShape);
     localStorage.setItem("mha-dev-icon-shape", iconShape);
+    return this.sync();
+  }
+
+  setOneUiPrimarySurfaceOpacity(value = DEFAULT_ONEUI_PRIMARY_SURFACE_OPACITY) {
+    const opacity = normalizeOneUiPrimarySurfaceOpacity(value);
+    localStorage.setItem(ONEUI_PRIMARY_SURFACE_OPACITY_STORAGE_KEY, String(opacity));
     return this.sync();
   }
 }

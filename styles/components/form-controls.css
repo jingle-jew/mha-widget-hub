@@ -1,0 +1,356 @@
+/*
+ * MHA form controls.
+ *
+ * Geometry lives here; colors are routed through semantic control/panel tokens
+ * so the same components inherit OneUI, iOS and Material identities.
+ */
+
+.mha-select {
+  position: relative;
+  inline-size: min(12rem, 100%);
+  min-inline-size: 0;
+  justify-self: end;
+  isolation: isolate;
+}
+
+.mha-select[data-open="true"] {
+  z-index: 20;
+}
+
+.mha-select-native {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+  clip-path: inset(50%);
+  overflow: hidden;
+}
+
+.mha-select-trigger {
+  appearance: none;
+  inline-size: 100%;
+  min-block-size: 2.75rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: .7rem;
+  border: 1px solid var(--mha-panel-control-border, var(--mha-control-border, var(--mha-border-secondary)));
+  border-radius: var(--mha-select-radius, .95rem);
+  background: var(--mha-panel-control-surface, var(--mha-control-surface, var(--mha-surface-tertiary)));
+  color: var(--mha-text-primary);
+  padding: .58rem .72rem;
+  box-shadow: var(--mha-control-shadow, none);
+  font: inherit;
+  font-size: .86rem;
+  text-align: start;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.mha-select-trigger:hover,
+.mha-select-trigger[aria-expanded="true"] {
+  background: var(--mha-control-surface-hover, var(--mha-panel-control-surface, var(--mha-control-surface, var(--mha-surface-tertiary))));
+  border-color: var(--mha-control-border-hover, var(--mha-border-focus, var(--mha-accent)));
+}
+
+.mha-select-trigger:focus-visible {
+  outline: 2px solid var(--mha-border-focus, var(--mha-accent));
+  outline-offset: 2px;
+}
+
+.mha-select-trigger:disabled {
+  opacity: .48;
+  cursor: not-allowed;
+}
+
+.mha-select-value,
+.mha-select-option-label {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mha-select-chevron {
+  inline-size: .58rem;
+  block-size: .58rem;
+  border-inline-end: 2px solid currentColor;
+  border-block-end: 2px solid currentColor;
+  opacity: .68;
+  transform: rotate(45deg) translateY(-.12rem);
+  transition: transform 180ms ease;
+}
+
+.mha-select-trigger[aria-expanded="true"] .mha-select-chevron {
+  transform: rotate(225deg) translate(-.08rem, -.08rem);
+}
+
+.mha-select-menu {
+  position: absolute;
+  z-index: 12;
+  inset-block-start: calc(100% + .42rem);
+  inset-inline: 0;
+  min-inline-size: max(100%, 10rem);
+  max-block-size: min(15rem, 48vh);
+  overflow-y: auto;
+  display: grid;
+  gap: .2rem;
+  padding: .36rem;
+  border: 1px solid var(--mha-panel-control-border, var(--mha-control-border, var(--mha-border-secondary)));
+  border-radius: var(--mha-select-menu-radius, 1.05rem);
+  background: var(--mha-select-menu-surface, var(--mha-surface-panel, var(--mha-surface-secondary)));
+  color: var(--mha-text-primary);
+  box-shadow: var(--mha-shadow-panel, 0 .8rem 2rem rgba(0,0,0,.2));
+  overscroll-behavior: contain;
+}
+
+.mha-select[data-placement="top"] .mha-select-menu {
+  inset-block-start: auto;
+  inset-block-end: calc(100% + .42rem);
+}
+
+.mha-select-menu[data-portaled="true"] {
+  position: fixed;
+  z-index: 1000;
+  inset: auto;
+  inset-inline-start: var(--mha-select-menu-left);
+  inset-block-start: var(--mha-select-menu-top);
+  inline-size: var(--mha-select-menu-width);
+  min-inline-size: 0;
+  max-block-size: var(--mha-select-menu-max-height, min(15rem, 48vh));
+}
+
+.mha-select-menu[hidden] {
+  display: none;
+}
+
+.mha-select-option {
+  appearance: none;
+  min-block-size: 2.45rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 1rem;
+  align-items: center;
+  gap: .65rem;
+  border: 0;
+  border-radius: var(--mha-select-option-radius, .78rem);
+  background: transparent;
+  color: inherit;
+  padding: .52rem .62rem;
+  font: inherit;
+  font-size: .84rem;
+  text-align: start;
+  cursor: pointer;
+}
+
+.mha-select-option:hover,
+.mha-select-option:focus-visible {
+  background: var(--mha-control-surface-hover, color-mix(in srgb, var(--mha-text-primary) 9%, transparent));
+  outline: none;
+}
+
+.mha-select-option[aria-selected="true"] {
+  background: var(--mha-surface-accent, var(--mha-accent));
+  color: var(--mha-on-accent-surface, var(--mha-accent-contrast, #fff));
+}
+
+.mha-select-option:disabled {
+  opacity: .42;
+  cursor: not-allowed;
+}
+
+.mha-select-option-check {
+  inline-size: .68rem;
+  block-size: .38rem;
+  justify-self: center;
+  border-inline-start: 2px solid currentColor;
+  border-block-end: 2px solid currentColor;
+  opacity: 0;
+  transform: rotate(-45deg) translateY(-.08rem);
+}
+
+.mha-select-option[aria-selected="true"] .mha-select-option-check {
+  opacity: 1;
+}
+
+.mha-choice {
+  position: relative;
+  min-inline-size: 0;
+  display: inline-grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: .7rem;
+  color: var(--mha-text-primary);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mha-choice[data-indicator-placement="end"] {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.mha-choice-input {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  opacity: 0;
+  pointer-events: none;
+  clip-path: inset(50%);
+}
+
+.mha-choice-label {
+  min-inline-size: 0;
+}
+
+.mha-choice:not([data-indicator-placement="end"]) .mha-choice-label {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.mha-choice-indicator {
+  grid-column: 1;
+  grid-row: 1;
+  position: relative;
+  inline-size: var(--mha-choice-size, 1.3rem);
+  block-size: var(--mha-choice-size, 1.3rem);
+  box-sizing: border-box;
+  border: 1.5px solid var(--mha-control-border, var(--mha-border-secondary));
+  background: var(--mha-control-surface, var(--mha-surface-tertiary));
+  box-shadow: var(--mha-control-shadow, none);
+  transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.mha-choice[data-indicator-placement="end"] .mha-choice-label {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.mha-choice[data-indicator-placement="end"] .mha-choice-indicator {
+  grid-column: 2;
+}
+
+.mha-checkbox .mha-choice-indicator {
+  border-radius: var(--mha-checkbox-radius, .38rem);
+}
+
+.mha-radio .mha-choice-indicator {
+  border-radius: 999px;
+}
+
+.mha-choice-input:checked ~ .mha-choice-indicator {
+  border-color: var(--mha-surface-accent, var(--mha-accent));
+  background: var(--mha-surface-accent, var(--mha-accent));
+}
+
+.mha-checkbox .mha-choice-input:checked ~ .mha-choice-indicator::after {
+  content: "";
+  position: absolute;
+  inline-size: .58rem;
+  block-size: .3rem;
+  inset-inline-start: 50%;
+  inset-block-start: 44%;
+  border-inline-start: 2px solid var(--mha-on-accent-surface, var(--mha-accent-contrast, #fff));
+  border-block-end: 2px solid var(--mha-on-accent-surface, var(--mha-accent-contrast, #fff));
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.mha-radio .mha-choice-input:checked ~ .mha-choice-indicator::after {
+  content: "";
+  position: absolute;
+  inline-size: .48rem;
+  block-size: .48rem;
+  inset: 50% auto auto 50%;
+  border-radius: 999px;
+  background: var(--mha-on-accent-surface, var(--mha-accent-contrast, #fff));
+  transform: translate(-50%, -50%);
+}
+
+.mha-choice-input:focus-visible ~ .mha-choice-indicator {
+  outline: 2px solid var(--mha-border-focus, var(--mha-accent));
+  outline-offset: 3px;
+}
+
+.mha-choice-input:disabled ~ .mha-choice-label,
+.mha-choice-input:disabled ~ .mha-choice-indicator {
+  opacity: .46;
+  cursor: not-allowed;
+}
+
+/* Theme identities remain token-driven; only geometry/material is tuned. */
+:host([data-theme-style="oneui"]) {
+  --mha-select-radius: 1rem;
+  --mha-select-menu-radius: 1.25rem;
+  --mha-select-option-radius: .9rem;
+  --mha-checkbox-radius: .42rem;
+}
+
+:host([data-theme-style="oneui"]) .mha-select-menu {
+  background: var(--mha-surface-popup, var(--mha-oneui-panel-surface, var(--mha-surface-panel)));
+  -webkit-backdrop-filter: var(--mha-popup-filter, blur(var(--mha-blur-popup, 24px)) saturate(var(--mha-saturation-popup, 145%)));
+  backdrop-filter: var(--mha-popup-filter, blur(var(--mha-blur-popup, 24px)) saturate(var(--mha-saturation-popup, 145%)));
+  box-shadow: 0 .8rem 2.2rem color-mix(in srgb, black 22%, transparent);
+}
+
+:host([data-theme-style="ios"]) {
+  --mha-select-radius: .9rem;
+  --mha-select-menu-radius: 1.05rem;
+  --mha-select-option-radius: .72rem;
+  --mha-checkbox-radius: .36rem;
+}
+
+:host([data-theme-style="ios"][data-theme="light"]) {
+  --mha-select-menu-glass-tint:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--mha-accent) 4%, rgba(255,255,255,.58)),
+      color-mix(in srgb, var(--mha-accent) 3%, rgba(235,242,255,.42))
+    );
+}
+
+:host([data-theme-style="ios"][data-theme="dark"]) {
+  --mha-select-menu-glass-tint:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--mha-accent) 7%, rgba(28,32,43,.72)),
+      color-mix(in srgb, var(--mha-accent) 5%, rgba(16,19,28,.62))
+    );
+}
+
+:host([data-theme-style="ios"]) .mha-select-menu {
+  background:
+    var(--mha-select-menu-glass-tint, linear-gradient(rgba(28,32,43,.58), rgba(20,23,32,.52))),
+    var(--mha-surface-popup, var(--mha-surface-panel));
+  -webkit-backdrop-filter: var(--mha-popup-filter, blur(var(--mha-blur-popup, 14px)) saturate(var(--mha-saturation-popup, 165%)));
+  backdrop-filter: var(--mha-popup-filter, blur(var(--mha-blur-popup, 14px)) saturate(var(--mha-saturation-popup, 165%)));
+}
+
+/* iOS glass sections are independent stacking contexts because they blur. */
+:host([data-theme-style="ios"]) .mha-settings-section[data-select-open="true"] {
+  position: relative;
+  z-index: 21;
+}
+
+:host([data-theme-style="material"]) {
+  --mha-select-radius: 1.35rem;
+  --mha-select-menu-radius: 1.35rem;
+  --mha-select-option-radius: 1rem;
+  --mha-checkbox-radius: .22rem;
+}
+
+:host([data-theme-style="material"]) .mha-select-menu {
+  background: var(--mha-material-surface-container-high, var(--mha-surface-panel));
+  border-color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mha-select-trigger,
+  .mha-select-chevron,
+  .mha-choice-indicator {
+    transition: none;
+  }
+}

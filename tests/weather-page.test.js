@@ -6,6 +6,10 @@ import {
   discoverWeatherPageSources,
 } from "../src/ha/weather-page-data.js";
 import {
+  resolveWeatherRadarImageUrl,
+  resolveWeatherRadarSource,
+} from "../src/ha/weather-radar.js";
+import {
   createWeatherPageSeed,
   discoverWeatherPageSeed,
 } from "../src/pages/weather-page-seed.js";
@@ -66,6 +70,28 @@ function createHass() {
     },
     user: { id: "user-1", is_admin: true },
   };
+}
+
+function createRadarHass() {
+  const hass = createHass();
+  hass.states["camera.home_weather_radar"] = {
+    entity_id: "camera.home_weather_radar",
+    state: "idle",
+    attributes: {
+      friendly_name: "Radar météo maison",
+      entity_picture: "/api/camera_proxy/camera.home_weather_radar?token=radar-token",
+    },
+  };
+  hass.states["camera.garage"] = {
+    entity_id: "camera.garage",
+    state: "idle",
+    attributes: {
+      friendly_name: "Garage",
+      entity_picture: "/api/camera_proxy/camera.garage?token=garage-token",
+    },
+  };
+  hass.hassUrl = path => `https://ha.example${path}`;
+  return hass;
 }
 
 function createRegistryHass() {
@@ -364,6 +390,32 @@ test("weather page data selects native weather and location-matched complementar
   assert.equal(data.metrics.airQuality.measurementType, "aqi");
 });
 
+test("weather radar discovery selects only a named camera or image radar entity", () => {
+  const hass = createRadarHass();
+  const source = resolveWeatherRadarSource(hass);
+
+  assert.equal(source?.entityId, "camera.home_weather_radar");
+  assert.equal(source?.domain, "camera");
+  assert.equal(source?.sourceType, "radar-entity");
+  assert.equal(
+    resolveWeatherRadarImageUrl(hass, hass.states[source.entityId]),
+    "https://ha.example/api/camera_proxy/camera.home_weather_radar?token=radar-token",
+  );
+});
+
+test("weather page adds an auto-detected radar as a fixed 4x3 native widget", () => {
+  const seed = createWeatherPageSeed({
+    hass: createRadarHass(),
+    pageId: "weather-radar-test",
+  });
+  const radar = seed.widgets.find(widget => widget.kind === "weather-radar");
+
+  assert.equal(seed.config.radarEntityId, "camera.home_weather_radar");
+  assert.equal(radar?.entityId, "camera.home_weather_radar");
+  assert.deepEqual({ w: radar?.w, h: radar?.h }, { w: 4, h: 3 });
+  assert.equal(radar?.variant, "weather-radar");
+});
+
 test("registry discovery keeps related weather sensors and rejects unrelated sensors", async () => {
   const sources = await discoverWeatherPageSources(createRegistryHass());
   const metricKeys = sources.metrics.map(source => source.key);
@@ -405,7 +457,7 @@ test("OpenWeatherMap profile resolves condition sensors and separate air quality
 
   assert.equal(sources.discoveryMode, "registry");
   assert.equal(byKey.get("apparent-temperature")?.entityId, "sensor.quebec_feels_like_temperature");
-  assert.equal(byKey.get("summary")?.entityId, "sensor.quebec_weather");
+  assert.equal(byKey.get("summary")?.entityId, "weather.quebec");
   assert.equal(byKey.get("precipitation")?.entityId, "sensor.quebec_rain");
   assert.equal(byKey.get("air-quality")?.entityId, "sensor.quebec_air_quality_index");
   assert.equal(byKey.get("air-quality-pm25")?.entityId, "sensor.quebec_pm2_5");
@@ -432,6 +484,10 @@ test("weather page seed creates grid-compatible sections", () => {
   assert.equal(seed.widgets[0].w, 4);
   assert.equal(seed.widgets[0].h, 2);
   assert.equal(seed.widgets.filter(widget => widget.kind === "weather").length, 3);
+  assert.equal(
+    seed.widgets.filter(widget => widget.kind === "weather").every(widget => widget.surfaceMode === "dynamic"),
+    true,
+  );
   assert.equal(seed.widgets.some(widget => widget.kind === "weather-metric"), true);
   assert.equal(seed.widgets.every(widget => [2, 4].includes(widget.w)), true);
   assert.equal(seed.widgets.every(widget => [1, 2].includes(widget.h)), true);
@@ -449,12 +505,26 @@ test("weather page widget manager category exposes semantic integration capabili
   assert.equal(byKey.has("current-daily"), true);
   assert.equal(byKey.has("forecast-hourly"), true);
   assert.equal(byKey.has("forecast-daily"), true);
-  assert.equal(category.widgets.some(widget => widget.kind === "weather-narrative"), true);
+  assert.equal(category.widgets.some(widget => widget.kind === "weather-narrative"), false);
+  assert.equal(byKey.has("summary"), true);
+  assert.equal(byKey.get("summary")?.labelKey, "widgets.weatherManager.narrative");
   assert.equal(byKey.get("humidity")?.labelKey, "weatherPage.metrics.humidity");
   assert.equal(byKey.get("uv")?.labelKey, "weatherPage.metrics.uv");
   assert.equal(byKey.get("precipitation-probability")?.labelKey, "weatherPage.metrics.precipitationProbability");
   assert.equal(byKey.get("air-quality")?.entityId, "sensor.air_quality_index");
   assert.equal(category.widgets.some(widget => widget.entityId === "sensor.outdoor_humidity"), false);
+});
+
+test("weather page widget manager exposes the detected radar at 4x3", () => {
+  const category = buildWeatherPageWidgetManagerCategory({
+    hass: createRadarHass(),
+    weatherEntityId: "weather.home",
+  });
+  const radar = category.widgets.find(widget => widget.kind === "weather-radar");
+
+  assert.equal(radar?.labelKey, "widgets.weatherManager.radar");
+  assert.equal(radar?.entityId, "camera.home_weather_radar");
+  assert.deepEqual(radar?.size, { w: 4, h: 3 });
 });
 
 test("weather page widget manager registry discovery exposes linked integration sensors", async () => {

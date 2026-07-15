@@ -227,6 +227,7 @@ constructor(){
     setAccent:(value)=>this._themeController.setAccent(value),
     setAccentMode:(value)=>this._themeController.setAccentMode(value),
     setIconShape:(value)=>this._themeController.setIconShape(value),
+    setOneUiPrimarySurfaceOpacity:(value)=>this._themeController.setOneUiPrimarySurfaceOpacity(value),
     migrateLegacyWallpaper:()=>this._wallpaperController.migrateLegacy(),
     readWallpapers:()=>this._wallpaperController.read(),
     applyWallpaperState:(themeState)=>this._wallpaperController.apply(themeState),
@@ -809,6 +810,9 @@ _applyAccentModeFromSettings(value="manual"){
 
 _applyIconShapeFromSettings(value="auto"){
   return this._appearanceCoordinator.applyIconShapeFromSettings(value);
+}
+_applyOneUiPrimarySurfaceOpacityFromSettings(value=88){
+  return this._appearanceCoordinator.applyOneUiPrimarySurfaceOpacityFromSettings(value);
 }
 _setAccentPaletteExpanded(expanded=false){
   this._accentPaletteExpanded=Boolean(expanded);

@@ -1,4 +1,5 @@
 import { getLanguage, t } from "../i18n/index.js";
+import { createMhaSelect } from "../ui/form-controls.js";
 import {
   getStoredLayoutMode,
   normalizeLayoutMode,
@@ -45,17 +46,9 @@ function optionLabel(item = {}) {
   return t(`settings.layoutModes.${item.value}`, labels[item.value] || item.label);
 }
 
-function createOption(item, value) {
-  const option = document.createElement("option");
-  option.value = item.value;
-  option.textContent = optionLabel(item);
-  option.selected = item.value === value;
-  return option;
-}
-
 function createLayoutModeField(panel) {
   const value = getStoredLayoutMode();
-  const field = document.createElement("label");
+  const field = document.createElement("div");
   field.className = "mha-settings-field";
   field.dataset.layoutModeControl = "true";
 
@@ -63,14 +56,20 @@ function createLayoutModeField(panel) {
   text.className = "mha-settings-label";
   text.textContent = t("settings.layoutMode", getLocalLabels().layoutMode);
 
-  const select = document.createElement("select");
-  select.className = "mha-settings-select";
+  const control = createMhaSelect({
+    label: text.textContent,
+    value,
+    options: LAYOUT_MODE_OPTIONS.map(item => ({ ...item, label: optionLabel(item) })),
+    triggerClassName: "mha-settings-select",
+    onChange: nextValue => applyLayoutMode(panel, nextValue),
+  });
+  const select = control.querySelector(".mha-select-native");
+  const trigger = control.querySelector(".mha-select-trigger");
   select.dataset.settingsControl = "layout-mode";
   select.dataset.settingsValueControl = "true";
-  select.append(...LAYOUT_MODE_OPTIONS.map(item => createOption(item, value)));
-  select.addEventListener("change", () => applyLayoutMode(panel, select.value));
+  trigger.dataset.settingsControl = "layout-mode";
 
-  field.append(text, select);
+  field.append(text, control);
   return field;
 }
 

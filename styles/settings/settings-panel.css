@@ -175,7 +175,7 @@
 .mha-settings-eyebrow {
   color: var(--mha-text-tertiary);
   font-size: .78rem;
-  font-weight: 800;
+  font-weight: var(--mha-font-weight-extra-bold);
   letter-spacing: .12em;
   text-transform: uppercase;
 }
@@ -239,7 +239,7 @@
   margin: 0 0 .15rem;
   color: var(--mha-text-primary);
   font-size: .9rem;
-  font-weight: 820;
+  font-weight: var(--mha-font-weight-extra-bold);
 }
 
 .mha-settings-field,
@@ -279,7 +279,7 @@
 .mha-settings-label {
   color: var(--mha-text-primary);
   font-size: .9rem;
-  font-weight: 700;
+  font-weight: var(--mha-font-weight-bold);
 }
 
 .mha-settings-text {
@@ -308,6 +308,103 @@
   font-size: .86rem;
 }
 
+.mha-settings-range-field {
+  display: grid;
+  min-inline-size: 0;
+  gap: .55rem;
+}
+
+.mha-settings-range-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: .75rem;
+}
+
+.mha-settings-range-value {
+  color: var(--mha-text-secondary);
+  font-size: .82rem;
+  font-weight: var(--mha-font-weight-extra-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.mha-settings-range-input {
+  --mha-settings-range-track-height: .55rem;
+  --mha-settings-range-thumb-size: 1.25rem;
+  --mha-settings-range-fill: var(--mha-accent);
+  --mha-settings-range-track: color-mix(in srgb, var(--mha-text-primary) 18%, transparent);
+  -webkit-appearance: none;
+  appearance: none;
+  inline-size: 100%;
+  block-size: var(--mha-settings-range-thumb-size);
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  accent-color: var(--mha-accent);
+  touch-action: pan-y;
+}
+
+.mha-settings-range-input::-webkit-slider-runnable-track {
+  block-size: var(--mha-settings-range-track-height);
+  border: 1px solid color-mix(in srgb, var(--mha-text-primary) 14%, transparent);
+  border-radius: var(--mha-control-radius, 999px);
+  background:
+    linear-gradient(
+      90deg,
+      var(--mha-settings-range-fill) 0 var(--mha-settings-range-value, 0%),
+      var(--mha-settings-range-track) var(--mha-settings-range-value, 0%) 100%
+    );
+}
+
+.mha-settings-range-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  inline-size: var(--mha-settings-range-thumb-size);
+  block-size: var(--mha-settings-range-thumb-size);
+  margin-block-start: calc((var(--mha-settings-range-track-height) - var(--mha-settings-range-thumb-size)) / 2);
+  border: 0;
+  border-radius: var(--mha-control-radius, 999px);
+  background: var(--mha-accent);
+  box-shadow: var(--mha-shadow-control, 0 2px 6px rgba(0,0,0,.18));
+}
+
+.mha-settings-range-input::-moz-range-track {
+  block-size: var(--mha-settings-range-track-height);
+  border: 1px solid color-mix(in srgb, var(--mha-text-primary) 14%, transparent);
+  border-radius: var(--mha-control-radius, 999px);
+  background: var(--mha-settings-range-track);
+}
+
+.mha-settings-range-input::-moz-range-progress {
+  block-size: var(--mha-settings-range-track-height);
+  border-radius: var(--mha-control-radius, 999px);
+  background: var(--mha-settings-range-fill);
+}
+
+:host([data-theme-style="oneui"][data-theme="light"]) .mha-settings-range-input {
+  --mha-settings-range-track: rgba(20,24,32,.24);
+}
+
+:host([data-theme-style="oneui"][data-theme="dark"]) .mha-settings-range-input {
+  --mha-settings-range-track: rgba(255,255,255,.22);
+}
+
+.mha-settings-range-input::-moz-range-thumb {
+  inline-size: var(--mha-settings-range-thumb-size);
+  block-size: var(--mha-settings-range-thumb-size);
+  border: 0;
+  border-radius: var(--mha-control-radius, 999px);
+  background: var(--mha-accent);
+  box-shadow: var(--mha-shadow-control, 0 2px 6px rgba(0,0,0,.18));
+}
+
+.mha-settings-range-input:focus-visible {
+  outline: 2px solid var(--mha-accent);
+  outline-offset: .25rem;
+  border-radius: var(--mha-control-radius, 999px);
+}
+
 
 
 
@@ -323,7 +420,7 @@
   background: var(--mha-surface-secondary);
   color: var(--mha-text-primary);
   font: inherit;
-  font-weight: 800;
+  font-weight: var(--mha-font-weight-extra-bold);
   cursor: pointer;
 }
 
@@ -624,7 +721,7 @@
   color: var(--mha-text-primary);
   font: inherit;
   font-size: 1rem;
-  font-weight: 800;
+  font-weight: var(--mha-font-weight-extra-bold);
   line-height: 1;
   place-items: center;
   cursor: pointer;
@@ -1010,7 +1107,7 @@
   place-items: center;
   color: #fff;
   font-size: clamp(.95rem, 2.6vw, 1.25rem);
-  font-weight: 950;
+  font-weight: var(--mha-font-weight-black);
   line-height: 1;
   text-shadow:
     0 1px 3px rgba(0,0,0,.55),
@@ -1103,10 +1200,8 @@
 
 :host([data-theme-style="oneui"][data-theme="dark"]) .mha-settings-sheet {
   background: var(--mha-oneui-panel-surface, var(--mha-surface-panel));
-  border-color: color-mix(in srgb, var(--mha-border-secondary) 76%, rgba(255,255,255,.10));
-  box-shadow:
-    0 22px 62px rgba(0,0,0,.34),
-    inset 0 1px 0 rgba(255,255,255,.10);
+  border-color: var(--mha-oneui-panel-border);
+  box-shadow: none;
   -webkit-backdrop-filter: blur(calc(var(--mha-blur-strong) * 1.08)) saturate(145%);
   backdrop-filter: blur(calc(var(--mha-blur-strong) * 1.08)) saturate(145%);
 }
@@ -1361,7 +1456,7 @@
 .mha-settings-nav-text strong,
 .mha-settings-dock-row-text strong {
   font-size: .95rem;
-  font-weight: 680;
+  font-weight: var(--mha-font-weight-semibold);
   letter-spacing: -.01em;
 }
 
@@ -1429,7 +1524,7 @@
 .mha-settings-back {
   justify-self: start;
   margin-block-end: .25rem;
-  font-weight: 650;
+  font-weight: var(--mha-font-weight-semibold);
 }
 
 .mha-settings-dock-editor {
@@ -1600,10 +1695,74 @@
 .mha-settings-accent-swatch-auto {
   color: var(--mha-text);
   font-size: 12px;
-  font-weight: 800;
+  font-weight: var(--mha-font-weight-extra-bold);
   letter-spacing: -.02em;
   background:
     linear-gradient(135deg,
       color-mix(in srgb, var(--mha-accent) 32%, rgba(255,255,255,.72)),
       rgba(255,255,255,.28));
+}
+
+/* OneUI widget-opacity live preview
+ * Keep the range control at its stable layout position while temporarily
+ * removing every visual layer that obscures the widgets behind the panel.
+ */
+:host([data-theme-style="oneui"].is-oneui-opacity-previewing) .mha-settings-backdrop {
+  visibility: hidden;
+  opacity: 0;
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+:host([data-theme-style="oneui"].is-oneui-opacity-previewing) .mha-background,
+:host([data-theme-style="oneui"].is-oneui-opacity-previewing) .mha-shell,
+:host([data-theme-style="oneui"].is-oneui-opacity-previewing) .mha-dock,
+:host([data-theme-style="oneui"].is-oneui-opacity-previewing) .mha-mobile-dock,
+:host([data-theme-style="oneui"].is-oneui-opacity-previewing) .mha-edit-button {
+  -webkit-filter: none;
+  filter: none;
+}
+
+:host([data-theme-style="oneui"].is-oneui-opacity-previewing)
+  .mha-settings-panel.is-oneui-opacity-previewing .mha-settings-scrim,
+:host([data-theme-style="oneui"].is-oneui-opacity-previewing)
+  .mha-settings-panel.is-oneui-opacity-previewing .mha-settings-header,
+:host([data-theme-style="oneui"].is-oneui-opacity-previewing)
+  .mha-settings-panel.is-oneui-opacity-previewing .mha-settings-body > .mha-settings-section {
+  visibility: hidden;
+}
+
+:host([data-theme-style="oneui"].is-oneui-opacity-previewing)
+  .mha-settings-panel.is-oneui-opacity-previewing .mha-settings-sheet {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+:host([data-theme-style="oneui"].is-oneui-opacity-previewing)
+  .mha-settings-panel.is-oneui-opacity-previewing .mha-settings-sheet::before,
+:host([data-theme-style="oneui"].is-oneui-opacity-previewing)
+  .mha-settings-panel.is-oneui-opacity-previewing .mha-settings-sheet::after {
+  opacity: 0;
+}
+
+:host([data-theme-style="oneui"].is-oneui-opacity-previewing)
+  .mha-settings-panel.is-oneui-opacity-previewing .mha-settings-body {
+  scrollbar-width: none;
+}
+
+:host([data-theme-style="oneui"].is-oneui-opacity-previewing)
+  .mha-settings-panel.is-oneui-opacity-previewing .mha-settings-body::-webkit-scrollbar {
+  display: none;
+}
+
+:host([data-theme-style="oneui"].is-oneui-opacity-previewing)
+  .mha-settings-panel.is-oneui-opacity-previewing .mha-settings-range-field {
+  position: relative;
+  z-index: 1;
+  visibility: visible;
+  pointer-events: auto;
 }

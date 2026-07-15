@@ -59,7 +59,14 @@
   --mha-surface-bg-edit:var(--mha-widget-surface-edit);
   --mha-surface-border:var(--mha-widget-border);
   --mha-surface-border-edit:var(--mha-widget-border-edit);
-  --mha-typography-weight:750;
+  --mha-font-weight-regular:400;
+  --mha-font-weight-medium:500;
+  --mha-font-weight-semibold:550;
+  --mha-font-weight-bold:600;
+  --mha-font-weight-heavy:650;
+  --mha-font-weight-extra-bold:700;
+  --mha-font-weight-black:800;
+  --mha-typography-weight:var(--mha-font-weight-heavy);
   --mha-control-height:34px;
   --mha-control-gap:8px;
   --mha-dock-padding:9px 11px;
@@ -101,6 +108,7 @@
   background:var(--mha-bg-base-1);
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;
 }
+:host strong,:host b{font-weight:var(--mha-font-weight-bold)}
 :host([data-layout="mobile"]){--mha-page-padding:var(--mha-page-padding-mobile);--mha-grid-gap:var(--mha-grid-gap-mobile);--mha-dock-button-size:52px}
 :host([data-layout="tablet"]){--mha-page-padding:var(--mha-page-padding-tablet);--mha-grid-gap:var(--mha-grid-gap-tablet);--mha-dock-button-size:56px}
 :host(:not([data-theme-style="oneui"])){--mha-side-dock-rail-width:86px}

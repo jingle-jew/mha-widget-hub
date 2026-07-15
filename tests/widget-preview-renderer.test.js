@@ -7,6 +7,7 @@ import {
   getWidgetPreviewLayout,
   hasLiveWidgetPreview,
 } from "../src/widgets/widget-preview-renderer.js";
+import { createWeatherRadarWidgetContent } from "../src/widgets/weather-radar-widget.js";
 
 function installDom() {
   class FakeNode {}
@@ -22,6 +23,16 @@ function installDom() {
     node.querySelector = () => null;
     node.querySelectorAll = () => [];
     node.setAttribute = (name, value) => { node[name] = value; };
+    node.removeAttribute = (name) => { delete node[name]; };
+    const listeners = new Map();
+    node.addEventListener = (name, listener) => {
+      const eventListeners = listeners.get(name) || [];
+      eventListeners.push(listener);
+      listeners.set(name, eventListeners);
+    };
+    node.dispatchEvent = event => {
+      (listeners.get(event.type) || []).forEach(listener => listener.call(node, event));
+    };
     node.append = (...children) => node.childNodes.push(...children);
     node.replaceChildren = (...children) => { node.childNodes = [...children]; };
     return node;
@@ -112,4 +123,49 @@ test("weather metric exposes a live preview renderer with fallback preview data"
   assert.equal(preview?.dataset.kind, "weather-metric");
   assert.equal(preview?.dataset.size, "2x2");
   assert.equal(preview?.childNodes.length, 1);
+});
+
+test("weather radar exposes a live 4x3 preview", () => {
+  installDom();
+  const preview = createLiveWidgetPreview({
+    kind: "weather-radar",
+    variant: "weather-radar",
+    size: { w: 4, h: 3 },
+  });
+
+  assert.equal(getWidgetPreviewRenderer({ kind: "weather-radar" }).mode, "live");
+  assert.equal(hasLiveWidgetPreview({ kind: "weather-radar" }), true);
+  assert.equal(preview?.className, "mha-widget-manager-live-preview");
+  assert.equal(preview?.dataset.kind, "weather-radar");
+  assert.equal(preview?.dataset.size, "4x3");
+  assert.equal(preview?.childNodes.length, 1);
+});
+
+test("weather radar remains visible after an unchanged Home Assistant update", () => {
+  installDom();
+  const hass = {
+    states: {
+      "camera.home_radar": {
+        entity_id: "camera.home_radar",
+        state: "streaming",
+        attributes: {
+          entity_picture: "https://ha.local/api/camera_proxy/camera.home_radar?token=test",
+        },
+      },
+    },
+  };
+  const content = createWeatherRadarWidgetContent(
+    { entityId: "camera.home_radar" },
+    { hass },
+  );
+  const viewport = content.childNodes[1];
+  const image = viewport.childNodes[0];
+
+  assert.equal(viewport.dataset.imageState, "loading");
+  image.dispatchEvent({ type: "load" });
+  assert.equal(viewport.dataset.imageState, "ready");
+
+  content.__mhaUpdateFromHass(hass);
+
+  assert.equal(viewport.dataset.imageState, "ready");
 });

@@ -91,46 +91,41 @@ export function buildToggleWidgetConfig(widget, draft, hass, visibilityConfig) {
 }
 
 export function renderToggleConfigFields(session, hass, visibilityConfig, onChange, helpers) {
-  const { createField, configOptionLabel, emptyLabelForConfigOption, t } = helpers;
+  const { createField, createSelectControl, configOptionLabel, emptyLabelForConfigOption, t } = helpers;
   const reconciled = reconcileToggleConfigDraft(session.draft, hass, visibilityConfig);
   const { draft } = reconciled;
   const fields = document.createElement("div");
   fields.className = "mha-widget-config-fields";
 
-  const typeSelect = document.createElement("select");
-  typeSelect.className = "mha-widget-config-control";
-  TOGGLE_DEVICE_TYPES.forEach((deviceType) => {
-    const item = document.createElement("option");
-    item.value = deviceType.value;
-    item.textContent = configOptionLabel("widgets.config.deviceTypes", deviceType);
-    item.selected = deviceType.value === draft.deviceType;
-    typeSelect.append(item);
-  });
-  typeSelect.addEventListener("change", (event) => {
-    updateToggleDeviceType(draft, event.currentTarget.value, hass, visibilityConfig);
-    onChange?.({ rerender: true });
+  const deviceTypeLabel = t("widgets.config.deviceType", "Device type");
+  const typeSelect = createSelectControl({
+    label: deviceTypeLabel,
+    value: draft.deviceType,
+    options: TOGGLE_DEVICE_TYPES.map(deviceType => ({
+      value: deviceType.value,
+      label: configOptionLabel("widgets.config.deviceTypes", deviceType),
+    })),
+    onChange: (value) => {
+      updateToggleDeviceType(draft, value, hass, visibilityConfig);
+      onChange?.({ rerender: true });
+    },
   });
 
-  const deviceSelect = document.createElement("select");
-  deviceSelect.className = "mha-widget-config-control";
-  deviceSelect.disabled = !reconciled.options.length;
-  if (!reconciled.options.length) {
-    const empty = document.createElement("option");
-    empty.value = "";
-    empty.textContent = emptyLabelForConfigOption("widgets.config.emptyLabels", reconciled.deviceType);
-    deviceSelect.append(empty);
-  } else {
-    reconciled.options.forEach((option) => {
-      const item = document.createElement("option");
-      item.value = option.value;
-      item.textContent = option.label;
-      item.selected = option.value === draft.entityId;
-      deviceSelect.append(item);
-    });
-  }
-  deviceSelect.addEventListener("change", (event) => {
-    updateToggleEntity(draft, event.currentTarget.value, reconciled.options);
-    onChange?.({ rerender: true });
+  const deviceLabel = t("widgets.config.device", "Device");
+  const deviceSelect = createSelectControl({
+    label: deviceLabel,
+    value: draft.entityId,
+    disabled: !reconciled.options.length,
+    options: reconciled.options.length
+      ? reconciled.options
+      : [{
+        value: "",
+        label: emptyLabelForConfigOption("widgets.config.emptyLabels", reconciled.deviceType),
+      }],
+    onChange: (value) => {
+      updateToggleEntity(draft, value, reconciled.options);
+      onChange?.({ rerender: true });
+    },
   });
 
   const nameInput = document.createElement("input");
@@ -166,8 +161,8 @@ export function renderToggleConfigFields(session, hass, visibilityConfig, onChan
   const iconNameRow = createInlineIconNameRow(nameInput, iconPicker);
 
   fields.append(
-    createField(t("widgets.config.deviceType", "Device type"), typeSelect),
-    createField(t("widgets.config.device", "Device"), deviceSelect),
+    createField(deviceTypeLabel, typeSelect),
+    createField(deviceLabel, deviceSelect),
     createField(t("widgets.modesRoutines.displayName", "Display name"), iconNameRow),
   );
   return { fields, canSave: Boolean(reconciled.selected) };

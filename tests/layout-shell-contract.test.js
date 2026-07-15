@@ -67,6 +67,126 @@ test("theme stylesheets do not override structural geometry variables", () => {
   assert.deepEqual(offenders, []);
 });
 
+test("OneUI dock and active pill derive their visible tint from the theme accent", () => {
+  const source = fs.readFileSync(path.join(THEME_ROOT, "oneui.css"), "utf8");
+  const tintConsumers = source.match(/var\(--mha-oneui-dock-tint\)/g) || [];
+
+  assert.match(source, /--mha-oneui-dock-tint:\s*var\(--mha-accent\);/);
+  assert.match(source, /--mha-oneui-dock-filter:\s*blur\(18px\) saturate\(132%\);/);
+  assert.equal(tintConsumers.length, 12);
+});
+
+test("OneUI glass uses a dense fine-grain texture across persistent and panel surfaces", () => {
+  const source = fs.readFileSync(path.join(THEME_ROOT, "oneui.css"), "utf8");
+
+  assert.match(source, /--mha-oneui-glass-noise-texture:\s*url\("data:image\/svg\+xml,[^\n]*baseFrequency='\.96'[^\n]*numOctaves='4'/);
+  assert.match(source, /--mha-glass-noise-opacity:\s*\.14;/);
+  assert.match(source, /--mha-glass-noise-size:\s*56px 56px;/);
+  assert.match(source, /--mha-glass-noise-blend-mode:\s*soft-light;/);
+  assert.match(
+    source,
+    /\.mha-settings-sheet::before,[\s\S]*\.mha-page-creator-sheet::before,[\s\S]*\.mha-media-page-widget-panel::before,[\s\S]*\.mha-mobile-dock::before\s*\{[\s\S]*background-image:\s*var\(--mha-glass-noise-image\);[\s\S]*opacity:\s*var\(--mha-glass-noise-opacity\);/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-theme-style="oneui"\]\[data-wallpaper-source="theme"\]\[data-wallpaper-kind="advanced"\]\) \.mha-widget:not\(\.mha-media-page-auto-player\)::before\s*\{[\s\S]*opacity:\s*var\(--mha-oneui-adaptive-widget-noise-opacity, var\(--mha-glass-noise-opacity\)\);/,
+  );
+  assert.doesNotMatch(
+    source,
+    /:host\([^\n]*data-wallpaper-source="custom"[^\n]*\) \.mha-widget[^\n]*::before/,
+  );
+});
+
+test("OneUI light canvas uses subdued base colors behind primary surfaces", () => {
+  const source = fs.readFileSync(path.join(THEME_ROOT, "oneui.css"), "utf8");
+
+  assert.match(
+    source,
+    /:host\(\[data-theme-style="oneui"\]\[data-theme="light"\]\)\s*\{[\s\S]*--mha-bg-base-1:\s*color-mix\(in srgb, var\(--mha-accent\) 16%, #eef0f2\);[\s\S]*--mha-bg-base-2:\s*color-mix\(in srgb, var\(--mha-accent\) 24%, #e0e7f2\);/,
+  );
+});
+
+test("OneUI light releases its background filter reset while the screensaver is visible", () => {
+  const themeSource = fs.readFileSync(path.join(THEME_ROOT, "oneui.css"), "utf8");
+  const screensaverSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "screensaver", "screensaver.css"),
+    "utf8",
+  );
+
+  assert.match(
+    themeSource,
+    /:host\(\[data-theme-style="oneui"\]\[data-theme="light"\]:not\(\.is-screensaver-visible\)\) \.mha-background,[\s\S]*filter:\s*none;/,
+  );
+  assert.match(
+    screensaverSource,
+    /:host\(\[data-theme="light"\]\)\s*\{[\s\S]*--mha-screensaver-background-filter:\s*blur\(18px\)\s*saturate\(\.82\)\s*brightness\(\.88\);/,
+  );
+});
+
+test("OneUI primary surface reuses the dock colors at reduced opacity", () => {
+  const source = fs.readFileSync(path.join(THEME_ROOT, "oneui.css"), "utf8");
+  const semanticSource = fs.readFileSync(path.join(THEME_ROOT, "semantic-tokens.css"), "utf8");
+  const sharedAdapter = semanticSource.match(
+    /\/\* iOS and OneUI canonical layer adapters\.[\s\S]*?\n\}/,
+  )?.[0] || "";
+
+  assert.match(source, /--mha-oneui-primary-blur:\s*46px;/);
+  assert.match(source, /--mha-oneui-primary-saturation:\s*118%;/);
+  assert.match(source, /--mha-oneui-primary-surface-opacity:\s*68%;/);
+  assert.match(
+    source,
+    /--mha-oneui-primary-surface:[\s\S]*var\(--mha-oneui-dock-surface-start\) var\(--mha-oneui-primary-surface-opacity\)[\s\S]*var\(--mha-oneui-dock-surface-end\) var\(--mha-oneui-primary-surface-opacity\)/,
+  );
+  assert.match(
+    source,
+    /--mha-oneui-mobile-dock-surface:[\s\S]*var\(--mha-oneui-dock-surface-start\),[\s\S]*var\(--mha-oneui-dock-surface-end\)/,
+  );
+  assert.match(source, /--mha-oneui-primary-brightness:\s*\.99;/);
+  assert.match(source, /--mha-oneui-primary-brightness:\s*\.90;/);
+  assert.match(
+    semanticSource,
+    /:host\(\[data-theme-style="oneui"\]\),\s*:root\[data-theme-style="oneui"\]\s*\{[\s\S]*--mha-primary-surface:\s*var\(--mha-oneui-primary-surface\);[\s\S]*--mha-surface-primary:\s*var\(--mha-primary-surface\);[\s\S]*--mha-blur-primary:\s*var\(--mha-oneui-primary-blur\);[\s\S]*--mha-brightness-primary:\s*var\(--mha-oneui-primary-brightness\);/,
+  );
+  assert.doesNotMatch(sharedAdapter, /--mha-primary-surface:/);
+});
+
+test("OneUI Now Bar tiles reuse the dock surface material", () => {
+  const source = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "screensaver", "screensaver-contract.css"),
+    "utf8",
+  );
+
+  assert.match(
+    source,
+    /:host\(\[data-theme-style="oneui"\]\) \.mha-screensaver-nowbar-tile\s*\{[\s\S]*--mha-nowbar-oneui-surface:\s*var\([\s\S]*--mha-oneui-mobile-dock-surface,[\s\S]*--mha-shell-dock-surface[\s\S]*background:\s*var\(--mha-nowbar-oneui-surface\);[\s\S]*border-color:\s*var\(--mha-oneui-mobile-dock-border, var\(--mha-shell-border\)\);[\s\S]*box-shadow:\s*var\(--mha-shell-shadow\);[\s\S]*backdrop-filter:\s*var\(--mha-oneui-dock-filter\);/,
+  );
+});
+
+test("OneUI dark panels keep a flat outer frame", () => {
+  const themeSource = fs.readFileSync(path.join(THEME_ROOT, "oneui.css"), "utf8");
+  const settingsSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "settings", "settings-panel.css"),
+    "utf8",
+  );
+  const mediaSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "pages", "media-page.css"),
+    "utf8",
+  );
+
+  assert.match(
+    themeSource,
+    /:host\(\[data-theme-style="oneui"\]\[data-theme="dark"\]\)\s*\{[\s\S]*--mha-oneui-panel-border:\s*transparent;[\s\S]*--mha-panel-border:\s*var\(--mha-oneui-panel-border\);[\s\S]*--mha-popup-border:\s*var\(--mha-oneui-panel-border\);[\s\S]*--mha-panel-shadow:\s*none;[\s\S]*--mha-popup-shadow:\s*none;/,
+  );
+  assert.match(
+    settingsSource,
+    /:host\(\[data-theme-style="oneui"\]\[data-theme="dark"\]\) \.mha-settings-sheet\s*\{[\s\S]*border-color:\s*var\(--mha-oneui-panel-border\);[\s\S]*box-shadow:\s*none;/,
+  );
+  assert.match(
+    mediaSource,
+    /:host\(\[data-theme-style="oneui"\]\[data-theme="dark"\]\) \.mha-media-page-widget-panel\s*\{[\s\S]*--mha-panel-border:\s*var\(--mha-oneui-panel-border\);[\s\S]*--mha-panel-shadow:\s*none;/,
+  );
+});
+
 test("side docks do not keep a mirrored bottom inset once the shell top reserve is applied", () => {
   const source = fs.readFileSync(
     path.join(REPO_ROOT, "styles", "layout", "widget-grid.css"),
@@ -378,6 +498,38 @@ test("mobile shell keeps the background viewport-anchored while widget content o
   );
 });
 
+test("media artwork wallpaper crossfades between two persistent layers", () => {
+  const shellSource = fs.readFileSync(
+    path.join(REPO_ROOT, "src", "layout", "shell.js"),
+    "utf8",
+  );
+  const backgroundSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "core", "background.css"),
+    "utf8",
+  );
+  const mediaPageSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "pages", "media-page.css"),
+    "utf8",
+  );
+
+  assert.match(
+    shellSource,
+    /const mediaLayers = \["primary", "secondary"\]\.map\([\s\S]*layer\.dataset\.mediaWallpaperActive = "false";/,
+  );
+  assert.match(
+    backgroundSource,
+    /\.mha-background-media,[\s\S]*transition:opacity var\(--mha-media-page-wallpaper-fade-duration, 1000ms\) ease;/,
+  );
+  assert.match(
+    backgroundSource,
+    /\.mha-background-media\[data-media-wallpaper-active="true"\],[\s\S]*\.mha-background-media-overlay\s*\{[\s\S]*opacity:\s*1;/,
+  );
+  assert.match(
+    mediaPageSource,
+    /--mha-media-page-wallpaper-fade-duration:\s*1000ms;/,
+  );
+});
+
 test("media page mobile layout scrolls as snapped sheets in portrait and landscape", () => {
   const androidEdgeSource = fs.readFileSync(
     path.join(REPO_ROOT, "styles", "core", "android-edge-to-edge.css"),
@@ -474,6 +626,10 @@ test("media page mobile layout scrolls as snapped sheets in portrait and landsca
   );
   assert.match(
     source,
+    /:host\(:is\(\[data-theme-style="oneui"\], \[data-theme-style="material"\]\)\) \.mha-media-page \.mha-media-page-player-list > \.mha-media-page-auto-player \.mha-media-page-player-widget\[data-media-page-player="true"\] > \.mha-media-widget-artwork\s*\{[\s\S]*display:\s*grid;[\s\S]*position:\s*relative;[\s\S]*inset:\s*auto;[\s\S]*inline-size:\s*100%;[\s\S]*block-size:\s*100%;[\s\S]*aspect-ratio:\s*1;/,
+  );
+  assert.match(
+    source,
     /\.mha-media-page-player-info \.mha-media-widget-text\s*\{[\s\S]*align-self:\s*end;[\s\S]*justify-self:\s*stretch;[\s\S]*text-align:\s*start;/,
   );
   assert.match(
@@ -486,7 +642,7 @@ test("media page mobile layout scrolls as snapped sheets in portrait and landsca
   );
   assert.match(
     source,
-    /\.mha-media-page \.mha-media-page-player-list > \.mha-media-page-auto-player \.mha-media-page-player-widget\[data-media-page-player="true"\] \.mha-media-widget-source-badge\s*\{[\s\S]*display:\s*inline-flex;[\s\S]*background:\s*var\(--mha-control-surface, var\(--mha-surface-secondary\)\);/,
+    /\.mha-media-page \.mha-media-page-player-list > \.mha-media-page-auto-player \.mha-media-page-player-widget\[data-media-page-player="true"\] \.mha-media-widget-source-badge\s*\{[\s\S]*display:\s*inline-flex;[\s\S]*background:\s*linear-gradient\([\s\S]*--mha-media-page-artwork-control-tint[\s\S]*var\(--mha-control-surface, var\(--mha-surface-secondary\)\);/,
   );
   assert.match(
     source,
@@ -494,7 +650,7 @@ test("media page mobile layout scrolls as snapped sheets in portrait and landsca
   );
   assert.match(
     source,
-    /\.mha-media-page-player-list > \.mha-media-page-auto-player\[data-media-page-player="true"\]\s*\{[\s\S]*--mha-media-page-player-card-surface:\s*var\([\s\S]*--mha-widget-shell-surface,[\s\S]*--mha-surface-primary[\s\S]*background:\s*var\(--mha-media-page-player-card-surface\);/,
+    /\.mha-media-page-player-list > \.mha-media-page-auto-player\[data-media-page-player="true"\]\s*\{[\s\S]*--mha-media-page-player-card-surface:\s*var\([\s\S]*--mha-widget-shell-surface,[\s\S]*--mha-surface-primary[\s\S]*background:\s*linear-gradient\([\s\S]*--mha-media-page-artwork-card-tint[\s\S]*var\(--mha-media-page-player-card-surface\);/,
   );
   assert.match(
     source,
@@ -505,10 +661,65 @@ test("media page mobile layout scrolls as snapped sheets in portrait and landsca
     /\.mha-media-page\[data-artwork-tone\] \.mha-media-page-now-playing \.mha-media-widget-title\s*\{[\s\S]*color:\s*var\(--mha-media-artwork-foreground\);/,
   );
   assert.doesNotMatch(source, /\.mha-media-page-player-widget\[data-artwork-tone=/);
-  assert.doesNotMatch(source, /:host\(\[data-theme-style="oneui"\]\) \.mha-media-page \.mha-media-page-player-list/);
+  assert.match(
+    source,
+    /:host\(\[data-theme-style="oneui"\]\) \.mha-media-page\[data-artwork-palette="true"\]\s*\{[\s\S]*--mha-media-page-dynamic-panel-surface:\s*color-mix\(in srgb, var\(--mha-media-palette-surface\) 22%,[\s\S]*--mha-media-page-dynamic-card-surface:\s*color-mix\(in srgb, var\(--mha-media-palette-surface\) 28%,[\s\S]*--mha-media-page-dynamic-selected-surface:\s*color-mix\(in srgb, var\(--mha-media-palette-surface\) 40%,/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-theme-style="material"\]\) \.mha-media-page\[data-artwork-palette="true"\]\s*\{[\s\S]*--mha-media-page-dynamic-panel-surface:\s*color-mix\(in srgb, var\(--mha-media-palette-surface\) 18%,[\s\S]*--mha-media-page-dynamic-card-surface:\s*color-mix\(in srgb, var\(--mha-media-palette-surface\) 26%,[\s\S]*--mha-media-page-dynamic-selected-surface:\s*color-mix\(in srgb, var\(--mha-media-palette-surface\) 38%,/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-theme-style="ios"\]\) \.mha-media-page\[data-artwork-palette="true"\]\s*\{[\s\S]*--mha-media-page-artwork-panel-tint:\s*color-mix\(in srgb, var\(--mha-media-palette-surface\) 5%, transparent\);[\s\S]*--mha-media-page-artwork-card-tint:\s*color-mix\(in srgb, var\(--mha-media-palette-surface\) 3%, transparent\);[\s\S]*--mha-media-page-artwork-selected-tint:\s*color-mix\(in srgb, var\(--mha-media-palette-surface\) 6%, transparent\);/,
+  );
+  assert.match(
+    source,
+    /\.mha-media-page-widget-panel\s*\{[\s\S]*background:\s*linear-gradient\([\s\S]*--mha-media-page-artwork-panel-tint[\s\S]*var\(--mha-media-page-panel-surface\);/,
+  );
+  assert.match(
+    source,
+    /:host\(:is\(\[data-theme-style="oneui"\], \[data-theme-style="material"\]\)\) \.mha-media-page\[data-artwork-palette="true"\] \.mha-media-page-widget-panel\s*\{[\s\S]*background-image:\s*none;[\s\S]*background-color:\s*var\(--mha-media-page-dynamic-panel-surface\);/,
+  );
+  assert.match(
+    source,
+    /--mha-media-page-palette-fade-duration:\s*1000ms;[\s\S]*\.mha-media-page-widget-panel,[\s\S]*transition:[\s\S]*background-color\s+var\(--mha-media-page-palette-fade-duration\) ease,/,
+  );
+  assert.match(
+    source,
+    /@property --mha-media-page-artwork-panel-tint\s*\{[\s\S]*syntax:\s*"<color>";[\s\S]*inherits:\s*true;[\s\S]*initial-value:\s*transparent;[\s\S]*\.mha-media-page\s*\{[\s\S]*transition:[\s\S]*--mha-media-page-artwork-panel-tint var\(--mha-media-page-palette-fade-duration\) ease,/,
+  );
+  assert.match(
+    source,
+    /\.mha-media-page\[data-artwork-tone\] \.mha-media-page-now-playing \.mha-media-widget-control\s*\{[\s\S]*background-image:\s*none;[\s\S]*background-color:\s*var\(--mha-media-artwork-control-surface\);[\s\S]*border-color:\s*color-mix\([\s\S]*--mha-media-artwork-foreground[\s\S]*color:\s*var\(--mha-media-artwork-foreground\);/,
+  );
+  assert.match(
+    source,
+    /\.mha-media-page\[data-artwork-tone\] \.mha-media-page-now-playing \.mha-media-widget-progress\s*\{[\s\S]*background-image:\s*none;[\s\S]*background-color:\s*var\(--mha-media-artwork-control-surface\);[\s\S]*\.mha-media-widget-progress-fill\s*\{[\s\S]*background-image:\s*none;[\s\S]*background-color:\s*var\(--mha-media-artwork-foreground\);/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-theme-style="oneui"\]\) \.mha-media-page-widget-panel\s*\{[\s\S]*--mha-media-page-available-players-surface:\s*var\([\s\S]*--mha-oneui-mobile-dock-surface,[\s\S]*--mha-shell-dock-surface[\s\S]*--mha-panel-surface:\s*var\(--mha-media-page-available-players-surface\);[\s\S]*--mha-panel-filter:\s*var\(--mha-oneui-dock-filter\);/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-theme-style="oneui"\]\) \.mha-media-page \.mha-media-page-player-list > \.mha-media-page-auto-player\[data-media-page-player="true"\]\s*\{[\s\S]*--mha-media-page-player-card-surface:\s*var\(--mha-oneui-dock-item-surface\);[\s\S]*--mha-media-page-player-card-border:\s*var\(--mha-oneui-dock-item-border\);[\s\S]*box-shadow:\s*var\(--mha-oneui-dock-item-shadow\);/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-theme-style="oneui"\]\) \.mha-media-page \.mha-media-page-player-list > \.mha-media-page-auto-player\[data-media-page-player="true"\]\[data-selected="true"\]\s*\{[\s\S]*background:\s*linear-gradient\([\s\S]*--mha-media-page-artwork-selected-tint[\s\S]*var\(--mha-oneui-dock-active-surface\);[\s\S]*border-color:\s*transparent;[\s\S]*box-shadow:\s*none;/,
+  );
+  assert.match(
+    source,
+    /\.mha-media-page\[data-artwork-palette="true"\] \.mha-media-page-player-list > \.mha-media-page-auto-player\[data-media-page-player="true"\]:has\(> \.mha-media-page-player-widget:is\(\[data-media-state="playing"\], \[data-media-state="paused"\]\)\)\s*\{[\s\S]*background-image:\s*none;[\s\S]*background-color:\s*var\(--mha-media-page-dynamic-card-surface\);[\s\S]*border-color:\s*var\(--mha-media-page-dynamic-card-border\);/,
+  );
   assert.match(
     source,
     /:host\(\[data-layout-variant="mobile-landscape"\]\[data-media-page-active="true"\]\.is-mobile-floating-controls-hidden\) \.mha-dock\s*\{[\s\S]*opacity:\s*0;[\s\S]*pointer-events:\s*none;/,
+  );
+  assert.match(
+    source,
+    /:host\(\[data-layout="mobile"\]\[data-media-players-sheet-open="true"\]\) \.mha-mobile-dock,[\s\S]*:host\(\[data-layout="mobile"\]\[data-media-players-sheet-open="true"\]\) \.mha-dock\s*\{[\s\S]*opacity:\s*0;[\s\S]*visibility:\s*hidden;[\s\S]*pointer-events:\s*none;/,
   );
   assert.match(
     source,

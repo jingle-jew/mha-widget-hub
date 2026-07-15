@@ -1,4 +1,5 @@
 import { getAvailableEntitiesForDomain } from "./entity-filters.js";
+import { resolveWeatherRadarSource } from "./weather-radar.js";
 
 const REGISTRY_TIMEOUT_MS = 1800;
 const GENERIC_WEATHER_WORDS = new Set([
@@ -435,7 +436,8 @@ function resolveWeatherAttributeUnit(attributes = {}, attribute = "", fallbackUn
 
 function createMetricSourceFromWeather(weatherEntity, definition) {
   const attributes = weatherEntity?.state?.attributes || {};
-  const attribute = definition.attributes.find(name => hasValue(attributes[name]));
+  const attribute = definition.attributes.find(name => hasValue(attributes[name]))
+    || (definition.key === "summary" ? "summary" : "");
   if (!attribute) return null;
 
   return {
@@ -563,9 +565,11 @@ export function resolveWeatherPageSourcesFromState(
   const weatherName = weatherEntity?.name || weatherEntity?.state?.attributes?.friendly_name || "";
   const sensorSources = collectGlobalSensorSources(sensors, weatherName, weatherEntity?.entity_id || "");
   const sunSource = createSunSource(sunEntities);
+  const radar = resolveWeatherRadarSource(hass, visibilityConfig);
 
   return {
     weatherEntityId: weatherEntity?.entity_id || "",
+    radar,
     metrics: deduplicateSources([
       ...collectWeatherAttributeSources(weatherEntity),
       ...sensorSources,
@@ -713,9 +717,13 @@ export async function discoverWeatherPageSources(
     weatherEntityId: fallback.weatherEntityId,
   });
   const sunSource = createSunSource(sunEntities);
+  const radar = resolveWeatherRadarSource(hass, visibilityConfig, {
+    registryEntries: registry.entities,
+  }) || fallback.radar;
 
   return {
     weatherEntityId: fallback.weatherEntityId,
+    radar,
     metrics: deduplicateSources([
       ...collectWeatherAttributeSources(weatherEntity),
       ...sensorSources,

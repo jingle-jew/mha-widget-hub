@@ -183,3 +183,67 @@ test("first-launch weather page is populated once from available Home Assistant 
   assert.equal(await coordinator.populateDefaultWeatherPage(), false);
   assert.equal(JSON.parse(stored.get("mha-grid-pages"))[1].widgets.length, weatherPage.widgets.length);
 });
+
+test("existing weather pages receive the radar widget once when a radar entity is discovered", async () => {
+  const stored = new Map();
+  globalThis.localStorage = {
+    getItem(key) {
+      return stored.get(key) ?? null;
+    },
+    setItem(key, value) {
+      stored.set(key, String(value));
+    },
+    removeItem(key) {
+      stored.delete(key);
+    },
+  };
+
+  const pages = createDefaultPages();
+  const weatherPage = pages.find(page => page.id === "weather");
+  weatherPage.config = {
+    weatherEntityId: "weather.home",
+    autoDetectedMetricKeys: ["humidity"],
+  };
+  weatherPage.widgets = [{ id: "existing-weather", kind: "weather", type: "weather" }];
+
+  const host = {
+    _hass: {
+      states: {
+        "weather.home": {
+          entity_id: "weather.home",
+          state: "partlycloudy",
+          attributes: { friendly_name: "Home weather", temperature: 22 },
+        },
+        "camera.home_radar": {
+          entity_id: "camera.home_radar",
+          state: "idle",
+          attributes: {
+            friendly_name: "Home weather radar",
+            entity_picture: "/api/camera_proxy/camera.home_radar?token=test",
+          },
+        },
+      },
+    },
+    _entityVisibilityConfig: null,
+    _pages: pages,
+    _activePageId: "weather",
+    dataset: {},
+    _deviceInsightsPublisher: { schedulePublish() {} },
+    _refreshActiveGridOnly() {},
+  };
+  const coordinator = createHubStateIngressCoordinator(host, {
+    normalizeWidget: widget => widget,
+    normalizeWidgetForGrid: widget => widget,
+  });
+
+  assert.equal(await coordinator.populateDefaultWeatherPage(), true);
+  assert.equal(weatherPage.widgets.some(widget => widget.kind === "weather-radar"), false);
+  const updatedPage = host._pages.find(page => page.id === "weather");
+  assert.equal(updatedPage.config.radarDiscoveryCompleted, true);
+  assert.equal(updatedPage.config.radarEntityId, "camera.home_radar");
+  assert.deepEqual(
+    updatedPage.widgets.filter(widget => widget.kind === "weather-radar").map(widget => [widget.w, widget.h]),
+    [[4, 3]],
+  );
+  assert.equal(await coordinator.populateDefaultWeatherPage(), false);
+});

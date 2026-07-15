@@ -1,3 +1,27 @@
+@property --mha-media-page-artwork-panel-tint {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: transparent;
+}
+
+@property --mha-media-page-artwork-card-tint {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: transparent;
+}
+
+@property --mha-media-page-artwork-selected-tint {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: transparent;
+}
+
+@property --mha-media-page-artwork-control-tint {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: transparent;
+}
+
 :host {
   --mha-media-page-artwork-size: clamp(16rem, 28cqi, 24rem);
   --mha-media-page-artwork-radius: clamp(1.35rem, 3.2cqi, 2.2rem);
@@ -7,6 +31,8 @@
   --mha-media-page-content-gap: clamp(.9rem, 1.8cqi, 1.6rem);
   --mha-media-page-grid-gap: var(--mha-grid-gap, var(--mha-media-page-content-gap));
   --mha-media-page-panel-gap: clamp(.85rem, 1.5cqi, 1.35rem);
+  --mha-media-page-palette-fade-duration: 1000ms;
+  --mha-media-page-wallpaper-fade-duration: 1000ms;
   --mha-media-page-widget-panel-padding: clamp(1rem, 2.2cqi, 1.4rem);
   --mha-media-page-grid-cell-size: var(--mha-grid-row-size, var(--mha-square-unit, 72px));
   --mha-media-page-metadata-min-height: calc(
@@ -56,6 +82,11 @@
   overflow: hidden;
   overflow-anchor: none;
   isolation: isolate;
+  transition:
+    --mha-media-page-artwork-panel-tint var(--mha-media-page-palette-fade-duration) ease,
+    --mha-media-page-artwork-card-tint var(--mha-media-page-palette-fade-duration) ease,
+    --mha-media-page-artwork-selected-tint var(--mha-media-page-palette-fade-duration) ease,
+    --mha-media-page-artwork-control-tint var(--mha-media-page-palette-fade-duration) ease;
 
   --mha-media-gap: var(--mha-media-page-panel-gap);
   --mha-media-title-gap: clamp(.22rem, .55cqi, .42rem);
@@ -91,15 +122,25 @@
   --mha-media-progress-fill: var(--mha-accent);
   --mha-media-progress-height: var(--mha-media-page-progress-height);
   --mha-media-artist-color: var(--mha-text-secondary, var(--mha-muted));
-  --mha-media-title-weight: 820;
+  --mha-media-title-weight: var(--mha-font-weight-extra-bold);
   --mha-media-title-letter-spacing: -.035em;
-  --mha-media-subtitle-weight: 650;
+  --mha-media-subtitle-weight: var(--mha-font-weight-semibold);
   --mha-media-text-shadow: none;
   --mha-media-artwork-foreground: var(--mha-text-primary, var(--mha-text));
   --mha-media-artwork-muted: var(--mha-media-artist-color);
   --mha-media-artwork-control-surface: var(--mha-media-control-surface);
   --mha-media-artwork-control-active-surface: var(--mha-media-control-active-surface);
   --mha-media-artwork-control-active-color: var(--mha-media-control-active-color);
+  --mha-media-page-artwork-panel-tint: transparent;
+  --mha-media-page-artwork-card-tint: transparent;
+  --mha-media-page-artwork-selected-tint: transparent;
+  --mha-media-page-artwork-control-tint: transparent;
+  --mha-media-page-dynamic-panel-surface: transparent;
+  --mha-media-page-dynamic-card-surface: transparent;
+  --mha-media-page-dynamic-selected-surface: transparent;
+  --mha-media-page-dynamic-control-surface: transparent;
+  --mha-media-page-dynamic-card-border: transparent;
+  --mha-media-page-dynamic-selected-border: transparent;
 }
 
 .mha-media-page[data-artwork-tone="dark"] {
@@ -118,6 +159,50 @@
   --mha-media-artwork-control-active-color: #fff;
 }
 
+/* iOS keeps the transparent glass as the dominant material. The artwork adds
+ * only a restrained chromatic veil instead of becoming the panel surface. */
+:host([data-theme-style="ios"]) .mha-media-page[data-artwork-palette="true"] {
+  --mha-media-page-artwork-panel-tint: color-mix(in srgb, var(--mha-media-palette-surface) 5%, transparent);
+  --mha-media-page-artwork-card-tint: color-mix(in srgb, var(--mha-media-palette-surface) 3%, transparent);
+  --mha-media-page-artwork-selected-tint: color-mix(in srgb, var(--mha-media-palette-surface) 6%, transparent);
+  --mha-media-page-artwork-control-tint: color-mix(in srgb, var(--mha-media-palette-surface) 4%, transparent);
+}
+
+/* OneUI and Material replace their normal panel/active-card surfaces with
+ * page-owned palette surfaces. Theme colors remain available to inactive
+ * players because the overlay tint variables above stay transparent here. */
+:host([data-theme-style="oneui"]) .mha-media-page[data-artwork-palette="true"] {
+  --mha-media-page-dynamic-panel-surface: color-mix(in srgb, var(--mha-media-palette-surface) 22%, rgb(238 244 252 / .82));
+  --mha-media-page-dynamic-card-surface: color-mix(in srgb, var(--mha-media-palette-surface) 28%, rgb(255 255 255 / .58));
+  --mha-media-page-dynamic-selected-surface: color-mix(in srgb, var(--mha-media-palette-surface) 40%, rgb(255 255 255 / .54));
+  --mha-media-page-dynamic-control-surface: color-mix(in srgb, var(--mha-media-palette-surface) 24%, rgb(255 255 255 / .68));
+  --mha-media-page-dynamic-card-border: color-mix(in srgb, var(--mha-media-palette-surface) 42%, transparent);
+  --mha-media-page-dynamic-selected-border: color-mix(in srgb, var(--mha-media-palette-surface) 64%, transparent);
+}
+
+:host([data-theme-style="oneui"][data-theme="dark"]) .mha-media-page[data-artwork-palette="true"] {
+  --mha-media-page-dynamic-panel-surface: color-mix(in srgb, var(--mha-media-palette-surface) 26%, rgb(18 26 38 / .86));
+  --mha-media-page-dynamic-card-surface: color-mix(in srgb, var(--mha-media-palette-surface) 32%, rgb(88 98 112 / .34));
+  --mha-media-page-dynamic-selected-surface: color-mix(in srgb, var(--mha-media-palette-surface) 44%, rgb(96 106 120 / .38));
+  --mha-media-page-dynamic-control-surface: color-mix(in srgb, var(--mha-media-palette-surface) 28%, rgb(255 255 255 / .14));
+}
+
+:host([data-theme-style="material"]) .mha-media-page[data-artwork-palette="true"] {
+  --mha-media-page-dynamic-panel-surface: color-mix(in srgb, var(--mha-media-palette-surface) 18%, rgb(246 243 250));
+  --mha-media-page-dynamic-card-surface: color-mix(in srgb, var(--mha-media-palette-surface) 26%, rgb(250 247 252));
+  --mha-media-page-dynamic-selected-surface: color-mix(in srgb, var(--mha-media-palette-surface) 38%, rgb(248 244 250));
+  --mha-media-page-dynamic-control-surface: color-mix(in srgb, var(--mha-media-palette-surface) 22%, rgb(252 249 253));
+  --mha-media-page-dynamic-card-border: color-mix(in srgb, var(--mha-media-palette-surface) 42%, transparent);
+  --mha-media-page-dynamic-selected-border: color-mix(in srgb, var(--mha-media-palette-surface) 64%, transparent);
+}
+
+:host([data-theme-style="material"][data-theme="dark"]) .mha-media-page[data-artwork-palette="true"] {
+  --mha-media-page-dynamic-panel-surface: color-mix(in srgb, var(--mha-media-palette-surface) 22%, rgb(30 29 36));
+  --mha-media-page-dynamic-card-surface: color-mix(in srgb, var(--mha-media-palette-surface) 30%, rgb(43 41 50));
+  --mha-media-page-dynamic-selected-surface: color-mix(in srgb, var(--mha-media-palette-surface) 42%, rgb(47 44 54));
+  --mha-media-page-dynamic-control-surface: color-mix(in srgb, var(--mha-media-palette-surface) 26%, rgb(55 52 62));
+}
+
 .mha-media-page-layout,
 .mha-media-page-transport,
 .mha-media-page-widget-panel,
@@ -126,9 +211,9 @@
 .mha-media-page .mha-media-widget-progress,
 .mha-media-page .mha-media-widget-progress-fill {
   transition:
-    background-color 220ms ease,
+    background-color var(--mha-media-page-palette-fade-duration) ease,
     border-color 220ms ease,
-    color 220ms ease,
+    color var(--mha-media-page-palette-fade-duration) ease,
     box-shadow 220ms ease,
     opacity 220ms ease,
     -webkit-backdrop-filter 220ms ease,
@@ -241,7 +326,12 @@
   place-items: center;
   border-radius: 999px;
   border: 1px solid var(--mha-control-border, var(--mha-media-page-panel-border));
-  background: var(--mha-control-surface, var(--mha-surface-secondary));
+  background:
+    linear-gradient(
+      var(--mha-media-page-artwork-control-tint),
+      var(--mha-media-page-artwork-control-tint)
+    ),
+    var(--mha-control-surface, var(--mha-surface-secondary));
   color: var(--mha-text-primary, var(--mha-text));
   cursor: pointer;
 }
@@ -320,9 +410,50 @@
   padding-block: var(--mha-media-page-widget-panel-padding);
   padding-inline: 0;
   border-radius: clamp(1.4rem, 2.8cqi, 2rem);
-  background: var(--mha-media-page-panel-surface);
+  background:
+    linear-gradient(
+      var(--mha-media-page-artwork-panel-tint),
+      var(--mha-media-page-artwork-panel-tint)
+    ),
+    var(--mha-media-page-panel-surface);
   border: 1px solid var(--mha-media-page-panel-border);
   overflow: hidden;
+}
+
+:host([data-theme-style="oneui"]) .mha-media-page-widget-panel {
+  --mha-media-page-available-players-surface: var(
+    --mha-oneui-mobile-dock-surface,
+    var(--mha-shell-dock-surface)
+  );
+  --mha-panel-surface: var(--mha-media-page-available-players-surface);
+  --mha-panel-border: var(--mha-shell-border);
+  --mha-panel-shadow: var(--mha-shell-shadow);
+  --mha-panel-filter: var(--mha-oneui-dock-filter);
+  background:
+    linear-gradient(
+      var(--mha-media-page-artwork-panel-tint),
+      var(--mha-media-page-artwork-panel-tint)
+    ),
+    var(--mha-media-page-available-players-surface);
+  border-color: var(--mha-panel-border);
+  box-shadow: var(--mha-panel-shadow);
+  -webkit-backdrop-filter: var(--mha-panel-filter);
+  backdrop-filter: var(--mha-panel-filter);
+}
+
+:host([data-theme-style="oneui"][data-theme="dark"]) .mha-media-page-widget-panel {
+  --mha-panel-border: var(--mha-oneui-panel-border);
+  --mha-panel-shadow: none;
+}
+
+:host(:is([data-theme-style="oneui"], [data-theme-style="material"])) .mha-media-page[data-artwork-palette="true"] .mha-media-page-widget-panel {
+  background-image: none;
+  background-color: var(--mha-media-page-dynamic-panel-surface);
+}
+
+:host(:is([data-theme-style="oneui"], [data-theme-style="material"])) .mha-media-page[data-artwork-palette="true"] .mha-media-page-widget-panel .mha-media-page-icon-button {
+  background-image: none;
+  background-color: var(--mha-media-page-dynamic-control-surface);
 }
 
 .mha-media-page-widget-panel-surface {
@@ -360,7 +491,7 @@
 .mha-media-page-widget-panel-title {
   margin: 0;
   font-size: clamp(.82rem, 1.65cqi, .95rem);
-  font-weight: 760;
+  font-weight: var(--mha-font-weight-heavy);
   letter-spacing: .08em;
   text-transform: uppercase;
   color: var(--mha-text-secondary, var(--mha-muted));
@@ -461,6 +592,12 @@
   --mha-widget-shell-shadow: none;
   --mha-media-padding: var(--mha-widget-content-inset);
   --mha-media-gap: clamp(.35rem, 1cqi, .58rem);
+  --mha-media-artwork-bg:
+    linear-gradient(
+      var(--mha-media-page-artwork-control-tint),
+      var(--mha-media-page-artwork-control-tint)
+    ),
+    var(--mha-control-surface, var(--mha-surface-secondary));
   --mha-media-artwork-radius: clamp(.65rem, 1.5cqi, .9rem);
   --mha-media-control-size: clamp(2.2rem, 4.2cqi, 2.75rem);
   --mha-media-control-icon-size: clamp(.88rem, 1.8cqi, 1.08rem);
@@ -472,13 +609,31 @@
   block-size: 7.5rem;
   min-block-size: 0;
   border-radius: clamp(.85rem, 1.8cqi, 1.15rem);
-  background: var(--mha-media-page-player-card-surface);
+  background:
+    linear-gradient(
+      var(--mha-media-page-artwork-card-tint),
+      var(--mha-media-page-artwork-card-tint)
+    ),
+    var(--mha-media-page-player-card-surface);
   border-color: var(--mha-media-page-player-card-border);
   transition:
-    background-color 180ms ease,
-    border-color 180ms ease,
+    background-color var(--mha-media-page-palette-fade-duration) ease,
+    border-color var(--mha-media-page-palette-fade-duration) ease,
     box-shadow 180ms ease,
     transform 180ms ease;
+}
+
+:host([data-theme-style="oneui"]) .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player[data-media-page-player="true"] {
+  --mha-media-page-player-card-surface: var(--mha-oneui-dock-item-surface);
+  --mha-media-page-player-card-border: var(--mha-oneui-dock-item-border);
+  background:
+    linear-gradient(
+      var(--mha-media-page-artwork-card-tint),
+      var(--mha-media-page-artwork-card-tint)
+    ),
+    var(--mha-media-page-player-card-surface);
+  border-color: var(--mha-media-page-player-card-border);
+  box-shadow: var(--mha-oneui-dock-item-shadow);
 }
 
 .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player[data-media-page-player="true"][data-selected="true"] {
@@ -487,9 +642,40 @@
       color-mix(in srgb, var(--mha-accent) 16%, transparent),
       color-mix(in srgb, var(--mha-accent) 16%, transparent)
     ),
+    linear-gradient(
+      var(--mha-media-page-artwork-selected-tint),
+      var(--mha-media-page-artwork-selected-tint)
+    ),
     var(--mha-media-page-player-card-surface);
   border-color: color-mix(in srgb, var(--mha-accent) 55%, var(--mha-media-page-player-card-border));
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--mha-accent) 18%, transparent);
+}
+
+:host([data-theme-style="oneui"]) .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player[data-media-page-player="true"][data-selected="true"] {
+  background:
+    linear-gradient(
+      var(--mha-media-page-artwork-selected-tint),
+      var(--mha-media-page-artwork-selected-tint)
+    ),
+    var(--mha-oneui-dock-active-surface);
+  border-color: transparent;
+  box-shadow: none;
+}
+
+/* Only playing/paused cards replace their theme surface. Idle, off,
+ * unavailable and unknown players deliberately keep the surfaces above. */
+:host(:is([data-theme-style="oneui"], [data-theme-style="material"])) .mha-media-page[data-artwork-palette="true"] .mha-media-page-player-list > .mha-media-page-auto-player[data-media-page-player="true"]:has(> .mha-media-page-player-widget:is([data-media-state="playing"], [data-media-state="paused"])) {
+  background-image: none;
+  background-color: var(--mha-media-page-dynamic-card-surface);
+  border-color: var(--mha-media-page-dynamic-card-border);
+  box-shadow: none;
+}
+
+:host(:is([data-theme-style="oneui"], [data-theme-style="material"])) .mha-media-page[data-artwork-palette="true"] .mha-media-page-player-list > .mha-media-page-auto-player[data-media-page-player="true"][data-selected="true"]:has(> .mha-media-page-player-widget:is([data-media-state="playing"], [data-media-state="paused"])) {
+  background-image: none;
+  background-color: var(--mha-media-page-dynamic-selected-surface);
+  border-color: var(--mha-media-page-dynamic-selected-border);
+  box-shadow: none;
 }
 
 .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player > .mha-media-widget {
@@ -689,7 +875,7 @@
   overflow: hidden;
   color: var(--mha-text-primary);
   font-size: clamp(.72rem, 1.4cqi, .86rem);
-  font-weight: 760;
+  font-weight: var(--mha-font-weight-heavy);
   line-height: 1.08;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -750,13 +936,41 @@
   box-shadow: var(--mha-media-artwork-shadow);
 }
 
+/* media-widget.css is loaded after this page stylesheet and turns active
+ * OneUI/Material 4x2 artwork into an immersive full-card layer. Available
+ * players are selectors: keep their artwork in the dedicated square grid cell,
+ * like iOS, including the empty placeholder for inactive players. */
+:host(:is([data-theme-style="oneui"], [data-theme-style="material"])) .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget[data-media-page-player="true"] > .mha-media-widget-artwork {
+  display: grid;
+  position: relative;
+  inset: auto;
+  inline-size: 100%;
+  block-size: 100%;
+  max-inline-size: none;
+  max-block-size: none;
+  aspect-ratio: 1;
+  border: 1px solid var(--mha-media-artwork-border);
+  border-radius: var(--mha-media-artwork-radius);
+  background: var(--mha-media-artwork-bg);
+  box-shadow: var(--mha-media-artwork-shadow);
+  transform: scale(var(--mha-media-artwork-scale));
+}
+
 .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget[data-media-page-player="true"] .mha-media-widget-source-badge {
   display: inline-flex;
   max-inline-size: 100%;
   overflow: hidden;
   color: var(--mha-text-secondary, var(--mha-muted));
-  background: var(--mha-control-surface, var(--mha-surface-secondary));
+  background:
+    linear-gradient(
+      var(--mha-media-page-artwork-control-tint),
+      var(--mha-media-page-artwork-control-tint)
+    ),
+    var(--mha-control-surface, var(--mha-surface-secondary));
   border-color: var(--mha-control-border, var(--mha-border-secondary, transparent));
+  transition:
+    background-color var(--mha-media-page-palette-fade-duration) ease,
+    border-color var(--mha-media-page-palette-fade-duration) ease;
 }
 
 .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget[data-media-page-player="true"] .mha-media-widget-title {
@@ -772,7 +986,12 @@
 
 .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget[data-media-page-player="true"] .mha-media-widget-control {
   color: var(--mha-text-primary, var(--mha-text));
-  background: var(--mha-media-artwork-control-surface);
+  background:
+    linear-gradient(
+      var(--mha-media-page-artwork-control-tint),
+      var(--mha-media-page-artwork-control-tint)
+    ),
+    var(--mha-media-artwork-control-surface);
   border-color: var(--mha-control-border, var(--mha-border-secondary, transparent));
   box-shadow: var(--mha-control-shadow, none);
 }
@@ -781,6 +1000,12 @@
 .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget[data-media-page-player="true"] .mha-media-widget-control[data-primary] {
   color: var(--mha-media-artwork-control-active-color);
   background: var(--mha-media-artwork-control-active-surface);
+}
+
+:host(:is([data-theme-style="oneui"], [data-theme-style="material"])) .mha-media-page[data-artwork-palette="true"] .mha-media-page-auto-player:has(> .mha-media-page-player-widget:is([data-media-state="playing"], [data-media-state="paused"])) .mha-media-widget-source-badge,
+:host(:is([data-theme-style="oneui"], [data-theme-style="material"])) .mha-media-page[data-artwork-palette="true"] .mha-media-page-auto-player:has(> .mha-media-page-player-widget:is([data-media-state="playing"], [data-media-state="paused"])) .mha-media-widget-control {
+  background-image: none;
+  background-color: var(--mha-media-page-dynamic-control-surface);
 }
 
 .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-page-player-widget[data-media-page-player="true"] .mha-media-widget-progress {
@@ -1151,9 +1376,18 @@
   grid-column: 1 / -1;
 }
 
-/* The landscape dock keeps its structural rail to avoid reflowing the two
- * media sheets mid-snap, but leaves the interaction space while browsing
- * available players. */
+/* The desired-open state is published before the sheet transition starts.
+ * Keep each dock's structural footprint, but remove it from rendering and
+ * interaction for the complete mobile sheet lifecycle. */
+:host([data-layout="mobile"][data-media-players-sheet-open="true"]) .mha-mobile-dock,
+:host([data-layout="mobile"][data-media-players-sheet-open="true"]) .mha-dock {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Landscape also keeps its rail hidden while the media page is snapped to the
+ * available-players pane, including the sheet's closing scroll transition. */
 :host([data-layout-variant="mobile-landscape"][data-media-page-active="true"].is-mobile-floating-controls-hidden) .mha-dock {
   opacity: 0;
   pointer-events: none;
@@ -1222,22 +1456,32 @@
 }
 
 :host .mha-media-page[data-artwork-tone] .mha-media-page-now-playing .mha-media-widget-control {
-  background: var(--mha-media-artwork-control-surface);
+  background-image: none;
+  background-color: var(--mha-media-artwork-control-surface);
+  border-color: color-mix(
+    in srgb,
+    var(--mha-media-artwork-foreground) 16%,
+    transparent
+  );
   color: var(--mha-media-artwork-foreground);
 }
 
 :host .mha-media-page[data-artwork-tone] .mha-media-page-now-playing .mha-media-widget-control[data-primary="true"],
 :host .mha-media-page[data-artwork-tone] .mha-media-page-now-playing .mha-media-widget-control[data-primary] {
-  background: var(--mha-media-artwork-control-active-surface);
+  background-image: none;
+  background-color: var(--mha-media-artwork-control-active-surface);
+  border-color: transparent;
   color: var(--mha-media-artwork-control-active-color);
 }
 
 :host .mha-media-page[data-artwork-tone] .mha-media-page-now-playing .mha-media-widget-progress {
-  background: var(--mha-media-artwork-control-surface);
+  background-image: none;
+  background-color: var(--mha-media-artwork-control-surface);
 }
 
 :host .mha-media-page[data-artwork-tone] .mha-media-page-now-playing .mha-media-widget-progress-fill {
-  background: var(--mha-media-artwork-foreground);
+  background-image: none;
+  background-color: var(--mha-media-artwork-foreground);
 }
 
 .mha-media-page .mha-media-page-player-list > .mha-media-page-auto-player .mha-media-widget-progress-shell {

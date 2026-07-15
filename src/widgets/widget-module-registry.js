@@ -10,6 +10,7 @@ import { WIDGET_MODULE as toggleWidgetModule } from "./toggle-widget.js";
 import { WIDGET_MODULE as weatherWidgetModule } from "./weather-widget.js";
 import { WIDGET_MODULE as weatherNarrativeWidgetModule } from "./weather-narrative-widget.js";
 import { WIDGET_MODULE as weatherMetricWidgetModule } from "./weather-metric-widget.js";
+import { WIDGET_MODULE as weatherRadarWidgetModule } from "./weather-radar-widget.js";
 
 export const WIDGET_MODULES = Object.freeze([
   emptyWidgetModule,
@@ -23,6 +24,7 @@ export const WIDGET_MODULES = Object.freeze([
   weatherWidgetModule,
   weatherNarrativeWidgetModule,
   weatherMetricWidgetModule,
+  weatherRadarWidgetModule,
   mediaWidgetModule,
 ]);
 

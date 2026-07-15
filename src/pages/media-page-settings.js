@@ -10,13 +10,13 @@ import {
   PANEL_MOBILE_PRESENTATIONS,
   PANEL_SURFACE_ROLES,
 } from "../panels/panel-surface-contract.js";
+import { createMhaCheckbox, createMhaSelect } from "../ui/form-controls.js";
 import { SETTINGS_PANEL_VISIBILITY_TRANSITION_MS } from "../panels/panel-transition-timing.js";
 import { replaceSettingsPanelPreservingUiState } from "../settings/settings-panel-orchestrator.js";
 import {
   applyWidgetSurfaceHostLayoutState,
   syncWidgetSurfaceOpenState,
 } from "../widgets/widget-placement-orchestrator.js";
-import { getMediaPageVisualStyleOptions } from "./page-types.js?v=media-persistence-v2";
 
 function syncDataset(target, source) {
   if (!target?.dataset || !source?.dataset) return;
@@ -49,21 +49,19 @@ function createCheckboxRow({
   controlId = "",
   onChange = () => {},
 } = {}) {
-  const labelNode = document.createElement("label");
-  labelNode.className = "mha-settings-checkbox mha-media-page-settings-checkbox";
-
-  const input = document.createElement("input");
-  input.type = "checkbox";
-  input.className = "mha-settings-checkbox-input";
-  if (controlId) input.dataset.settingsControl = controlId;
-  input.checked = Boolean(checked);
-  input.addEventListener("change", () => onChange(input.checked));
-
-  const text = document.createElement("span");
-  text.className = "mha-settings-label";
-  text.textContent = label;
-  labelNode.append(text, input);
-  return labelNode;
+  const row = createMhaCheckbox({
+    label,
+    checked,
+    indicatorPlacement: "end",
+    className: "mha-settings-checkbox mha-media-page-settings-checkbox",
+    inputClassName: "mha-settings-checkbox-input",
+    labelClassName: "mha-settings-label",
+    onChange,
+  });
+  const input = row.querySelector(".mha-settings-checkbox-input");
+  if (controlId && input) input.dataset.settingsControl = controlId;
+  if (input) input.dataset.settingsValueControl = "true";
+  return row;
 }
 
 function createSelectField({
@@ -73,27 +71,30 @@ function createSelectField({
   controlId = "",
   onChange = () => {},
 } = {}) {
-  const field = document.createElement("label");
+  const field = document.createElement("div");
   field.className = "mha-settings-field mha-media-page-settings-field";
 
   const text = document.createElement("span");
   text.className = "mha-settings-label mha-media-page-settings-field-label";
   text.textContent = label;
 
-  const select = document.createElement("select");
-  select.className = "mha-settings-select mha-media-page-settings-select";
-  if (controlId) select.dataset.settingsControl = controlId;
-  select.addEventListener("change", () => onChange(select.value));
-
-  options.forEach((option) => {
-    const node = document.createElement("option");
-    node.value = option.value;
-    node.textContent = option.label;
-    select.append(node);
+  const control = createMhaSelect({
+    label,
+    value,
+    options,
+    className: "mha-media-page-settings-select-control",
+    triggerClassName: "mha-settings-select mha-media-page-settings-select",
+    onChange,
   });
-  select.value = value;
+  const select = control.querySelector(".mha-select-native");
+  const trigger = control.querySelector(".mha-select-trigger");
+  if (controlId) {
+    if (select) select.dataset.settingsControl = controlId;
+    if (trigger) trigger.dataset.settingsControl = controlId;
+  }
+  if (select) select.dataset.settingsValueControl = "true";
 
-  field.append(text, select);
+  field.append(text, control);
   return field;
 }
 
@@ -183,13 +184,6 @@ export function createMediaPageSettingsPanel({
       }),
     ]),
     createSection(t("mediaPage.appearance", "Appearance"), [
-      createSelectField({
-        label: t("mediaPage.visualStyle", "Visual style"),
-        value: page?.config?.visualStyle || "theme",
-        controlId: "visual-style",
-        options: getMediaPageVisualStyleOptions(),
-        onChange: value => onConfigChange(buildConfigPatch({ visualStyle: value })),
-      }),
       createCheckboxRow({
         label: t("mediaPage.blurBackground", "Blur artwork in the background"),
         checked: page?.config?.blurBackground !== false,

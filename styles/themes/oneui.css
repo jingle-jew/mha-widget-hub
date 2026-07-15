@@ -12,18 +12,38 @@
   --mha-status-bar-radius: var(--mha-statusbar-radius);
   --mha-surface-blur: 24px;
   --mha-surface-saturation: 145%;
-  --mha-glass-noise-image: var(--mha-glass-noise-texture);
-  --mha-glass-noise-opacity: .046;
-  --mha-glass-noise-size: 104px 104px;
-  --mha-glass-noise-blend-mode: overlay;
+  --mha-oneui-primary-blur: 46px;
+  --mha-oneui-primary-saturation: 118%;
+  --mha-oneui-glass-noise-texture: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Cfilter id='n' x='0%25' y='0%25' width='100%25' height='100%25' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.96' numOctaves='4' seed='29' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='128' height='128' filter='url(%23n)' opacity='.92'/%3E%3C/svg%3E");
+  --mha-glass-noise-image: var(--mha-oneui-glass-noise-texture);
+  --mha-glass-noise-opacity: .14;
+  --mha-glass-noise-size: 56px 56px;
+  --mha-glass-noise-blend-mode: soft-light;
   --mha-widget-shell-border: transparent;
   --mha-widget-shell-border-edit: transparent;
   --mha-widget-inner-highlight: transparent;
+  --mha-oneui-dock-tint: var(--mha-accent);
+  --mha-oneui-dock-filter: blur(18px) saturate(132%);
+  --mha-oneui-primary-surface-opacity: 68%;
+  --mha-oneui-primary-surface:
+    linear-gradient(
+      145deg,
+      color-mix(
+        in srgb,
+        var(--mha-oneui-dock-surface-start) var(--mha-oneui-primary-surface-opacity),
+        transparent
+      ),
+      color-mix(
+        in srgb,
+        var(--mha-oneui-dock-surface-end) var(--mha-oneui-primary-surface-opacity),
+        transparent
+      )
+    );
   --mha-shell-dock-surface:
     linear-gradient(
       145deg,
-      color-mix(in srgb, rgba(255,255,255,.94) 90%, var(--mha-accent) 5%),
-      color-mix(in srgb, rgba(245,248,255,.86) 92%, var(--mha-accent) 3%)
+      color-mix(in srgb, var(--mha-oneui-dock-tint) 18%, rgba(255,255,255,.82)),
+      color-mix(in srgb, var(--mha-oneui-dock-tint) 12%, rgba(245,248,255,.74))
     );
   --mha-shell-border: color-mix(in srgb, rgba(255,255,255,.72) 84%, var(--mha-accent) 8%);
   --mha-shell-shadow: 0 8px 22px rgba(76,92,120,.075);
@@ -33,6 +53,7 @@
   /* 2. Mode clair */
   --mha-text: rgba(0,0,0,.88);
   --mha-muted: rgba(0,0,0,.52);
+  --mha-oneui-primary-brightness: .99;
   --mha-widget-surface: linear-gradient(145deg, rgba(255,255,255,.76), rgba(255,246,238,.58));
   --mha-widget-surface-edit: linear-gradient(145deg, rgba(255,255,255,.88), rgba(255,240,230,.70));
   --mha-widget-border: rgba(110,92,78,.12);
@@ -46,11 +67,15 @@
   --mha-dock-surface: linear-gradient(145deg, rgba(255,255,255,.80), rgba(255,246,238,.62));
   --mha-dock-slot-surface: linear-gradient(145deg, rgba(255,255,255,.88), rgba(236,244,255,.70));
   --mha-statusbar-surface: linear-gradient(145deg, rgba(255,255,255,.80), rgba(255,246,238,.62));
+  --mha-oneui-dock-surface-start:
+    color-mix(in srgb, var(--mha-oneui-dock-tint) 18%, rgba(250,251,255,.86));
+  --mha-oneui-dock-surface-end:
+    color-mix(in srgb, var(--mha-oneui-dock-tint) 12%, rgba(240,244,250,.78));
   --mha-oneui-mobile-dock-surface:
     linear-gradient(
       145deg,
-      color-mix(in srgb, rgba(250,251,255,.98) 94%, var(--mha-accent) 3%),
-      color-mix(in srgb, rgba(240,244,250,.94) 96%, var(--mha-accent) 2%)
+      var(--mha-oneui-dock-surface-start),
+      var(--mha-oneui-dock-surface-end)
     );
   --mha-oneui-mobile-dock-border: color-mix(in srgb, rgba(255,255,255,.84) 86%, var(--mha-accent) 6%);
   --mha-control-surface: rgba(255,255,255,.58);
@@ -61,8 +86,8 @@
       color-mix(in srgb, var(--mha-accent) 10%, rgba(255,255,255,.88)),
       color-mix(in srgb, var(--mha-accent) 6%, rgba(246,248,255,.78))
     );
-  --mha-bg-base-1: color-mix(in srgb, var(--mha-accent) 16%, #fbf8f5);
-  --mha-bg-base-2: color-mix(in srgb, var(--mha-accent) 24%, #eef3ff);
+  --mha-bg-base-1: color-mix(in srgb, var(--mha-accent) 16%, #eef0f2);
+  --mha-bg-base-2: color-mix(in srgb, var(--mha-accent) 24%, #e0e7f2);
   --mha-bg-radial-1: color-mix(in srgb, var(--mha-bg-blob-1) 32%, transparent);
   --mha-bg-radial-2: color-mix(in srgb, var(--mha-bg-blob-2) 24%, transparent);
   --mha-bg-radial-3: color-mix(in srgb, var(--mha-bg-blob-3) 18%, transparent);
@@ -74,8 +99,8 @@
   --mha-oneui-dock-active-surface:
     linear-gradient(
       145deg,
-      color-mix(in srgb, rgba(216,222,230,.96) 94%, var(--mha-accent) 3%),
-      color-mix(in srgb, rgba(198,206,217,.92) 94%, var(--mha-accent) 3%)
+      color-mix(in srgb, var(--mha-oneui-dock-tint) 34%, rgba(216,222,230,.92)),
+      color-mix(in srgb, var(--mha-oneui-dock-tint) 26%, rgba(198,206,217,.88))
     );
   --mha-oneui-dock-active-border: color-mix(in srgb, rgba(255,255,255,.72) 88%, var(--mha-accent) 8%);
   --mha-oneui-dock-active-shadow:
@@ -98,6 +123,7 @@
   /* 3. Mode sombre */
   --mha-text: rgba(255,255,255,.96);
   --mha-muted: rgba(255,255,255,.58);
+  --mha-oneui-primary-brightness: .90;
   --mha-widget-surface: linear-gradient(145deg, rgba(255,240,226,.18), rgba(255,255,255,.105));
   --mha-widget-surface-edit: linear-gradient(145deg, rgba(255,236,219,.26), rgba(255,255,255,.15));
   --mha-widget-border: rgba(255,236,219,.18);
@@ -107,11 +133,15 @@
   --mha-dock-surface: linear-gradient(145deg, rgba(255,240,226,.22), rgba(255,255,255,.13));
   --mha-dock-slot-surface: linear-gradient(145deg, rgba(101,168,255,.22), rgba(255,135,183,.12));
   --mha-statusbar-surface: linear-gradient(145deg, rgba(255,240,226,.20), rgba(255,255,255,.115));
+  --mha-oneui-dock-surface-start:
+    color-mix(in srgb, var(--mha-oneui-dock-tint) 20%, rgba(34,38,48,.78));
+  --mha-oneui-dock-surface-end:
+    color-mix(in srgb, var(--mha-oneui-dock-tint) 14%, rgba(24,28,36,.7));
   --mha-oneui-mobile-dock-surface:
     linear-gradient(
       145deg,
-      color-mix(in srgb, rgba(34,38,48,.92) 92%, var(--mha-accent) 5%),
-      color-mix(in srgb, rgba(24,28,36,.88) 94%, var(--mha-accent) 3%)
+      var(--mha-oneui-dock-surface-start),
+      var(--mha-oneui-dock-surface-end)
     );
   --mha-oneui-mobile-dock-border: color-mix(in srgb, rgba(255,255,255,.24) 78%, var(--mha-accent) 6%);
   --mha-control-surface: rgba(255,240,226,.16);
@@ -135,16 +165,21 @@
   --mha-shell-dock-surface:
     linear-gradient(
       145deg,
-      color-mix(in srgb, rgba(255,255,255,.28) 90%, var(--mha-accent) 6%),
-      color-mix(in srgb, rgba(255,255,255,.18) 92%, var(--mha-accent) 3%)
+      color-mix(in srgb, var(--mha-oneui-dock-tint) 20%, rgba(255,255,255,.28)),
+      color-mix(in srgb, var(--mha-oneui-dock-tint) 14%, rgba(255,255,255,.18))
     );
   --mha-shell-border: color-mix(in srgb, rgba(255,255,255,.18) 78%, var(--mha-accent) 6%);
   --mha-shell-shadow: 0 10px 24px rgba(0,0,0,.18);
+  --mha-oneui-panel-border: transparent;
+  --mha-panel-border: var(--mha-oneui-panel-border);
+  --mha-popup-border: var(--mha-oneui-panel-border);
+  --mha-panel-shadow: none;
+  --mha-popup-shadow: none;
   --mha-oneui-dock-active-surface:
     linear-gradient(
       145deg,
-      color-mix(in srgb, rgba(148,156,168,.34) 88%, var(--mha-accent) 4%),
-      color-mix(in srgb, rgba(108,118,132,.28) 90%, var(--mha-accent) 3%)
+      color-mix(in srgb, var(--mha-oneui-dock-tint) 36%, rgba(148,156,168,.34)),
+      color-mix(in srgb, var(--mha-oneui-dock-tint) 28%, rgba(108,118,132,.28))
     );
   --mha-oneui-dock-active-border: color-mix(in srgb, rgba(255,255,255,.24) 82%, var(--mha-accent) 8%);
   --mha-oneui-dock-active-shadow:
@@ -168,11 +203,48 @@
   background: var(--mha-oneui-panel-surface, var(--mha-surface-panel));
 }
 
+:host([data-theme-style="oneui"]) .mha-settings-sheet,
+:host([data-theme-style="oneui"]) .mha-page-creator-sheet,
+:host([data-theme-style="oneui"]) .mha-media-page-widget-panel,
+:host([data-theme-style="oneui"]) .mha-mobile-dock {
+  isolation: isolate;
+}
+
+:host([data-theme-style="oneui"]) .mha-media-page-widget-panel {
+  position: relative;
+}
+
+:host([data-theme-style="oneui"]) .mha-settings-sheet::before,
+:host([data-theme-style="oneui"]) .mha-page-creator-sheet::before,
+:host([data-theme-style="oneui"]) .mha-media-page-widget-panel::before,
+:host([data-theme-style="oneui"]) .mha-mobile-dock::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  z-index: 0;
+  pointer-events: none;
+  background-image: var(--mha-glass-noise-image);
+  background-position: center;
+  background-repeat: repeat;
+  background-size: var(--mha-glass-noise-size);
+  opacity: var(--mha-glass-noise-opacity);
+  mix-blend-mode: var(--mha-glass-noise-blend-mode);
+}
+
+/* The native blob wallpaper already has strong diffuse texture. Below 50%
+ * primary-surface opacity, fade only grid-widget grain with the surface so the
+ * two texture layers do not visually accumulate. Imported images keep the
+ * canonical OneUI grain, and media-page selector cards remain independent. */
+:host([data-theme-style="oneui"][data-wallpaper-source="theme"][data-wallpaper-kind="advanced"]) .mha-widget:not(.mha-media-page-auto-player)::before {
+  opacity: var(--mha-oneui-adaptive-widget-noise-opacity, var(--mha-glass-noise-opacity));
+}
+
 /* 5. Background */
 /* Theme background is fully token-driven in OneUI. */
 
 /* 6. Exceptions strictement necessaires */
-:host([data-theme-style="oneui"][data-theme="light"]) .mha-background,
+:host([data-theme-style="oneui"][data-theme="light"]:not(.is-screensaver-visible)) .mha-background,
 :host([data-theme-style="oneui"][data-theme="light"]) .mha-shell,
 :host([data-theme-style="oneui"][data-theme="light"]) .mha-grid {
   box-shadow: none !important;
