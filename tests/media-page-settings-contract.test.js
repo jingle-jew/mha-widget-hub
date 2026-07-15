@@ -46,18 +46,24 @@ test("media page settings panel sync reuses the shared panel visibility/orchestr
   );
 });
 
-test("media page settings selects assign the selected value after their options exist", () => {
+test("media page settings uses shared MHA choice controls", () => {
   assert.match(
     source,
-    /options\.forEach\(\(option\) => \{[\s\S]*select\.append\(node\);[\s\S]*}\);\s*select\.value = value;/,
+    /import \{ createMhaCheckbox, createMhaSelect \} from "\.\.\/ui\/form-controls\.js";/,
   );
+  assert.match(source, /const row = createMhaCheckbox\(\{[\s\S]*indicatorPlacement: "end"/);
+  assert.match(source, /const control = createMhaSelect\(\{[\s\S]*triggerClassName: "mha-settings-select mha-media-page-settings-select"/);
+  assert.doesNotMatch(source, /document\.createElement\("select"\)|input\.type = "checkbox"/);
 });
 
 test("media page settings persist the effective player selection with non-player changes", () => {
   assert.match(source, /const buildConfigPatch = \(patch = \{\}\) => \(\{[\s\S]*enabledPlayerIds: \[\.\.\.enabledPlayerIds\][\s\S]*enabledPlayerIdsConfigured: true/);
   assert.match(source, /onChange: value => onConfigChange\(buildConfigPatch\(\{ defaultPlayerId: value \}\)\)/);
-  assert.match(source, /onChange: value => onConfigChange\(buildConfigPatch\(\{ visualStyle: value \}\)\)/);
   assert.match(source, /onChange: checked => onConfigChange\(buildConfigPatch\(\{ blurBackground: checked \}\)\)/);
+});
+
+test("media page settings no longer exposes the visual style option", () => {
+  assert.doesNotMatch(source, /getMediaPageVisualStyleOptions|mediaPage\.visualStyle|controlId: "visual-style"|visualStyle: value/);
 });
 
 test("media page settings panel restores its own scrim instead of inheriting the transparent settings sub-panel scrim", () => {

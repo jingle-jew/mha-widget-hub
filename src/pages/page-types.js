@@ -222,14 +222,3 @@ export function getPageCreatorTypeOptions({ themeStyle = "oneui" } = {}) {
 
   return options;
 }
-
-export function getMediaPageVisualStyleOptions() {
-  return [
-    { value: "theme", label: t("settings.mediaPageVisualStyles.theme", "Follow active theme") },
-    { value: "liquid-glass", label: t("settings.mediaPageVisualStyles.liquid-glass", "Liquid Glass") },
-    { value: "frosted-glass", label: t("settings.mediaPageVisualStyles.frosted-glass", "Frosted Glass") },
-    { value: "oneui", label: t("settings.mediaPageVisualStyles.oneui", "One UI") },
-    { value: "material-you", label: t("settings.mediaPageVisualStyles.material-you", "Material You") },
-    { value: "alexa", label: t("settings.mediaPageVisualStyles.alexa", "Alexa") },
-  ];
-}

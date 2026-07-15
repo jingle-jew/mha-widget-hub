@@ -80,6 +80,9 @@ appartiennent à `AGENTS.md`.
   native du système. Les primitives HTML natives peuvent rester sous-jacentes
   pour la sémantique, le clavier et l'accessibilité, mais leur présentation
   doit appartenir au design system MHA.
+- Le panneau de réglages propre à la page Média ne propose plus de sélecteur
+  « Style visuel » : son apparence suit le thème actif. La normalisation de
+  `visualStyle` reste tolérante pour charger les configurations historiques.
 - Les widgets média `2×2` et `4×2` ont trois contrats visuels natifs : iOS
   conserve l'artwork comme objet sur un champ coloré; OneUI et Material
   partagent une composition immersive en lecture ou en pause, Material la
