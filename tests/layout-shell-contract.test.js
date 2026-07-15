@@ -142,6 +142,18 @@ test("OneUI primary surface reuses the dock colors at reduced opacity", () => {
   assert.doesNotMatch(sharedAdapter, /--mha-primary-surface:/);
 });
 
+test("OneUI Now Bar tiles reuse the dock surface material", () => {
+  const source = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "screensaver", "screensaver-contract.css"),
+    "utf8",
+  );
+
+  assert.match(
+    source,
+    /:host\(\[data-theme-style="oneui"\]\) \.mha-screensaver-nowbar-tile\s*\{[\s\S]*--mha-nowbar-oneui-surface:\s*var\([\s\S]*--mha-oneui-mobile-dock-surface,[\s\S]*--mha-shell-dock-surface[\s\S]*background:\s*var\(--mha-nowbar-oneui-surface\);[\s\S]*border-color:\s*var\(--mha-oneui-mobile-dock-border, var\(--mha-shell-border\)\);[\s\S]*box-shadow:\s*var\(--mha-shell-shadow\);[\s\S]*backdrop-filter:\s*var\(--mha-oneui-dock-filter\);/,
+  );
+});
+
 test("OneUI dark panels keep a flat outer frame", () => {
   const themeSource = fs.readFileSync(path.join(THEME_ROOT, "oneui.css"), "utf8");
   const settingsSource = fs.readFileSync(

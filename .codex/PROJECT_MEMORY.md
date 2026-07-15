@@ -94,6 +94,9 @@ appartiennent à `AGENTS.md`.
 - En OneUI, la section « Lecteurs disponibles » de la page Média réutilise la
   matière du dock et son lecteur sélectionné réutilise exactement la surface de
   la pastille active du dock.
+- En OneUI, les tuiles de la Now Bar réutilisent la matière canonique du dock
+  latéral/compact : même surface, bordure, ombre et filtre. Les autres thèmes
+  conservent leur contrat de surface propre.
 - En OneUI sombre seulement, les contours et ombres externes des panels, sheets
   et popups sont neutralisés afin d’éviter un rendu tridimensionnel. La
   profondeur vient des surfaces internes; le calibrage OneUI clair reste
