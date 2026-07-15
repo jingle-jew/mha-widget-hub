@@ -63,11 +63,12 @@ appartiennent à `AGENTS.md`.
   laiteuses conservent un contraste lisible avec le fond.
 - `primary-surface` OneUI reproduit le matériau fortement diffusé de One UI
   Home : clair froid et laiteux, sombre bleu nuit très absorbant, blur `46px`
-  et saturation `118%`. Sa couleur consomme la surface effectivement affichée
-  par le dock OneUI latéral/compact, `--mha-oneui-mobile-dock-surface`, avec
-  `--mha-shell-dock-surface` comme fallback. Son blur et sa brightness restent
-  propres au rôle primary. Les rôles panel et `on-primary` restent indépendants
-  tant qu’ils ne sont pas explicitement remappés.
+  et saturation `118%`. Sa couleur et celle du dock OneUI latéral/compact
+  partagent les mêmes tokens de stops; la surface primary les compose à `88%`
+  pour rester légèrement plus transparente que le dock sans atténuer son
+  contenu. Son blur et sa brightness restent propres au rôle primary. Les rôles
+  panel et `on-primary` restent indépendants tant qu’ils ne sont pas
+  explicitement remappés.
 - En OneUI, la section « Lecteurs disponibles » de la page Média réutilise la
   matière du dock et son lecteur sélectionné réutilise exactement la surface de
   la pastille active du dock.

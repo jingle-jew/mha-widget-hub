@@ -98,7 +98,7 @@ test("OneUI light canvas uses subdued base colors behind primary surfaces", () =
   );
 });
 
-test("OneUI primary surface reuses only the dock background color recipe", () => {
+test("OneUI primary surface reuses the dock colors at reduced opacity", () => {
   const source = fs.readFileSync(path.join(THEME_ROOT, "oneui.css"), "utf8");
   const semanticSource = fs.readFileSync(path.join(THEME_ROOT, "semantic-tokens.css"), "utf8");
   const sharedAdapter = semanticSource.match(
@@ -107,12 +107,20 @@ test("OneUI primary surface reuses only the dock background color recipe", () =>
 
   assert.match(source, /--mha-oneui-primary-blur:\s*46px;/);
   assert.match(source, /--mha-oneui-primary-saturation:\s*118%;/);
-  assert.doesNotMatch(source, /--mha-oneui-primary-surface:/);
+  assert.match(source, /--mha-oneui-primary-surface-opacity:\s*88%;/);
+  assert.match(
+    source,
+    /--mha-oneui-primary-surface:[\s\S]*var\(--mha-oneui-dock-surface-start\) var\(--mha-oneui-primary-surface-opacity\)[\s\S]*var\(--mha-oneui-dock-surface-end\) var\(--mha-oneui-primary-surface-opacity\)/,
+  );
+  assert.match(
+    source,
+    /--mha-oneui-mobile-dock-surface:[\s\S]*var\(--mha-oneui-dock-surface-start\),[\s\S]*var\(--mha-oneui-dock-surface-end\)/,
+  );
   assert.match(source, /--mha-oneui-primary-brightness:\s*\.99;/);
   assert.match(source, /--mha-oneui-primary-brightness:\s*\.90;/);
   assert.match(
     semanticSource,
-    /:host\(\[data-theme-style="oneui"\]\),\s*:root\[data-theme-style="oneui"\]\s*\{[\s\S]*--mha-primary-surface:\s*var\(\s*--mha-oneui-mobile-dock-surface,\s*var\(--mha-shell-dock-surface\)\s*\);[\s\S]*--mha-surface-primary:\s*var\(--mha-primary-surface\);[\s\S]*--mha-blur-primary:\s*var\(--mha-oneui-primary-blur\);[\s\S]*--mha-brightness-primary:\s*var\(--mha-oneui-primary-brightness\);/,
+    /:host\(\[data-theme-style="oneui"\]\),\s*:root\[data-theme-style="oneui"\]\s*\{[\s\S]*--mha-primary-surface:\s*var\(--mha-oneui-primary-surface\);[\s\S]*--mha-surface-primary:\s*var\(--mha-primary-surface\);[\s\S]*--mha-blur-primary:\s*var\(--mha-oneui-primary-blur\);[\s\S]*--mha-brightness-primary:\s*var\(--mha-oneui-primary-brightness\);/,
   );
   assert.doesNotMatch(sharedAdapter, /--mha-primary-surface:/);
 });

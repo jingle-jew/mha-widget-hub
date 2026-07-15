@@ -121,10 +121,7 @@
  * optical treatment. Panel and nested-surface roles remain independent. */
 :host([data-theme-style="oneui"]),
 :root[data-theme-style="oneui"] {
-  --mha-primary-surface: var(
-    --mha-oneui-mobile-dock-surface,
-    var(--mha-shell-dock-surface)
-  );
+  --mha-primary-surface: var(--mha-oneui-primary-surface);
   --mha-surface-primary: var(--mha-primary-surface);
   --mha-blur-primary: var(--mha-oneui-primary-blur);
   --mha-saturation-primary: var(--mha-oneui-primary-saturation);
