@@ -10,6 +10,7 @@ const STATIC_STYLE_MANIFEST_BEFORE_THEMES = Object.freeze([
   entry("styles/components/icon-symbol.css", "component"),
   entry("styles/components/slider.css", "component"),
   entry("styles/components/toggle.css", "component"),
+  entry("styles/components/form-controls.css", "component"),
   entry("styles/components/pill.css", "component"),
   entry("styles/components/button.css", "component"),
   entry("styles/components/icon-picker.css", "component"),

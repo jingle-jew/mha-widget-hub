@@ -15,6 +15,20 @@ appartiennent à `AGENTS.md`.
 
 ## Décisions et raisons
 
+### 2026-07-15 — Centraliser les contrôles de choix MHA
+
+- **Statut :** confirmé.
+- **Décision :** les nouveaux sélecteurs, cases et radios MHA partagent les
+  primitives de `src/ui/form-controls.js` et leur contrat visuel dans
+  `styles/components/form-controls.css`. Le champ HTML natif reste la source de
+  vérité masquée; le déclencheur, la liste et l'indicateur visibles sont rendus
+  par MHA à partir des tokens sémantiques du thème.
+- **Pourquoi :** un simple habillage CSS d'un `select` laisse son menu ouvert à
+  l'apparence de l'appareil, tandis que le contrat hybride conserve valeurs,
+  clavier et accessibilité sans renoncer à une UX MHA cohérente.
+- **Conséquence :** éviter de recréer localement un `select`, une checkbox ou un
+  radio visible; étendre ces primitives quand un nouveau besoin commun apparaît.
+
 ### 2026-07-14 — Séparer instructions et connaissances
 
 - **Statut :** confirmé.
@@ -32,6 +46,14 @@ appartiennent à `AGENTS.md`.
 
 ## Pièges connus
 
+- Les contrôles MHA vivent dans le Shadow DOM du hub. Pour détecter un clic
+  extérieur depuis `document`, utiliser `event.composedPath()` plutôt que le
+  seul `event.target` : ce dernier est retargeté vers l'hôte et peut faire
+  fermer un menu avant le `click` de son option.
+- Sous iOS, les sections vitrées du settings-panel créent chacune un contexte
+  d'empilement à cause de leur `backdrop-filter`. Un menu local doit donc
+  relever temporairement sa section parente; augmenter uniquement le `z-index`
+  interne de la liste ne peut pas la faire dépasser les sections suivantes.
 - Dans `semantic-tokens.css`, ne pas redéfinir le `--mha-primary-surface`
   spécialisé de OneUI avec `var(--mha-surface-primary)` : OneUI mappe déjà
   `--mha-surface-primary` vers `--mha-primary-surface`. La double référence

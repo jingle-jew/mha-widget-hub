@@ -4,6 +4,7 @@ import test from "node:test";
 import { setLanguage } from "../src/i18n/index.js";
 import { getPageIconLabel, PAGE_ICON_OPTIONS } from "../src/pages/page-icons.js";
 import { createSettingsPanel, updateSettingsPanel } from "../src/settings/settings-panel.js";
+import { createMhaCheckbox, createMhaRadio } from "../src/ui/form-controls.js";
 
 function createMockNode(tagName, namespaceURI = null) {
   const node = {
@@ -78,12 +79,20 @@ function createMockNode(tagName, namespaceURI = null) {
 }
 
 function createMockDocument() {
+  const listeners = {};
   return {
+    listeners,
     createElement(tagName) {
       return createMockNode(tagName);
     },
     createElementNS(namespaceURI, tagName) {
       return createMockNode(tagName, namespaceURI);
+    },
+    addEventListener(type, handler) {
+      listeners[type] = handler;
+    },
+    removeEventListener(type, handler) {
+      if (listeners[type] === handler) delete listeners[type];
     },
   };
 }
@@ -388,6 +397,83 @@ test("settings panel hides the Alexa theme option", () => withMockDocument(() =>
   });
 
   assert.equal(hasText(panel, "Alexa"), false);
+}));
+
+test("settings selectors use the controlled MHA listbox and keep the native value contract", () => withMockDocument(() => {
+  const values = [];
+  const panel = createSettingsPanel({
+    open: true,
+    scope: "all",
+    settingsPage: "main",
+    theme: "auto",
+    onThemeChange: value => values.push(value),
+  });
+  const trigger = panel.querySelectorAll(".mha-select-trigger")
+    .find(control => control.getAttribute("aria-label") === "Theme");
+  const control = trigger.closest(".mha-select");
+  const input = control.querySelector(".mha-select-native");
+  const darkOption = control.querySelectorAll("[role='option']")
+    .find(option => option.dataset.value === "dark");
+
+  assert.ok(trigger);
+  assert.equal(trigger.getAttribute("role"), "combobox");
+  assert.equal(input.tagName, "SELECT");
+  assert.equal(input.value, "auto");
+  assert.equal(control.dataset.open, "false");
+
+  trigger.listeners.click();
+  assert.equal(control.dataset.open, "true");
+  assert.equal(trigger.getAttribute("aria-expanded"), "true");
+  assert.equal(control.closest(".mha-settings-section").dataset.selectOpen, "true");
+
+  globalThis.document.listeners.pointerdown({
+    target: createMockNode("mha-control-hub"),
+    composedPath: () => [darkOption, control],
+  });
+  assert.equal(control.dataset.open, "true");
+
+  darkOption.listeners.click();
+  assert.equal(input.value, "dark");
+  assert.equal(darkOption.getAttribute("aria-selected"), "true");
+  assert.equal(control.dataset.open, "false");
+  assert.equal(control.closest(".mha-settings-section").dataset.selectOpen, undefined);
+  assert.deepEqual(values, ["dark"]);
+
+  trigger.listeners.click();
+  globalThis.document.listeners.pointerdown({
+    target: createMockNode("button"),
+    composedPath: () => [],
+  });
+  assert.equal(control.dataset.open, "false");
+}));
+
+test("MHA checkbox and radio primitives keep native semantics behind custom indicators", () => withMockDocument(() => {
+  const checkboxValues = [];
+  const checkbox = createMhaCheckbox({
+    label: "Calendar",
+    checked: false,
+    onChange: checked => checkboxValues.push(checked),
+  });
+  const radio = createMhaRadio({
+    label: "Dynamic",
+    name: "surface",
+    value: "dynamic",
+    checked: true,
+  });
+  const checkboxInput = checkbox.querySelector(".mha-choice-input");
+  const radioInput = radio.querySelector(".mha-choice-input");
+
+  checkboxInput.checked = true;
+  checkboxInput.listeners.change({ currentTarget: checkboxInput });
+
+  assert.equal(checkboxInput.type, "checkbox");
+  assert.equal(radioInput.type, "radio");
+  assert.equal(radioInput.name, "surface");
+  assert.equal(radioInput.value, "dynamic");
+  assert.equal(radioInput.checked, true);
+  assert.ok(checkbox.querySelector(".mha-choice-indicator"));
+  assert.ok(radio.querySelector(".mha-choice-indicator"));
+  assert.deepEqual(checkboxValues, [true]);
 }));
 
 test("settings panel exposes primary surface opacity only for OneUI", () => withMockDocument(() => {

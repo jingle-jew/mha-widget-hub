@@ -1,5 +1,6 @@
 import { ACCENT_REFERENCE_COLORS, getAccentOptions, normalizeAccent, supportsAutoAccent } from "./accent-palettes.js";
 import { createToggle } from "../ui/toggle.js";
+import { createMhaCheckbox, createMhaSelect } from "../ui/form-controls.js";
 import { createIcon } from "../ui/icon.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
 import { createBackButton, createCloseButton, createMoveUpButton, createMoveDownButton, createRemoveButton } from "../system/system-buttons.js";
@@ -261,34 +262,32 @@ const CLOCK_VARIANTS = [
   { value: "ios-analog", label: "Analog iOS", labelKey: "settings.clockVariants.ios-analog" },
 ];
 
-function option(value, label, selectedValue) {
-  const opt = document.createElement("option");
-  opt.value = value;
-  opt.textContent = label;
-  opt.selected = value === selectedValue;
-  return opt;
-}
-
 function optionLabel(item = {}) {
   return item.labelKey ? t(item.labelKey, item.label) : item.label;
 }
 
 function createSelect({ label, value, options, onChange }) {
-  const field = document.createElement("label");
+  const field = document.createElement("div");
   field.className = "mha-settings-field";
 
   const text = document.createElement("span");
   text.className = "mha-settings-label";
   text.textContent = label;
 
-  const select = document.createElement("select");
-  select.className = "mha-settings-select";
+  const control = createMhaSelect({
+    label,
+    value,
+    options: options.map(item => ({ ...item, label: optionLabel(item) })),
+    triggerClassName: "mha-settings-select",
+    onChange,
+  });
+  const select = control.querySelector(".mha-select-native");
+  const trigger = control.querySelector(".mha-select-trigger");
   select.dataset.settingsControl = label;
   select.dataset.settingsValueControl = "true";
-  select.append(...options.map((item) => option(item.value, optionLabel(item), value)));
-  select.addEventListener("change", () => onChange?.(select.value));
+  trigger.dataset.settingsControl = label;
 
-  field.append(text, select);
+  field.append(text, control);
   return field;
 }
 
@@ -411,22 +410,18 @@ function createSwitch({ label, description = "", checked = false, onChange }) {
 }
 
 function createCheckbox({ label, checked = false, onChange }) {
-  const field = document.createElement("label");
-  field.className = "mha-settings-checkbox";
-
-  const text = document.createElement("span");
-  text.className = "mha-settings-label";
-  text.textContent = label;
-
-  const input = document.createElement("input");
-  input.className = "mha-settings-checkbox-input";
-  input.type = "checkbox";
-  input.checked = Boolean(checked);
+  const field = createMhaCheckbox({
+    label,
+    checked,
+    indicatorPlacement: "end",
+    className: "mha-settings-checkbox",
+    inputClassName: "mha-settings-checkbox-input",
+    labelClassName: "mha-settings-label",
+    onChange,
+  });
+  const input = field.querySelector(".mha-settings-checkbox-input");
   input.dataset.settingsControl = label;
   input.dataset.settingsValueControl = "true";
-  input.addEventListener("change", () => onChange?.(Boolean(input.checked)));
-
-  field.append(text, input);
   return field;
 }
 
@@ -869,8 +864,12 @@ function updateMatchedValueControls(existing, next) {
     }
 
     if (control instanceof HTMLSelectElement && source instanceof HTMLSelectElement) {
-      control.value = source.value;
-      control.disabled = source.disabled;
+      control.__mhaSelectApi?.setValue(source.value);
+      control.__mhaSelectApi?.setDisabled(source.disabled);
+      if (!control.__mhaSelectApi) {
+        control.value = source.value;
+        control.disabled = source.disabled;
+      }
     }
   });
 }
