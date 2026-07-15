@@ -43,6 +43,9 @@ appartiennent à `AGENTS.md`.
 - Dans les réglages d’apparence OneUI, « Opacité des widgets » contrôle
   `--mha-oneui-primary-surface-opacity` de 0 à 100 %. La valeur est persistée
   localement sous `mha-oneui-primary-surface-opacity`; son défaut reste 88 %.
+  Pendant un geste actif sur ce slider, le panel, son scrim et le blur du
+  dashboard sont masqués, tandis que le contrôle reste au premier plan à sa
+  position stable pour permettre un aperçu direct des surfaces.
 - Sur la carte météo Vent 2×2, la boussole est une information contextuelle de
   fond : elle doit rester centrée, atténuée, derrière les textes et remplir la
   carte à une échelle proche des cadrans ClockWidget analogiques. La direction

@@ -1702,3 +1702,67 @@
       color-mix(in srgb, var(--mha-accent) 32%, rgba(255,255,255,.72)),
       rgba(255,255,255,.28));
 }
+
+/* OneUI widget-opacity live preview
+ * Keep the range control at its stable layout position while temporarily
+ * removing every visual layer that obscures the widgets behind the panel.
+ */
+:host([data-theme-style="oneui"].is-oneui-opacity-previewing) .mha-settings-backdrop {
+  visibility: hidden;
+  opacity: 0;
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+:host([data-theme-style="oneui"].is-oneui-opacity-previewing) .mha-background,
+:host([data-theme-style="oneui"].is-oneui-opacity-previewing) .mha-shell,
+:host([data-theme-style="oneui"].is-oneui-opacity-previewing) .mha-dock,
+:host([data-theme-style="oneui"].is-oneui-opacity-previewing) .mha-mobile-dock,
+:host([data-theme-style="oneui"].is-oneui-opacity-previewing) .mha-edit-button {
+  -webkit-filter: none;
+  filter: none;
+}
+
+:host([data-theme-style="oneui"].is-oneui-opacity-previewing)
+  .mha-settings-panel.is-oneui-opacity-previewing .mha-settings-scrim,
+:host([data-theme-style="oneui"].is-oneui-opacity-previewing)
+  .mha-settings-panel.is-oneui-opacity-previewing .mha-settings-header,
+:host([data-theme-style="oneui"].is-oneui-opacity-previewing)
+  .mha-settings-panel.is-oneui-opacity-previewing .mha-settings-body > .mha-settings-section {
+  visibility: hidden;
+}
+
+:host([data-theme-style="oneui"].is-oneui-opacity-previewing)
+  .mha-settings-panel.is-oneui-opacity-previewing .mha-settings-sheet {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+:host([data-theme-style="oneui"].is-oneui-opacity-previewing)
+  .mha-settings-panel.is-oneui-opacity-previewing .mha-settings-sheet::before,
+:host([data-theme-style="oneui"].is-oneui-opacity-previewing)
+  .mha-settings-panel.is-oneui-opacity-previewing .mha-settings-sheet::after {
+  opacity: 0;
+}
+
+:host([data-theme-style="oneui"].is-oneui-opacity-previewing)
+  .mha-settings-panel.is-oneui-opacity-previewing .mha-settings-body {
+  scrollbar-width: none;
+}
+
+:host([data-theme-style="oneui"].is-oneui-opacity-previewing)
+  .mha-settings-panel.is-oneui-opacity-previewing .mha-settings-body::-webkit-scrollbar {
+  display: none;
+}
+
+:host([data-theme-style="oneui"].is-oneui-opacity-previewing)
+  .mha-settings-panel.is-oneui-opacity-previewing .mha-settings-range-field {
+  position: relative;
+  z-index: 1;
+  visibility: visible;
+  pointer-events: auto;
+}

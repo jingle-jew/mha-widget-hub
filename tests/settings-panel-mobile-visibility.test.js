@@ -6,7 +6,7 @@ import { getPageIconLabel, PAGE_ICON_OPTIONS } from "../src/pages/page-icons.js"
 import { createSettingsPanel, updateSettingsPanel } from "../src/settings/settings-panel.js";
 
 function createMockNode(tagName, namespaceURI = null) {
-  return {
+  const node = {
     tagName: String(tagName).toUpperCase(),
     namespaceURI,
     className: "",
@@ -20,7 +20,9 @@ function createMockNode(tagName, namespaceURI = null) {
     listeners: {},
     hidden: false,
     append(...nodes) {
-      this.children.push(...nodes.filter(Boolean));
+      const children = nodes.filter(Boolean);
+      children.forEach(child => { child.parentNode = this; });
+      this.children.push(...children);
     },
     setAttribute(name, value) {
       this.attributes[name] = String(value);
@@ -43,6 +45,36 @@ function createMockNode(tagName, namespaceURI = null) {
     },
     focus() {},
   };
+  node.classList = {
+    add(...tokens) {
+      const classes = new Set(String(node.className || "").split(/\s+/u).filter(Boolean));
+      tokens.forEach(token => classes.add(token));
+      node.className = [...classes].join(" ");
+    },
+    remove(...tokens) {
+      const classes = new Set(String(node.className || "").split(/\s+/u).filter(Boolean));
+      tokens.forEach(token => classes.delete(token));
+      node.className = [...classes].join(" ");
+    },
+    contains(token) {
+      return String(node.className || "").split(/\s+/u).includes(token);
+    },
+    toggle(token, force) {
+      const active = force ?? !this.contains(token);
+      if (active) this.add(token);
+      else this.remove(token);
+      return active;
+    },
+  };
+  node.closest = function closest(selector) {
+    let current = this;
+    while (current) {
+      if (matchesSelector(current, selector)) return current;
+      current = current.parentNode;
+    }
+    return null;
+  };
+  return node;
 }
 
 function createMockDocument() {
@@ -388,4 +420,31 @@ test("settings panel exposes primary surface opacity only for OneUI", () => with
   slider.listeners.input();
   assert.deepEqual(values, [0]);
   assert.equal(oneUiPanel.querySelector(".mha-settings-range-value").textContent, "0%");
+}));
+
+test("OneUI opacity preview hides panel layers only while the slider is armed", () => withMockDocument(() => {
+  const values = [];
+  const panel = createSettingsPanel({
+    open: true,
+    scope: "all",
+    settingsPage: "main",
+    themeStyle: "oneui",
+    onOneUiPrimarySurfaceOpacityChange: value => values.push(value),
+  });
+  const slider = panel.querySelector(".mha-settings-range-input");
+  const host = createMockNode("mha-control-hub");
+  slider.getRootNode = () => ({ host });
+
+  slider.listeners.pointerdown({ button: 0, pointerId: 7 });
+  assert.equal(panel.classList.contains("is-oneui-opacity-previewing"), true);
+  assert.equal(host.classList.contains("is-oneui-opacity-previewing"), true);
+
+  slider.value = "31";
+  slider.listeners.input();
+  assert.deepEqual(values, [31]);
+  assert.equal(panel.classList.contains("is-oneui-opacity-previewing"), true);
+
+  slider.listeners.pointerup({ pointerId: 7 });
+  assert.equal(panel.classList.contains("is-oneui-opacity-previewing"), false);
+  assert.equal(host.classList.contains("is-oneui-opacity-previewing"), false);
 }));

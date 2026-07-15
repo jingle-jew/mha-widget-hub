@@ -336,6 +336,36 @@ function createPercentageSlider({
   syncValue(normalizedValue);
   input.addEventListener("input", () => onInput?.(syncValue(input.value)));
 
+  let activePointerId = null;
+  const setPreviewActive = (active) => {
+    const panel = input.closest?.(".mha-settings-panel");
+    const host = input.getRootNode?.()?.host;
+    panel?.classList?.toggle?.("is-oneui-opacity-previewing", active);
+    host?.classList?.toggle?.("is-oneui-opacity-previewing", active);
+  };
+  const finishPreview = (event) => {
+    if (
+      activePointerId !== null
+      && event?.pointerId !== undefined
+      && event.pointerId !== activePointerId
+    ) {
+      return;
+    }
+    activePointerId = null;
+    setPreviewActive(false);
+  };
+
+  input.addEventListener("pointerdown", (event) => {
+    if (event.button !== undefined && event.button !== 0) return;
+    activePointerId = event.pointerId ?? 0;
+    setPreviewActive(true);
+  });
+  input.addEventListener("pointerup", finishPreview);
+  input.addEventListener("pointercancel", finishPreview);
+  input.addEventListener("lostpointercapture", finishPreview);
+  input.addEventListener("change", finishPreview);
+  input.addEventListener("blur", finishPreview);
+
   header.append(text, output);
   field.append(header, input);
   return field;
