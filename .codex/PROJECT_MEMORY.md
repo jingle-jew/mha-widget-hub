@@ -15,6 +15,25 @@ appartiennent à `AGENTS.md`.
 
 ## Décisions et raisons
 
+### 2026-07-15 — Garder la page Média autonome
+
+- **Statut :** confirmé.
+- **Décision :** la page Média et tout son contenu forment un système autonome.
+  Leur structure, leurs états, leurs comportements et leurs styles doivent être
+  possédés par la page Média. La page consomme le contrat visuel du thème actif
+  comme une entrée interchangeable, mais ne dépend ni de l'implémentation d'un
+  thème particulier ni d'éléments définis ailleurs dans l'application.
+- **Pourquoi :** un contrat local évite que la cascade, l'ordre des feuilles ou
+  l'évolution d'un widget/thème externe modifie silencieusement la page Média.
+- **Conséquence :** les thèmes sont des fournisseurs consommés par la page, pas
+  des propriétaires de sa structure ou de son comportement. Chaque entrée
+  thématique doit pouvoir être remplacée ou absente grâce à un contrat et des
+  fallbacks locaux complets. Ne pas réutiliser un élément préexistant si cette
+  réutilisation crée une dépendance; préférer un composant appartenant à la page
+  Média. Les couplages historiques encore présents avec
+  `media-widget.css` ou les tokens du dock sont une dette à réduire par correctifs
+  ciblés; ne pas les étendre.
+
 ### 2026-07-15 — Centraliser les contrôles de choix MHA
 
 - **Statut :** confirmé.
@@ -158,9 +177,11 @@ appartiennent à `AGENTS.md`.
   contenu. Son blur et sa brightness restent propres au rôle primary. Les rôles
   panel et `on-primary` restent indépendants tant qu’ils ne sont pas
   explicitement remappés.
-- En OneUI, la section « Lecteurs disponibles » de la page Média réutilise la
-  matière du dock et son lecteur sélectionné réutilise exactement la surface de
-  la pastille active du dock.
+- En OneUI, la section « Lecteurs disponibles » de la page Média possède une
+  matière locale visuellement alignée sur le dock, et son lecteur sélectionné
+  reprend localement l'apparence de la pastille active sans dépendre du composant
+  dock. Ses lecteurs inactifs ou éteints conservent une vignette d'artwork vide
+  avec glyphe, comme en iOS, au lieu de masquer la colonne d'artwork.
 - En OneUI, les tuiles de la Now Bar réutilisent la matière canonique du dock
   latéral/compact : même surface, bordure, ombre et filtre. Les autres thèmes
   conservent leur contrat de surface propre.
