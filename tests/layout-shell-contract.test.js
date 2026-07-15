@@ -87,6 +87,14 @@ test("OneUI glass uses a dense fine-grain texture across persistent and panel su
     source,
     /\.mha-settings-sheet::before,[\s\S]*\.mha-page-creator-sheet::before,[\s\S]*\.mha-media-page-widget-panel::before,[\s\S]*\.mha-mobile-dock::before\s*\{[\s\S]*background-image:\s*var\(--mha-glass-noise-image\);[\s\S]*opacity:\s*var\(--mha-glass-noise-opacity\);/,
   );
+  assert.match(
+    source,
+    /:host\(\[data-theme-style="oneui"\]\[data-wallpaper-source="theme"\]\[data-wallpaper-kind="advanced"\]\) \.mha-widget:not\(\.mha-media-page-auto-player\)::before\s*\{[\s\S]*opacity:\s*var\(--mha-oneui-adaptive-widget-noise-opacity, var\(--mha-glass-noise-opacity\)\);/,
+  );
+  assert.doesNotMatch(
+    source,
+    /:host\([^\n]*data-wallpaper-source="custom"[^\n]*\) \.mha-widget[^\n]*::before/,
+  );
 });
 
 test("OneUI light canvas uses subdued base colors behind primary surfaces", () => {

@@ -5,6 +5,7 @@ import {
   DEFAULT_ONEUI_PRIMARY_SURFACE_OPACITY,
   createThemeController,
   normalizeOneUiPrimarySurfaceOpacity,
+  resolveOneUiWidgetNoiseOpacity,
 } from "../src/settings/theme-controller.js";
 
 function createStyle() {
@@ -79,6 +80,13 @@ test("OneUI primary surface opacity is normalized to a percentage", () => {
   );
 });
 
+test("OneUI widget noise fades linearly only below 50 percent surface opacity", () => {
+  assert.equal(resolveOneUiWidgetNoiseOpacity(100), 0.14);
+  assert.equal(resolveOneUiWidgetNoiseOpacity(50), 0.14);
+  assert.equal(resolveOneUiWidgetNoiseOpacity(25), 0.07);
+  assert.equal(resolveOneUiWidgetNoiseOpacity(0), 0);
+});
+
 test("OneUI primary surface opacity persists and only applies to OneUI", () => withThemeEnvironment(({
   host,
   root,
@@ -91,12 +99,18 @@ test("OneUI primary surface opacity persists and only applies to OneUI", () => w
   assert.equal(oneUiState.oneUiPrimarySurfaceOpacity, 37);
   assert.equal(host.style.properties.get("--mha-oneui-primary-surface-opacity"), "37%");
   assert.equal(root.style.properties.get("--mha-oneui-primary-surface-opacity"), "37%");
+  assert.equal(host.style.properties.get("--mha-oneui-adaptive-widget-noise-opacity"), "0.1036");
+  assert.equal(root.style.properties.get("--mha-oneui-adaptive-widget-noise-opacity"), "0.1036");
 
   controller.setThemeStyle("ios");
   assert.equal(host.style.properties.has("--mha-oneui-primary-surface-opacity"), false);
   assert.equal(root.style.properties.has("--mha-oneui-primary-surface-opacity"), false);
+  assert.equal(host.style.properties.has("--mha-oneui-adaptive-widget-noise-opacity"), false);
+  assert.equal(root.style.properties.has("--mha-oneui-adaptive-widget-noise-opacity"), false);
 
   controller.setThemeStyle("oneui");
   assert.equal(host.style.properties.get("--mha-oneui-primary-surface-opacity"), "37%");
   assert.equal(root.style.properties.get("--mha-oneui-primary-surface-opacity"), "37%");
+  assert.equal(host.style.properties.get("--mha-oneui-adaptive-widget-noise-opacity"), "0.1036");
+  assert.equal(root.style.properties.get("--mha-oneui-adaptive-widget-noise-opacity"), "0.1036");
 }));

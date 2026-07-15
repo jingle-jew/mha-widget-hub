@@ -91,7 +91,10 @@ appartiennent à `AGENTS.md`.
 - Le verre OneUI utilise un grain volontairement visible mais fin et poudreux :
   texture fractale dense à quatre octaves, répétée à `56px`, opacité `.14` et
   fusion `soft-light`. Ce voile couvre aussi les sheets/panels OneUI sans leur
-  ajouter de bordure ou d’ombre.
+  ajouter de bordure ou d’ombre. Avec le wallpaper animé OneUI par défaut, le
+  grain des widgets reste à `.14` entre 50 et 100 % d’opacité de surface, puis
+  diminue linéairement jusqu’à `0` entre 50 et 0 %. Les images personnalisées,
+  les panels et les cartes « Lecteurs disponibles » conservent leur grain fixe.
 - Le canvas généré de OneUI clair reste légèrement assombri par ses couleurs de
   base, sans réduire l’intensité des blobs, afin que les surfaces primary
   laiteuses conservent un contraste lisible avec le fond.

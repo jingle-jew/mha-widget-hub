@@ -8,6 +8,8 @@ import {
 
 export const THEME_STYLES = Object.freeze(new Set(getThemeStyleIds()));
 export const DEFAULT_ONEUI_PRIMARY_SURFACE_OPACITY = 88;
+export const ONEUI_WIDGET_NOISE_FADE_START = 50;
+export const ONEUI_WIDGET_NOISE_MAX_OPACITY = 0.14;
 
 const ONEUI_PRIMARY_SURFACE_OPACITY_STORAGE_KEY = "mha-oneui-primary-surface-opacity";
 
@@ -15,6 +17,12 @@ export function normalizeOneUiPrimarySurfaceOpacity(value = DEFAULT_ONEUI_PRIMAR
   const numericValue = Number(value);
   if (!Number.isFinite(numericValue)) return DEFAULT_ONEUI_PRIMARY_SURFACE_OPACITY;
   return Math.round(Math.max(0, Math.min(100, numericValue)));
+}
+
+export function resolveOneUiWidgetNoiseOpacity(value = DEFAULT_ONEUI_PRIMARY_SURFACE_OPACITY) {
+  const surfaceOpacity = normalizeOneUiPrimarySurfaceOpacity(value);
+  const fadeProgress = Math.min(surfaceOpacity / ONEUI_WIDGET_NOISE_FADE_START, 1);
+  return Math.round(ONEUI_WIDGET_NOISE_MAX_OPACITY * fadeProgress * 10000) / 10000;
 }
 
 function getSystemThemePreference() {
@@ -223,16 +231,22 @@ function syncOneUiBlobPalette(host, state) {
 
 function syncOneUiPrimarySurfaceOpacity(host, state) {
   const property = "--mha-oneui-primary-surface-opacity";
+  const widgetNoiseProperty = "--mha-oneui-adaptive-widget-noise-opacity";
 
   if (state.themeStyle !== "oneui") {
     host?.style?.removeProperty?.(property);
+    host?.style?.removeProperty?.(widgetNoiseProperty);
     document.documentElement.style?.removeProperty?.(property);
+    document.documentElement.style?.removeProperty?.(widgetNoiseProperty);
     return;
   }
 
   const value = `${state.oneUiPrimarySurfaceOpacity}%`;
+  const widgetNoiseOpacity = resolveOneUiWidgetNoiseOpacity(state.oneUiPrimarySurfaceOpacity);
   host?.style?.setProperty?.(property, value);
+  host?.style?.setProperty?.(widgetNoiseProperty, String(widgetNoiseOpacity));
   document.documentElement.style?.setProperty?.(property, value);
+  document.documentElement.style?.setProperty?.(widgetNoiseProperty, String(widgetNoiseOpacity));
 }
 
 export function syncThemeAttributes(host) {

@@ -232,6 +232,14 @@
   mix-blend-mode: var(--mha-glass-noise-blend-mode);
 }
 
+/* The native blob wallpaper already has strong diffuse texture. Below 50%
+ * primary-surface opacity, fade only grid-widget grain with the surface so the
+ * two texture layers do not visually accumulate. Imported images keep the
+ * canonical OneUI grain, and media-page selector cards remain independent. */
+:host([data-theme-style="oneui"][data-wallpaper-source="theme"][data-wallpaper-kind="advanced"]) .mha-widget:not(.mha-media-page-auto-player)::before {
+  opacity: var(--mha-oneui-adaptive-widget-noise-opacity, var(--mha-glass-noise-opacity));
+}
+
 /* 5. Background */
 /* Theme background is fully token-driven in OneUI. */
 
