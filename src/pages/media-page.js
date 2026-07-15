@@ -28,6 +28,7 @@ import {
   createMediaWidgetContent,
   createMediaTitleStack,
   createMediaTransitionCache,
+  MEDIA_TRANSITION_GRACE_MS,
   setMediaArtworkImage,
   setMediaProgressState,
 } from "../widgets/media-widget.js?media-page-ios-card-v1";
@@ -181,8 +182,8 @@ export function resolveMediaPageNowPlayingId({
   return enabledPlayers[0]?.entity_id || "";
 }
 
-function normalizeInactiveNowPlayingMedia(media = {}) {
-  if (!isMediaPlayerInactiveState(media.entity?.state)) return media;
+export function normalizeInactiveNowPlayingMedia(media = {}) {
+  if (!isMediaPlayerInactiveState(media.state)) return media;
 
   return {
     ...media,
@@ -471,6 +472,7 @@ export function createMediaPage(page = {}, {
   root.__mhaSyncMobileDockState = mobileScrollCoordinator.syncDockState;
 
   let progressTimer = 0;
+  let mediaStateConfirmationTimer = 0;
   let visualTransitionTimer = 0;
   let automaticPlayerCards = [];
   let draggedPlayerId = "";
@@ -725,7 +727,26 @@ export function createMediaPage(page = {}, {
     applyProgress(view);
   };
 
-  const refresh = ({ progressOnly = false } = {}) => {
+  function clearMediaStateConfirmationTimer() {
+    if (!mediaStateConfirmationTimer) return;
+    clearTimeout(mediaStateConfirmationTimer);
+    mediaStateConfirmationTimer = 0;
+  }
+
+  function scheduleMediaStateConfirmation(view) {
+    clearMediaStateConfirmationTimer();
+    if (!view.media.usingGraceCache) return;
+    const now = globalThis.performance?.now?.() ?? Date.now();
+    const elapsed = now - transitionCache.graceStartedTimestamp;
+    const delay = Math.max(0, MEDIA_TRANSITION_GRACE_MS - elapsed + 1);
+    mediaStateConfirmationTimer = globalThis.setTimeout(() => {
+      mediaStateConfirmationTimer = 0;
+      refresh();
+      syncProgressTicker();
+    }, delay);
+  }
+
+  function refresh({ progressOnly = false } = {}) {
     const nextView = buildViewState(
       context.page,
       context.hass,
@@ -734,7 +755,8 @@ export function createMediaPage(page = {}, {
       selectionState,
     );
     applyView(nextView, { progressOnly });
-  };
+    scheduleMediaStateConfirmation(nextView);
+  }
 
   const resetScrollPosition = () => {
     mobileScrollCoordinator.reset();
@@ -757,6 +779,7 @@ export function createMediaPage(page = {}, {
   };
 
   applyView(context.view);
+  scheduleMediaStateConfirmation(context.view);
   syncProgressTicker();
   scheduleScrollReset();
 
@@ -804,6 +827,7 @@ export function createMediaPage(page = {}, {
     if (progressTimer) clearInterval(progressTimer);
     progressTimer = 0;
     clearInactiveSelectionTimer();
+    clearMediaStateConfirmationTimer();
     if (visualTransitionTimer) clearTimeout(visualTransitionTimer);
     visualTransitionTimer = 0;
     mobileScrollCoordinator.destroy();

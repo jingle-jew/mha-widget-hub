@@ -20,7 +20,7 @@ import { createIconSymbol } from "../ui/icon-symbol.js";
 import { findThemeStyleId } from "../settings/theme-registry.js";
 
 export const MEDIA_WIDGET_KIND = "media";
-export const MEDIA_TRANSITION_GRACE_MS = 1200;
+export const MEDIA_TRANSITION_GRACE_MS = 5000;
 
 const MEDIA_ARTWORK_PALETTE_PROPERTIES = Object.freeze([
   "--mha-media-palette-surface",
@@ -33,7 +33,7 @@ const MEDIA_ARTWORK_PALETTE_ROOT_SELECTOR = ".mha-media-widget, .mha-media-page"
 const MEDIA_PAGE_WALLPAPER_OVERLAY_COLOR = Object.freeze([10, 14, 24]);
 const MEDIA_PAGE_WALLPAPER_OVERLAY_WEIGHT = 0.44;
 
-const MEDIA_TRANSIENT_STATES = new Set(["idle", "off", "unavailable", "unknown", "none"]);
+const MEDIA_TRANSIENT_STATES = new Set(["idle", "stopped", "off", "unavailable", "unknown", "none"]);
 
 export function isMediaWidget(widget = {}) {
   return isLocalWidgetKind(widget, MEDIA_WIDGET_KIND, ["media-widget"]);
@@ -46,6 +46,7 @@ function resolveMediaEntity(widget = {}, hass) {
 
 export function createMediaTransitionCache() {
   return {
+    entityId: "",
     lastArtwork: "",
     lastTitle: "",
     lastArtist: "",
@@ -54,6 +55,16 @@ export function createMediaTransitionCache() {
     graceState: "",
     graceStartedTimestamp: 0,
   };
+}
+
+function clearMediaTransitionDisplayCache(cache) {
+  cache.lastArtwork = "";
+  cache.lastTitle = "";
+  cache.lastArtist = "";
+  cache.lastMediaState = "";
+  cache.lastUpdateTimestamp = 0;
+  cache.graceState = "";
+  cache.graceStartedTimestamp = 0;
 }
 
 function getMediaTimestamp() {
@@ -76,6 +87,12 @@ function hasLiveMediaMetadata(entity, widget = {}) {
 function applyMediaTransitionCache(data, cache, now = getMediaTimestamp()) {
   if (!cache) return data;
 
+  const entityId = String(data.entityId || "").trim();
+  if (cache.entityId && entityId && cache.entityId !== entityId) {
+    clearMediaTransitionDisplayCache(cache);
+  }
+  if (entityId) cache.entityId = entityId;
+
   const hasCachedDisplay = Boolean(cache.lastArtwork || cache.lastTitle || cache.lastArtist);
   const hasTransientState = MEDIA_TRANSIENT_STATES.has(data.state);
   const missingCachedArtwork = Boolean(cache.lastArtwork && !data.artworkUrl);
@@ -84,8 +101,8 @@ function applyMediaTransitionCache(data, cache, now = getMediaTimestamp()) {
   const shouldUseGrace = hasCachedDisplay && (missingCachedArtwork || missingCachedMetadata || stateWouldRegress);
 
   if (shouldUseGrace) {
-    if (cache.graceState !== data.state || !cache.graceStartedTimestamp) {
-      cache.graceState = data.state;
+    cache.graceState = data.state;
+    if (!cache.graceStartedTimestamp) {
       cache.graceStartedTimestamp = now;
     }
 
@@ -101,6 +118,8 @@ function applyMediaTransitionCache(data, cache, now = getMediaTimestamp()) {
         usingGraceCache: true,
       };
     }
+
+    clearMediaTransitionDisplayCache(cache);
   }
 
   cache.graceState = "";
@@ -380,7 +399,8 @@ function readArtworkPalette(image) {
     const pixels = context.getImageData(0, 0, size, size).data;
     return deriveMediaArtworkPaletteFromPixels(pixels);
   } catch {
-    // Cross-origin artwork can make canvas sampling unavailable. Keep theme defaults.
+    // Cross-origin artwork can make canvas sampling unavailable. The caller
+    // decides whether to keep an existing palette or use theme defaults.
     return null;
   }
 }
@@ -390,6 +410,13 @@ function clearMediaArtworkPalette(root) {
   root.removeAttribute("data-artwork-tone");
   root.removeAttribute("data-artwork-palette");
   MEDIA_ARTWORK_PALETTE_PROPERTIES.forEach(property => root.style.removeProperty(property));
+}
+
+function shouldPreserveMediaPagePalette(root) {
+  return Boolean(
+    root?.matches?.(".mha-media-page")
+    && root.dataset.artworkPalette === "true",
+  );
 }
 
 function resolveMediaArtworkPaletteRoot(rootOrArtwork) {
@@ -434,7 +461,7 @@ export function syncMediaArtworkTone(rootOrArtwork, artworkOrImage) {
       image.__mhaArtworkPaletteCache = { artworkUrl: expectedArtworkUrl, palette };
     }
     if (palette) applyMediaArtworkPalette(root, palette);
-    else clearMediaArtworkPalette(root);
+    else if (!shouldPreserveMediaPagePalette(root)) clearMediaArtworkPalette(root);
   };
   detachMediaArtworkPaletteListener(image);
   if (image.complete && image.naturalWidth) {
@@ -449,7 +476,8 @@ export function syncMediaArtworkTone(rootOrArtwork, artworkOrImage) {
   const onError = () => {
     detachMediaArtworkPaletteListener(image);
     if (expectedArtworkUrl !== (image.dataset.artworkUrl || "")) return;
-    clearMediaArtworkPalette(resolveMediaArtworkPaletteRoot(rootOrArtwork));
+    const root = resolveMediaArtworkPaletteRoot(rootOrArtwork);
+    if (!shouldPreserveMediaPagePalette(root)) clearMediaArtworkPalette(root);
   };
   image.__mhaArtworkPaletteListener = { onLoad, onError };
   image.addEventListener("load", onLoad);

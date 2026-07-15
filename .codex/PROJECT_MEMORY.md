@@ -214,6 +214,17 @@ appartiennent à `AGENTS.md`.
   brièvement le wallpaper du thème entre deux chansons. Une fois prête, la
   nouvelle image apparaît par un crossfade de `1000ms` entre deux couches
   d'artwork superposées : le fondu ne transite jamais par le fond du thème.
+- Un état HA `idle`, `stopped`, `off`, `unavailable` ou `unknown` ne remplace pas
+  immédiatement un état média actif sur le même lecteur. MHA conserve artwork,
+  métadonnées et état visuel pendant une fenêtre de confirmation continue de
+  `5000ms`, puis effectue son propre rafraîchissement même sans nouvel événement
+  HA. Le cache est vidé après confirmation et n'est jamais partagé entre deux
+  entités, afin d'éviter à la fois les flashes et les artworks périmés.
+- La dernière palette valide de la page Média reste active pendant le chargement
+  et l'échantillonnage de l'artwork suivant. Une erreur d'image ou un canvas non
+  lisible ne doit pas faire retomber « Lecteurs disponibles » sur la surface du
+  thème; la palette n'est retirée qu'après confirmation réelle de l'absence
+  d'artwork.
 - Le contraste du contenu Now Playing est calculé contre une approximation de
   l'artwork une fois composé avec l'overlay sombre du wallpaper, et non contre
   les pixels bruts de la pochette. La palette des surfaces continue d'utiliser

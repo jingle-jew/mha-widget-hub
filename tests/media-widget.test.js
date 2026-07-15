@@ -17,6 +17,7 @@ import {
 import { normalizeWidgetForKind } from "../src/layout/layout-engine.js";
 import {
   MEDIA_PAGE_INACTIVE_FALLBACK_MS,
+  normalizeInactiveNowPlayingMedia,
   resolveMediaPageNowPlayingId,
   resolveMobileMediaPagePane,
   swapOrderedIds,
@@ -197,9 +198,14 @@ test("media page keeps the previous artwork palette until its replacement loads"
   assert.equal(page.dataset.artworkPalette, "true");
   assert.equal(image.dataset.artworkUrl, "/new-artwork.jpg");
   assert.equal(typeof listeners.get("load"), "function");
+
+  listeners.get("error")();
+  assert.equal(page.dataset.artworkTone, "dark");
+  assert.equal(page.dataset.artworkPalette, "true");
 });
 
 test("media transition cache hides temporary idle metadata and artwork gaps", () => {
+  assert.equal(MEDIA_TRANSITION_GRACE_MS, 5000);
   const cache = createMediaTransitionCache();
   const playing = resolveMediaTransitionData(mediaData({
     title: "Ocean Drive",
@@ -272,6 +278,53 @@ test("media transition cache expires when idle is not temporary", () => {
   assert.equal(expiredIdle.playing, false);
   assert.equal(expiredIdle.artworkUrl, "");
   assert.equal(expiredIdle.usingGraceCache, undefined);
+
+  const stillIdle = resolveMediaTransitionData(mediaData({ state: "idle" }), cache, 1100 + MEDIA_TRANSITION_GRACE_MS + 500);
+  assert.equal(stillIdle.usingGraceCache, undefined);
+  assert.equal(cache.lastArtwork, "");
+});
+
+test("media transition cache never carries artwork to another player", () => {
+  const cache = createMediaTransitionCache();
+  resolveMediaTransitionData(mediaData({
+    state: "playing",
+    playing: true,
+    artworkUrl: "/salon.jpg",
+    hasLiveMetadata: true,
+  }), cache, 1000);
+
+  const office = resolveMediaTransitionData(mediaData({
+    entityId: "media_player.office",
+    name: "Office",
+    title: "Office",
+    state: "idle",
+  }), cache, 1100);
+
+  assert.equal(office.artworkUrl, "");
+  assert.equal(office.usingGraceCache, undefined);
+  assert.equal(cache.entityId, "media_player.office");
+});
+
+test("media page preserves cached playback while HA is only provisionally idle", () => {
+  const provisionalIdle = normalizeInactiveNowPlayingMedia(mediaData({
+    entity: { state: "idle" },
+    state: "playing",
+    playing: true,
+    title: "Current song",
+    artworkUrl: "/current-song.jpg",
+    usingGraceCache: true,
+  }));
+  const confirmedIdle = normalizeInactiveNowPlayingMedia(mediaData({
+    entity: { state: "idle" },
+    state: "idle",
+    title: "Current song",
+    artworkUrl: "/current-song.jpg",
+  }));
+
+  assert.equal(provisionalIdle.artworkUrl, "/current-song.jpg");
+  assert.equal(provisionalIdle.state, "playing");
+  assert.equal(confirmedIdle.artworkUrl, "");
+  assert.equal(confirmedIdle.state, "idle");
 });
 
 test("media page player widgets default to 4x2 and support a compact 2x2 variant", () => {
