@@ -52,6 +52,21 @@ function pseudoRandom(seed) {
   return value - Math.floor(value);
 }
 
+function normalizeWindSpeedKmh(value = 0, unit = "km/h") {
+  const speed = Math.max(0, Number(value) || 0);
+  const normalizedUnit = String(unit || "km/h").trim().toLowerCase();
+  if (["m/s", "mps"].includes(normalizedUnit)) return speed * 3.6;
+  if (["mph", "mi/h"].includes(normalizedUnit)) return speed * 1.609344;
+  if (["kn", "kt", "kts", "knot", "knots"].includes(normalizedUnit)) return speed * 1.852;
+  return speed;
+}
+
+function resolveWindFactor(windSpeedKmh = 0) {
+  const normalized = Math.max(0, Number(windSpeedKmh) || 0);
+  const curved = 0.55 + (1.58 * (1 - Math.exp(-normalized / 32)));
+  return Math.max(0.55, Math.min(2.1, curved));
+}
+
 function resolveCloudCount(condition = "sunny", cloudCover = NaN) {
   if (STORM_CONDITIONS.has(condition)) return 17;
   if (["rainy", "pouring", "hail", "snowy", "snowy-rainy", "fog"].includes(condition)) return 15;
@@ -100,7 +115,9 @@ function appendClouds(scene, { condition = "sunny", cloudCover = NaN } = {}) {
     cloud.style.setProperty("--mha-weather-cloud-start", `${start}vw`);
     cloud.style.setProperty("--mha-weather-cloud-travel", `${travel}vw`);
     cloud.style.setProperty("--mha-weather-cloud-drift", `${drift}vh`);
+    const depthSpeedFactor = depth === "far" ? 0.82 : (depth === "near" ? 1.12 : 1);
     cloud.style.setProperty("--mha-weather-cloud-duration", `${duration}s`);
+    cloud.style.setProperty("--mha-weather-cloud-depth-speed-factor", String(depthSpeedFactor));
     cloud.style.setProperty("--mha-weather-cloud-delay", `${-(pseudoRandom(seed + 10) * duration)}s`);
     cloud.style.setProperty("--mha-weather-cloud-opacity-local", String(opacity));
     cloudField.append(cloud);
@@ -123,7 +140,10 @@ export function createWeatherPageBackground(page = {}, hass = null) {
   const weatherEntity = resolveWeatherEntity(page, hass);
   const condition = normalizeCondition(weatherEntity?.state);
   const isDay = resolveIsDay(hass);
-  const windSpeed = Number(weatherEntity?.attributes?.wind_speed) || 0;
+  const windSpeedKmh = normalizeWindSpeedKmh(
+    weatherEntity?.attributes?.wind_speed,
+    weatherEntity?.attributes?.wind_speed_unit || weatherEntity?.attributes?.wind_unit || "km/h",
+  );
   const cloudCover = Number(weatherEntity?.attributes?.cloud_coverage);
   const cloudy = CLOUDY_CONDITIONS.has(condition);
 
@@ -133,7 +153,7 @@ export function createWeatherPageBackground(page = {}, hass = null) {
   scene.dataset.daytime = isDay ? "day" : "night";
   scene.dataset.cloudy = String(cloudy);
   scene.dataset.storm = String(STORM_CONDITIONS.has(condition));
-  scene.style.setProperty("--mha-weather-wind-factor", String(Math.max(0.65, Math.min(2.2, 0.65 + (windSpeed / 28)))));
+  scene.style.setProperty("--mha-weather-wind-factor", String(resolveWindFactor(windSpeedKmh)));
   scene.style.setProperty(
     "--mha-weather-cloud-opacity",
     String(Number.isFinite(cloudCover) ? Math.max(0.38, Math.min(0.96, cloudCover / 100)) : (cloudy ? 0.82 : 0.42)),

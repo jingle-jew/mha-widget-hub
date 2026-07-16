@@ -94,7 +94,7 @@
   transform-origin: center;
   will-change: transform;
   animation-name: mha-weather-cloud-drift;
-  animation-duration: calc(var(--mha-weather-cloud-duration, 80s) / var(--mha-weather-wind-factor));
+  animation-duration: calc(var(--mha-weather-cloud-duration, 80s) / (var(--mha-weather-wind-factor) * var(--mha-weather-cloud-depth-speed-factor, 1)));
   animation-delay: var(--mha-weather-cloud-delay, 0s);
   animation-timing-function: linear;
   animation-iteration-count: infinite;
