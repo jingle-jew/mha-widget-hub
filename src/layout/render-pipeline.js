@@ -24,6 +24,7 @@ import {
 } from "./layout-engine.js";
 import { getLayoutForWidth } from "./responsive.js";
 import { createPagePanel } from "../pages/page-panel.js";
+import { createWeatherPageBackground } from "../pages/weather-page-background.js";
 import {
   createMediaPage,
   resolveMediaPageNowPlayingId,
@@ -236,6 +237,25 @@ export function createRenderPipeline(host, options = {}) {
     frontendVersion,
     styleManifest = [],
   } = options;
+
+  function syncWeatherPageBackdropState({
+    activePage = getActivePage(host),
+  } = {}) {
+    const background = host.shadowRoot?.querySelector?.(".mha-background") || null;
+    const currentScene = background?.querySelector?.(".mha-weather-background") || null;
+    const weatherActive = isWeatherPage(activePage);
+    host.dataset.weatherPageActive = String(weatherActive);
+
+    if (!background) return;
+    if (!weatherActive) {
+      currentScene?.remove?.();
+      return;
+    }
+
+    const nextScene = createWeatherPageBackground(activePage, host._hass);
+    if (currentScene) currentScene.replaceWith(nextScene);
+    else background.append(nextScene);
+  }
 
   function syncMediaPageBackdropState({
     activePage = getActivePage(host),
@@ -543,6 +563,7 @@ export function createRenderPipeline(host, options = {}) {
     host._applyCustomWallpaperState(themeState);
     host._applyHaSidebarMode(host._hideHaSidebar);
     syncMediaPageBackdropState({ themeStyle: themeState?.themeStyle || "" });
+    syncWeatherPageBackdropState();
     host._renderId = renderId;
     cancelAnimationFrame(host._widgetRenderFrame);
     cancelAnimationFrame(host._secondaryUiFrame);
@@ -730,6 +751,7 @@ export function createRenderPipeline(host, options = {}) {
     ensureIosOrganicWallpaperNode(background);
     syncShellBackgroundSurface(background);
     if (!persistentBackground) host.shadowRoot.append(background);
+    syncWeatherPageBackdropState();
     host.shadowRoot.append(shell);
     return { links, pageStage };
   }
@@ -798,6 +820,7 @@ export function createRenderPipeline(host, options = {}) {
     host._clearTouchEditLongPress?.();
     host.dataset.widgetsState = "pending";
     syncMediaPageBackdropState({ themeStyle: context.themeStyle });
+    syncWeatherPageBackdropState();
     applyRenderDatasetsAndRuntimeVars(context);
 
     destroyDomSubtree(currentPanel);
