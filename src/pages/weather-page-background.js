@@ -68,12 +68,16 @@ function resolveWindFactor(windSpeedKmh = 0) {
 }
 
 function resolveCloudCount(condition = "sunny", cloudCover = NaN) {
+  if (condition === "sunny" || condition === "clear-night") {
+    return Number.isFinite(cloudCover) && cloudCover >= 22 ? 2 : 0;
+  }
+  if (condition === "partlycloudy") return 6;
+  if (condition === "fog") return 2;
   if (STORM_CONDITIONS.has(condition)) return 17;
-  if (["rainy", "pouring", "hail", "snowy", "snowy-rainy", "fog"].includes(condition)) return 15;
+  if (["rainy", "pouring", "hail", "snowy", "snowy-rainy"].includes(condition)) return 15;
   if (condition === "cloudy") return 14;
-  if (condition === "partlycloudy") return 10;
-  if (Number.isFinite(cloudCover)) return Math.max(5, Math.min(14, Math.round(5 + (cloudCover / 11))));
-  return 6;
+  if (Number.isFinite(cloudCover)) return Math.max(3, Math.min(14, Math.round(3 + (cloudCover / 9))));
+  return 4;
 }
 
 function appendClouds(scene, { condition = "sunny", cloudCover = NaN } = {}) {
@@ -133,10 +137,51 @@ function appendClouds(scene, { condition = "sunny", cloudCover = NaN } = {}) {
 function appendPrecipitation(scene, className, count) {
   const field = createLayer(`mha-weather-background__precipitation ${className}`);
   for (let index = 0; index < count; index += 1) {
+    const seed = 31.7 + (index * 19.13);
     const particle = document.createElement("i");
-    particle.style.setProperty("--mha-weather-particle-index", String(index));
-    particle.style.setProperty("--mha-weather-particle-x", `${(index * 37) % 101}%`);
+    const size = 0.72 + (pseudoRandom(seed + 1) * 1.05);
+    const duration = className.includes("snow")
+      ? 4.8 + (pseudoRandom(seed + 2) * 4.6)
+      : 0.72 + (pseudoRandom(seed + 2) * 0.72);
+    const delay = -(pseudoRandom(seed + 3) * duration);
+    const opacity = 0.42 + (pseudoRandom(seed + 4) * 0.52);
+    const drift = -4 + (pseudoRandom(seed + 5) * 11);
+    particle.style.setProperty("--mha-weather-particle-x", `${pseudoRandom(seed + 6) * 100}%`);
+    particle.style.setProperty("--mha-weather-particle-size", String(size));
+    particle.style.setProperty("--mha-weather-particle-duration", `${duration}s`);
+    particle.style.setProperty("--mha-weather-particle-delay", `${delay}s`);
+    particle.style.setProperty("--mha-weather-particle-opacity", String(opacity));
+    particle.style.setProperty("--mha-weather-particle-drift", `${drift}vw`);
+    particle.style.setProperty("--mha-weather-particle-drift-back", `${drift * -0.45}vw`);
     field.append(particle);
+  }
+  scene.append(field);
+}
+
+function appendStars(scene, count = 46) {
+  const field = createLayer("mha-weather-background__stars");
+  for (let index = 0; index < count; index += 1) {
+    const seed = 71.2 + (index * 13.37);
+    const star = document.createElement("i");
+    star.style.setProperty("--mha-weather-star-x", `${pseudoRandom(seed + 1) * 100}%`);
+    star.style.setProperty("--mha-weather-star-y", `${pseudoRandom(seed + 2) * 63}%`);
+    star.style.setProperty("--mha-weather-star-size", `${0.8 + (pseudoRandom(seed + 3) * 1.9)}px`);
+    star.style.setProperty("--mha-weather-star-opacity", String(0.34 + (pseudoRandom(seed + 4) * 0.62)));
+    star.style.setProperty("--mha-weather-star-delay", `${-(pseudoRandom(seed + 5) * 6)}s`);
+    field.append(star);
+  }
+  scene.append(field);
+}
+
+function appendFog(scene) {
+  const field = createLayer("mha-weather-background__fog-field");
+  for (let index = 0; index < 5; index += 1) {
+    const band = document.createElement("i");
+    band.style.setProperty("--mha-weather-fog-index", String(index));
+    band.style.setProperty("--mha-weather-fog-top", `${14 + (index * 11)}%`);
+    band.style.setProperty("--mha-weather-fog-opacity", String(0.16 + (index * 0.035)));
+    band.style.setProperty("--mha-weather-fog-duration", `${42 + (index * 11)}s`);
+    field.append(band);
   }
   scene.append(field);
 }
@@ -171,13 +216,19 @@ export function createWeatherPageBackground(page = {}, hass = null) {
     createLayer("mha-weather-background__haze"),
   );
 
+  if (condition === "clear-night") appendStars(scene, 54);
+  if (condition === "fog") appendFog(scene);
   appendClouds(scene, { condition, cloudCover });
 
   if (PRECIPITATION_CONDITIONS.has(condition)) {
-    appendPrecipitation(scene, "mha-weather-background__rain", condition === "pouring" ? 42 : 28);
+    appendPrecipitation(
+      scene,
+      "mha-weather-background__rain",
+      condition === "pouring" || STORM_CONDITIONS.has(condition) ? 72 : 48,
+    );
   }
   if (SNOW_CONDITIONS.has(condition)) {
-    appendPrecipitation(scene, "mha-weather-background__snow", 24);
+    appendPrecipitation(scene, "mha-weather-background__snow", 54);
   }
   if (STORM_CONDITIONS.has(condition)) {
     scene.append(createLayer("mha-weather-background__lightning"));
