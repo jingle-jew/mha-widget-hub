@@ -81,9 +81,9 @@
 }
 
 .mha-weather-background__cloud-field {
-  inset-block-end: 33.333%;
   overflow: hidden;
   opacity: var(--mha-weather-cloud-opacity);
+  clip-path: inset(0 0 33.333% 0);
 }
 
 .mha-weather-background__cloud {

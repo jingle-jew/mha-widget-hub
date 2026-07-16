@@ -100,10 +100,10 @@ function appendClouds(scene, { condition = "sunny", cloudCover = NaN } = {}) {
     const start = -58 - (pseudoRandom(seed + 5) * 72);
     const travel = 195 + (pseudoRandom(seed + 6) * 110);
     const topRange = depth === "far"
-      ? { min: -10, max: 42 }
+      ? { min: -10, max: 55 }
       : depth === "mid"
-        ? { min: -8, max: 34 }
-        : { min: -12, max: 24 };
+        ? { min: -8, max: 48 }
+        : { min: -12, max: 40 };
     const top = topRange.min + (pseudoRandom(seed + 7) * (topRange.max - topRange.min));
     const drift = -4 + (pseudoRandom(seed + 8) * 9);
     const opacity = depth === "far"
