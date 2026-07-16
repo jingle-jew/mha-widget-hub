@@ -362,13 +362,34 @@
   inset-block-start: var(--mha-weather-star-y, 30%);
   inline-size: var(--mha-weather-star-size, 1.2px);
   aspect-ratio: 1;
-  border-radius: 50%;
   opacity: var(--mha-weather-star-opacity, .7);
   background: rgba(245, 249, 255, .98);
-  box-shadow: 0 0 .28rem rgba(220, 232, 255, .42);
+  clip-path: polygon(
+    50% 0%,
+    58% 38%,
+    100% 50%,
+    58% 62%,
+    50% 100%,
+    42% 62%,
+    0% 50%,
+    42% 38%
+  );
+  filter: drop-shadow(0 0 .18rem rgba(220, 232, 255, .52));
   will-change: transform, filter;
   animation: mha-weather-star-twinkle 6s ease-in-out infinite alternate;
   animation-delay: var(--mha-weather-star-delay, 0s);
+}
+
+.mha-weather-background__stars i:nth-child(3n) {
+  scale: .72 1.28;
+}
+
+.mha-weather-background__stars i:nth-child(5n) {
+  scale: 1.18 .82;
+}
+
+.mha-weather-background__stars i:nth-child(7n) {
+  rotate: 45deg;
 }
 
 .mha-weather-background__fog-field {
