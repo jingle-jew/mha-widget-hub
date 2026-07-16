@@ -15,6 +15,13 @@
     .dev-panel button:hover,.dev-panel select:hover{background:rgba(255,255,255,.2)}
     .dev-panel select{grid-column:1/-1;width:100%}
     @media (max-width:420px){.dev-panel{grid-template-columns:1fr;width:min(260px,calc(100vw - 24px))}.dev-panel button,.dev-panel select{width:100%}}
+    .dev-weather-panel{position:fixed;z-index:9998;left:50%;bottom:max(18px,env(safe-area-inset-bottom));translate:-50% 0;display:grid;gap:10px;width:min(620px,calc(100vw - 28px));padding:12px;border:1px solid rgba(255,255,255,.16);border-radius:22px;background:rgba(10,10,18,.72);backdrop-filter:blur(24px) saturate(155%);box-shadow:0 22px 70px rgba(0,0,0,.36)}
+    .dev-weather-panel[hidden]{display:none}
+    .dev-weather-panel__title{font-size:12px;font-weight:800;letter-spacing:.02em;opacity:.72}
+    .dev-weather-panel__buttons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+    .dev-weather-panel button{appearance:none;min-height:34px;border:0;border-radius:999px;padding:8px 10px;background:rgba(255,255,255,.12);color:inherit;font:inherit;font-size:12px;font-weight:750;cursor:pointer}
+    .dev-weather-panel button:hover,.dev-weather-panel button[data-active="true"]{background:rgba(255,255,255,.22)}
+    @media (max-width:560px){.dev-weather-panel__buttons{grid-template-columns:repeat(2,minmax(0,1fr))}}
     mha-widget-hub{width:100vw;height:100vh;display:block}
   </style>
 </head>
@@ -559,115 +566,68 @@
       return true;
     }
 
-    function ensureDevWeatherSwitcherStyle(root) {
-      if (!root || root.querySelector("style[data-dev-weather-switcher-style]")) return;
-      const style = document.createElement("style");
-      style.dataset.devWeatherSwitcherStyle = "true";
-      style.textContent = `
-        .mha-dev-weather-switcher {
-          grid-column: 1 / span 4 !important;
-          grid-row: 1 / span 2 !important;
-          display: grid;
-          grid-template-rows: auto 1fr;
-          gap: .65rem;
-          min-inline-size: 0;
-          padding: clamp(.8rem, 1.5vw, 1.1rem);
-          overflow: hidden;
-        }
-        .mha-dev-weather-switcher__title {
-          font-size: .78rem;
-          font-weight: 760;
-          letter-spacing: .02em;
-          opacity: .72;
-        }
-        .mha-dev-weather-switcher__buttons {
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: .42rem;
-          align-content: center;
-          min-block-size: 0;
-        }
-        .mha-dev-weather-switcher button {
-          appearance: none;
-          min-inline-size: 0;
-          min-block-size: 2rem;
-          border: 0;
-          border-radius: 999px;
-          padding: .42rem .56rem;
-          color: inherit;
-          background: color-mix(in srgb, currentColor 12%, transparent);
-          font: inherit;
-          font-size: .68rem;
-          font-weight: 720;
-          line-height: 1.1;
-          cursor: pointer;
-        }
-        .mha-dev-weather-switcher button:hover,
-        .mha-dev-weather-switcher button[data-active="true"] {
-          background: color-mix(in srgb, var(--mha-accent, currentColor) 28%, transparent);
-        }
-      `;
-      root.append(style);
-    }
-
-    function shiftWeatherWidgetsBelowSwitcher(grid) {
-      [...grid.children].forEach((child) => {
-        if (child.dataset?.devWeatherSwitcher === "true") return;
-        if (!child.matches?.(".mha-widget")) return;
-        if (child.dataset.devWeatherRowShifted === "true") return;
-        const rowValue = child.style.gridRow || "";
-        const match = rowValue.match(/^\s*(-?\d+)\s*\/\s*span\s+(\d+)\s*$/);
-        if (!match) return;
-        child.style.gridRow = `${Number(match[1]) + 2} / span ${match[2]}`;
-        child.dataset.devWeatherRowShifted = "true";
-      });
-    }
-
-    function mountDevWeatherSwitcher() {
-      const root = hub.shadowRoot;
-      const grid = root?.querySelector?.('.mha-page-panel[data-page-type="weather"] .mha-grid');
-      if (!root || !grid) return false;
-      ensureDevWeatherSwitcherStyle(root);
-
-      let widget = grid.querySelector('[data-dev-weather-switcher="true"]');
-      if (!widget) {
-        widget = document.createElement("article");
-        widget.className = "mha-widget mha-dev-weather-switcher";
-        widget.dataset.devWeatherSwitcher = "true";
-        widget.dataset.widgetW = "4";
-        widget.dataset.widgetH = "2";
-        widget.dataset.widgetSize = "4x2";
-        widget.style.setProperty("--mha-widget-w", "4");
-        widget.style.setProperty("--mha-widget-h", "2");
+    function mountDevWeatherPanel() {
+      let panel = document.querySelector("[data-dev-weather-panel]");
+      if (!panel) {
+        panel = document.createElement("section");
+        panel.className = "dev-weather-panel";
+        panel.dataset.devWeatherPanel = "true";
+        panel.hidden = true;
 
         const title = document.createElement("div");
-        title.className = "mha-dev-weather-switcher__title";
+        title.className = "dev-weather-panel__title";
         title.textContent = "Scène météo · dev";
+
         const buttons = document.createElement("div");
-        buttons.className = "mha-dev-weather-switcher__buttons";
+        buttons.className = "dev-weather-panel__buttons";
         DEV_WEATHER_SCENARIOS.forEach((scenario) => {
           const button = document.createElement("button");
           button.type = "button";
           button.textContent = scenario.label;
           button.dataset.weatherScenario = scenario.id;
-          button.onclick = () => setDevWeatherScenario(scenario.id);
+          button.onclick = () => {
+            setDevWeatherScenario(scenario.id);
+            buttons.querySelectorAll("button").forEach((item) => {
+              item.dataset.active = String(item === button);
+            });
+          };
           buttons.append(button);
         });
-        widget.append(title, buttons);
-        grid.insertBefore(widget, grid.firstChild);
+
+        panel.append(title, buttons);
+        document.body.append(panel);
       }
 
-      shiftWeatherWidgetsBelowSwitcher(grid);
-      return true;
+      syncDevWeatherPanelVisibility();
+      return panel;
     }
 
-    function observeDevWeatherSwitcher() {
+    function syncDevWeatherPanelVisibility() {
+      const panel = document.querySelector("[data-dev-weather-panel]");
+      if (!panel) return;
+      const weatherActive = hub.dataset.weatherPageActive === "true"
+        || hub.dataset.activePageType === "weather"
+        || Boolean(hub.shadowRoot?.querySelector?.('.mha-page-panel[data-page-type="weather"]'));
+      panel.hidden = !weatherActive;
+    }
+
+    function observeDevWeatherPanel() {
+      mountDevWeatherPanel();
+      if (!hub.__mhaDevWeatherPanelObserver) {
+        const hostObserver = new MutationObserver(syncDevWeatherPanelVisibility);
+        hostObserver.observe(hub, {
+          attributes: true,
+          attributeFilter: ["data-weather-page-active", "data-active-page-type"],
+        });
+        hub.__mhaDevWeatherPanelObserver = hostObserver;
+      }
       const root = hub.shadowRoot;
-      if (!root || root.__mhaDevWeatherSwitcherObserver) return;
-      const observer = new MutationObserver(() => mountDevWeatherSwitcher());
-      observer.observe(root, { childList: true, subtree: true });
-      root.__mhaDevWeatherSwitcherObserver = observer;
-      mountDevWeatherSwitcher();
+      if (root && !root.__mhaDevWeatherPanelObserver) {
+        const rootObserver = new MutationObserver(syncDevWeatherPanelVisibility);
+        rootObserver.observe(root, { childList: true, subtree: true });
+        root.__mhaDevWeatherPanelObserver = rootObserver;
+      }
+      syncDevWeatherPanelVisibility();
     }
 
     if (!new URLSearchParams(location.search).has("no-hass")) {
@@ -675,7 +635,7 @@
         devMockHass = createMockHass();
         hub.hass = devMockHass;
         hub.requestRender?.();
-        observeDevWeatherSwitcher();
+        observeDevWeatherPanel();
       };
 
       if (customElements.get("mha-widget-hub")) {
@@ -710,7 +670,7 @@
       setLayoutMode,
       setIconShape,
       setDevWeatherScenario,
-      mountDevWeatherSwitcher,
+      mountDevWeatherPanel,
     };
   </script>
 </body>
