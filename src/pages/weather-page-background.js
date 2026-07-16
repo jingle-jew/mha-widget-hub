@@ -134,25 +134,47 @@ function appendClouds(scene, { condition = "sunny", cloudCover = NaN } = {}) {
   scene.append(cloudField);
 }
 
-function appendPrecipitation(scene, className, count) {
+function appendPrecipitation(scene, className, count, { intensity = "normal" } = {}) {
   const field = createLayer(`mha-weather-background__precipitation ${className}`);
+  field.dataset.intensity = intensity;
   for (let index = 0; index < count; index += 1) {
     const seed = 31.7 + (index * 19.13);
     const particle = document.createElement("i");
-    const size = 0.72 + (pseudoRandom(seed + 1) * 1.05);
-    const duration = className.includes("snow")
+    const isSnow = className.includes("snow");
+    const rainProfile = intensity === "storm"
+      ? { sizeMin: 1.5, sizeRange: 1.35, durationMin: 0.46, durationRange: 0.34, opacityMin: 0.7, opacityRange: 0.28 }
+      : intensity === "heavy"
+        ? { sizeMin: 1.15, sizeRange: 1.2, durationMin: 0.58, durationRange: 0.48, opacityMin: 0.58, opacityRange: 0.34 }
+        : { sizeMin: 0.86, sizeRange: 0.9, durationMin: 0.82, durationRange: 0.62, opacityMin: 0.46, opacityRange: 0.42 };
+    const size = isSnow
+      ? 0.72 + (pseudoRandom(seed + 1) * 1.05)
+      : rainProfile.sizeMin + (pseudoRandom(seed + 1) * rainProfile.sizeRange);
+    const duration = isSnow
       ? 4.8 + (pseudoRandom(seed + 2) * 4.6)
-      : 0.72 + (pseudoRandom(seed + 2) * 0.72);
+      : rainProfile.durationMin + (pseudoRandom(seed + 2) * rainProfile.durationRange);
     const delay = -(pseudoRandom(seed + 3) * duration);
-    const opacity = 0.42 + (pseudoRandom(seed + 4) * 0.52);
+    const opacity = isSnow
+      ? 0.42 + (pseudoRandom(seed + 4) * 0.52)
+      : rainProfile.opacityMin + (pseudoRandom(seed + 4) * rainProfile.opacityRange);
     const drift = -4 + (pseudoRandom(seed + 5) * 11);
+    const depthRoll = pseudoRandom(seed + 7);
+    const depth = depthRoll < 0.28 ? "far" : (depthRoll < 0.76 ? "mid" : "near");
+    const stormAngle = intensity === "storm" ? 8 + (pseudoRandom(seed + 8) * 16) : 10 + (pseudoRandom(seed + 8) * 5);
+    const startOffset = intensity === "storm" ? -18 - (pseudoRandom(seed + 9) * 26) : -14;
+    const travelScale = intensity === "storm" ? 0.82 + (pseudoRandom(seed + 10) * 0.42) : 1;
+    const depthScale = depth === "far" ? 0.68 : (depth === "near" ? 1.24 : 1);
+    particle.dataset.depth = depth;
     particle.style.setProperty("--mha-weather-particle-x", `${pseudoRandom(seed + 6) * 100}%`);
-    particle.style.setProperty("--mha-weather-particle-size", String(size));
+    particle.style.setProperty("--mha-weather-particle-size", String(size * depthScale));
     particle.style.setProperty("--mha-weather-particle-duration", `${duration}s`);
     particle.style.setProperty("--mha-weather-particle-delay", `${delay}s`);
     particle.style.setProperty("--mha-weather-particle-opacity", String(opacity));
     particle.style.setProperty("--mha-weather-particle-drift", `${drift}vw`);
     particle.style.setProperty("--mha-weather-particle-drift-back", `${drift * -0.45}vw`);
+    particle.style.setProperty("--mha-weather-particle-angle", `${stormAngle}deg`);
+    particle.style.setProperty("--mha-weather-particle-start", `${startOffset}vh`);
+    particle.style.setProperty("--mha-weather-particle-travel-x", `${(10 + drift) * travelScale}vw`);
+    particle.style.setProperty("--mha-weather-particle-travel-y", `${122 * travelScale}vh`);
     field.append(particle);
   }
   scene.append(field);
@@ -221,14 +243,19 @@ export function createWeatherPageBackground(page = {}, hass = null) {
   appendClouds(scene, { condition, cloudCover });
 
   if (PRECIPITATION_CONDITIONS.has(condition)) {
+    const rainIntensity = STORM_CONDITIONS.has(condition)
+      ? "storm"
+      : (condition === "pouring" ? "heavy" : "normal");
+    const rainCount = rainIntensity === "storm" ? 96 : (rainIntensity === "heavy" ? 76 : 48);
     appendPrecipitation(
       scene,
       "mha-weather-background__rain",
-      condition === "pouring" || STORM_CONDITIONS.has(condition) ? 72 : 48,
+      rainCount,
+      { intensity: rainIntensity },
     );
   }
   if (SNOW_CONDITIONS.has(condition)) {
-    appendPrecipitation(scene, "mha-weather-background__snow", 54);
+    appendPrecipitation(scene, "mha-weather-background__snow", 54, { intensity: "snow" });
   }
   if (STORM_CONDITIONS.has(condition)) {
     scene.append(createLayer("mha-weather-background__lightning"));
