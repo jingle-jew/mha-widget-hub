@@ -350,8 +350,10 @@
 }
 
 .mha-weather-background__stars {
-  z-index: 1;
+  z-index: 3;
   overflow: hidden;
+  isolation: isolate;
+  transform: translateZ(0);
 }
 
 .mha-weather-background__stars i {
@@ -361,8 +363,10 @@
   inline-size: var(--mha-weather-star-size, 1.2px);
   aspect-ratio: 1;
   border-radius: 50%;
-  background: rgba(245, 249, 255, var(--mha-weather-star-opacity, .7));
+  opacity: var(--mha-weather-star-opacity, .7);
+  background: rgba(245, 249, 255, .98);
   box-shadow: 0 0 .28rem rgba(220, 232, 255, .42);
+  will-change: transform, filter;
   animation: mha-weather-star-twinkle 6s ease-in-out infinite alternate;
   animation-delay: var(--mha-weather-star-delay, 0s);
 }
@@ -447,8 +451,8 @@
 }
 
 @keyframes mha-weather-star-twinkle {
-  from { transform: scale(.72); opacity: .38; }
-  to { transform: scale(1.22); opacity: 1; }
+  from { transform: scale(.82); filter: brightness(.78); }
+  to { transform: scale(1.16); filter: brightness(1.24); }
 }
 
 @keyframes mha-weather-fog-drift {
