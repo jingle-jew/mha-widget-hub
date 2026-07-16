@@ -47,11 +47,62 @@ function createLayer(className) {
   return layer;
 }
 
-function appendClouds(scene, count = 4) {
+function pseudoRandom(seed) {
+  const value = Math.sin(seed * 12.9898) * 43758.5453;
+  return value - Math.floor(value);
+}
+
+function resolveCloudCount(condition = "sunny", cloudCover = NaN) {
+  if (STORM_CONDITIONS.has(condition)) return 17;
+  if (["rainy", "pouring", "hail", "snowy", "snowy-rainy", "fog"].includes(condition)) return 15;
+  if (condition === "cloudy") return 14;
+  if (condition === "partlycloudy") return 10;
+  if (Number.isFinite(cloudCover)) return Math.max(5, Math.min(14, Math.round(5 + (cloudCover / 11))));
+  return 6;
+}
+
+function appendClouds(scene, { condition = "sunny", cloudCover = NaN } = {}) {
+  const count = resolveCloudCount(condition, cloudCover);
   const cloudField = createLayer("mha-weather-background__cloud-field");
+  const seedBase = [...condition].reduce((total, character) => total + character.charCodeAt(0), 0);
+
   for (let index = 0; index < count; index += 1) {
+    const seed = seedBase + (index * 17.31);
+    const depthRoll = pseudoRandom(seed + 1);
+    const depth = depthRoll < 0.34 ? "far" : (depthRoll < 0.78 ? "mid" : "near");
     const cloud = createLayer("mha-weather-background__cloud");
-    cloud.style.setProperty("--mha-weather-cloud-index", String(index));
+    const width = depth === "far"
+      ? 18 + (pseudoRandom(seed + 2) * 18)
+      : depth === "mid"
+        ? 28 + (pseudoRandom(seed + 2) * 28)
+        : 42 + (pseudoRandom(seed + 2) * 36);
+    const heightRatio = 0.28 + (pseudoRandom(seed + 3) * 0.2);
+    const duration = depth === "far"
+      ? 88 + (pseudoRandom(seed + 4) * 74)
+      : depth === "mid"
+        ? 62 + (pseudoRandom(seed + 4) * 58)
+        : 44 + (pseudoRandom(seed + 4) * 42);
+    const start = -58 - (pseudoRandom(seed + 5) * 72);
+    const travel = 195 + (pseudoRandom(seed + 6) * 110);
+    const top = -8 + (pseudoRandom(seed + 7) * 88);
+    const drift = -4 + (pseudoRandom(seed + 8) * 9);
+    const opacity = depth === "far"
+      ? 0.28 + (pseudoRandom(seed + 9) * 0.24)
+      : depth === "mid"
+        ? 0.5 + (pseudoRandom(seed + 9) * 0.3)
+        : 0.66 + (pseudoRandom(seed + 9) * 0.28);
+
+    cloud.dataset.depth = depth;
+    cloud.dataset.shape = String(index % 5);
+    cloud.style.setProperty("--mha-weather-cloud-width", `${width}vw`);
+    cloud.style.setProperty("--mha-weather-cloud-height", `${width * heightRatio}vw`);
+    cloud.style.setProperty("--mha-weather-cloud-top", `${top}%`);
+    cloud.style.setProperty("--mha-weather-cloud-start", `${start}vw`);
+    cloud.style.setProperty("--mha-weather-cloud-travel", `${travel}vw`);
+    cloud.style.setProperty("--mha-weather-cloud-drift", `${drift}vh`);
+    cloud.style.setProperty("--mha-weather-cloud-duration", `${duration}s`);
+    cloud.style.setProperty("--mha-weather-cloud-delay", `${-(pseudoRandom(seed + 10) * duration)}s`);
+    cloud.style.setProperty("--mha-weather-cloud-opacity-local", String(opacity));
     cloudField.append(cloud);
   }
   scene.append(cloudField);
@@ -95,7 +146,7 @@ export function createWeatherPageBackground(page = {}, hass = null) {
     createLayer("mha-weather-background__haze"),
   );
 
-  appendClouds(scene, cloudy ? 6 : 3);
+  appendClouds(scene, { condition, cloudCover });
 
   if (PRECIPITATION_CONDITIONS.has(condition)) {
     appendPrecipitation(scene, "mha-weather-background__rain", condition === "pouring" ? 42 : 28);
