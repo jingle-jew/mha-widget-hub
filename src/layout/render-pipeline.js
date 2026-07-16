@@ -968,6 +968,7 @@ export function createRenderPipeline(host, options = {}) {
 
   return {
     render,
+    syncWeatherPageBackdropState,
     createWidgetPlaceholder,
     appendDeferredUi,
     handleStylesReady,

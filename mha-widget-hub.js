@@ -1086,6 +1086,7 @@ _syncActivePageBackdropState({
   blurBackground=activePage?.config?.blurBackground!==false,
   themeStyle=this.dataset.themeStyle||this._themeController?.read?.()?.themeStyle||"oneui",
 }={}){
+  getRenderPipelineForHost(this).syncWeatherPageBackdropState({activePage});
   const isMediaPage=isMediaPageExperienceActive(activePage,themeStyle);
   this.dataset.activePageType=activePage?.type||"grid";
   this.dataset.mediaPageActive=String(isMediaPage);
