@@ -9,6 +9,7 @@ function createHarness(overrides = {}) {
     syncPageCreator: 0,
     refreshActiveGridOnly: 0,
     transitionPageRender: [],
+    syncActivePageBackdrop: [],
     syncWidgetDropSlots: 0,
     syncSettingsDom: 0,
     renderRoot: 0,
@@ -90,6 +91,12 @@ function createHarness(overrides = {}) {
         nextPageType: nextPage?.type || "grid",
       });
     },
+    syncActivePageBackdrop: (activePage) => {
+      calls.syncActivePageBackdrop.push({
+        pageId: activePage?.id || "",
+        pageType: activePage?.type || "grid",
+      });
+    },
     syncWidgetDropSlots: () => { calls.syncWidgetDropSlots += 1; },
     syncSettingsDom: () => { calls.syncSettingsDom += 1; },
     renderRoot: () => { calls.renderRoot += 1; },
@@ -122,9 +129,34 @@ test("selecting a page closes placement state and reloads widgets", () => {
   assert.equal(state.widgetManagerCategory, "");
   assert.deepEqual(calls.writeActivePage, ["lights"]);
   assert.deepEqual(calls.transitionPageRender, []);
+  assert.deepEqual(calls.syncActivePageBackdrop, [{ pageId: "lights", pageType: "grid" }]);
   assert.equal(calls.refreshActiveGridOnly, 1);
   assert.equal(calls.syncWidgetDropSlots, 1);
   assert.equal(calls.syncDocks, 1);
+});
+
+test("grid and weather page changes synchronize the active backdrop before refreshing the grid", () => {
+  const { coordinator, state, calls } = createHarness({
+    state: {
+      pages: [
+        { id: "home", name: "Home", icon: "home", type: "grid", widgets: [] },
+        { id: "weather", name: "Weather", icon: "weather", type: "weather", widgets: [] },
+      ],
+    },
+  });
+
+  assert.equal(coordinator.selectPage("weather"), true);
+  assert.equal(state.activePageId, "weather");
+  assert.deepEqual(calls.syncActivePageBackdrop, [{ pageId: "weather", pageType: "weather" }]);
+  assert.equal(calls.refreshActiveGridOnly, 1);
+
+  calls.syncActivePageBackdrop.length = 0;
+  calls.refreshActiveGridOnly = 0;
+
+  assert.equal(coordinator.selectPage("home"), true);
+  assert.equal(state.activePageId, "home");
+  assert.deepEqual(calls.syncActivePageBackdrop, [{ pageId: "home", pageType: "grid" }]);
+  assert.equal(calls.refreshActiveGridOnly, 1);
 });
 
 test("selecting a media page keeps edit mode available while using the dedicated transition", () => {

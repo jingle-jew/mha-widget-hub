@@ -294,6 +294,7 @@ constructor(){
     openSettings:()=>this._openSettings(),
     exitEditMode:()=>this._disableEditMode(),
     transitionPageRender:(previousPage,nextPage)=>this._renderPageTransition(previousPage,nextPage),
+    syncActivePageBackdrop:(activePage)=>this._syncActivePageBackdropState({activePage}),
     renderRoot:()=>this.render(),
     clearPlacementState:()=>{
       this._activeMoveWidgetId="";
