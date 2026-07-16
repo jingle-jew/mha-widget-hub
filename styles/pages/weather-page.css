@@ -161,16 +161,22 @@
   -webkit-mask-image: linear-gradient(
     to bottom,
     #000 0%,
-    #000 54%,
-    rgba(0, 0, 0, .72) 59%,
-    transparent 66.667%
+    #000 40%,
+    rgba(0, 0, 0, .92) 46%,
+    rgba(0, 0, 0, .68) 53%,
+    rgba(0, 0, 0, .38) 59%,
+    rgba(0, 0, 0, .12) 64%,
+    transparent 68%
   );
   mask-image: linear-gradient(
     to bottom,
     #000 0%,
-    #000 54%,
-    rgba(0, 0, 0, .72) 59%,
-    transparent 66.667%
+    #000 40%,
+    rgba(0, 0, 0, .92) 46%,
+    rgba(0, 0, 0, .68) 53%,
+    rgba(0, 0, 0, .38) 59%,
+    rgba(0, 0, 0, .12) 64%,
+    transparent 68%
   );
 }
 
