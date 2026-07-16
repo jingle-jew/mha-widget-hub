@@ -44,6 +44,18 @@
 
     const legacyDevPrefix = ["mha", "v2", "dev"].join("-");
     const MOCK_MEDIA_ARTWORK_URL = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%237ee8ff'/%3E%3Cstop offset='48%25' stop-color='%237b61ff'/%3E%3Cstop offset='100%25' stop-color='%23ff7ac8'/%3E%3C/linearGradient%3E%3CradialGradient id='glow' cx='28%25' cy='20%25' r='60%25'%3E%3Cstop offset='0%25' stop-color='%23ffffff' stop-opacity='.72'/%3E%3Cstop offset='100%25' stop-color='%23ffffff' stop-opacity='0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='512' height='512' rx='112' fill='url(%23bg)'/%3E%3Crect width='512' height='512' rx='112' fill='url(%23glow)'/%3E%3Ccircle cx='372' cy='132' r='74' fill='%23ffffff' fill-opacity='.18'/%3E%3Ccircle cx='142' cy='372' r='96' fill='%23000000' fill-opacity='.16'/%3E%3Cpath d='M194 334V150h154v48H248v136a56 56 0 1 1-54-56z' fill='%23ffffff' fill-opacity='.92'/%3E%3C/svg%3E";
+    const DEV_WEATHER_SCENARIOS = Object.freeze([
+      { id: "sunny", label: "Soleil", condition: "sunny", isDay: true, cloudCoverage: 8, windSpeed: 6 },
+      { id: "partlycloudy", label: "Éclaircies", condition: "partlycloudy", isDay: true, cloudCoverage: 48, windSpeed: 12 },
+      { id: "cloudy", label: "Couvert", condition: "cloudy", isDay: true, cloudCoverage: 92, windSpeed: 18 },
+      { id: "rainy", label: "Pluie", condition: "rainy", isDay: true, cloudCoverage: 96, windSpeed: 24 },
+      { id: "pouring", label: "Forte pluie", condition: "pouring", isDay: true, cloudCoverage: 100, windSpeed: 38 },
+      { id: "lightning-rainy", label: "Orage", condition: "lightning-rainy", isDay: true, cloudCoverage: 100, windSpeed: 52 },
+      { id: "snowy", label: "Neige", condition: "snowy", isDay: true, cloudCoverage: 94, windSpeed: 16 },
+      { id: "fog", label: "Brouillard", condition: "fog", isDay: true, cloudCoverage: 100, windSpeed: 4 },
+      { id: "clear-night", label: "Nuit claire", condition: "clear-night", isDay: false, cloudCoverage: 10, windSpeed: 7 },
+    ]);
+    let devMockHass = null;
 
     function readDevPreference(key, legacyKey, fallback) {
       const current = localStorage.getItem(key);
@@ -512,10 +524,158 @@
       };
     }
 
+    function setDevWeatherScenario(scenarioId = "partlycloudy") {
+      if (!devMockHass) return false;
+      const scenario = DEV_WEATHER_SCENARIOS.find(item => item.id === scenarioId) || DEV_WEATHER_SCENARIOS[1];
+      const nextStates = { ...devMockHass.states };
+
+      ["weather.val_d_or_previsions", "weather.home"].forEach((entityId) => {
+        const current = nextStates[entityId];
+        if (!current) return;
+        nextStates[entityId] = {
+          ...current,
+          state: scenario.condition,
+          attributes: {
+            ...current.attributes,
+            cloud_coverage: scenario.cloudCoverage,
+            wind_speed: scenario.windSpeed,
+          },
+          last_updated: new Date().toISOString(),
+        };
+      });
+
+      const sun = nextStates["sun.sun"];
+      if (sun) {
+        nextStates["sun.sun"] = {
+          ...sun,
+          state: scenario.isDay ? "above_horizon" : "below_horizon",
+          last_updated: new Date().toISOString(),
+        };
+      }
+
+      devMockHass = { ...devMockHass, states: nextStates };
+      hub.hass = devMockHass;
+      hub.requestRender?.();
+      return true;
+    }
+
+    function ensureDevWeatherSwitcherStyle(root) {
+      if (!root || root.querySelector("style[data-dev-weather-switcher-style]")) return;
+      const style = document.createElement("style");
+      style.dataset.devWeatherSwitcherStyle = "true";
+      style.textContent = `
+        .mha-dev-weather-switcher {
+          grid-column: 1 / span 4 !important;
+          grid-row: 1 / span 2 !important;
+          display: grid;
+          grid-template-rows: auto 1fr;
+          gap: .65rem;
+          min-inline-size: 0;
+          padding: clamp(.8rem, 1.5vw, 1.1rem);
+          overflow: hidden;
+        }
+        .mha-dev-weather-switcher__title {
+          font-size: .78rem;
+          font-weight: 760;
+          letter-spacing: .02em;
+          opacity: .72;
+        }
+        .mha-dev-weather-switcher__buttons {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: .42rem;
+          align-content: center;
+          min-block-size: 0;
+        }
+        .mha-dev-weather-switcher button {
+          appearance: none;
+          min-inline-size: 0;
+          min-block-size: 2rem;
+          border: 0;
+          border-radius: 999px;
+          padding: .42rem .56rem;
+          color: inherit;
+          background: color-mix(in srgb, currentColor 12%, transparent);
+          font: inherit;
+          font-size: .68rem;
+          font-weight: 720;
+          line-height: 1.1;
+          cursor: pointer;
+        }
+        .mha-dev-weather-switcher button:hover,
+        .mha-dev-weather-switcher button[data-active="true"] {
+          background: color-mix(in srgb, var(--mha-accent, currentColor) 28%, transparent);
+        }
+      `;
+      root.append(style);
+    }
+
+    function shiftWeatherWidgetsBelowSwitcher(grid) {
+      [...grid.children].forEach((child) => {
+        if (child.dataset?.devWeatherSwitcher === "true") return;
+        if (!child.matches?.(".mha-widget")) return;
+        if (child.dataset.devWeatherRowShifted === "true") return;
+        const rowValue = child.style.gridRow || "";
+        const match = rowValue.match(/^\s*(-?\d+)\s*\/\s*span\s+(\d+)\s*$/);
+        if (!match) return;
+        child.style.gridRow = `${Number(match[1]) + 2} / span ${match[2]}`;
+        child.dataset.devWeatherRowShifted = "true";
+      });
+    }
+
+    function mountDevWeatherSwitcher() {
+      const root = hub.shadowRoot;
+      const grid = root?.querySelector?.('.mha-page-panel[data-page-type="weather"] .mha-grid');
+      if (!root || !grid) return false;
+      ensureDevWeatherSwitcherStyle(root);
+
+      let widget = grid.querySelector('[data-dev-weather-switcher="true"]');
+      if (!widget) {
+        widget = document.createElement("article");
+        widget.className = "mha-widget mha-dev-weather-switcher";
+        widget.dataset.devWeatherSwitcher = "true";
+        widget.dataset.widgetW = "4";
+        widget.dataset.widgetH = "2";
+        widget.dataset.widgetSize = "4x2";
+        widget.style.setProperty("--mha-widget-w", "4");
+        widget.style.setProperty("--mha-widget-h", "2");
+
+        const title = document.createElement("div");
+        title.className = "mha-dev-weather-switcher__title";
+        title.textContent = "Scène météo · dev";
+        const buttons = document.createElement("div");
+        buttons.className = "mha-dev-weather-switcher__buttons";
+        DEV_WEATHER_SCENARIOS.forEach((scenario) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.textContent = scenario.label;
+          button.dataset.weatherScenario = scenario.id;
+          button.onclick = () => setDevWeatherScenario(scenario.id);
+          buttons.append(button);
+        });
+        widget.append(title, buttons);
+        grid.insertBefore(widget, grid.firstChild);
+      }
+
+      shiftWeatherWidgetsBelowSwitcher(grid);
+      return true;
+    }
+
+    function observeDevWeatherSwitcher() {
+      const root = hub.shadowRoot;
+      if (!root || root.__mhaDevWeatherSwitcherObserver) return;
+      const observer = new MutationObserver(() => mountDevWeatherSwitcher());
+      observer.observe(root, { childList: true, subtree: true });
+      root.__mhaDevWeatherSwitcherObserver = observer;
+      mountDevWeatherSwitcher();
+    }
+
     if (!new URLSearchParams(location.search).has("no-hass")) {
       const attachMockHass = () => {
-        hub.hass = createMockHass();
+        devMockHass = createMockHass();
+        hub.hass = devMockHass;
         hub.requestRender?.();
+        observeDevWeatherSwitcher();
       };
 
       if (customElements.get("mha-widget-hub")) {
@@ -549,6 +709,8 @@
       setThemeStyle,
       setLayoutMode,
       setIconShape,
+      setDevWeatherScenario,
+      mountDevWeatherSwitcher,
     };
   </script>
 </body>
