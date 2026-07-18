@@ -93,57 +93,99 @@ function resolveWindFactor(windSpeedKmh = 0) {
   return Math.max(0.55, Math.min(2.1, curved));
 }
 
-function resolveCloudCount(condition = "sunny", cloudCover = NaN) {
-  if (condition === "sunny" || condition === "clear-night") {
-    return Number.isFinite(cloudCover) && cloudCover >= 22 ? 2 : 0;
-  }
-  if (condition === "partlycloudy") return 6;
-  if (condition === "fog") return 2;
-  if (STORM_CONDITIONS.has(condition)) return 17;
-  if (["rainy", "pouring", "hail", "snowy", "snowy-rainy"].includes(condition)) return 15;
-  if (condition === "cloudy") return 14;
-  if (Number.isFinite(cloudCover)) return Math.max(3, Math.min(14, Math.round(3 + (cloudCover / 9))));
-  return 4;
+const CLOUD_MASS_PROFILES = Object.freeze({
+  clear: Object.freeze({ minCount: 0, maxCount: 2, fallbackCover: 8, widthScale: 0.78, lowCloudShift: -0.04 }),
+  partly: Object.freeze({ minCount: 3, maxCount: 5, fallbackCover: 42, widthScale: 0.88, lowCloudShift: -0.02 }),
+  cloudy: Object.freeze({ minCount: 6, maxCount: 8, fallbackCover: 82, widthScale: 1.04, lowCloudShift: 0.02 }),
+  rain: Object.freeze({ minCount: 7, maxCount: 9, fallbackCover: 90, widthScale: 1.12, lowCloudShift: 0.06 }),
+  storm: Object.freeze({ minCount: 8, maxCount: 10, fallbackCover: 100, widthScale: 1.22, lowCloudShift: 0.1 }),
+  fog: Object.freeze({ minCount: 2, maxCount: 3, fallbackCover: 92, widthScale: 1.14, lowCloudShift: 0.12 }),
+  default: Object.freeze({ minCount: 3, maxCount: 5, fallbackCover: 48, widthScale: 0.94, lowCloudShift: 0 }),
+});
+
+const CLOUD_DEPTH_SEQUENCE = Object.freeze([
+  "far", "mid", "near", "mid", "far", "near", "mid", "far", "near", "mid",
+]);
+
+function resolveCloudProfile(condition = "sunny", cloudCover = NaN) {
+  let key = "default";
+  if (condition === "sunny" || condition === "clear-night") key = "clear";
+  else if (condition === "partlycloudy") key = "partly";
+  else if (condition === "fog") key = "fog";
+  else if (STORM_CONDITIONS.has(condition)) key = "storm";
+  else if (["rainy", "pouring", "hail"].includes(condition)) key = "rain";
+  else if (["cloudy", "snowy", "snowy-rainy"].includes(condition)) key = "cloudy";
+
+  const profile = CLOUD_MASS_PROFILES[key];
+  const cover = Number.isFinite(cloudCover)
+    ? Math.max(0, Math.min(100, cloudCover))
+    : profile.fallbackCover;
+  const density = cover / 100;
+  const count = key === "clear"
+    ? (cover < 22 ? 0 : Math.max(1, Math.round(profile.maxCount * density)))
+    : Math.round(profile.minCount + ((profile.maxCount - profile.minCount) * density));
+  return { ...profile, key, cover, density, count };
 }
 
-function appendClouds(scene, { condition = "sunny", cloudCover = NaN } = {}) {
-  const count = resolveCloudCount(condition, cloudCover);
+function appendClouds(scene, {
+  condition = "sunny",
+  cloudCover = NaN,
+  composition = {},
+  profile = resolveCloudProfile(condition, cloudCover),
+  seedKey = condition,
+} = {}) {
   const cloudField = createLayer("mha-weather-background__cloud-field");
-  const seedBase = [...condition].reduce((total, character) => total + character.charCodeAt(0), 0);
+  const seedBase = [...seedKey].reduce((total, character) => total + character.charCodeAt(0), 0);
+  const horizon = Number(composition.horizon) || 58;
+  const fieldHeight = Number(composition.cloudFieldHeight) || 66;
+  const fadeStart = Number(composition.cloudFadeStart) || 44;
+  cloudField.dataset.profile = profile.key;
 
-  for (let index = 0; index < count; index += 1) {
+  for (let index = 0; index < profile.count; index += 1) {
     const seed = seedBase + (index * 17.31);
-    const depthRoll = pseudoRandom(seed + 1);
-    const depth = depthRoll < 0.34 ? "far" : (depthRoll < 0.78 ? "mid" : "near");
+    const depth = CLOUD_DEPTH_SEQUENCE[index % CLOUD_DEPTH_SEQUENCE.length];
     const cloud = createLayer("mha-weather-background__cloud");
-    const width = depth === "far"
-      ? 16 + (pseudoRandom(seed + 2) * 16)
+    const baseWidth = depth === "far"
+      ? 68 + (pseudoRandom(seed + 2) * 38)
       : depth === "mid"
-        ? 24 + (pseudoRandom(seed + 2) * 24)
-        : 34 + (pseudoRandom(seed + 2) * 28);
-    const heightRatio = 0.2 + (pseudoRandom(seed + 3) * 0.14);
+        ? 82 + (pseudoRandom(seed + 2) * 48)
+        : 98 + (pseudoRandom(seed + 2) * 58);
+    const width = baseWidth * profile.widthScale;
+    const heightRatio = depth === "far"
+      ? 0.11 + (pseudoRandom(seed + 3) * 0.07)
+      : 0.13 + (pseudoRandom(seed + 3) * 0.09);
     const duration = depth === "far"
-      ? 88 + (pseudoRandom(seed + 4) * 74)
+      ? 118 + (pseudoRandom(seed + 4) * 78)
       : depth === "mid"
-        ? 62 + (pseudoRandom(seed + 4) * 58)
-        : 44 + (pseudoRandom(seed + 4) * 42);
-    const start = -58 - (pseudoRandom(seed + 5) * 72);
-    const travel = 195 + (pseudoRandom(seed + 6) * 110);
-    const topRange = depth === "far"
-      ? { min: -10, max: 70 }
+        ? 88 + (pseudoRandom(seed + 4) * 64)
+        : 66 + (pseudoRandom(seed + 4) * 50);
+    const start = -width - 18 - (pseudoRandom(seed + 5) * 44);
+    const travel = 225 + width + (pseudoRandom(seed + 6) * 70);
+    const verticalBand = depth === "far"
+      ? { min: 0.48, max: 0.74 }
       : depth === "mid"
-        ? { min: -8, max: 62 }
-        : { min: -12, max: 54 };
-    const top = topRange.min + (pseudoRandom(seed + 7) * (topRange.max - topRange.min));
-    const drift = -4 + (pseudoRandom(seed + 8) * 9);
+        ? { min: 0.16, max: 0.54 }
+        : { min: -0.1, max: 0.34 };
+    const topRatio = verticalBand.min
+      + profile.lowCloudShift
+      + (pseudoRandom(seed + 7) * (verticalBand.max - verticalBand.min));
+    const computedTop = Math.max(-8, Math.min(horizon - 3, horizon * topRatio));
+    const anchorsHorizon = index === 0 && ["cloudy", "rain", "storm", "fog"].includes(profile.key);
+    const topInScene = anchorsHorizon
+      ? Math.max(computedTop, Math.min(horizon - 3, fadeStart + 1))
+      : computedTop;
+    const top = (topInScene / fieldHeight) * 100;
+    const drift = -2.5 + (pseudoRandom(seed + 8) * 5.5);
+    const horizonFactor = topInScene >= fadeStart ? 0.64 : 1;
     const opacity = depth === "far"
-      ? 0.28 + (pseudoRandom(seed + 9) * 0.2)
+      ? 0.2 + (pseudoRandom(seed + 9) * 0.16)
       : depth === "mid"
-        ? 0.46 + (pseudoRandom(seed + 9) * 0.24)
-        : 0.58 + (pseudoRandom(seed + 9) * 0.22);
+        ? 0.32 + (pseudoRandom(seed + 9) * 0.2)
+        : 0.4 + (pseudoRandom(seed + 9) * 0.2);
 
     cloud.dataset.depth = depth;
     cloud.dataset.shape = String(index % 5);
+    cloud.dataset.horizon = String(topInScene >= fadeStart);
     cloud.style.setProperty("--mha-weather-cloud-width", `${width}vw`);
     cloud.style.setProperty("--mha-weather-cloud-height", `${width * heightRatio}vw`);
     cloud.style.setProperty("--mha-weather-cloud-top", `${top}%`);
@@ -154,7 +196,7 @@ function appendClouds(scene, { condition = "sunny", cloudCover = NaN } = {}) {
     cloud.style.setProperty("--mha-weather-cloud-duration", `${duration}s`);
     cloud.style.setProperty("--mha-weather-cloud-depth-speed-factor", String(depthSpeedFactor));
     cloud.style.setProperty("--mha-weather-cloud-delay", `${-(pseudoRandom(seed + 10) * duration)}s`);
-    cloud.style.setProperty("--mha-weather-cloud-opacity-local", String(opacity));
+    cloud.style.setProperty("--mha-weather-cloud-opacity-local", String(opacity * horizonFactor));
     cloudField.append(cloud);
   }
   scene.append(cloudField);
@@ -247,6 +289,7 @@ export function createWeatherPageBackground(page = {}, hass = null) {
     weatherEntity?.attributes?.wind_speed_unit || weatherEntity?.attributes?.wind_unit || "km/h",
   );
   const cloudCover = Number(weatherEntity?.attributes?.cloud_coverage);
+  const cloudProfile = resolveCloudProfile(condition, cloudCover);
   const cloudy = CLOUDY_CONDITIONS.has(condition);
 
   const scene = document.createElement("div");
@@ -255,11 +298,31 @@ export function createWeatherPageBackground(page = {}, hass = null) {
   scene.dataset.daytime = isDay ? "day" : "night";
   scene.dataset.period = period;
   scene.dataset.winter = String(winter);
-  scene.dataset.sceneKey = backgroundAsset.key;
+  scene.dataset.sceneKey = `${backgroundAsset.key}:cloud-${cloudProfile.key}-${cloudProfile.count}`;
+  scene.dataset.assetKey = backgroundAsset.key;
   scene.dataset.assetUrl = backgroundAsset.url;
   scene.dataset.cloudy = String(cloudy);
   scene.dataset.storm = String(STORM_CONDITIONS.has(condition));
+  scene.dataset.horizon = String(backgroundAsset.composition.horizon);
   scene.style.setProperty("--mha-weather-wind-factor", String(resolveWindFactor(windSpeedKmh)));
+  scene.style.setProperty("--mha-weather-scene-horizon", `${backgroundAsset.composition.horizon}%`);
+  scene.style.setProperty("--mha-weather-cloud-field-height", `${backgroundAsset.composition.cloudFieldHeight}%`);
+  scene.style.setProperty(
+    "--mha-weather-cloud-fade-start",
+    `${(backgroundAsset.composition.cloudFadeStart / backgroundAsset.composition.cloudFieldHeight) * 100}%`,
+  );
+  scene.style.setProperty(
+    "--mha-weather-cloud-fade-soft",
+    `${(backgroundAsset.composition.cloudFadeSoft / backgroundAsset.composition.cloudFieldHeight) * 100}%`,
+  );
+  scene.style.setProperty(
+    "--mha-weather-cloud-mist-start",
+    `${((backgroundAsset.composition.horizon - 9) / backgroundAsset.composition.cloudFieldHeight) * 100}%`,
+  );
+  scene.style.setProperty(
+    "--mha-weather-horizon-mist-opacity",
+    String(backgroundAsset.composition.horizonMistOpacity),
+  );
   scene.style.setProperty(
     "--mha-weather-cloud-opacity",
     String(Number.isFinite(cloudCover) ? Math.max(0.38, Math.min(0.96, cloudCover / 100)) : (cloudy ? 0.82 : 0.42)),
@@ -278,7 +341,13 @@ export function createWeatherPageBackground(page = {}, hass = null) {
 
   if (condition === "clear-night") appendStars(scene, 54);
   if (condition === "fog") appendFog(scene);
-  appendClouds(scene, { condition, cloudCover });
+  appendClouds(scene, {
+    condition,
+    cloudCover,
+    composition: backgroundAsset.composition,
+    profile: cloudProfile,
+    seedKey: backgroundAsset.key,
+  });
 
   if (PRECIPITATION_CONDITIONS.has(condition)) {
     const rainIntensity = STORM_CONDITIONS.has(condition)

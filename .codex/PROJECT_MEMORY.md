@@ -1,6 +1,6 @@
 # Mémoire persistante — MHA Widget Hub
 
-Dernière consolidation : 2026-07-15
+Dernière consolidation : 2026-07-18
 
 Ce fichier contient les connaissances durables qui seraient coûteuses à redécouvrir.
 Le code et les tests actuels restent la source de vérité. Les instructions de travail
@@ -60,6 +60,25 @@ appartiennent à `AGENTS.md`.
   `createSelectControl` et `createRadioControl` fournis par
   `widget-config-popup.js`, afin de rester découplés du DOM interne des contrôles
   partagés.
+
+### 2026-07-18 — Composer les nuages météo avec chaque paysage
+
+- **Statut :** confirmé.
+- **Décision :** chaque WebP météo fournit un petit profil de composition
+  déclaratif dans `weather-background-assets.js` : horizon perçu, hauteur utile
+  du champ nuageux, début et douceur du fondu, intensité de la brume. Le
+  générateur conserve ses profondeurs `far`/`mid`/`near`, son mouvement et sa
+  génération procédurale, mais construit quelques grandes nappes chevauchées
+  dont la distribution est pilotée par la météo et ce profil de scène.
+- **Pourquoi :** une hauteur globale et de petits nuages placés indépendamment
+  donnent l'impression d'une couche posée devant la photographie. Le contrat de
+  composition permet aux nappes basses de se dissoudre autour du relief et à la
+  brume de prolonger naturellement l'atmosphère déjà présente dans le WebP.
+- **Conséquence :** garder les paysages comme source visuelle principale; pour
+  calibrer ou ajouter un asset météo, ajuster d'abord son profil de composition
+  plutôt que créer une exception CSS ou analyser l'image au runtime. Les
+  changements fins d'opacité et de vent se synchronisent en place; seul un
+  changement du nombre de nappes réutilise le crossfade de scène existant.
 
 ## Pièges connus
 

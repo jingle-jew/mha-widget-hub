@@ -258,6 +258,9 @@ export function createRenderPipeline(host, options = {}) {
     const nextScene = createWeatherPageBackground(activePage, host._hass);
     if (currentScene?.dataset.sceneKey === nextScene.dataset.sceneKey) {
       host._weatherBackgroundPendingSceneKey = "";
+      ["--mha-weather-wind-factor", "--mha-weather-cloud-opacity"].forEach(property => {
+        currentScene.style.setProperty(property, nextScene.style.getPropertyValue(property));
+      });
       currentScene.dataset.active = "true";
       scenes.filter(scene => scene !== currentScene).forEach(scene => scene.remove?.());
       return;
@@ -287,6 +290,11 @@ export function createRenderPipeline(host, options = {}) {
     if (!currentScene) {
       nextScene.dataset.active = "true";
       background.append(nextScene);
+      return;
+    }
+
+    if (currentScene.dataset.assetKey === nextScene.dataset.assetKey) {
+      mountNextScene();
       return;
     }
 
