@@ -18,7 +18,36 @@
   overflow: hidden;
   pointer-events: none;
   background: var(--mha-weather-sky-background);
-  transition: background 1.8s ease, filter 1.8s ease;
+  opacity: 0;
+  transition: opacity 1.8s ease, background 1.8s ease, filter 1.8s ease;
+}
+
+.mha-weather-background[data-active="true"] {
+  opacity: 1;
+}
+
+.mha-weather-background__landscape {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  transform: scale(1.015);
+  filter: saturate(1.02) contrast(1.01);
+  will-change: opacity, transform;
+}
+
+.mha-weather-background[data-daytime="night"] .mha-weather-background__landscape {
+  filter: saturate(.94) brightness(.92) contrast(1.04);
+}
+
+.mha-weather-background[data-condition="fog"] .mha-weather-background__landscape {
+  filter: saturate(.78) contrast(.96);
+}
+
+.mha-weather-background[data-storm="true"] .mha-weather-background__landscape {
+  filter: saturate(.86) brightness(.86) contrast(1.08);
 }
 
 .mha-weather-background[data-daytime="day"] {
@@ -106,6 +135,7 @@
 }
 
 .mha-weather-background__sky,
+.mha-weather-background__landscape,
 .mha-weather-background__light,
 .mha-weather-background__haze,
 .mha-weather-background__readability,
@@ -118,7 +148,12 @@
   inset: 0;
 }
 
+.mha-weather-background__sky {
+  z-index: 0;
+}
+
 .mha-weather-background__light {
+  z-index: 2;
   inset: -18% -12% auto auto;
   inline-size: min(52vw, 42rem);
   aspect-ratio: 1;
@@ -149,6 +184,7 @@
 }
 
 .mha-weather-background__haze {
+  z-index: 2;
   inset: auto -12% -12% -12%;
   block-size: 54%;
   background: linear-gradient(180deg, transparent, var(--mha-weather-haze-color));
@@ -156,8 +192,9 @@
 }
 
 .mha-weather-background__cloud-field {
+  z-index: 2;
   overflow: hidden;
-  opacity: var(--mha-weather-cloud-opacity);
+  opacity: calc(var(--mha-weather-cloud-opacity) * .42);
   -webkit-mask-image: linear-gradient(
     to bottom,
     #000 0%,
@@ -482,6 +519,11 @@
 }
 
 @media (max-width: 767px) {
+  .mha-weather-background__landscape {
+    background-position: 52% center;
+    transform: scale(1.03);
+  }
+
   .mha-weather-background__cloud {
     inline-size: clamp(11rem, var(--mha-weather-cloud-width, 34vw), 31rem);
     block-size: clamp(4rem, var(--mha-weather-cloud-height, 13vw), 12rem);
@@ -493,6 +535,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .mha-weather-background {
+    transition-duration: .2s;
+  }
+
   .mha-weather-background *,
   .mha-weather-background *::before,
   .mha-weather-background *::after {

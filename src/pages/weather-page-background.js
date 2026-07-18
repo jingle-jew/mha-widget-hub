@@ -1,3 +1,5 @@
+import { resolveWeatherBackgroundAsset } from "./weather-background-assets.js";
+
 const PRECIPITATION_CONDITIONS = new Set([
   "rainy",
   "pouring",
@@ -45,6 +47,30 @@ function createLayer(className) {
   layer.className = className;
   layer.setAttribute("aria-hidden", "true");
   return layer;
+}
+
+function resolveWeatherPeriod(hass = null, isDay = true, now = new Date()) {
+  const sun = hass?.states?.["sun.sun"] || null;
+  const nextRising = Date.parse(sun?.attributes?.next_rising || "");
+  const nextSetting = Date.parse(sun?.attributes?.next_setting || "");
+  const nowMs = now.getTime();
+  const transitionWindowMs = 45 * 60 * 1000;
+
+  if (isDay && Number.isFinite(nextSetting) && nextSetting - nowMs <= transitionWindowMs && nextSetting >= nowMs) {
+    return "sunset";
+  }
+  if (!isDay && Number.isFinite(nextRising) && nextRising - nowMs <= transitionWindowMs && nextRising >= nowMs) {
+    return "dawn";
+  }
+  return isDay ? "day" : "night";
+}
+
+function resolveWinterScene(condition = "sunny", weatherEntity = null, now = new Date()) {
+  if (SNOW_CONDITIONS.has(condition)) return true;
+  const temperature = Number(weatherEntity?.attributes?.temperature);
+  if (Number.isFinite(temperature) && temperature <= 1) return true;
+  const month = now.getMonth();
+  return month === 11 || month <= 1;
 }
 
 function pseudoRandom(seed) {
@@ -211,7 +237,11 @@ function appendFog(scene) {
 export function createWeatherPageBackground(page = {}, hass = null) {
   const weatherEntity = resolveWeatherEntity(page, hass);
   const condition = normalizeCondition(weatherEntity?.state);
+  const now = new Date();
   const isDay = resolveIsDay(hass);
+  const period = resolveWeatherPeriod(hass, isDay, now);
+  const winter = resolveWinterScene(condition, weatherEntity, now);
+  const backgroundAsset = resolveWeatherBackgroundAsset({ condition, period, winter });
   const windSpeedKmh = normalizeWindSpeedKmh(
     weatherEntity?.attributes?.wind_speed,
     weatherEntity?.attributes?.wind_speed_unit || weatherEntity?.attributes?.wind_unit || "km/h",
@@ -223,6 +253,10 @@ export function createWeatherPageBackground(page = {}, hass = null) {
   scene.className = "mha-weather-background";
   scene.dataset.condition = condition;
   scene.dataset.daytime = isDay ? "day" : "night";
+  scene.dataset.period = period;
+  scene.dataset.winter = String(winter);
+  scene.dataset.sceneKey = backgroundAsset.key;
+  scene.dataset.assetUrl = backgroundAsset.url;
   scene.dataset.cloudy = String(cloudy);
   scene.dataset.storm = String(STORM_CONDITIONS.has(condition));
   scene.style.setProperty("--mha-weather-wind-factor", String(resolveWindFactor(windSpeedKmh)));
@@ -232,8 +266,12 @@ export function createWeatherPageBackground(page = {}, hass = null) {
   );
   scene.setAttribute("aria-hidden", "true");
 
+  const landscape = createLayer("mha-weather-background__landscape");
+  landscape.style.backgroundImage = `url("${backgroundAsset.url}")`;
+
   scene.append(
     createLayer("mha-weather-background__sky"),
+    landscape,
     createLayer("mha-weather-background__light"),
     createLayer("mha-weather-background__haze"),
   );

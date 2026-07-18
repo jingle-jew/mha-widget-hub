@@ -242,19 +242,78 @@ export function createRenderPipeline(host, options = {}) {
     activePage = getActivePage(host),
   } = {}) {
     const background = host.shadowRoot?.querySelector?.(".mha-background") || null;
-    const currentScene = background?.querySelector?.(".mha-weather-background") || null;
+    const scenes = [...background?.querySelectorAll?.(".mha-weather-background") || []];
+    const currentScene = scenes.find(scene => scene.dataset.active === "true") || scenes.at(-1) || null;
     const weatherActive = isWeatherPage(activePage);
     host.dataset.weatherPageActive = String(weatherActive);
 
     if (!background) return;
     if (!weatherActive) {
-      currentScene?.remove?.();
+      host._weatherBackgroundRequestId = (host._weatherBackgroundRequestId || 0) + 1;
+      host._weatherBackgroundPendingSceneKey = "";
+      scenes.forEach(scene => scene.remove?.());
       return;
     }
 
     const nextScene = createWeatherPageBackground(activePage, host._hass);
-    if (currentScene) currentScene.replaceWith(nextScene);
-    else background.append(nextScene);
+    if (currentScene?.dataset.sceneKey === nextScene.dataset.sceneKey) {
+      host._weatherBackgroundPendingSceneKey = "";
+      currentScene.dataset.active = "true";
+      scenes.filter(scene => scene !== currentScene).forEach(scene => scene.remove?.());
+      return;
+    }
+
+    if (host._weatherBackgroundPendingSceneKey === nextScene.dataset.sceneKey) return;
+
+    const mountNextScene = () => {
+      const requestId = (host._weatherBackgroundRequestId || 0) + 1;
+      host._weatherBackgroundRequestId = requestId;
+      host._weatherBackgroundPendingSceneKey = "";
+      nextScene.dataset.active = "false";
+      background.append(nextScene);
+      requestAnimationFrame(() => {
+        if (host._weatherBackgroundRequestId !== requestId || !nextScene.isConnected) return;
+        currentScene?.setAttribute?.("data-active", "false");
+        nextScene.dataset.active = "true";
+        setTimeout(() => {
+          if (host._weatherBackgroundRequestId !== requestId) return;
+          [...background.querySelectorAll(".mha-weather-background")]
+            .filter(scene => scene !== nextScene)
+            .forEach(scene => scene.remove?.());
+        }, 1900);
+      });
+    };
+
+    if (!currentScene) {
+      nextScene.dataset.active = "true";
+      background.append(nextScene);
+      return;
+    }
+
+    const assetUrl = String(nextScene.dataset.assetUrl || "").trim();
+    if (!assetUrl || typeof globalThis.Image !== "function") {
+      mountNextScene();
+      return;
+    }
+
+    const preloadRequestId = (host._weatherBackgroundRequestId || 0) + 1;
+    host._weatherBackgroundRequestId = preloadRequestId;
+    host._weatherBackgroundPendingSceneKey = nextScene.dataset.sceneKey;
+    const image = new globalThis.Image();
+    image.onload = () => {
+      Promise.resolve(image.decode?.())
+        .catch(() => {})
+        .then(() => {
+          if (host._weatherBackgroundRequestId !== preloadRequestId) return;
+          mountNextScene();
+        });
+    };
+    image.onerror = () => {
+      if (host._weatherBackgroundRequestId !== preloadRequestId) return;
+      host._weatherBackgroundPendingSceneKey = "";
+    };
+    image.src = assetUrl;
+    if (image.complete && image.naturalWidth) queueMicrotask(() => image.onload?.());
   }
 
   function syncMediaPageBackdropState({
