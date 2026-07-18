@@ -117,11 +117,11 @@ function appendClouds(scene, { condition = "sunny", cloudCover = NaN } = {}) {
     const depth = depthRoll < 0.34 ? "far" : (depthRoll < 0.78 ? "mid" : "near");
     const cloud = createLayer("mha-weather-background__cloud");
     const width = depth === "far"
-      ? 18 + (pseudoRandom(seed + 2) * 18)
+      ? 16 + (pseudoRandom(seed + 2) * 16)
       : depth === "mid"
-        ? 28 + (pseudoRandom(seed + 2) * 28)
-        : 42 + (pseudoRandom(seed + 2) * 36);
-    const heightRatio = 0.28 + (pseudoRandom(seed + 3) * 0.2);
+        ? 24 + (pseudoRandom(seed + 2) * 24)
+        : 34 + (pseudoRandom(seed + 2) * 28);
+    const heightRatio = 0.2 + (pseudoRandom(seed + 3) * 0.14);
     const duration = depth === "far"
       ? 88 + (pseudoRandom(seed + 4) * 74)
       : depth === "mid"
@@ -130,17 +130,17 @@ function appendClouds(scene, { condition = "sunny", cloudCover = NaN } = {}) {
     const start = -58 - (pseudoRandom(seed + 5) * 72);
     const travel = 195 + (pseudoRandom(seed + 6) * 110);
     const topRange = depth === "far"
-      ? { min: -10, max: 55 }
+      ? { min: -18, max: 42 }
       : depth === "mid"
-        ? { min: -8, max: 48 }
-        : { min: -12, max: 40 };
+        ? { min: -14, max: 36 }
+        : { min: -20, max: 30 };
     const top = topRange.min + (pseudoRandom(seed + 7) * (topRange.max - topRange.min));
     const drift = -4 + (pseudoRandom(seed + 8) * 9);
     const opacity = depth === "far"
-      ? 0.28 + (pseudoRandom(seed + 9) * 0.24)
+      ? 0.18 + (pseudoRandom(seed + 9) * 0.18)
       : depth === "mid"
-        ? 0.5 + (pseudoRandom(seed + 9) * 0.3)
-        : 0.66 + (pseudoRandom(seed + 9) * 0.28);
+        ? 0.3 + (pseudoRandom(seed + 9) * 0.22)
+        : 0.42 + (pseudoRandom(seed + 9) * 0.2);
 
     cloud.dataset.depth = depth;
     cloud.dataset.shape = String(index % 5);

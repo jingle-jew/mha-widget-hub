@@ -193,27 +193,25 @@
 
 .mha-weather-background__cloud-field {
   z-index: 2;
+  inset: 0 0 auto;
+  block-size: 36%;
   overflow: hidden;
-  opacity: calc(var(--mha-weather-cloud-opacity) * .42);
+  opacity: calc(var(--mha-weather-cloud-opacity) * .34);
   -webkit-mask-image: linear-gradient(
     to bottom,
     #000 0%,
-    #000 40%,
-    rgba(0, 0, 0, .92) 46%,
-    rgba(0, 0, 0, .68) 53%,
-    rgba(0, 0, 0, .38) 59%,
-    rgba(0, 0, 0, .12) 64%,
-    transparent 68%
+    #000 58%,
+    rgba(0, 0, 0, .78) 72%,
+    rgba(0, 0, 0, .34) 86%,
+    transparent 100%
   );
   mask-image: linear-gradient(
     to bottom,
     #000 0%,
-    #000 40%,
-    rgba(0, 0, 0, .92) 46%,
-    rgba(0, 0, 0, .68) 53%,
-    rgba(0, 0, 0, .38) 59%,
-    rgba(0, 0, 0, .12) 64%,
-    transparent 68%
+    #000 58%,
+    rgba(0, 0, 0, .78) 72%,
+    rgba(0, 0, 0, .34) 86%,
+    transparent 100%
   );
 }
 
@@ -238,41 +236,38 @@
   content: "";
   position: absolute;
   inset: 0;
-  border-radius: 48% 52% 42% 58% / 62% 54% 46% 38%;
+  border-radius: 50%;
 }
 
 .mha-weather-background__cloud::before {
   background:
-    radial-gradient(ellipse at 12% 66%, color-mix(in srgb, var(--mha-weather-cloud-back) 88%, transparent) 0 18%, transparent 34%),
-    radial-gradient(ellipse at 26% 48%, var(--mha-weather-cloud-front) 0 28%, transparent 48%),
-    radial-gradient(ellipse at 43% 34%, var(--mha-weather-cloud-front) 0 31%, transparent 51%),
-    radial-gradient(ellipse at 61% 44%, color-mix(in srgb, var(--mha-weather-cloud-front) 94%, var(--mha-weather-cloud-back)) 0 30%, transparent 50%),
-    radial-gradient(ellipse at 79% 58%, var(--mha-weather-cloud-front) 0 26%, transparent 47%),
-    radial-gradient(ellipse at 92% 70%, color-mix(in srgb, var(--mha-weather-cloud-back) 86%, transparent) 0 18%, transparent 36%),
-    linear-gradient(180deg, transparent 28%, var(--mha-weather-cloud-front) 44%, var(--mha-weather-cloud-back) 82%, transparent 100%);
-  filter: blur(1.2px);
+    radial-gradient(ellipse at 28% 54%, color-mix(in srgb, var(--mha-weather-cloud-front) 78%, transparent) 0 24%, transparent 58%),
+    radial-gradient(ellipse at 52% 42%, color-mix(in srgb, var(--mha-weather-cloud-front) 72%, transparent) 0 28%, transparent 62%),
+    radial-gradient(ellipse at 76% 58%, color-mix(in srgb, var(--mha-weather-cloud-back) 62%, transparent) 0 24%, transparent 58%),
+    linear-gradient(180deg, transparent 18%, color-mix(in srgb, var(--mha-weather-cloud-front) 58%, transparent) 48%, color-mix(in srgb, var(--mha-weather-cloud-back) 42%, transparent) 78%, transparent 100%);
+  filter: blur(7px);
 }
 
 .mha-weather-background__cloud::after {
-  inset: 24% 7% 2%;
+  inset: 18% 5% 4%;
   background:
-    radial-gradient(ellipse at 24% 62%, rgba(73, 92, 108, .22), transparent 42%),
-    radial-gradient(ellipse at 63% 68%, rgba(68, 87, 104, .26), transparent 46%),
-    linear-gradient(180deg, transparent 22%, rgba(74, 92, 107, .12) 58%, rgba(52, 69, 83, .28) 100%);
-  filter: blur(5px);
+    radial-gradient(ellipse at 34% 66%, color-mix(in srgb, var(--mha-weather-cloud-back) 28%, transparent), transparent 58%),
+    radial-gradient(ellipse at 68% 64%, color-mix(in srgb, var(--mha-weather-cloud-back) 24%, transparent), transparent 62%);
+  filter: blur(12px);
   mix-blend-mode: multiply;
+  opacity: .72;
 }
 
 .mha-weather-background__cloud[data-depth="far"] {
-  filter: blur(2.8px) saturate(.78);
+  filter: blur(5px) saturate(.72);
 }
 
 .mha-weather-background__cloud[data-depth="mid"] {
-  filter: blur(1.2px) saturate(.9);
+  filter: blur(3px) saturate(.82);
 }
 
 .mha-weather-background__cloud[data-depth="near"] {
-  filter: blur(.35px) contrast(1.02);
+  filter: blur(1.8px) saturate(.88) contrast(.96);
 }
 
 .mha-weather-background__cloud[data-shape="1"]::before {
@@ -524,9 +519,13 @@
     transform: scale(1.03);
   }
 
+  .mha-weather-background__cloud-field {
+    block-size: 40%;
+  }
+
   .mha-weather-background__cloud {
-    inline-size: clamp(11rem, var(--mha-weather-cloud-width, 34vw), 31rem);
-    block-size: clamp(4rem, var(--mha-weather-cloud-height, 13vw), 12rem);
+    inline-size: clamp(10rem, var(--mha-weather-cloud-width, 30vw), 27rem);
+    block-size: clamp(3.2rem, var(--mha-weather-cloud-height, 9vw), 8.5rem);
   }
 
   .mha-weather-background__cloud[data-depth="far"]:nth-child(3n) {
