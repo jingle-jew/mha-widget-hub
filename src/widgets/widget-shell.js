@@ -34,6 +34,7 @@ export function createWidgetShell(
     onCycleVariant,
     onConfigure,
     onConfigureSlot,
+    onUpdateConfig,
     hass,
     entityVisibilityConfig,
   } = {},
@@ -93,6 +94,14 @@ export function createWidgetShell(
     event.preventDefault();
     event.stopPropagation();
     onConfigureSlot?.(detail.widgetId || widget.id, detail.buttonIndex);
+  });
+
+  shell.addEventListener("mha-update-widget-config", (event) => {
+    const patch = event?.detail?.patch;
+    if (!patch || typeof patch !== "object" || Array.isArray(patch)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    onUpdateConfig?.(widget.id, patch);
   });
 
   const tools = document.createElement("div");

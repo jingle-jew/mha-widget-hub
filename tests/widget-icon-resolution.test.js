@@ -19,20 +19,27 @@ function createMockElement(tagName, namespaceURI = null) {
     dataset: {},
     attributes: {},
     children: [],
+    listeners: {},
     append(...nodes) {
       this.children.push(...nodes);
     },
     setAttribute(name, value) {
       this.attributes[name] = value;
     },
-    addEventListener() {},
+    addEventListener(name, listener) {
+      this.listeners[name] = listener;
+    },
     dispatchEvent() {},
     closest() {
       return null;
     },
     querySelector(selector) {
       if (selector === ".mha-toggle-input") {
-        return this.children.find(child => child.className === "mha-toggle-input") || null;
+        if (this.className === "mha-toggle-input") return this;
+        for (const child of this.children) {
+          const match = child.querySelector?.(selector);
+          if (match) return match;
+        }
       }
       return null;
     },
@@ -88,7 +95,7 @@ test("toggle widget uses the resolved automatic icon name", () => withMockDocume
     label: "Lampe salon",
     icon: "auto",
   });
-  const iconBubble = root.children[0];
+  const iconBubble = root.children[0].children[0];
 
   assert.equal(iconBubble.dataset.icon, "lamp");
   assert.equal(iconBubble.children[0].dataset.iconSymbol, "lamp");
@@ -101,8 +108,41 @@ test("toggle widget treats the legacy home icon as implicit and resolves from la
     icon: "home",
     iconCategory: "home",
   });
-  const iconBubble = root.children[0];
+  const iconBubble = root.children[0].children[0];
 
   assert.equal(iconBubble.dataset.icon, "coffee");
   assert.equal(iconBubble.children[0].dataset.iconSymbol, "coffee");
+}));
+
+test("light details open only from the informative button, independently from the toggle", () => withMockDocument(() => {
+  let detailsOpened = 0;
+  let toggled = 0;
+  const root = createToggleWidgetContent({
+    kind: "toggle",
+    entityId: "light.salon",
+    label: "Salon",
+  }, {
+    onOpenDetails: () => { detailsOpened += 1; },
+    onToggle: () => { toggled += 1; },
+  });
+  const info = root.children[0];
+  const toggleInput = root.children[1].querySelector(".mha-toggle-input");
+
+  assert.equal(info.tagName, "button");
+  assert.equal(root.dataset.lightDetailsSupported, "true");
+  info.listeners.click({ preventDefault() {}, stopPropagation() {} });
+  assert.equal(detailsOpened, 1);
+
+  toggleInput.checked = true;
+  toggleInput.listeners.change({ currentTarget: toggleInput });
+  assert.equal(toggled, 1);
+  assert.equal(detailsOpened, 1);
+}));
+
+test("switches and booleans keep a non-interactive information surface", () => withMockDocument(() => {
+  for (const entityId of ["switch.coffee", "input_boolean.away"]) {
+    const root = createToggleWidgetContent({ kind: "toggle", entityId, label: "Control" });
+    assert.equal(root.children[0].tagName, "span");
+    assert.equal(root.dataset.lightDetailsSupported, "false");
+  }
 }));

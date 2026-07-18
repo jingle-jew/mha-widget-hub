@@ -24,6 +24,11 @@ import {
 } from "../widget-config/toggle-config.js";
 import { WIDGET_PREVIEW_DATA } from "./widget-preview-data.js";
 import { t } from "../i18n/index.js";
+import {
+  canOpenLightControlPopup,
+  openLightControlPopup,
+} from "../light-control/light-control-popup.js";
+import { normalizeLightControlConfig } from "../light-control/light-control-config.js";
 
 export const TOGGLE_WIDGET_KIND = "toggle";
 
@@ -68,9 +73,11 @@ export function createToggleWidgetContent(widget = {}, {
   widgetH = Number(widget?.h) || 1,
   disabled = false,
   bindToHass = false,
+  interactive = true,
   hass,
   entityVisibilityConfig,
   onToggle,
+  onOpenDetails,
 } = {}) {
   const data = getToggleWidgetData(widget);
   const entityId = getWidgetEntityId(widget);
@@ -80,6 +87,7 @@ export function createToggleWidgetContent(widget = {}, {
     entityAvailable: false,
     entityAllowed: true,
   };
+  let detailPopup = null;
 
   const root = document.createElement("div");
   root.className = ["mha-toggle-widget", className].filter(Boolean).join(" ");
@@ -111,6 +119,31 @@ export function createToggleWidgetContent(widget = {}, {
 
   textStack.append(label, state);
 
+  const detailsSupported = canOpenLightControlPopup(widget, { interactive });
+  const info = document.createElement(detailsSupported ? "button" : "span");
+  info.className = "mha-toggle-widget-info";
+  if (detailsSupported) {
+    info.type = "button";
+    info.setAttribute("aria-label", t("lightControl.open", `Open controls for ${data.label}`));
+    info.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (!context.entityAllowed) return;
+      if (onOpenDetails) {
+        onOpenDetails(event, info);
+        return;
+      }
+      detailPopup = openLightControlPopup({
+        widget,
+        hass: context.hass,
+        source: root,
+        opener: info,
+        onClose: () => { detailPopup = null; },
+      });
+    });
+  }
+  info.append(iconBubble, textStack);
+
   const toggle = createToggle({
     label: data.label,
     checked: data.checked,
@@ -127,7 +160,8 @@ export function createToggleWidgetContent(widget = {}, {
     },
   });
 
-  root.append(iconBubble, textStack, toggle);
+  root.dataset.lightDetailsSupported = String(detailsSupported);
+  root.append(info, toggle);
 
   if (bindToHass) {
     root.__mhaUpdateFromHass = nextHass => {
@@ -153,6 +187,8 @@ export function createToggleWidgetContent(widget = {}, {
       root.dataset.entityAllowed = String(context.entityAllowed);
       root.dataset.toggleSupported = String(Boolean(supportsToggle));
       root.dataset.checked = String(checked);
+      detailPopup?.__mhaUpdateFromHass?.(nextHass);
+      if (detailsSupported) info.disabled = !context.entityAllowed;
       if (input) {
         input.checked = checked;
         input.disabled = !supportsToggle;
@@ -178,6 +214,9 @@ export function createToggleWidgetContent(widget = {}, {
       context.entityState = null;
       context.entityAvailable = false;
       context.entityAllowed = true;
+      detailPopup?.__mhaDestroy?.();
+      detailPopup?.remove?.();
+      detailPopup = null;
       delete root.__mhaUpdateFromHass;
     };
 
@@ -203,6 +242,7 @@ export const TOGGLE_WIDGET_CONTENT_RENDERER = Object.freeze({
     bindToHass: true,
     hass,
     entityVisibilityConfig,
+    interactive,
   }),
 });
 
@@ -243,9 +283,15 @@ export const TOGGLE_WIDGET_DEFINITION = Object.freeze({
     weatherEntityConfigurable: false,
   }),
   storage: Object.freeze({
-    normalize: (widget = {}) => ({
-      entityId: widget.entityId || widget.entity_id || "",
-    }),
+    normalize: (widget = {}) => {
+      const entityId = widget.entityId || widget.entity_id || "";
+      return {
+        entityId,
+        lightControl: getEntityDomain(entityId) === "light"
+          ? normalizeLightControlConfig(widget.lightControl)
+          : undefined,
+      };
+    },
   }),
   shell: Object.freeze({
     configureMode: "config",

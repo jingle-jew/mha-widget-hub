@@ -47,6 +47,7 @@ export class WidgetSurfaceCoordinator {
     finishResize = () => {},
     openWidgetConfig = () => {},
     openScenesButtonConfig = () => {},
+    updateWidgetConfig = () => false,
     createWidgetShellFn = createWidgetShell,
     rerenderWidgetContentFn = rerenderRegisteredWidgetContent,
     buildWidgetShellStateFn = buildWidgetShellState,
@@ -92,6 +93,7 @@ export class WidgetSurfaceCoordinator {
     this.finishResize = (...args) => finishResize(...args);
     this.openWidgetConfig = (...args) => openWidgetConfig(...args);
     this.openScenesButtonConfig = (...args) => openScenesButtonConfig(...args);
+    this.updateWidgetConfig = (...args) => updateWidgetConfig(...args);
     this.createWidgetShellFn = (...args) => createWidgetShellFn(...args);
     this.rerenderWidgetContentFn = (...args) => rerenderWidgetContentFn(...args);
     this.buildWidgetShellStateFn = (...args) => buildWidgetShellStateFn(...args);
@@ -132,6 +134,7 @@ export class WidgetSurfaceCoordinator {
       onCycleVariant: (id) => this.cycleVariant(id),
       onConfigure: (id) => this.openWidgetConfig(id),
       onConfigureSlot: (id, slotIndex) => this.openScenesButtonConfig(id, slotIndex),
+      onUpdateConfig: (id, patch) => this.updateWidgetConfig(id, patch),
     };
   }
 

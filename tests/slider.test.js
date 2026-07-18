@@ -361,6 +361,10 @@ test("mobile slider arms after the delay and dispatches input/change only when a
     const input = slider.querySelector(".mha-slider-input");
     input.rect = { top: 0, left: 0, width: 100, height: 24 };
     attachToHost(slider, { layout: "mobile" });
+    slider.__mhaSliderApi.setRange(1000, 5000);
+
+    assert.equal(input.min, "1000");
+    assert.equal(input.max, "5000");
 
     slider.dispatchEvent({
       type: "pointerdown",
@@ -384,8 +388,8 @@ test("mobile slider arms after the delay and dispatches input/change only when a
     });
 
     assert.equal(slider.classList.contains("is-slider-dragging"), false);
-    assert.equal(inputs.at(-1), 80);
-    assert.equal(changes.at(-1), 80);
+    assert.equal(inputs.at(-1), 4200);
+    assert.equal(changes.at(-1), 4200);
   } finally {
     globalThis.document = previousDocument;
     globalThis.window = previousWindow;

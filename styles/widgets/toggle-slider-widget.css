@@ -46,11 +46,15 @@
 
 .combined-toggle-slider__toggle > .mha-toggle-widget {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   column-gap: var(--mha-toggle-slider-gap);
   min-inline-size: 0;
   overflow: hidden;
+}
+
+.combined-toggle-slider__toggle .mha-toggle-widget-info {
+  column-gap: var(--mha-toggle-slider-gap);
 }
 
 .combined-toggle-slider__slider {

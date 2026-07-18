@@ -54,6 +54,7 @@ function createHarness(overrides = {}) {
     finishResize: 0,
     configure: [],
     configureSlot: [],
+    updateConfig: [],
     wireDrag: [],
     saveCurrentWidgetPositions: [],
     saveWidgets: 0,
@@ -129,6 +130,7 @@ function createHarness(overrides = {}) {
     finishResize: () => { calls.finishResize += 1; },
     openWidgetConfig: (id) => { calls.configure.push(id); },
     openScenesButtonConfig: (id, slotIndex) => { calls.configureSlot.push([id, slotIndex]); },
+    updateWidgetConfig: (id, patch) => { calls.updateConfig.push([id, patch]); return true; },
     createWidgetShellFn: (widget, props) => {
       calls.createWidgetShell.push({ widget, props });
       const node = new FakeNode(".mha-widget");
@@ -197,6 +199,7 @@ test("widget surface coordinator builds widget shell props with the existing cal
   props.onCycleVariant("clock");
   props.onConfigure("clock");
   props.onConfigureSlot("clock", 2);
+  props.onUpdateConfig("clock", { lightControl: { orientation: "horizontal" } });
 
   assert.deepEqual(calls.toggleMove, ["clock"]);
   assert.deepEqual(calls.move, [["clock", "right"]]);
@@ -207,6 +210,7 @@ test("widget surface coordinator builds widget shell props with the existing cal
   assert.equal(calls.cycleVariant, "clock");
   assert.deepEqual(calls.configure, ["clock"]);
   assert.deepEqual(calls.configureSlot, [["clock", 2]]);
+  assert.deepEqual(calls.updateConfig, [["clock", { lightControl: { orientation: "horizontal" } }]]);
 });
 
 test("replace widget keeps position and rebuilds the shell with the same callback contract", () => {
@@ -231,6 +235,7 @@ test("replace widget keeps position and rebuilds the shell with the same callbac
   assert.equal(typeof rebuiltProps.onUpdateResize, "function");
   assert.equal(typeof rebuiltProps.onFinishResize, "function");
   assert.equal(typeof rebuiltProps.onCycleVariant, "function");
+  assert.equal(typeof rebuiltProps.onUpdateConfig, "function");
 });
 
 test("rerender widget content uses the current widget size and render context", () => {

@@ -50,11 +50,41 @@
   pointer-events: auto;
 
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   justify-items: start;
   column-gap: var(--mha-toggle-widget-gap-x);
   padding-inline-start: var(--mha-toggle-widget-edge-balance);
+}
+
+.mha-toggle-widget-info {
+  appearance: none;
+  min-inline-size: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  justify-items: start;
+  column-gap: var(--mha-toggle-widget-gap-x);
+  border: 0;
+  border-radius: var(--mha-widget-inner-radius, 1.25rem);
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+}
+
+button.mha-toggle-widget-info {
+  cursor: pointer;
+}
+
+button.mha-toggle-widget-info:focus-visible {
+  outline: 2px solid var(--mha-border-focus, var(--mha-accent));
+  outline-offset: 4px;
+}
+
+button.mha-toggle-widget-info:disabled {
+  cursor: default;
 }
 
 .mha-toggle-widget-icon-bubble {

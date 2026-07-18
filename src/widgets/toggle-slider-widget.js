@@ -18,6 +18,11 @@ import {
 } from "../widget-config/toggle-slider-config.js";
 import { WIDGET_PREVIEW_DATA } from "./widget-preview-data.js";
 import { t } from "../i18n/index.js";
+import {
+  canOpenLightControlPopup,
+  openLightControlPopup,
+} from "../light-control/light-control-popup.js";
+import { normalizeLightControlConfig } from "../light-control/light-control-config.js";
 
 export const TOGGLE_SLIDER_WIDGET_KIND = "toggle-slider";
 const SLIDER_SERVICE_INTERVAL_MS = 80;
@@ -30,6 +35,7 @@ export function createToggleSliderWidgetContent(widget = {}, {
   hass,
   entityVisibilityConfig,
   widgetW = Number(widget?.w) || 4,
+  interactive = true,
   onToggle,
   onSliderInput,
 } = {}) {
@@ -41,6 +47,7 @@ export function createToggleSliderWidgetContent(widget = {}, {
     entityAvailable: false,
     entityAllowed: true,
   };
+  let detailPopup = null;
   const sliderAction = createLatestValueAction(
     (nextValue) => runSliderAction(context.hass, context.entityState, nextValue),
     { intervalMs: SLIDER_SERVICE_INTERVAL_MS },
@@ -60,6 +67,20 @@ export function createToggleSliderWidgetContent(widget = {}, {
     widgetW,
     widgetH: 1,
     disabled: false,
+    interactive,
+    onOpenDetails: (event, opener) => {
+      if (!canOpenLightControlPopup(widget, {
+        interactive,
+        entityAllowed: context.entityAllowed,
+      })) return;
+      detailPopup = openLightControlPopup({
+        widget,
+        hass: context.hass,
+        source: root,
+        opener,
+        onClose: () => { detailPopup = null; },
+      });
+    },
     onToggle: (nextChecked, currentWidget, event) => {
       if (entityId && context.entityAvailable) {
         runToggleAction(context.hass, context.entityState);
@@ -140,13 +161,16 @@ export function createToggleSliderWidgetContent(widget = {}, {
     root.dataset.entityAllowed = String(context.entityAllowed);
     root.dataset.toggleSupported = String(Boolean(supportsToggle));
     root.dataset.sliderSupported = String(Boolean(supportsSlider));
+    detailPopup?.__mhaUpdateFromHass?.(nextHass);
     if (!context.entityAvailable) sliderAction.clear();
 
     const toggleRoot = toggleSection.querySelector(".mha-toggle-widget");
+    const toggleInfo = toggleSection.querySelector(".mha-toggle-widget-info");
     const toggleInput = toggleSection.querySelector(".mha-toggle-input");
     const toggleLabel = toggleSection.querySelector(".mha-toggle-widget-label");
     const toggleState = toggleSection.querySelector(".mha-toggle-widget-state");
     if (toggleRoot) toggleRoot.dataset.checked = String(checked);
+    if (toggleInfo?.tagName === "BUTTON") toggleInfo.disabled = !context.entityAllowed;
     if (toggleInput) {
       toggleInput.checked = checked;
       toggleInput.disabled = !supportsToggle;
@@ -192,6 +216,9 @@ export function createToggleSliderWidgetContent(widget = {}, {
     context.sliderBinding = null;
     context.entityAvailable = false;
     context.entityAllowed = true;
+    detailPopup?.__mhaDestroy?.();
+    detailPopup?.remove?.();
+    detailPopup = null;
     delete root.__mhaUpdateFromHass;
   };
 
@@ -201,10 +228,11 @@ export function createToggleSliderWidgetContent(widget = {}, {
 
 
 export const TOGGLE_SLIDER_WIDGET_CONTENT_RENDERER = Object.freeze({
-  render: ({ widget, widgetW, hass, entityVisibilityConfig }) => createToggleSliderWidgetContent(widget, {
+  render: ({ widget, widgetW, hass, entityVisibilityConfig, interactive }) => createToggleSliderWidgetContent(widget, {
     hass,
     entityVisibilityConfig,
     widgetW,
+    interactive,
   }),
 });
 
@@ -258,6 +286,7 @@ export const TOGGLE_SLIDER_WIDGET_DEFINITION = Object.freeze({
         lightEntityId: entityId,
         entityId,
         sliderMode: "brightness",
+        lightControl: normalizeLightControlConfig(widget.lightControl),
       };
     },
   }),

@@ -118,6 +118,30 @@ appartiennent à `AGENTS.md`.
   entrée procédurale doit préserver cette séparation entre renderer temporel et
   effets météo indépendants.
 
+### 2026-07-18 — Partager le popup de contrôle détaillé des lumières
+
+- **Statut :** confirmé.
+- **Décision :** les widgets `toggle` et `toggle-slider` ouvrent le même popup
+  natif depuis leur zone informative uniquement lorsque leur entité appartient
+  au domaine `light`. Le popup lit séparément les capacités de luminosité,
+  température et couleur, et conserve ses vues presets, couleur personnalisée
+  et configuration dans une seule surface. Son contrat persistant appartient au
+  widget sous `lightControl`; un événement remonté au shell utilise la chaîne de
+  sauvegarde des widgets existante.
+- **Pourquoi :** séparer le déclencheur informatif des contrôles directs évite
+  les ouvertures accidentelles depuis le toggle ou le slider. Le filtrage par
+  domaine préserve intégralement `switch` et `input_boolean`, tandis que le
+  filtrage par capacités empêche d'exposer des commandes HA non supportées.
+- **Conséquence :** toute évolution du contrôle lumière doit rester centralisée
+  dans `src/light-control/` et `src/ha/light.js`, sans dupliquer de popup dans les
+  widgets. Les mises à jour HA réutilisent le DOM ouvert et ignorent les modèles
+  inchangés; le builder de service élimine les appels sans changement réel. Les
+  presets d'ambiance choisissent un seul modèle de couleur HA (`color` ou
+  `colorTemperature`) auquel peut s'ajouter la luminosité. Les contrôles continus
+  du popup réutilisent `createSlider` et son API publique, y compris pour les
+  bornes Kelvin dynamiques et l'orientation responsive; ils ne recréent pas de
+  range local ni ne dépendent de la structure DOM interne du composant.
+
 ## Pièges connus
 
 - Les contrôles MHA vivent dans le Shadow DOM du hub. Pour détecter un clic
