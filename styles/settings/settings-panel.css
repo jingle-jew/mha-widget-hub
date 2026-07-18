@@ -1713,6 +1713,24 @@
   box-shadow: inset 0 0 0 1px color-mix(in srgb, white 8%, transparent);
 }
 
+.mha-settings-weather-landscape-preview[data-renderer="celestial-gradient"] {
+  position: relative;
+  overflow: hidden;
+}
+
+.mha-settings-weather-landscape-preview[data-renderer="celestial-gradient"]::after {
+  content: "";
+  position: absolute;
+  inset-inline-start: 76%;
+  inset-block-start: 28%;
+  inline-size: clamp(1.25rem, 12%, 2.2rem);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 42% 40%, #fffbe8 0 18%, #ffe9a4 52%, #f8c568 100%);
+  box-shadow: 0 0 1.1rem rgba(255, 213, 125, .38);
+  transform: translate(-50%, -50%);
+}
+
 /* Structural Liquid tiles stay borderless; selected and active controls keep
  * their state borders from the rules above.
  */

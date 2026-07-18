@@ -99,6 +99,25 @@ appartiennent à `AGENTS.md`.
   panneau dev garde la condition et le moment comme deux axes indépendants; son
   override `_mha_weather_period_override` appartient uniquement au mock local.
 
+### 2026-07-18 — Supporter les paysages météo procéduraux dans la registry
+
+- **Statut :** confirmé.
+- **Décision :** une entrée de `weather-background-assets.js` déclare désormais
+  explicitement son `type` (`raster` ou `procedural`) et son `renderer`. Le
+  renderer `celestial-gradient` possède ses sept profils temporels, ses
+  interpolations et ses fallbacks solaire/lunaire dans
+  `weather-celestial-gradient.js`; il ne dépend pas des ambiances issues des
+  conditions météo.
+- **Pourquoi :** le paysage de ciel doit partager sélection, persistance,
+  composition et couches d'effets avec les WebP sans simuler une URL d'image ni
+  dupliquer le moteur météo.
+- **Conséquence :** la `sceneKey` procédurale reste structurelle. Les changements
+  de couleurs, positions des astres, phase lunaire et opacité des étoiles sont
+  synchronisés en place par variables CSS lorsque la structure météo ne change
+  pas; ils ne recréent donc ni le fond ni les nuages/précipitations. Toute future
+  entrée procédurale doit préserver cette séparation entre renderer temporel et
+  effets météo indépendants.
+
 ## Pièges connus
 
 - Les contrôles MHA vivent dans le Shadow DOM du hub. Pour détecter un clic

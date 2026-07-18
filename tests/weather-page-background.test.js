@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import {
   DEFAULT_WEATHER_LANDSCAPE_ID,
   normalizeWeatherLandscapeId,
+  getWeatherLandscapeOptions,
   resolveWeatherBackgroundAsset,
   resolveWeatherLandscapeAmbience,
   WEATHER_LANDSCAPES,
@@ -13,7 +14,15 @@ import {
 import {
   createWeatherPageBackground,
   resolveWeatherPeriod,
+  resolveWeatherPeriodTransition,
+  syncWeatherPageBackgroundState,
 } from "../src/pages/weather-page-background.js";
+import {
+  CELESTIAL_GRADIENT_PROFILES,
+  normalizeCelestialPosition,
+  normalizeMoonPhase,
+  resolveCelestialGradientState,
+} from "../src/pages/weather-celestial-gradient.js";
 
 function createFakeElement(tagName) {
   const properties = new Map();
@@ -134,6 +143,49 @@ test("weather period accepts the explicit dev scene override", () => {
   assert.equal(resolveWeatherPeriod(sun, true, now), "afternoon");
 });
 
+test("weather period resolver preserves exactly the seven supported periods", () => {
+  const now = new Date("2026-07-18T14:00:00-04:00");
+  const hass = {
+    states: {
+      "sun.sun": {
+        state: "above_horizon",
+        attributes: {},
+      },
+    },
+  };
+
+  Object.keys(CELESTIAL_GRADIENT_PROFILES).forEach(period => {
+    hass.states["sun.sun"].attributes._mha_weather_period_override = period;
+    assert.equal(resolveWeatherPeriod(hass, true, now), period);
+    assert.deepEqual(
+      resolveWeatherPeriodTransition(hass, true, now),
+      { from: period, to: period, progress: 0 },
+    );
+  });
+});
+
+test("weather period transition interpolates between real solar anchors", () => {
+  const now = new Date("2026-07-18T17:30:00Z");
+  const hass = {
+    states: {
+      "sun.sun": {
+        state: "above_horizon",
+        attributes: {
+          next_rising: "2026-07-19T06:00:00Z",
+          next_setting: "2026-07-18T18:00:00Z",
+          next_dawn: "2026-07-19T05:00:00Z",
+          next_dusk: "2026-07-18T19:00:00Z",
+        },
+      },
+    },
+  };
+  const transition = resolveWeatherPeriodTransition(hass, true, now);
+
+  assert.equal(transition.from, "afternoon");
+  assert.equal(transition.to, "sunset");
+  assert.ok(transition.progress > 0 && transition.progress < 1);
+});
+
 test("alpine lake registry resolves every declared WebP asset", () => {
   const landscape = WEATHER_LANDSCAPES[DEFAULT_WEATHER_LANDSCAPE_ID];
   const urls = Object.values(landscape.assets).flatMap(variants => Object.values(variants));
@@ -160,6 +212,23 @@ test("alpine lake registry resolves every declared WebP asset", () => {
   assert.equal(winterFallback.filename, "night-overcast-high.webp");
   assert.equal(winterFallback.season, "standard");
   assert.equal(winterFallback.winterFallback, true);
+});
+
+test("landscape registry exposes raster and procedural renderers side by side", () => {
+  const options = getWeatherLandscapeOptions();
+  const celestial = resolveWeatherBackgroundAsset({
+    landscapeId: "celestial-gradient",
+    moment: "sunset",
+    condition: "rainy",
+  });
+
+  assert.deepEqual(options.map(option => option.value), ["alpine-lake", "celestial-gradient"]);
+  assert.equal(WEATHER_LANDSCAPES["alpine-lake"].type, "raster");
+  assert.equal(WEATHER_LANDSCAPES["celestial-gradient"].type, "procedural");
+  assert.equal(celestial.renderer, "celestial-gradient");
+  assert.equal(celestial.url, "");
+  assert.equal(celestial.key, "celestial-gradient:procedural");
+  assert.equal(celestial.ambience, "temporal");
 });
 
 test("weather asset resolver follows declared fallbacks without constructing missing URLs", () => {
@@ -221,4 +290,124 @@ test("clear and storm profiles preserve open sky and progressively fill the uppe
   assert.equal(stormField.children.length, 10);
   assert.ok(stormField.children.some(cloud => cloud.dataset.horizon === "true"));
   assert.ok(Number.parseFloat(stormScene.style.getPropertyValue("--mha-weather-horizon-mist-opacity")) >= 0.24);
+}));
+
+test("solar angles normalize inside the responsive upper composition", () => {
+  assert.deepEqual(
+    normalizeCelestialPosition({ azimuth: 90, elevation: 0 }),
+    { x: 29, y: 46, source: "astronomical" },
+  );
+  assert.deepEqual(
+    normalizeCelestialPosition({ azimuth: 180, elevation: 90 }),
+    { x: 50, y: 8, source: "astronomical" },
+  );
+  assert.deepEqual(
+    normalizeCelestialPosition({ fallbackX: 120, fallbackY: -20 }),
+    { x: 94, y: 7, source: "estimated" },
+  );
+});
+
+test("celestial bodies use day, night, and missing-data fallbacks safely", () => {
+  const day = resolveCelestialGradientState({
+    hass: {
+      states: {
+        "sun.sun": {
+          state: "above_horizon",
+          attributes: { azimuth: 180, elevation: 55 },
+        },
+      },
+    },
+    isDay: true,
+    now: new Date("2026-07-18T12:00:00Z"),
+    period: "morning",
+    transition: { from: "morning", to: "morning", progress: 0 },
+  });
+  const night = resolveCelestialGradientState({
+    hass: {
+      states: {
+        "sun.sun": { state: "below_horizon", attributes: { azimuth: 10, elevation: -12 } },
+      },
+    },
+    isDay: false,
+    now: new Date("2026-07-18T23:00:00Z"),
+    period: "night",
+    transition: { from: "night", to: "night", progress: 0 },
+  });
+  const noSun = resolveCelestialGradientState({
+    hass: null,
+    isDay: true,
+    now: new Date(2026, 6, 18, 10, 0),
+    period: "morning",
+    transition: { from: "morning", to: "morning", progress: 0 },
+  });
+
+  assert.ok(day.sun.opacity > 0);
+  assert.equal(day.moon.opacity, 0);
+  assert.equal(night.sun.opacity, 0);
+  assert.ok(night.moon.opacity > 0);
+  assert.equal(night.moon.phase, "full_moon");
+  assert.equal(night.moon.source, "estimated");
+  assert.ok(noSun.sun.opacity > 0);
+  assert.equal(noSun.sun.source, "estimated");
+});
+
+test("moon phase aliases map to the eight supported procedural phases", () => {
+  const phases = [
+    "new_moon",
+    "waxing_crescent",
+    "first_quarter",
+    "waxing_gibbous",
+    "full_moon",
+    "waning_gibbous",
+    "last_quarter",
+    "waning_crescent",
+  ];
+  phases.forEach(phase => assert.equal(normalizeMoonPhase(phase), phase));
+  assert.equal(normalizeMoonPhase("third quarter"), "last_quarter");
+  assert.equal(normalizeMoonPhase("unknown"), "full_moon");
+});
+
+test("stars appear progressively from sunset through dusk to night", () => {
+  const stateFor = period => resolveCelestialGradientState({
+    hass: {
+      states: {
+        "sun.sun": { state: "below_horizon", attributes: {} },
+        "sensor.moon_phase": { entity_id: "sensor.moon_phase", state: "new_moon", attributes: {} },
+      },
+    },
+    isDay: false,
+    period,
+    transition: { from: period, to: period, progress: 0 },
+  });
+
+  assert.equal(stateFor("sunset").starsOpacity, 0);
+  assert.ok(stateFor("dusk").starsOpacity > stateFor("sunset").starsOpacity);
+  assert.ok(stateFor("night").starsOpacity > stateFor("dusk").starsOpacity);
+});
+
+test("celestial gradient keeps weather effects separate and syncs state without replacing DOM", () => withFakeDocument(() => {
+  const page = { config: { weatherLandscapeId: "celestial-gradient" } };
+  const hass = createHass("rainy", 80);
+  hass.states["sun.sun"].attributes = {
+    _mha_weather_period_override: "sunset",
+    azimuth: 255,
+    elevation: 4,
+  };
+  const current = createWeatherPageBackground(page, hass);
+  const next = createWeatherPageBackground(page, hass);
+  next.style.setProperty("--mha-celestial-sun-x", "72%");
+  next.dataset.celestialProgress = "0.42";
+  const originalChildren = current.children;
+
+  assert.equal(current.dataset.landscapeId, "celestial-gradient");
+  assert.equal(current.dataset.renderer, "celestial-gradient");
+  assert.ok(findLayer(current, "mha-weather-background__celestial-gradient"));
+  assert.ok(findLayer(current, "mha-weather-background__cloud-field"));
+  assert.ok(findLayer(current, "mha-weather-background__precipitation mha-weather-background__rain"));
+  assert.equal(current.dataset.sceneKey, next.dataset.sceneKey);
+
+  syncWeatherPageBackgroundState(current, next);
+  assert.equal(current.children, originalChildren);
+  assert.equal(current.style.getPropertyValue("--mha-celestial-sun-x"), "72%");
+  assert.equal(current.dataset.celestialProgress, "0.42");
 }));

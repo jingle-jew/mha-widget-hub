@@ -24,7 +24,10 @@ import {
 } from "./layout-engine.js";
 import { getLayoutForWidth } from "./responsive.js";
 import { createPagePanel } from "../pages/page-panel.js";
-import { createWeatherPageBackground } from "../pages/weather-page-background.js";
+import {
+  createWeatherPageBackground,
+  syncWeatherPageBackgroundState,
+} from "../pages/weather-page-background.js";
 import {
   createMediaPage,
   resolveMediaPageNowPlayingId,
@@ -258,9 +261,7 @@ export function createRenderPipeline(host, options = {}) {
     const nextScene = createWeatherPageBackground(activePage, host._hass);
     if (currentScene?.dataset.sceneKey === nextScene.dataset.sceneKey) {
       host._weatherBackgroundPendingSceneKey = "";
-      ["--mha-weather-wind-factor", "--mha-weather-cloud-opacity"].forEach(property => {
-        currentScene.style.setProperty(property, nextScene.style.getPropertyValue(property));
-      });
+      syncWeatherPageBackgroundState(currentScene, nextScene);
       currentScene.dataset.active = "true";
       scenes.filter(scene => scene !== currentScene).forEach(scene => scene.remove?.());
       return;

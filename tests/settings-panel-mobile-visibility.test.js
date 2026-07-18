@@ -402,15 +402,23 @@ test("Weather page customization tile opens its dedicated landscape subpanel", (
   });
   const choices = subpanel.querySelectorAll(".mha-settings-weather-landscape-option");
   const alpineChoice = choices.find(choice => choice.dataset.landscapeId === "alpine-lake");
+  const celestialChoice = choices.find(choice => choice.dataset.landscapeId === "celestial-gradient");
   const alpineInput = alpineChoice.querySelector("input");
+  const celestialInput = celestialChoice.querySelector("input");
 
   assert.equal(subpanel.dataset.settingsPage, "weather-page");
   assert.equal(hasText(subpanel, "Landscape"), true);
-  assert.equal(choices.length, 1);
+  assert.equal(choices.length, 2);
   assert.equal(alpineChoice.dataset.selected, "true");
+  assert.ok(celestialChoice);
+  assert.equal(
+    celestialChoice.querySelector(".mha-settings-weather-landscape-preview").dataset.renderer,
+    "celestial-gradient",
+  );
   assert.equal(alpineInput.checked, true);
-  alpineInput.listeners.change({ target: alpineInput });
-  assert.deepEqual(changes, ["alpine-lake"]);
+  celestialInput.checked = true;
+  celestialInput.listeners.change({ target: celestialInput });
+  assert.deepEqual(changes, ["celestial-gradient"]);
 
   const renderedHeader = subpanel.querySelector(".mha-settings-header").replacedWith;
   assert.equal(renderedHeader.querySelector(".mha-settings-title").textContent, "Weather page settings");

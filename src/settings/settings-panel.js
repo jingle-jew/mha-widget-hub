@@ -603,7 +603,13 @@ function createWeatherLandscapePicker({ value, onChange } = {}) {
 
     const preview = document.createElement("span");
     preview.className = "mha-settings-weather-landscape-preview";
-    preview.style.backgroundImage = `url("${option.preview}")`;
+    preview.dataset.renderer = option.renderer;
+    if (option.type === "procedural") {
+      preview.style.background = option.preview?.background || "";
+      preview.dataset.period = option.preview?.period || "sunset";
+    } else {
+      preview.style.backgroundImage = `url("${option.preview}")`;
+    }
     preview.setAttribute("aria-hidden", "true");
     choice.append(preview);
     picker.append(choice);

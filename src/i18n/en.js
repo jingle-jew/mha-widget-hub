@@ -43,6 +43,7 @@ export const en = Object.freeze({
     weatherLandscape: "Landscape",
     weatherLandscapeOptions: Object.freeze({
       alpineLake: "Alpine lake",
+      celestialGradient: "Celestial gradient",
     }),
     dock: "Dock",
     dockDescription: "Reorder dock pages and change their icons.",

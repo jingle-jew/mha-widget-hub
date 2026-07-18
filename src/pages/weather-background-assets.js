@@ -1,3 +1,5 @@
+import { CELESTIAL_GRADIENT_PREVIEW } from "./weather-celestial-gradient.js";
+
 const alpineLakeAssetUrl = filename => new URL(
   `../assets/weather/landscapes/alpine-lake/webp/${filename}`,
   import.meta.url,
@@ -130,6 +132,7 @@ const ALPINE_LAKE_COMPOSITION = Object.freeze({
 export const WEATHER_LANDSCAPES = Object.freeze({
   [DEFAULT_WEATHER_LANDSCAPE_ID]: Object.freeze({
     id: DEFAULT_WEATHER_LANDSCAPE_ID,
+    type: "raster",
     label: "Alpine lake",
     labelKey: "settings.weatherLandscapeOptions.alpineLake",
     preview: ALPINE_LAKE_ASSETS.afternoon.clear,
@@ -137,6 +140,23 @@ export const WEATHER_LANDSCAPES = Object.freeze({
     // Winter assets can be connected here later without changing the resolver.
     winterAssets: null,
     composition: ALPINE_LAKE_COMPOSITION,
+  }),
+  "celestial-gradient": Object.freeze({
+    id: "celestial-gradient",
+    type: "procedural",
+    renderer: "celestial-gradient",
+    label: "Celestial gradient",
+    labelKey: "settings.weatherLandscapeOptions.celestialGradient",
+    preview: CELESTIAL_GRADIENT_PREVIEW,
+    composition: Object.freeze({
+      default: Object.freeze({
+        horizon: 58,
+        cloudFieldHeight: 66,
+        cloudFadeStart: 44,
+        cloudFadeSoft: 56,
+        horizonMistOpacity: 0.12,
+      }),
+    }),
   }),
 });
 
@@ -153,6 +173,8 @@ export function getWeatherLandscapeOptions() {
     label: landscape.label,
     labelKey: landscape.labelKey,
     preview: landscape.preview,
+    type: landscape.type || "raster",
+    renderer: landscape.renderer || "raster",
   }));
 }
 
@@ -200,6 +222,26 @@ export function resolveWeatherBackgroundAsset({
   const landscape = resolveLandscape(landscapeId, registry);
   const normalizedMoment = WEATHER_LANDSCAPE_MOMENTS.includes(moment) ? moment : "afternoon";
   const requestedAmbience = resolveWeatherLandscapeAmbience(condition);
+  if (landscape?.type === "procedural") {
+    const resolvedLandscapeId = landscape.id || DEFAULT_WEATHER_LANDSCAPE_ID;
+    return Object.freeze({
+      key: `${resolvedLandscapeId}:procedural`,
+      assetKey: `${resolvedLandscapeId}:procedural`,
+      landscapeId: resolvedLandscapeId,
+      requestedLandscapeId: String(landscapeId || ""),
+      type: "procedural",
+      renderer: landscape.renderer || resolvedLandscapeId,
+      label: landscape.label || "Celestial gradient",
+      moment: normalizedMoment,
+      ambience: "temporal",
+      fallback: "none",
+      season: "standard",
+      winterFallback: false,
+      filename: "",
+      url: "",
+      composition: resolveComposition(landscape, normalizedMoment, requestedAmbience),
+    });
+  }
   const usesWinterAssets = Boolean(winter && landscape?.winterAssets);
   const assets = usesWinterAssets ? landscape.winterAssets : landscape?.assets;
   const candidates = [
@@ -237,6 +279,8 @@ export function resolveWeatherBackgroundAsset({
     assetKey: `${resolvedLandscapeId}:${resolvedMoment}:${resolvedAmbience}`,
     landscapeId: resolvedLandscapeId,
     requestedLandscapeId: String(landscapeId || ""),
+    type: landscape?.type || "raster",
+    renderer: landscape?.renderer || "raster",
     label: landscape?.label || "Alpine lake",
     moment: resolvedMoment,
     ambience: resolvedAmbience,
