@@ -29,3 +29,14 @@ test("dev weather mocks can be reset from the browser console", () => {
   assert.match(source, /resetMockHass\(\)/);
   assert.match(source, /createMockHass/);
 });
+
+test("dev weather panel separates weather conditions from landscape moments", () => {
+  assert.match(source, /dataset\.devWeatherCondition/);
+  assert.match(source, /dataset\.devWeatherMoment/);
+  assert.match(source, /resolveWeatherLandscapeAmbience/);
+  assert.match(source, /setDevWeatherMoment/);
+  assert.match(source, /_mha_weather_period_override/);
+  for (const moment of ["dawn", "sunrise", "morning", "afternoon", "sunset", "dusk", "night"]) {
+    assert.match(source, new RegExp(`\\b${moment}\\b`));
+  }
+});

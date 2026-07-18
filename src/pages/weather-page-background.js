@@ -1,4 +1,7 @@
-import { resolveWeatherBackgroundAsset } from "./weather-background-assets.js";
+import {
+  WEATHER_LANDSCAPE_MOMENTS,
+  resolveWeatherBackgroundAsset,
+} from "./weather-background-assets.js";
 
 const PRECIPITATION_CONDITIONS = new Set([
   "rainy",
@@ -34,11 +37,11 @@ function resolveWeatherEntity(page = {}, hass = null) {
   return Object.values(hass?.states || {}).find(entity => entity?.entity_id?.startsWith?.("weather.")) || null;
 }
 
-function resolveIsDay(hass = null) {
+function resolveIsDay(hass = null, now = new Date()) {
   const sunState = hass?.states?.["sun.sun"]?.state;
   if (sunState === "above_horizon") return true;
   if (sunState === "below_horizon") return false;
-  const hour = new Date().getHours();
+  const hour = now.getHours();
   return hour >= 6 && hour < 20;
 }
 
@@ -49,20 +52,56 @@ function createLayer(className) {
   return layer;
 }
 
-function resolveWeatherPeriod(hass = null, isDay = true, now = new Date()) {
-  const sun = hass?.states?.["sun.sun"] || null;
-  const nextRising = Date.parse(sun?.attributes?.next_rising || "");
-  const nextSetting = Date.parse(sun?.attributes?.next_setting || "");
-  const nowMs = now.getTime();
-  const transitionWindowMs = 45 * 60 * 1000;
+function resolveFallbackWeatherPeriod(now = new Date()) {
+  const hour = now.getHours() + (now.getMinutes() / 60);
+  if (hour < 5) return "night";
+  if (hour < 6.25) return "dawn";
+  if (hour < 7.5) return "sunrise";
+  if (hour < 12) return "morning";
+  if (hour < 17) return "afternoon";
+  if (hour < 18.5) return "sunset";
+  if (hour < 20.5) return "dusk";
+  return "night";
+}
 
-  if (isDay && Number.isFinite(nextSetting) && nextSetting - nowMs <= transitionWindowMs && nextSetting >= nowMs) {
-    return "sunset";
+function timestamp(value = "") {
+  const parsed = Date.parse(value);
+  return Number.isFinite(parsed) ? parsed : NaN;
+}
+
+export function resolveWeatherPeriod(hass = null, isDay = true, now = new Date()) {
+  const sun = hass?.states?.["sun.sun"] || null;
+  if (!sun) return resolveFallbackWeatherPeriod(now);
+
+  const explicitPeriod = String(sun.attributes?._mha_weather_period_override || "").trim();
+  if (WEATHER_LANDSCAPE_MOMENTS.includes(explicitPeriod)) {
+    return explicitPeriod;
   }
-  if (!isDay && Number.isFinite(nextRising) && nextRising - nowMs <= transitionWindowMs && nextRising >= nowMs) {
-    return "dawn";
+
+  const nextRising = timestamp(sun.attributes?.next_rising);
+  const nextSetting = timestamp(sun.attributes?.next_setting);
+  const nextDawn = timestamp(sun.attributes?.next_dawn);
+  const nextDusk = timestamp(sun.attributes?.next_dusk);
+  const lastChanged = timestamp(sun.last_changed);
+  const nowMs = now.getTime();
+  const minute = 60 * 1000;
+  const until = value => Number.isFinite(value) ? value - nowMs : Infinity;
+  const sinceLastChange = Number.isFinite(lastChanged) ? nowMs - lastChanged : Infinity;
+  const aboveHorizon = sun.state === "above_horizon"
+    || (sun.state !== "below_horizon" && isDay);
+
+  if (aboveHorizon) {
+    if (sinceLastChange >= 0 && sinceLastChange <= 30 * minute) return "sunrise";
+    if (until(nextSetting) >= 0 && until(nextSetting) <= 45 * minute) return "sunset";
+    return now.getHours() < 12 ? "morning" : "afternoon";
   }
-  return isDay ? "day" : "night";
+
+  if (until(nextRising) >= 0 && until(nextRising) <= 25 * minute) return "sunrise";
+  if (until(nextRising) > 25 * minute && until(nextRising) <= 100 * minute) return "dawn";
+  if (until(nextDawn) >= 0 && until(nextDawn) <= 45 * minute) return "dawn";
+  if (until(nextDusk) >= 0 && until(nextDusk) <= 75 * minute) return "dusk";
+  if (sinceLastChange >= 0 && sinceLastChange <= 60 * minute) return "dusk";
+  return resolveFallbackWeatherPeriod(now);
 }
 
 function resolveWinterScene(condition = "sunny", weatherEntity = null, now = new Date()) {
@@ -280,10 +319,15 @@ export function createWeatherPageBackground(page = {}, hass = null) {
   const weatherEntity = resolveWeatherEntity(page, hass);
   const condition = normalizeCondition(weatherEntity?.state);
   const now = new Date();
-  const isDay = resolveIsDay(hass);
+  const isDay = resolveIsDay(hass, now);
   const period = resolveWeatherPeriod(hass, isDay, now);
   const winter = resolveWinterScene(condition, weatherEntity, now);
-  const backgroundAsset = resolveWeatherBackgroundAsset({ condition, period, winter });
+  const backgroundAsset = resolveWeatherBackgroundAsset({
+    landscapeId: page?.config?.weatherLandscapeId,
+    condition,
+    moment: period,
+    winter,
+  });
   const windSpeedKmh = normalizeWindSpeedKmh(
     weatherEntity?.attributes?.wind_speed,
     weatherEntity?.attributes?.wind_speed_unit || weatherEntity?.attributes?.wind_unit || "km/h",
@@ -298,7 +342,9 @@ export function createWeatherPageBackground(page = {}, hass = null) {
   scene.dataset.daytime = isDay ? "day" : "night";
   scene.dataset.period = period;
   scene.dataset.winter = String(winter);
-  scene.dataset.sceneKey = `${backgroundAsset.key}:cloud-${cloudProfile.key}-${cloudProfile.count}`;
+  scene.dataset.landscapeId = backgroundAsset.landscapeId;
+  scene.dataset.ambience = backgroundAsset.ambience;
+  scene.dataset.sceneKey = `${backgroundAsset.key}:condition-${condition}:cloud-${cloudProfile.key}-${cloudProfile.count}`;
   scene.dataset.assetKey = backgroundAsset.key;
   scene.dataset.assetUrl = backgroundAsset.url;
   scene.dataset.cloudy = String(cloudy);

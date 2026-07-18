@@ -37,6 +37,13 @@ export const fr = Object.freeze({
     iosGlass: "Verre iOS",
     wallpaper: "Fond d’écran",
     wallpaperDescription: "Choisis une image distincte pour les thèmes clair et sombre.",
+    weatherPage: "Page Météo",
+    weatherPageDescription: "Choisis le paysage utilisé par la page Météo.",
+    weatherPageSettings: "Paramètres de la page Météo",
+    weatherLandscape: "Paysage",
+    weatherLandscapeOptions: Object.freeze({
+      alpineLake: "Lac alpin",
+    }),
     dock: "Dock",
     dockDescription: "Réorganise les pages du dock et change leurs icônes.",
     statusBar: "Status bar",

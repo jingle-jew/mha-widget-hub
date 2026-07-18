@@ -4,6 +4,8 @@ import {
 } from "./settings-panel-coordinator.js";
 import { detectDesktopEnvironment } from "../core/device-environment.js";
 import { resolveResponsiveStatusBarMode } from "../core/status-bar-mode.js";
+import { isWeatherPage } from "../pages/page-types.js";
+import { normalizeWeatherLandscapeId } from "../pages/weather-background-assets.js";
 
 const SETTINGS_BACKDROP_SELECTOR = ".mha-settings-backdrop";
 
@@ -40,6 +42,12 @@ export function createSettingsSurfaceCoordinator(host) {
         layout: resolvedLayout,
         isDesktopEnvironment: responsiveState.isDesktopEnvironment ?? detectDesktopEnvironment(),
       });
+    const activeWeatherPage = host._pages?.find(page => (
+      page.id === host._activePageId && isWeatherPage(page)
+    )) || null;
+    const weatherPage = activeWeatherPage
+      || host._pages?.find(page => isWeatherPage(page))
+      || null;
     return buildSettingsCoordinatorProps({
       settingsOpen: host._settingsOpen,
       screensaverSettingsOpen: host._screensaverSettingsOpen,
@@ -56,6 +64,7 @@ export function createSettingsSurfaceCoordinator(host) {
       isMobileLayout: Boolean(responsiveState.isMobileLayout ?? host._isMobileLauncherLayout?.()),
       isMobileLandscape: Boolean(settingsCapabilities.isMobileLandscape),
       customWallpapers: host._customWallpapers,
+      weatherLandscapeId: normalizeWeatherLandscapeId(weatherPage?.config?.weatherLandscapeId),
       hass: host._hass,
       entityVisibilityConfig: host._entityVisibilityConfig,
       themeState,
@@ -95,6 +104,9 @@ export function createSettingsSurfaceCoordinator(host) {
         onResetGrid: () => host.resetGrid(),
         onOpenWallpaperSettings: () => host._openWallpaperSettings(),
         onOpenNowBarSettings: () => host._openNowBarSettings(),
+        onOpenWeatherPageSettings: () => host._openWeatherPageSettings(),
+        onWeatherPageMainBack: () => host._openSettings(),
+        onWeatherLandscapeChange: (value) => host._applyWeatherLandscapeFromSettings(value),
         onWallpaperMainBack: () => host._openSettings(),
         onOpenDockSettings: () => host._openDockSettings(),
         onDockBack: () => host._openDockSettings(),

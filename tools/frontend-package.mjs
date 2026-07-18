@@ -33,6 +33,7 @@ function isFrontendSourceOnlyPath(source, relativePath) {
     && (
       normalizedRelativePath === "assets/weather/png"
       || normalizedRelativePath.startsWith("assets/weather/png/")
+      || /^assets\/weather\/landscapes\/[^/]+\/png(?:\/|$)/.test(normalizedRelativePath)
     );
 }
 

@@ -8,6 +8,7 @@ import {
   removePageWidgetPositions,
   renamePage,
   selectPage,
+  updatePageConfig,
 } from "../src/pages/page-controller.js";
 import { PAGE_TYPES } from "../src/pages/page-types.js";
 
@@ -63,6 +64,29 @@ test("media page creation preserves the dedicated page type", () => {
     visualStyle: "theme",
     blurBackground: true,
   });
+});
+
+test("weather landscape selection persists through the existing page config model", () => {
+  const weatherPages = [{
+    id: "weather",
+    name: "Weather",
+    icon: "weather",
+    type: PAGE_TYPES.WEATHER,
+    config: { weatherEntityId: "weather.home" },
+    widgets: [],
+  }];
+
+  const defaulted = updatePageConfig(weatherPages, "weather", {});
+  const selected = updatePageConfig(defaulted.pages, "weather", {
+    weatherLandscapeId: "alpine-lake",
+  });
+  const repaired = updatePageConfig(selected.pages, "weather", {
+    weatherLandscapeId: "missing-landscape",
+  });
+
+  assert.equal(defaulted.pages[0].config.weatherLandscapeId, "alpine-lake");
+  assert.equal(selected.pages[0].config.weatherLandscapeId, "alpine-lake");
+  assert.equal(repaired.pages[0].config.weatherLandscapeId, "alpine-lake");
 });
 
 test("page movement respects list boundaries", () => {

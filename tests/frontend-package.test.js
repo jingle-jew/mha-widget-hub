@@ -30,6 +30,11 @@ test("frontend generation replaces stale content and matches canonical sources b
   await validateFrontendPackage(destination);
 
   assert.equal(await readFile(path.join(destination, "mha-widget-hub.js"), "utf8"), await readFile(path.join(REPO_ROOT, "mha-widget-hub.js"), "utf8"));
+  assert.equal((await readFile(path.join(destination, "src/assets/weather/landscapes/alpine-lake/webp/afternoon-clear.webp"))).length > 0, true);
+  await assert.rejects(
+    readFile(path.join(destination, "src/assets/weather/landscapes/alpine-lake/png/afternoon-clear.png")),
+    { code: "ENOENT" },
+  );
   assert.equal((await listTreeFiles(destination)).some(file => file.endsWith(".DS_Store")), false);
   await assert.rejects(readFile(path.join(destination, "obsolete.js")), { code: "ENOENT" });
 });

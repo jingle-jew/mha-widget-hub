@@ -85,6 +85,7 @@ import { applyDockLabelsSetting } from "./src/settings/dock-labels-setting.js";
 import { applyStatusBarModeSetting } from "./src/settings/status-bar-mode-setting.js";
 import { openDockPageSettingsForPage } from "./src/settings/dock-page-settings.js";
 import { updatePageConfig } from "./src/pages/page-controller.js?v=media-persistence-v2";
+import { normalizeWeatherLandscapeId } from "./src/pages/weather-background-assets.js";
 import { getStyleManifest } from "./src/styles/style-manifest.js";
 import { syncMediaPageSettingsPanel } from "./src/pages/media-page-settings.js?v=media-persistence-v4";
 import {
@@ -736,6 +737,24 @@ _openWallpaperSettings(){
 }
 _openNowBarSettings(){
   return getI18nSettingsSyncForHost(this).openSettingsPage("screensaver-nowbar");
+}
+_openWeatherPageSettings(){
+  return getI18nSettingsSyncForHost(this).openSettingsPage("weather-page");
+}
+_applyWeatherLandscapeFromSettings(value="alpine-lake"){
+  const activePage=this._getActivePage();
+  const weatherPage=isWeatherPage(activePage)
+    ? activePage
+    : this._pages.find(page=>isWeatherPage(page));
+  if(!weatherPage)return false;
+  const updated=this._updatePageConfig(weatherPage.id,{
+    weatherLandscapeId:normalizeWeatherLandscapeId(value),
+  });
+  if(!updated)return false;
+  if(weatherPage.id===this._activePageId){
+    this._syncActivePageBackdropState({activePage:this._getActivePage()});
+  }
+  return true;
 }
 _openDockPageSettings(id=""){
   return openDockPageSettingsForPage(this,id,{

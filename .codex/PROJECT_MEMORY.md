@@ -80,6 +80,25 @@ appartiennent à `AGENTS.md`.
   changements fins d'opacité et de vent se synchronisent en place; seul un
   changement du nombre de nappes réutilise le crossfade de scène existant.
 
+### 2026-07-18 — Résoudre les scènes météo depuis une registry de paysages
+
+- **Statut :** confirmé.
+- **Décision :** `weather-background-assets.js` est la source de vérité des
+  paysages météo. Chaque entrée déclare son identifiant, son libellé, sa
+  preview, ses WebP par moment (`dawn` à `night`) et ambiance (`clear`,
+  `overcast-light`, `overcast-high`), son profil de composition et un point de
+  raccord optionnel pour de futurs assets d'hiver. Le paysage sélectionné est
+  persisté dans la configuration de la page sous `weatherLandscapeId`, avec
+  `alpine-lake` comme fallback.
+- **Pourquoi :** séparer le paysage photographique des effets procéduraux
+  conserve le moteur météo existant tout en rendant la sélection testable et
+  extensible. Le resolver ne construit jamais une URL supposée : il ne choisit
+  que parmi les assets déclarés et applique une chaîne de fallback explicite.
+- **Conséquence :** ajouter un paysage passe d'abord par cette registry et par
+  le settings-panel de la page Météo, sans créer de stockage parallèle. Le
+  panneau dev garde la condition et le moment comme deux axes indépendants; son
+  override `_mha_weather_period_override` appartient uniquement au mock local.
+
 ## Pièges connus
 
 - Les contrôles MHA vivent dans le Shadow DOM du hub. Pour détecter un clic
