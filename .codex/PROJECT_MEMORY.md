@@ -217,7 +217,10 @@ appartiennent à `AGENTS.md`.
   précédée d’un petit glyphe triangulaire d’avertissement. Les avis de pluie et
   de neige emploient une heure locale approximative lorsque les prévisions sont
   horaires (« vers 14 h »), puis retombent sur la période naturelle (« ce soir »)
-  avec des prévisions quotidiennes.
+  avec des prévisions quotidiennes. Ce choix de source reste automatique : la
+  configuration du « Bref météo » expose uniquement l’entité météo et ne
+  persiste pas de `forecastType`; le sélecteur horaire/quotidien demeure réservé
+  aux widgets météo qui affichent réellement une prévision choisie.
 - Les surfaces du dock OneUI, standard comme compactes, sont légèrement
   translucides, floutées et teintées par la couleur d’accent active du thème.
   La pastille de l’élément actif reprend cette teinte avec une intensité plus

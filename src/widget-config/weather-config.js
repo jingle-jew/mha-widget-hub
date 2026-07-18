@@ -23,6 +23,10 @@ export function supportsWeatherSurfaceModeConfig(widget = {}, themeStyle = "") {
   return widget.kind === "weather" && normalizedThemeStyle === "oneui";
 }
 
+export function supportsWeatherForecastTypeConfig(widget = {}) {
+  return widget.kind === "weather";
+}
+
 export function createWeatherConfigDraft(widget = {}, hass, visibilityConfig) {
   const draft = {
     entityId: widget.entityId || widget.entity_id || "",
@@ -66,8 +70,12 @@ export function buildWeatherWidgetConfig(widget, draft, hass, visibilityConfig) 
   const config = {
     ...widget,
     entityId: draft.entityId || "",
-    forecastType: normalizeWeatherForecastType(draft.forecastType),
   };
+  if (supportsWeatherForecastTypeConfig(widget)) {
+    config.forecastType = normalizeWeatherForecastType(draft.forecastType);
+  } else {
+    delete config.forecastType;
+  }
   if (widget.kind === "weather") {
     config.surfaceMode = normalizeWeatherSurfaceMode(draft.surfaceMode);
   }
@@ -130,24 +138,23 @@ export function renderWeatherConfigFields(session, hass, visibilityConfig, onCha
     },
   });
 
-  const forecastLabel = t("widgets.weather.forecast", "Forecasts");
-  const forecastSelect = createSelectControl({
-    label: forecastLabel,
-    value: draft.forecastType,
-    options: WEATHER_FORECAST_OPTIONS.map(option => ({
-      value: option.value,
-      label: configOptionLabel("widgets.weather.forecastTypes", option),
-    })),
-    onChange: (value) => {
-      updateWeatherForecastType(draft, value);
-      onChange?.();
-    },
-  });
-
-  fields.append(
-    createField(entityLabel, select),
-    createField(forecastLabel, forecastSelect),
-  );
+  fields.append(createField(entityLabel, select));
+  if (supportsWeatherForecastTypeConfig(session.widget)) {
+    const forecastLabel = t("widgets.weather.forecast", "Forecasts");
+    const forecastSelect = createSelectControl({
+      label: forecastLabel,
+      value: draft.forecastType,
+      options: WEATHER_FORECAST_OPTIONS.map(option => ({
+        value: option.value,
+        label: configOptionLabel("widgets.weather.forecastTypes", option),
+      })),
+      onChange: (value) => {
+        updateWeatherForecastType(draft, value);
+        onChange?.();
+      },
+    });
+    fields.append(createField(forecastLabel, forecastSelect));
+  }
   if (supportsWeatherSurfaceModeConfig(session.widget, session.themeStyle)) {
     fields.append(createWeatherSurfaceModeField(draft, onChange, helpers));
   }
