@@ -145,6 +145,7 @@ const CLOUD_MASS_PROFILES = Object.freeze({
 const CLOUD_DEPTH_SEQUENCE = Object.freeze([
   "far", "mid", "near", "mid", "far", "near", "mid", "far", "near", "mid",
 ]);
+const CLOUD_OPACITY_BOOST = 1.1;
 
 function resolveCloudProfile(condition = "sunny", cloudCover = NaN) {
   let key = "default";
@@ -235,7 +236,10 @@ function appendClouds(scene, {
     cloud.style.setProperty("--mha-weather-cloud-duration", `${duration}s`);
     cloud.style.setProperty("--mha-weather-cloud-depth-speed-factor", String(depthSpeedFactor));
     cloud.style.setProperty("--mha-weather-cloud-delay", `${-(pseudoRandom(seed + 10) * duration)}s`);
-    cloud.style.setProperty("--mha-weather-cloud-opacity-local", String(opacity * horizonFactor));
+    cloud.style.setProperty(
+      "--mha-weather-cloud-opacity-local",
+      String(Math.min(1, opacity * horizonFactor * CLOUD_OPACITY_BOOST)),
+    );
     cloudField.append(cloud);
   }
   scene.append(cloudField);
