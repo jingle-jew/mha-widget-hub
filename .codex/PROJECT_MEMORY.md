@@ -214,7 +214,10 @@ appartiennent à `AGENTS.md`.
   toujours les conditions de la période courante, ou de la période suivante
   après le milieu de la période courante; son ancienne logique prioritaire sert
   uniquement de ligne d’avis secondaire. Lorsqu’un avis existe, cette ligne est
-  précédée d’un petit glyphe triangulaire d’avertissement.
+  précédée d’un petit glyphe triangulaire d’avertissement. Les avis de pluie et
+  de neige emploient une heure locale approximative lorsque les prévisions sont
+  horaires (« vers 14 h »), puis retombent sur la période naturelle (« ce soir »)
+  avec des prévisions quotidiennes.
 - Les surfaces du dock OneUI, standard comme compactes, sont légèrement
   translucides, floutées et teintées par la couleur d’accent active du thème.
   La pastille de l’élément actif reprend cette teinte avec une intensité plus

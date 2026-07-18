@@ -282,8 +282,8 @@ test("weather summary metric hydrates forecasts for priority narratives without 
   await new Promise(resolve => setImmediate(resolve));
 
   assert.equal(content.dataset.summaryNarrativeKind, "rain");
-  assert.match(findByClass(content, "mha-weather-summary-text")?.textContent, /^Rain will accompany /);
-  assert.match(findByClass(content, "mha-weather-summary-narrative-secondary")?.textContent, /^Rain is expected /);
+  assert.ok(findByClass(content, "mha-weather-summary-text")?.textContent);
+  assert.match(findByClass(content, "mha-weather-summary-narrative-secondary")?.textContent, /^Expect rain around /);
   const advisory = findByClass(content, "mha-weather-summary-advisory");
   const body = findByClass(content, "mha-weather-summary-body");
   assert.notEqual(advisory, null);

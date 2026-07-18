@@ -43,7 +43,7 @@ test("weather brief summarizes the current period before its midpoint", () => {
   }), now);
 
   assert.equal(model.periodKey, "morning");
-  assert.equal(model.headline, "Le soleil dominera ce matin.");
+  assert.equal(model.headline, "Le soleil sera au rendez-vous ce matin.");
   assert.equal(model.secondary, "");
 });
 
@@ -58,7 +58,7 @@ test("weather brief switches to the next period after the current period midpoin
   }), now);
 
   assert.equal(model.periodKey, "afternoon");
-  assert.equal(model.headline, "Le ciel sera nuageux cet après-midi.");
+  assert.equal(model.headline, "Le ciel restera nuageux cet après-midi.");
 });
 
 test("weather brief keeps future advisories separate from the period summary", () => {
@@ -71,9 +71,19 @@ test("weather brief keeps future advisories separate from the period summary", (
     ],
   }), now);
 
-  assert.equal(model.headline, "Le soleil dominera ce matin.");
+  assert.equal(model.headline, "Le soleil sera au rendez-vous ce matin.");
   assert.equal(model.kind, "rain");
   assert.equal(model.advisory?.kind, "rain");
-  assert.match(model.secondary, /^De la pluie est prévue cet après-midi\./);
+  assert.match(model.secondary, /^Attendez-vous à de la pluie vers 14 h\./);
   assert.match(model.secondary, /Probabilité : 80 %$/);
+});
+
+test("weather brief falls back to a natural period label for daily precipitation", () => {
+  const now = new Date(2026, 6, 14, 8, 0);
+  const model = buildWeatherNarrativeModel(weather({
+    hourlyForecast: [],
+    dailyForecast: [forecastAt(2026, 6, 14, 18, "rainy", 70)],
+  }), now);
+
+  assert.match(model.secondary, /^Attendez-vous à de la pluie ce soir\./);
 });
