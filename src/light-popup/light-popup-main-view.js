@@ -73,12 +73,25 @@ function createQuickControlSliders(options) {
   return { wrapper, slider, slider2 };
 }
 
+function getPresetForeground(color) {
+  const match = String(color || "").trim().match(/^#([0-9a-f]{6})$/i);
+  if (!match) return "var(--mha-text-primary)";
+  const value = Number.parseInt(match[1], 16);
+  const red = (value >> 16) & 255;
+  const green = (value >> 8) & 255;
+  const blue = value & 255;
+  const luminance = (red * 299 + green * 587 + blue * 114) / 1000;
+  return luminance >= 150 ? "#111" : "#fff";
+}
+
 function presetButton({ scene, onClick }) {
   const button = document.createElement("button");
   button.type = "button";
   button.className = "mha-light-preset mha-light-scene-preset";
   button.setAttribute("aria-label", scene.name);
-  button.style.setProperty("--mha-light-preset-color", scene.color || "var(--mha-text-primary)");
+  const presetColor = scene.color || "var(--mha-text-primary)";
+  button.style.setProperty("--mha-light-preset-color", presetColor);
+  button.style.setProperty("--mha-light-preset-foreground", getPresetForeground(scene.color));
   button.append(
     icon(scene.icon, "mha-light-preset-icon"),
     Object.assign(document.createElement("span"), {

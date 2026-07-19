@@ -358,18 +358,26 @@
 .mha-light-preset {
   min-inline-size: 0;
   min-block-size: 0;
-  border: 1px solid var(--mha-control-border, var(--mha-border-subtle));
+  border: 1px solid color-mix(
+    in srgb,
+    var(--mha-light-preset-color, var(--mha-control-border)) 78%,
+    var(--mha-control-border, var(--mha-border-subtle))
+  );
   border-radius: var(--mha-radius-widget-inner, var(--mha-widget-inner-radius, 1rem));
-  background: var(--mha-control-surface, transparent);
-  color: var(--mha-text-primary);
+  background: var(--mha-light-preset-color, var(--mha-control-surface, transparent));
+  color: var(--mha-light-preset-foreground, var(--mha-text-primary));
   font: inherit;
   cursor: pointer;
 }
 
 .mha-light-preset:hover,
 .mha-light-preset:focus-visible {
-  border-color: var(--mha-border-focus, var(--mha-accent));
-  background: var(--mha-control-surface-hover, var(--mha-control-surface));
+  border-color: var(--mha-light-preset-foreground, var(--mha-border-focus, var(--mha-accent)));
+  background: color-mix(
+    in srgb,
+    var(--mha-light-preset-color, var(--mha-control-surface)) 88%,
+    var(--mha-light-preset-foreground, var(--mha-text-primary))
+  );
 }
 
 .mha-light-scene-preset {
@@ -390,7 +398,7 @@
   align-self: center;
   justify-self: auto;
   margin: 0;
-  color: var(--mha-light-preset-color, var(--mha-text-primary));
+  color: var(--mha-light-preset-foreground, var(--mha-text-primary));
 }
 
 .mha-light-preset-copy {
