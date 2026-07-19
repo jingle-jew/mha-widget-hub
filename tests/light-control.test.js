@@ -19,6 +19,10 @@ import {
 import {
   buildAmbienceLightPatch,
   canOpenLightControlPopup,
+  getAmbienceDisplayColor,
+  getColorWheelIndicatorPosition,
+  getColorWheelSelection,
+  getLightDisplayColor,
   normalizeLightControlView,
 } from "../src/light-control/light-control-popup.js";
 import { normalizeWidgetContract } from "../src/widgets/widget-registry.js";
@@ -55,6 +59,37 @@ test("the local view machine stays inside one popup and ambience patches choose 
     colorTemperature: 3500,
     brightness: 72,
   }), { colorTemperature: 3500, brightness: 72 });
+});
+
+test("popup display colors follow the effective light and ambience color models", () => {
+  assert.equal(getAmbienceDisplayColor({
+    mode: "color",
+    color: "#2244ff",
+  }), "#2244ff");
+  assert.equal(getAmbienceDisplayColor({
+    mode: "temperature",
+    color: "#2244ff",
+    colorTemperature: 3500,
+  }), rgbToHex(kelvinToRgb(3500)));
+  assert.equal(getLightDisplayColor(entity("light.rgb", "on", {
+    rgb_color: [34, 68, 255],
+  })), "#2244ff");
+  assert.equal(getLightDisplayColor(entity("light.warm", "on", {
+    color_temp_kelvin: 2700,
+  })), rgbToHex(kelvinToRgb(2700)));
+});
+
+test("color wheel geometry aligns red at the top and green-yellow on the right", () => {
+  assert.deepEqual(getColorWheelSelection(0, -100, 100), {
+    hue: 0,
+    saturation: 1,
+  });
+  assert.deepEqual(getColorWheelSelection(100, 0, 100), {
+    hue: 90,
+    saturation: 1,
+  });
+  assert.deepEqual(getColorWheelIndicatorPosition(0, 1), { x: 50, y: 4 });
+  assert.deepEqual(getColorWheelIndicatorPosition(90, 1), { x: 96, y: 50 });
 });
 
 test("light capabilities distinguish brightness, temperature, and color independently", () => {
@@ -194,16 +229,39 @@ test("desktop popup sections share one stretching grid and views stay in one dia
   assert.match(source, /mha-update-widget-config/u);
 });
 
-test("popup brightness and temperature controls reuse the shared MHA slider", () => {
+test("popup controls map vertical and horizontal modes without inverting them", () => {
   const cssPath = fileURLToPath(new URL("../styles/components/light-control-popup.css", import.meta.url));
   const sourcePath = fileURLToPath(new URL("../src/light-control/light-control-popup.js", import.meta.url));
   const css = readFileSync(cssPath, "utf8");
   const source = readFileSync(sourcePath, "utf8");
 
   assert.match(source, /import \{ createSlider \} from "\.\.\/ui\/slider\.js";/u);
-  assert.equal((source.match(/createSlider\(\{/gu) || []).length, 2);
+  assert.equal((source.match(/orientation: config\.orientation/gu) || []).length, 2);
+  assert.match(source, /const sliderOrientation = config\.orientation;/u);
+  assert.match(css, /data-orientation="vertical"[\s\S]*?grid-template-columns:[^;]+repeat\(2,/u);
+  assert.match(css, /data-orientation="vertical"[\s\S]*?mha-light-control-power-group[\s\S]*?grid-template-rows:\s*repeat\(2,/u);
   assert.doesNotMatch(source, /function createRange|input\.type = "range"/u);
   assert.doesNotMatch(css, /mha-light-control-range|::-webkit-slider/u);
+});
+
+test("iOS light controls use slider2 while other themes keep the standard MHA slider", () => {
+  const cssPath = fileURLToPath(new URL("../styles/components/light-control-popup.css", import.meta.url));
+  const slider2CssPath = fileURLToPath(new URL("../styles/components/slider2.css", import.meta.url));
+  const sourcePath = fileURLToPath(new URL("../src/light-control/light-control-popup.js", import.meta.url));
+  const slider2SourcePath = fileURLToPath(new URL("../src/ui/slider2.js", import.meta.url));
+  const manifestPath = fileURLToPath(new URL("../src/styles/style-manifest.js", import.meta.url));
+  const css = readFileSync(cssPath, "utf8");
+  const slider2Css = readFileSync(slider2CssPath, "utf8");
+  const source = readFileSync(sourcePath, "utf8");
+  const slider2Source = readFileSync(slider2SourcePath, "utf8");
+  const manifest = readFileSync(manifestPath, "utf8");
+
+  assert.match(source, /import \{ createSlider2 \} from "\.\.\/ui\/slider2\.js";/u);
+  assert.match(source, /slot\.append\(standard, ios\)/u);
+  assert.match(css, /:host\(\[data-theme-style="ios"\]\) \.mha-light-control-slider--default\s*\{[\s\S]*?display:\s*none;/u);
+  assert.match(slider2Css, /\.slider2\[data-orientation="vertical"\]/u);
+  assert.doesNotMatch(slider2Source, /orientation:\s*"horizontal"/u);
+  assert.match(manifest, /styles\/components\/slider2\.css/u);
 });
 
 test("toggle-slider opens details through its toggle information area, never its slider callbacks", () => {

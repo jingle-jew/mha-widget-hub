@@ -1,5 +1,3 @@
-@import url("../components/slider2.css");
-
 .mha-widget[data-widget-kind="toggle-slider"] {
   container-type: size;
   container-name: mha-toggle-slider-widget;

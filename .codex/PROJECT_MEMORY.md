@@ -138,9 +138,16 @@ appartiennent à `AGENTS.md`.
   inchangés; le builder de service élimine les appels sans changement réel. Les
   presets d'ambiance choisissent un seul modèle de couleur HA (`color` ou
   `colorTemperature`) auquel peut s'ajouter la luminosité. Les contrôles continus
-  du popup réutilisent `createSlider` et son API publique, y compris pour les
-  bornes Kelvin dynamiques et l'orientation responsive; ils ne recréent pas de
-  range local ni ne dépendent de la structure DOM interne du composant.
+  du popup réutilisent les sliders partagés et leur API publique : `createSlider`
+  pour OneUI/Material et `createSlider2` pour iOS, y compris pour les bornes Kelvin
+  dynamiques et l'orientation responsive. L'option `vertical` distribue les
+  contrôles en colonnes, avec sliders et commande Off/On verticaux lorsque
+  l'espace le permet; `horizontal` conserve leurs axes horizontaux. Le popup ne
+  recrée pas de range local et ne dépend pas de la structure DOM interne des
+  composants. Les surfaces d'ambiance et l'icône d'entité dérivent toujours du
+  modèle effectivement envoyé à HA : couleur RGB pour `color`, conversion Kelvin
+  pour `colorTemperature`. La roue colorimétrique partage le même repère que la
+  conversion HSV, avec le rouge en haut et une saturation radiale.
 
 ## Pièges connus
 

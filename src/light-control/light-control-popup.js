@@ -7,6 +7,7 @@ import {
   getLightColorTemperature,
   getLightColorTemperatureRange,
   getLightRgbColor,
+  hexToRgb,
   hsvToRgb,
   kelvinToRgb,
   rgbToHex,
@@ -18,6 +19,7 @@ import { destroyDomSubtree } from "../core/dom-lifecycle.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
 import { resolveWidgetIconName } from "../ui/icon-name-resolver.js";
 import { createSlider } from "../ui/slider.js";
+import { createSlider2 } from "../ui/slider2.js";
 import {
   cloneLightControlConfig,
   normalizeLightControlConfig,
@@ -49,9 +51,11 @@ function createButton({ className = "", label = "", icon = "", text = "", onClic
   return button;
 }
 
-function createControlRow({ icon, label, valueElement, control }) {
+const COLOR_WHEEL_INDICATOR_DISTANCE = 46;
+
+function createControlRow({ icon, label, valueElement, control, className = "" }) {
   const row = document.createElement("div");
-  row.className = "mha-light-control-control-row";
+  row.className = ["mha-light-control-control-row", className].filter(Boolean).join(" ");
 
   const heading = document.createElement("div");
   heading.className = "mha-light-control-control-heading";
@@ -64,6 +68,28 @@ function createControlRow({ icon, label, valueElement, control }) {
 
   row.append(heading, control);
   return row;
+}
+
+function createLightControlSliderVariants({ className = "", label = "", ...options } = {}) {
+  const slot = document.createElement("div");
+  slot.className = "mha-light-control-slider-slot";
+  const sharedClassName = ["mha-light-control-slider", className].filter(Boolean).join(" ");
+  const standard = createSlider({
+    ...options,
+    className: `${sharedClassName} mha-light-control-slider--default`,
+  });
+  const ios = createSlider2({
+    ...options,
+    className: `${sharedClassName} mha-light-control-slider--ios`,
+  });
+  slot.append(standard, ios);
+  const inputs = [standard, ios].map(slider => slider.querySelector(".mha-slider-input"));
+  inputs.forEach(input => input?.setAttribute("aria-label", label || "Slider"));
+  return {
+    slot,
+    sliders: [standard, ios],
+    inputs,
+  };
 }
 
 function createSectionTitle(text) {
@@ -79,6 +105,39 @@ function getFriendlyName(widget, entityState) {
 
 function getAmbienceName(preset = {}) {
   return preset.name || t(`lightControl.ambienceNames.${preset.id}`, preset.id || "Ambience");
+}
+
+export function getAmbienceDisplayColor(preset = {}) {
+  return preset.mode === "color"
+    ? rgbToHex(hexToRgb(preset.color) || [255, 255, 255])
+    : rgbToHex(kelvinToRgb(preset.colorTemperature));
+}
+
+export function getLightDisplayColor(entityState) {
+  const rgb = getLightRgbColor(entityState);
+  if (rgb) return rgbToHex(rgb);
+  const temperature = getLightColorTemperature(entityState);
+  return temperature != null
+    ? rgbToHex(kelvinToRgb(temperature))
+    : "#ffd27a";
+}
+
+export function getColorWheelSelection(deltaX, deltaY, radius) {
+  const safeRadius = Math.max(1, Number(radius) || 0);
+  return {
+    hue: (Math.atan2(deltaY, deltaX) * 180 / Math.PI + 450) % 360,
+    saturation: Math.min(1, Math.hypot(deltaX, deltaY) / safeRadius),
+  };
+}
+
+export function getColorWheelIndicatorPosition(hue, saturation = 1) {
+  const angle = (Number(hue) - 90) * Math.PI / 180;
+  const distance = Math.min(1, Math.max(0, Number(saturation) || 0))
+    * COLOR_WHEEL_INDICATOR_DISTANCE;
+  return {
+    x: 50 + Math.cos(angle) * distance,
+    y: 50 + Math.sin(angle) * distance,
+  };
 }
 
 function dispatchConfigChange(source, config) {
@@ -128,6 +187,8 @@ export function createLightControlPopup({
   let destroyed = false;
   let lastStateSignature = "";
   let customColor = rgbToHex(getLightRgbColor(entityState) || [255, 153, 52]);
+  let customHue = 32;
+  let customSaturation = .9;
 
   const brightnessAction = createLatestValueAction((value) => applyPatch({ brightness: value }), {
     intervalMs: SERVICE_INTERVAL_MS,
@@ -237,13 +298,13 @@ export function createLightControlPopup({
   powerGroup.append(offButton, onButton);
 
   const brightnessValue = document.createElement("strong");
-  const brightnessSlider = createSlider({
+  const brightnessControls = createLightControlSliderVariants({
     label: t("lightControl.brightness", "Brightness"),
     min: 1,
     max: 100,
     value: getLightBrightnessPercent(entityState) ?? 100,
-    orientation: config.orientation === "horizontal" ? "auto" : "horizontal",
-    className: "mha-light-control-slider mha-light-control-brightness-slider",
+    orientation: config.orientation,
+    className: "mha-light-control-brightness-slider",
     onInput: (event) => {
       const value = Number(event.currentTarget.value);
       brightnessValue.textContent = `${Math.round(value)}%`;
@@ -255,19 +316,19 @@ export function createLightControlPopup({
     icon: "brightness-up",
     label: t("lightControl.brightness", "Brightness"),
     valueElement: brightnessValue,
-    control: brightnessSlider,
+    control: brightnessControls.slot,
+    className: "mha-light-control-brightness-row",
   });
-  const brightnessInput = brightnessSlider.querySelector(".mha-slider-input");
 
   const temperatureValue = document.createElement("strong");
   const initialRange = getLightColorTemperatureRange(entityState);
-  const temperatureSlider = createSlider({
+  const temperatureControls = createLightControlSliderVariants({
     label: t("lightControl.temperature", "Temperature"),
     min: initialRange.min,
     max: initialRange.max,
     value: getLightColorTemperature(entityState) ?? 3500,
-    orientation: config.orientation === "horizontal" ? "auto" : "horizontal",
-    className: "mha-light-control-slider mha-light-control-temperature-slider",
+    orientation: config.orientation,
+    className: "mha-light-control-temperature-slider",
     onInput: (event) => {
       const value = Number(event.currentTarget.value);
       temperatureValue.textContent = `${Math.round(value)} K`;
@@ -279,9 +340,9 @@ export function createLightControlPopup({
     icon: "temperature",
     label: t("lightControl.temperature", "Temperature"),
     valueElement: temperatureValue,
-    control: temperatureSlider,
+    control: temperatureControls.slot,
+    className: "mha-light-control-temperature-row",
   });
-  const temperatureInput = temperatureSlider.querySelector(".mha-slider-input");
 
   controlsSection.append(powerGroup, brightnessRow, temperatureRow);
 
@@ -397,9 +458,10 @@ export function createLightControlPopup({
       config = normalizeLightControlConfig(configDraft);
       configDraft = cloneLightControlConfig(config);
       controlsSection.dataset.orientation = config.orientation;
-      const sliderOrientation = config.orientation === "horizontal" ? "auto" : "horizontal";
-      brightnessSlider.dataset.orientationMode = sliderOrientation;
-      temperatureSlider.dataset.orientationMode = sliderOrientation;
+      const sliderOrientation = config.orientation;
+      [...brightnessControls.sliders, ...temperatureControls.sliders].forEach((slider) => {
+        slider.dataset.orientationMode = sliderOrientation;
+      });
       syncPresetDefinitions();
       lastStateSignature = "";
       syncFromHass(currentHass);
@@ -445,19 +507,20 @@ export function createLightControlPopup({
     const radius = Math.max(1, Math.min(rect.width, rect.height) / 2);
     const x = clientX - (rect.left + rect.width / 2);
     const y = clientY - (rect.top + rect.height / 2);
-    const saturation = Math.min(1, Math.hypot(x, y) / radius);
-    const hue = (Math.atan2(y, x) * 180 / Math.PI + 450) % 360;
+    const { hue, saturation } = getColorWheelSelection(x, y, radius);
     setCustomColor(hue, saturation);
   }
 
   function setCustomColor(hue, saturation = 1) {
-    customColor = rgbToHex(hsvToRgb(hue, saturation, 1));
-    const angle = (hue - 90) * Math.PI / 180;
-    const distance = saturation * 46;
-    colorWheel.style.setProperty("--mha-light-wheel-x", `${50 + Math.cos(angle) * distance}%`);
-    colorWheel.style.setProperty("--mha-light-wheel-y", `${50 + Math.sin(angle) * distance}%`);
-    colorWheel.setAttribute("aria-valuenow", String(Math.round(hue)));
-    colorPreview.style.setProperty("--mha-light-selected-color", customColor);
+    customHue = ((Number(hue) % 360) + 360) % 360;
+    customSaturation = Math.min(1, Math.max(0, Number(saturation) || 0));
+    customColor = rgbToHex(hsvToRgb(customHue, customSaturation, 1));
+    const indicator = getColorWheelIndicatorPosition(customHue, customSaturation);
+    colorWheel.style.setProperty("--mha-light-wheel-x", `${indicator.x}%`);
+    colorWheel.style.setProperty("--mha-light-wheel-y", `${indicator.y}%`);
+    colorWheel.setAttribute("aria-valuenow", String(Math.round(customHue)));
+    colorWheel.setAttribute("aria-valuetext", customColor.toUpperCase());
+    colorView.style.setProperty("--mha-light-selected-color", customColor);
     colorValue.textContent = customColor.toUpperCase();
   }
 
@@ -489,7 +552,7 @@ export function createLightControlPopup({
         onClick: () => applyPatch(buildAmbienceLightPatch(preset)),
       });
       button.dataset.presetId = preset.id;
-      button.style.setProperty("--mha-light-preset-color", preset.color);
+      button.style.setProperty("--mha-light-preset-color", getAmbienceDisplayColor(preset));
       button.append(createIconSymbol({ name: preset.icon }));
       const label = document.createElement("span");
       label.textContent = presetName;
@@ -525,6 +588,7 @@ export function createLightControlPopup({
     const temperature = getLightColorTemperature(entityState);
     const temperatureLimits = getLightColorTemperatureRange(entityState);
     const rgb = getLightRgbColor(entityState);
+    const displayColor = getLightDisplayColor(entityState);
     const nextStateSignature = JSON.stringify({
       available,
       capabilities,
@@ -540,6 +604,8 @@ export function createLightControlPopup({
 
     root.dataset.entityAvailable = String(available);
     root.dataset.lightOn = String(on);
+    entityIcon.style.setProperty("--mha-light-entity-color", displayColor);
+    entityIcon.dataset.active = String(on);
     title.textContent = getFriendlyName(widget, entityState);
     status.textContent = available
       ? `${on ? t("states.on", "On") : t("states.off", "Off")}${brightness != null ? ` · ${brightness}%` : ""}`
@@ -551,17 +617,21 @@ export function createLightControlPopup({
     [offButton, onButton].forEach(button => { button.disabled = !available; });
 
     brightnessRow.hidden = !capabilities.brightness;
-    brightnessSlider.__mhaSliderApi?.setDisabled(!available || !capabilities.brightness);
-    if (!brightnessInput?.matches?.(":active") && brightness != null) {
-      brightnessSlider.__mhaSliderApi?.setValue(brightness);
+    brightnessControls.sliders.forEach((slider) => {
+      slider.__mhaSliderApi?.setDisabled(!available || !capabilities.brightness);
+    });
+    if (!brightnessControls.inputs.some(input => input?.matches?.(":active")) && brightness != null) {
+      brightnessControls.sliders.forEach(slider => slider.__mhaSliderApi?.setValue(brightness));
       brightnessValue.textContent = `${brightness}%`;
     }
 
     temperatureRow.hidden = !capabilities.colorTemperature;
-    temperatureSlider.__mhaSliderApi?.setDisabled(!available || !capabilities.colorTemperature);
-    temperatureSlider.__mhaSliderApi?.setRange(temperatureLimits.min, temperatureLimits.max);
-    if (!temperatureInput?.matches?.(":active") && temperature != null) {
-      temperatureSlider.__mhaSliderApi?.setValue(temperature);
+    temperatureControls.sliders.forEach((slider) => {
+      slider.__mhaSliderApi?.setDisabled(!available || !capabilities.colorTemperature);
+      slider.__mhaSliderApi?.setRange(temperatureLimits.min, temperatureLimits.max);
+    });
+    if (!temperatureControls.inputs.some(input => input?.matches?.(":active")) && temperature != null) {
+      temperatureControls.sliders.forEach(slider => slider.__mhaSliderApi?.setValue(temperature));
       temperatureValue.textContent = `${temperature} K`;
     }
 
@@ -600,8 +670,8 @@ export function createLightControlPopup({
         ) <= 75;
       button.setAttribute("aria-pressed", String(Boolean(brightnessMatches && appearanceMatches)));
     });
-    if (rgb && currentView !== "color") {
-      const hsv = rgbToHsv(rgb);
+    if (currentView !== "color") {
+      const hsv = rgbToHsv(hexToRgb(displayColor));
       setCustomColor(hsv.hue, hsv.saturation);
     }
   }
@@ -667,7 +737,7 @@ export function createLightControlPopup({
         : 0;
     if (!direction) return;
     event.preventDefault();
-    setCustomColor(currentHue + direction * (event.shiftKey ? 15 : 3), 1);
+    setCustomColor(currentHue + direction * (event.shiftKey ? 15 : 3), customSaturation);
   });
 
   root.__mhaUpdateFromHass = syncFromHass;
