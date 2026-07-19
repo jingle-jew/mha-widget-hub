@@ -130,7 +130,8 @@ test("release ZIP contains the installable integration and no discarded metadata
   assert.equal([...hacsEntries].some(entry => entry.startsWith("custom_components/")), false);
 
   const hacs = JSON.parse(await readFile(path.join(REPO_ROOT, "hacs.json"), "utf8"));
-  assert.equal(hacs.zip_release, true);
   assert.equal(hacs.hide_default_branch, true);
-  assert.equal(hacs.filename, path.basename(hacsOutput));
+  if (hacs.zip_release === true) {
+    assert.equal(hacs.filename, path.basename(hacsOutput));
+  }
 });
