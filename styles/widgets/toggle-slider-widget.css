@@ -53,6 +53,7 @@
   overflow: hidden;
 }
 
+
 .combined-toggle-slider__slider {
   display: grid;
   grid-template-columns: minmax(0, 1fr);

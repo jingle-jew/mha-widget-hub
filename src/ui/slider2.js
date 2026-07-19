@@ -13,7 +13,6 @@ export function createSlider2({
 } = {}) {
   const slider = createSlider({
     ...sliderOptions,
-    orientation: "horizontal",
     className: ["slider2", "slider2--ios", "slider2--compact", className]
       .filter(Boolean)
       .join(" "),

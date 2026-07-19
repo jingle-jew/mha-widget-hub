@@ -10,9 +10,6 @@
   --mha-system-button-bg-hover: var(--mha-system-button-bg);
   --mha-system-button-color: var(--mha-preview-text, var(--mha-text-primary, currentColor));
   --mha-system-button-border: var(--mha-preview-border, var(--mha-border-secondary, rgba(255,255,255,.18)));
-  --mha-system-button-shadow:
-    inset 0 1px 0 color-mix(in srgb, currentColor 8%, transparent),
-    0 6px 16px rgba(0,0,0,.10);
 
   appearance: none;
   inline-size: var(--mha-system-button-size);
@@ -27,7 +24,7 @@
   border-radius: 999px;
   background: var(--mha-system-button-bg);
   color: var(--mha-system-button-color);
-  box-shadow: var(--mha-system-button-shadow);
+  box-shadow: none;
   font: inherit;
   line-height: 1;
   cursor: pointer;
@@ -67,7 +64,6 @@
   --mha-system-button-color: #000;
   --mha-system-button-border: transparent;
   --mha-system-button-border-hover: transparent;
-  --mha-system-button-shadow: 0 8px 18px rgba(0,0,0,.14);
 }
 
 .mha-system-button--danger,
@@ -78,7 +74,6 @@
   --mha-system-button-color: #fff;
   --mha-system-button-border: transparent;
   --mha-system-button-border-hover: transparent;
-  --mha-system-button-shadow: 0 10px 22px rgba(255, 59, 48, .28);
 }
 
 .mha-system-button--close,

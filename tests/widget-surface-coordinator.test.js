@@ -209,6 +209,21 @@ test("widget surface coordinator builds widget shell props with the existing cal
   assert.deepEqual(calls.configureSlot, [["clock", 2]]);
 });
 
+test("widget surface coordinator persists a targeted widget configuration update", () => {
+  const { coordinator, state, calls } = createHarness({
+    state: {
+      widgets: [{ id: "clock", kind: "toggle", entityId: "light.salon", w: 3, h: 1 }],
+    },
+  });
+
+  assert.equal(coordinator.updateWidgetConfig("clock", {
+    lightPopup: { orientation: "horizontal" },
+  }), true);
+  assert.deepEqual(state.widgets[0].lightPopup, { orientation: "horizontal" });
+  assert.equal(calls.saveWidgets, 1);
+  assert.equal(calls.rerenderWidgetContent.length, 1);
+});
+
 test("replace widget keeps position and rebuilds the shell with the same callback contract", () => {
   const { coordinator, calls, existingWidget, grid } = createHarness();
 

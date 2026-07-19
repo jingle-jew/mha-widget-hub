@@ -34,6 +34,7 @@ export function createWidgetShell(
     onCycleVariant,
     onConfigure,
     onConfigureSlot,
+    onUpdateWidgetConfig,
     hass,
     entityVisibilityConfig,
   } = {},
@@ -60,6 +61,7 @@ export function createWidgetShell(
     isEditing,
     hass,
     entityVisibilityConfig,
+    updateWidgetConfig: (config) => onUpdateWidgetConfig?.(widget.id, config),
   };
 
   const shell = document.createElement("article");

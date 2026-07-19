@@ -132,7 +132,26 @@ export class WidgetSurfaceCoordinator {
       onCycleVariant: (id) => this.cycleVariant(id),
       onConfigure: (id) => this.openWidgetConfig(id),
       onConfigureSlot: (id, slotIndex) => this.openScenesButtonConfig(id, slotIndex),
+      onUpdateWidgetConfig: (id, config) => this.updateWidgetConfig(id, config),
     };
+  }
+
+  updateWidgetConfig(id, config = {}) {
+    if (!id || !config || typeof config !== "object") return false;
+
+    const widgets = this.getWidgets();
+    const index = widgets.findIndex((item) => item.id === id);
+    if (index < 0) return false;
+
+    const nextWidgets = [...widgets];
+    nextWidgets[index] = this.normalizeStoredWidgetFn({
+      ...widgets[index],
+      ...config,
+    });
+    this.setWidgets(nextWidgets);
+    this.saveWidgets();
+    this.rerenderWidgetContent(id);
+    return true;
   }
 
   createWidgetElement(widget, {
@@ -176,6 +195,7 @@ export class WidgetSurfaceCoordinator {
       isEditing: this.getIsEditing(),
       hass: this.getHass(),
       entityVisibilityConfig: this.getEntityVisibilityConfig(),
+      updateWidgetConfig: (config) => this.updateWidgetConfig(widget.id, config),
     };
   }
 

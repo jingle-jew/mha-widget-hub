@@ -25,6 +25,10 @@ import {
 import { getLayoutForWidth } from "./responsive.js";
 import { createPagePanel } from "../pages/page-panel.js";
 import {
+  createWeatherPageBackground,
+  syncWeatherPageBackgroundState,
+} from "../pages/weather-page-background.js";
+import {
   createMediaPage,
   resolveMediaPageNowPlayingId,
 } from "../pages/media-page.js?v=media-page-ios-cards-v3";
@@ -236,6 +240,90 @@ export function createRenderPipeline(host, options = {}) {
     frontendVersion,
     styleManifest = [],
   } = options;
+
+  function syncWeatherPageBackdropState({
+    activePage = getActivePage(host),
+  } = {}) {
+    const background = host.shadowRoot?.querySelector?.(".mha-background") || null;
+    const scenes = [...background?.querySelectorAll?.(".mha-weather-background") || []];
+    const currentScene = scenes.find(scene => scene.dataset.active === "true") || scenes.at(-1) || null;
+    const weatherActive = isWeatherPage(activePage);
+    host.dataset.weatherPageActive = String(weatherActive);
+
+    if (!background) return;
+    if (!weatherActive) {
+      host._weatherBackgroundRequestId = (host._weatherBackgroundRequestId || 0) + 1;
+      host._weatherBackgroundPendingSceneKey = "";
+      scenes.forEach(scene => scene.remove?.());
+      return;
+    }
+
+    const nextScene = createWeatherPageBackground(activePage, host._hass);
+    if (currentScene?.dataset.sceneKey === nextScene.dataset.sceneKey) {
+      host._weatherBackgroundPendingSceneKey = "";
+      syncWeatherPageBackgroundState(currentScene, nextScene);
+      currentScene.dataset.active = "true";
+      scenes.filter(scene => scene !== currentScene).forEach(scene => scene.remove?.());
+      return;
+    }
+
+    if (host._weatherBackgroundPendingSceneKey === nextScene.dataset.sceneKey) return;
+
+    const mountNextScene = () => {
+      const requestId = (host._weatherBackgroundRequestId || 0) + 1;
+      host._weatherBackgroundRequestId = requestId;
+      host._weatherBackgroundPendingSceneKey = "";
+      nextScene.dataset.active = "false";
+      background.append(nextScene);
+      requestAnimationFrame(() => {
+        if (host._weatherBackgroundRequestId !== requestId || !nextScene.isConnected) return;
+        currentScene?.setAttribute?.("data-active", "false");
+        nextScene.dataset.active = "true";
+        setTimeout(() => {
+          if (host._weatherBackgroundRequestId !== requestId) return;
+          [...background.querySelectorAll(".mha-weather-background")]
+            .filter(scene => scene !== nextScene)
+            .forEach(scene => scene.remove?.());
+        }, 1900);
+      });
+    };
+
+    if (!currentScene) {
+      nextScene.dataset.active = "true";
+      background.append(nextScene);
+      return;
+    }
+
+    if (currentScene.dataset.assetKey === nextScene.dataset.assetKey) {
+      mountNextScene();
+      return;
+    }
+
+    const assetUrl = String(nextScene.dataset.assetUrl || "").trim();
+    if (!assetUrl || typeof globalThis.Image !== "function") {
+      mountNextScene();
+      return;
+    }
+
+    const preloadRequestId = (host._weatherBackgroundRequestId || 0) + 1;
+    host._weatherBackgroundRequestId = preloadRequestId;
+    host._weatherBackgroundPendingSceneKey = nextScene.dataset.sceneKey;
+    const image = new globalThis.Image();
+    image.onload = () => {
+      Promise.resolve(image.decode?.())
+        .catch(() => {})
+        .then(() => {
+          if (host._weatherBackgroundRequestId !== preloadRequestId) return;
+          mountNextScene();
+        });
+    };
+    image.onerror = () => {
+      if (host._weatherBackgroundRequestId !== preloadRequestId) return;
+      host._weatherBackgroundPendingSceneKey = "";
+    };
+    image.src = assetUrl;
+    if (image.complete && image.naturalWidth) queueMicrotask(() => image.onload?.());
+  }
 
   function syncMediaPageBackdropState({
     activePage = getActivePage(host),
@@ -543,6 +631,7 @@ export function createRenderPipeline(host, options = {}) {
     host._applyCustomWallpaperState(themeState);
     host._applyHaSidebarMode(host._hideHaSidebar);
     syncMediaPageBackdropState({ themeStyle: themeState?.themeStyle || "" });
+    syncWeatherPageBackdropState();
     host._renderId = renderId;
     cancelAnimationFrame(host._widgetRenderFrame);
     cancelAnimationFrame(host._secondaryUiFrame);
@@ -730,6 +819,7 @@ export function createRenderPipeline(host, options = {}) {
     ensureIosOrganicWallpaperNode(background);
     syncShellBackgroundSurface(background);
     if (!persistentBackground) host.shadowRoot.append(background);
+    syncWeatherPageBackdropState();
     host.shadowRoot.append(shell);
     return { links, pageStage };
   }
@@ -798,6 +888,7 @@ export function createRenderPipeline(host, options = {}) {
     host._clearTouchEditLongPress?.();
     host.dataset.widgetsState = "pending";
     syncMediaPageBackdropState({ themeStyle: context.themeStyle });
+    syncWeatherPageBackdropState();
     applyRenderDatasetsAndRuntimeVars(context);
 
     destroyDomSubtree(currentPanel);
@@ -945,6 +1036,7 @@ export function createRenderPipeline(host, options = {}) {
 
   return {
     render,
+    syncWeatherPageBackdropState,
     createWidgetPlaceholder,
     appendDeferredUi,
     handleStylesReady,

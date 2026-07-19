@@ -15,6 +15,14 @@
     .dev-panel button:hover,.dev-panel select:hover{background:rgba(255,255,255,.2)}
     .dev-panel select{grid-column:1/-1;width:100%}
     @media (max-width:420px){.dev-panel{grid-template-columns:1fr;width:min(260px,calc(100vw - 24px))}.dev-panel button,.dev-panel select{width:100%}}
+    .dev-weather-panel{position:fixed;z-index:9998;left:50%;bottom:max(18px,env(safe-area-inset-bottom));translate:-50% 0;display:grid;gap:10px;width:min(620px,calc(100vw - 28px));padding:12px;border:1px solid rgba(255,255,255,.16);border-radius:22px;background:rgba(10,10,18,.72);backdrop-filter:blur(24px) saturate(155%);box-shadow:0 22px 70px rgba(0,0,0,.36)}
+    .dev-weather-panel[hidden]{display:none}
+    .dev-weather-panel__title{font-size:12px;font-weight:800;letter-spacing:.02em;opacity:.72}
+    .dev-weather-panel__controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+    .dev-weather-panel__control{display:grid;gap:5px;font-size:11px;font-weight:750;opacity:.78}
+    .dev-weather-panel select{appearance:none;width:100%;min-height:38px;border:0;border-radius:999px;padding:8px 12px;background:rgba(255,255,255,.12);color:inherit;font:inherit;font-size:12px;font-weight:750;cursor:pointer;opacity:1}
+    .dev-weather-panel select:hover{background:rgba(255,255,255,.2)}
+    @media (max-width:560px){.dev-weather-panel__controls{grid-template-columns:1fr}}
     mha-widget-hub{width:100vw;height:100vh;display:block}
   </style>
 </head>
@@ -36,6 +44,10 @@
   <script type="module">
     const devAssetVersion = `dev-${Date.now()}`;
     await import(`./mha-widget-hub-loader.js?v=${devAssetVersion}`);
+    const {
+      WEATHER_LANDSCAPE_MOMENTS,
+      resolveWeatherLandscapeAmbience,
+    } = await import(`./src/pages/weather-background-assets.js?v=${devAssetVersion}`);
 
     const hub = document.querySelector("mha-widget-hub");
     const devMenu = document.querySelector("[data-dev-menu]");
@@ -44,6 +56,40 @@
 
     const legacyDevPrefix = ["mha", "v2", "dev"].join("-");
     const MOCK_MEDIA_ARTWORK_URL = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%237ee8ff'/%3E%3Cstop offset='48%25' stop-color='%237b61ff'/%3E%3Cstop offset='100%25' stop-color='%23ff7ac8'/%3E%3C/linearGradient%3E%3CradialGradient id='glow' cx='28%25' cy='20%25' r='60%25'%3E%3Cstop offset='0%25' stop-color='%23ffffff' stop-opacity='.72'/%3E%3Cstop offset='100%25' stop-color='%23ffffff' stop-opacity='0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='512' height='512' rx='112' fill='url(%23bg)'/%3E%3Crect width='512' height='512' rx='112' fill='url(%23glow)'/%3E%3Ccircle cx='372' cy='132' r='74' fill='%23ffffff' fill-opacity='.18'/%3E%3Ccircle cx='142' cy='372' r='96' fill='%23000000' fill-opacity='.16'/%3E%3Cpath d='M194 334V150h154v48H248v136a56 56 0 1 1-54-56z' fill='%23ffffff' fill-opacity='.92'/%3E%3C/svg%3E";
+    const DEV_WEATHER_SCENARIOS = Object.freeze([
+      { id: "sunny", label: "Soleil", condition: "sunny", cloudCoverage: 8, windSpeed: 6 },
+      { id: "clear-night", label: "Ciel clair (nuit)", condition: "clear-night", cloudCoverage: 10, windSpeed: 7 },
+      { id: "exceptional", label: "Exceptionnel", condition: "exceptional", cloudCoverage: 12, windSpeed: 8 },
+      { id: "partlycloudy", label: "Éclaircies", condition: "partlycloudy", cloudCoverage: 48, windSpeed: 12 },
+      { id: "windy", label: "Venteux", condition: "windy", cloudCoverage: 58, windSpeed: 46 },
+      { id: "windy-variant", label: "Venteux et nuageux", condition: "windy-variant", cloudCoverage: 72, windSpeed: 54 },
+      { id: "fog", label: "Brouillard", condition: "fog", cloudCoverage: 100, windSpeed: 4 },
+      { id: "cloudy", label: "Couvert", condition: "cloudy", cloudCoverage: 92, windSpeed: 18 },
+      { id: "rainy", label: "Pluie", condition: "rainy", cloudCoverage: 96, windSpeed: 24 },
+      { id: "pouring", label: "Forte pluie", condition: "pouring", cloudCoverage: 100, windSpeed: 38 },
+      { id: "lightning", label: "Éclairs", condition: "lightning", cloudCoverage: 100, windSpeed: 48 },
+      { id: "lightning-rainy", label: "Orage", condition: "lightning-rainy", cloudCoverage: 100, windSpeed: 52 },
+      { id: "hail", label: "Grêle", condition: "hail", cloudCoverage: 98, windSpeed: 36 },
+      { id: "snowy", label: "Neige", condition: "snowy", cloudCoverage: 94, windSpeed: 16 },
+      { id: "snowy-rainy", label: "Neige et pluie", condition: "snowy-rainy", cloudCoverage: 98, windSpeed: 22 },
+      { id: "freezing-rainy", label: "Pluie verglaçante", condition: "freezing-rainy", cloudCoverage: 100, windSpeed: 26 },
+      { id: "unknown", label: "Condition inconnue", condition: "unknown", cloudCoverage: 52, windSpeed: 10 },
+      { id: "unavailable", label: "Condition indisponible", condition: "unavailable", cloudCoverage: 52, windSpeed: 10 },
+    ]);
+    const DEV_WEATHER_MOMENT_LABELS = Object.freeze({
+      dawn: "Aube",
+      sunrise: "Lever du soleil",
+      morning: "Matin",
+      afternoon: "Après-midi",
+      sunset: "Coucher du soleil",
+      dusk: "Crépuscule",
+      night: "Nuit",
+    });
+    const DEFAULT_DEV_WEATHER_SCENARIO = "partlycloudy";
+    const DEFAULT_DEV_WEATHER_MOMENT = "afternoon";
+    let devWeatherScenarioId = DEFAULT_DEV_WEATHER_SCENARIO;
+    let devWeatherMoment = DEFAULT_DEV_WEATHER_MOMENT;
+    let devMockHass = null;
 
     function readDevPreference(key, legacyKey, fallback) {
       const current = localStorage.getItem(key);
@@ -396,6 +442,7 @@
           friendly_name: "Soleil",
           next_rising: forecastDate(15),
           next_setting: forecastDate(4),
+          _mha_weather_period_override: devWeatherMoment,
         }),
       };
       const WEATHER_CONFIG_ENTRY_ID = "dev-weather-entry";
@@ -512,10 +559,154 @@
       };
     }
 
+    function setDevWeatherScenario(scenarioId = DEFAULT_DEV_WEATHER_SCENARIO) {
+      if (!devMockHass) return false;
+      const scenario = DEV_WEATHER_SCENARIOS.find(item => item.id === scenarioId)
+        || DEV_WEATHER_SCENARIOS.find(item => item.id === DEFAULT_DEV_WEATHER_SCENARIO);
+      const nextStates = { ...devMockHass.states };
+
+      ["weather.val_d_or_previsions", "weather.home"].forEach((entityId) => {
+        const current = nextStates[entityId];
+        if (!current) return;
+        nextStates[entityId] = {
+          ...current,
+          state: scenario.condition,
+          attributes: {
+            ...current.attributes,
+            cloud_coverage: scenario.cloudCoverage,
+            wind_speed: scenario.windSpeed,
+          },
+          last_updated: new Date().toISOString(),
+        };
+      });
+
+      devWeatherScenarioId = scenario.id;
+      devMockHass = { ...devMockHass, states: nextStates };
+      hub.hass = devMockHass;
+      hub.requestRender?.();
+      return true;
+    }
+
+    function setDevWeatherMoment(moment = DEFAULT_DEV_WEATHER_MOMENT) {
+      if (!devMockHass) return false;
+      const resolvedMoment = WEATHER_LANDSCAPE_MOMENTS.includes(moment)
+        ? moment
+        : DEFAULT_DEV_WEATHER_MOMENT;
+      const nextStates = { ...devMockHass.states };
+      const sun = nextStates["sun.sun"];
+      if (!sun) return false;
+      const isDay = ["sunrise", "morning", "afternoon", "sunset"].includes(resolvedMoment);
+
+      nextStates["sun.sun"] = {
+        ...sun,
+        state: isDay ? "above_horizon" : "below_horizon",
+        attributes: {
+          ...sun.attributes,
+          _mha_weather_period_override: resolvedMoment,
+        },
+        last_changed: new Date().toISOString(),
+        last_updated: new Date().toISOString(),
+      };
+
+      devWeatherMoment = resolvedMoment;
+      devMockHass = { ...devMockHass, states: nextStates };
+      hub.hass = devMockHass;
+      hub.requestRender?.();
+      return true;
+    }
+
+    function mountDevWeatherPanel() {
+      let panel = document.querySelector("[data-dev-weather-panel]");
+      if (!panel) {
+        panel = document.createElement("section");
+        panel.className = "dev-weather-panel";
+        panel.dataset.devWeatherPanel = "true";
+        panel.hidden = true;
+
+        const title = document.createElement("div");
+        title.className = "dev-weather-panel__title";
+        title.textContent = "Scène météo · dev";
+
+        const controls = document.createElement("div");
+        controls.className = "dev-weather-panel__controls";
+
+        const weatherControl = document.createElement("label");
+        weatherControl.className = "dev-weather-panel__control";
+        weatherControl.append(document.createTextNode("Météo"));
+        const weatherSelect = document.createElement("select");
+        weatherSelect.dataset.devWeatherCondition = "true";
+        weatherSelect.setAttribute("aria-label", "Condition météo de la scène");
+        DEV_WEATHER_SCENARIOS.forEach((scenario) => {
+          const option = document.createElement("option");
+          const ambience = resolveWeatherLandscapeAmbience(scenario.condition);
+          option.value = scenario.id;
+          option.textContent = `${scenario.label} · ${ambience}`;
+          weatherSelect.append(option);
+        });
+        weatherSelect.value = devWeatherScenarioId;
+        weatherSelect.onchange = () => setDevWeatherScenario(weatherSelect.value);
+        weatherControl.append(weatherSelect);
+
+        const momentControl = document.createElement("label");
+        momentControl.className = "dev-weather-panel__control";
+        momentControl.append(document.createTextNode("Heure"));
+        const momentSelect = document.createElement("select");
+        momentSelect.dataset.devWeatherMoment = "true";
+        momentSelect.setAttribute("aria-label", "Heure de la scène météo");
+        WEATHER_LANDSCAPE_MOMENTS.forEach((moment) => {
+          const option = document.createElement("option");
+          option.value = moment;
+          option.textContent = DEV_WEATHER_MOMENT_LABELS[moment] || moment;
+          momentSelect.append(option);
+        });
+        momentSelect.value = devWeatherMoment;
+        momentSelect.onchange = () => setDevWeatherMoment(momentSelect.value);
+        momentControl.append(momentSelect);
+
+        controls.append(weatherControl, momentControl);
+
+        panel.append(title, controls);
+        document.body.append(panel);
+      }
+
+      syncDevWeatherPanelVisibility();
+      return panel;
+    }
+
+    function syncDevWeatherPanelVisibility() {
+      const panel = document.querySelector("[data-dev-weather-panel]");
+      if (!panel) return;
+      const weatherActive = hub.dataset.weatherPageActive === "true"
+        || hub.dataset.activePageType === "weather"
+        || Boolean(hub.shadowRoot?.querySelector?.('.mha-page-panel[data-page-type="weather"]'));
+      panel.hidden = !weatherActive;
+    }
+
+    function observeDevWeatherPanel() {
+      mountDevWeatherPanel();
+      if (!hub.__mhaDevWeatherPanelObserver) {
+        const hostObserver = new MutationObserver(syncDevWeatherPanelVisibility);
+        hostObserver.observe(hub, {
+          attributes: true,
+          attributeFilter: ["data-weather-page-active", "data-active-page-type"],
+        });
+        hub.__mhaDevWeatherPanelObserver = hostObserver;
+      }
+      const root = hub.shadowRoot;
+      if (root && !root.__mhaDevWeatherPanelObserver) {
+        const rootObserver = new MutationObserver(syncDevWeatherPanelVisibility);
+        rootObserver.observe(root, { childList: true, subtree: true });
+        root.__mhaDevWeatherPanelObserver = rootObserver;
+      }
+      syncDevWeatherPanelVisibility();
+    }
+
     if (!new URLSearchParams(location.search).has("no-hass")) {
       const attachMockHass = () => {
-        hub.hass = createMockHass();
+        devMockHass = createMockHass();
+        hub.hass = devMockHass;
         hub.requestRender?.();
+        observeDevWeatherPanel();
       };
 
       if (customElements.get("mha-widget-hub")) {
@@ -540,8 +731,15 @@
       hub,
       createMockHass,
       resetMockHass() {
-        hub.hass = createMockHass();
+        devWeatherScenarioId = DEFAULT_DEV_WEATHER_SCENARIO;
+        devWeatherMoment = DEFAULT_DEV_WEATHER_MOMENT;
+        devMockHass = createMockHass();
+        hub.hass = devMockHass;
         hub.requestRender?.();
+        const weatherSelect = document.querySelector("[data-dev-weather-condition]");
+        const momentSelect = document.querySelector("[data-dev-weather-moment]");
+        if (weatherSelect) weatherSelect.value = devWeatherScenarioId;
+        if (momentSelect) momentSelect.value = devWeatherMoment;
         return hub.hass;
       },
       setTheme,
@@ -549,6 +747,9 @@
       setThemeStyle,
       setLayoutMode,
       setIconShape,
+      setDevWeatherScenario,
+      setDevWeatherMoment,
+      mountDevWeatherPanel,
     };
   </script>
 </body>

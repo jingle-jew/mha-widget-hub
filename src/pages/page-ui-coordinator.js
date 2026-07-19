@@ -68,6 +68,7 @@ export class PageUiCoordinator {
     exitEditMode = () => {},
     clearPlacementState = () => {},
     transitionPageRender = () => {},
+    syncActivePageBackdrop = () => {},
     renderRoot = () => {},
     syncDocksFn = syncDocks,
     createDockPropsFn = createDockProps,
@@ -114,6 +115,7 @@ export class PageUiCoordinator {
     this.exitEditMode = (...args) => exitEditMode(...args);
     this.clearPlacementState = (...args) => clearPlacementState(...args);
     this.transitionPageRender = (...args) => transitionPageRender(...args);
+    this.syncActivePageBackdrop = (...args) => syncActivePageBackdrop(...args);
     this.renderRoot = (...args) => renderRoot(...args);
     this.syncDocksFn = (...args) => syncDocksFn(...args);
     this.createDockPropsFn = (...args) => createDockPropsFn(...args);
@@ -173,6 +175,7 @@ export class PageUiCoordinator {
   }
 
   refreshAfterActivePageChange(previousPage, nextPage) {
+    this.syncActivePageBackdrop(nextPage);
     if (
       previousPage?.id
       && nextPage?.id

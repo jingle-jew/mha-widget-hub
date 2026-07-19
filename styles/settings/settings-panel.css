@@ -1656,12 +1656,88 @@
   font-size: .8rem;
 }
 
+.mha-settings-weather-landscape-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: .7rem;
+}
+
+.mha-settings-weather-landscape-option {
+  min-inline-size: 0;
+  min-block-size: 2.75rem;
+  display: grid;
+  grid-template-areas:
+    "preview preview"
+    "label indicator";
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: .65rem;
+  padding: .65rem;
+  border: 1px solid color-mix(in srgb, var(--mha-border-secondary, rgba(255,255,255,.18)) 70%, transparent);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--mha-surface-panel, rgba(255,255,255,.14)) 68%, transparent);
+  cursor: pointer;
+}
+
+.mha-settings-weather-landscape-option[data-selected="true"] {
+  border-color: color-mix(in srgb, var(--mha-accent, #8b72ff) 48%, transparent);
+  background: color-mix(in srgb, var(--mha-accent, #8b72ff) 18%, var(--mha-surface-panel, rgba(255,255,255,.14)));
+}
+
+.mha-settings-weather-landscape-option:has(.mha-choice-input:focus-visible) {
+  outline: 2px solid color-mix(in srgb, var(--mha-accent) 72%, white);
+  outline-offset: 2px;
+}
+
+.mha-settings-weather-landscape-option .mha-choice-label {
+  grid-area: label;
+  min-inline-size: 0;
+  align-self: center;
+  color: var(--mha-text-primary);
+  font-size: .84rem;
+  font-weight: var(--mha-font-weight-semibold);
+}
+
+.mha-settings-weather-landscape-option .mha-choice-indicator {
+  grid-area: indicator;
+  align-self: center;
+}
+
+.mha-settings-weather-landscape-preview {
+  grid-area: preview;
+  inline-size: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: .72rem;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, white 8%, transparent);
+}
+
+.mha-settings-weather-landscape-preview[data-renderer="celestial-gradient"] {
+  position: relative;
+  overflow: hidden;
+}
+
+.mha-settings-weather-landscape-preview[data-renderer="celestial-gradient"]::after {
+  content: "";
+  position: absolute;
+  inset-inline-start: 76%;
+  inset-block-start: 28%;
+  inline-size: clamp(1.25rem, 12%, 2.2rem);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 42% 40%, #fffbe8 0 18%, #ffe9a4 52%, #f8c568 100%);
+  box-shadow: 0 0 1.1rem rgba(255, 213, 125, .38);
+  transform: translate(-50%, -50%);
+}
+
 /* Structural Liquid tiles stay borderless; selected and active controls keep
  * their state borders from the rules above.
  */
 :host([data-theme-style="ios"][data-ios-glass="liquid"]) .mha-settings-nav-tile,
 :host([data-theme-style="ios"][data-ios-glass="liquid"]) .mha-settings-dock-row:not([data-active="true"]),
 :host([data-theme-style="ios"][data-ios-glass="liquid"]) .mha-settings-icon-option:not([data-selected="true"]),
+:host([data-theme-style="ios"][data-ios-glass="liquid"]) .mha-settings-weather-landscape-option:not([data-selected="true"]),
 :host([data-theme-style="ios"][data-ios-glass="liquid"]) .mha-settings-wallpaper-preview {
   border-color: transparent;
 }
@@ -1673,6 +1749,7 @@
 :host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-settings-nav-tile,
 :host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-settings-dock-row,
 :host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-settings-icon-option:not([data-selected="true"]),
+:host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-settings-weather-landscape-option:not([data-selected="true"]),
 :host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-settings-wallpaper-preview {
   background: var(--mha-ios-frosted-tile-surface);
   border-color: var(--mha-ios-frosted-tile-border);
@@ -1682,12 +1759,17 @@
 :host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-settings-nav-tile:hover,
 :host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-settings-nav-tile:focus-visible,
 :host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-settings-dock-row:hover,
-:host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-settings-icon-option:not([data-selected="true"]):hover {
+:host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-settings-icon-option:not([data-selected="true"]):hover,
+:host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-settings-weather-landscape-option:not([data-selected="true"]):hover {
   background: var(--mha-ios-frosted-tile-surface-hover);
 }
 
 @media (max-width: 420px) {
   .mha-settings-wallpaper-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .mha-settings-weather-landscape-grid {
     grid-template-columns: 1fr;
   }
 }

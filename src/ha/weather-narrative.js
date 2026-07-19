@@ -1,4 +1,4 @@
-import { t } from "../i18n/index.js";
+import { getLanguage, t } from "../i18n/index.js";
 
 const HOUR_MS = 60 * 60 * 1000;
 const FORECAST_WINDOW_MS = 24 * HOUR_MS;
@@ -63,7 +63,15 @@ function getPeriodLabel(date, now) {
 
 function getTimeLabel(date) {
   if (!date) return "";
-  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }).replace(/\s/g, "");
+  const locale = {
+    en: "en-CA",
+    fr: "fr-CA",
+    es: "es-ES",
+  }[getLanguage()] || getLanguage();
+  const options = date.getMinutes()
+    ? { hour: "numeric", minute: "2-digit" }
+    : { hour: "numeric" };
+  return new Intl.DateTimeFormat(locale, options).format(date);
 }
 
 function getForecast(weather = {}, now = new Date()) {
@@ -344,15 +352,20 @@ function buildWeatherAdvisory(weather, items, currentTime) {
     const target = dateOf(precipitation);
     const period = getPeriodLabel(target, currentTime);
     const isSnow = conditionIncludes(precipitation.condition, ["snow"]);
+    const time = Array.isArray(weather.hourlyForecast) && weather.hourlyForecast.length
+      ? getTimeLabel(target)
+      : "";
     return createEvent({
       kind: isSnow ? "snow" : "rain",
       chartKind: "precipitation",
       target,
       period,
       headline: translateMessage(
-        isSnow ? "snow" : "rain",
-        isSnow ? "Snow is expected {period}." : "Rain is expected {period}.",
-        { period },
+        time ? (isSnow ? "snowAt" : "rainAt") : (isSnow ? "snow" : "rain"),
+        time
+          ? (isSnow ? "Expect snow around {time}." : "Expect rain around {time}.")
+          : (isSnow ? "Expect snow {period}." : "Expect rain {period}."),
+        { period, time },
       ),
       secondary: precipitation.precipitationProbability != null
         ? translateMessage("precipitationSecondary", "Probability: {value}%", { value: Math.round(precipitation.precipitationProbability) })

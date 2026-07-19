@@ -26,6 +26,17 @@ function isDiscardedName(name) {
     || /\.py[cod]$/.test(name);
 }
 
+function isFrontendSourceOnlyPath(source, relativePath) {
+  const normalizedSource = String(source || "").split(path.sep).join("/");
+  const normalizedRelativePath = String(relativePath || "").split(path.sep).join("/");
+  return normalizedSource === "src"
+    && (
+      normalizedRelativePath === "assets/weather/png"
+      || normalizedRelativePath.startsWith("assets/weather/png/")
+      || /^assets\/weather\/landscapes\/[^/]+\/png(?:\/|$)/.test(normalizedRelativePath)
+    );
+}
+
 async function getEntryType(entry) {
   const entryStat = await stat(entry).catch(() => null);
   if (!entryStat) return null;
@@ -88,6 +99,7 @@ async function collectExpectedFiles(sourceRoot, sources) {
 
     const files = await listTreeFiles(sourcePath, { includeDiscarded: false });
     for (const relativePath of files) {
+      if (isFrontendSourceOnlyPath(source, relativePath)) continue;
       expected.set(path.join(destination, relativePath), path.join(sourcePath, relativePath));
     }
   }
@@ -109,7 +121,10 @@ export async function copyFrontendSources(
     await mkdir(path.dirname(destinationPath), { recursive: true });
     await cp(sourcePath, destinationPath, {
       recursive: true,
-      filter: entry => !isDiscardedName(path.basename(entry)),
+      filter: entry => {
+        if (isDiscardedName(path.basename(entry))) return false;
+        return !isFrontendSourceOnlyPath(source, path.relative(sourcePath, entry));
+      },
     });
   }
 

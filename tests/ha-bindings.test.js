@@ -42,6 +42,8 @@ import {
   createWeatherConfigDraft,
   normalizeWeatherForecastType,
   normalizeWeatherSurfaceMode,
+  renderWeatherConfigFields,
+  supportsWeatherForecastTypeConfig,
   supportsWeatherSurfaceModeConfig,
 } from "../src/widget-config/weather-config.js";
 import {
@@ -532,6 +534,66 @@ test("weather configuration defaults and persists forecast and surface modes", (
   assert.equal(supportsWeatherSurfaceModeConfig({ kind: "weather" }, "ios"), false);
   assert.equal(supportsWeatherSurfaceModeConfig({ kind: "weather" }, "material"), false);
   assert.equal(supportsWeatherSurfaceModeConfig({ kind: "weather-narrative" }, "oneui"), false);
+});
+
+test("weather brief configuration keeps forecast selection automatic", () => {
+  const hass = {
+    states: {
+      "weather.home": entity("weather.home", "sunny", { friendly_name: "Maison" }),
+    },
+  };
+  const widget = {
+    kind: "weather-metric",
+    metricKey: "summary",
+    entityId: "weather.home",
+    forecastType: "hourly",
+  };
+  const { draft } = createWeatherConfigDraft(widget, hass);
+  const configured = buildWeatherWidgetConfig(widget, draft, hass);
+
+  assert.equal(supportsWeatherForecastTypeConfig({ kind: "weather" }), true);
+  assert.equal(supportsWeatherForecastTypeConfig(widget), false);
+  assert.equal("forecastType" in configured, false);
+});
+
+test("weather brief configuration renders only the weather entity selector", () => {
+  const previousDocument = globalThis.document;
+  const selectLabels = [];
+  globalThis.document = {
+    createElement: () => ({
+      childNodes: [],
+      append(...children) {
+        this.childNodes.push(...children);
+      },
+    }),
+  };
+  const hass = {
+    states: {
+      "weather.home": entity("weather.home", "sunny", { friendly_name: "Maison" }),
+    },
+  };
+  const helpers = {
+    createField: (label, control) => ({ label, control }),
+    createRadioControl: () => ({}),
+    createSelectControl: ({ label }) => {
+      selectLabels.push(label);
+      return {};
+    },
+    configOptionLabel: (_key, option) => option.label,
+    t: (_key, fallback) => fallback,
+  };
+
+  try {
+    renderWeatherConfigFields({
+      widget: { kind: "weather-metric", metricKey: "summary" },
+      draft: createWeatherConfigDraft({}, hass).draft,
+      themeStyle: "oneui",
+    }, hass, null, null, helpers);
+  } finally {
+    globalThis.document = previousDocument;
+  }
+
+  assert.deepEqual(selectLabels, ["Weather entity"]);
 });
 
 test("modes and routines configuration keeps four buttons and preserves missing scenes", () => {

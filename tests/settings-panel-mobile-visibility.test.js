@@ -375,6 +375,57 @@ test("dock detail reuses the shared page icon registry", () => withMockDocument(
   );
 }));
 
+test("Weather page customization tile opens its dedicated landscape subpanel", () => withMockDocument(() => {
+  let openCount = 0;
+  let backCount = 0;
+  const changes = [];
+  const main = createSettingsPanel({
+    open: true,
+    scope: "all",
+    settingsPage: "main",
+    onOpenWeatherPageSettings: () => { openCount += 1; },
+  });
+  const weatherTile = main.querySelectorAll(".mha-settings-nav-tile")
+    .find(tile => hasText(tile, "Weather page"));
+
+  assert.ok(weatherTile);
+  weatherTile.listeners.click();
+  assert.equal(openCount, 1);
+
+  const subpanel = createSettingsPanel({
+    open: true,
+    scope: "all",
+    settingsPage: "weather-page",
+    weatherLandscapeId: "alpine-lake",
+    onWeatherPageMainBack: () => { backCount += 1; },
+    onWeatherLandscapeChange: value => changes.push(value),
+  });
+  const choices = subpanel.querySelectorAll(".mha-settings-weather-landscape-option");
+  const alpineChoice = choices.find(choice => choice.dataset.landscapeId === "alpine-lake");
+  const celestialChoice = choices.find(choice => choice.dataset.landscapeId === "celestial-gradient");
+  const alpineInput = alpineChoice.querySelector("input");
+  const celestialInput = celestialChoice.querySelector("input");
+
+  assert.equal(subpanel.dataset.settingsPage, "weather-page");
+  assert.equal(hasText(subpanel, "Landscape"), true);
+  assert.equal(choices.length, 2);
+  assert.equal(alpineChoice.dataset.selected, "true");
+  assert.ok(celestialChoice);
+  assert.equal(
+    celestialChoice.querySelector(".mha-settings-weather-landscape-preview").dataset.renderer,
+    "celestial-gradient",
+  );
+  assert.equal(alpineInput.checked, true);
+  celestialInput.checked = true;
+  celestialInput.listeners.change({ target: celestialInput });
+  assert.deepEqual(changes, ["celestial-gradient"]);
+
+  const renderedHeader = subpanel.querySelector(".mha-settings-header").replacedWith;
+  assert.equal(renderedHeader.querySelector(".mha-settings-title").textContent, "Weather page settings");
+  renderedHeader.querySelector(".mha-settings-back").listeners.click();
+  assert.equal(backCount, 1);
+}));
+
 test("settings panel hides the iOS glass variant selector", () => withMockDocument(() => {
   const iosPanel = createSettingsPanel({
     open: true,

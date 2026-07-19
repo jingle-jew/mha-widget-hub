@@ -96,6 +96,7 @@ test("settings panel state derives the current scope openness and preserves stat
     isMobileLayout: false,
     isMobileLandscape: false,
     customWallpapers: { light: null, dark: null },
+    weatherLandscapeId: "alpine-lake",
     supportsDockPosition: true,
     supportsSidebarToggle: true,
     showsStatusBarOptions: true,

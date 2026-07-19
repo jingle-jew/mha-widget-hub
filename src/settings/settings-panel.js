@@ -1,6 +1,6 @@
 import { ACCENT_REFERENCE_COLORS, getAccentOptions, normalizeAccent, supportsAutoAccent } from "./accent-palettes.js";
 import { createToggle } from "../ui/toggle.js";
-import { createMhaCheckbox, createMhaSelect } from "../ui/form-controls.js";
+import { createMhaCheckbox, createMhaRadio, createMhaSelect } from "../ui/form-controls.js";
 import { createIcon } from "../ui/icon.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
 import { createBackButton, createCloseButton, createMoveUpButton, createMoveDownButton, createRemoveButton } from "../system/system-buttons.js";
@@ -15,6 +15,10 @@ import { syncPanelVisibility } from "../panels/panel-visibility-controller.js";
 import { validateWallpaperFile } from "./wallpaper-storage.js";
 import { getThemeStyleOptions, getThemeVariantOptions } from "./theme-registry.js";
 import { getPageIconLabel, PAGE_ICON_OPTIONS } from "../pages/page-icons.js";
+import {
+  getWeatherLandscapeOptions,
+  normalizeWeatherLandscapeId,
+} from "../pages/weather-background-assets.js";
 import {
   NOW_BAR_NOW_ITEMS,
   getNowBarEntityOptions,
@@ -574,6 +578,46 @@ function createSettingsNavTile({ icon = "gear", label, description = "", onClick
   return button;
 }
 
+function createWeatherLandscapePicker({ value, onChange } = {}) {
+  const selectedId = normalizeWeatherLandscapeId(value);
+  const picker = document.createElement("div");
+  picker.className = "mha-settings-weather-landscape-grid";
+  picker.setAttribute("role", "radiogroup");
+  picker.setAttribute("aria-label", t("settings.weatherLandscape", "Landscape"));
+
+  getWeatherLandscapeOptions().forEach(option => {
+    const label = t(option.labelKey, option.label);
+    const choice = createMhaRadio({
+      label,
+      checked: option.value === selectedId,
+      name: "mha-weather-landscape",
+      value: option.value,
+      indicatorPlacement: "end",
+      className: "mha-settings-weather-landscape-option",
+      onChange: checked => {
+        if (checked) onChange?.(option.value);
+      },
+    });
+    choice.dataset.landscapeId = option.value;
+    choice.dataset.selected = String(option.value === selectedId);
+
+    const preview = document.createElement("span");
+    preview.className = "mha-settings-weather-landscape-preview";
+    preview.dataset.renderer = option.renderer;
+    if (option.type === "procedural") {
+      preview.style.background = option.preview?.background || "";
+      preview.dataset.period = option.preview?.period || "sunset";
+    } else {
+      preview.style.backgroundImage = `url("${option.preview}")`;
+    }
+    preview.setAttribute("aria-hidden", "true");
+    choice.append(preview);
+    picker.append(choice);
+  });
+
+  return picker;
+}
+
 function createDockPageRow(page, index, pages, { activePageId = "", onSelect, onMove, onDelete } = {}) {
   const row = document.createElement("div");
   row.className = "mha-settings-dock-row";
@@ -967,6 +1011,7 @@ export function createSettingsPanel({
   isMobileLayout = false,
   isMobileLandscape = false,
   customWallpapers = {},
+  weatherLandscapeId = "alpine-lake",
   supportsDockPosition,
   supportsSidebarToggle,
   showsStatusBarOptions,
@@ -996,6 +1041,9 @@ export function createSettingsPanel({
   onResetGrid,
   onOpenWallpaperSettings,
   onOpenNowBarSettings,
+  onOpenWeatherPageSettings,
+  onWeatherPageMainBack,
+  onWeatherLandscapeChange,
   onWallpaperMainBack,
   onOpenDockSettings,
   onDockBack,
@@ -1054,9 +1102,11 @@ export function createSettingsPanel({
         ? t("settings.dockIcon", "Dock icon")
         : settingsPage === "wallpaper"
           ? t("settings.wallpaper", "Wallpaper")
-          : settingsPage === "screensaver-nowbar" || settingsPage === "nowbar"
-            ? t("settings.screensaverAndNowBar", "Screensaver and Now Bar")
-          : t("settings.title", "Settings");
+          : settingsPage === "weather-page"
+            ? t("settings.weatherPageSettings", "Weather page settings")
+            : settingsPage === "screensaver-nowbar" || settingsPage === "nowbar"
+              ? t("settings.screensaverAndNowBar", "Screensaver and Now Bar")
+              : t("settings.title", "Settings");
 
   title.append(eyebrow, h2);
 
@@ -1069,13 +1119,15 @@ export function createSettingsPanel({
   const headerActions = document.createElement("div");
   headerActions.className = "mha-settings-header-actions";
 
-  if (!isScreensaverScope && (settingsPage === "dock" || settingsPage === "wallpaper" || settingsPage === "screensaver-nowbar" || settingsPage === "nowbar")) {
+  if (!isScreensaverScope && (settingsPage === "dock" || settingsPage === "wallpaper" || settingsPage === "weather-page" || settingsPage === "screensaver-nowbar" || settingsPage === "nowbar")) {
     headerActions.append(createBackButton({
       label: t("settings.backToSettings", "Back to settings"),
       className: "mha-settings-back",
       onClick: () => settingsPage === "wallpaper"
         ? onWallpaperMainBack?.()
-        : onDockMainBack?.(),
+        : settingsPage === "weather-page"
+          ? onWeatherPageMainBack?.()
+          : onDockMainBack?.(),
     }));
   }
 
@@ -1155,6 +1207,17 @@ export function createSettingsPanel({
         wallpaper: customWallpapers.dark,
         onImport: onWallpaperImport,
         onReset: onWallpaperReset,
+      }),
+    ]));
+    body.append(...sections);
+    return finalizeSettingsPanel(root, header, body, onClose);
+  }
+
+  if (!isScreensaverScope && settingsPage === "weather-page") {
+    sections.push(createSection(t("settings.weatherLandscape", "Landscape"), [
+      createWeatherLandscapePicker({
+        value: weatherLandscapeId,
+        onChange: onWeatherLandscapeChange,
       }),
     ]));
     body.append(...sections);
@@ -1259,6 +1322,12 @@ export function createSettingsPanel({
         label: t("settings.wallpaper", "Wallpaper"),
         description: t("settings.wallpaperDescription", "Choose a separate image for light and dark themes."),
         onClick: onOpenWallpaperSettings,
+      }),
+      createSettingsNavTile({
+        icon: "weather",
+        label: t("settings.weatherPage", "Weather page"),
+        description: t("settings.weatherPageDescription", "Choose the landscape used by the Weather page."),
+        onClick: onOpenWeatherPageSettings,
       }),
       ...(supportsScreensaver ? [
         createSettingsNavTile({

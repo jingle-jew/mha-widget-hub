@@ -401,7 +401,6 @@ Use this reference when creating a theme, adjusting a surface, or deciding wheth
 | `--mha-system-button-bg` | Legacy system button | Floating system button background. | Floating edit/settings buttons. | Prefer system button contract if present. |
 | `--mha-system-button-border` | Legacy system button | Floating system button border. | Floating buttons. | Compatibility. |
 | `--mha-system-button-color` | Legacy system button | Floating system button foreground. | Floating buttons. | Compatibility. |
-| `--mha-system-button-shadow` | Legacy system button | Floating system button shadow. | Floating buttons. | Compatibility. |
 | `--mha-system-button-backdrop-filter` | Legacy system button | Floating button blur/filter. | Floating buttons. | Compatibility. |
 | `--mha-system-button-highlight` | Legacy system button | Floating button highlight layer. | Floating buttons. | Compatibility. |
 | `--mha-system-button-highlight-opacity` | Legacy system button | Floating button highlight opacity. | Floating buttons. | Compatibility. |

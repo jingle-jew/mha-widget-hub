@@ -1,12 +1,30 @@
 # Mémoire persistante — MHA Widget Hub
 
-Dernière consolidation : 2026-07-15
+Dernière consolidation : 2026-07-19
 
 Ce fichier contient les connaissances durables qui seraient coûteuses à redécouvrir.
 Le code et les tests actuels restent la source de vérité. Les instructions de travail
 appartiennent à `AGENTS.md`.
 
 ## Décisions et raisons
+
+### 2026-07-19 — Composer le popup lumière autour de deux colonnes stables
+
+- **Statut :** confirmé.
+- **Décision :** sur tablette et desktop, le popup lumière conserve une même
+  géométrie externe et deux colonnes : les contrôles rapides à gauche, la
+  couleur à droite. Le réglage `orientation` est exposé par dataset et pilote
+  uniquement la composition complète de la colonne gauche (ordre, axe des
+  sliders, disposition des ambiances et proportions) à partir d'une seule
+  structure DOM. La colonne couleur reste commune aux deux modes.
+- **Pourquoi :** limiter l'orientation à un slider laissait les ambiances et les
+  proportions hors du contrat de configuration, tandis que dupliquer les vues
+  aurait créé deux chemins de synchronisation Home Assistant fragiles.
+- **Conséquence :** luminosité et température restent dans les contrôles
+  rapides; saturation, teinte et roue colorimétrique partagent un seul état HSV
+  synchronisé avec Home Assistant. Les futurs ajustements d'alignement doivent
+  rester dans la grille CSS pilotée par `data-orientation`, sans créer une
+  seconde implémentation JavaScript.
 
 ### 2026-07-15 — Faire du mouvement une signature visuelle MHA
 
@@ -60,6 +78,63 @@ appartiennent à `AGENTS.md`.
   `createSelectControl` et `createRadioControl` fournis par
   `widget-config-popup.js`, afin de rester découplés du DOM interne des contrôles
   partagés.
+
+### 2026-07-18 — Composer les nuages météo avec chaque paysage
+
+- **Statut :** confirmé.
+- **Décision :** chaque WebP météo fournit un petit profil de composition
+  déclaratif dans `weather-background-assets.js` : horizon perçu, hauteur utile
+  du champ nuageux, début et douceur du fondu, intensité de la brume. Le
+  générateur conserve ses profondeurs `far`/`mid`/`near`, son mouvement et sa
+  génération procédurale, mais construit quelques grandes nappes chevauchées
+  dont la distribution est pilotée par la météo et ce profil de scène.
+- **Pourquoi :** une hauteur globale et de petits nuages placés indépendamment
+  donnent l'impression d'une couche posée devant la photographie. Le contrat de
+  composition permet aux nappes basses de se dissoudre autour du relief et à la
+  brume de prolonger naturellement l'atmosphère déjà présente dans le WebP.
+- **Conséquence :** garder les paysages comme source visuelle principale; pour
+  calibrer ou ajouter un asset météo, ajuster d'abord son profil de composition
+  plutôt que créer une exception CSS ou analyser l'image au runtime. Les
+  changements fins d'opacité et de vent se synchronisent en place; seul un
+  changement du nombre de nappes réutilise le crossfade de scène existant.
+
+### 2026-07-18 — Résoudre les scènes météo depuis une registry de paysages
+
+- **Statut :** confirmé.
+- **Décision :** `weather-background-assets.js` est la source de vérité des
+  paysages météo. Chaque entrée déclare son identifiant, son libellé, sa
+  preview, ses WebP par moment (`dawn` à `night`) et ambiance (`clear`,
+  `overcast-light`, `overcast-high`), son profil de composition et un point de
+  raccord optionnel pour de futurs assets d'hiver. Le paysage sélectionné est
+  persisté dans la configuration de la page sous `weatherLandscapeId`, avec
+  `alpine-lake` comme fallback.
+- **Pourquoi :** séparer le paysage photographique des effets procéduraux
+  conserve le moteur météo existant tout en rendant la sélection testable et
+  extensible. Le resolver ne construit jamais une URL supposée : il ne choisit
+  que parmi les assets déclarés et applique une chaîne de fallback explicite.
+- **Conséquence :** ajouter un paysage passe d'abord par cette registry et par
+  le settings-panel de la page Météo, sans créer de stockage parallèle. Le
+  panneau dev garde la condition et le moment comme deux axes indépendants; son
+  override `_mha_weather_period_override` appartient uniquement au mock local.
+
+### 2026-07-18 — Supporter les paysages météo procéduraux dans la registry
+
+- **Statut :** confirmé.
+- **Décision :** une entrée de `weather-background-assets.js` déclare désormais
+  explicitement son `type` (`raster` ou `procedural`) et son `renderer`. Le
+  renderer `celestial-gradient` possède ses sept profils temporels, ses
+  interpolations et ses fallbacks solaire/lunaire dans
+  `weather-celestial-gradient.js`; il ne dépend pas des ambiances issues des
+  conditions météo.
+- **Pourquoi :** le paysage de ciel doit partager sélection, persistance,
+  composition et couches d'effets avec les WebP sans simuler une URL d'image ni
+  dupliquer le moteur météo.
+- **Conséquence :** la `sceneKey` procédurale reste structurelle. Les changements
+  de couleurs, positions des astres, phase lunaire et opacité des étoiles sont
+  synchronisés en place par variables CSS lorsque la structure météo ne change
+  pas; ils ne recréent donc ni le fond ni les nuages/précipitations. Toute future
+  entrée procédurale doit préserver cette séparation entre renderer temporel et
+  effets météo indépendants.
 
 ## Pièges connus
 
@@ -157,7 +232,13 @@ appartiennent à `AGENTS.md`.
   toujours les conditions de la période courante, ou de la période suivante
   après le milieu de la période courante; son ancienne logique prioritaire sert
   uniquement de ligne d’avis secondaire. Lorsqu’un avis existe, cette ligne est
-  précédée d’un petit glyphe triangulaire d’avertissement.
+  précédée d’un petit glyphe triangulaire d’avertissement. Les avis de pluie et
+  de neige emploient une heure locale approximative lorsque les prévisions sont
+  horaires (« vers 14 h »), puis retombent sur la période naturelle (« ce soir »)
+  avec des prévisions quotidiennes. Ce choix de source reste automatique : la
+  configuration du « Bref météo » expose uniquement l’entité météo et ne
+  persiste pas de `forecastType`; le sélecteur horaire/quotidien demeure réservé
+  aux widgets météo qui affichent réellement une prévision choisie.
 - Les surfaces du dock OneUI, standard comme compactes, sont légèrement
   translucides, floutées et teintées par la couleur d’accent active du thème.
   La pastille de l’élément actif reprend cette teinte avec une intensité plus
@@ -231,3 +312,14 @@ appartiennent à `AGENTS.md`.
 - Sur la page Média mobile, le dock reste masqué pendant toute l’ouverture de la
   sheet « Lecteurs disponibles »; son empreinte structurelle est conservée pour
   éviter un reflow.
+- Le contrôle détaillé des entités `light` s’ouvre uniquement depuis la zone
+  informative des widgets `toggle` et `toggle-slider`; leurs toggles, sliders et
+  outils d’édition gardent leurs interactions directes. Il repose sur le contrat
+  de surface existant (`page-creator` en popup et sheet mobile), dont l’en-tête
+  conserve le swipe descendant de fermeture. Le contenu est séparé en vues
+  contrôle, couleur personnalisée et configuration. En portrait mobile, les
+  deux sections principales se parcourent par scroll vertical paginé; en
+  paysage, tablette et desktop elles restent côte à côte sans scroll global.
+  Les préréglages persistants appartiennent à `widget.lightPopup` et sont
+  normalisés par le registry du widget; les appels HA restent centralisés dans
+  l’adaptateur lumière et les sliders utilisent l’action coalescée existante.

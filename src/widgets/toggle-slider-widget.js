@@ -18,6 +18,8 @@ import {
 } from "../widget-config/toggle-slider-config.js";
 import { WIDGET_PREVIEW_DATA } from "./widget-preview-data.js";
 import { t } from "../i18n/index.js";
+import { openLightControlPopup } from "../light-popup/light-control-popup-controller.js";
+import { normalizeLightPopupConfig } from "../light-popup/light-popup-config.js";
 
 export const TOGGLE_SLIDER_WIDGET_KIND = "toggle-slider";
 const SLIDER_SERVICE_INTERVAL_MS = 80;
@@ -32,6 +34,9 @@ export function createToggleSliderWidgetContent(widget = {}, {
   widgetW = Number(widget?.w) || 4,
   onToggle,
   onSliderInput,
+  interactive = true,
+  isEditing = false,
+  updateWidgetConfig,
 } = {}) {
   const entityId = getWidgetEntityId(widget);
   const context = {
@@ -66,6 +71,15 @@ export function createToggleSliderWidgetContent(widget = {}, {
       }
       onToggle?.(nextChecked, currentWidget, event);
     },
+    onOpenDetails: interactive
+      ? (anchor) => openLightControlPopup({
+        anchor,
+        widget,
+        hass: context.hass,
+        entityVisibilityConfig,
+        updateWidgetConfig,
+      })
+      : undefined,
   }));
 
   const sliderSection = document.createElement("div");
@@ -201,10 +215,13 @@ export function createToggleSliderWidgetContent(widget = {}, {
 
 
 export const TOGGLE_SLIDER_WIDGET_CONTENT_RENDERER = Object.freeze({
-  render: ({ widget, widgetW, hass, entityVisibilityConfig }) => createToggleSliderWidgetContent(widget, {
+  render: ({ widget, widgetW, hass, entityVisibilityConfig, interactive, isEditing, updateWidgetConfig }) => createToggleSliderWidgetContent(widget, {
     hass,
     entityVisibilityConfig,
     widgetW,
+    interactive,
+    isEditing,
+    updateWidgetConfig,
   }),
 });
 
@@ -258,6 +275,7 @@ export const TOGGLE_SLIDER_WIDGET_DEFINITION = Object.freeze({
         lightEntityId: entityId,
         entityId,
         sliderMode: "brightness",
+        ...(widget.lightPopup ? { lightPopup: normalizeLightPopupConfig(widget.lightPopup) } : {}),
       };
     },
   }),

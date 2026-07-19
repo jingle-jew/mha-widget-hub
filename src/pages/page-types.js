@@ -4,6 +4,10 @@ import {
   createWeatherPageSeed,
   discoverWeatherPageSeed,
 } from "./weather-page-seed.js";
+import {
+  DEFAULT_WEATHER_LANDSCAPE_ID,
+  normalizeWeatherLandscapeId,
+} from "./weather-background-assets.js";
 
 export const PAGE_TYPES = Object.freeze({
   GRID: "grid",
@@ -38,6 +42,9 @@ export function normalizeWeatherPageConfig(config = {}) {
 
   const normalized = {
     weatherEntityId: String(config.weatherEntityId || "").trim(),
+    weatherLandscapeId: normalizeWeatherLandscapeId(
+      config.weatherLandscapeId || DEFAULT_WEATHER_LANDSCAPE_ID,
+    ),
     radarEntityId: String(config.radarEntityId || "").trim(),
     radarDiscoveryCompleted: config.radarDiscoveryCompleted === true,
     autoDetectedMetricKeys,

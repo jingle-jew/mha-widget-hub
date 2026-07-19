@@ -2,6 +2,7 @@ import {
   discoverWeatherPageSources,
   resolveWeatherPageSources,
 } from "../ha/weather-page-data.js";
+import { DEFAULT_WEATHER_LANDSCAPE_ID } from "./weather-background-assets.js";
 
 const WEATHER_METRIC_DISPLAY_ORDER = Object.freeze({
   "dew-point": 10,
@@ -176,6 +177,7 @@ function createWeatherPageSeedFromSources({
     weatherEntityId: entityId,
     config: {
       weatherEntityId: entityId,
+      weatherLandscapeId: DEFAULT_WEATHER_LANDSCAPE_ID,
       radarEntityId: sources.radar?.entityId || "",
       radarDiscoveryCompleted: true,
       autoDetectedMetricKeys: metrics.map(source => source.key),

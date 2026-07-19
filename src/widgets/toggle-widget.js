@@ -24,6 +24,8 @@ import {
 } from "../widget-config/toggle-config.js";
 import { WIDGET_PREVIEW_DATA } from "./widget-preview-data.js";
 import { t } from "../i18n/index.js";
+import { openLightControlPopup } from "../light-popup/light-control-popup-controller.js";
+import { normalizeLightPopupConfig } from "../light-popup/light-popup-config.js";
 
 export const TOGGLE_WIDGET_KIND = "toggle";
 
@@ -71,6 +73,7 @@ export function createToggleWidgetContent(widget = {}, {
   hass,
   entityVisibilityConfig,
   onToggle,
+  onOpenDetails,
 } = {}) {
   const data = getToggleWidgetData(widget);
   const entityId = getWidgetEntityId(widget);
@@ -127,7 +130,19 @@ export function createToggleWidgetContent(widget = {}, {
     },
   });
 
-  root.append(iconBubble, textStack, toggle);
+  const detailsTrigger = document.createElement("button");
+  detailsTrigger.type = "button";
+  detailsTrigger.className = "mha-toggle-widget-details-trigger";
+  detailsTrigger.setAttribute("aria-label", t("lightPopup.open", "Open light controls"));
+  detailsTrigger.disabled = typeof onOpenDetails !== "function";
+  detailsTrigger.onclick = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (detailsTrigger.closest(".mha-widget")?.classList.contains("is-editing")) return;
+    onOpenDetails?.(detailsTrigger, event, context.hass);
+  };
+
+  root.append(iconBubble, textStack, toggle, detailsTrigger);
 
   if (bindToHass) {
     root.__mhaUpdateFromHass = nextHass => {
@@ -196,6 +211,8 @@ export const TOGGLE_WIDGET_CONTENT_RENDERER = Object.freeze({
     hass,
     entityVisibilityConfig,
     interactive = true,
+    isEditing = false,
+    updateWidgetConfig,
   }) => createToggleWidgetContent(widget, {
     widgetW,
     widgetH,
@@ -203,6 +220,15 @@ export const TOGGLE_WIDGET_CONTENT_RENDERER = Object.freeze({
     bindToHass: true,
     hass,
     entityVisibilityConfig,
+    onOpenDetails: interactive && getEntityDomain(getWidgetEntityId(widget)) === "light"
+      ? (anchor, _event, currentHass) => openLightControlPopup({
+        anchor,
+        widget,
+        hass: currentHass,
+        entityVisibilityConfig,
+        updateWidgetConfig,
+      })
+      : undefined,
   }),
 });
 
@@ -243,9 +269,15 @@ export const TOGGLE_WIDGET_DEFINITION = Object.freeze({
     weatherEntityConfigurable: false,
   }),
   storage: Object.freeze({
-    normalize: (widget = {}) => ({
-      entityId: widget.entityId || widget.entity_id || "",
-    }),
+    normalize: (widget = {}) => {
+      const entityId = widget.entityId || widget.entity_id || "";
+      return {
+        entityId,
+        ...(getEntityDomain(entityId) === "light" && widget.lightPopup
+          ? { lightPopup: normalizeLightPopupConfig(widget.lightPopup) }
+          : {}),
+      };
+    },
   }),
   shell: Object.freeze({
     configureMode: "config",
