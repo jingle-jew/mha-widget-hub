@@ -1,3 +1,5 @@
+@import url("./slider2.css");
+
 /* Light control surface built on the shared panel/sheet contract. */
 .mha-light-control-popup {
   z-index: 155;
@@ -167,6 +169,10 @@
   font-size: .74rem;
 }
 
+.mha-light-power-segments {
+  display: none;
+}
+
 .mha-light-quick-controls-layout {
   min-inline-size: 0;
   min-block-size: 0;
@@ -275,6 +281,22 @@
   inline-size: 100%;
 }
 
+.mha-light-control-sliders {
+  min-inline-size: 0;
+  min-block-size: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  display: grid;
+}
+
+.mha-light-control-sliders > .mha-light-popup-slider {
+  grid-area: 1 / 1;
+}
+
+.mha-light-control-sliders > .slider2 {
+  display: none;
+}
+
 .mha-light-popup-main-view[data-orientation="horizontal"] .mha-light-control-field .mha-light-popup-slider {
   min-block-size: 2.75rem;
   align-self: center;
@@ -352,11 +374,17 @@
 }
 
 .mha-light-preset-copy {
+  min-inline-size: 0;
   max-inline-size: 100%;
   overflow: hidden;
   font-size: .71rem;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.mha-light-preset:disabled {
+  opacity: .45;
+  cursor: default;
 }
 
 /* Stable right column: saturation, hue, wheel and settings. */
@@ -505,6 +533,10 @@
   min-inline-size: 0;
   display: grid;
   gap: .65rem;
+}
+
+.mha-light-config-scene-page {
+  display: contents;
 }
 
 .mha-light-config-scene-card {
@@ -679,6 +711,137 @@
 
 .mha-light-config-save .mha-icon-symbol {
   --mha-icon-symbol-size: 1rem;
+}
+
+@media (min-width: 768px) {
+  :host([data-theme-style="oneui"]) .mha-light-control-popup[data-mobile-layout="false"] .mha-light-power-control {
+    grid-template-columns: minmax(0, 1fr) minmax(14rem, 44%);
+  }
+
+  :host([data-theme-style="oneui"]) .mha-light-control-popup[data-mobile-layout="false"] .mha-light-power-control > .mha-toggle {
+    display: none;
+  }
+
+  :host([data-theme-style="oneui"]) .mha-light-control-popup[data-mobile-layout="false"] .mha-light-power-segments {
+    min-inline-size: 0;
+    min-block-size: 2.65rem;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .18rem;
+    padding: .2rem;
+    border: 1px solid var(--mha-oneui-mobile-dock-border, var(--mha-control-border));
+    border-radius: var(--mha-control-radius, 999px);
+    background: var(
+      --mha-oneui-mobile-dock-surface,
+      var(--mha-shell-dock-surface, var(--mha-control-surface))
+    );
+    -webkit-backdrop-filter: var(--mha-oneui-dock-filter);
+    backdrop-filter: var(--mha-oneui-dock-filter);
+  }
+
+  :host([data-theme-style="oneui"]) .mha-light-control-popup[data-mobile-layout="false"] .mha-light-power-segments button {
+    min-inline-size: 0;
+    border: 0;
+    border-radius: var(--mha-control-radius, 999px);
+    background: transparent;
+    color: var(--mha-text-secondary);
+    font: inherit;
+    font-size: .78rem;
+    font-weight: var(--mha-font-weight-semibold);
+    cursor: pointer;
+  }
+
+  :host([data-theme-style="oneui"]) .mha-light-control-popup[data-mobile-layout="false"] .mha-light-power-segments button[data-active="true"] {
+    background: var(--mha-oneui-dock-active-surface, var(--mha-accent));
+    color: var(--mha-text-primary);
+  }
+
+  :host([data-theme-style="oneui"]) .mha-light-control-popup[data-mobile-layout="false"] .mha-light-power-segments button:focus-visible {
+    outline: 2px solid var(--mha-accent);
+    outline-offset: 1px;
+  }
+
+  :host([data-theme-style="oneui"]) .mha-light-control-popup[data-mobile-layout="false"] .mha-light-power-segments button:disabled {
+    opacity: .45;
+    cursor: default;
+  }
+
+  :host([data-theme-style="ios"]) .mha-light-control-popup[data-mobile-layout="false"] .mha-light-popup-main-view[data-orientation="horizontal"] .mha-light-control-sliders > .mha-light-popup-slider:not(.slider2) {
+    display: none;
+  }
+
+  :host([data-theme-style="ios"]) .mha-light-control-popup[data-mobile-layout="false"] .mha-light-popup-main-view[data-orientation="horizontal"] .mha-light-control-sliders > .slider2 {
+    display: block;
+    align-self: center;
+  }
+
+  .mha-light-control-popup[data-mobile-layout="false"] .mha-light-popup-main-view[data-orientation="vertical"] .mha-light-scene-preset {
+    flex-direction: row;
+  }
+
+  .mha-light-control-popup[data-mobile-layout="false"] .mha-light-config-presets {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: .9rem;
+    overflow: hidden;
+  }
+
+  .mha-light-control-popup[data-mobile-layout="false"] .mha-light-config-presets > h3 {
+    margin-block-end: 0;
+  }
+
+  .mha-light-control-popup[data-mobile-layout="false"] .mha-light-config-presets .mha-light-config-scenes {
+    --mha-light-config-scene-gap: .9rem;
+    min-block-size: 0;
+    gap: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    scroll-snap-type: y proximity;
+  }
+
+  .mha-light-control-popup[data-mobile-layout="false"] .mha-light-config-scene-page {
+    min-inline-size: 0;
+    display: grid;
+    block-size: 100%;
+    min-block-size: 100%;
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    gap: var(--mha-light-config-scene-gap);
+    scroll-snap-align: start;
+  }
+
+  .mha-light-control-popup[data-mobile-layout="false"] .mha-light-config-scene-card {
+    min-block-size: 0;
+    gap: .8rem .85rem;
+    padding: .9rem;
+  }
+
+  .mha-light-control-popup[data-mobile-layout="false"] .mha-light-config-scene-details {
+    align-content: center;
+    gap: .75rem .85rem;
+  }
+
+  .mha-light-control-popup[data-mobile-layout="false"] .mha-light-config-slider-field {
+    row-gap: .5rem;
+  }
+
+  .mha-light-control-popup[data-mobile-layout="false"] .mha-light-popup-color-view .mha-light-color-content {
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+    row-gap: 1.15rem;
+    padding: 1.2rem 1.3rem 1.1rem;
+  }
+
+  .mha-light-control-popup[data-mobile-layout="false"] .mha-light-popup-color-view .mha-light-color-slider-group {
+    display: contents;
+  }
+
+  .mha-light-control-popup[data-mobile-layout="false"] .mha-light-popup-color-view .mha-light-color-wheel-pane {
+    padding: .7rem 1rem 1rem;
+  }
+
+  .mha-light-control-popup[data-mobile-layout="false"] .mha-light-popup-color-view .mha-light-color-wheel {
+    inline-size: min(20rem, 100%);
+  }
 }
 
 @media (max-width: 767px) {

@@ -219,9 +219,16 @@ export function createLightPopupConfigView({ config, onSave, onCancel } = {}) {
   scenesColumn.append(scenesTitle, scenes);
 
   const renderScenes = () => {
-    scenes.replaceChildren(...draft.scenes.map((scene, index) => (
-      createSceneCard(scene, index, draft, renderScenes)
-    )));
+    const pages = [];
+    for (let index = 0; index < draft.scenes.length; index += 2) {
+      const page = document.createElement("div");
+      page.className = "mha-light-config-scene-page";
+      page.append(...draft.scenes.slice(index, index + 2).map((scene, offset) => (
+        createSceneCard(scene, index + offset, draft, renderScenes)
+      )));
+      pages.push(page);
+    }
+    scenes.replaceChildren(...pages);
   };
 
   columns.append(scenesColumn, createAppearance(draft));

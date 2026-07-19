@@ -10,6 +10,7 @@ import {
 import { t } from "../i18n/index.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
 import { createSlider } from "../ui/slider.js";
+import { createSlider2 } from "../ui/slider2.js";
 import { createToggle } from "../ui/toggle.js";
 import { createLightPopupColorView } from "./light-popup-color-view.js";
 
@@ -27,6 +28,49 @@ function sectionTitle(text) {
 
 function icon(name, className = "") {
   return createIconSymbol({ name, className });
+}
+
+function createPowerSegments({ checked, onChange }) {
+  const group = document.createElement("div");
+  group.className = "mha-light-power-segments";
+  group.setAttribute("role", "group");
+  group.setAttribute("aria-label", t("lightPopup.power", "On / Off"));
+
+  const buttons = [
+    [true, t("common.on", "On")],
+    [false, t("common.off", "Off")],
+  ].map(([value, label]) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = label;
+    button.dataset.value = String(value);
+    button.onclick = () => {
+      if (button.getAttribute("aria-pressed") === "true") return;
+      onChange(value);
+    };
+    group.append(button);
+    return button;
+  });
+
+  group.__mhaSetState = (nextChecked, disabled = false) => {
+    buttons.forEach((button) => {
+      const active = button.dataset.value === String(Boolean(nextChecked));
+      button.dataset.active = String(active);
+      button.setAttribute("aria-pressed", String(active));
+      button.disabled = Boolean(disabled);
+    });
+  };
+  group.__mhaSetState(checked);
+  return group;
+}
+
+function createQuickControlSliders(options) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "mha-light-control-sliders";
+  const slider = createSlider(options);
+  const slider2 = createSlider2(options);
+  wrapper.append(slider, slider2);
+  return { wrapper, slider, slider2 };
 }
 
 function presetButton({ scene, onClick }) {
@@ -87,16 +131,27 @@ export function createLightPopupMainView({
     checked: getLightSnapshot(entityState).on,
     onChange: (event) => setLightPower(context.hass, context.entityState, Boolean(event.currentTarget.checked)),
   });
+  const powerSegments = createPowerSegments({
+    checked: getLightSnapshot(entityState).on,
+    onChange: (nextOn) => {
+      if (getLightSnapshot(context.entityState).on === nextOn) return;
+      setLightPower(context.hass, context.entityState, nextOn);
+    },
+  });
   const powerCopy = document.createElement("span");
   powerCopy.append(powerLabel, powerState);
-  power.append(powerCopy, powerToggle);
+  power.append(powerCopy, powerToggle, powerSegments);
 
   const snapshot = getLightSnapshot(entityState);
   const brightnessAction = createLatestValueAction(
     (value) => setLightBrightness(context.hass, context.entityState, value),
     { intervalMs: ACTION_INTERVAL_MS },
   );
-  const brightnessSlider = createSlider({
+  const {
+    wrapper: brightnessControls,
+    slider: brightnessSlider,
+    slider2: brightnessSlider2,
+  } = createQuickControlSliders({
     label: t("lightPopup.brightness", "Brightness"),
     min: 0,
     max: 100,
@@ -113,7 +168,7 @@ export function createLightPopupMainView({
     title: t("lightPopup.brightness", "Brightness"),
     value: `${snapshot.brightness} %`,
     iconName: "sun",
-    control: brightnessSlider,
+    control: brightnessControls,
     area: "brightness",
   });
 
@@ -121,7 +176,11 @@ export function createLightPopupMainView({
     (value) => setLightTemperature(context.hass, context.entityState, value),
     { intervalMs: ACTION_INTERVAL_MS },
   );
-  const temperatureSlider = createSlider({
+  const {
+    wrapper: temperatureControls,
+    slider: temperatureSlider,
+    slider2: temperatureSlider2,
+  } = createQuickControlSliders({
     label: t("lightPopup.temperature", "Color temperature"),
     min: snapshot.minKelvin,
     max: snapshot.maxKelvin,
@@ -138,7 +197,7 @@ export function createLightPopupMainView({
     title: t("lightPopup.temperatureShort", "Temp. / Color"),
     value: `${snapshot.kelvin} K`,
     iconName: "temperature",
-    control: temperatureSlider,
+    control: temperatureControls,
     area: "temperature",
   });
 
@@ -179,18 +238,25 @@ export function createLightPopupMainView({
       input.checked = next.on;
       input.disabled = !capabilities.available;
     }
+    powerSegments.__mhaSetState?.(next.on, !capabilities.available);
     powerState.textContent = next.on ? t("states.on", "On") : t("states.off", "Off");
     controlsSection.dataset.available = String(capabilities.available);
     brightnessField.hidden = !capabilities.brightness;
     temperatureField.hidden = !capabilities.colorTemperature;
     layout.dataset.hasBrightness = String(capabilities.brightness);
     layout.dataset.hasTemperature = String(capabilities.colorTemperature);
-    if (!brightnessSlider.classList.contains("is-slider-dragging")) {
-      brightnessSlider.__mhaSliderApi?.setValue(next.brightness);
+    const brightnessDragging = [brightnessSlider, brightnessSlider2]
+      .some((slider) => slider.classList.contains("is-slider-dragging"));
+    if (!brightnessDragging) {
+      [brightnessSlider, brightnessSlider2]
+        .forEach((slider) => slider.__mhaSliderApi?.setValue(next.brightness));
       brightnessOutput.textContent = `${next.brightness} %`;
     }
-    if (!temperatureSlider.classList.contains("is-slider-dragging")) {
-      temperatureSlider.__mhaSliderApi?.setValue(next.kelvin);
+    const temperatureDragging = [temperatureSlider, temperatureSlider2]
+      .some((slider) => slider.classList.contains("is-slider-dragging"));
+    if (!temperatureDragging) {
+      [temperatureSlider, temperatureSlider2]
+        .forEach((slider) => slider.__mhaSliderApi?.setValue(next.kelvin));
       temperatureOutput.textContent = `${next.kelvin} K`;
     }
     colorSection.__mhaUpdateFromHass?.(nextHass);
