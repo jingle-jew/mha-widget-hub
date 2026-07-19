@@ -96,6 +96,31 @@ test("light popup adapter exposes partial capabilities and live values", () => {
   assert.equal(getLightCapabilities(lightState({}, "unavailable")).available, false);
 });
 
+test("light popup adapter detects white-temperature-only lights from current and legacy HA metadata", () => {
+  const currentModeOnly = lightState({
+    supported_color_modes: ["brightness"],
+    color_mode: "color_temp",
+    color_temp_kelvin: undefined,
+    color_temp: undefined,
+    min_color_temp_kelvin: undefined,
+    max_color_temp_kelvin: undefined,
+  });
+  const legacyFeatureOnly = lightState({
+    supported_color_modes: ["brightness"],
+    color_mode: undefined,
+    color_temp_kelvin: undefined,
+    color_temp: undefined,
+    min_color_temp_kelvin: undefined,
+    max_color_temp_kelvin: undefined,
+    supported_features: 2,
+  });
+
+  assert.equal(getLightCapabilities(currentModeOnly).colorTemperature, true);
+  assert.equal(getLightCapabilities(currentModeOnly).color, false);
+  assert.equal(getLightCapabilities(legacyFeatureOnly).colorTemperature, true);
+  assert.equal(getLightCapabilities(legacyFeatureOnly).color, false);
+});
+
 test("light popup adapter builds Home Assistant light calls for sliders and presets", async () => {
   const calls = [];
   const hass = { callService: async (...args) => calls.push(args) };

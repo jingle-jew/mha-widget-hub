@@ -16,11 +16,24 @@ export function getLightCapabilities(entityState) {
     : [];
   const domain = getEntityDomain(entityState?.entity_id || "");
   const available = domain === "light" && isEntityAvailable(entityState);
+  const currentColorMode = String(attributes.color_mode || "");
+  const supportedFeatures = Number(attributes.supported_features) || 0;
+  const supportsLegacyColorTemperature = (supportedFeatures & 2) === 2;
 
   return {
     available,
     brightness: available && supportsLightBrightness(attributes),
-    colorTemperature: available && (modes.includes("color_temp") || attributes.color_temp_kelvin != null || attributes.color_temp != null),
+    colorTemperature: available && (
+      modes.includes("color_temp")
+      || currentColorMode === "color_temp"
+      || supportsLegacyColorTemperature
+      || attributes.color_temp_kelvin != null
+      || attributes.color_temp != null
+      || attributes.min_color_temp_kelvin != null
+      || attributes.max_color_temp_kelvin != null
+      || attributes.min_mireds != null
+      || attributes.max_mireds != null
+    ),
     color: available && modes.some((mode) => COLOR_MODES.has(mode)),
   };
 }

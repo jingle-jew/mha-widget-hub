@@ -246,6 +246,10 @@
   gap: .55rem;
 }
 
+.mha-light-control-field[hidden] {
+  display: none;
+}
+
 .mha-light-control-heading {
   min-inline-size: 0;
   display: flex;
