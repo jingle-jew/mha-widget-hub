@@ -23,6 +23,8 @@ import {
 } from "../widget-config/button-config.js";
 import { WIDGET_PREVIEW_DATA } from "./widget-preview-data.js";
 import { t } from "../i18n/index.js";
+import { openLightControlPopup } from "../light-popup/light-control-popup-controller.js";
+import { normalizeLightPopupConfig } from "../light-popup/light-popup-config.js";
 
 export const SIMPLE_BUTTON_WIDGET_KIND = "button";
 
@@ -86,6 +88,7 @@ export function createSimpleButtonWidgetContent(widget = {}, {
   hass,
   entityVisibilityConfig,
   interactive = true,
+  onOpenDetails,
 } = {}) {
   const data = getButtonData(widget);
   const isSquare = Number(widgetW) === 2 && Number(widgetH) === 2;
@@ -164,6 +167,15 @@ export function createSimpleButtonWidgetContent(widget = {}, {
     if (access.entityId && (!access.entityAllowed || !access.entityAvailable)) return;
     if (actionAccess.some(candidate => !candidate.entityAllowed || !candidate.entityAvailable)) return;
     if (!access.entityId && !hasConfiguredAction) return;
+
+    if (
+      access.domain === "light"
+      && widget.buttonAction === "popup"
+      && typeof onOpenDetails === "function"
+    ) {
+      onOpenDetails(root, event, context.hass);
+      return;
+    }
 
     await runButtonAction(context.hass, widget, access.entityState);
     root.dispatchEvent(new CustomEvent("mha-button-click", {
@@ -266,12 +278,31 @@ export const SIMPLE_BUTTON_WIDGET_CONTENT_RENDERER = Object.freeze({
   decorateShell: ({ shell, widget }) => {
     shell.dataset.active = String(isSimpleButtonWidgetActive(widget));
   },
-  render: ({ widget, widgetW, widgetH, hass, entityVisibilityConfig, interactive }) => createSimpleButtonWidgetContent(widget, {
+  render: ({
+    widget,
     widgetW,
     widgetH,
     hass,
     entityVisibilityConfig,
     interactive,
+    updateWidgetConfig,
+  }) => createSimpleButtonWidgetContent(widget, {
+    widgetW,
+    widgetH,
+    hass,
+    entityVisibilityConfig,
+    interactive,
+    onOpenDetails: interactive
+      && getEntityDomain(widget.entityId || widget.entity_id || "") === "light"
+      && widget.buttonAction === "popup"
+      ? (anchor, _event, currentHass) => openLightControlPopup({
+        anchor,
+        widget,
+        hass: currentHass,
+        entityVisibilityConfig,
+        updateWidgetConfig,
+      })
+      : undefined,
   }),
 });
 
@@ -314,9 +345,17 @@ export const SIMPLE_BUTTON_WIDGET_DEFINITION = Object.freeze({
     weatherEntityConfigurable: false,
   }),
   storage: Object.freeze({
-    normalize: (widget = {}) => ({
-      entityId: widget.entityId || widget.entity_id || "",
-    }),
+    normalize: (widget = {}) => {
+      const entityId = widget.entityId || widget.entity_id || "";
+      const isLight = getEntityDomain(entityId) === "light";
+      return {
+        entityId,
+        ...(isLight ? { buttonAction: widget.buttonAction === "popup" ? "popup" : "toggle" } : {}),
+        ...(isLight && widget.lightPopup
+          ? { lightPopup: normalizeLightPopupConfig(widget.lightPopup) }
+          : {}),
+      };
+    },
   }),
   shell: Object.freeze({
     configureMode: "config",

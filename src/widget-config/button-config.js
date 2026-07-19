@@ -12,6 +12,11 @@ export const BUTTON_TYPES = Object.freeze([
   Object.freeze({ value: "action", label: "Custom action" }),
 ]);
 
+export const BUTTON_ACTIONS = Object.freeze([
+  Object.freeze({ value: "toggle", label: "Toggle" }),
+  Object.freeze({ value: "popup", label: "Open popup" }),
+]);
+
 function getButtonType(value) {
   return BUTTON_TYPES.find(type => type.value === value) || BUTTON_TYPES[0];
 }
@@ -31,6 +36,7 @@ export function createButtonConfigDraft(widget = {}, hass, visibilityConfig) {
     : getEntityDomain(entityId);
   const draft = {
     buttonType: getButtonType(configuredType).value,
+    buttonAction: widget.buttonAction === "popup" ? "popup" : "toggle",
     entityId,
     label: String(widget.label || "").trim(),
     icon: normalizeIconPickerValue(widget.icon || "auto"),
@@ -58,6 +64,7 @@ export function reconcileButtonConfigDraft(draft, hass, visibilityConfig) {
 
 export function updateButtonType(draft, buttonType, hass, visibilityConfig) {
   draft.buttonType = getButtonType(buttonType).value;
+  draft.buttonAction = "toggle";
   draft.entityId = "";
   return reconcileButtonConfigDraft(draft, hass, visibilityConfig);
 }
@@ -98,6 +105,9 @@ export function buildButtonWidgetConfig(widget, draft, hass, visibilityConfig) {
     kind: "button",
     buttonType: buttonType.value,
     entityId: draft.entityId || "",
+    ...(buttonType.value === "light"
+      ? { buttonAction: draft.buttonAction === "popup" ? "popup" : "toggle" }
+      : {}),
     label: String(draft.label || selected?.label || "").trim(),
     ...(resolvedIcon ? { icon: resolvedIcon } : {}),
   };
@@ -188,6 +198,23 @@ export function renderButtonConfigFields(session, hass, visibilityConfig, onChan
       },
     });
     fields.append(createField(entityLabel, entitySelect));
+
+    if (draft.buttonType === "light") {
+      const buttonActionLabel = t("widgets.config.buttonAction", "Button action");
+      const buttonActionSelect = createSelectControl({
+        label: buttonActionLabel,
+        value: draft.buttonAction,
+        options: BUTTON_ACTIONS.map(action => ({
+          value: action.value,
+          label: configOptionLabel("widgets.config.buttonActions", action),
+        })),
+        onChange: (value) => {
+          draft.buttonAction = value === "popup" ? "popup" : "toggle";
+          onChange?.();
+        },
+      });
+      fields.append(createField(buttonActionLabel, buttonActionSelect));
+    }
   }
 
   const label = document.createElement("input");
