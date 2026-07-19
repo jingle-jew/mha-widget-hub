@@ -2,6 +2,7 @@ import { hexToRgb, hsvToRgb, rgbToHex, rgbToHsv } from "../ha/light-popup-adapte
 import { t } from "../i18n/index.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
 import { createSlider } from "../ui/slider.js";
+import { createSlider2 } from "../ui/slider2.js";
 import { createToggle } from "../ui/toggle.js";
 import { createIconPickerControl } from "../widget-config/icon-picker.js";
 import { cloneLightPopupConfig, normalizeHex } from "./light-popup-config.js";
@@ -20,6 +21,15 @@ function getSceneColor(scene) {
 function setSceneHsv(scene, hue, saturation) {
   scene.type = "rgb";
   scene.color = rgbToHex(hsvToRgb(hue, saturation, 100));
+}
+
+function createSliderStack(options) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "mha-light-slider-stack";
+  const slider = createSlider(options);
+  const slider2 = createSlider2(options);
+  wrapper.append(slider, slider2);
+  return { wrapper, slider, slider2 };
 }
 
 function createSceneCard(scene, index, draft, rerender) {
@@ -73,7 +83,11 @@ function createSceneCard(scene, index, draft, rerender) {
   let hsv = rgbToHsv(hexToRgb(colorPicker.value));
   const saturationOutput = document.createElement("output");
   const hueOutput = document.createElement("output");
-  const saturation = createSlider({
+  const {
+    wrapper: saturationStack,
+    slider: saturation,
+    slider2: saturation2,
+  } = createSliderStack({
     label: t("lightPopup.saturation", "Saturation"),
     min: 0,
     max: 100,
@@ -87,7 +101,11 @@ function createSceneCard(scene, index, draft, rerender) {
       saturationOutput.textContent = `${Math.round(hsv.saturation)} %`;
     },
   });
-  const hue = createSlider({
+  const {
+    wrapper: hueStack,
+    slider: hue,
+    slider2: hue2,
+  } = createSliderStack({
     label: t("lightPopup.hue", "Hue"),
     min: 0,
     max: 360,
@@ -109,8 +127,9 @@ function createSceneCard(scene, index, draft, rerender) {
     colorPicker.value = color;
     colorCode.value = color;
     hsv = rgbToHsv(hexToRgb(color));
-    saturation.__mhaSliderApi?.setValue(hsv.saturation);
-    hue.__mhaSliderApi?.setValue(hsv.hue);
+    [saturation, saturation2]
+      .forEach((slider) => slider.__mhaSliderApi?.setValue(hsv.saturation));
+    [hue, hue2].forEach((slider) => slider.__mhaSliderApi?.setValue(hsv.hue));
     saturationOutput.textContent = `${hsv.saturation} %`;
     hueOutput.textContent = `${hsv.hue}°`;
   };
@@ -122,14 +141,14 @@ function createSceneCard(scene, index, draft, rerender) {
   saturationField.append(
     Object.assign(document.createElement("span"), { textContent: t("lightPopup.saturation", "Saturation") }),
     saturationOutput,
-    saturation,
+    saturationStack,
   );
   const hueField = document.createElement("label");
   hueField.className = "mha-light-config-slider-field";
   hueField.append(
     Object.assign(document.createElement("span"), { textContent: t("lightPopup.hue", "Hue") }),
     hueOutput,
-    hue,
+    hueStack,
   );
   saturationOutput.textContent = `${hsv.saturation} %`;
   hueOutput.textContent = `${hsv.hue}°`;

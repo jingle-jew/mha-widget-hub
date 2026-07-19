@@ -57,7 +57,15 @@
   opacity: var(--slider2-fill-opacity);
   background: var(--mha-ios-slider-fill);
   box-shadow: var(--mha-ios-slider-fill-shadow);
-  transition: inline-size 100ms linear;
+  transition: inline-size 100ms linear, block-size 100ms linear;
+}
+
+:host([data-theme-style="ios"]) .slider2[data-orientation="vertical"] .slider2__fill {
+  inset-block-start: auto;
+  inset-block-end: 0;
+  inset-inline: 0;
+  inline-size: 100%;
+  block-size: var(--mha-slider-value, 50%);
 }
 
 :host([data-theme-style="ios"]) .slider2__sheen {
@@ -89,7 +97,16 @@
     0 4px 12px rgba(0,0,0,.2),
     0 1px 3px rgba(0,0,0,.16),
     inset 0 1px 0 rgba(255,255,255,.98);
-  transition: inset-inline-start 100ms linear;
+  transition: inset-inline-start 100ms linear, inset-block-start 100ms linear;
+}
+
+:host([data-theme-style="ios"]) .slider2[data-orientation="vertical"] .slider2__thumb {
+  inset-inline-start: 50%;
+  inset-block-start: clamp(
+    calc(var(--slider2-padding-inline) + (var(--slider2-thumb-size) / 2)),
+    calc(100% - var(--mha-slider-value, 50%)),
+    calc(100% - var(--slider2-padding-inline) - (var(--slider2-thumb-size) / 2))
+  );
 }
 
 :host([data-theme-style="ios"]) .slider2 > .mha-slider-rotor,
@@ -105,6 +122,13 @@
 :host([data-theme-style="ios"]) .slider2 .mha-slider-input {
   opacity: 0;
   cursor: pointer;
+}
+
+:host([data-theme-style="ios"]) .slider2[data-orientation="vertical"] .mha-slider-input {
+  writing-mode: vertical-lr;
+  direction: rtl;
+  -webkit-appearance: slider-vertical;
+  appearance: slider-vertical;
 }
 
 :host([data-theme-style="ios"]) .slider2.is-slider-dragging,

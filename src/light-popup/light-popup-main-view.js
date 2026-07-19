@@ -66,7 +66,7 @@ function createPowerSegments({ checked, onChange }) {
 
 function createQuickControlSliders(options) {
   const wrapper = document.createElement("div");
-  wrapper.className = "mha-light-control-sliders";
+  wrapper.className = "mha-light-control-sliders mha-light-slider-stack";
   const slider = createSlider(options);
   const slider2 = createSlider2(options);
   wrapper.append(slider, slider2);

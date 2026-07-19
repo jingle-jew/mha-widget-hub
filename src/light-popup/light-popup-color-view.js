@@ -9,6 +9,7 @@ import {
 import { t } from "../i18n/index.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
 import { createSlider } from "../ui/slider.js";
+import { createSlider2 } from "../ui/slider2.js";
 
 const ACTION_INTERVAL_MS = 80;
 
@@ -97,6 +98,15 @@ function createColorWheel(state, onInput, onCommit) {
   return wheel;
 }
 
+function createSliderStack(options) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "mha-light-slider-stack";
+  const slider = createSlider(options);
+  const slider2 = createSlider2(options);
+  wrapper.append(slider, slider2);
+  return { wrapper, slider, slider2 };
+}
+
 function createSliderField({ title, output, slider, className = "" }) {
   const field = document.createElement("label");
   field.className = ["mha-light-color-slider-field", className].filter(Boolean).join(" ");
@@ -134,8 +144,9 @@ export function createLightPopupColorView({ hass, entityState, onOpenSettings } 
     state.saturation = Math.min(100, Math.max(0, Number(state.saturation) || 0));
     hueOutput.textContent = `${Math.round(state.hue)}°`;
     saturationOutput.textContent = `${Math.round(state.saturation)} %`;
-    hueSlider.__mhaSliderApi?.setValue(state.hue);
-    saturationSlider.__mhaSliderApi?.setValue(state.saturation);
+    [hueSlider, hueSlider2].forEach((slider) => slider.__mhaSliderApi?.setValue(state.hue));
+    [saturationSlider, saturationSlider2]
+      .forEach((slider) => slider.__mhaSliderApi?.setValue(state.saturation));
     wheel.__mhaSync?.();
     if (emit) {
       state.suppressHassUntil = Date.now() + 500;
@@ -144,7 +155,11 @@ export function createLightPopupColorView({ hass, entityState, onOpenSettings } 
     }
   };
 
-  const hueSlider = createSlider({
+  const {
+    wrapper: hueSliderStack,
+    slider: hueSlider,
+    slider2: hueSlider2,
+  } = createSliderStack({
     label: t("lightPopup.hue", "Hue"),
     min: 0,
     max: 360,
@@ -161,7 +176,11 @@ export function createLightPopupColorView({ hass, entityState, onOpenSettings } 
       sync({ emit: true, commit: true });
     },
   });
-  const saturationSlider = createSlider({
+  const {
+    wrapper: saturationSliderStack,
+    slider: saturationSlider,
+    slider2: saturationSlider2,
+  } = createSliderStack({
     label: t("lightPopup.saturation", "Saturation"),
     min: 0,
     max: 100,
@@ -185,12 +204,12 @@ export function createLightPopupColorView({ hass, entityState, onOpenSettings } 
     createSliderField({
       title: t("lightPopup.saturation", "Saturation"),
       output: saturationOutput,
-      slider: saturationSlider,
+      slider: saturationSliderStack,
     }),
     createSliderField({
       title: t("lightPopup.hue", "Hue"),
       output: hueOutput,
-      slider: hueSlider,
+      slider: hueSliderStack,
     }),
   );
 
@@ -222,8 +241,10 @@ export function createLightPopupColorView({ hass, entityState, onOpenSettings } 
     state.entityState = nextHass?.states?.[state.entityState?.entity_id] || state.entityState;
     const capabilities = getLightCapabilities(state.entityState);
     root.dataset.available = String(capabilities.color);
-    hueSlider.__mhaSliderApi?.setDisabled(!capabilities.color);
-    saturationSlider.__mhaSliderApi?.setDisabled(!capabilities.color);
+    [hueSlider, hueSlider2]
+      .forEach((slider) => slider.__mhaSliderApi?.setDisabled(!capabilities.color));
+    [saturationSlider, saturationSlider2]
+      .forEach((slider) => slider.__mhaSliderApi?.setDisabled(!capabilities.color));
     wheel.dataset.disabled = String(!capabilities.color);
     wheel.tabIndex = capabilities.color ? 0 : -1;
     wheel.setAttribute("aria-disabled", String(!capabilities.color));

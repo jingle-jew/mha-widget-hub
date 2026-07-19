@@ -288,6 +288,7 @@
   display: none;
 }
 
+.mha-light-slider-stack,
 .mha-light-control-sliders {
   min-inline-size: 0;
   min-block-size: 0;
@@ -296,12 +297,21 @@
   display: grid;
 }
 
+.mha-light-slider-stack > .mha-slider,
 .mha-light-control-sliders > .mha-light-popup-slider {
+  min-inline-size: 0;
+  inline-size: 100%;
   grid-area: 1 / 1;
 }
 
-.mha-light-control-sliders > .slider2 {
+.mha-light-slider-stack > .slider2 {
   display: none;
+}
+
+.mha-light-color-slider-field > .mha-light-slider-stack,
+.mha-light-config-slider-field > .mha-light-slider-stack {
+  min-block-size: 1.7rem;
+  grid-column: 1 / -1;
 }
 
 .mha-light-popup-main-view[data-orientation="horizontal"] .mha-light-control-field .mha-light-popup-slider {
@@ -816,17 +826,13 @@
     cursor: default;
   }
 
-  :host([data-theme-style="ios"]) .mha-light-control-popup[data-mobile-layout="false"] .mha-light-popup-main-view[data-orientation="horizontal"] .mha-light-control-sliders > .mha-light-popup-slider:not(.slider2) {
+  :host([data-theme-style="ios"]) .mha-light-control-popup .mha-light-slider-stack > .mha-slider:not(.slider2) {
     display: none;
   }
 
-  :host([data-theme-style="ios"]) .mha-light-control-popup[data-mobile-layout="false"] .mha-light-control-sliders > .slider2 {
-    display: none;
-  }
-
-  :host([data-theme-style="ios"]) .mha-light-control-popup[data-mobile-layout="false"] .mha-light-popup-main-view[data-orientation="horizontal"] .mha-light-control-sliders > .slider2 {
+  :host([data-theme-style="ios"]) .mha-light-control-popup .mha-light-slider-stack > .slider2 {
     display: block;
-    align-self: center;
+    align-self: stretch;
   }
 
   .mha-light-control-popup[data-mobile-layout="false"] .mha-light-popup-main-view[data-orientation="vertical"] .mha-light-scene-preset {
@@ -943,10 +949,14 @@
     color: var(--mha-text-primary);
   }
 
-  .mha-light-control-popup[data-mobile-layout="false"] .mha-light-popup-color-view .mha-light-color-slider-field > .mha-slider {
+  .mha-light-control-popup[data-mobile-layout="false"] .mha-light-popup-color-view .mha-light-color-slider-field > .mha-light-slider-stack {
     min-block-size: 3.15rem;
     grid-column: 1;
     grid-row: 1;
+  }
+
+  .mha-light-control-popup[data-mobile-layout="false"] .mha-light-popup-color-view .mha-light-color-slider-field > .mha-light-slider-stack > .mha-slider {
+    min-block-size: 3.15rem;
   }
 
   .mha-light-control-popup[data-mobile-layout="false"] .mha-light-popup-color-view .mha-light-color-wheel-pane {
