@@ -73,6 +73,18 @@ function createQuickControlSliders(options) {
   return { wrapper, slider, slider2 };
 }
 
+function getPresetColor(scene) {
+  if (scene?.type === "rgb" && scene.color) return scene.color;
+  const kelvin = Math.min(6500, Math.max(2000, Number(scene?.kelvin) || 2700));
+  const ratio = (kelvin - 2000) / 4500;
+  const red = 255;
+  const green = Math.round(150 + ratio * 105);
+  const blue = Math.round(95 + ratio * 160);
+  return `#${[red, green, blue]
+    .map((channel) => channel.toString(16).padStart(2, "0"))
+    .join("")}`;
+}
+
 function getPresetForeground(color) {
   const match = String(color || "").trim().match(/^#([0-9a-f]{6})$/i);
   if (!match) return "var(--mha-text-primary)";
@@ -89,9 +101,9 @@ function presetButton({ scene, onClick }) {
   button.type = "button";
   button.className = "mha-light-preset mha-light-scene-preset";
   button.setAttribute("aria-label", scene.name);
-  const presetColor = scene.color || "var(--mha-text-primary)";
+  const presetColor = getPresetColor(scene);
   button.style.setProperty("--mha-light-preset-color", presetColor);
-  button.style.setProperty("--mha-light-preset-foreground", getPresetForeground(scene.color));
+  button.style.setProperty("--mha-light-preset-foreground", getPresetForeground(presetColor));
   button.append(
     icon(scene.icon, "mha-light-preset-icon"),
     Object.assign(document.createElement("span"), {
