@@ -97,7 +97,7 @@ test("mobile sheet headers close the panel on swipe down", () => withMockDocumen
 
   const target = {
     closest(selector) {
-      if (selector === "[data-panel-shell-header='true']") return header;
+      if (selector === ".mha-settings-header, .mha-page-creator-header") return header;
       if (selector === "button, input, select, textarea, a, [role='button'], [data-settings-control]") return null;
       return null;
     },
@@ -166,7 +166,7 @@ test("swipe down dismissal stays disabled outside mobile sheet layouts", () => w
 
   const target = {
     closest(selector) {
-      if (selector === "[data-panel-shell-header='true']") return header;
+      if (selector === ".mha-settings-header, .mha-page-creator-header") return header;
       if (selector === "button, input, select, textarea, a, [role='button'], [data-settings-control]") return null;
       return null;
     },
@@ -194,21 +194,4 @@ test("swipe down dismissal stays disabled outside mobile sheet layouts", () => w
 
   assert.equal(closeCount, 0);
   assert.equal(panel.dataset.swipeClosing, undefined);
-}));
-
-test("panel shell preserves a rich custom header", () => withMockDocument(() => {
-  const customHeader = document.createElement("header");
-  const identity = document.createElement("span");
-  identity.textContent = "Light";
-  customHeader.append(identity);
-
-  const panel = createPanelShell({
-    open: true,
-    headerNode: customHeader,
-  });
-  const sheet = panel.querySelector("[role='dialog']");
-
-  assert.equal(sheet.childNodes[0], customHeader);
-  assert.equal(customHeader.childNodes[0], identity);
-  assert.equal(customHeader.dataset.panelShellHeader, "true");
 }));

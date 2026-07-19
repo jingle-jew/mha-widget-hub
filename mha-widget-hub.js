@@ -374,13 +374,6 @@ constructor(){
     finishResize:()=>this._finishResize(),
     openWidgetConfig:(id)=>this._openWidgetConfig(id),
     openScenesButtonConfig:(id,slotIndex)=>this._openScenesButtonConfig(id,slotIndex),
-    updateWidgetConfig:(id,patch)=>{
-      const index=this._widgets.findIndex(widget=>widget.id===id);
-      if(index<0||!patch||typeof patch!=="object"||Array.isArray(patch))return false;
-      const next=normalizeStoredWidgetContract({...this._widgets[index],...patch});
-      this._widgets=[...this._widgets.slice(0,index),next,...this._widgets.slice(index+1)];
-      return this._saveWidgets();
-    },
   });
   this._widgetFlowCoordinator=getWidgetFlowCoordinatorForHost(this);
   this._bootLifecycleCoordinator=getBootLifecycleCoordinatorForHost(this);

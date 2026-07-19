@@ -9,7 +9,6 @@ const STATIC_STYLE_MANIFEST_BEFORE_THEMES = Object.freeze([
   entry("styles/components/icon.css", "component"),
   entry("styles/components/icon-symbol.css", "component"),
   entry("styles/components/slider.css", "component"),
-  entry("styles/components/slider2.css", "component"),
   entry("styles/components/toggle.css", "component"),
   entry("styles/components/form-controls.css", "component"),
   entry("styles/components/pill.css", "component"),
@@ -60,6 +59,7 @@ const STATIC_STYLE_MANIFEST_AFTER_THEMES = Object.freeze([
   entry("styles/panels/page-creator-bottom.css", "component"),
   entry("styles/panels/page-creator-contract.css", "component"),
   entry("styles/panels/page-creator-popup-center.css", "component"),
+  entry("styles/components/light-popup.css", "component"),
   entry("styles/settings/settings-bottom.css", "component"),
   entry("styles/themes/light-text-contract.css", "theme"),
   entry("styles/widgets/widget-layout.css", "structure"),
@@ -72,7 +72,6 @@ const STATIC_STYLE_MANIFEST_AFTER_THEMES = Object.freeze([
 
 const STATIC_STYLE_MANIFEST_AFTER_WIDGETS = Object.freeze([
   entry("styles/widgets/weather-detail-chips.css", "component"),
-  entry("styles/components/light-control-popup.css", "component"),
   entry("styles/widgets/widget-control-internals-contract.css", "component"),
   entry("styles/widgets/widget-slider-internals-contract.css", "component"),
   entry("styles/widgets/widget-media-internals-contract.css", "component"),

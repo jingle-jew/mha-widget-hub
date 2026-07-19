@@ -13,6 +13,7 @@ const OPEN_WIDGET_SURFACE_SELECTOR = [
   'section.mha-page-creator:not(.mha-widget-config-popup)[data-open="true"]:not([hidden])',
   '.mha-widget-config-popup[data-open="true"]:not([hidden])',
   '.mha-media-page-settings-panel[data-open="true"]:not([hidden])',
+  '.mha-light-control-popup[data-open="true"]:not([hidden])',
 ].join(",");
 
 const WIDGET_SURFACE_SELECTOR = [
@@ -20,6 +21,7 @@ const WIDGET_SURFACE_SELECTOR = [
   "section.mha-page-creator:not(.mha-widget-config-popup)",
   ".mha-widget-config-popup",
   ".mha-media-page-settings-panel",
+  ".mha-light-control-popup",
 ].join(",");
 
 export function applyWidgetSurfaceHostLayoutState(root, panel) {

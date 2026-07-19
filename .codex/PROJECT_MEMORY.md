@@ -118,69 +118,6 @@ appartiennent à `AGENTS.md`.
   entrée procédurale doit préserver cette séparation entre renderer temporel et
   effets météo indépendants.
 
-### 2026-07-18 — Partager le popup de contrôle détaillé des lumières
-
-- **Statut :** confirmé.
-- **Décision :** les widgets `toggle` et `toggle-slider` ouvrent le même popup
-  natif depuis leur zone informative uniquement lorsque leur entité appartient
-  au domaine `light`. Le popup lit séparément les capacités de luminosité,
-  température et couleur, et conserve sa commande principale, son compositeur
-  de couleur et sa configuration dans une seule surface. La roue colorimétrique
-  appartient directement à la seconde page de la section couleur plutôt qu'à
-  une sous-vue séparée. Son contrat persistant appartient au
-  widget sous `lightControl`; un événement remonté au shell utilise la chaîne de
-  sauvegarde des widgets existante.
-- **Pourquoi :** séparer le déclencheur informatif des contrôles directs évite
-  les ouvertures accidentelles depuis le toggle ou le slider. Le filtrage par
-  domaine préserve intégralement `switch` et `input_boolean`, tandis que le
-  filtrage par capacités empêche d'exposer des commandes HA non supportées.
-- **Conséquence :** toute évolution du contrôle lumière doit rester centralisée
-  dans `src/light-control/` et `src/ha/light.js`, sans dupliquer de popup dans les
-  widgets. Les mises à jour HA réutilisent le DOM ouvert et ignorent les modèles
-  inchangés; le builder de service élimine les appels sans changement réel. Les
-  presets d'ambiance choisissent un seul modèle de couleur HA (`color` ou
-  `colorTemperature`) auquel peut s'ajouter la luminosité. Les contrôles continus
-  du popup réutilisent les sliders partagés et leur API publique : `createSlider`
-  pour OneUI/Material et `createSlider2` pour iOS, y compris pour les bornes Kelvin
-  dynamiques et l'orientation responsive. L'option `vertical` distribue les
-  contrôles en colonnes, avec sliders et commande Off/On verticaux lorsque
-  l'espace le permet; `horizontal` conserve leurs axes horizontaux. Le popup ne
-  recrée pas de range local et ne dépend pas de la structure DOM interne des
-  composants. Les surfaces d'ambiance et l'icône d'entité dérivent toujours du
-  modèle effectivement envoyé à HA : couleur RGB pour `color`, conversion Kelvin
-  pour `colorTemperature`. La roue colorimétrique partage le même repère que la
-  conversion HSV, avec le rouge en haut et une saturation radiale.
-
-### 2026-07-18 — Paginer le popup lumière selon le contexte responsive
-
-- **Statut :** confirmé.
-- **Décision :** le popup lumière reste une seule surface construite avec le
-  `panel-shell`. Tablette et desktop consomment le rôle `popup` centré; mobile
-  consomme le contrat de sheet du settings-panel et son geste de fermeture. En
-  portrait, les contrôles et la couleur forment deux pages verticales. La zone
-  couleur utilise toujours deux pages horizontales : blancs + ambiances, puis
-  couleurs rapides + roue colorimétrique. En paysage mobile, tablette et
-  desktop, les contrôles et la zone couleur restent simultanément visibles et
-  cette même pagination horizontale reste locale à la zone couleur. La
-  configuration utilise trois pages bornées : réglages de base, ambiances 1–2
-  et ambiances 3–4; son axe est vertical en portrait mobile et horizontal dans
-  les autres contextes.
-- **Pourquoi :** les anciens scrolls imbriqués et le scroll-snap appliqué au
-  contenu global mélangeaient navigation et débordement, étiraient les sections
-  et rendaient le paysage dépendant de la hauteur. Des viewports paginés locaux
-  donnent une géométrie stable sans dupliquer le popup ni les contrôles.
-- **Conséquence :** piloter les variantes mobiles avec `data-layout` et
-  `data-layout-variant`, pas avec une orientation brute qui inclurait tablette ou
-  desktop étroit. Garder les pagers locaux au popup, les indicateurs accessibles
-  synchronisés au scroll, et recalculer leur position après redimensionnement.
-  Les sliders et le groupe Off/On utilisent des hauteurs intrinsèques bornées;
-  aucune piste `1fr` ou hauteur de section ne doit allonger un contrôle pour
-  remplir l'espace disponible. Le header respecte explicitement `[hidden]` afin
-  que l'identité de la lumière et le titre des réglages ne coexistent jamais.
-  L'ouverture et la fermeture passent par `syncPanelVisibility`; le mouvement
-  réduit désactive aussi les scrolls programmatiques fluides. Les appels HA, la
-  détection de capacités et les sliders partagés restent indépendants du pager.
-
 ## Pièges connus
 
 - Les contrôles MHA vivent dans le Shadow DOM du hub. Pour détecter un clic
@@ -357,3 +294,14 @@ appartiennent à `AGENTS.md`.
 - Sur la page Média mobile, le dock reste masqué pendant toute l’ouverture de la
   sheet « Lecteurs disponibles »; son empreinte structurelle est conservée pour
   éviter un reflow.
+- Le contrôle détaillé des entités `light` s’ouvre uniquement depuis la zone
+  informative des widgets `toggle` et `toggle-slider`; leurs toggles, sliders et
+  outils d’édition gardent leurs interactions directes. Il repose sur le contrat
+  de surface existant (`page-creator` en popup et sheet mobile), dont l’en-tête
+  conserve le swipe descendant de fermeture. Le contenu est séparé en vues
+  contrôle, couleur personnalisée et configuration. En portrait mobile, les
+  deux sections principales se parcourent par scroll vertical paginé; en
+  paysage, tablette et desktop elles restent côte à côte sans scroll global.
+  Les préréglages persistants appartiennent à `widget.lightPopup` et sont
+  normalisés par le registry du widget; les appels HA restent centralisés dans
+  l’adaptateur lumière et les sliders utilisent l’action coalescée existante.

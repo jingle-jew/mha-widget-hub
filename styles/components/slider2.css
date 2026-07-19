@@ -25,13 +25,6 @@
   border-radius: var(--slider2-radius);
 }
 
-:host([data-theme-style="ios"]) .slider2[data-orientation="vertical"] {
-  inline-size: var(--slider2-height);
-  block-size: 100%;
-  min-inline-size: var(--slider2-height);
-  min-block-size: 0;
-}
-
 :host([data-theme-style="ios"]) .slider2__surface,
 :host([data-theme-style="ios"]) .slider2__fill,
 :host([data-theme-style="ios"]) .slider2__sheen {
@@ -67,14 +60,6 @@
   transition: inline-size 100ms linear;
 }
 
-:host([data-theme-style="ios"]) .slider2[data-orientation="vertical"] .slider2__fill {
-  inset-block-start: auto;
-  inset-inline-end: 0;
-  inline-size: 100%;
-  block-size: var(--mha-slider-value, 50%);
-  transition-property: block-size;
-}
-
 :host([data-theme-style="ios"]) .slider2__sheen {
   z-index: 3;
   background:
@@ -107,28 +92,7 @@
   transition: inset-inline-start 100ms linear;
 }
 
-:host([data-theme-style="ios"]) .slider2[data-orientation="vertical"] .slider2__thumb {
-  inset-block-start: clamp(
-    calc(var(--slider2-padding-inline) + (var(--slider2-thumb-size) / 2)),
-    calc(100% - var(--mha-slider-value, 50%)),
-    calc(100% - var(--slider2-padding-inline) - (var(--slider2-thumb-size) / 2))
-  );
-  inset-inline-start: 50%;
-  transition-property: inset-block-start;
-}
-
-:host([data-theme-style="ios"]) .slider2 > .mha-slider-rotor {
-  z-index: 5;
-}
-
-:host([data-theme-style="ios"]) .slider2[data-orientation="horizontal"] > .mha-slider-rotor {
-  position: absolute;
-  inset: 0 !important;
-  inline-size: 100% !important;
-  block-size: 100% !important;
-  transform: none !important;
-}
-
+:host([data-theme-style="ios"]) .slider2 > .mha-slider-rotor,
 :host([data-theme-style="ios"]) .slider2 .mha-slider-input {
   position: absolute;
   z-index: 5;
@@ -136,6 +100,9 @@
   inline-size: 100% !important;
   block-size: 100% !important;
   transform: none !important;
+}
+
+:host([data-theme-style="ios"]) .slider2 .mha-slider-input {
   opacity: 0;
   cursor: pointer;
 }
@@ -181,9 +148,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .slider2__fill,
-  .slider2__thumb,
-  .slider2[data-orientation="vertical"] .slider2__fill,
-  .slider2[data-orientation="vertical"] .slider2__thumb {
+  .slider2__thumb {
     transition-duration: 0.01ms !important;
   }
 }

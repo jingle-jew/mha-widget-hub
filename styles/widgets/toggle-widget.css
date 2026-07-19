@@ -50,41 +50,53 @@
   pointer-events: auto;
 
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   justify-items: start;
   column-gap: var(--mha-toggle-widget-gap-x);
   padding-inline-start: var(--mha-toggle-widget-edge-balance);
 }
 
-.mha-toggle-widget-info {
-  appearance: none;
-  min-inline-size: 0;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  justify-items: start;
-  column-gap: var(--mha-toggle-widget-gap-x);
-  border: 0;
-  border-radius: var(--mha-widget-inner-radius, 1.25rem);
+.mha-toggle-widget {
+  position: relative;
+}
+
+.mha-toggle-widget-details-trigger {
+  position: absolute;
+  inset: 0;
   padding: 0;
+  border: 0;
   background: transparent;
   color: inherit;
   font: inherit;
-  text-align: start;
-}
-
-button.mha-toggle-widget-info {
   cursor: pointer;
 }
 
-button.mha-toggle-widget-info:focus-visible {
-  outline: 2px solid var(--mha-border-focus, var(--mha-accent));
-  outline-offset: 4px;
+.mha-toggle-widget-details-trigger:disabled {
+  cursor: default;
 }
 
-button.mha-toggle-widget-info:disabled {
-  cursor: default;
+.mha-toggle-widget:has(.mha-toggle-widget-details-trigger:hover) .mha-toggle-widget-label,
+.mha-toggle-widget:has(.mha-toggle-widget-details-trigger:focus-visible) .mha-toggle-widget-label {
+  color: var(--mha-accent);
+}
+
+.mha-toggle-widget-details-trigger:focus-visible {
+  border-radius: var(--mha-control-radius, .85rem);
+  outline: 2px solid var(--mha-border-focus, var(--mha-accent));
+  outline-offset: -2px;
+}
+
+.mha-toggle-widget-icon-bubble,
+.mha-toggle-widget-text {
+  pointer-events: none;
+  position: relative;
+  z-index: 1;
+}
+
+.mha-toggle-widget-control {
+  position: relative;
+  z-index: 2;
 }
 
 .mha-toggle-widget-icon-bubble {

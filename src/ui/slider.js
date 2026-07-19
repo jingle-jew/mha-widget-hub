@@ -269,8 +269,6 @@ export function createSlider({
   onInput,
   onChange,
 } = {}) {
-  let currentMin = min;
-  let currentMax = max;
   const resolvedOrientation = normalizeSliderOrientation(orientation);
   const initialOrientation = resolvedOrientation === "auto" ? "horizontal" : resolvedOrientation;
   const wrapper = document.createElement("label");
@@ -288,8 +286,8 @@ export function createSlider({
   const input = document.createElement("input");
   input.className = "mha-slider-input";
   input.type = "range";
-  input.min = String(currentMin);
-  input.max = String(currentMax);
+  input.min = String(min);
+  input.max = String(max);
   input.value = String(value);
   input.disabled = Boolean(disabled);
   input.setAttribute("aria-label", label || "Slider");
@@ -307,7 +305,7 @@ export function createSlider({
   const mobileInteractionTarget = wrapper;
 
   const syncValue = (currentValue) => {
-    const percent = getSliderPercent(currentValue, currentMin, currentMax);
+    const percent = getSliderPercent(currentValue, min, max);
     const percentValue = `${percent}%`;
     wrapper.style.setProperty("--mha-slider-value", percentValue);
     input.style.setProperty("--mha-slider-value", percentValue);
@@ -328,13 +326,6 @@ export function createSlider({
     },
     setDisabled(nextDisabled) {
       input.disabled = Boolean(nextDisabled);
-    },
-    setRange(nextMin, nextMax) {
-      currentMin = nextMin;
-      currentMax = nextMax;
-      input.min = String(currentMin);
-      input.max = String(currentMax);
-      syncValue(input.value);
     },
   };
 
@@ -392,7 +383,7 @@ export function createSlider({
     mobileSession.scrollContainer?.classList?.add?.("is-mobile-slider-dragging");
     mobileInteractionTarget.setPointerCapture?.(mobileSession.pointerId);
     if (mobileSession.lastEvent) {
-      setSliderValueFromPointer(wrapper, input, mobileSession.lastEvent, currentMin, currentMax);
+      setSliderValueFromPointer(wrapper, input, mobileSession.lastEvent, min, max);
     }
   };
 
@@ -437,7 +428,7 @@ export function createSlider({
       return;
     }
 
-    setSliderValueFromPointer(wrapper, input, event, currentMin, currentMax);
+    setSliderValueFromPointer(wrapper, input, event, min, max);
     event.preventDefault?.();
     event.stopPropagation?.();
   };
@@ -447,7 +438,7 @@ export function createSlider({
 
     const wasActive = mobileSession.state === "active";
     if (wasActive) {
-      setSliderValueFromPointer(wrapper, input, event, currentMin, currentMax);
+      setSliderValueFromPointer(wrapper, input, event, min, max);
       event.preventDefault?.();
       event.stopPropagation?.();
     }
