@@ -18,13 +18,22 @@ function resolveShadowRoot(anchor) {
   return root?.host ? root : null;
 }
 
-function applyHostLayoutState(root, panel) {
+function getHostLayoutState(root) {
   const host = root?.host;
   const layout = String(host?.dataset?.layout || host?._layout || "");
   const variant = String(host?.dataset?.layoutVariant || "");
+  return {
+    layout,
+    variant,
+    mobileLandscape: variant === "mobile-landscape",
+  };
+}
+
+function applyHostLayoutState(root, panel) {
+  const { layout, variant, mobileLandscape } = getHostLayoutState(root);
   panel.dataset.layout = layout;
   panel.dataset.mobileLayout = String(layout === "mobile");
-  panel.dataset.mobileLandscape = String(variant === "mobile-landscape");
+  panel.dataset.mobileLandscape = String(mobileLandscape);
   if (variant) panel.dataset.layoutVariant = variant;
   return panel;
 }
@@ -86,10 +95,12 @@ export function openLightControlPopup({
     previous.remove();
   }
 
+  const hostLayoutState = getHostLayoutState(shadowRoot);
   const context = {
     hass,
     entityState: getEntityState(hass, entityId),
     config: normalizeLightPopupConfig(widget.lightPopup),
+    mobileLandscape: hostLayoutState.mobileLandscape,
     view: "main",
     trigger: anchor,
   };
@@ -165,6 +176,7 @@ export function openLightControlPopup({
           hass: context.hass,
           entityState: context.entityState,
           config: context.config,
+          forceHorizontalLayout: context.mobileLandscape,
           onOpenSettings: () => renderView("config"),
         });
     body.dataset.activeView = view;

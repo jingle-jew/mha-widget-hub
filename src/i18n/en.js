@@ -500,6 +500,7 @@ export const en = Object.freeze({
       lightHint: "Choose the light and control to display.",
       action: "Action",
       actionType: "Action type",
+      buttonAction: "Button action",
       customAction: "Custom action",
       device: "Device",
       deviceType: "Device type",
@@ -540,6 +541,10 @@ export const en = Object.freeze({
         input_boolean: "Boolean",
         button: "Button HA",
         action: "Custom action",
+      }),
+      buttonActions: Object.freeze({
+        toggle: "Toggle",
+        popup: "Open popup",
       }),
       emptyLabels: Object.freeze({
         volume: "No media device available",

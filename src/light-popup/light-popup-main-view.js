@@ -134,13 +134,15 @@ export function createLightPopupMainView({
   hass,
   entityState,
   config,
+  forceHorizontalLayout = false,
   onOpenSettings,
 } = {}) {
   const context = { hass, entityState };
   const root = document.createElement("div");
+  const effectiveOrientation = forceHorizontalLayout ? "horizontal" : config.orientation;
   root.className = "mha-light-popup-main-view";
   root.dataset.view = "main";
-  root.dataset.orientation = config.orientation;
+  root.dataset.orientation = effectiveOrientation;
 
   const controlsSection = document.createElement("section");
   controlsSection.className = "mha-light-popup-section mha-light-popup-controls";
@@ -181,7 +183,7 @@ export function createLightPopupMainView({
     min: 0,
     max: 100,
     value: snapshot.brightness,
-    orientation: config.orientation,
+    orientation: effectiveOrientation,
     className: "mha-light-popup-slider",
     onInput: (event) => {
       brightnessOutput.textContent = `${Math.round(Number(event.currentTarget.value))} %`;
@@ -210,7 +212,7 @@ export function createLightPopupMainView({
     min: snapshot.minKelvin,
     max: snapshot.maxKelvin,
     value: snapshot.kelvin,
-    orientation: config.orientation,
+    orientation: effectiveOrientation,
     className: "mha-light-popup-slider mha-light-popup-temperature-slider",
     onInput: (event) => {
       temperatureOutput.textContent = `${Math.round(Number(event.currentTarget.value))} K`;
