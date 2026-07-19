@@ -967,6 +967,29 @@
     min-block-size: 3.15rem;
   }
 
+  :host([data-theme-style="material"]) .mha-light-control-popup[data-mobile-layout="false"] .mha-light-popup-color-view .mha-light-color-slider-field {
+    min-block-size: 0;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto minmax(2.75rem, auto);
+    gap: .4rem .7rem;
+  }
+
+  :host([data-theme-style="material"]) .mha-light-control-popup[data-mobile-layout="false"] .mha-light-popup-color-view .mha-light-color-slider-field > span,
+  :host([data-theme-style="material"]) .mha-light-control-popup[data-mobile-layout="false"] .mha-light-popup-color-view .mha-light-color-slider-field > output {
+    position: static;
+    transform: none;
+  }
+
+  :host([data-theme-style="material"]) .mha-light-control-popup[data-mobile-layout="false"] .mha-light-popup-color-view .mha-light-color-slider-field > .mha-light-slider-stack {
+    min-block-size: 2.75rem;
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  :host([data-theme-style="material"]) .mha-light-control-popup[data-mobile-layout="false"] .mha-light-popup-color-view .mha-light-color-slider-field > .mha-light-slider-stack > .mha-slider {
+    min-block-size: 2.75rem;
+  }
+
   .mha-light-control-popup[data-mobile-layout="false"] .mha-light-popup-color-view .mha-light-color-wheel-pane {
     padding: .7rem 1rem 1rem;
   }
