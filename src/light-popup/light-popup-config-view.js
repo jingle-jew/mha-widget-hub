@@ -161,6 +161,20 @@ function createSceneCard(scene, index, draft, rerender) {
   return card;
 }
 
+function createQuickControlsLayoutPreview(orientation) {
+  const preview = document.createElement("span");
+  preview.className = `mha-light-config-layout-preview mha-light-config-layout-preview--${orientation}`;
+  preview.setAttribute("aria-hidden", "true");
+
+  ["power", "brightness", "temperature", "scenes"].forEach((area) => {
+    const block = document.createElement("span");
+    block.dataset.area = area;
+    preview.append(block);
+  });
+
+  return preview;
+}
+
 function createAppearance(draft) {
   const section = document.createElement("section");
   section.className = "mha-light-config-column mha-light-config-appearance";
@@ -171,13 +185,16 @@ function createAppearance(draft) {
   const choices = document.createElement("div");
   choices.className = "mha-light-config-orientations";
   [
-    ["vertical", "layout-rows", "lightPopup.vertical", "Vertical"],
-    ["horizontal", "layout-columns", "lightPopup.horizontal", "Horizontal"],
-  ].forEach(([value, iconName, key, fallback]) => {
+    ["vertical", "lightPopup.vertical", "Vertical"],
+    ["horizontal", "lightPopup.horizontal", "Horizontal"],
+  ].forEach(([value, key, fallback]) => {
     const choice = document.createElement("button");
     choice.type = "button";
     choice.dataset.selected = String(draft.orientation === value);
-    choice.append(createIconSymbol({ name: iconName }), document.createTextNode(t(key, fallback)));
+    choice.append(
+      createQuickControlsLayoutPreview(value),
+      document.createTextNode(t(key, fallback)),
+    );
     choice.onclick = () => {
       draft.orientation = value;
       choices.querySelectorAll("button").forEach((button) => {

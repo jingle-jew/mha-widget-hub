@@ -670,6 +670,45 @@
   color: var(--mha-accent);
 }
 
+.mha-light-config-layout-preview {
+  inline-size: 3.8rem;
+  block-size: 2.8rem;
+  display: grid;
+  gap: .18rem;
+  color: currentColor;
+}
+
+.mha-light-config-layout-preview > span {
+  min-inline-size: 0;
+  min-block-size: 0;
+  border: 1.5px solid currentColor;
+  border-radius: .22rem;
+  opacity: .9;
+}
+
+.mha-light-config-layout-preview--horizontal {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows: .45fr repeat(2, .8fr) 1fr;
+  grid-template-areas:
+    "power power power power"
+    "brightness brightness brightness brightness"
+    "temperature temperature temperature temperature"
+    "scenes scenes scenes scenes";
+}
+
+.mha-light-config-layout-preview--vertical {
+  grid-template-columns: 1.15fr repeat(2, .85fr);
+  grid-template-rows: .45fr minmax(0, 1fr);
+  grid-template-areas:
+    "power power power"
+    "scenes temperature brightness";
+}
+
+.mha-light-config-layout-preview [data-area="power"] { grid-area: power; }
+.mha-light-config-layout-preview [data-area="brightness"] { grid-area: brightness; }
+.mha-light-config-layout-preview [data-area="temperature"] { grid-area: temperature; }
+.mha-light-config-layout-preview [data-area="scenes"] { grid-area: scenes; }
+
 .mha-light-config-tint-row {
   min-inline-size: 0;
   margin-block-start: 1rem;
