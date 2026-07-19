@@ -35,6 +35,8 @@ export const fr = Object.freeze({
     quickControlsAlignment: "Alignement de la section Contrôles rapides",
     presets: "Préréglages de lumière",
     power: "Marche / Arrêt",
+    powerOff: "Éteint",
+    powerOn: "Allumé",
     brightness: "Luminosité",
     temperature: "Température de couleur",
     whites: "Blancs",

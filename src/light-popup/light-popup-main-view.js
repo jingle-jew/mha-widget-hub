@@ -37,8 +37,8 @@ function createPowerSegments({ checked, onChange }) {
   group.setAttribute("aria-label", t("lightPopup.power", "On / Off"));
 
   const buttons = [
-    [true, t("common.on", "On")],
-    [false, t("common.off", "Off")],
+    [false, t("lightPopup.powerOff", "Off")],
+    [true, t("lightPopup.powerOn", "On")],
   ].map(([value, label]) => {
     const button = document.createElement("button");
     button.type = "button";
