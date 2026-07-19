@@ -224,7 +224,11 @@ test("desktop popup sections share one stretching grid and views stay in one dia
   assert.match(source, /colorView\.dataset\.view = "color"/u);
   assert.match(source, /configView\.dataset\.view = "config"/u);
   assert.match(source, /applyPanelSurfaceContract\(createPanelShell\(\{/u);
+  assert.match(source, /open:\s*false,/u);
   assert.match(source, /mobilePresentation:\s*PANEL_MOBILE_PRESENTATIONS\.SHEET/u);
+  assert.match(source, /syncPanelVisibility\(root, true,/u);
+  assert.match(source, /syncPanelVisibility\(root, false,/u);
+  assert.match(source, /matchMedia\?\.\("\(prefers-reduced-motion: reduce\)"\)/u);
   assert.match(source, /root\.__mhaUpdateFromHass = syncFromHass/u);
   assert.match(source, /if \(nextStateSignature === lastStateSignature\) return;/u);
   assert.match(source, /mha-update-widget-config/u);
@@ -257,17 +261,38 @@ test("preset heading stays left aligned and custom color label remains visible",
   assert.match(css, /mha-light-control-custom-color-button\s+\.mha-icon-symbol:last-child[\s\S]*?justify-self:\s*end;/u);
 });
 
-test("mobile portrait uses two vertical snap pages while landscape preserves control orientation", () => {
+test("mobile portrait and landscape use scoped pagers without turning tablet layouts into sheets", () => {
   const cssPath = fileURLToPath(new URL("../styles/components/light-control-popup.css", import.meta.url));
+  const sourcePath = fileURLToPath(new URL("../src/light-control/light-control-popup.js", import.meta.url));
+  const css = readFileSync(cssPath, "utf8");
+  const source = readFileSync(sourcePath, "utf8");
+
+  assert.match(css, /:host\(\[data-layout="mobile"\]\) \.mha-light-control-dialog\s*\{[\s\S]*?--mha-mobile-sheet-max-height:[\s\S]*?transform:\s*translateY\(110dvh\);/u);
+  assert.match(css, /:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\) \.mha-light-control-main-view\s*\{[\s\S]*?grid-auto-rows:\s*100%;[\s\S]*?scroll-snap-type:\s*y mandatory;/u);
+  assert.match(css, /:host\(\[data-layout="mobile"\]\[data-layout-variant="mobile-landscape"\]\) \.mha-light-control-main-view\s*\{[\s\S]*?grid-template-columns:/u);
+  assert.match(css, /:host\(\[data-layout="mobile"\]\[data-layout-variant="mobile-landscape"\]\) \.mha-light-control-preset-pages\s*\{[\s\S]*?scroll-snap-type:\s*y mandatory;/u);
+  assert.match(css, /@media \(min-width:\s*768px\)[\s\S]*?data-theme-style="oneui"[\s\S]*?mha-light-control-dialog[\s\S]*?border-radius:/u);
+  assert.match(css, /:host\(\[data-layout="mobile"\]\) \.mha-light-control-header[\s\S]*?background:\s*transparent;/u);
+  assert.match(css, /data-layout-variant="mobile-landscape"[\s\S]*?data-orientation="vertical"[\s\S]*?grid-template-columns:[^;]+repeat\(2,/u);
+  assert.match(css, /data-layout-variant="mobile-landscape"[\s\S]*?data-orientation="horizontal"[\s\S]*?align-content:\s*center;/u);
+  assert.doesNotMatch(css, /@media \(max-width:\s*1099px\) and \(orientation:\s*landscape\)/u);
+  assert.match(source, /createPageNavigation\(\{[\s\S]*?count:\s*2,[\s\S]*?mainPages/u);
+  assert.match(source, /pageSelector:\s*":scope > \.mha-light-control-preset-page"/u);
+});
+
+test("light settings are split into bounded pages instead of one free-scrolling form", () => {
+  const viewPath = fileURLToPath(new URL("../src/light-control/light-control-config-view.js", import.meta.url));
+  const cssPath = fileURLToPath(new URL("../styles/components/light-control-popup.css", import.meta.url));
+  const view = readFileSync(viewPath, "utf8");
   const css = readFileSync(cssPath, "utf8");
 
-  assert.match(css, /max-width:\s*767px\) and \(orientation:\s*portrait\)[\s\S]*?scroll-snap-type:\s*y mandatory;/u);
-  assert.match(css, /max-width:\s*767px\) and \(orientation:\s*portrait\)[\s\S]*?data-mobile-presentation="sheet"[\s\S]*?block-size:\s*var\(--mha-mobile-sheet-max-height\);/u);
-  assert.match(css, /max-width:\s*767px\) and \(orientation:\s*portrait\)[\s\S]*?grid-auto-rows:\s*100cqb;/u);
-  assert.match(css, /@media \(min-width:\s*768px\)[\s\S]*?data-theme-style="oneui"[\s\S]*?mha-light-control-dialog[\s\S]*?border-radius:/u);
-  assert.match(css, /@media \(max-width:\s*767px\)[\s\S]*?mha-light-control-header[\s\S]*?background:\s*transparent;/u);
-  assert.match(css, /max-width:\s*1099px\) and \(orientation:\s*landscape\)[\s\S]*?data-orientation="vertical"[\s\S]*?grid-template-columns:[^;]+repeat\(2,/u);
-  assert.match(css, /max-width:\s*1099px\) and \(orientation:\s*landscape\)[\s\S]*?data-orientation="horizontal"[\s\S]*?align-content:\s*start;/u);
+  assert.match(view, /basicsPage\.dataset\.configPage = "basics"/u);
+  assert.match(view, /firstAmbiencesPage\.dataset\.configPage = "ambiences-1"/u);
+  assert.match(view, /secondAmbiencesPage\.dataset\.configPage = "ambiences-2"/u);
+  assert.match(view, /start:\s*0,[\s\S]*?end:\s*2,/u);
+  assert.match(view, /start:\s*2,[\s\S]*?end:\s*4,/u);
+  assert.match(css, /\.mha-light-control-config-body\s*\{[\s\S]*?grid-auto-rows:\s*100%;[\s\S]*?scroll-snap-type:\s*y mandatory;/u);
+  assert.match(css, /\.mha-light-control-config-page\s*\{[\s\S]*?scroll-snap-align:\s*start;/u);
 });
 
 test("iOS light controls use slider2 while other themes keep the standard MHA slider", () => {

@@ -149,6 +149,28 @@ appartiennent à `AGENTS.md`.
   pour `colorTemperature`. La roue colorimétrique partage le même repère que la
   conversion HSV, avec le rouge en haut et une saturation radiale.
 
+### 2026-07-18 — Paginer le popup lumière selon le contexte responsive
+
+- **Statut :** confirmé.
+- **Décision :** le popup lumière reste une seule surface construite avec le
+  `panel-shell`. Tablette et desktop consomment le rôle `popup` centré; mobile
+  consomme le contrat de sheet du settings-panel et son geste de fermeture. En
+  portrait, les contrôles et les presets forment deux pages verticales. En
+  paysage mobile, les deux zones restent simultanément visibles et seule la
+  zone couleur pagine entre deux groupes de presets. La configuration utilise
+  trois pages bornées : réglages de base, ambiances 1–2 et ambiances 3–4.
+- **Pourquoi :** les anciens scrolls imbriqués et le scroll-snap appliqué au
+  contenu global mélangeaient navigation et débordement, étiraient les sections
+  et rendaient le paysage dépendant de la hauteur. Des viewports paginés locaux
+  donnent une géométrie stable sans dupliquer le popup ni les contrôles.
+- **Conséquence :** piloter les variantes mobiles avec `data-layout` et
+  `data-layout-variant`, pas avec une orientation brute qui inclurait tablette ou
+  desktop étroit. Garder les pagers locaux au popup, les indicateurs accessibles
+  synchronisés au scroll, et recalculer leur position après redimensionnement.
+  L'ouverture et la fermeture passent par `syncPanelVisibility`; le mouvement
+  réduit désactive aussi les scrolls programmatiques fluides. Les appels HA, la
+  détection de capacités et les sliders partagés restent indépendants du pager.
+
 ## Pièges connus
 
 - Les contrôles MHA vivent dans le Shadow DOM du hub. Pour détecter un clic

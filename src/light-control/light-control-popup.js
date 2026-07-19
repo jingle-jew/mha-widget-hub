@@ -22,6 +22,8 @@ import {
   PANEL_MOBILE_PRESENTATIONS,
   PANEL_SURFACE_ROLES,
 } from "../panels/panel-surface-contract.js";
+import { SETTINGS_PANEL_VISIBILITY_TRANSITION_MS } from "../panels/panel-transition-timing.js";
+import { syncPanelVisibility } from "../panels/panel-visibility-controller.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
 import { resolveWidgetIconName } from "../ui/icon-name-resolver.js";
 import { createSlider } from "../ui/slider.js";
@@ -34,6 +36,7 @@ import { renderLightControlConfigFields } from "./light-control-config-view.js";
 
 const SERVICE_INTERVAL_MS = 100;
 const LIGHT_CONTROL_VIEWS = new Set(["presets", "color", "config"]);
+const LIGHT_CONTROL_CLOSE_TRANSITION_MS = SETTINGS_PANEL_VISIBILITY_TRANSITION_MS;
 const FOCUSABLE_SELECTOR = [
   "button:not([disabled])",
   "input:not([disabled])",
@@ -41,6 +44,12 @@ const FOCUSABLE_SELECTOR = [
   "textarea:not([disabled])",
   "[tabindex]:not([tabindex='-1'])",
 ].join(",");
+
+function getLightControlTransitionMs() {
+  return globalThis.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches
+    ? 0
+    : LIGHT_CONTROL_CLOSE_TRANSITION_MS;
+}
 
 function createButton({ className = "", label = "", icon = "", text = "", onClick } = {}) {
   const button = document.createElement("button");
@@ -103,6 +112,115 @@ function createSectionTitle(text) {
   title.className = "mha-light-control-section-title";
   title.textContent = text;
   return title;
+}
+
+function createPageNavigation({ className = "", count = 2, label = "Page" } = {}) {
+  const navigation = document.createElement("nav");
+  navigation.className = ["mha-light-control-page-navigation", className].filter(Boolean).join(" ");
+  navigation.setAttribute("aria-label", label);
+  const buttons = Array.from({ length: count }, (_, index) => {
+    const button = document.createElement("button");
+    button.className = "mha-light-control-page-dot";
+    button.type = "button";
+    button.dataset.pageIndex = String(index);
+    button.setAttribute("aria-label", `${label} ${index + 1}`);
+    button.setAttribute("aria-current", index === 0 ? "page" : "false");
+    navigation.append(button);
+    return button;
+  });
+  return { navigation, buttons };
+}
+
+function bindVerticalPager({ viewport, buttons = [], pageSelector, onPageChange } = {}) {
+  let currentPage = 0;
+  let scrollFrame = null;
+  const requestFrame = globalThis.requestAnimationFrame
+    || (callback => globalThis.setTimeout(callback, 0));
+  const cancelFrame = globalThis.cancelAnimationFrame || globalThis.clearTimeout;
+
+  function getPages() {
+    return [...viewport?.querySelectorAll?.(pageSelector) || []];
+  }
+
+  function syncState(index) {
+    const pages = getPages();
+    const maxIndex = Math.max(0, pages.length - 1);
+    currentPage = Math.min(maxIndex, Math.max(0, Number(index) || 0));
+    viewport.dataset.currentPage = String(currentPage);
+    buttons.forEach((button, buttonIndex) => {
+      const active = buttonIndex === currentPage;
+      button.setAttribute("aria-current", active ? "page" : "false");
+      button.tabIndex = active ? 0 : -1;
+    });
+    onPageChange?.(currentPage);
+  }
+
+  function setPage(index, { animate = true } = {}) {
+    const pages = getPages();
+    const maxIndex = Math.max(0, pages.length - 1);
+    const nextIndex = Math.min(maxIndex, Math.max(0, Number(index) || 0));
+    syncState(nextIndex);
+    const pageSize = viewport?.clientHeight || pages[nextIndex]?.clientHeight || 0;
+    const top = nextIndex * pageSize;
+    const smooth = animate && getLightControlTransitionMs() > 0;
+    if (typeof viewport?.scrollTo === "function") {
+      viewport.scrollTo({ top, behavior: smooth ? "smooth" : "auto" });
+    } else if (viewport) {
+      viewport.scrollTop = top;
+    }
+  }
+
+  function handleScroll() {
+    if (scrollFrame != null) return;
+    scrollFrame = requestFrame(() => {
+      scrollFrame = null;
+      const height = Math.max(1, viewport?.clientHeight || 0);
+      syncState(Math.round((viewport?.scrollTop || 0) / height));
+    });
+  }
+
+  function handleResize() {
+    setPage(currentPage, { animate: false });
+  }
+
+  const buttonHandlers = buttons.map((button, index) => {
+    const click = () => setPage(index);
+    const keydown = (event) => {
+      const direction = event.key === "ArrowDown" || event.key === "ArrowRight" ? 1
+        : event.key === "ArrowUp" || event.key === "ArrowLeft" ? -1
+          : 0;
+      const targetIndex = event.key === "Home" ? 0
+        : event.key === "End" ? buttons.length - 1
+          : direction ? index + direction
+            : null;
+      if (targetIndex == null) return;
+      event.preventDefault();
+      const boundedIndex = Math.min(buttons.length - 1, Math.max(0, targetIndex));
+      setPage(boundedIndex);
+      buttons[boundedIndex]?.focus?.({ preventScroll: true });
+    };
+    button.addEventListener("click", click);
+    button.addEventListener("keydown", keydown);
+    return { click, keydown };
+  });
+  viewport?.addEventListener?.("scroll", handleScroll, { passive: true });
+  globalThis.addEventListener?.("resize", handleResize, { passive: true });
+  syncState(0);
+
+  return {
+    get currentPage() { return currentPage; },
+    setPage,
+    sync: () => syncState(currentPage),
+    destroy() {
+      if (scrollFrame != null) cancelFrame(scrollFrame);
+      viewport?.removeEventListener?.("scroll", handleScroll);
+      globalThis.removeEventListener?.("resize", handleResize);
+      buttons.forEach((button, index) => {
+        button.removeEventListener("click", buttonHandlers[index].click);
+        button.removeEventListener("keydown", buttonHandlers[index].keydown);
+      });
+    },
+  };
 }
 
 function getFriendlyName(widget, entityState) {
@@ -191,6 +309,8 @@ export function createLightControlPopup({
   let configDraft = cloneLightControlConfig(config);
   let currentView = "presets";
   let destroyed = false;
+  let closing = false;
+  let closeTimer = null;
   let lastStateSignature = "";
   let customColor = rgbToHex(getLightRgbColor(entityState) || [255, 153, 52]);
   let customHue = 32;
@@ -267,6 +387,14 @@ export function createLightControlPopup({
   const mainView = document.createElement("div");
   mainView.className = "mha-light-control-view mha-light-control-main-view";
   mainView.dataset.view = "presets";
+
+  const mainPager = document.createElement("div");
+  mainPager.className = "mha-light-control-main-pager";
+  const mainPageNavigation = createPageNavigation({
+    className: "mha-light-control-main-page-navigation",
+    count: 2,
+    label: t("lightControl.mainPages", "Light control page"),
+  });
 
   const controlsSection = document.createElement("section");
   controlsSection.className = "mha-light-control-section mha-light-control-controls";
@@ -378,14 +506,25 @@ export function createLightControlPopup({
     onClick: () => setView("color"),
   });
   customColorButton.append(createIconSymbol({ name: "chevron-right" }));
-  presetsSection.append(
-    presetsHeading,
-    whitesGroup,
-    ambiencesGroup,
-    colorsGroup,
-    customColorButton,
-  );
+  const presetPages = document.createElement("div");
+  presetPages.className = "mha-light-control-preset-pages";
+  const whitesAndColorsPage = document.createElement("div");
+  whitesAndColorsPage.className = "mha-light-control-preset-page";
+  whitesAndColorsPage.dataset.presetPage = "whites-colors";
+  whitesAndColorsPage.append(whitesGroup, colorsGroup);
+  const ambiencesPage = document.createElement("div");
+  ambiencesPage.className = "mha-light-control-preset-page";
+  ambiencesPage.dataset.presetPage = "ambiences";
+  ambiencesPage.append(ambiencesGroup, customColorButton);
+  presetPages.append(whitesAndColorsPage, ambiencesPage);
+  const presetPageNavigation = createPageNavigation({
+    className: "mha-light-control-preset-page-navigation",
+    count: 2,
+    label: t("lightControl.colorPages", "Light color page"),
+  });
+  presetsSection.append(presetsHeading, presetPages, presetPageNavigation.navigation);
   mainView.append(controlsSection, presetsSection);
+  mainPager.append(mainView, mainPageNavigation.navigation);
 
   const colorView = document.createElement("div");
   colorView.className = "mha-light-control-view mha-light-control-color-view";
@@ -464,11 +603,19 @@ export function createLightControlPopup({
   });
   saveConfig.dataset.variant = "primary";
   configActions.append(cancelConfig, saveConfig);
-  configView.append(configBody, configActions);
+  const configPageNavigation = createPageNavigation({
+    className: "mha-light-control-config-page-navigation",
+    count: 3,
+    label: t("lightControl.configPages", "Light control settings page"),
+  });
+  const configFooter = document.createElement("div");
+  configFooter.className = "mha-light-control-config-footer";
+  configFooter.append(configPageNavigation.navigation, configActions);
+  configView.append(configBody, configFooter);
 
-  content.append(mainView, colorView, configView);
+  content.append(mainPager, colorView, configView);
   root = applyPanelSurfaceContract(createPanelShell({
-    open: true,
+    open: false,
     rootClassName: "mha-light-control-popup",
     scrimClassName: "mha-light-control-scrim",
     sheetClassName: "mha-light-control-dialog",
@@ -483,6 +630,24 @@ export function createLightControlPopup({
   });
   root.dataset.lightControlPopup = "true";
   dialog = root.querySelector(".mha-light-control-dialog");
+  const mainPagerController = bindVerticalPager({
+    viewport: mainView,
+    buttons: mainPageNavigation.buttons,
+    pageSelector: ":scope > .mha-light-control-section",
+    onPageChange: page => { root.dataset.mainPage = String(page); },
+  });
+  const presetPagerController = bindVerticalPager({
+    viewport: presetPages,
+    buttons: presetPageNavigation.buttons,
+    pageSelector: ":scope > .mha-light-control-preset-page",
+    onPageChange: page => { root.dataset.presetPage = String(page); },
+  });
+  const configPagerController = bindVerticalPager({
+    viewport: configBody,
+    buttons: configPageNavigation.buttons,
+    pageSelector: ":scope > .mha-light-control-config-page",
+    onPageChange: page => { root.dataset.configPage = String(page); },
+  });
 
   function applyPatch(patch) {
     const serviceCall = buildLightControlServiceCall(entityState, patch);
@@ -491,16 +656,32 @@ export function createLightControlPopup({
   }
 
   function setView(view) {
+    const previousView = currentView;
     currentView = normalizeLightControlView(view);
+    [mainPager, colorView, configView].forEach((viewNode) => {
+      delete viewNode.dataset.entering;
+    });
     root.dataset.view = currentView;
-    mainView.hidden = currentView !== "presets";
+    mainPager.hidden = currentView !== "presets";
     colorView.hidden = currentView !== "color";
     configView.hidden = currentView !== "config";
     backButton.hidden = currentView === "presets";
     gearButton.hidden = currentView !== "presets";
     identity.hidden = currentView === "config";
     headerViewTitle.hidden = currentView !== "config";
-    if (currentView === "config") renderConfigFields();
+    if (currentView === "config") {
+      renderConfigFields();
+      configPagerController.setPage(0, { animate: false });
+    }
+    if (currentView !== previousView) {
+      const activeView = currentView === "presets" ? mainPager
+        : currentView === "color" ? colorView
+          : configView;
+      activeView.dataset.entering = currentView === "presets" ? "back" : "forward";
+      activeView.addEventListener("animationend", () => {
+        delete activeView.dataset.entering;
+      }, { once: true });
+    }
     const nextFocus = currentView === "presets"
       ? gearButton
       : currentView === "color"
@@ -647,6 +828,8 @@ export function createLightControlPopup({
     colorsGroup.hidden = !capabilities.color;
     customColorButton.hidden = !capabilities.color;
     presetsSection.hidden = !capabilities.color && !capabilities.colorTemperature;
+    mainPageNavigation.navigation.hidden = presetsSection.hidden;
+    if (presetsSection.hidden) mainPagerController.setPage(0, { animate: false });
     colorView.dataset.disabled = String(!available || !capabilities.color);
     applyColorButton.disabled = !available || !capabilities.color;
 
@@ -683,13 +866,23 @@ export function createLightControlPopup({
     }
   }
 
-  function close() {
-    if (destroyed) return;
-    root.dataset.open = "false";
-    destroy();
-    root.remove();
-    opener?.focus?.({ preventScroll: true });
-    onClose?.();
+  function close({ immediate = false } = {}) {
+    if (destroyed || closing) return;
+    closing = true;
+    const transitionMs = immediate ? 0 : getLightControlTransitionMs();
+    syncPanelVisibility(root, false, {
+      transitionMs,
+      animateClose: !immediate,
+    });
+    const finishClose = () => {
+      closeTimer = null;
+      destroy();
+      root.remove();
+      opener?.focus?.({ preventScroll: true });
+      onClose?.();
+    };
+    if (transitionMs <= 0) finishClose();
+    else closeTimer = globalThis.setTimeout(finishClose, transitionMs);
   }
 
   function handleKeyDown(event) {
@@ -720,6 +913,10 @@ export function createLightControlPopup({
     destroyed = true;
     brightnessAction.clear();
     temperatureAction.clear();
+    if (closeTimer != null) globalThis.clearTimeout(closeTimer);
+    mainPagerController.destroy();
+    presetPagerController.destroy();
+    configPagerController.destroy();
     root.removeEventListener("keydown", handleKeyDown);
     destroyDomSubtree(content);
     delete root.__mhaUpdateFromHass;
@@ -753,6 +950,10 @@ export function createLightControlPopup({
   setCustomColor(32, .9);
   syncFromHass(currentHass);
   setView("presets");
+  syncPanelVisibility(root, true, {
+    transitionMs: getLightControlTransitionMs(),
+    animateClose: false,
+  });
   requestAnimationFrame(() => closeButton.focus?.({ preventScroll: true }));
   return root;
 }
@@ -763,7 +964,7 @@ export function openLightControlPopup({ widget, hass, source, opener, onClose } 
 
   const existing = renderRoot.querySelector?.("[data-light-control-popup='true']");
   if (existing) {
-    if (existing.__mhaClose) existing.__mhaClose();
+    if (existing.__mhaClose) existing.__mhaClose({ immediate: true });
     else {
       existing.__mhaDestroy?.();
       existing.remove?.();

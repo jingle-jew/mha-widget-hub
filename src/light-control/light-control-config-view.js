@@ -220,12 +220,18 @@ function createAmbienceCard(configDraft, preset, index, rerender) {
   return card;
 }
 
-function createAmbiencesSection(configDraft, rerender) {
+function createAmbiencesSection(configDraft, rerender, {
+  start = 0,
+  end = configDraft.ambiences.length,
+  continuation = false,
+} = {}) {
   const section = document.createElement("section");
-  section.className = "mha-light-control-config-section";
+  section.className = "mha-light-control-config-section mha-light-control-config-section--ambiences";
+  section.dataset.continuation = String(continuation);
   const fields = document.createElement("div");
   fields.className = "mha-light-control-config-ambiences";
-  configDraft.ambiences.forEach((preset, index) => {
+  configDraft.ambiences.slice(start, end).forEach((preset, localIndex) => {
+    const index = start + localIndex;
     fields.append(createAmbienceCard(configDraft, preset, index, rerender));
   });
   section.append(createSectionTitle(t("lightControl.ambiences", "Ambiences")), fields);
@@ -249,10 +255,31 @@ function createColorsSection(configDraft) {
 export function renderLightControlConfigFields(container, configDraft) {
   if (!container || !configDraft) return;
   const rerender = () => renderLightControlConfigFields(container, configDraft);
-  container.replaceChildren(
+  const basicsPage = document.createElement("div");
+  basicsPage.className = "mha-light-control-config-page";
+  basicsPage.dataset.configPage = "basics";
+  basicsPage.append(
     createOrientationSection(configDraft),
     createWhitesSection(configDraft),
-    createAmbiencesSection(configDraft, rerender),
     createColorsSection(configDraft),
   );
+
+  const firstAmbiencesPage = document.createElement("div");
+  firstAmbiencesPage.className = "mha-light-control-config-page";
+  firstAmbiencesPage.dataset.configPage = "ambiences-1";
+  firstAmbiencesPage.append(createAmbiencesSection(configDraft, rerender, {
+    start: 0,
+    end: 2,
+  }));
+
+  const secondAmbiencesPage = document.createElement("div");
+  secondAmbiencesPage.className = "mha-light-control-config-page";
+  secondAmbiencesPage.dataset.configPage = "ambiences-2";
+  secondAmbiencesPage.append(createAmbiencesSection(configDraft, rerender, {
+    start: 2,
+    end: 4,
+    continuation: true,
+  }));
+
+  container.replaceChildren(basicsPage, firstAmbiencesPage, secondAmbiencesPage);
 }

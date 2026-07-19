@@ -15,6 +15,14 @@
     max(1rem, var(--mha-safe-bottom, 0px))
     max(1rem, var(--mha-safe-left, 0px));
   color: var(--mha-text-primary, var(--mha-text));
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--mha-panel-visibility-duration, 360ms) ease;
+}
+
+.mha-light-control-popup[data-open="true"] {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .mha-light-control-scrim {
@@ -26,6 +34,12 @@
   padding: 0;
   background: var(--mha-scrim-surface, var(--mha-surface-scrim, var(--mha-bg-overlay)));
   cursor: default;
+  opacity: 0;
+  transition: opacity var(--mha-panel-visibility-duration, 360ms) ease;
+}
+
+.mha-light-control-popup[data-open="true"] .mha-light-control-scrim {
+  opacity: var(--mha-scrim-opacity, 1);
 }
 
 .mha-light-control-dialog {
@@ -42,6 +56,13 @@
   box-shadow: var(--mha-popup-shadow, var(--mha-shadow-popup, var(--mha-shadow-panel)));
   -webkit-backdrop-filter: var(--mha-popup-filter, blur(var(--mha-blur-popup, var(--mha-blur-strong))));
   backdrop-filter: var(--mha-popup-filter, blur(var(--mha-blur-popup, var(--mha-blur-strong))));
+  opacity: 0;
+  transform-origin: center;
+  transition: opacity var(--mha-panel-visibility-duration, 360ms) ease;
+}
+
+.mha-light-control-popup[data-open="true"] .mha-light-control-dialog {
+  opacity: 1;
 }
 
 .mha-light-control-header {
@@ -112,13 +133,11 @@
 }
 
 .mha-light-control-identity h2 {
-  overflow: hidden;
   color: var(--mha-text-primary);
   font-size: clamp(1.25rem, 2.5vw, 2rem);
   font-weight: var(--mha-font-weight-bold);
   line-height: 1.08;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .mha-light-control-status {
@@ -181,7 +200,41 @@
   display: none !important;
 }
 
+.mha-light-control-main-pager {
+  position: relative;
+  min-inline-size: 0;
+  min-block-size: 0;
+  block-size: 100%;
+}
+
+.mha-light-control-main-pager[hidden] {
+  display: none !important;
+}
+
+.mha-light-control-main-pager[data-entering="forward"],
+.mha-light-control-color-view[data-entering="forward"],
+.mha-light-control-config-view[data-entering="forward"] {
+  animation: mha-light-control-view-forward 220ms cubic-bezier(.2,.8,.2,1) both;
+}
+
+.mha-light-control-main-pager[data-entering="back"],
+.mha-light-control-color-view[data-entering="back"],
+.mha-light-control-config-view[data-entering="back"] {
+  animation: mha-light-control-view-back 220ms cubic-bezier(.2,.8,.2,1) both;
+}
+
+@keyframes mha-light-control-view-forward {
+  from { opacity: 0; transform: translateX(.75rem); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes mha-light-control-view-back {
+  from { opacity: 0; transform: translateX(-.75rem); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
 .mha-light-control-main-view {
+  block-size: 100%;
   display: grid;
   grid-template-columns: minmax(15rem, .86fr) minmax(22rem, 1.14fr);
   align-items: stretch;
@@ -230,6 +283,7 @@
   font: inherit;
   font-weight: var(--mha-font-weight-semibold);
   cursor: pointer;
+  transition: background-color 220ms ease, color 220ms ease, opacity 220ms ease;
 }
 
 .mha-light-control-power-button .mha-icon-symbol {
@@ -296,12 +350,11 @@
 
 .mha-light-control-presets {
   display: grid;
-  grid-template-rows: auto auto auto auto auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   align-content: start;
   gap: clamp(.55rem, 1.05vh, .8rem);
   padding: clamp(1rem, 1.55vw, 1.3rem);
-  overflow-y: auto;
-  overscroll-behavior: contain;
+  overflow: hidden;
 }
 
 .mha-light-control-presets-heading {
@@ -341,6 +394,64 @@
   gap: clamp(.45rem, 1vh, .7rem);
   padding-block-end: clamp(.55rem, 1vh, .8rem);
   border-block-end: 1px solid var(--mha-divider, var(--mha-border-subtle));
+}
+
+.mha-light-control-preset-pages,
+.mha-light-control-preset-page {
+  display: contents;
+}
+
+.mha-light-control-page-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .15rem;
+}
+
+.mha-light-control-page-dot {
+  appearance: none;
+  inline-size: 2.4rem;
+  block-size: 2.4rem;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.mha-light-control-page-dot::after {
+  content: "";
+  inline-size: .38rem;
+  block-size: .38rem;
+  border-radius: 999px;
+  background: var(--mha-text-tertiary, var(--mha-text-secondary));
+  opacity: .5;
+  transition:
+    inline-size 180ms ease,
+    opacity 180ms ease,
+    background-color 180ms ease;
+}
+
+.mha-light-control-page-dot[aria-current="page"]::after {
+  inline-size: 1rem;
+  background: var(--mha-accent);
+  opacity: 1;
+}
+
+.mha-light-control-page-dot:focus-visible {
+  outline: 2px solid var(--mha-border-focus, var(--mha-accent));
+  outline-offset: -2px;
+}
+
+.mha-light-control-main-page-navigation,
+.mha-light-control-preset-page-navigation {
+  display: none;
+}
+
+.mha-light-control-page-navigation[hidden] {
+  display: none !important;
 }
 
 .mha-light-control-section-title {
@@ -430,10 +541,9 @@
 
 .mha-light-control-ambience-preset > span:last-child {
   max-inline-size: 100%;
-  overflow: hidden;
   font-size: clamp(.72rem, 1vw, .86rem);
   line-height: 1.15;
-  text-overflow: ellipsis;
+  overflow-wrap: anywhere;
 }
 
 .mha-light-control-ambience-preset[aria-pressed="true"],
@@ -586,11 +696,35 @@
 .mha-light-control-config-body {
   min-block-size: 0;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  align-content: start;
-  gap: var(--mha-light-popup-gap);
+  grid-auto-flow: row;
+  grid-auto-rows: 100%;
+  gap: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   overscroll-behavior: contain;
+  scroll-behavior: smooth;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: none;
+}
+
+.mha-light-control-config-body::-webkit-scrollbar,
+.mha-light-control-main-view::-webkit-scrollbar,
+.mha-light-control-preset-pages::-webkit-scrollbar {
+  display: none;
+}
+
+.mha-light-control-config-page {
+  min-inline-size: 0;
+  min-block-size: 0;
+  block-size: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: center;
+  gap: var(--mha-light-popup-gap);
+  padding-inline: 1px;
+  overflow: hidden;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
 }
 
 .mha-light-control-config-section {
@@ -604,7 +738,8 @@
   background: var(--mha-popup-section-surface, var(--mha-panel-section-surface));
 }
 
-.mha-light-control-config-section:nth-child(3) {
+.mha-light-control-config-page[data-config-page="basics"] .mha-light-control-config-section:last-child,
+.mha-light-control-config-section--ambiences {
   grid-column: 1 / -1;
 }
 
@@ -723,6 +858,14 @@
   display: flex;
   justify-content: flex-end;
   gap: .7rem;
+}
+
+.mha-light-control-config-footer {
+  min-inline-size: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--mha-light-popup-gap);
 }
 
 .mha-light-control-config-actions .mha-button {
@@ -845,296 +988,337 @@
   }
 }
 
-@media (max-width: 767px) {
-  .mha-light-control-popup {
-    place-items: end stretch;
-    padding: max(0px, var(--mha-safe-top, 0px)) 0 0;
-  }
+/* The light controller follows the settings-panel sheet contract on mobile. */
+:host([data-layout="mobile"]) .mha-light-control-popup {
+  place-items: end stretch;
+  padding:
+    max(0px, var(--mha-safe-top, 0px))
+    max(0px, var(--mha-safe-right, 0px))
+    0
+    max(0px, var(--mha-safe-left, 0px));
+}
 
-  .mha-light-control-dialog {
-    block-size: var(--mha-mobile-sheet-max-height);
-    background: var(--mha-surface-panel);
-    border-color: var(--mha-border-secondary);
-    box-shadow: var(--mha-shadow-panel);
-    -webkit-backdrop-filter: blur(var(--mha-blur-strong)) saturate(var(--mha-surface-saturation));
-    backdrop-filter: blur(var(--mha-blur-strong)) saturate(var(--mha-surface-saturation));
-  }
+:host([data-layout="mobile"]) .mha-light-control-dialog {
+  --mha-mobile-sheet-top-gap: max(var(--mha-statusbar-reserved-top, 0px), var(--mha-safe-top, 0px));
+  --mha-mobile-sheet-max-height: calc(100dvh - var(--mha-mobile-sheet-top-gap));
+  --mha-mobile-sheet-top-radius: var(--mha-radius-widget, var(--mha-widget-radius, 1.75rem));
+  inline-size: 100%;
+  block-size: var(--mha-mobile-sheet-max-height);
+  min-block-size: 0;
+  max-block-size: var(--mha-mobile-sheet-max-height);
+  border-start-start-radius: var(--mha-mobile-sheet-top-radius);
+  border-start-end-radius: var(--mha-mobile-sheet-top-radius);
+  border-end-start-radius: 0;
+  border-end-end-radius: 0;
+  background: var(--mha-panel-surface, var(--mha-surface-panel));
+  border-color: var(--mha-panel-border, var(--mha-border-secondary));
+  box-shadow: var(--mha-panel-shadow, var(--mha-shadow-panel));
+  -webkit-backdrop-filter: var(
+    --mha-panel-filter,
+    blur(var(--mha-blur-strong)) saturate(var(--mha-surface-saturation))
+  );
+  backdrop-filter: var(
+    --mha-panel-filter,
+    blur(var(--mha-blur-strong)) saturate(var(--mha-surface-saturation))
+  );
+  opacity: 1;
+  transform: translateY(110dvh);
+  transform-origin: bottom center;
+  transition: transform var(--mha-panel-visibility-duration, 360ms) cubic-bezier(.22,1,.36,1);
+}
 
-  .mha-light-control-header {
-    position: relative;
-    z-index: 2;
-    padding: .85rem .9rem .65rem;
-    background: transparent;
-  }
+:host([data-layout="mobile"]) .mha-light-control-popup[data-open="true"] .mha-light-control-dialog {
+  transform: translateY(0);
+}
 
-  .mha-light-control-content {
-    padding: 0 .8rem max(.8rem, var(--mha-safe-bottom, 0px));
+:host([data-layout="mobile"][data-theme-style="material"]) .mha-light-control-dialog {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+:host([data-layout="mobile"]) .mha-light-control-header {
+  position: relative;
+  z-index: 2;
+  padding: .85rem .9rem .65rem;
+  background: transparent;
+}
+
+:host([data-layout="mobile"]) .mha-light-control-content {
+  padding: 0 .8rem max(.8rem, var(--mha-safe-bottom, 0px));
+  overflow: hidden;
+}
+
+:host([data-layout="mobile"]) .mha-light-control-controls[data-orientation="vertical"] {
+  grid-template-columns: minmax(5.5rem, .72fr) repeat(2, minmax(4.5rem, 1fr));
+  align-items: stretch;
+  align-content: stretch;
+  gap: .65rem;
+}
+
+:host([data-layout="mobile"]) .mha-light-control-controls[data-orientation="vertical"]:has(
+  .mha-light-control-temperature-row[hidden]
+),
+:host([data-layout="mobile"]) .mha-light-control-controls[data-orientation="vertical"]:has(
+  .mha-light-control-brightness-row[hidden]
+) {
+  grid-template-columns: minmax(5.5rem, .72fr) minmax(5rem, 1fr);
+}
+
+:host([data-layout="mobile"]) .mha-light-control-controls[data-orientation="vertical"] .mha-light-control-power-group {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+}
+
+:host([data-layout="mobile"]) .mha-light-control-controls[data-orientation="vertical"] .mha-light-control-power-button:first-child {
+  order: 2;
+}
+
+:host([data-layout="mobile"]) .mha-light-control-controls[data-orientation="vertical"] .mha-light-control-power-button:nth-child(2) {
+  order: 1;
+}
+
+:host([data-layout="mobile"]) .mha-light-control-controls[data-orientation="vertical"] .mha-light-control-control-row {
+  grid-template-rows: auto minmax(10rem, 1fr);
+  border-block-start: 0;
+  border-inline-start: 1px solid var(--mha-divider, var(--mha-border-subtle));
+  padding-block-start: 0;
+  padding-inline-start: .65rem;
+}
+
+:host([data-layout="mobile"]) .mha-light-control-controls[data-orientation="vertical"] .mha-light-control-control-heading {
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  gap: .2rem;
+  text-align: center;
+}
+
+:host([data-layout="mobile"]) .mha-light-control-controls[data-orientation="vertical"] .mha-light-control-slider-slot {
+  inline-size: var(--mha-light-popup-slider-size);
+  block-size: 100%;
+  min-block-size: 10rem;
+  justify-self: center;
+}
+
+:host([data-layout="mobile"]) .mha-light-control-config-page {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+:host([data-layout="mobile"]) .mha-light-control-config-page[data-config-page^="ambiences"] {
+  align-content: center;
+}
+
+:host([data-layout="mobile"]) .mha-light-control-config-ambiences {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+:host([data-layout="mobile"]) .mha-light-control-config-footer {
+  grid-template-columns: minmax(0, 1fr);
+  gap: .25rem;
+}
+
+:host([data-layout="mobile"]) .mha-light-control-config-page-navigation {
+  grid-row: 1;
+}
+
+:host([data-layout="mobile"]) .mha-light-control-config-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+:host([data-layout="mobile"]) .mha-light-control-config-actions .mha-button {
+  min-inline-size: 0;
+}
+
+/* Portrait: the main surface is exactly two vertically paged screens. */
+:host([data-layout="mobile"]:not([data-layout-variant="mobile-landscape"])) .mha-light-control-main-view {
+  grid-template-columns: minmax(0, 1fr);
+  grid-auto-flow: row;
+  grid-auto-rows: 100%;
+  gap: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: none;
+}
+
+:host([data-layout="mobile"]:not([data-layout-variant="mobile-landscape"])) .mha-light-control-main-view > .mha-light-control-section {
+  block-size: 100%;
+  padding-inline-end: clamp(1rem, 5vw, 1.35rem);
+  overflow: hidden;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+:host([data-layout="mobile"]:not([data-layout-variant="mobile-landscape"])) .mha-light-control-main-page-navigation {
+  position: absolute;
+  z-index: 2;
+  inset-inline-end: .15rem;
+  inset-block-start: 50%;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(-50%);
+}
+
+:host([data-layout="mobile"]:not([data-layout-variant="mobile-landscape"])) .mha-light-control-presets {
+  align-content: center;
+}
+
+:host([data-layout="mobile"]:not([data-layout-variant="mobile-landscape"])) .mha-light-control-color-view {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  padding: clamp(.85rem, 4vw, 1.2rem);
+}
+
+:host([data-layout="mobile"]:not([data-layout-variant="mobile-landscape"])) .mha-light-control-color-view > .mha-light-control-section-title,
+:host([data-layout="mobile"]:not([data-layout-variant="mobile-landscape"])) .mha-light-control-color-wheel,
+:host([data-layout="mobile"]:not([data-layout-variant="mobile-landscape"])) .mha-light-control-color-actions {
+  grid-column: 1;
+  grid-row: auto;
+}
+
+:host([data-layout="mobile"]:not([data-layout-variant="mobile-landscape"])) .mha-light-control-color-wheel {
+  inline-size: min(70vw, 38dvh, 19rem);
+}
+
+/* Landscape: one sheet, two columns, with paging confined to the color column. */
+:host([data-layout="mobile"][data-layout-variant="mobile-landscape"]) .mha-light-control-header {
+  padding-block: .55rem .45rem;
+}
+
+:host([data-layout="mobile"][data-layout-variant="mobile-landscape"]) .mha-light-control-entity-icon {
+  inline-size: 2.75rem;
+  block-size: 2.75rem;
+}
+
+:host([data-layout="mobile"][data-layout-variant="mobile-landscape"]) .mha-light-control-content {
+  padding: 0 .7rem max(.65rem, var(--mha-safe-bottom, 0px));
+}
+
+:host([data-layout="mobile"][data-layout-variant="mobile-landscape"]) .mha-light-control-main-view {
+  grid-template-columns: minmax(16rem, .9fr) minmax(20rem, 1.1fr);
+  align-items: stretch;
+  gap: .7rem;
+  overflow: hidden;
+}
+
+:host([data-layout="mobile"][data-layout-variant="mobile-landscape"]) .mha-light-control-main-view > .mha-light-control-section {
+  block-size: 100%;
+  overflow: hidden;
+}
+
+:host([data-layout="mobile"][data-layout-variant="mobile-landscape"]) .mha-light-control-controls {
+  gap: .55rem;
+  padding: .7rem;
+}
+
+:host([data-layout="mobile"][data-layout-variant="mobile-landscape"]) .mha-light-control-controls[data-orientation="vertical"] {
+  grid-template-columns: minmax(5rem, .72fr) repeat(2, minmax(5rem, 1fr));
+}
+
+:host([data-layout="mobile"][data-layout-variant="mobile-landscape"]) .mha-light-control-controls[data-orientation="vertical"] .mha-light-control-control-row {
+  grid-template-rows: auto minmax(6rem, 1fr);
+  padding-inline-start: .55rem;
+}
+
+:host([data-layout="mobile"][data-layout-variant="mobile-landscape"]) .mha-light-control-controls[data-orientation="vertical"] .mha-light-control-slider-slot {
+  min-block-size: 6rem;
+}
+
+:host([data-layout="mobile"][data-layout-variant="mobile-landscape"]) .mha-light-control-controls[data-orientation="horizontal"] {
+  align-content: center;
+}
+
+:host([data-layout="mobile"][data-layout-variant="mobile-landscape"]) .mha-light-control-controls[data-orientation="horizontal"] .mha-light-control-power-button {
+  min-block-size: 3.25rem;
+}
+
+:host([data-layout="mobile"][data-layout-variant="mobile-landscape"]) .mha-light-control-controls[data-orientation="horizontal"] .mha-light-control-control-row {
+  gap: .45rem;
+  padding-block-start: .45rem;
+}
+
+:host([data-layout="mobile"][data-layout-variant="mobile-landscape"]) .mha-light-control-presets {
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  align-content: stretch;
+  gap: .25rem;
+  padding: .7rem;
+}
+
+:host([data-layout="mobile"][data-layout-variant="mobile-landscape"]) .mha-light-control-preset-pages {
+  min-block-size: 0;
+  display: grid;
+  grid-auto-flow: row;
+  grid-auto-rows: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: none;
+}
+
+:host([data-layout="mobile"][data-layout-variant="mobile-landscape"]) .mha-light-control-preset-page {
+  min-block-size: 0;
+  block-size: 100%;
+  display: grid;
+  align-content: center;
+  gap: clamp(.45rem, 1.5vh, .7rem);
+  overflow: hidden;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+:host([data-layout="mobile"][data-layout-variant="mobile-landscape"]) .mha-light-control-preset-page-navigation {
+  display: flex;
+}
+
+:host([data-layout="mobile"][data-layout-variant="mobile-landscape"]) .mha-light-control-preset-group {
+  gap: .35rem;
+  padding-block-end: .4rem;
+}
+
+:host([data-layout="mobile"][data-layout-variant="mobile-landscape"]) .mha-light-control-ambience-preset {
+  min-block-size: 3.75rem;
+}
+
+:host([data-layout="mobile"][data-layout-variant="mobile-landscape"]) .mha-light-control-color-view {
+  grid-template-columns: minmax(12rem, 20rem) minmax(12rem, 18rem);
+  grid-template-rows: auto minmax(0, 1fr);
+  padding: .7rem;
+}
+
+:host([data-layout="mobile"][data-layout-variant="mobile-landscape"]) .mha-light-control-color-view > .mha-light-control-section-title {
+  grid-column: 1 / -1;
+  grid-row: 1;
+}
+
+:host([data-layout="mobile"][data-layout-variant="mobile-landscape"]) .mha-light-control-color-wheel {
+  grid-column: 1;
+  grid-row: 2;
+  inline-size: min(54dvh, 17rem);
+}
+
+:host([data-layout="mobile"][data-layout-variant="mobile-landscape"]) .mha-light-control-color-actions {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+:host([data-layout="mobile"][data-layout-variant="mobile-landscape"]) .mha-light-control-config-page {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+:host([data-layout="mobile"][data-layout-variant="mobile-landscape"]) .mha-light-control-config-ambiences {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-height: 680px) {
+  :host([data-layout="mobile"]:not([data-layout-variant="mobile-landscape"])) .mha-light-control-main-view > .mha-light-control-section,
+  :host([data-layout="mobile"]:not([data-layout-variant="mobile-landscape"])) .mha-light-control-config-page {
     overflow-y: auto;
     overscroll-behavior: contain;
-  }
-
-  .mha-light-control-main-view {
-    block-size: auto;
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .mha-light-control-section {
-    block-size: auto;
-  }
-
-  .mha-light-control-controls {
-    align-content: start;
-  }
-
-  .mha-light-control-controls[data-orientation="vertical"] {
-    grid-template-columns: minmax(5.5rem, .72fr) repeat(2, minmax(4.5rem, 1fr));
-    align-items: stretch;
-    align-content: stretch;
-    gap: .65rem;
-  }
-
-  .mha-light-control-controls[data-orientation="vertical"]:has(
-    .mha-light-control-temperature-row[hidden]
-  ),
-  .mha-light-control-controls[data-orientation="vertical"]:has(
-    .mha-light-control-brightness-row[hidden]
-  ) {
-    grid-template-columns: minmax(5.5rem, .72fr) minmax(5rem, 1fr);
-  }
-
-  .mha-light-control-controls[data-orientation="vertical"] .mha-light-control-power-group {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: repeat(2, minmax(0, 1fr));
-  }
-
-  .mha-light-control-controls[data-orientation="vertical"] .mha-light-control-power-button:first-child {
-    order: 2;
-  }
-
-  .mha-light-control-controls[data-orientation="vertical"] .mha-light-control-power-button:nth-child(2) {
-    order: 1;
-  }
-
-  .mha-light-control-controls[data-orientation="vertical"] .mha-light-control-control-row {
-    grid-template-rows: auto minmax(12rem, 1fr);
-    border-block-start: 0;
-    border-inline-start: 1px solid var(--mha-divider, var(--mha-border-subtle));
-    padding-block-start: 0;
-    padding-inline-start: .65rem;
-  }
-
-  .mha-light-control-controls[data-orientation="vertical"] .mha-light-control-control-heading {
-    grid-template-columns: minmax(0, 1fr);
-    justify-items: center;
-    gap: .2rem;
-    text-align: center;
-  }
-
-  .mha-light-control-controls[data-orientation="vertical"] .mha-light-control-slider-slot {
-    inline-size: var(--mha-light-popup-slider-size);
-    block-size: 100%;
-    min-block-size: 12rem;
-    justify-self: center;
-  }
-
-  .mha-light-control-presets {
-    overflow: visible;
-  }
-
-  .mha-light-control-color-view {
-    block-size: auto;
-    min-block-size: calc(100dvh - 9rem);
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto auto auto;
-  }
-
-  .mha-light-control-color-view > .mha-light-control-section-title {
-    grid-column: 1;
-    grid-row: auto;
-  }
-
-  .mha-light-control-color-wheel {
-    grid-column: 1;
-    grid-row: auto;
-    inline-size: min(78vw, 20rem);
-  }
-
-  .mha-light-control-color-actions {
-    grid-column: 1;
-    grid-row: auto;
-  }
-
-  .mha-light-control-config-view {
-    block-size: auto;
-  }
-
-  .mha-light-control-config-body,
-  .mha-light-control-config-ambiences {
-    grid-template-columns: minmax(0, 1fr);
-    overflow: visible;
-  }
-
-  .mha-light-control-config-section:nth-child(3) {
-    grid-column: 1;
-  }
-
-  .mha-light-control-config-actions {
-    position: sticky;
-    inset-block-end: 0;
-    padding-block: .75rem;
-    background: var(--mha-popup-surface, var(--mha-surface-popup));
-  }
-}
-
-@media (max-width: 767px) and (orientation: portrait) {
-  .mha-light-control-popup[data-mobile-presentation="sheet"] > .mha-light-control-dialog {
-    block-size: var(--mha-mobile-sheet-max-height);
-  }
-
-  .mha-light-control-content {
-    container-type: size;
-    scroll-snap-type: y mandatory;
-    scroll-padding-block: 0;
-  }
-
-  .mha-light-control-main-view {
-    grid-auto-rows: calc(var(--mha-mobile-sheet-max-height) - 5.5rem);
-    grid-auto-rows: 100cqb;
-  }
-
-  .mha-light-control-main-view > .mha-light-control-section {
-    block-size: 100%;
-    overflow-y: auto;
-    scroll-snap-align: start;
-    scroll-snap-stop: always;
-  }
-}
-
-@media (max-width: 1099px) and (orientation: landscape) {
-  .mha-light-control-dialog {
-    inline-size: 100%;
-    block-size: 100dvh;
-    min-block-size: 0;
-    border-radius: 0;
-  }
-
-  .mha-light-control-header {
-    padding-block: max(.5rem, var(--mha-safe-top, 0px)) .45rem;
-  }
-
-  .mha-light-control-content {
-    padding: 0 .7rem .7rem;
-    overflow: hidden;
-  }
-
-  .mha-light-control-entity-icon {
-    inline-size: 2.75rem;
-    block-size: 2.75rem;
-  }
-
-  .mha-light-control-main-view {
-    block-size: 100%;
-    grid-template-columns: minmax(20rem, .9fr) minmax(24rem, 1.1fr);
-    align-items: stretch;
-    gap: .7rem;
-  }
-
-  .mha-light-control-main-view > .mha-light-control-section {
-    block-size: 100%;
-    overflow-y: auto;
-  }
-
-  .mha-light-control-controls[data-orientation="vertical"] {
-    grid-template-columns: minmax(5.5rem, .72fr) repeat(2, minmax(5.5rem, 1fr));
-    align-items: stretch;
-    align-content: stretch;
-    gap: .55rem;
-    padding: .7rem;
-  }
-
-  .mha-light-control-controls[data-orientation="vertical"]:has(
-    .mha-light-control-temperature-row[hidden]
-  ),
-  .mha-light-control-controls[data-orientation="vertical"]:has(
-    .mha-light-control-brightness-row[hidden]
-  ) {
-    grid-template-columns: minmax(5.5rem, .72fr) minmax(6rem, 1fr);
-  }
-
-  .mha-light-control-controls[data-orientation="vertical"] .mha-light-control-power-group {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: repeat(2, minmax(0, 1fr));
-  }
-
-  .mha-light-control-controls[data-orientation="vertical"] .mha-light-control-power-button:first-child {
-    order: 2;
-  }
-
-  .mha-light-control-controls[data-orientation="vertical"] .mha-light-control-power-button:nth-child(2) {
-    order: 1;
-  }
-
-  .mha-light-control-controls[data-orientation="vertical"] .mha-light-control-control-row {
-    grid-template-rows: auto minmax(7rem, 1fr);
-    border-block-start: 0;
-    border-inline-start: 1px solid var(--mha-divider, var(--mha-border-subtle));
-    padding-block-start: 0;
-    padding-inline-start: .55rem;
-  }
-
-  .mha-light-control-controls[data-orientation="vertical"] .mha-light-control-control-heading {
-    grid-template-columns: minmax(0, 1fr);
-    justify-items: center;
-    gap: .18rem;
-    text-align: center;
-  }
-
-  .mha-light-control-controls[data-orientation="vertical"] .mha-light-control-slider-slot {
-    inline-size: var(--mha-light-popup-slider-size);
-    block-size: 100%;
-    min-block-size: 7rem;
-    justify-self: center;
-  }
-
-  .mha-light-control-controls[data-orientation="horizontal"] {
-    align-content: start;
-    gap: .55rem;
-    padding: .7rem;
-  }
-
-  .mha-light-control-controls[data-orientation="horizontal"] .mha-light-control-power-button {
-    min-block-size: 3.25rem;
-  }
-
-  .mha-light-control-controls[data-orientation="horizontal"] .mha-light-control-control-row {
-    gap: .55rem;
-    padding-block-start: .55rem;
-  }
-
-  .mha-light-control-ambience-preset {
-    min-block-size: 4rem;
-  }
-
-  .mha-light-control-color-view {
-    min-block-size: calc(100dvh - 5rem);
-    grid-template-columns: minmax(12rem, 20rem) minmax(12rem, 18rem);
-    grid-template-rows: auto minmax(0, 1fr);
-  }
-
-  .mha-light-control-color-view > .mha-light-control-section-title {
-    grid-column: 1 / -1;
-    grid-row: 1;
-  }
-
-  .mha-light-control-color-wheel {
-    grid-column: 1;
-    grid-row: 2;
-    inline-size: min(58vh, 18rem);
-  }
-
-  .mha-light-control-color-actions {
-    grid-column: 2;
-    grid-row: 2;
+    scrollbar-width: none;
   }
 }
 
