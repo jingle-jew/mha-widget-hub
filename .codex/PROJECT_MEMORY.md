@@ -1,12 +1,30 @@
 # Mémoire persistante — MHA Widget Hub
 
-Dernière consolidation : 2026-07-18
+Dernière consolidation : 2026-07-19
 
 Ce fichier contient les connaissances durables qui seraient coûteuses à redécouvrir.
 Le code et les tests actuels restent la source de vérité. Les instructions de travail
 appartiennent à `AGENTS.md`.
 
 ## Décisions et raisons
+
+### 2026-07-19 — Composer le popup lumière autour de deux colonnes stables
+
+- **Statut :** confirmé.
+- **Décision :** sur tablette et desktop, le popup lumière conserve une même
+  géométrie externe et deux colonnes : les contrôles rapides à gauche, la
+  couleur à droite. Le réglage `orientation` est exposé par dataset et pilote
+  uniquement la composition complète de la colonne gauche (ordre, axe des
+  sliders, disposition des ambiances et proportions) à partir d'une seule
+  structure DOM. La colonne couleur reste commune aux deux modes.
+- **Pourquoi :** limiter l'orientation à un slider laissait les ambiances et les
+  proportions hors du contrat de configuration, tandis que dupliquer les vues
+  aurait créé deux chemins de synchronisation Home Assistant fragiles.
+- **Conséquence :** luminosité et température restent dans les contrôles
+  rapides; saturation, teinte et roue colorimétrique partagent un seul état HSV
+  synchronisé avec Home Assistant. Les futurs ajustements d'alignement doivent
+  rester dans la grille CSS pilotée par `data-orientation`, sans créer une
+  seconde implémentation JavaScript.
 
 ### 2026-07-15 — Faire du mouvement une signature visuelle MHA
 

@@ -39,6 +39,7 @@ test("light popup configuration normalizes the persisted widget contract", () =>
   });
 
   assert.equal(config.orientation, "horizontal");
+  assert.equal(config.tintPopup, false);
   assert.deepEqual(config.whites, [5000, 2700, 9000, 2200]);
   assert.deepEqual(config.colors, ["#ff0000", "#00c853"]);
   assert.deepEqual(config.scenes[0], {
@@ -50,6 +51,30 @@ test("light popup configuration normalizes the persisted widget contract", () =>
     brightness: 80,
     enabled: true,
   });
+});
+
+test("light popup configuration migrates legacy alignment and tint keys", () => {
+  const config = normalizeLightPopupConfig({
+    controlsAlignment: "horizontal",
+    tintPopupWithLightColor: true,
+  });
+
+  assert.equal(config.orientation, "horizontal");
+  assert.equal(config.tintPopup, true);
+  assert.equal("controlsAlignment" in config, false);
+  assert.equal("tintPopupWithLightColor" in config, false);
+});
+
+test("light popup configuration keeps the four ambience slots from the settings contract", () => {
+  const config = normalizeLightPopupConfig({
+    scenes: Array.from({ length: 6 }, (_, index) => ({
+      id: `scene-${index + 1}`,
+      name: `Ambiance ${index + 1}`,
+    })),
+  });
+
+  assert.equal(config.scenes.length, 4);
+  assert.deepEqual(config.scenes.map((scene) => scene.id), ["scene-1", "scene-2", "scene-3", "scene-4"]);
 });
 
 test("light popup adapter exposes partial capabilities and live values", () => {

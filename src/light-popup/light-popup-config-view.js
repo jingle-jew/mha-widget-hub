@@ -1,179 +1,174 @@
+import { hexToRgb, hsvToRgb, rgbToHex, rgbToHsv } from "../ha/light-popup-adapter.js";
 import { t } from "../i18n/index.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
 import { createSlider } from "../ui/slider.js";
 import { createToggle } from "../ui/toggle.js";
 import { cloneLightPopupConfig, normalizeHex } from "./light-popup-config.js";
 
-const TABS = Object.freeze([
-  ["whites", "lightPopup.whites", "Whites"],
-  ["scenes", "lightPopup.scenes", "Ambiences"],
-  ["colors", "lightPopup.colors", "Colors"],
-  ["display", "lightPopup.display", "Display"],
-]);
-
-function removeButton(label, onClick) {
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "mha-light-config-remove";
-  button.setAttribute("aria-label", label);
-  button.textContent = "×";
-  button.onclick = onClick;
-  return button;
+function getSceneColor(scene) {
+  if (scene.type === "rgb") return normalizeHex(scene.color);
+  const kelvin = Math.min(6500, Math.max(2000, Number(scene.kelvin) || 2700));
+  const ratio = (kelvin - 2000) / 4500;
+  return rgbToHex([
+    255,
+    Math.round(150 + ratio * 105),
+    Math.round(95 + ratio * 160),
+  ]);
 }
 
-function createWhitesPanel(draft, rerender) {
-  const panel = document.createElement("div");
-  panel.className = "mha-light-config-tab-panel";
-  const note = document.createElement("p");
-  note.textContent = t("lightPopup.whiteHint", "Suggested temperatures (up to 4)");
-  const chips = document.createElement("div");
-  chips.className = "mha-light-config-chips";
-  draft.whites.forEach((kelvin, index) => {
-    const chip = document.createElement("span");
-    chip.className = "mha-light-config-chip";
-    chip.append(document.createTextNode(`${kelvin} K`), removeButton(
-      t("lightPopup.removeWhite", "Remove white preset"),
-      () => {
-        draft.whites.splice(index, 1);
-        rerender();
-      },
-    ));
-    chips.append(chip);
-  });
+function setSceneHsv(scene, hue, saturation) {
+  scene.type = "rgb";
+  scene.color = rgbToHex(hsvToRgb(hue, saturation, 100));
+}
 
-  const add = document.createElement("div");
-  add.className = "mha-light-config-add-row";
-  const input = document.createElement("input");
-  input.type = "number";
-  input.min = "1500";
-  input.max = "9000";
-  input.step = "100";
-  input.value = "3000";
-  input.className = "mha-light-config-input";
-  input.setAttribute("aria-label", t("lightPopup.temperature", "Color temperature"));
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "mha-light-config-add";
-  button.textContent = "+";
-  button.disabled = draft.whites.length >= 4;
-  button.setAttribute("aria-label", t("common.add", "Add"));
-  button.onclick = () => {
-    const value = Math.round(Math.min(9000, Math.max(1500, Number(input.value) || 3000)));
-    if (draft.whites.length >= 4 || draft.whites.includes(value)) return;
-    draft.whites.push(value);
-    draft.whites.sort((a, b) => a - b);
-    rerender();
+function createSceneCard(scene, index, draft, rerender) {
+  const card = document.createElement("article");
+  card.className = "mha-light-config-scene-card";
+
+  const header = document.createElement("div");
+  header.className = "mha-light-config-scene-header";
+  const iconPreview = document.createElement("span");
+  iconPreview.className = "mha-light-config-scene-icon-preview";
+  iconPreview.append(createIconSymbol({ name: scene.icon, className: "mha-light-config-scene-icon" }));
+  const name = document.createElement("input");
+  name.type = "text";
+  name.className = "mha-light-config-input mha-light-config-scene-name";
+  name.value = scene.name;
+  name.setAttribute("aria-label", t("lightPopup.sceneName", "Ambience name"));
+  name.oninput = () => { scene.name = name.value; };
+  const enabled = createToggle({
+    label: `${scene.name}: ${t("lightPopup.enabled", "Enabled")}`,
+    checked: scene.enabled,
+    onChange: (event) => { scene.enabled = Boolean(event.currentTarget.checked); },
+  });
+  header.append(iconPreview, name, enabled);
+
+  const iconField = document.createElement("label");
+  iconField.className = "mha-light-config-compact-field";
+  const iconLabel = document.createElement("span");
+  iconLabel.textContent = t("lightPopup.icon", "Icon");
+  const iconInput = document.createElement("input");
+  iconInput.type = "text";
+  iconInput.className = "mha-light-config-input";
+  iconInput.value = scene.icon;
+  iconInput.oninput = () => {
+    scene.icon = iconInput.value.trim() || "sparkles";
+    iconPreview.replaceChildren(createIconSymbol({ name: scene.icon, className: "mha-light-config-scene-icon" }));
   };
-  add.append(input, button);
-  panel.append(note, chips, add);
-  return panel;
-}
+  iconField.append(iconLabel, iconInput);
 
-function sceneTypeValue(scene) {
-  return scene.type === "rgb" ? scene.color : `${scene.kelvin} K`;
-}
+  const colorField = document.createElement("label");
+  colorField.className = "mha-light-config-compact-field mha-light-config-color-field";
+  const colorLabel = document.createElement("span");
+  colorLabel.textContent = t("lightPopup.colorCode", "Color code");
+  const colorPicker = document.createElement("input");
+  colorPicker.type = "color";
+  colorPicker.value = getSceneColor(scene);
+  const colorCode = document.createElement("input");
+  colorCode.type = "text";
+  colorCode.className = "mha-light-config-input";
+  colorCode.value = colorPicker.value;
+  colorCode.setAttribute("aria-label", t("lightPopup.colorCode", "Color code"));
+  colorField.append(colorLabel, colorPicker, colorCode);
 
-function createScenesPanel(draft, rerender) {
-  const panel = document.createElement("div");
-  panel.className = "mha-light-config-tab-panel";
-  const table = document.createElement("div");
-  table.className = "mha-light-config-scenes";
-  table.setAttribute("role", "table");
-
-  draft.scenes.forEach((scene, index) => {
-    const row = document.createElement("div");
-    row.className = "mha-light-config-scene-row";
-    row.setAttribute("role", "row");
-    const icon = createIconSymbol({ name: scene.icon, className: "mha-light-config-scene-icon" });
-    const name = document.createElement("input");
-    name.type = "text";
-    name.className = "mha-light-config-input mha-light-config-scene-name";
-    name.value = scene.name;
-    name.setAttribute("aria-label", t("lightPopup.sceneName", "Ambience name"));
-    name.oninput = () => { scene.name = name.value; };
-    const value = document.createElement("span");
-    value.className = "mha-light-config-scene-value";
-    value.textContent = sceneTypeValue(scene);
-    if (scene.type === "rgb") value.style.setProperty("--mha-light-scene-color", scene.color);
-
-    const brightness = createSlider({
-      min: 1,
-      max: 100,
-      value: scene.brightness,
-      className: "mha-light-config-scene-slider",
-      onInput: (event) => {
-        scene.brightness = Math.round(Number(event.currentTarget.value));
-        output.textContent = `${scene.brightness} %`;
-      },
-    });
-    const output = document.createElement("output");
-    output.textContent = `${scene.brightness} %`;
-    const enabled = createToggle({
-      label: `${scene.name}: ${t("lightPopup.enabled", "Enabled")}`,
-      checked: scene.enabled,
-      onChange: (event) => { scene.enabled = Boolean(event.currentTarget.checked); },
-    });
-    const order = document.createElement("div");
-    order.className = "mha-light-config-order";
-    [
-      ["↑", -1, index === 0],
-      ["↓", 1, index === draft.scenes.length - 1],
-    ].forEach(([glyph, direction, disabled]) => {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.textContent = glyph;
-      button.disabled = disabled;
-      button.setAttribute("aria-label", direction < 0 ? t("common.moveUp", "Move up") : t("common.moveDown", "Move down"));
-      button.onclick = () => {
-        const [moved] = draft.scenes.splice(index, 1);
-        draft.scenes.splice(index + direction, 0, moved);
-        rerender();
-      };
-      order.append(button);
-    });
-    row.append(icon, name, value, brightness, output, enabled, order);
-    table.append(row);
+  let hsv = rgbToHsv(hexToRgb(colorPicker.value));
+  const saturationOutput = document.createElement("output");
+  const hueOutput = document.createElement("output");
+  const saturation = createSlider({
+    label: t("lightPopup.saturation", "Saturation"),
+    min: 0,
+    max: 100,
+    value: hsv.saturation,
+    className: "mha-light-config-scene-slider",
+    onInput: (event) => {
+      hsv.saturation = Number(event.currentTarget.value);
+      setSceneHsv(scene, hsv.hue, hsv.saturation);
+      colorPicker.value = scene.color;
+      colorCode.value = scene.color;
+      saturationOutput.textContent = `${Math.round(hsv.saturation)} %`;
+    },
   });
-  panel.append(table);
-  return panel;
-}
+  const hue = createSlider({
+    label: t("lightPopup.hue", "Hue"),
+    min: 0,
+    max: 360,
+    value: hsv.hue,
+    className: "mha-light-config-scene-slider mha-light-hue-slider",
+    onInput: (event) => {
+      hsv.hue = Number(event.currentTarget.value);
+      setSceneHsv(scene, hsv.hue, hsv.saturation);
+      colorPicker.value = scene.color;
+      colorCode.value = scene.color;
+      hueOutput.textContent = `${Math.round(hsv.hue)}°`;
+    },
+  });
 
-function createColorsPanel(draft, rerender) {
-  const panel = document.createElement("div");
-  panel.className = "mha-light-config-tab-panel";
-  const colors = document.createElement("div");
-  colors.className = "mha-light-config-colors";
-  draft.colors.forEach((color, index) => {
-    const chip = document.createElement("span");
-    chip.className = "mha-light-config-color-chip";
-    chip.style.setProperty("--mha-light-config-color", color);
-    chip.append(removeButton(t("lightPopup.removeColor", "Remove color"), () => {
-      draft.colors.splice(index, 1);
+  const syncFromColor = (value) => {
+    const color = normalizeHex(value, getSceneColor(scene));
+    scene.type = "rgb";
+    scene.color = color;
+    colorPicker.value = color;
+    colorCode.value = color;
+    hsv = rgbToHsv(hexToRgb(color));
+    saturation.__mhaSliderApi?.setValue(hsv.saturation);
+    hue.__mhaSliderApi?.setValue(hsv.hue);
+    saturationOutput.textContent = `${hsv.saturation} %`;
+    hueOutput.textContent = `${hsv.hue}°`;
+  };
+  colorPicker.oninput = () => syncFromColor(colorPicker.value);
+  colorCode.onchange = () => syncFromColor(colorCode.value);
+
+  const saturationField = document.createElement("label");
+  saturationField.className = "mha-light-config-slider-field";
+  saturationField.append(
+    Object.assign(document.createElement("span"), { textContent: t("lightPopup.saturation", "Saturation") }),
+    saturationOutput,
+    saturation,
+  );
+  const hueField = document.createElement("label");
+  hueField.className = "mha-light-config-slider-field";
+  hueField.append(
+    Object.assign(document.createElement("span"), { textContent: t("lightPopup.hue", "Hue") }),
+    hueOutput,
+    hue,
+  );
+  saturationOutput.textContent = `${hsv.saturation} %`;
+  hueOutput.textContent = `${hsv.hue}°`;
+
+  const details = document.createElement("div");
+  details.className = "mha-light-config-scene-details";
+  details.append(iconField, colorField, saturationField, hueField);
+
+  const order = document.createElement("div");
+  order.className = "mha-light-config-order";
+  [
+    ["arrow-up", -1, index === 0],
+    ["arrow-down", 1, index === draft.scenes.length - 1],
+  ].forEach(([iconName, direction, disabled]) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.disabled = disabled;
+    button.setAttribute("aria-label", direction < 0 ? t("common.moveUp", "Move up") : t("common.moveDown", "Move down"));
+    button.append(createIconSymbol({ name: iconName }));
+    button.onclick = () => {
+      const [moved] = draft.scenes.splice(index, 1);
+      draft.scenes.splice(index + direction, 0, moved);
       rerender();
-    }));
-    colors.append(chip);
+    };
+    order.append(button);
   });
-  const add = document.createElement("label");
-  add.className = "mha-light-config-color-add";
-  add.textContent = t("lightPopup.addColor", "Add a color");
-  const input = document.createElement("input");
-  input.type = "color";
-  input.value = "#ff2d55";
-  input.onchange = () => {
-    const color = normalizeHex(input.value);
-    if (!draft.colors.includes(color) && draft.colors.length < 10) draft.colors.push(color);
-    rerender();
-  };
-  add.append(input);
-  panel.append(colors, add);
-  return panel;
+
+  card.append(header, details, order);
+  return card;
 }
 
-function createDisplayPanel(draft) {
-  const panel = document.createElement("div");
-  panel.className = "mha-light-config-tab-panel";
-  const title = document.createElement("p");
-  title.textContent = t("lightPopup.orientation", "Control orientation");
+function createAppearance(draft) {
+  const section = document.createElement("section");
+  section.className = "mha-light-config-column mha-light-config-appearance";
+  const title = document.createElement("h3");
+  title.textContent = t("settings.appearance", "Appearance");
+  const orientationLabel = document.createElement("p");
+  orientationLabel.textContent = t("lightPopup.quickControlsAlignment", "Quick controls alignment");
   const choices = document.createElement("div");
   choices.className = "mha-light-config-orientations";
   [
@@ -192,58 +187,61 @@ function createDisplayPanel(draft) {
     };
     choices.append(choice);
   });
-  panel.append(title, choices);
-  return panel;
+
+  const tintRow = document.createElement("div");
+  tintRow.className = "mha-light-config-tint-row";
+  const tintLabel = document.createElement("span");
+  tintLabel.textContent = t("lightPopup.tintPopup", "Tint the popup with the light color");
+  const tint = createToggle({
+    label: tintLabel.textContent,
+    checked: draft.tintPopup,
+    onChange: (event) => { draft.tintPopup = Boolean(event.currentTarget.checked); },
+  });
+  tintRow.append(tintLabel, tint);
+  section.append(title, orientationLabel, choices, tintRow);
+  return section;
 }
 
 export function createLightPopupConfigView({ config, onSave, onCancel } = {}) {
   const draft = cloneLightPopupConfig(config);
-  let activeTab = "whites";
   const root = document.createElement("div");
   root.className = "mha-light-popup-config-view";
   root.dataset.view = "config";
-  const tabs = document.createElement("div");
-  tabs.className = "mha-light-config-tabs";
-  tabs.setAttribute("role", "tablist");
-  const content = document.createElement("div");
-  content.className = "mha-light-config-content";
 
-  const render = () => {
-    tabs.replaceChildren();
-    TABS.forEach(([id, key, fallback]) => {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.role = "tab";
-      button.dataset.active = String(activeTab === id);
-      button.setAttribute("aria-selected", String(activeTab === id));
-      button.textContent = t(key, fallback);
-      button.onclick = () => {
-        activeTab = id;
-        render();
-      };
-      tabs.append(button);
-    });
-    const panel = activeTab === "scenes" ? createScenesPanel(draft, render)
-      : activeTab === "colors" ? createColorsPanel(draft, render)
-        : activeTab === "display" ? createDisplayPanel(draft)
-          : createWhitesPanel(draft, render);
-    content.replaceChildren(panel);
+  const columns = document.createElement("div");
+  columns.className = "mha-light-config-columns";
+  const scenesColumn = document.createElement("section");
+  scenesColumn.className = "mha-light-config-column mha-light-config-presets";
+  const scenesTitle = document.createElement("h3");
+  scenesTitle.textContent = t("lightPopup.ambiencePresets", "Ambience presets");
+  const scenes = document.createElement("div");
+  scenes.className = "mha-light-config-scenes";
+  scenesColumn.append(scenesTitle, scenes);
+
+  const renderScenes = () => {
+    scenes.replaceChildren(...draft.scenes.map((scene, index) => (
+      createSceneCard(scene, index, draft, renderScenes)
+    )));
   };
 
+  columns.append(scenesColumn, createAppearance(draft));
   const actions = document.createElement("div");
   actions.className = "mha-light-config-actions";
   const cancel = document.createElement("button");
   cancel.type = "button";
-  cancel.className = "mha-button mha-light-config-cancel";
+  cancel.className = "mha-light-config-cancel";
   cancel.textContent = t("common.cancel", "Cancel");
   cancel.onclick = () => onCancel?.();
   const save = document.createElement("button");
   save.type = "button";
-  save.className = "mha-button mha-light-config-save";
-  save.textContent = t("common.save", "Save");
+  save.className = "mha-light-config-save";
+  save.append(
+    createIconSymbol({ name: "back" }),
+    document.createTextNode(t("lightPopup.saveAndReturn", "Save and return to light")),
+  );
   save.onclick = () => onSave?.(cloneLightPopupConfig(draft));
   actions.append(cancel, save);
-  root.append(tabs, content, actions);
-  render();
+  root.append(columns, actions);
+  renderScenes();
   return root;
 }

@@ -1,6 +1,6 @@
 import { destroyDomSubtree } from "../core/dom-lifecycle.js";
 import { getEntityDomain, getEntityState, getWidgetEntityId } from "../ha/entity.js";
-import { getLightSnapshot } from "../ha/light-popup-adapter.js";
+import { getLightSnapshot, rgbToHex } from "../ha/light-popup-adapter.js";
 import { t } from "../i18n/index.js";
 import {
   applyPanelSurfaceContract,
@@ -8,9 +8,7 @@ import {
   PANEL_SURFACE_ROLES,
 } from "../panels/panel-surface-contract.js";
 import { createPanelShell } from "../panels/panel-shell.js";
-import { createSystemIconButton } from "../system/system-buttons.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
-import { createLightPopupColorView } from "./light-popup-color-view.js";
 import { normalizeLightPopupConfig } from "./light-popup-config.js";
 import { createLightPopupConfigView } from "./light-popup-config-view.js";
 import { createLightPopupMainView } from "./light-popup-main-view.js";
@@ -136,50 +134,24 @@ export function openLightControlPopup({
   body.className = "mha-light-control-popup-body";
   sheet.append(body);
 
+  function syncPopupTint() {
+    const color = rgbToHex(getLightSnapshot(context.entityState).rgb);
+    root.dataset.tintPopup = String(context.config.tintPopup);
+    sheet.style.setProperty("--mha-light-popup-tint", color);
+  }
+
   function renderHeader() {
     header.replaceChildren();
-    if (context.view === "main") {
-      identity = createIdentity(widget, context.entityState);
-      updateIdentity(identity, context.entityState);
-      const actions = document.createElement("div");
-      actions.className = "mha-light-popup-header-actions";
-      const settings = createSystemIconButton({
-        icon: "settings",
-        label: t("lightPopup.configurePresets", "Configure light presets"),
-        className: "mha-light-popup-settings",
-        onClick: () => renderView("config"),
-      });
-      actions.append(settings, generatedClose);
-      header.append(identity, actions);
-      return;
-    }
-
-    const back = createSystemIconButton({
-      icon: "back",
-      label: context.view === "color"
-        ? t("lightPopup.backToPresets", "Back to presets")
-        : t("lightPopup.backToControl", "Back to control"),
-      className: "mha-light-popup-back",
-      onClick: () => renderView("main"),
-    });
-    const title = document.createElement("strong");
-    title.className = "mha-light-popup-view-title";
-    title.textContent = context.view === "color"
-      ? t("lightPopup.customColor", "Custom color")
-      : t("lightPopup.configurePresets", "Configure light presets");
-    const start = document.createElement("div");
-    start.className = "mha-light-popup-header-start";
-    start.append(back, title);
-    header.append(start, generatedClose);
+    identity = createIdentity(widget, context.entityState);
+    updateIdentity(identity, context.entityState);
+    header.append(identity, generatedClose);
   }
 
   function renderView(view) {
     context.view = view;
     root.dataset.activeView = view;
     if (activeView) destroyDomSubtree(activeView);
-    activeView = view === "color"
-      ? createLightPopupColorView({ hass: context.hass, entityState: context.entityState })
-      : view === "config"
+    activeView = view === "config"
         ? createLightPopupConfigView({
           config: context.config,
           onCancel: () => renderView("main"),
@@ -193,10 +165,12 @@ export function openLightControlPopup({
           hass: context.hass,
           entityState: context.entityState,
           config: context.config,
-          onOpenColor: () => renderView("color"),
+          onOpenSettings: () => renderView("config"),
         });
+    body.dataset.activeView = view;
     body.replaceChildren(activeView);
     renderHeader();
+    syncPopupTint();
   }
 
   const onKeyDown = (event) => {
@@ -210,6 +184,7 @@ export function openLightControlPopup({
     context.hass = nextHass;
     context.entityState = getEntityState(nextHass, entityId) || context.entityState;
     updateIdentity(identity, context.entityState);
+    syncPopupTint();
     activeView?.__mhaUpdateFromHass?.(nextHass);
   };
   root.__mhaDestroy = () => {
@@ -221,6 +196,9 @@ export function openLightControlPopup({
   renderView("main");
   shadowRoot.append(applyHostLayoutState(shadowRoot, root));
   syncHostSurfaceState(shadowRoot);
-  requestAnimationFrame(() => sheet.focus?.({ preventScroll: true }));
+  requestAnimationFrame(() => {
+    sheet.focus?.({ preventScroll: true });
+    body.scrollTop = 0;
+  });
   return root;
 }

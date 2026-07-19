@@ -42,18 +42,28 @@ function normalizeScene(scene = {}, index = 0) {
 }
 
 export function normalizeLightPopupConfig(config = {}) {
+  const legacyOrientation = config.quickControlsAlignment
+    ?? config.controlsAlignment
+    ?? config.alignment;
+  const orientation = config.orientation ?? legacyOrientation;
   const whites = Array.isArray(config.whites)
     ? [...new Set(config.whites.map((value) => Math.round(clamp(value, 1500, 9000))).filter(Boolean))].slice(0, 4)
     : [...DEFAULT_WHITES];
   const scenes = Array.isArray(config.scenes)
-    ? config.scenes.slice(0, 8).map(normalizeScene)
+    ? config.scenes.slice(0, 4).map(normalizeScene)
     : DEFAULT_SCENES.map((scene, index) => normalizeScene(scene, index));
   const colors = Array.isArray(config.colors)
     ? [...new Set(config.colors.map((color) => normalizeHex(color)))].slice(0, 10)
     : [...DEFAULT_COLORS];
 
   return {
-    orientation: config.orientation === "horizontal" ? "horizontal" : "vertical",
+    orientation: orientation === "horizontal" ? "horizontal" : "vertical",
+    tintPopup: Boolean(
+      config.tintPopup
+      ?? config.tintPopupWithLightColor
+      ?? config.tintWithLightColor
+      ?? false
+    ),
     whites: whites.length ? whites : [...DEFAULT_WHITES],
     scenes,
     colors: colors.length ? colors : [...DEFAULT_COLORS],
