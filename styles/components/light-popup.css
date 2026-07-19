@@ -281,6 +281,13 @@
   inline-size: 100%;
 }
 
+/* Popup sections already render their own visible labels and values. Keep the
+ * reusable slider label available to assistive technology through the range
+ * input aria-label, but do not draw a duplicate visual label inside the rail. */
+.mha-light-control-popup .mha-slider-label {
+  display: none;
+}
+
 .mha-light-control-sliders {
   min-inline-size: 0;
   min-block-size: 0;
@@ -824,6 +831,35 @@
 
   .mha-light-control-popup[data-mobile-layout="false"] .mha-light-popup-main-view[data-orientation="vertical"] .mha-light-scene-preset {
     flex-direction: row;
+  }
+
+  .mha-light-control-popup[data-mobile-layout="false"] .mha-light-popup-main-view[data-orientation="vertical"] .mha-light-control-field {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    align-items: stretch;
+    column-gap: .2rem;
+  }
+
+  .mha-light-control-popup[data-mobile-layout="false"] .mha-light-popup-main-view[data-orientation="vertical"] .mha-light-control-heading {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    flex-direction: row;
+    justify-content: space-between;
+    justify-self: end;
+    padding-block: 0;
+  }
+
+  .mha-light-control-popup[data-mobile-layout="false"] .mha-light-popup-main-view[data-orientation="vertical"] .mha-light-control-heading > span {
+    flex-direction: row;
+  }
+
+  .mha-light-control-popup[data-mobile-layout="false"] .mha-light-popup-main-view[data-orientation="vertical"] .mha-light-control-heading .mha-icon-symbol {
+    transform: rotate(180deg);
+  }
+
+  .mha-light-control-popup[data-mobile-layout="false"] .mha-light-popup-main-view[data-orientation="vertical"] .mha-light-control-sliders {
+    grid-column: 2;
+    grid-row: 1;
   }
 
   .mha-light-control-popup[data-mobile-layout="false"] .mha-light-config-presets {

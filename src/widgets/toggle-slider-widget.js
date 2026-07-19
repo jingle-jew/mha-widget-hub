@@ -71,7 +71,7 @@ export function createToggleSliderWidgetContent(widget = {}, {
       }
       onToggle?.(nextChecked, currentWidget, event);
     },
-    onOpenDetails: interactive && !isEditing
+    onOpenDetails: interactive
       ? (anchor) => openLightControlPopup({
         anchor,
         widget,

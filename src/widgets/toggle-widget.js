@@ -138,6 +138,7 @@ export function createToggleWidgetContent(widget = {}, {
   detailsTrigger.onclick = (event) => {
     event.preventDefault();
     event.stopPropagation();
+    if (detailsTrigger.closest(".mha-widget")?.classList.contains("is-editing")) return;
     onOpenDetails?.(detailsTrigger, event, context.hass);
   };
 
@@ -219,7 +220,7 @@ export const TOGGLE_WIDGET_CONTENT_RENDERER = Object.freeze({
     bindToHass: true,
     hass,
     entityVisibilityConfig,
-    onOpenDetails: interactive && !isEditing && getEntityDomain(getWidgetEntityId(widget)) === "light"
+    onOpenDetails: interactive && getEntityDomain(getWidgetEntityId(widget)) === "light"
       ? (anchor, _event, currentHass) => openLightControlPopup({
         anchor,
         widget,
