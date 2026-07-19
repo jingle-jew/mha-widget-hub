@@ -16,6 +16,12 @@ import {
 import { isToggleEntityOn } from "../ha/toggle.js";
 import { t } from "../i18n/index.js";
 import { destroyDomSubtree } from "../core/dom-lifecycle.js";
+import { createPanelShell } from "../panels/panel-shell.js";
+import {
+  applyPanelSurfaceContract,
+  PANEL_MOBILE_PRESENTATIONS,
+  PANEL_SURFACE_ROLES,
+} from "../panels/panel-surface-contract.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
 import { resolveWidgetIconName } from "../ui/icon-name-resolver.js";
 import { createSlider } from "../ui/slider.js";
@@ -197,21 +203,8 @@ export function createLightControlPopup({
     intervalMs: SERVICE_INTERVAL_MS,
   });
 
-  const root = document.createElement("section");
-  root.className = "mha-light-control-popup";
-  root.dataset.lightControlPopup = "true";
-  root.dataset.open = "true";
-
-  const scrim = document.createElement("button");
-  scrim.className = "mha-light-control-scrim";
-  scrim.type = "button";
-  scrim.setAttribute("aria-label", t("lightControl.close", "Close light controls"));
-
-  const dialog = document.createElement("div");
-  dialog.className = "mha-light-control-dialog";
-  dialog.setAttribute("role", "dialog");
-  dialog.setAttribute("aria-modal", "true");
-  dialog.setAttribute("aria-label", t("lightControl.title", "Light controls"));
+  let root;
+  let dialog;
 
   const header = document.createElement("header");
   header.className = "mha-light-control-header";
@@ -474,8 +467,22 @@ export function createLightControlPopup({
   configView.append(configBody, configActions);
 
   content.append(mainView, colorView, configView);
-  dialog.append(header, content);
-  root.append(scrim, dialog);
+  root = applyPanelSurfaceContract(createPanelShell({
+    open: true,
+    rootClassName: "mha-light-control-popup",
+    scrimClassName: "mha-light-control-scrim",
+    sheetClassName: "mha-light-control-dialog",
+    headerNode: header,
+    ariaLabel: t("lightControl.title", "Light controls"),
+    scrimLabel: t("lightControl.close", "Close light controls"),
+    onClose: close,
+    children: [content],
+  }), {
+    surfaceRole: PANEL_SURFACE_ROLES.POPUP,
+    mobilePresentation: PANEL_MOBILE_PRESENTATIONS.SHEET,
+  });
+  root.dataset.lightControlPopup = "true";
+  dialog = root.querySelector(".mha-light-control-dialog");
 
   function applyPatch(patch) {
     const serviceCall = buildLightControlServiceCall(entityState, patch);
@@ -720,7 +727,6 @@ export function createLightControlPopup({
     delete root.__mhaDestroy;
   }
 
-  scrim.addEventListener("click", close);
   root.addEventListener("keydown", handleKeyDown);
   colorWheel.addEventListener("pointerdown", (event) => {
     colorWheel.setPointerCapture?.(event.pointerId);

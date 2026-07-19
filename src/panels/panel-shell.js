@@ -18,7 +18,7 @@ function isMobileSheetPanel(panel) {
 function bindMobileSheetSwipeToClose({ panel, sheet, scrim, onClose }) {
   if (!panel || !sheet || !scrim) return;
 
-  const headerSelector = ".mha-settings-header, .mha-page-creator-header";
+  const headerSelector = "[data-panel-shell-header='true']";
   let activePointerId = null;
   let activeHeader = null;
   let startX = 0;
@@ -116,6 +116,7 @@ export function createPanelShell({
   scrimClassName = "mha-panel-shell-scrim",
   sheetClassName = "mha-panel-shell-sheet",
   headerClassName = "mha-panel-shell-header",
+  headerNode = null,
   closeClassName = "mha-panel-shell-close",
   titleClassName = "",
   title = "",
@@ -142,17 +143,20 @@ export function createPanelShell({
   sheet.setAttribute("aria-modal", "true");
   if (ariaLabel) sheet.setAttribute("aria-label", ariaLabel);
 
-  const header = document.createElement("div");
-  header.className = headerClassName;
-  const heading = document.createElement("h2");
-  if (titleClassName) heading.className = titleClassName;
-  heading.textContent = title;
-  const close = createCloseButton({
-    label: closeLabel,
-    className: closeClassName,
-    onClick: onClose,
-  });
-  header.append(heading, close);
+  const header = headerNode || document.createElement("div");
+  header.dataset.panelShellHeader = "true";
+  if (!headerNode) {
+    header.className = headerClassName;
+    const heading = document.createElement("h2");
+    if (titleClassName) heading.className = titleClassName;
+    heading.textContent = title;
+    const close = createCloseButton({
+      label: closeLabel,
+      className: closeClassName,
+      onClick: onClose,
+    });
+    header.append(heading, close);
+  }
 
   sheet.append(header);
   appendChildren(sheet, children);

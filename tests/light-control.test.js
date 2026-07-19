@@ -223,7 +223,8 @@ test("desktop popup sections share one stretching grid and views stay in one dia
   assert.match(source, /mainView\.dataset\.view = "presets"/u);
   assert.match(source, /colorView\.dataset\.view = "color"/u);
   assert.match(source, /configView\.dataset\.view = "config"/u);
-  assert.equal((source.match(/setAttribute\("role", "dialog"\)/gu) || []).length, 1);
+  assert.match(source, /applyPanelSurfaceContract\(createPanelShell\(\{/u);
+  assert.match(source, /mobilePresentation:\s*PANEL_MOBILE_PRESENTATIONS\.SHEET/u);
   assert.match(source, /root\.__mhaUpdateFromHass = syncFromHass/u);
   assert.match(source, /if \(nextStateSignature === lastStateSignature\) return;/u);
   assert.match(source, /mha-update-widget-config/u);
@@ -240,8 +241,33 @@ test("popup controls map vertical and horizontal modes without inverting them", 
   assert.match(source, /const sliderOrientation = config\.orientation;/u);
   assert.match(css, /data-orientation="vertical"[\s\S]*?grid-template-columns:[^;]+repeat\(2,/u);
   assert.match(css, /data-orientation="vertical"[\s\S]*?mha-light-control-power-group[\s\S]*?grid-template-rows:\s*repeat\(2,/u);
+  assert.match(css, /data-orientation="vertical"[\s\S]*?mha-light-control-power-button:first-child[\s\S]*?order:\s*2;/u);
+  assert.match(css, /data-orientation="vertical"[\s\S]*?mha-light-control-power-button:nth-child\(2\)[\s\S]*?order:\s*1;/u);
   assert.doesNotMatch(source, /function createRange|input\.type = "range"/u);
   assert.doesNotMatch(css, /mha-light-control-range|::-webkit-slider/u);
+});
+
+test("preset heading stays left aligned and custom color label remains visible", () => {
+  const cssPath = fileURLToPath(new URL("../styles/components/light-control-popup.css", import.meta.url));
+  const css = readFileSync(cssPath, "utf8");
+
+  assert.match(css, /mha-light-control-presets-heading[\s\S]*?justify-content:\s*flex-start;/u);
+  assert.match(css, /mha-light-control-presets-heading\s*>\s*\.mha-icon-symbol[\s\S]*?margin:\s*0;/u);
+  assert.match(css, /mha-light-control-custom-color-button\s*>\s*span:nth-child\(2\)[\s\S]*?min-inline-size:\s*max-content;/u);
+  assert.match(css, /mha-light-control-custom-color-button\s+\.mha-icon-symbol:last-child[\s\S]*?justify-self:\s*end;/u);
+});
+
+test("mobile portrait uses two vertical snap pages while landscape preserves control orientation", () => {
+  const cssPath = fileURLToPath(new URL("../styles/components/light-control-popup.css", import.meta.url));
+  const css = readFileSync(cssPath, "utf8");
+
+  assert.match(css, /max-width:\s*767px\) and \(orientation:\s*portrait\)[\s\S]*?scroll-snap-type:\s*y mandatory;/u);
+  assert.match(css, /max-width:\s*767px\) and \(orientation:\s*portrait\)[\s\S]*?data-mobile-presentation="sheet"[\s\S]*?block-size:\s*var\(--mha-mobile-sheet-max-height\);/u);
+  assert.match(css, /max-width:\s*767px\) and \(orientation:\s*portrait\)[\s\S]*?grid-auto-rows:\s*100cqb;/u);
+  assert.match(css, /@media \(min-width:\s*768px\)[\s\S]*?data-theme-style="oneui"[\s\S]*?mha-light-control-dialog[\s\S]*?border-radius:/u);
+  assert.match(css, /@media \(max-width:\s*767px\)[\s\S]*?mha-light-control-header[\s\S]*?background:\s*transparent;/u);
+  assert.match(css, /max-width:\s*1099px\) and \(orientation:\s*landscape\)[\s\S]*?data-orientation="vertical"[\s\S]*?grid-template-columns:[^;]+repeat\(2,/u);
+  assert.match(css, /max-width:\s*1099px\) and \(orientation:\s*landscape\)[\s\S]*?data-orientation="horizontal"[\s\S]*?align-content:\s*start;/u);
 });
 
 test("iOS light controls use slider2 while other themes keep the standard MHA slider", () => {
