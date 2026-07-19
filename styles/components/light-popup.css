@@ -547,7 +547,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   grid-template-areas:
-    "header order"
+    "header header"
     "details order";
   gap: .6rem .7rem;
   padding: .7rem;
@@ -603,6 +603,7 @@
 }
 
 .mha-light-config-color-field {
+  grid-column: 1 / -1;
   grid-template-columns: 2.15rem minmax(0, 1fr);
 }
 

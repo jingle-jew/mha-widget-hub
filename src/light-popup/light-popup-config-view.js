@@ -28,9 +28,21 @@ function createSceneCard(scene, index, draft, rerender) {
 
   const header = document.createElement("div");
   header.className = "mha-light-config-scene-header";
-  const iconPreview = document.createElement("span");
-  iconPreview.className = "mha-light-config-scene-icon-preview";
-  iconPreview.append(createIconSymbol({ name: scene.icon, className: "mha-light-config-scene-icon" }));
+  const iconPicker = createIconPickerControl({
+    value: scene.icon,
+    suggestedIcon: scene.icon || "sparkles",
+    searchPlaceholder: t("widgets.config.iconSearch", "Search icons"),
+    emptyLabel: t("widgets.config.iconEmpty", "No icons found"),
+    t,
+    onChange: (nextIcon) => {
+      scene.icon = nextIcon === "auto" ? "sparkles" : nextIcon;
+    },
+  });
+  iconPicker.classList.add("mha-widget-icon-picker--inline");
+  iconPicker.querySelector(".mha-widget-icon-picker-trigger")?.setAttribute(
+    "aria-label",
+    t("lightPopup.chooseIcon", "Choose icon"),
+  );
   const name = document.createElement("input");
   name.type = "text";
   name.className = "mha-light-config-input mha-light-config-scene-name";
@@ -42,32 +54,7 @@ function createSceneCard(scene, index, draft, rerender) {
     checked: scene.enabled,
     onChange: (event) => { scene.enabled = Boolean(event.currentTarget.checked); },
   });
-  header.append(iconPreview, name, enabled);
-
-  const iconField = document.createElement("div");
-  iconField.className = "mha-light-config-compact-field";
-  const iconLabel = document.createElement("span");
-  iconLabel.textContent = t("lightPopup.icon", "Icon");
-  const iconPicker = createIconPickerControl({
-    value: scene.icon,
-    suggestedIcon: scene.icon || "sparkles",
-    searchPlaceholder: t("widgets.config.iconSearch", "Search icons"),
-    emptyLabel: t("widgets.config.iconEmpty", "No icons found"),
-    t,
-    onChange: (nextIcon) => {
-      scene.icon = nextIcon === "auto" ? "sparkles" : nextIcon;
-      iconPreview.replaceChildren(createIconSymbol({
-        name: scene.icon,
-        className: "mha-light-config-scene-icon",
-      }));
-    },
-  });
-  iconPicker.classList.add("mha-widget-icon-picker--inline");
-  iconPicker.querySelector(".mha-widget-icon-picker-trigger")?.setAttribute(
-    "aria-label",
-    t("lightPopup.chooseIcon", "Choose icon"),
-  );
-  iconField.append(iconLabel, iconPicker);
+  header.append(iconPicker, name, enabled);
 
   const colorField = document.createElement("label");
   colorField.className = "mha-light-config-compact-field mha-light-config-color-field";
@@ -149,7 +136,7 @@ function createSceneCard(scene, index, draft, rerender) {
 
   const details = document.createElement("div");
   details.className = "mha-light-config-scene-details";
-  details.append(iconField, colorField, saturationField, hueField);
+  details.append(colorField, saturationField, hueField);
 
   const order = document.createElement("div");
   order.className = "mha-light-config-order";
