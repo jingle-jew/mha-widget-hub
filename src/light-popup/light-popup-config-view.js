@@ -3,6 +3,7 @@ import { t } from "../i18n/index.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
 import { createSlider } from "../ui/slider.js";
 import { createToggle } from "../ui/toggle.js";
+import { createIconPickerControl } from "../widget-config/icon-picker.js";
 import { cloneLightPopupConfig, normalizeHex } from "./light-popup-config.js";
 
 function getSceneColor(scene) {
@@ -43,19 +44,30 @@ function createSceneCard(scene, index, draft, rerender) {
   });
   header.append(iconPreview, name, enabled);
 
-  const iconField = document.createElement("label");
+  const iconField = document.createElement("div");
   iconField.className = "mha-light-config-compact-field";
   const iconLabel = document.createElement("span");
   iconLabel.textContent = t("lightPopup.icon", "Icon");
-  const iconInput = document.createElement("input");
-  iconInput.type = "text";
-  iconInput.className = "mha-light-config-input";
-  iconInput.value = scene.icon;
-  iconInput.oninput = () => {
-    scene.icon = iconInput.value.trim() || "sparkles";
-    iconPreview.replaceChildren(createIconSymbol({ name: scene.icon, className: "mha-light-config-scene-icon" }));
-  };
-  iconField.append(iconLabel, iconInput);
+  const iconPicker = createIconPickerControl({
+    value: scene.icon,
+    suggestedIcon: scene.icon || "sparkles",
+    searchPlaceholder: t("widgets.config.iconSearch", "Search icons"),
+    emptyLabel: t("widgets.config.iconEmpty", "No icons found"),
+    t,
+    onChange: (nextIcon) => {
+      scene.icon = nextIcon === "auto" ? "sparkles" : nextIcon;
+      iconPreview.replaceChildren(createIconSymbol({
+        name: scene.icon,
+        className: "mha-light-config-scene-icon",
+      }));
+    },
+  });
+  iconPicker.classList.add("mha-widget-icon-picker--inline");
+  iconPicker.querySelector(".mha-widget-icon-picker-trigger")?.setAttribute(
+    "aria-label",
+    t("lightPopup.chooseIcon", "Choose icon"),
+  );
+  iconField.append(iconLabel, iconPicker);
 
   const colorField = document.createElement("label");
   colorField.className = "mha-light-config-compact-field mha-light-config-color-field";
