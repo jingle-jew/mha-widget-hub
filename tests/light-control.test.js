@@ -44,7 +44,7 @@ test("light popup eligibility is restricted to interactive authorized light enti
 
 test("the local view machine stays inside one popup and ambience patches choose one color model", () => {
   assert.equal(normalizeLightControlView("presets"), "presets");
-  assert.equal(normalizeLightControlView("color"), "color");
+  assert.equal(normalizeLightControlView("color"), "presets");
   assert.equal(normalizeLightControlView("config"), "config");
   assert.equal(normalizeLightControlView("unknown"), "presets");
   assert.deepEqual(buildAmbienceLightPatch({
@@ -212,16 +212,19 @@ test("light control configuration is bounded, cloned, and persisted by both widg
   }
 });
 
-test("desktop popup sections share one stretching grid and views stay in one dialog", () => {
+test("desktop popup uses bounded controls and keeps color composition inside the main dialog", () => {
   const cssPath = fileURLToPath(new URL("../styles/components/light-control-popup.css", import.meta.url));
   const sourcePath = fileURLToPath(new URL("../src/light-control/light-control-popup.js", import.meta.url));
   const css = readFileSync(cssPath, "utf8");
   const source = readFileSync(sourcePath, "utf8");
 
   assert.match(css, /\.mha-light-control-main-view\s*\{[\s\S]*?align-items:\s*stretch;/u);
-  assert.match(css, /\.mha-light-control-section\s*\{[\s\S]*?block-size:\s*100%;/u);
+  assert.match(css, /mha-light-control-controls\[data-orientation="vertical"\][\s\S]*?block-size:\s*clamp\(11rem,\s*31vh,\s*15rem\);/u);
   assert.match(source, /mainView\.dataset\.view = "presets"/u);
-  assert.match(source, /colorView\.dataset\.view = "color"/u);
+  assert.match(source, /whitesAndAmbiencesPage\.dataset\.presetPage = "whites-ambiences"/u);
+  assert.match(source, /colorsAndWheelPage\.dataset\.presetPage = "colors-wheel"/u);
+  assert.match(source, /colorsAndWheelPage\.append\(colorsGroup, colorComposer\)/u);
+  assert.doesNotMatch(source, /dataset\.view = "color"/u);
   assert.match(source, /configView\.dataset\.view = "config"/u);
   assert.match(source, /applyPanelSurfaceContract\(createPanelShell\(\{/u);
   assert.match(source, /open:\s*false,/u);
@@ -251,14 +254,14 @@ test("popup controls map vertical and horizontal modes without inverting them", 
   assert.doesNotMatch(css, /mha-light-control-range|::-webkit-slider/u);
 });
 
-test("preset heading stays left aligned and custom color label remains visible", () => {
+test("preset heading stays left aligned and the custom color composer remains visible", () => {
   const cssPath = fileURLToPath(new URL("../styles/components/light-control-popup.css", import.meta.url));
   const css = readFileSync(cssPath, "utf8");
 
   assert.match(css, /mha-light-control-presets-heading[\s\S]*?justify-content:\s*flex-start;/u);
   assert.match(css, /mha-light-control-presets-heading\s*>\s*\.mha-icon-symbol[\s\S]*?margin:\s*0;/u);
-  assert.match(css, /mha-light-control-custom-color-button\s*>\s*span:nth-child\(2\)[\s\S]*?min-inline-size:\s*max-content;/u);
-  assert.match(css, /mha-light-control-custom-color-button\s+\.mha-icon-symbol:last-child[\s\S]*?justify-self:\s*end;/u);
+  assert.match(css, /\.mha-light-control-color-composer\s*\{[\s\S]*?display:\s*grid;/u);
+  assert.match(css, /\.mha-light-control-color-wheel\s*\{[\s\S]*?aspect-ratio:\s*1;/u);
 });
 
 test("mobile portrait and landscape use scoped pagers without turning tablet layouts into sheets", () => {
@@ -267,10 +270,11 @@ test("mobile portrait and landscape use scoped pagers without turning tablet lay
   const css = readFileSync(cssPath, "utf8");
   const source = readFileSync(sourcePath, "utf8");
 
-  assert.match(css, /:host\(\[data-layout="mobile"\]\) \.mha-light-control-dialog\s*\{[\s\S]*?--mha-mobile-sheet-max-height:[\s\S]*?transform:\s*translateY\(110dvh\);/u);
+  assert.match(css, /:host\(\[data-layout="mobile"\]\) \.mha-light-control-popup\s*\{[\s\S]*?--mha-mobile-sheet-max-height:/u);
+  assert.match(css, /:host\(\[data-layout="mobile"\]\) \.mha-light-control-dialog\s*\{[\s\S]*?transform:\s*translateY\(110dvh\);/u);
   assert.match(css, /:host\(\[data-layout="mobile"\]:not\(\[data-layout-variant="mobile-landscape"\]\)\) \.mha-light-control-main-view\s*\{[\s\S]*?grid-auto-rows:\s*100%;[\s\S]*?scroll-snap-type:\s*y mandatory;/u);
   assert.match(css, /:host\(\[data-layout="mobile"\]\[data-layout-variant="mobile-landscape"\]\) \.mha-light-control-main-view\s*\{[\s\S]*?grid-template-columns:/u);
-  assert.match(css, /:host\(\[data-layout="mobile"\]\[data-layout-variant="mobile-landscape"\]\) \.mha-light-control-preset-pages\s*\{[\s\S]*?scroll-snap-type:\s*y mandatory;/u);
+  assert.match(css, /\.mha-light-control-preset-pages\s*\{[\s\S]*?grid-auto-flow:\s*column;[\s\S]*?scroll-snap-type:\s*x mandatory;/u);
   assert.match(css, /@media \(min-width:\s*768px\)[\s\S]*?data-theme-style="oneui"[\s\S]*?mha-light-control-dialog[\s\S]*?border-radius:/u);
   assert.match(css, /:host\(\[data-layout="mobile"\]\) \.mha-light-control-header[\s\S]*?background:\s*transparent;/u);
   assert.match(css, /data-layout-variant="mobile-landscape"[\s\S]*?data-orientation="vertical"[\s\S]*?grid-template-columns:[^;]+repeat\(2,/u);
@@ -280,7 +284,7 @@ test("mobile portrait and landscape use scoped pagers without turning tablet lay
   assert.match(source, /pageSelector:\s*":scope > \.mha-light-control-preset-page"/u);
 });
 
-test("light settings are split into bounded pages instead of one free-scrolling form", () => {
+test("light settings use horizontal pages outside portrait and vertical pages in portrait", () => {
   const viewPath = fileURLToPath(new URL("../src/light-control/light-control-config-view.js", import.meta.url));
   const cssPath = fileURLToPath(new URL("../styles/components/light-control-popup.css", import.meta.url));
   const view = readFileSync(viewPath, "utf8");
@@ -291,7 +295,8 @@ test("light settings are split into bounded pages instead of one free-scrolling 
   assert.match(view, /secondAmbiencesPage\.dataset\.configPage = "ambiences-2"/u);
   assert.match(view, /start:\s*0,[\s\S]*?end:\s*2,/u);
   assert.match(view, /start:\s*2,[\s\S]*?end:\s*4,/u);
-  assert.match(css, /\.mha-light-control-config-body\s*\{[\s\S]*?grid-auto-rows:\s*100%;[\s\S]*?scroll-snap-type:\s*y mandatory;/u);
+  assert.match(css, /\.mha-light-control-config-body\s*\{[\s\S]*?grid-auto-flow:\s*column;[\s\S]*?scroll-snap-type:\s*x mandatory;/u);
+  assert.match(css, /mobile-landscape"\]\)\) \.mha-light-control-config-body\s*\{[\s\S]*?grid-auto-flow:\s*row;[\s\S]*?scroll-snap-type:\s*y mandatory;/u);
   assert.match(css, /\.mha-light-control-config-page\s*\{[\s\S]*?scroll-snap-align:\s*start;/u);
 });
 

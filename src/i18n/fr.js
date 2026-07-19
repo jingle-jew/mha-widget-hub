@@ -769,6 +769,7 @@ export const fr = Object.freeze({
     open: "Ouvrir les contrôles de la lumière",
     close: "Fermer les contrôles de la lumière",
     configure: "Configurer les presets",
+    settings: "Réglages de la lumière",
     turnOn: "Allumer",
     turnOff: "Éteindre",
     brightness: "Luminosité",

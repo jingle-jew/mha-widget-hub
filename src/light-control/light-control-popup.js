@@ -35,7 +35,7 @@ import {
 import { renderLightControlConfigFields } from "./light-control-config-view.js";
 
 const SERVICE_INTERVAL_MS = 100;
-const LIGHT_CONTROL_VIEWS = new Set(["presets", "color", "config"]);
+const LIGHT_CONTROL_VIEWS = new Set(["presets", "config"]);
 const LIGHT_CONTROL_CLOSE_TRANSITION_MS = SETTINGS_PANEL_VISIBILITY_TRANSITION_MS;
 const FOCUSABLE_SELECTOR = [
   "button:not([disabled])",
@@ -131,7 +131,13 @@ function createPageNavigation({ className = "", count = 2, label = "Page" } = {}
   return { navigation, buttons };
 }
 
-function bindVerticalPager({ viewport, buttons = [], pageSelector, onPageChange } = {}) {
+function bindPager({
+  viewport,
+  buttons = [],
+  pageSelector,
+  axis = "vertical",
+  onPageChange,
+} = {}) {
   let currentPage = 0;
   let scrollFrame = null;
   const requestFrame = globalThis.requestAnimationFrame
@@ -140,6 +146,12 @@ function bindVerticalPager({ viewport, buttons = [], pageSelector, onPageChange 
 
   function getPages() {
     return [...viewport?.querySelectorAll?.(pageSelector) || []];
+  }
+
+  function getAxis() {
+    return (typeof axis === "function" ? axis() : axis) === "horizontal"
+      ? "horizontal"
+      : "vertical";
   }
 
   function syncState(index) {
@@ -160,13 +172,21 @@ function bindVerticalPager({ viewport, buttons = [], pageSelector, onPageChange 
     const maxIndex = Math.max(0, pages.length - 1);
     const nextIndex = Math.min(maxIndex, Math.max(0, Number(index) || 0));
     syncState(nextIndex);
-    const pageSize = viewport?.clientHeight || pages[nextIndex]?.clientHeight || 0;
-    const top = nextIndex * pageSize;
+    const currentAxis = getAxis();
+    const pageSize = currentAxis === "horizontal"
+      ? viewport?.clientWidth || pages[nextIndex]?.clientWidth || 0
+      : viewport?.clientHeight || pages[nextIndex]?.clientHeight || 0;
+    const offset = nextIndex * pageSize;
     const smooth = animate && getLightControlTransitionMs() > 0;
     if (typeof viewport?.scrollTo === "function") {
-      viewport.scrollTo({ top, behavior: smooth ? "smooth" : "auto" });
+      viewport.scrollTo({
+        left: currentAxis === "horizontal" ? offset : 0,
+        top: currentAxis === "vertical" ? offset : 0,
+        behavior: smooth ? "smooth" : "auto",
+      });
     } else if (viewport) {
-      viewport.scrollTop = top;
+      viewport.scrollLeft = currentAxis === "horizontal" ? offset : 0;
+      viewport.scrollTop = currentAxis === "vertical" ? offset : 0;
     }
   }
 
@@ -174,8 +194,14 @@ function bindVerticalPager({ viewport, buttons = [], pageSelector, onPageChange 
     if (scrollFrame != null) return;
     scrollFrame = requestFrame(() => {
       scrollFrame = null;
-      const height = Math.max(1, viewport?.clientHeight || 0);
-      syncState(Math.round((viewport?.scrollTop || 0) / height));
+      const currentAxis = getAxis();
+      const pageSize = Math.max(1, currentAxis === "horizontal"
+        ? viewport?.clientWidth || 0
+        : viewport?.clientHeight || 0);
+      const offset = currentAxis === "horizontal"
+        ? viewport?.scrollLeft || 0
+        : viewport?.scrollTop || 0;
+      syncState(Math.round(offset / pageSize));
     });
   }
 
@@ -377,7 +403,7 @@ export function createLightControlPopup({
   headerActions.append(backButton, gearButton, closeButton);
   const headerViewTitle = document.createElement("h2");
   headerViewTitle.className = "mha-light-control-view-title";
-  headerViewTitle.textContent = t("lightControl.configure", "Configure presets");
+  headerViewTitle.textContent = t("lightControl.settings", "Light settings");
   headerViewTitle.hidden = true;
   header.append(identity, headerViewTitle, headerActions);
 
@@ -498,39 +524,6 @@ export function createLightControlPopup({
   colorsList.className = "mha-light-control-colors-list";
   colorsGroup.append(createSectionTitle(t("lightControl.colors", "Colors")), colorsList);
 
-  const customColorButton = createButton({
-    className: "mha-light-control-custom-color-button",
-    label: t("lightControl.customColor", "Custom color"),
-    icon: "color-picker",
-    text: t("lightControl.customColor", "Custom color"),
-    onClick: () => setView("color"),
-  });
-  customColorButton.append(createIconSymbol({ name: "chevron-right" }));
-  const presetPages = document.createElement("div");
-  presetPages.className = "mha-light-control-preset-pages";
-  const whitesAndColorsPage = document.createElement("div");
-  whitesAndColorsPage.className = "mha-light-control-preset-page";
-  whitesAndColorsPage.dataset.presetPage = "whites-colors";
-  whitesAndColorsPage.append(whitesGroup, colorsGroup);
-  const ambiencesPage = document.createElement("div");
-  ambiencesPage.className = "mha-light-control-preset-page";
-  ambiencesPage.dataset.presetPage = "ambiences";
-  ambiencesPage.append(ambiencesGroup, customColorButton);
-  presetPages.append(whitesAndColorsPage, ambiencesPage);
-  const presetPageNavigation = createPageNavigation({
-    className: "mha-light-control-preset-page-navigation",
-    count: 2,
-    label: t("lightControl.colorPages", "Light color page"),
-  });
-  presetsSection.append(presetsHeading, presetPages, presetPageNavigation.navigation);
-  mainView.append(controlsSection, presetsSection);
-  mainPager.append(mainView, mainPageNavigation.navigation);
-
-  const colorView = document.createElement("div");
-  colorView.className = "mha-light-control-view mha-light-control-color-view";
-  colorView.dataset.view = "color";
-  colorView.hidden = true;
-
   const colorWheel = document.createElement("div");
   colorWheel.className = "mha-light-control-color-wheel";
   colorWheel.tabIndex = 0;
@@ -556,11 +549,33 @@ export function createLightControlPopup({
   const colorActions = document.createElement("div");
   colorActions.className = "mha-light-control-color-actions";
   colorActions.append(colorPreview, colorValue, applyColorButton);
-  colorView.append(
+  const colorComposer = document.createElement("div");
+  colorComposer.className = "mha-light-control-color-composer";
+  colorComposer.append(
     createSectionTitle(t("lightControl.customColor", "Custom color")),
     colorWheel,
     colorActions,
   );
+
+  const presetPages = document.createElement("div");
+  presetPages.className = "mha-light-control-preset-pages";
+  const whitesAndAmbiencesPage = document.createElement("div");
+  whitesAndAmbiencesPage.className = "mha-light-control-preset-page";
+  whitesAndAmbiencesPage.dataset.presetPage = "whites-ambiences";
+  whitesAndAmbiencesPage.append(whitesGroup, ambiencesGroup);
+  const colorsAndWheelPage = document.createElement("div");
+  colorsAndWheelPage.className = "mha-light-control-preset-page";
+  colorsAndWheelPage.dataset.presetPage = "colors-wheel";
+  colorsAndWheelPage.append(colorsGroup, colorComposer);
+  presetPages.append(whitesAndAmbiencesPage, colorsAndWheelPage);
+  const presetPageNavigation = createPageNavigation({
+    className: "mha-light-control-preset-page-navigation",
+    count: 2,
+    label: t("lightControl.colorPages", "Light color page"),
+  });
+  presetsSection.append(presetsHeading, presetPages, presetPageNavigation.navigation);
+  mainView.append(controlsSection, presetsSection);
+  mainPager.append(mainView, mainPageNavigation.navigation);
 
   const configView = document.createElement("div");
   configView.className = "mha-light-control-view mha-light-control-config-view";
@@ -613,7 +628,7 @@ export function createLightControlPopup({
   configFooter.append(configPageNavigation.navigation, configActions);
   configView.append(configBody, configFooter);
 
-  content.append(mainPager, colorView, configView);
+  content.append(mainPager, configView);
   root = applyPanelSurfaceContract(createPanelShell({
     open: false,
     rootClassName: "mha-light-control-popup",
@@ -630,22 +645,30 @@ export function createLightControlPopup({
   });
   root.dataset.lightControlPopup = "true";
   dialog = root.querySelector(".mha-light-control-dialog");
-  const mainPagerController = bindVerticalPager({
+  const isMobilePortrait = () => {
+    const host = root.getRootNode?.()?.host;
+    return host?.dataset?.layout === "mobile"
+      && host?.dataset?.layoutVariant !== "mobile-landscape";
+  };
+  const mainPagerController = bindPager({
     viewport: mainView,
     buttons: mainPageNavigation.buttons,
     pageSelector: ":scope > .mha-light-control-section",
+    axis: "vertical",
     onPageChange: page => { root.dataset.mainPage = String(page); },
   });
-  const presetPagerController = bindVerticalPager({
+  const presetPagerController = bindPager({
     viewport: presetPages,
     buttons: presetPageNavigation.buttons,
     pageSelector: ":scope > .mha-light-control-preset-page",
+    axis: "horizontal",
     onPageChange: page => { root.dataset.presetPage = String(page); },
   });
-  const configPagerController = bindVerticalPager({
+  const configPagerController = bindPager({
     viewport: configBody,
     buttons: configPageNavigation.buttons,
     pageSelector: ":scope > .mha-light-control-config-page",
+    axis: () => isMobilePortrait() ? "vertical" : "horizontal",
     onPageChange: page => { root.dataset.configPage = String(page); },
   });
 
@@ -658,12 +681,11 @@ export function createLightControlPopup({
   function setView(view) {
     const previousView = currentView;
     currentView = normalizeLightControlView(view);
-    [mainPager, colorView, configView].forEach((viewNode) => {
+    [mainPager, configView].forEach((viewNode) => {
       delete viewNode.dataset.entering;
     });
     root.dataset.view = currentView;
     mainPager.hidden = currentView !== "presets";
-    colorView.hidden = currentView !== "color";
     configView.hidden = currentView !== "config";
     backButton.hidden = currentView === "presets";
     gearButton.hidden = currentView !== "presets";
@@ -674,9 +696,7 @@ export function createLightControlPopup({
       configPagerController.setPage(0, { animate: false });
     }
     if (currentView !== previousView) {
-      const activeView = currentView === "presets" ? mainPager
-        : currentView === "color" ? colorView
-          : configView;
+      const activeView = currentView === "presets" ? mainPager : configView;
       activeView.dataset.entering = currentView === "presets" ? "back" : "forward";
       activeView.addEventListener("animationend", () => {
         delete activeView.dataset.entering;
@@ -684,9 +704,7 @@ export function createLightControlPopup({
     }
     const nextFocus = currentView === "presets"
       ? gearButton
-      : currentView === "color"
-        ? colorWheel
-        : configBody.querySelector(FOCUSABLE_SELECTOR);
+      : configBody.querySelector(FOCUSABLE_SELECTOR);
     nextFocus?.focus?.({ preventScroll: true });
   }
 
@@ -708,7 +726,7 @@ export function createLightControlPopup({
     colorWheel.style.setProperty("--mha-light-wheel-y", `${indicator.y}%`);
     colorWheel.setAttribute("aria-valuenow", String(Math.round(customHue)));
     colorWheel.setAttribute("aria-valuetext", customColor.toUpperCase());
-    colorView.style.setProperty("--mha-light-selected-color", customColor);
+    colorComposer.style.setProperty("--mha-light-selected-color", customColor);
     colorValue.textContent = customColor.toUpperCase();
   }
 
@@ -826,11 +844,15 @@ export function createLightControlPopup({
     whitesGroup.hidden = !capabilities.colorTemperature;
     ambiencesGroup.hidden = !capabilities.color && !capabilities.colorTemperature;
     colorsGroup.hidden = !capabilities.color;
-    customColorButton.hidden = !capabilities.color;
+    colorsAndWheelPage.hidden = !capabilities.color;
+    presetPageNavigation.navigation.hidden = !capabilities.color;
+    if (!capabilities.color) presetPagerController.setPage(0, { animate: false });
     presetsSection.hidden = !capabilities.color && !capabilities.colorTemperature;
     mainPageNavigation.navigation.hidden = presetsSection.hidden;
     if (presetsSection.hidden) mainPagerController.setPage(0, { animate: false });
-    colorView.dataset.disabled = String(!available || !capabilities.color);
+    colorComposer.dataset.disabled = String(!available || !capabilities.color);
+    colorWheel.setAttribute("aria-disabled", String(!available || !capabilities.color));
+    colorWheel.tabIndex = available && capabilities.color ? 0 : -1;
     applyColorButton.disabled = !available || !capabilities.color;
 
     whitesList.querySelectorAll(".mha-light-control-white-preset").forEach((button) => {
@@ -860,7 +882,7 @@ export function createLightControlPopup({
         ) <= 75;
       button.setAttribute("aria-pressed", String(Boolean(brightnessMatches && appearanceMatches)));
     });
-    if (currentView !== "color") {
+    if (presetPagerController.currentPage !== 1) {
       const hsv = rgbToHsv(hexToRgb(displayColor));
       setCustomColor(hsv.hue, hsv.saturation);
     }
@@ -894,7 +916,8 @@ export function createLightControlPopup({
       return;
     }
     if (event.key !== "Tab") return;
-    const focusable = [...dialog.querySelectorAll(FOCUSABLE_SELECTOR)].filter(node => !node.hidden);
+    const focusable = [...dialog.querySelectorAll(FOCUSABLE_SELECTOR)]
+      .filter(node => !node.hidden && !node.closest?.("[hidden]"));
     if (!focusable.length) return;
     const first = focusable[0];
     const last = focusable[focusable.length - 1];

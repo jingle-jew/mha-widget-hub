@@ -124,8 +124,10 @@ appartiennent à `AGENTS.md`.
 - **Décision :** les widgets `toggle` et `toggle-slider` ouvrent le même popup
   natif depuis leur zone informative uniquement lorsque leur entité appartient
   au domaine `light`. Le popup lit séparément les capacités de luminosité,
-  température et couleur, et conserve ses vues presets, couleur personnalisée
-  et configuration dans une seule surface. Son contrat persistant appartient au
+  température et couleur, et conserve sa commande principale, son compositeur
+  de couleur et sa configuration dans une seule surface. La roue colorimétrique
+  appartient directement à la seconde page de la section couleur plutôt qu'à
+  une sous-vue séparée. Son contrat persistant appartient au
   widget sous `lightControl`; un événement remonté au shell utilise la chaîne de
   sauvegarde des widgets existante.
 - **Pourquoi :** séparer le déclencheur informatif des contrôles directs évite
@@ -155,10 +157,14 @@ appartiennent à `AGENTS.md`.
 - **Décision :** le popup lumière reste une seule surface construite avec le
   `panel-shell`. Tablette et desktop consomment le rôle `popup` centré; mobile
   consomme le contrat de sheet du settings-panel et son geste de fermeture. En
-  portrait, les contrôles et les presets forment deux pages verticales. En
-  paysage mobile, les deux zones restent simultanément visibles et seule la
-  zone couleur pagine entre deux groupes de presets. La configuration utilise
-  trois pages bornées : réglages de base, ambiances 1–2 et ambiances 3–4.
+  portrait, les contrôles et la couleur forment deux pages verticales. La zone
+  couleur utilise toujours deux pages horizontales : blancs + ambiances, puis
+  couleurs rapides + roue colorimétrique. En paysage mobile, tablette et
+  desktop, les contrôles et la zone couleur restent simultanément visibles et
+  cette même pagination horizontale reste locale à la zone couleur. La
+  configuration utilise trois pages bornées : réglages de base, ambiances 1–2
+  et ambiances 3–4; son axe est vertical en portrait mobile et horizontal dans
+  les autres contextes.
 - **Pourquoi :** les anciens scrolls imbriqués et le scroll-snap appliqué au
   contenu global mélangeaient navigation et débordement, étiraient les sections
   et rendaient le paysage dépendant de la hauteur. Des viewports paginés locaux
@@ -167,6 +173,10 @@ appartiennent à `AGENTS.md`.
   `data-layout-variant`, pas avec une orientation brute qui inclurait tablette ou
   desktop étroit. Garder les pagers locaux au popup, les indicateurs accessibles
   synchronisés au scroll, et recalculer leur position après redimensionnement.
+  Les sliders et le groupe Off/On utilisent des hauteurs intrinsèques bornées;
+  aucune piste `1fr` ou hauteur de section ne doit allonger un contrôle pour
+  remplir l'espace disponible. Le header respecte explicitement `[hidden]` afin
+  que l'identité de la lumière et le titre des réglages ne coexistent jamais.
   L'ouverture et la fermeture passent par `syncPanelVisibility`; le mouvement
   réduit désactive aussi les scrolls programmatiques fluides. Les appels HA, la
   détection de capacités et les sliders partagés restent indépendants du pager.
