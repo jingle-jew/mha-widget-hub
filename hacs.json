@@ -2,5 +2,7 @@
   "name": "MHA Widget Hub",
   "render_readme": true,
   "homeassistant": "2025.7.0",
+  "zip_release": true,
+  "filename": "mha-widget-hub-hacs.zip",
   "hide_default_branch": true
 }
