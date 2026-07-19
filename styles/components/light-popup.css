@@ -1006,7 +1006,8 @@
 @media (max-width: 767px) {
   .mha-light-control-popup-sheet {
     inline-size: 100%;
-    block-size: var(--mha-mobile-sheet-max-height);
+    block-size: auto;
+    min-block-size: 0;
     max-block-size: var(--mha-mobile-sheet-max-height);
     padding: clamp(.8rem, 3.5vw, 1rem);
     padding-block-end: calc(clamp(.8rem, 3.5vw, 1rem) + var(--mha-mobile-sheet-bottom-comfort));
@@ -1019,8 +1020,30 @@
   }
 
   .mha-light-control-popup-body {
+    min-block-size: 0;
+    max-block-size: calc(
+      var(--mha-mobile-sheet-max-height)
+      - 3.25rem
+      - clamp(.8rem, 3.5vw, 1rem)
+      - var(--mha-mobile-sheet-bottom-comfort)
+    );
     overflow: auto;
     overscroll-behavior: contain;
+  }
+
+  .mha-light-control-popup[data-mobile-landscape="false"]
+    .mha-light-control-popup-body[data-active-view="main"] {
+    --mha-light-mobile-page-height: min(
+      34rem,
+      calc(
+        var(--mha-mobile-sheet-max-height)
+        - 3.25rem
+        - clamp(1.6rem, 7vw, 2rem)
+        - var(--mha-mobile-sheet-bottom-comfort)
+      )
+    );
+    block-size: var(--mha-light-mobile-page-height);
+    overflow: hidden;
   }
 
   .mha-light-popup-main-view {
@@ -1029,8 +1052,39 @@
     overflow: visible;
   }
 
-  .mha-light-popup-controls,
-  .mha-light-popup-color-view {
+  .mha-light-control-popup[data-mobile-landscape="false"]
+    .mha-light-control-popup-body[data-active-view="main"]
+    .mha-light-popup-main-view {
+    block-size: var(--mha-light-mobile-page-height);
+    max-block-size: var(--mha-light-mobile-page-height);
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-auto-rows: var(--mha-light-mobile-page-height);
+    gap: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+  }
+
+  .mha-light-control-popup[data-mobile-landscape="false"]
+    .mha-light-control-popup-body[data-active-view="main"]
+    .mha-light-popup-main-view::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mha-light-control-popup[data-mobile-landscape="false"]
+    .mha-light-popup-main-view > .mha-light-popup-section {
+    min-block-size: 0;
+    block-size: var(--mha-light-mobile-page-height);
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
+  .mha-light-control-popup[data-mobile-landscape="true"] .mha-light-popup-controls,
+  .mha-light-control-popup[data-mobile-landscape="true"] .mha-light-popup-color-view {
     min-block-size: 34rem;
   }
 
