@@ -134,7 +134,6 @@ They should map back to semantic roles instead of hardcoded component values.
 | `--mha-system-button-bg` | Background for floating system buttons. |
 | `--mha-system-button-border` | Border for floating system buttons. |
 | `--mha-system-button-color` | Text/icon color for floating system buttons. |
-| `--mha-system-button-shadow` | Shadow for floating system buttons. |
 | `--mha-system-button-backdrop-filter` | Blur/filter for floating system buttons. |
 | `--mha-system-button-highlight` | Highlight/reflection layer for floating system buttons. |
 | `--mha-system-button-highlight-opacity` | Strength of the highlight layer. |

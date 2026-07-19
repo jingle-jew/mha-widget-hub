@@ -112,7 +112,6 @@
   --mha-system-button-bg: var(--mha-surface-floating);
   --mha-system-button-border: var(--mha-border-primary);
   --mha-system-button-color: var(--mha-text-primary);
-  --mha-system-button-shadow: var(--mha-shadow-floating);
   --mha-system-button-backdrop-filter:
     blur(var(--mha-blur-primary)) saturate(var(--mha-surface-saturation));
   --mha-system-button-highlight: var(--mha-highlight-primary);
@@ -127,9 +126,6 @@
     color-mix(in srgb, var(--mha-surface-floating) 78%, transparent);
   --mha-system-button-border:
     color-mix(in srgb, var(--mha-border-primary) 70%, rgba(255,255,255,.42));
-  --mha-system-button-shadow:
-    inset 0 1px 0 rgba(255,255,255,.24),
-    var(--mha-shadow-floating);
   --mha-system-button-backdrop-filter:
     blur(calc(var(--mha-blur-primary) * 1.05)) saturate(175%);
   --mha-system-button-highlight: var(--mha-highlight-primary);
@@ -141,9 +137,6 @@
     linear-gradient(145deg, rgba(255,255,255,.72), rgba(255,255,255,.36)),
     color-mix(in srgb, var(--mha-surface-floating) 64%, rgba(255,255,255,.46));
   --mha-system-button-border: rgba(255,255,255,.56);
-  --mha-system-button-shadow:
-    inset 0 1px 0 rgba(255,255,255,.34),
-    0 8px 20px rgba(0,0,0,.10);
   --mha-system-button-highlight-opacity: .58;
 }
 
@@ -154,9 +147,6 @@
   --mha-system-button-border:
     color-mix(in srgb, var(--mha-border-primary) 82%, rgba(255,255,255,.14));
   --mha-system-button-color: rgba(255,255,255,.96);
-  --mha-system-button-shadow:
-    inset 0 1px 0 rgba(255,255,255,.16),
-    0 10px 24px rgba(0,0,0,.26);
   --mha-system-button-highlight-opacity: .42;
 }
 
@@ -166,7 +156,6 @@
 :host([data-theme-style="material"]) {
   --mha-system-button-bg: var(--mha-material-surface-container-high, var(--mha-surface-tonal));
   --mha-system-button-border: var(--mha-border-subtle);
-  --mha-system-button-shadow: var(--mha-shadow-floating);
   --mha-system-button-backdrop-filter: none;
   --mha-system-button-highlight:
     linear-gradient(135deg, color-mix(in srgb, var(--mha-accent) 7%, transparent), transparent 66%);
@@ -177,7 +166,6 @@
   --mha-system-button-bg: var(--mha-material-surface-container-high, var(--mha-surface-tonal));
   --mha-system-button-border: var(--mha-border-subtle);
   --mha-system-button-color: rgba(255,255,255,.96);
-  --mha-system-button-shadow: var(--mha-shadow-floating);
   --mha-system-button-highlight-opacity: .12;
 }
 
@@ -189,10 +177,6 @@
     color-mix(in srgb, var(--mha-surface-floating) 76%, transparent);
   --mha-system-button-border:
     color-mix(in srgb, var(--mha-border-primary) 76%, rgba(255,255,255,.16));
-  --mha-system-button-shadow:
-    inset 0 1px 0 rgba(255,255,255,.20),
-    0 8px 18px rgba(0,0,0,.12),
-    0 2px 6px color-mix(in srgb, var(--mha-accent) 7%, transparent);
   --mha-system-button-backdrop-filter: blur(20px) saturate(145%);
   --mha-system-button-highlight:
     radial-gradient(circle at 28% 18%, rgba(255,255,255,.20), transparent 34%),
@@ -207,10 +191,6 @@
   --mha-system-button-border:
     color-mix(in srgb, var(--mha-border-primary) 84%, rgba(255,255,255,.08));
   --mha-system-button-color: rgba(255,255,255,.96);
-  --mha-system-button-shadow:
-    inset 0 1px 0 rgba(255,255,255,.13),
-    0 9px 20px rgba(0,0,0,.24),
-    0 2px 7px color-mix(in srgb, var(--mha-accent) 8%, transparent);
   --mha-system-button-highlight-opacity: .30;
 }
 
@@ -221,7 +201,7 @@
   background: var(--mha-system-button-bg) !important;
   border-color: var(--mha-system-button-border) !important;
   color: var(--mha-system-button-color) !important;
-  box-shadow: var(--mha-system-button-shadow) !important;
+  box-shadow: none !important;
   -webkit-backdrop-filter: var(--mha-system-button-backdrop-filter) !important;
   backdrop-filter: var(--mha-system-button-backdrop-filter) !important;
 }
@@ -253,7 +233,7 @@
   background: var(--mha-system-button-bg) !important;
   border-color: var(--mha-system-button-border) !important;
   color: var(--mha-system-button-color) !important;
-  box-shadow: var(--mha-system-button-shadow) !important;
+  box-shadow: none !important;
   -webkit-backdrop-filter: var(--mha-system-button-backdrop-filter) !important;
   backdrop-filter: var(--mha-system-button-backdrop-filter) !important;
 }
@@ -268,7 +248,7 @@
     border: 1px solid var(--mha-widget-border) !important;
     border-radius: 999px !important;
     background: var(--mha-system-button-bg) !important;
-    box-shadow: var(--mha-system-button-shadow) !important;
+    box-shadow: none !important;
     color: var(--mha-system-button-color) !important;
     -webkit-backdrop-filter: var(--mha-system-button-backdrop-filter) !important;
     backdrop-filter: var(--mha-system-button-backdrop-filter) !important;
