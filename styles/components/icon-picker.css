@@ -45,6 +45,7 @@
 
 .mha-widget-icon-picker-panel {
   --mha-icon-picker-tile-size: 2.55rem;
+  box-sizing: border-box;
   --mha-icon-picker-grid-gap: .28rem;
   --mha-icon-picker-visible-rows: 7;
   --mha-icon-picker-auto-size: 2.7rem;
@@ -66,6 +67,33 @@
   -webkit-backdrop-filter: blur(26px) saturate(1.2);
   backdrop-filter: blur(26px) saturate(1.2);
   overflow: hidden;
+}
+
+.mha-widget-icon-picker--embedded .mha-widget-icon-picker-panel {
+  position: relative;
+  inset: auto;
+  z-index: auto;
+  inline-size: 100%;
+  max-inline-size: none;
+  max-block-size: none;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.mha-widget-icon-picker--embedded .mha-widget-icon-picker-results {
+  --mha-icon-picker-visible-rows: 6;
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
+}
+
+.mha-widget-icon-picker--embedded .mha-widget-icon-picker-search {
+  background: color-mix(in srgb, var(--mha-widget-surface, rgba(255,255,255,.14)) 72%, transparent);
+  border-color: color-mix(in srgb, var(--mha-widget-border, rgba(255,255,255,.2)) 82%, transparent);
 }
 
 .mha-widget-icon-picker-search {
@@ -119,6 +147,7 @@
 }
 
 .mha-widget-icon-picker-results {
+  box-sizing: border-box;
   display: grid;
   align-content: start;
   gap: var(--mha-icon-picker-results-gap);
@@ -131,6 +160,7 @@
   min-block-size: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
+  touch-action: pan-y;
   padding-inline: .15rem;
 }
 
@@ -301,7 +331,7 @@
 }
 
 @media (max-width: 767px) {
-  .mha-widget-icon-picker-panel {
+  .mha-widget-icon-picker-panel:not([data-mobile-presentation="embedded"]) {
     --mha-icon-picker-mobile-top-gap: max(var(--mha-page-padding, clamp(.65rem, 2.5vw, 1rem)), var(--mha-safe-top, env(safe-area-inset-top)));
     --mha-icon-picker-mobile-max-height: min(85dvh, calc(100dvh - var(--mha-icon-picker-mobile-top-gap)));
     display: flex;

@@ -51,6 +51,9 @@ const CATEGORY_TABS = Object.freeze([
 ]);
 
 const MOBILE_BREAKPOINT_PX = 767;
+const GRID_SWIPE_INTENT_PX = 10;
+const GRID_SWIPE_TRIGGER_PX = 42;
+const GRID_SWIPE_AXIS_RATIO = 1.2;
 const TABLER_ICONS_BY_NAME = new Map(TABLER_ICON_CATALOG.map(icon => [icon.name, icon]));
 
 function titleCase(value = "") {
@@ -213,6 +216,7 @@ function createCategoryTab({
     "mha-widget-icon-picker-tab",
     selected ? "is-selected" : "",
   ].filter(Boolean).join(" ");
+  button.dataset.categoryId = id;
   button.setAttribute("aria-pressed", String(selected));
   button.title = label;
   button.append(createIconSymbol({
@@ -227,11 +231,25 @@ function clampNumber(value, min, max) {
   return Math.min(Math.max(value, min), max);
 }
 
+function clearElement(element) {
+  if (typeof element?.replaceChildren === "function") {
+    element.replaceChildren();
+    return;
+  }
+  if (Array.isArray(element?.children)) {
+    element.children.length = 0;
+    return;
+  }
+  if (element) element.textContent = "";
+}
+
 export function createIconPickerControl({
   value = "auto",
   suggestedIcon = "",
   searchPlaceholder = "Recherche",
   emptyLabel = "No icons found",
+  embedded = false,
+  allowAuto = true,
   onChange,
   t = (key, fallback) => fallback,
 } = {}) {
@@ -239,9 +257,14 @@ export function createIconPickerControl({
   let query = "";
   let activeCategory = suggestedIcon ? resolveIconCategory(suggestedIcon) : "suggested";
   let cleanupMutationObserver = null;
+  let gridSwipeSession = null;
+  let suppressNextGridClick = false;
 
   const root = document.createElement("div");
-  root.className = "mha-widget-icon-picker";
+  root.className = [
+    "mha-widget-icon-picker",
+    embedded ? "mha-widget-icon-picker--embedded" : "",
+  ].filter(Boolean).join(" ");
 
   const trigger = document.createElement("button");
   trigger.type = "button";
@@ -292,13 +315,14 @@ export function createIconPickerControl({
   searchInput.autocomplete = "off";
   searchInput.addEventListener("input", (event) => {
     query = event.currentTarget.value;
-    renderResults();
-    renderTabs();
+    renderResults({ resetScroll: true });
+    syncCategoryTabs();
   });
   searchWrap.append(searchIcon, searchInput);
 
   const results = document.createElement("div");
   results.className = "mha-widget-icon-picker-results";
+  results.dataset.swipeable = "true";
 
   const footer = document.createElement("div");
   footer.className = "mha-widget-icon-picker-footer";
@@ -308,7 +332,8 @@ export function createIconPickerControl({
 
   footer.append(categoryTabs);
   panel.append(searchWrap, results, footer);
-  root.append(trigger);
+  if (embedded) root.append(panel);
+  else root.append(trigger);
 
   const ownerDocument = root.ownerDocument || globalThis.document;
   const ownerWindow = ownerDocument?.defaultView || globalThis.window;
@@ -336,7 +361,7 @@ export function createIconPickerControl({
   }
 
   function dispatchInput() {
-    root.dispatchEvent(new Event("input", { bubbles: true }));
+    root.dispatchEvent?.(new Event("input", { bubbles: true }));
   }
 
   function isExpanded() {
@@ -481,11 +506,11 @@ export function createIconPickerControl({
 
   function setSelectedValue(nextValue) {
     selectedValue = normalizeIconPickerValue(nextValue);
-    updateTrigger();
+    if (!embedded) updateTrigger();
     renderResults();
     onChange?.(selectedValue);
     dispatchInput();
-    closePanel();
+    if (!embedded) closePanel();
   }
 
   function updateTrigger() {
@@ -504,8 +529,12 @@ export function createIconPickerControl({
       : selectedValue;
   }
 
-  function renderResults() {
-    results.replaceChildren();
+  function renderResults({ resetScroll = false } = {}) {
+    clearElement(results);
+    if (resetScroll) {
+      results.scrollTop = 0;
+      results.scrollLeft = 0;
+    }
     const filteredItems = filterIconPickerInventory(query);
     const categoryItems = query
       ? filteredItems
@@ -513,13 +542,15 @@ export function createIconPickerControl({
         ? filteredItems.filter(item => item.name === suggestedIcon)
         : filteredItems.filter(item => item.category === activeCategory);
 
-    results.append(createAutoTile({
-      selectedValue,
-      suggestedIcon,
-      suggestedLabel: suggestedIcon ? humanizeIconName(suggestedIcon) : "",
-      onSelect: setSelectedValue,
-      t,
-    }));
+    if (allowAuto) {
+      results.append(createAutoTile({
+        selectedValue,
+        suggestedIcon,
+        suggestedLabel: suggestedIcon ? humanizeIconName(suggestedIcon) : "",
+        onSelect: setSelectedValue,
+        t,
+      }));
+    }
 
     if (!categoryItems.length) {
       const empty = document.createElement("p");
@@ -543,22 +574,96 @@ export function createIconPickerControl({
     results.append(grid);
   }
 
+  function syncCategoryTabs() {
+    [...(categoryTabs.children || [])].forEach((button) => {
+      const selected = !query && button.dataset.categoryId === activeCategory;
+      button.classList?.toggle?.("is-selected", selected);
+      button.setAttribute?.("aria-pressed", String(selected));
+    });
+  }
+
+  function selectCategory(nextCategory = "") {
+    if (!CATEGORY_TABS.some(tab => tab.id === nextCategory)) return false;
+    if (nextCategory === activeCategory && !query) return false;
+    activeCategory = nextCategory;
+    query = "";
+    searchInput.value = "";
+    syncCategoryTabs();
+    renderResults({ resetScroll: true });
+    if (!embedded) placePanel();
+    return true;
+  }
+
+  function changeCategoryByOffset(offset = 0) {
+    if (query || !offset) return false;
+    const currentIndex = CATEGORY_TABS.findIndex(tab => tab.id === activeCategory);
+    if (currentIndex < 0) return false;
+    const nextIndex = clampNumber(currentIndex + offset, 0, CATEGORY_TABS.length - 1);
+    if (nextIndex === currentIndex) return false;
+    return selectCategory(CATEGORY_TABS[nextIndex].id);
+  }
+
   function renderTabs() {
-    categoryTabs.replaceChildren();
+    clearElement(categoryTabs);
     CATEGORY_TABS.forEach((tab) => {
       categoryTabs.append(createCategoryTab({
         id: tab.id,
         icon: tab.icon,
         selected: !query && activeCategory === tab.id,
         label: CATEGORY_LABELS[tab.id] || humanizeIconName(tab.id),
-        onSelect: (nextCategory) => {
-          activeCategory = nextCategory;
-          renderTabs();
-          renderResults();
-          placePanel();
-        },
+        onSelect: selectCategory,
       }));
     });
+  }
+
+  function handleGridPointerDown(event) {
+    if (query || event.button > 0 || event.isPrimary === false) return;
+    gridSwipeSession = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      horizontal: false,
+    };
+  }
+
+  function handleGridPointerMove(event) {
+    if (!gridSwipeSession || event.pointerId !== gridSwipeSession.pointerId) return;
+    const deltaX = event.clientX - gridSwipeSession.startX;
+    const deltaY = event.clientY - gridSwipeSession.startY;
+    if (!gridSwipeSession.horizontal) {
+      if (Math.max(Math.abs(deltaX), Math.abs(deltaY)) < GRID_SWIPE_INTENT_PX) return;
+      if (Math.abs(deltaX) <= Math.abs(deltaY) * GRID_SWIPE_AXIS_RATIO) {
+        gridSwipeSession = null;
+        return;
+      }
+      gridSwipeSession.horizontal = true;
+      results.setPointerCapture?.(event.pointerId);
+    }
+    event.preventDefault?.();
+  }
+
+  function finishGridSwipe(event) {
+    if (!gridSwipeSession || event.pointerId !== gridSwipeSession.pointerId) return;
+    const session = gridSwipeSession;
+    gridSwipeSession = null;
+    results.releasePointerCapture?.(event.pointerId);
+    if (!session.horizontal) return;
+
+    const deltaX = event.clientX - session.startX;
+    const deltaY = event.clientY - session.startY;
+    suppressNextGridClick = true;
+    if (
+      Math.abs(deltaX) >= GRID_SWIPE_TRIGGER_PX
+      && Math.abs(deltaX) > Math.abs(deltaY) * GRID_SWIPE_AXIS_RATIO
+    ) {
+      changeCategoryByOffset(deltaX < 0 ? 1 : -1);
+    }
+  }
+
+  function cancelGridSwipe(event) {
+    if (!gridSwipeSession || event.pointerId !== gridSwipeSession.pointerId) return;
+    gridSwipeSession = null;
+    results.releasePointerCapture?.(event.pointerId);
   }
 
   function handleDocumentPointerDown(event) {
@@ -582,6 +687,17 @@ export function createIconPickerControl({
     trigger.focus({ preventScroll: true });
   }
 
+  results.addEventListener("pointerdown", handleGridPointerDown);
+  results.addEventListener("pointermove", handleGridPointerMove);
+  results.addEventListener("pointerup", finishGridSwipe);
+  results.addEventListener("pointercancel", cancelGridSwipe);
+  results.addEventListener("click", (event) => {
+    if (!suppressNextGridClick) return;
+    suppressNextGridClick = false;
+    event.preventDefault?.();
+    event.stopPropagation?.();
+  }, true);
+
   trigger.addEventListener("click", (event) => {
     event.preventDefault();
     event.stopPropagation();
@@ -599,9 +715,13 @@ export function createIconPickerControl({
     closePanel();
   });
 
-  root.dataset.expanded = "false";
-  trigger.setAttribute("aria-expanded", "false");
-  updateTrigger();
+  root.dataset.expanded = String(embedded);
+  trigger.setAttribute("aria-expanded", String(embedded));
+  if (embedded) {
+    panel.dataset.mobilePresentation = "embedded";
+    panel.setAttribute("role", "group");
+  }
+  if (!embedded) updateTrigger();
   renderTabs();
   renderResults();
 
