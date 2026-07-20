@@ -517,7 +517,8 @@ export function createIconPickerControl({
     const previewName = selectedValue === "auto"
       ? suggestedIcon || "gear"
       : selectedValue;
-    triggerIcon.replaceChildren(createIconSymbol({
+    clearElement(triggerIcon);
+    triggerIcon.append(createIconSymbol({
       name: previewName,
       className: "mha-widget-icon-picker-trigger-glyph",
     }));

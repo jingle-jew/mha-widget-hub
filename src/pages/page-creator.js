@@ -10,6 +10,8 @@ import {
 import { PAGE_CREATOR_VISIBILITY_TRANSITION_MS } from "../panels/panel-transition-timing.js";
 import { syncPanelVisibility } from "../panels/panel-visibility-controller.js";
 import { t } from "../i18n/index.js";
+import { createIconPickerControl } from "../widget-config/icon-picker.js";
+import { createInlineIconNameRow } from "../widget-config/icon-picker-field.js";
 
 function syncPageCreatorPanelVisibility(panel, open, { animateClose = true } = {}) {
   return syncPanelVisibility(panel, open, {
@@ -21,8 +23,12 @@ function syncPageCreatorPanelVisibility(panel, open, { animateClose = true } = {
 export function createPageCreatorPanel({
   open = false,
   pageTypeOptions = [],
+  pageName = "",
+  pageIcon = "grid",
   onClose = () => {},
   onSelectPageType = () => {},
+  onPageNameChange = () => {},
+  onPageIconChange = () => {},
   onCreate = () => {},
 } = {}) {
   const hint = document.createElement("p");
@@ -62,6 +68,34 @@ export function createPageCreatorPanel({
     typeGrid.append(button);
   });
 
+  const details = document.createElement("div");
+  details.className = "mha-page-creator-details";
+
+  const nameLabel = document.createElement("label");
+  nameLabel.className = "mha-page-creator-field-label";
+  const nameLabelText = document.createElement("span");
+  nameLabelText.textContent = t("settings.pageCreatorNameLabel", "Name");
+  const nameInput = document.createElement("input");
+  nameInput.className = "mha-page-creator-name mha-widget-config-control";
+  nameInput.type = "text";
+  nameInput.value = pageName;
+  nameInput.placeholder = t("settings.pageCreatorNamePlaceholder", "Page name");
+  nameInput.autocomplete = "off";
+  nameInput.addEventListener("input", event => onPageNameChange(event.currentTarget.value));
+
+  const iconPicker = createIconPickerControl({
+    value: pageIcon,
+    suggestedIcon: pageIcon || "grid",
+    allowAuto: false,
+    searchPlaceholder: t("widgets.config.iconSearch", "Search icons"),
+    emptyLabel: t("widgets.config.iconEmpty", "No icons found"),
+    onChange: onPageIconChange,
+    t,
+  });
+  iconPicker.classList?.add?.("mha-page-creator-icon-picker");
+  nameLabel.append(nameLabelText, createInlineIconNameRow(nameInput, iconPicker));
+  details.append(nameLabel);
+
   const actions = document.createElement("div");
   actions.className = "mha-page-creator-actions";
   const cancel = createButton({
@@ -90,7 +124,7 @@ export function createPageCreatorPanel({
     closeLabel: t("common.close", "Close"),
     scrimLabel: t("settings.pageCreatorClose", "Close icon picker"),
     onClose,
-    children: [hint, typeLabel, typeGrid, actions],
+    children: [hint, typeLabel, typeGrid, details, actions],
   }), {
     surfaceRole: PANEL_SURFACE_ROLES.POPUP,
     mobilePresentation: PANEL_MOBILE_PRESENTATIONS.SHEET,

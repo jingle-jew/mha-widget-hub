@@ -47,6 +47,7 @@ export function createHubRuntimeDefaults() {
     _pendingWidgetPlacement: null,
     _pageCreatorOpen: false,
     _newPageType: "grid",
+    _newPageName: "",
     _newPageIcon: "grid",
     _mediaPageSettingsOpen: false,
     _dockPosition: "left",

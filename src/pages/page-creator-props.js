@@ -4,6 +4,8 @@ export function buildPageCreatorState({
   open = false,
   themeStyle = "oneui",
   selectedPageType = PAGE_TYPES.GRID,
+  pageName = "",
+  pageIcon = "grid",
 } = {}) {
   const pageTypeOptions = getPageCreatorTypeOptions({ themeStyle });
   const resolvedSelectedPageType = pageTypeOptions.some(option => option.value === selectedPageType)
@@ -13,6 +15,8 @@ export function buildPageCreatorState({
   return {
     open,
     selectedPageType: resolvedSelectedPageType,
+    pageName: String(pageName || ""),
+    pageIcon: String(pageIcon || "grid"),
     pageTypeOptions: pageTypeOptions.map(option => ({
       ...option,
       selected: option.value === resolvedSelectedPageType,

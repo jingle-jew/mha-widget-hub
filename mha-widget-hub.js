@@ -271,6 +271,8 @@ constructor(){
     setPageCreatorOpen:(open)=>{this._pageCreatorOpen=open;},
     getNewPageType:()=>this._newPageType,
     setNewPageType:(type)=>{this._newPageType=type;},
+    getNewPageName:()=>this._newPageName,
+    setNewPageName:(name)=>{this._newPageName=name;},
     getNewPageIcon:()=>this._newPageIcon,
     setNewPageIcon:(icon)=>{this._newPageIcon=icon;},
     getDockSettingsPageId:()=>this._dockSettingsPageId,
