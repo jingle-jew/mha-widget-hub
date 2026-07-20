@@ -149,35 +149,63 @@ function isPrimaryPointer(event) {
   return true;
 }
 
+function isDirectManipulationPointer(event) {
+  const pointerType = String(event?.pointerType || "").toLowerCase();
+  return pointerType === "touch" || pointerType === "pen";
+}
+
+function isFullVerticalSliderWidget(wrapper) {
+  const shell = getSliderWidgetShell(wrapper);
+  if (!shell) return false;
+  if (wrapper.dataset.orientation === "vertical") return true;
+  return Boolean(wrapper.closest?.(".mha-slider-widget-unit--vertical"));
+}
+
+function isVerticalLightPopupSlider(wrapper) {
+  return Boolean(
+    wrapper.classList?.contains?.("mha-light-popup-slider")
+    && !wrapper.classList?.contains?.("slider2")
+    && wrapper.dataset.orientation === "vertical"
+  );
+}
+
+function isDirectVerticalSliderControl(wrapper) {
+  return isFullVerticalSliderWidget(wrapper) || isVerticalLightPopupSlider(wrapper);
+}
+
 export function canStartMobileSliderSession({
   layout = "",
   disabled = false,
   isEditing = false,
   isPreview = false,
+  isFullVerticalWidget = false,
+  isVerticalPopupSlider = false,
   event = null,
 } = {}) {
-  if (layout !== "mobile") return false;
   if (disabled || isEditing || isPreview) return false;
-  return isPrimaryPointer(event);
+  if (!isPrimaryPointer(event)) return false;
+  if (layout === "mobile") return true;
+  return (isFullVerticalWidget || isVerticalPopupSlider)
+    && isDirectManipulationPointer(event);
 }
 
 function isFullSliderWidgetPointerControl(wrapper) {
   const shell = getSliderWidgetShell(wrapper);
   const host = getSliderHost(wrapper);
-  const isMobile = host?.dataset?.layout === "mobile";
-  const isVertical = wrapper.dataset.orientation === "vertical";
   const themeStyle = host?.dataset?.themeStyle || "";
   const isIosSlider2 = themeStyle === "ios" && wrapper.classList.contains("slider2");
+  const isFullVerticalWidget = isFullVerticalSliderWidget(wrapper);
+  const isVerticalPopupSlider = isVerticalLightPopupSlider(wrapper);
 
-  if (!shell && !isIosSlider2) return false;
+  if (!shell && !isIosSlider2 && !isVerticalPopupSlider) return false;
 
   /*
    * iOS always used custom full-widget pointer control, which is why it worked
    * reliably on Android too. OneUI/Material vertical full SliderWidget controls
-   * need the same pointer mapping on mobile because native rotated range drag is
-   * unreliable there: tap works, continuous vertical drag often does not.
+   * and vertical light-popup sliders use the same shell-relative pointer mapping
+   * because a native range rotated with CSS remains unreliable during drag.
    */
-  return isIosSlider2 || themeStyle === "ios" || (isMobile && isVertical);
+  return isIosSlider2 || themeStyle === "ios" || isFullVerticalWidget || isVerticalPopupSlider;
 }
 
 export function resolvePendingSliderGesture({
@@ -215,7 +243,9 @@ function getFullWidgetSliderValueFromPointer(wrapper, input, event, min, max) {
     return Number(input.value) || 0;
   }
 
-  const orientation = wrapper.dataset.orientation || "horizontal";
+  const orientation = isDirectVerticalSliderControl(wrapper)
+    ? "vertical"
+    : wrapper.dataset.orientation || "horizontal";
   const ratio = orientation === "vertical"
     ? 1 - ((event.clientY - rect.top) / Math.max(1, rect.height))
     : (event.clientX - rect.left) / Math.max(1, rect.width);
@@ -349,6 +379,8 @@ export function createSlider({
       layout: host?.dataset?.layout || "",
       isEditing: Boolean(host?.classList?.contains?.("is-editing")),
       isPreview: Boolean(wrapper.closest?.(".mha-widget-manager-live-preview")),
+      isFullVerticalWidget: isFullVerticalSliderWidget(wrapper),
+      isVerticalPopupSlider: isVerticalLightPopupSlider(wrapper),
     };
   };
 
@@ -394,11 +426,17 @@ export function createSlider({
       disabled: input.disabled,
       isEditing: state.isEditing,
       isPreview: state.isPreview,
+      isFullVerticalWidget: state.isFullVerticalWidget,
+      isVerticalPopupSlider: state.isVerticalPopupSlider,
       event,
     })) {
       return;
     }
     if (mobileSession?.pointerId === event.pointerId) return;
+
+    const shouldArmImmediately = (
+      state.isFullVerticalWidget || state.isVerticalPopupSlider
+    ) && isDirectManipulationPointer(event);
 
     clearMobileSession(null);
     mobileSession = {
@@ -407,9 +445,19 @@ export function createSlider({
       startX: Number(event.clientX || 0),
       startY: Number(event.clientY || 0),
       lastEvent: event,
-      scrollContainer: wrapper.closest(".mha-widget-area"),
-      armTimer: setTimeout(() => armMobileSession(), SLIDER_ARM_DELAY_MS),
+      scrollContainer:
+        wrapper.closest(".mha-light-popup-main-view")
+        || wrapper.closest(".mha-widget-area"),
+      armTimer: shouldArmImmediately
+        ? 0
+        : setTimeout(() => armMobileSession(), SLIDER_ARM_DELAY_MS),
     };
+
+    if (shouldArmImmediately) {
+      armMobileSession();
+      event.preventDefault?.();
+      event.stopPropagation?.();
+    }
   };
 
   const handleMobilePointerMove = (event) => {

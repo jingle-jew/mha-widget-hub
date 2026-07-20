@@ -208,10 +208,21 @@ function createFakeDocument() {
   };
 }
 
-function attachToHost(node, { layout = "mobile", isEditing = false, preview = false } = {}) {
+function attachToHost(
+  node,
+  {
+    layout = "mobile",
+    isEditing = false,
+    preview = false,
+    sliderWidget = false,
+    sliderWidgetOrientation = "",
+    lightPopup = false,
+    themeStyle = "oneui",
+  } = {},
+) {
   class FakeShadowRoot {}
   const host = {
-    dataset: { layout, themeStyle: "oneui" },
+    dataset: { layout, themeStyle },
     classList: {
       contains(token) {
         return isEditing && token === "is-editing";
@@ -235,15 +246,64 @@ function attachToHost(node, { layout = "mobile", isEditing = false, preview = fa
     parent = previewNode;
   }
 
+  let popupMainView = null;
+  if (lightPopup) {
+    popupMainView = new FakeElement("div");
+    popupMainView.className = "mha-light-popup-main-view";
+    parent.append(popupMainView);
+    parent = popupMainView;
+  }
+
+  let sliderWidgetShell = null;
+  let sliderWidgetUnit = null;
+  if (sliderWidget) {
+    sliderWidgetShell = new FakeElement("article");
+    sliderWidgetShell.className = "mha-widget";
+    sliderWidgetShell.dataset.widgetKind = "slider";
+    parent.append(sliderWidgetShell);
+    parent = sliderWidgetShell;
+
+    if (sliderWidgetOrientation) {
+      sliderWidgetUnit = new FakeElement("div");
+      sliderWidgetUnit.className = [
+        "mha-slider-widget-unit",
+        `mha-slider-widget-unit--${sliderWidgetOrientation}`,
+      ].join(" ");
+      parent.append(sliderWidgetUnit);
+      parent = sliderWidgetUnit;
+    }
+  }
+
   parent.append(node);
   node._propagateRootNode(rootNode);
-  return { host, widgetArea };
+  return {
+    host,
+    widgetArea,
+    popupMainView,
+    sliderWidgetShell,
+    sliderWidgetUnit,
+  };
 }
 
 test("canStartMobileSliderSession blocks disabled, edit and preview states", () => {
   const event = { button: 0 };
   assert.equal(canStartMobileSliderSession({ layout: "mobile", event }), true);
   assert.equal(canStartMobileSliderSession({ layout: "tablet", event }), false);
+  assert.equal(canStartMobileSliderSession({
+    layout: "tablet",
+    isFullVerticalWidget: true,
+    event: { button: 0, pointerType: "touch" },
+  }), true);
+  assert.equal(canStartMobileSliderSession({
+    layout: "desktop",
+    isFullVerticalWidget: true,
+    event: { button: 0, pointerType: "pen" },
+  }), true);
+  assert.equal(canStartMobileSliderSession({
+    layout: "tablet",
+    isFullVerticalWidget: true,
+    event: { button: 0, pointerType: "mouse" },
+  }), false);
   assert.equal(canStartMobileSliderSession({ layout: "mobile", disabled: true, event }), false);
   assert.equal(canStartMobileSliderSession({ layout: "mobile", isEditing: true, event }), false);
   assert.equal(canStartMobileSliderSession({ layout: "mobile", isPreview: true, event }), false);
@@ -265,6 +325,179 @@ test("resolvePendingSliderGesture cancels scroll-first gestures before arming", 
     deltaX: 0,
     deltaY: 12,
   }), "cancel");
+});
+
+test("full vertical SliderWidget arms immediately for touch outside mobile layout", () => {
+  const previousDocument = globalThis.document;
+  const previousWindow = globalThis.window;
+  const previousSetTimeout = globalThis.setTimeout;
+  const previousClearTimeout = globalThis.clearTimeout;
+  const previousRequestAnimationFrame = globalThis.requestAnimationFrame;
+  const previousCancelAnimationFrame = globalThis.cancelAnimationFrame;
+
+  const frames = [];
+  const inputs = [];
+  const changes = [];
+  let timeoutCalls = 0;
+  globalThis.document = createFakeDocument();
+  globalThis.window = {};
+  globalThis.requestAnimationFrame = (callback) => {
+    frames.push(callback);
+    return frames.length;
+  };
+  globalThis.cancelAnimationFrame = () => {};
+  globalThis.setTimeout = () => {
+    timeoutCalls += 1;
+    return 1;
+  };
+  globalThis.clearTimeout = () => {};
+
+  try {
+    const slider = createSlider({
+      orientation: "auto",
+      value: 20,
+      min: 0,
+      max: 100,
+      onInput: (event) => inputs.push(Number(event.currentTarget.value)),
+      onChange: (event) => changes.push(Number(event.currentTarget.value)),
+    });
+    const input = slider.querySelector(".mha-slider-input");
+    const { sliderWidgetShell } = attachToHost(slider, {
+      layout: "tablet",
+      sliderWidget: true,
+      sliderWidgetOrientation: "vertical",
+      themeStyle: "material",
+    });
+    sliderWidgetShell.rect = { top: 0, left: 0, width: 60, height: 200 };
+
+    slider.dispatchEvent({
+      type: "pointerdown",
+      pointerId: 8,
+      pointerType: "touch",
+      button: 0,
+      clientX: 30,
+      clientY: 150,
+    });
+
+    assert.equal(timeoutCalls, 0);
+    assert.equal(slider.classList.contains("is-slider-dragging"), true);
+    assert.equal(slider.hasPointerCapture(8), true);
+    assert.equal(inputs.at(-1), 25);
+
+    slider.dispatchEvent({
+      type: "pointermove",
+      pointerId: 8,
+      pointerType: "touch",
+      clientX: 30,
+      clientY: 50,
+    });
+    slider.dispatchEvent({
+      type: "pointerup",
+      pointerId: 8,
+      pointerType: "touch",
+      clientX: 30,
+      clientY: 50,
+    });
+
+    assert.equal(inputs.at(-1), 75);
+    assert.equal(changes.at(-1), 75);
+    assert.equal(slider.classList.contains("is-slider-dragging"), false);
+    assert.equal(slider.hasPointerCapture(8), false);
+  } finally {
+    globalThis.document = previousDocument;
+    globalThis.window = previousWindow;
+    globalThis.setTimeout = previousSetTimeout;
+    globalThis.clearTimeout = previousClearTimeout;
+    globalThis.requestAnimationFrame = previousRequestAnimationFrame;
+    globalThis.cancelAnimationFrame = previousCancelAnimationFrame;
+  }
+});
+
+test("vertical light-popup slider captures touch before the popup snap scroller", () => {
+  const previousDocument = globalThis.document;
+  const previousWindow = globalThis.window;
+  const previousSetTimeout = globalThis.setTimeout;
+  const previousClearTimeout = globalThis.clearTimeout;
+  const previousRequestAnimationFrame = globalThis.requestAnimationFrame;
+  const previousCancelAnimationFrame = globalThis.cancelAnimationFrame;
+
+  const frames = [];
+  const inputs = [];
+  const changes = [];
+  let timeoutCalls = 0;
+  globalThis.document = createFakeDocument();
+  globalThis.window = {};
+  globalThis.requestAnimationFrame = (callback) => {
+    frames.push(callback);
+    return frames.length;
+  };
+  globalThis.cancelAnimationFrame = () => {};
+  globalThis.setTimeout = () => {
+    timeoutCalls += 1;
+    return 1;
+  };
+  globalThis.clearTimeout = () => {};
+
+  try {
+    const slider = createSlider({
+      orientation: "vertical",
+      className: "mha-light-popup-slider",
+      value: 20,
+      min: 0,
+      max: 100,
+      onInput: (event) => inputs.push(Number(event.currentTarget.value)),
+      onChange: (event) => changes.push(Number(event.currentTarget.value)),
+    });
+    slider.rect = { top: 0, left: 0, width: 60, height: 200 };
+    const { popupMainView } = attachToHost(slider, {
+      layout: "mobile",
+      lightPopup: true,
+      themeStyle: "oneui",
+    });
+
+    slider.dispatchEvent({
+      type: "pointerdown",
+      pointerId: 9,
+      pointerType: "touch",
+      button: 0,
+      clientX: 30,
+      clientY: 150,
+    });
+
+    assert.equal(timeoutCalls, 0);
+    assert.equal(slider.classList.contains("is-slider-dragging"), true);
+    assert.equal(slider.hasPointerCapture(9), true);
+    assert.equal(popupMainView.classList.contains("is-mobile-slider-dragging"), true);
+    assert.equal(inputs.at(-1), 25);
+
+    slider.dispatchEvent({
+      type: "pointermove",
+      pointerId: 9,
+      pointerType: "touch",
+      clientX: 30,
+      clientY: 50,
+    });
+    slider.dispatchEvent({
+      type: "pointerup",
+      pointerId: 9,
+      pointerType: "touch",
+      clientX: 30,
+      clientY: 50,
+    });
+
+    assert.equal(inputs.at(-1), 75);
+    assert.equal(changes.at(-1), 75);
+    assert.equal(slider.classList.contains("is-slider-dragging"), false);
+    assert.equal(slider.hasPointerCapture(9), false);
+    assert.equal(popupMainView.classList.contains("is-mobile-slider-dragging"), false);
+  } finally {
+    globalThis.document = previousDocument;
+    globalThis.window = previousWindow;
+    globalThis.setTimeout = previousSetTimeout;
+    globalThis.clearTimeout = previousClearTimeout;
+    globalThis.requestAnimationFrame = previousRequestAnimationFrame;
+    globalThis.cancelAnimationFrame = previousCancelAnimationFrame;
+  }
 });
 
 test("mobile slider cancels pending when vertical scroll wins before arm", () => {
