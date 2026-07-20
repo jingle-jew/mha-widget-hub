@@ -274,10 +274,10 @@ export class PageUiCoordinator {
     const nextType = !supportsMediaPageTheme(this.getThemeStyle()) && type === PAGE_TYPES.MEDIA_PLAYERS
       ? PAGE_TYPES.GRID
       : (type || PAGE_TYPES.GRID);
+    const nextIcon = getDefaultPageIcon(nextType);
     this.setNewPageType(nextType);
-    this.setNewPageIcon(getDefaultPageIcon(nextType));
-    this.updatePageCreatorTypeSelectionFn(this.getRoot(), nextType);
-    this.syncPageCreator();
+    this.setNewPageIcon(nextIcon);
+    this.updatePageCreatorTypeSelectionFn(this.getRoot(), nextType, nextIcon);
     return true;
   }
 

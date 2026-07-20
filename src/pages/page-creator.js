@@ -153,11 +153,24 @@ export function syncPageCreatorPanel(root, props) {
   return panel;
 }
 
-export function updatePageCreatorTypeSelection(root, selectedPageType) {
+export function updatePageCreatorTypeSelection(root, selectedPageType, selectedPageIcon = "grid") {
   root?.querySelectorAll?.("section.mha-page-creator:not(.mha-widget-config-popup) .mha-page-creator-type")
     ?.forEach((button) => {
       const selected = button.dataset?.pageType === selectedPageType;
       button.dataset.selected = String(selected);
       button.setAttribute("aria-pressed", String(selected));
     });
+
+  const triggerIcon = root?.querySelector?.(
+    "section.mha-page-creator:not(.mha-widget-config-popup) .mha-page-creator-icon-picker .mha-widget-icon-picker-trigger-icon",
+  );
+  if (triggerIcon) {
+    if (typeof triggerIcon.replaceChildren === "function") triggerIcon.replaceChildren();
+    else if (Array.isArray(triggerIcon.children)) triggerIcon.children.length = 0;
+    else triggerIcon.textContent = "";
+    triggerIcon.append?.(createIconSymbol({
+      name: selectedPageIcon || "grid",
+      className: "mha-widget-icon-picker-trigger-glyph",
+    }));
+  }
 }

@@ -8,6 +8,8 @@ function clearAutoAccentVars(host) {
   host?.style?.removeProperty?.("--mha-accent-auto-contrast");
 }
 
+const THEME_STYLE_CROSSFADE_MS = 1400;
+
 export class AppearanceCoordinator {
   constructor({
     host = null,
@@ -85,6 +87,7 @@ export class AppearanceCoordinator {
     this.appearanceRefreshFrame = 0;
     this.themeTransitionFrame = 0;
     this.themeTransitionTimer = 0;
+    this.themeSettingsSurfaceSnapshot = null;
   }
 
   migrateLegacyCustomWallpaper() {
@@ -118,7 +121,7 @@ export class AppearanceCoordinator {
     return wallpapers;
   }
 
-  async syncAutoAccentFromWallpaper() {
+  async syncAutoAccentFromWallpaper({ syncSettings = true } = {}) {
     const requestId = ++this.autoAccentRequestId;
     const themeState = this.readThemeState();
     const accentSource = this.getActiveAccentSource(
@@ -156,7 +159,7 @@ export class AppearanceCoordinator {
 
     if (requestId === this.autoAccentRequestId) {
       this.syncTheme();
-      this.syncSettingsDom();
+      if (syncSettings) this.syncSettingsDom();
       this.scheduleAppearanceDomRefresh();
       return true;
     }
@@ -202,42 +205,84 @@ export class AppearanceCoordinator {
     if (!root) return false;
 
     const reducedMotion = this.matchMediaFn("(prefers-reduced-motion: reduce)")?.matches;
-    const existingCover = root.querySelector?.(".mha-theme-transition-cover");
-    const cover = existingCover || this.createElement("div");
-    cover.className = "mha-theme-transition-cover";
-    cover.dataset.state = "covering";
-    cover.setAttribute("aria-hidden", "true");
-    if (!cover.parentNode) root.append(cover);
-    cover.style.background = this.getComputedStyleFn(cover).background;
+    const backdropTarget = root.querySelector?.(".mha-background") || this.host;
+    const backdropStyle = this.getComputedStyleFn(backdropTarget);
+    const backdropSnapshot = [
+      backdropStyle?.background,
+      backdropStyle?.backgroundImage,
+      backdropStyle?.backgroundColor,
+    ].map(value => String(value || "").trim())
+      .find(value => value && value !== "none") || "transparent";
 
-    this.host?.classList?.add?.("is-theme-transitioning");
+    const settingsSheet = root.querySelector?.(
+      '.mha-settings-panel[data-open="true"] .mha-settings-sheet',
+    );
+    const settingsSheetStyle = settingsSheet
+      ? this.getComputedStyleFn(settingsSheet)
+      : null;
+
     this.clearTimeoutFn(this.themeTransitionTimer);
     this.cancelAnimationFrameFn(this.themeTransitionFrame);
+    this.themeTransitionFrame = 0;
+    this.themeSettingsSurfaceSnapshot?.remove?.();
+    this.themeSettingsSurfaceSnapshot = null;
+    root.querySelectorAll?.(".mha-theme-settings-surface-snapshot")
+      ?.forEach?.((snapshot) => snapshot.remove?.());
+
+    if (settingsSheet && settingsSheetStyle) {
+      const snapshot = this.createElement("div");
+      snapshot.className = "mha-theme-settings-surface-snapshot";
+      const setSnapshotStyle = (name, value) => {
+        const normalized = String(value || "").trim();
+        if (!normalized || normalized === "none") return;
+        snapshot.style?.setProperty?.(name, normalized);
+      };
+      setSnapshotStyle("background", settingsSheetStyle.background);
+      setSnapshotStyle("border-color", settingsSheetStyle.borderColor);
+      setSnapshotStyle("border-style", settingsSheetStyle.borderStyle);
+      setSnapshotStyle("border-width", settingsSheetStyle.borderWidth);
+      setSnapshotStyle("border-radius", settingsSheetStyle.borderRadius);
+      setSnapshotStyle("box-shadow", settingsSheetStyle.boxShadow);
+      setSnapshotStyle("backdrop-filter", settingsSheetStyle.backdropFilter);
+      setSnapshotStyle("-webkit-backdrop-filter", settingsSheetStyle.webkitBackdropFilter);
+      settingsSheet.prepend?.(snapshot);
+      this.themeSettingsSurfaceSnapshot = snapshot;
+    }
+
+    this.host?.classList?.remove?.("is-theme-backdrop-crossfading");
+    this.host?.style?.setProperty?.("--mha-theme-crossfade-from", backdropSnapshot);
+    this.host?.classList?.add?.("is-theme-transitioning");
+    if (this.host?.dataset) this.host.dataset.themeTransitionPhase = "crossfade";
+    void this.host?.offsetWidth;
 
     const themeState = applyThemeChange();
     this.applyCustomWallpaperState(themeState);
-    this.syncAutoAccentFromWallpaper();
+    this.syncAutoAccentFromWallpaper({ syncSettings: false });
     if (syncSettings) this.syncSettingsDom();
     if (syncScreensaverSettings) this.syncScreensaverSettingsDom();
     this.scheduleAppearanceDomRefresh();
 
-    const finish = () => {
-      cover.dataset.state = "revealing";
-      const duration = reducedMotion ? 0 : 260;
-      this.themeTransitionTimer = this.setTimeoutFn(() => {
-        cover.remove();
-        this.host?.classList?.remove?.("is-theme-transitioning");
-      }, duration);
+    this.host?.classList?.add?.("is-theme-backdrop-crossfading");
+    if (this.themeSettingsSurfaceSnapshot?.dataset) {
+      this.themeSettingsSurfaceSnapshot.dataset.state = "leaving";
+    }
+
+    const cleanup = () => {
+      this.themeTransitionTimer = 0;
+      this.host?.classList?.remove?.("is-theme-backdrop-crossfading");
+      this.host?.classList?.remove?.("is-theme-transitioning");
+      if (this.host?.dataset) delete this.host.dataset.themeTransitionPhase;
+      this.host?.style?.removeProperty?.("--mha-theme-crossfade-from");
+      this.themeSettingsSurfaceSnapshot?.remove?.();
+      this.themeSettingsSurfaceSnapshot = null;
     };
 
     if (reducedMotion) {
-      finish();
+      cleanup();
       return true;
     }
 
-    this.themeTransitionFrame = this.requestAnimationFrameFn(() => {
-      this.themeTransitionFrame = this.requestAnimationFrameFn(finish);
-    });
+    this.themeTransitionTimer = this.setTimeoutFn(cleanup, THEME_STYLE_CROSSFADE_MS);
     return true;
   }
 
@@ -250,7 +295,7 @@ export class AppearanceCoordinator {
       },
       syncSettings: true,
     });
-    return themeState || this.readThemeState();
+    return themeState || { ...this.readThemeState(), themeStyle: value };
   }
 
   applyIosGlassFromSettings(value = "liquid") {
@@ -294,6 +339,8 @@ export class AppearanceCoordinator {
     this.themeTransitionFrame = 0;
     this.clearTimeoutFn(this.themeTransitionTimer);
     this.themeTransitionTimer = 0;
+    this.themeSettingsSurfaceSnapshot?.remove?.();
+    this.themeSettingsSurfaceSnapshot = null;
   }
 }
 

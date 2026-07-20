@@ -720,9 +720,10 @@ function createDockPageEditor({ page, onBack, onRename, onIconChange } = {}) {
   return wrapper;
 }
 
-function createSection(title, children = []) {
+function createSection(title, children = [], sectionId = "") {
   const section = document.createElement("section");
   section.className = "mha-settings-section";
+  if (sectionId) section.dataset.settingsSection = sectionId;
 
   const heading = document.createElement("h3");
   heading.className = "mha-settings-section-title";
@@ -871,15 +872,91 @@ function createScreensaverControls({
   ];
 }
 
+const SETTINGS_THEME_CROSSFADE_MS = 1400;
+
+function normalizeThemeAppearanceStack(root) {
+  const stack = root?.querySelector?.(".mha-settings-theme-appearance-stack");
+  if (!stack) return false;
+
+  const sections = [...(stack.querySelectorAll?.('[data-settings-section="appearance"]') || [])];
+  const incoming = stack.querySelector?.(".mha-settings-theme-appearance-incoming")
+    || sections[sections.length - 1];
+  if (!incoming) {
+    stack.remove?.();
+    return false;
+  }
+
+  incoming.classList?.remove?.("mha-settings-theme-appearance-incoming");
+  incoming.classList?.remove?.("mha-settings-theme-appearance-outgoing");
+  incoming.removeAttribute?.("data-settings-theme-outgoing");
+  stack.replaceWith?.(incoming);
+  return true;
+}
+
+function crossfadeAppearanceSection(existing, existingAppearance, nextAppearance) {
+  const documentRef = existing?.ownerDocument || globalThis.document;
+  if (!documentRef?.createElement || typeof existingAppearance?.replaceWith !== "function") {
+    return false;
+  }
+
+  const stack = documentRef.createElement("div");
+  stack.className = "mha-settings-theme-appearance-stack";
+  const oldHeight = existingAppearance.getBoundingClientRect?.().height
+    || existingAppearance.offsetHeight
+    || 0;
+
+  existingAppearance.dataset.settingsThemeOutgoing = "true";
+  existingAppearance.classList?.add?.("mha-settings-theme-appearance-outgoing");
+  nextAppearance.classList?.add?.("mha-settings-theme-appearance-incoming");
+
+  existingAppearance.replaceWith(stack);
+  stack.append(existingAppearance, nextAppearance);
+
+  const nextHeight = nextAppearance.getBoundingClientRect?.().height
+    || nextAppearance.scrollHeight
+    || nextAppearance.offsetHeight
+    || 0;
+  if (oldHeight > 0 && nextHeight > 0) {
+    stack.style?.setProperty?.("block-size", `${oldHeight}px`);
+    void stack.offsetHeight;
+    const scheduleFrame = globalThis.requestAnimationFrame
+      || ((callback) => globalThis.setTimeout?.(callback, 0));
+    scheduleFrame?.(() => {
+      if (stack.parentNode) {
+        stack.style?.setProperty?.("block-size", `${nextHeight}px`);
+      }
+    });
+  }
+
+  let cleaned = false;
+  let cleanupTimer = 0;
+  const cleanup = () => {
+    if (cleaned) return;
+    cleaned = true;
+    if (cleanupTimer) globalThis.clearTimeout?.(cleanupTimer);
+    nextAppearance.classList?.remove?.("mha-settings-theme-appearance-incoming");
+    nextAppearance.removeAttribute?.("data-settings-theme-outgoing");
+    stack.style?.removeProperty?.("block-size");
+    if (stack.parentNode) stack.replaceWith(nextAppearance);
+  };
+
+  existingAppearance.addEventListener?.("animationend", (event) => {
+    if (event.target === existingAppearance) cleanup();
+  });
+  cleanupTimer = globalThis.setTimeout?.(cleanup, SETTINGS_THEME_CROSSFADE_MS + 80) || 0;
+  return true;
+}
+
 function getValueControlSignature(root) {
   return [...root.querySelectorAll("[data-settings-value-control]")]
     .map(control => `${control.tagName}:${control.type || ""}:${control.dataset.settingsControl || ""}`)
     .join("|");
 }
 
-function updateMatchedValueControls(existing, next) {
-  const existingControls = [...existing.querySelectorAll("[data-settings-value-control]")];
-  const nextControls = [...next.querySelectorAll("[data-settings-value-control]")];
+function updateMatchedValueControls(existing, next, sourceControls = null) {
+  const existingControls = [...existing.querySelectorAll("[data-settings-value-control]")]
+    .filter(control => !control.closest?.('[data-settings-theme-outgoing="true"]'));
+  const nextControls = sourceControls || [...next.querySelectorAll("[data-settings-value-control]")];
 
   existingControls.forEach((control, index) => {
     const source = nextControls[index];
@@ -950,18 +1027,44 @@ export function updateSettingsPanel(existing, next) {
   if (existing.dataset.settingsScope !== next.dataset.settingsScope) return false;
   if (existing.dataset.settingsPage !== next.dataset.settingsPage) return false;
 
+  normalizeThemeAppearanceStack(existing);
+
   const page = existing.dataset.settingsPage || "";
   if (!["main", "screensaver-nowbar", "screensaver"].includes(page)) return false;
-  if (getValueControlSignature(existing) !== getValueControlSignature(next)) return false;
-  if (getAccentSwatchSignature(existing) !== getAccentSwatchSignature(next)) return false;
+
+  const valueSignatureChanged = getValueControlSignature(existing) !== getValueControlSignature(next);
+  const accentSignatureChanged = getAccentSwatchSignature(existing) !== getAccentSwatchSignature(next);
+  let appearanceReplaced = false;
+  let sourceControls = null;
+
+  if (valueSignatureChanged || accentSignatureChanged) {
+    if (page !== "main") return false;
+    const existingAppearance = existing.querySelector('[data-settings-section="appearance"]');
+    const nextAppearance = next.querySelector('[data-settings-section="appearance"]');
+    if (!existingAppearance || !nextAppearance || typeof existingAppearance.replaceWith !== "function") return false;
+
+    sourceControls = [...next.querySelectorAll("[data-settings-value-control]")];
+    const body = existing.querySelector(".mha-settings-body");
+    const scrollTop = body?.scrollTop || 0;
+    const host = existing.getRootNode?.()?.host;
+    const shouldCrossfade = host?.classList?.contains?.("is-theme-transitioning");
+    appearanceReplaced = shouldCrossfade
+      ? crossfadeAppearanceSection(existing, existingAppearance, nextAppearance)
+      : false;
+    if (!appearanceReplaced) {
+      existingAppearance.replaceWith(nextAppearance);
+      appearanceReplaced = true;
+    }
+    if (body) body.scrollTop = scrollTop;
+  }
 
   existing.dataset.iconShape = next.dataset.iconShape;
   existing.dataset.mobileLayout = next.dataset.mobileLayout || "false";
   existing.dataset.mobileLandscape = next.dataset.mobileLandscape || "false";
   syncSettingsPanelVisibility(existing, next.dataset.open === "true");
 
-  updateMatchedValueControls(existing, next);
-  updateAccentPressedState(existing, next);
+  updateMatchedValueControls(existing, next, sourceControls);
+  if (!appearanceReplaced) updateAccentPressedState(existing, next);
   return true;
 }
 
@@ -1298,7 +1401,7 @@ export function createSettingsPanel({
       }));
     }
 
-    sections.push(createSection(t("settings.appearance", "Appearance"), appearanceControls));
+    sections.push(createSection(t("settings.appearance", "Appearance"), appearanceControls, "appearance"));
     sections.push(createSection(t("settings.customization", "Customization"), [
       createSelect({
         label: t("settings.language", "Language"),
