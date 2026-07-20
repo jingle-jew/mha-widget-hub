@@ -380,6 +380,7 @@
   max-block-size: none;
 }
 
+
 :host([data-layout="mobile"][data-media-page-active="true"]) .mha-widget-area {
   padding-inline: 0;
   overflow-y: hidden;
@@ -617,6 +618,44 @@
     max-inline-size: 100%;
     overflow: visible;
     place-items: initial;
+  }
+}
+
+/* Weather pages remain full-height with a bottom dock. The dock overlays the
+ * scrollable page instead of permanently consuming a workspace row; terminal
+ * scroll padding keeps the final widgets revealable above the capsule. */
+@media (min-width: 768px) {
+  :host([data-active-page-type="weather"][data-dock-position="bottom"]) .mha-workspace {
+    position: relative;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  :host([data-active-page-type="weather"][data-dock-position="bottom"]) .mha-widget-area {
+    grid-column: 1;
+    grid-row: 1;
+    padding-block-end: calc(
+      var(--mha-bottom-dock-height, 0px)
+      + var(--mha-widget-area-edge-padding, 0px)
+    ) !important;
+    scroll-padding-block-end: calc(
+      var(--mha-bottom-dock-height, 0px)
+      + var(--mha-grid-gap, 0px)
+    );
+  }
+
+  :host([data-active-page-type="weather"][data-dock-position="bottom"]) .mha-dock-zone {
+    position: absolute;
+    z-index: 8;
+    inset-inline: 0;
+    inset-block-end: 0;
+    inline-size: 100%;
+    block-size: var(--mha-bottom-dock-height);
+    pointer-events: none;
+  }
+
+  :host([data-active-page-type="weather"][data-dock-position="bottom"]) .mha-dock-zone > .mha-dock {
+    pointer-events: auto;
   }
 }
 

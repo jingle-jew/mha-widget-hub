@@ -256,7 +256,7 @@ test("grid track alignment resolves from runtime geometry instead of direct CSS 
   );
 });
 
-test("grid track metrics preserve mobile squareness and desktop/tablet fill", () => {
+test("grid track metrics preserve mobile squareness and keep desktop/tablet width independent from height", () => {
   const common = {
     metrics: { width: 700, height: 320 },
     preset: { maxCell: 160 },
@@ -271,13 +271,22 @@ test("grid track metrics preserve mobile squareness and desktop/tablet fill", ()
   assert.deepEqual(
     calculateGridTrackMetrics({ ...common, mobile: false }),
     {
-      columnSize: 76.125,
+      columnSize: 91.42857142857143,
       rowSize: 72.5,
       squareUnit: 72.5,
-      matrixWidth: 592.875,
+      matrixWidth: 700,
       matrixHeight: 320,
     },
   );
+  const shorterDesktop = calculateGridTrackMetrics({
+    ...common,
+    metrics: { width: 700, height: 280 },
+    mobile: false,
+  });
+  assert.equal(shorterDesktop.columnSize, 91.42857142857143);
+  assert.equal(shorterDesktop.matrixWidth, 700);
+  assert.ok(shorterDesktop.rowSize < 72.5);
+
   assert.deepEqual(
     calculateGridTrackMetrics({ ...common, mobile: true }),
     {
@@ -389,7 +398,7 @@ test("runtime applies the existing grid dataset and CSS contract", () => {
   assert.equal(host.dataset.panelFrameHeight, "800");
   assert.equal(host.dataset.gridContainerWidth, "1400");
   assert.equal(host.dataset.gridContainerHeight, "800");
-  assert.equal(host.dataset.gridTrackWidth, "1176");
+  assert.equal(host.dataset.gridTrackWidth, "1400");
   assert.equal(host.dataset.gridTrackHeight, "800");
   assert.equal(host.dataset.gridDebugViewportHeight, "800");
   assert.equal(host.dataset.gridDebugShellHeight, "0");
@@ -400,7 +409,7 @@ test("runtime applies the existing grid dataset and CSS contract", () => {
   assert.equal(host.dataset.gridDebugRowUnitHeight, "80");
   assert.equal(host.dataset.gridDebugLeftoverHeight, "0");
   assert.equal(hostStyle.values.get("--mha-square-unit"), "80px");
-  assert.equal(hostStyle.values.get("--mha-grid-column-size"), "84px");
+  assert.equal(hostStyle.values.get("--mha-grid-column-size"), "100px");
   assert.equal(hostStyle.values.get("--mha-grid-row-size"), "80px");
   assert.equal(hostStyle.values.get("--mha-available-content-x"), "0px");
   assert.equal(hostStyle.values.get("--mha-available-content-y"), "0px");
@@ -411,7 +420,7 @@ test("runtime applies the existing grid dataset and CSS contract", () => {
   assert.equal(hostStyle.values.get("--mha-panel-frame-height"), "800px");
   assert.equal(hostStyle.values.get("--mha-grid-container-width"), "1400px");
   assert.equal(hostStyle.values.get("--mha-grid-container-height"), "800px");
-  assert.equal(hostStyle.values.get("--mha-grid-track-width"), "1176px");
+  assert.equal(hostStyle.values.get("--mha-grid-track-width"), "1400px");
   assert.equal(hostStyle.values.get("--mha-grid-track-height"), "800px");
   assert.equal(gridStyle.values.get("--mha-grid-container-width"), undefined);
   assert.equal(gridStyle.values.get("--mha-grid-container-height"), undefined);

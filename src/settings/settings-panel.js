@@ -14,7 +14,7 @@ import { SETTINGS_PANEL_VISIBILITY_TRANSITION_MS } from "../panels/panel-transit
 import { syncPanelVisibility } from "../panels/panel-visibility-controller.js";
 import { validateWallpaperFile } from "./wallpaper-storage.js";
 import { getThemeStyleOptions, getThemeVariantOptions } from "./theme-registry.js";
-import { getPageIconLabel, PAGE_ICON_OPTIONS } from "../pages/page-icons.js";
+import { createIconPickerControl } from "../widget-config/icon-picker.js";
 import {
   getWeatherLandscapeOptions,
   normalizeWeatherLandscapeId,
@@ -705,29 +705,18 @@ function createDockPageEditor({ page, onBack, onRename, onIconChange } = {}) {
   input.addEventListener("keydown", (event) => { if (event.key === "Enter") input.blur(); });
   nameField.append(nameLabel, input);
 
-  const iconGrid = document.createElement("div");
-  iconGrid.className = "mha-settings-icon-grid";
-  PAGE_ICON_OPTIONS.forEach(option => {
-    const labelText = getPageIconLabel(option);
-    const button = document.createElement("button");
-    button.className = "mha-settings-icon-option";
-    button.type = "button";
-    button.dataset.selected = String((page?.icon || "grid") === option.name);
-    button.setAttribute("aria-label", labelText);
-    button.append(createIcon({
-      name: option.name,
-      category: option.category,
-      label: labelText,
-      children: createIconSymbol({ name: option.name, label: labelText }),
-    }));
-    const label = document.createElement("span");
-    label.textContent = labelText;
-    button.append(label);
-    button.addEventListener("click", () => onIconChange?.(page.id, option.name));
-    iconGrid.append(button);
+  const iconPicker = createIconPickerControl({
+    value: page?.icon || "grid",
+    suggestedIcon: page?.icon || "grid",
+    searchPlaceholder: t("widgets.config.iconSearchPlaceholder", "Search icons"),
+    emptyLabel: t("widgets.config.iconSearchEmpty", "No icons found"),
+    embedded: true,
+    allowAuto: false,
+    onChange: icon => onIconChange?.(page.id, icon),
+    t,
   });
 
-  wrapper.append(back, nameField, createSection(t("settings.icon", "Icon"), [iconGrid]));
+  wrapper.append(back, nameField, createSection(t("settings.icon", "Icon"), [iconPicker]));
   return wrapper;
 }
 

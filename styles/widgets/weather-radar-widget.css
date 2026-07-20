@@ -8,7 +8,8 @@
   min-block-size: 0;
 }
 
-.mha-widget[data-widget-kind="weather-radar"] > .mha-weather-radar {
+.mha-widget[data-widget-kind="weather-radar"] > .mha-weather-radar,
+.mha-widget[data-widget-kind="camera"] > .mha-weather-radar {
   position: absolute;
   inset: var(--mha-widget-inner-padding);
   inline-size: auto;
@@ -122,4 +123,13 @@
 
 .mha-weather-radar-viewport[data-image-state="preview"] .mha-weather-radar-fallback {
   display: none;
+}
+
+.mha-camera-widget .mha-weather-radar-viewport[role="button"] {
+  cursor: pointer;
+}
+
+.mha-camera-widget .mha-weather-radar-viewport[role="button"]:focus-visible {
+  outline: 2px solid var(--mha-accent);
+  outline-offset: 2px;
 }

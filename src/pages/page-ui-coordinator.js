@@ -334,7 +334,6 @@ export class PageUiCoordinator {
     this.setPages(result.pages);
     this.savePages();
     this.syncDocks();
-    this.syncSettingsDom();
     return true;
   }
 

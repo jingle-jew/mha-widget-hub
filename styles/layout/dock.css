@@ -804,6 +804,18 @@
   }
 }
 
+/* Weather pages keep their full-height scroll surface with a floating bottom
+ * dock. In that specific tablet/desktop layout, reuse the mobile scroll-hide
+ * motion instead of the persistent desktop dock contract. */
+@media (min-width: 768px) {
+  :host([data-active-page-type="weather"][data-dock-position="bottom"].is-dock-hidden)
+    .mha-dock-zone > .mha-dock {
+    transform: translateY(calc(100% + var(--mha-bottom-dock-clearance, 1rem) + 18px));
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
 /* Force dock glyph size at the symbol level so first paint does not rely on inherited fallback timing. */
 .mha-dock .mha-icon > .mha-icon-symbol {
   --mha-icon-symbol-size: 82%;

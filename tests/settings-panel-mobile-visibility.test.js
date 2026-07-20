@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { setLanguage } from "../src/i18n/index.js";
-import { getPageIconLabel, PAGE_ICON_OPTIONS } from "../src/pages/page-icons.js";
 import { createSettingsPanel, updateSettingsPanel } from "../src/settings/settings-panel.js";
 import { createMhaCheckbox, createMhaRadio } from "../src/ui/form-controls.js";
 
@@ -357,22 +356,30 @@ test("settings panel keeps desktop close animation visible before hiding", () =>
   assert.equal(openPanel.dataset.open, "true");
 })));
 
-test("dock detail reuses the shared page icon registry", () => withMockDocument(() => {
+test("dock detail embeds the shared icon manager directly", () => withMockDocument(() => {
+  const changes = [];
   const dockDetail = createSettingsPanel({
     open: true,
     scope: "all",
     settingsPage: "dock-detail",
     dockPages: [{ id: "home", name: "Home", icon: "home" }],
     selectedDockPageId: "home",
+    onDockIconChange: (id, icon) => changes.push([id, icon]),
   });
 
-  const iconButtons = dockDetail.querySelectorAll(".mha-settings-icon-option");
+  const picker = dockDetail.querySelector(".mha-widget-icon-picker--embedded");
+  const tiles = dockDetail.querySelectorAll(".mha-widget-icon-picker-tile");
+  const homeTile = tiles.find(tile => tile.dataset.iconName === "home");
 
-  assert.equal(iconButtons.length, PAGE_ICON_OPTIONS.length);
-  assert.deepEqual(
-    iconButtons.map(button => button.attributes["aria-label"]),
-    PAGE_ICON_OPTIONS.map(option => getPageIconLabel(option)),
-  );
+  assert.ok(picker);
+  assert.ok(dockDetail.querySelector(".mha-widget-icon-picker-search-input"));
+  assert.ok(dockDetail.querySelector(".mha-widget-icon-picker-tabs"));
+  assert.equal(dockDetail.querySelector(".mha-widget-icon-picker-trigger"), null);
+  assert.equal(dockDetail.querySelector(".mha-widget-icon-picker-auto"), null);
+  assert.ok(tiles.length > 10);
+  assert.ok(homeTile);
+  homeTile.listeners.click();
+  assert.deepEqual(changes, [["home", "home"]]);
 }));
 
 test("Weather page customization tile opens its dedicated landscape subpanel", () => withMockDocument(() => {

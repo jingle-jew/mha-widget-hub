@@ -181,21 +181,19 @@ export function calculateGridTrackMetrics({
   }
 
   /*
-   * Tablet/desktop keep the shell-owned panel/container rectangle, but tracks
-   * should stay square or close to square. Any excess space remains in the
-   * panel as breathing room instead of stretching widgets vertically or
-   * horizontally.
+   * Tablet/desktop keep horizontal and vertical sizing independent.
+   *
+   * A status-bar or another vertical reservation changes the available
+   * height, but it must not feed back into column width. The grid therefore
+   * continues to fill the same horizontal panel rectangle while row height
+   * adapts to the remaining vertical space. Only excessive vertical stretch
+   * is capped relative to the width-derived column size.
    */
   const safeAspectRatio = Math.max(1, Number(maxTrackAspectRatio) || 1);
-  const minUnit = Math.max(1, Math.min(unitX, unitY));
-  const maxAllowedUnit = minUnit * safeAspectRatio;
-  const columnSize = Math.max(
-    1,
-    unitX <= unitY ? unitX : Math.min(unitX, maxAllowedUnit),
-  );
+  const columnSize = Math.max(1, unitX);
   const rowSize = Math.max(
     1,
-    unitY <= unitX ? unitY : Math.min(unitY, maxAllowedUnit),
+    Math.min(unitY, columnSize * safeAspectRatio),
   );
   if (!Number.isFinite(columnSize) || !Number.isFinite(rowSize)) return null;
 
