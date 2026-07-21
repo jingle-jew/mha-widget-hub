@@ -32,6 +32,7 @@ function createHarness(overrides = {}) {
     },
     pageCreatorOpen: false,
     newPageType: "grid",
+    newPageName: "",
     newPageIcon: "grid",
     dockSettingsPageId: "lights",
     settingsPage: "dock-detail",
@@ -59,6 +60,8 @@ function createHarness(overrides = {}) {
     setPageCreatorOpen: (open) => { state.pageCreatorOpen = open; },
     getNewPageType: () => state.newPageType,
     setNewPageType: (type) => { state.newPageType = type; },
+    getNewPageName: () => state.newPageName,
+    setNewPageName: (name) => { state.newPageName = name; },
     getNewPageIcon: () => state.newPageIcon,
     setNewPageIcon: (icon) => { state.newPageIcon = icon; },
     getDockSettingsPageId: () => state.dockSettingsPageId,
@@ -235,7 +238,7 @@ test("creating a media page resets the page creator state and keeps the media pa
   assert.equal(state.activePageId.startsWith("page-"), true);
   assert.equal(state.widgets.length, 0);
   assert.equal(state.pages.at(-1)?.type, "media-players");
-  assert.equal(state.pages.at(-1)?.icon, "media-player");
+  assert.equal(state.pages.at(-1)?.icon, "star");
   assert.deepEqual(state.pages.at(-1)?.widgets, []);
   assert.equal(calls.syncDocks, 1);
   assert.equal(calls.syncPageCreator, 1);

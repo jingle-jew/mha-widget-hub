@@ -72,10 +72,11 @@ function createScrollArea({
   };
 }
 
-test("widget drag stays scroll-friendly until the long press is armed", () => {
+test("tablet widget drag captures the pointer before the long press is armed", () => {
   const widget = createWidgetElement();
   const host = {
     _isEditing: true,
+    dataset: { layout: "tablet" },
     _activeMoveWidgetId: "",
     _pendingWidgetPlacement: null,
     _isMobileLandscapeLayout() {
@@ -117,7 +118,7 @@ test("widget drag stays scroll-friendly until the long press is armed", () => {
       target: widget,
     });
 
-    assert.equal(widget.setPointerCaptureCalls.length, 0);
+    assert.deepEqual(widget.setPointerCaptureCalls, [7]);
     assert.equal(host.classList.contains("is-widget-drag-pending"), true);
     assert.equal(host.classList.contains("is-widget-dragging"), false);
 
@@ -181,7 +182,8 @@ test("widget drag cancels before arming when the pointer starts scrolling", () =
     });
 
     assert.equal(armedCallback, null);
-    assert.equal(widget.setPointerCaptureCalls.length, 0);
+    assert.deepEqual(widget.setPointerCaptureCalls, [3]);
+    assert.deepEqual(widget.releasePointerCaptureCalls, [3]);
     assert.equal(host.classList.contains("is-widget-drag-pending"), false);
     assert.equal(host.classList.contains("is-widget-dragging"), false);
   } finally {

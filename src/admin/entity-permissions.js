@@ -5,6 +5,7 @@ export const MHA_ENTITY_DOMAINS = Object.freeze([
   Object.freeze({ value: "switch", label: "Switches" }),
   Object.freeze({ value: "input_boolean", label: "Booleans" }),
   Object.freeze({ value: "button", label: "Buttons" }),
+  Object.freeze({ value: "camera", label: "Cameras" }),
   Object.freeze({ value: "weather", label: "Weather" }),
   Object.freeze({ value: "media_player", label: "Media players" }),
   Object.freeze({ value: "climate", label: "Climate" }),

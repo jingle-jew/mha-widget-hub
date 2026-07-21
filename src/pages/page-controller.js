@@ -24,6 +24,7 @@ export function addPage(
   pages,
   {
     icon = "",
+    name = "",
     pageType = PAGE_TYPES.GRID,
     pageConfig = {},
     initialWidgets = [],
@@ -40,7 +41,7 @@ export function addPage(
   );
   const rawPage = {
     id,
-    name: getDefaultPageName(type, index - 1),
+    name: String(name || "").trim() || getDefaultPageName(type, index - 1),
     icon: icon || getDefaultPageIcon(type),
     widgets: Array.isArray(initialWidgets) ? initialWidgets : [],
   };

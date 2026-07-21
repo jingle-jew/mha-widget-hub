@@ -147,6 +147,50 @@
   color: var(--mha-text-secondary, rgba(255,255,255,.72));
 }
 
+.mha-page-creator-details {
+  display: grid;
+  gap: .7rem;
+}
+
+.mha-page-creator-field-label {
+  display: grid;
+  gap: .45rem;
+  color: var(--mha-text-secondary, rgba(255,255,255,.72));
+  font-size: .82rem;
+  font-weight: var(--mha-font-weight-semibold);
+}
+
+.mha-page-creator-field-label .mha-widget-config-icon-name-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: stretch;
+  gap: .55rem;
+}
+
+.mha-page-creator-name {
+  min-inline-size: 0;
+  block-size: 2.85rem;
+  padding-inline: .9rem;
+}
+
+.mha-page-creator-icon-picker .mha-widget-icon-picker-trigger {
+  inline-size: 2.85rem;
+  block-size: 2.85rem;
+  min-inline-size: 2.85rem;
+  padding: 0;
+  display: grid;
+  place-items: center;
+}
+
+.mha-page-creator-icon-picker .mha-widget-icon-picker-trigger-text {
+  display: none;
+}
+
+.mha-page-creator-icon-picker .mha-widget-icon-picker-trigger-icon {
+  display: grid;
+  place-items: center;
+}
+
 .mha-page-creator-actions {
   display: flex;
   justify-content: flex-end;

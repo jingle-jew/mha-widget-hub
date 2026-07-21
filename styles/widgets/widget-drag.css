@@ -4,13 +4,20 @@
   -webkit-touch-callout: none;
 }
 
-:host([data-layout="mobile"].is-editing) .mha-widget {
-  /* Mobile Scroll Addendum:
-   * This is a product-level interaction decision, not a visual tweak.
-   * Edit-mode drag reliability currently takes precedence over scrolling
-   * directly on a widget surface. Revisit only with an explicit UX change.
-   */
+/*
+ * Declare drag ownership before pointerdown on every touch-first layout.
+ * Android WebView decides native pan/scroll eligibility at gesture start, so
+ * adding touch-action only after the long press arms is too late on older builds.
+ */
+:host([data-layout="mobile"].is-editing) .mha-widget,
+:host([data-layout="tablet"].is-editing) .mha-widget {
   touch-action: none;
+}
+
+@media (pointer: coarse) {
+  :host(.is-editing) .mha-widget {
+    touch-action: none;
+  }
 }
 
 :host(.is-editing) .mha-widget.is-drag-armed {

@@ -312,6 +312,29 @@
   display: none;
 }
 
+/* OneUI and Material render their vertical popup controls with the reusable
+ * rotated range. Reserve the gesture for the control before pointerdown so the
+ * mobile snap scroller cannot claim the drag first. iOS keeps its slider2 path. */
+:host(:is([data-theme-style="oneui"], [data-theme-style="material"]))
+  .mha-light-control-popup
+  .mha-light-popup-slider:not(.slider2)[data-orientation="vertical"],
+:host(:is([data-theme-style="oneui"], [data-theme-style="material"]))
+  .mha-light-control-popup
+  .mha-light-popup-slider:not(.slider2)[data-orientation="vertical"]
+  .mha-slider-input {
+  touch-action: none;
+}
+
+/* The slider runtime adds this class only for the lifetime of an active drag.
+ * Disable snap/overflow while captured, then normal popup paging resumes as soon
+ * as pointerup or pointercancel clears the session. */
+.mha-light-popup-main-view.is-mobile-slider-dragging {
+  overflow-y: hidden !important;
+  overscroll-behavior: none !important;
+  scroll-snap-type: none !important;
+  touch-action: none;
+}
+
 .mha-light-color-slider-field > .mha-light-slider-stack,
 .mha-light-config-slider-field > .mha-light-slider-stack {
   min-block-size: 1.7rem;

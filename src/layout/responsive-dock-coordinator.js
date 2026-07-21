@@ -247,8 +247,13 @@ export function createResponsiveDockCoordinator(host) {
     const widgetArea = grid.closest(".mha-widget-area");
     const isMobileLayout = () => isMobileLauncherLayout();
     const isLandscape = () => isMobileLandscapeLayout();
+    const isWeatherBottomDockLayout = () => (
+      !isMobileLayout()
+      && host.dataset?.activePageType === "weather"
+      && host.dataset?.dockPosition === "bottom"
+    );
 
-    if (!widgetArea || !isMobileLayout()) return;
+    if (!widgetArea || (!isMobileLayout() && !isWeatherBottomDockLayout())) return;
     if (isLandscape()) {
       host.classList.add("is-mobile-floating-controls-hidden");
       return;
@@ -268,11 +273,14 @@ export function createResponsiveDockCoordinator(host) {
     syncStatusBarFillScrollState(previousScrollTop > 4);
     const threshold = 10;
     const onScroll = () => {
-      if (!isMobileLayout() || isLandscape()) {
+      const mobileLayout = isMobileLayout();
+      const weatherBottomDockLayout = isWeatherBottomDockLayout();
+      if ((!mobileLayout && !weatherBottomDockLayout) || isLandscape()) {
         host.classList.toggle(
           "is-mobile-floating-controls-hidden",
-          isMobileLayout() && isLandscape(),
+          mobileLayout && isLandscape(),
         );
+        host.classList.remove("is-dock-hidden");
         syncStatusBarFillScrollState(false);
         previousScrollTop = getScrollTop();
         return;
@@ -281,14 +289,19 @@ export function createResponsiveDockCoordinator(host) {
       const currentScrollTop = getScrollTop();
       syncStatusBarFillScrollState(currentScrollTop > 4);
       if (currentScrollTop <= 4) {
-        host.classList.remove("is-mobile-floating-controls-hidden");
+        host.classList.remove("is-mobile-floating-controls-hidden", "is-dock-hidden");
         previousScrollTop = currentScrollTop;
         return;
       }
 
       const delta = currentScrollTop - previousScrollTop;
-      if (delta > threshold) host.classList.add("is-mobile-floating-controls-hidden");
-      else if (delta < -threshold) host.classList.remove("is-mobile-floating-controls-hidden");
+      if (delta > threshold) {
+        if (weatherBottomDockLayout) host.classList.add("is-dock-hidden");
+        else host.classList.add("is-mobile-floating-controls-hidden");
+      } else if (delta < -threshold) {
+        if (weatherBottomDockLayout) host.classList.remove("is-dock-hidden");
+        else host.classList.remove("is-mobile-floating-controls-hidden");
+      }
 
       if (Math.abs(delta) > threshold) previousScrollTop = currentScrollTop;
     };

@@ -180,6 +180,13 @@ function createHarness(overrides = {}) {
         callback();
       }
     },
+    flushNextTimeout() {
+      const next = timeoutCallbacks.entries().next().value;
+      if (!next) return;
+      const [id, callback] = next;
+      timeoutCallbacks.delete(id);
+      callback();
+    },
     flushTimeouts() {
       while (timeoutCallbacks.size) {
         const pending = Array.from(timeoutCallbacks.entries());
@@ -277,7 +284,7 @@ test("appearance refresh resyncs the page creator with the new theme style", () 
   ]);
 });
 
-test("theme style changes use the shared theme transition cover", () => {
+test("theme style changes overlap outgoing and incoming themes in one crossfade", () => {
   const harness = createHarness();
   harness.host._pageUiCoordinator = {
     syncPageCreator() {
@@ -289,31 +296,29 @@ test("theme style changes use the shared theme transition cover", () => {
 
   assert.equal(themeState.themeStyle, "ios");
   assert.equal(harness.host.classList.contains("is-theme-transitioning"), true);
-  assert.equal(harness.root.children.length, 1);
-  assert.equal(harness.root.children[0].className, "mha-theme-transition-cover");
-  assert.equal(harness.root.children[0].dataset.state, "covering");
-  assert.deepEqual(harness.calls.slice(0, 5), [
+  assert.equal(harness.host.classList.contains("is-theme-backdrop-crossfading"), true);
+  assert.equal(harness.host.dataset.themeTransitionPhase, "crossfade");
+  assert.equal(harness.host.style.properties.get("--mha-theme-crossfade-from"), "rgb(0, 0, 0)");
+  assert.equal(harness.root.children.length, 0);
+  assert.deepEqual(harness.calls.slice(0, 4), [
     ["setThemeStyle", "ios"],
     ["applyWallpaperState", "ios"],
     "syncTheme",
     "syncSettingsDom",
-    "syncSettingsDom",
   ]);
 
-  harness.flushNextRaf();
-  assert.equal(harness.root.children[0].dataset.state, "covering");
-
-  harness.flushNextRaf();
-  assert.equal(harness.root.children[0].dataset.state, "revealing");
-
   harness.flushRaf();
-  harness.flushTimeouts();
-  assert.equal(harness.root.children.length, 0);
-  assert.equal(harness.host.classList.contains("is-theme-transitioning"), false);
-  assert.deepEqual(harness.calls.slice(5), [
+  assert.deepEqual(harness.calls.slice(4), [
     "syncDocksDom",
     "refreshActiveGridOnly",
     "syncPageCreator",
     "scheduleIconSymbolRefresh",
   ]);
+
+  harness.flushTimeouts();
+  assert.equal(harness.root.children.length, 0);
+  assert.equal(harness.host.classList.contains("is-theme-backdrop-crossfading"), false);
+  assert.equal(harness.host.classList.contains("is-theme-transitioning"), false);
+  assert.equal(harness.host.dataset.themeTransitionPhase, undefined);
+  assert.equal(harness.host.style.properties.has("--mha-theme-crossfade-from"), false);
 });

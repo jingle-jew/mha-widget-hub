@@ -15,7 +15,11 @@
     .dev-panel button:hover,.dev-panel select:hover{background:rgba(255,255,255,.2)}
     .dev-panel select{grid-column:1/-1;width:100%}
     @media (max-width:420px){.dev-panel{grid-template-columns:1fr;width:min(260px,calc(100vw - 24px))}.dev-panel button,.dev-panel select{width:100%}}
-    .dev-weather-panel{position:fixed;z-index:9998;left:50%;bottom:max(18px,env(safe-area-inset-bottom));translate:-50% 0;display:grid;gap:10px;width:min(620px,calc(100vw - 28px));padding:12px;border:1px solid rgba(255,255,255,.16);border-radius:22px;background:rgba(10,10,18,.72);backdrop-filter:blur(24px) saturate(155%);box-shadow:0 22px 70px rgba(0,0,0,.36)}
+    .dev-weather-tool{position:fixed;z-index:9998;left:max(14px,env(safe-area-inset-left));bottom:max(14px,env(safe-area-inset-bottom));display:grid;justify-items:start;gap:8px}
+    .dev-weather-tool[hidden]{display:none}
+    .dev-weather-toggle{appearance:none;display:grid;place-items:center;width:44px;height:44px;border:1px solid rgba(255,255,255,.16);border-radius:50%;padding:0;background:rgba(10,10,18,.68);color:inherit;font:inherit;font-size:20px;cursor:pointer;backdrop-filter:blur(22px) saturate(150%);box-shadow:0 14px 42px rgba(0,0,0,.28)}
+    .dev-weather-toggle:hover,.dev-weather-toggle[aria-expanded="true"]{background:rgba(255,255,255,.18)}
+    .dev-weather-panel{position:absolute;left:0;bottom:calc(100% + 8px);display:grid;gap:10px;width:min(620px,calc(100vw - 28px));padding:12px;border:1px solid rgba(255,255,255,.16);border-radius:22px;background:rgba(10,10,18,.72);backdrop-filter:blur(24px) saturate(155%);box-shadow:0 22px 70px rgba(0,0,0,.36)}
     .dev-weather-panel[hidden]{display:none}
     .dev-weather-panel__title{font-size:12px;font-weight:800;letter-spacing:.02em;opacity:.72}
     .dev-weather-panel__controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
@@ -616,8 +620,22 @@
     }
 
     function mountDevWeatherPanel() {
+      let tool = document.querySelector("[data-dev-weather-tool]");
       let panel = document.querySelector("[data-dev-weather-panel]");
-      if (!panel) {
+      if (!tool) {
+        tool = document.createElement("div");
+        tool.className = "dev-weather-tool";
+        tool.dataset.devWeatherTool = "true";
+        tool.hidden = true;
+
+        const toggle = document.createElement("button");
+        toggle.type = "button";
+        toggle.className = "dev-weather-toggle";
+        toggle.dataset.devWeatherToggle = "true";
+        toggle.setAttribute("aria-label", "Ouvrir les contrôles météo de développement");
+        toggle.setAttribute("aria-expanded", "false");
+        toggle.textContent = "☁";
+
         panel = document.createElement("section");
         panel.className = "dev-weather-panel";
         panel.dataset.devWeatherPanel = "true";
@@ -666,7 +684,12 @@
         controls.append(weatherControl, momentControl);
 
         panel.append(title, controls);
-        document.body.append(panel);
+        toggle.addEventListener("click", () => {
+          panel.hidden = !panel.hidden;
+          toggle.setAttribute("aria-expanded", String(!panel.hidden));
+        });
+        tool.append(panel, toggle);
+        document.body.append(tool);
       }
 
       syncDevWeatherPanelVisibility();
@@ -674,12 +697,18 @@
     }
 
     function syncDevWeatherPanelVisibility() {
+      const tool = document.querySelector("[data-dev-weather-tool]");
       const panel = document.querySelector("[data-dev-weather-panel]");
-      if (!panel) return;
+      const toggle = document.querySelector("[data-dev-weather-toggle]");
+      if (!tool || !panel) return;
       const weatherActive = hub.dataset.weatherPageActive === "true"
         || hub.dataset.activePageType === "weather"
         || Boolean(hub.shadowRoot?.querySelector?.('.mha-page-panel[data-page-type="weather"]'));
-      panel.hidden = !weatherActive;
+      tool.hidden = !weatherActive;
+      if (!weatherActive) {
+        panel.hidden = true;
+        toggle?.setAttribute("aria-expanded", "false");
+      }
     }
 
     function observeDevWeatherPanel() {

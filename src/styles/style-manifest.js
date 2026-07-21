@@ -92,6 +92,7 @@ const WIDGET_CSS_ORDER = Object.freeze([
   "weather",
   "weather-narrative",
   "weather-radar",
+  "camera",
   "media",
 ]);
 

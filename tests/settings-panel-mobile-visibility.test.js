@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { setLanguage } from "../src/i18n/index.js";
-import { getPageIconLabel, PAGE_ICON_OPTIONS } from "../src/pages/page-icons.js";
 import { createSettingsPanel, updateSettingsPanel } from "../src/settings/settings-panel.js";
 import { createMhaCheckbox, createMhaRadio } from "../src/ui/form-controls.js";
 
@@ -43,6 +42,13 @@ function createMockNode(tagName, namespaceURI = null) {
     },
     replaceWith(next) {
       this.replacedWith = next;
+      const parent = this.parentNode;
+      if (!parent) return;
+      const index = parent.children.indexOf(this);
+      if (index < 0) return;
+      next.parentNode = parent;
+      parent.children.splice(index, 1, next);
+      this.parentNode = null;
     },
     focus() {},
   };
@@ -166,6 +172,11 @@ function matchesSelector(node, selector) {
   const roleMatch = selector.match(/^\[role='([^']+)'\]$/u);
   if (roleMatch) {
     return node.attributes?.role === roleMatch[1];
+  }
+
+  const settingsSectionMatch = selector.match(/^\[data-settings-section="([^"]+)"\]$/u);
+  if (settingsSectionMatch) {
+    return node.dataset?.settingsSection === settingsSectionMatch[1];
   }
 
   return String(node.tagName || "").toLowerCase() === selector.toLowerCase();
@@ -319,6 +330,32 @@ test("settings panel updates its mobile landscape dataset in place across viewpo
   assert.equal(portraitPanel.dataset.mobileLandscape, "true");
 }));
 
+test("settings panel replaces only the appearance section when visual style changes", () => withMockDocument(() => {
+  const oneUiPanel = createSettingsPanel({
+    open: true,
+    scope: "all",
+    settingsPage: "main",
+    themeStyle: "oneui",
+    oneUiPrimarySurfaceOpacity: 42,
+  });
+  const iosPanel = createSettingsPanel({
+    open: true,
+    scope: "all",
+    settingsPage: "main",
+    themeStyle: "ios",
+  });
+  const originalBody = oneUiPanel.querySelector(".mha-settings-body");
+  const originalAppearance = oneUiPanel.querySelector('[data-settings-section="appearance"]');
+  originalBody.scrollTop = 137;
+
+  assert.equal(updateSettingsPanel(oneUiPanel, iosPanel), true);
+  assert.equal(oneUiPanel.querySelector(".mha-settings-body"), originalBody);
+  assert.notEqual(oneUiPanel.querySelector('[data-settings-section="appearance"]'), originalAppearance);
+  assert.equal(oneUiPanel.querySelector(".mha-settings-range-input"), null);
+  assert.equal(originalBody.scrollTop, 137);
+  assert.equal(oneUiPanel.replacedWith, undefined);
+}));
+
 test("settings panel keeps desktop close animation visible before hiding", () => withMockDocument(() => withMockAnimationQueues(({ flushFrames, flushTimeouts }) => {
   const openPanel = createSettingsPanel({
     open: true,
@@ -357,22 +394,30 @@ test("settings panel keeps desktop close animation visible before hiding", () =>
   assert.equal(openPanel.dataset.open, "true");
 })));
 
-test("dock detail reuses the shared page icon registry", () => withMockDocument(() => {
+test("dock detail embeds the shared icon manager directly", () => withMockDocument(() => {
+  const changes = [];
   const dockDetail = createSettingsPanel({
     open: true,
     scope: "all",
     settingsPage: "dock-detail",
     dockPages: [{ id: "home", name: "Home", icon: "home" }],
     selectedDockPageId: "home",
+    onDockIconChange: (id, icon) => changes.push([id, icon]),
   });
 
-  const iconButtons = dockDetail.querySelectorAll(".mha-settings-icon-option");
+  const picker = dockDetail.querySelector(".mha-widget-icon-picker--embedded");
+  const tiles = dockDetail.querySelectorAll(".mha-widget-icon-picker-tile");
+  const homeTile = tiles.find(tile => tile.dataset.iconName === "home");
 
-  assert.equal(iconButtons.length, PAGE_ICON_OPTIONS.length);
-  assert.deepEqual(
-    iconButtons.map(button => button.attributes["aria-label"]),
-    PAGE_ICON_OPTIONS.map(option => getPageIconLabel(option)),
-  );
+  assert.ok(picker);
+  assert.ok(dockDetail.querySelector(".mha-widget-icon-picker-search-input"));
+  assert.ok(dockDetail.querySelector(".mha-widget-icon-picker-tabs"));
+  assert.equal(dockDetail.querySelector(".mha-widget-icon-picker-trigger"), null);
+  assert.equal(dockDetail.querySelector(".mha-widget-icon-picker-auto"), null);
+  assert.ok(tiles.length > 10);
+  assert.ok(homeTile);
+  homeTile.listeners.click();
+  assert.deepEqual(changes, [["home", "home"]]);
 }));
 
 test("Weather page customization tile opens its dedicated landscape subpanel", () => withMockDocument(() => {
@@ -420,7 +465,7 @@ test("Weather page customization tile opens its dedicated landscape subpanel", (
   celestialInput.listeners.change({ target: celestialInput });
   assert.deepEqual(changes, ["celestial-gradient"]);
 
-  const renderedHeader = subpanel.querySelector(".mha-settings-header").replacedWith;
+  const renderedHeader = subpanel.querySelector(".mha-settings-header");
   assert.equal(renderedHeader.querySelector(".mha-settings-title").textContent, "Weather page settings");
   renderedHeader.querySelector(".mha-settings-back").listeners.click();
   assert.equal(backCount, 1);

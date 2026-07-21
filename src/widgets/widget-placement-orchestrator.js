@@ -139,8 +139,12 @@ export function buildPageCreatorPanelProps({
   open = false,
   themeStyle = "oneui",
   selectedPageType = "grid",
+  pageName = "",
+  pageIcon = "grid",
   onClose = () => {},
   onSelectPageType = () => {},
+  onPageNameChange = () => {},
+  onPageIconChange = () => {},
   onCreate = () => {},
 } = {}) {
   return {
@@ -149,9 +153,13 @@ export function buildPageCreatorPanelProps({
       open,
       themeStyle,
       selectedPageType,
+      pageName,
+      pageIcon,
     }),
     onClose,
     onSelectPageType,
+    onPageNameChange,
+    onPageIconChange,
     onCreate,
   };
 }

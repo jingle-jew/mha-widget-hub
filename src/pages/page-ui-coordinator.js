@@ -43,6 +43,8 @@ export class PageUiCoordinator {
     setPageCreatorOpen = () => {},
     getNewPageType = () => PAGE_TYPES.GRID,
     setNewPageType = () => {},
+    getNewPageName = () => "",
+    setNewPageName = () => {},
     getNewPageIcon = () => "grid",
     setNewPageIcon = () => {},
     getDockSettingsPageId = () => "",
@@ -90,6 +92,8 @@ export class PageUiCoordinator {
     this.setPageCreatorOpen = (...args) => setPageCreatorOpen(...args);
     this.getNewPageType = (...args) => getNewPageType(...args);
     this.setNewPageType = (...args) => setNewPageType(...args);
+    this.getNewPageName = (...args) => getNewPageName(...args);
+    this.setNewPageName = (...args) => setNewPageName(...args);
     this.getNewPageIcon = (...args) => getNewPageIcon(...args);
     this.setNewPageIcon = (...args) => setNewPageIcon(...args);
     this.getDockSettingsPageId = (...args) => getDockSettingsPageId(...args);
@@ -156,8 +160,12 @@ export class PageUiCoordinator {
       open: this.getPageCreatorOpen(),
       themeStyle: this.getThemeStyle(),
       selectedPageType: this.getNewPageType() || PAGE_TYPES.GRID,
+      pageName: this.getNewPageName(),
+      pageIcon: this.getNewPageIcon(),
       onClose: () => this.closePageCreator(),
       onSelectPageType: (type) => this.setPageCreatorType(type),
+      onPageNameChange: (name) => this.setPageCreatorName(name),
+      onPageIconChange: (icon) => this.setPageCreatorIcon(icon),
       onCreate: () => this.createPageFromCreator(),
     });
   }
@@ -211,10 +219,11 @@ export class PageUiCoordinator {
     return true;
   }
 
-  addPage({ icon = "grid", pageType = PAGE_TYPES.GRID, pageConfig = {}, initialWidgets = [] } = {}) {
+  addPage({ icon = "grid", name = "", pageType = PAGE_TYPES.GRID, pageConfig = {}, initialWidgets = [] } = {}) {
     const previousPage = this.getPages().find(page => page.id === this.getActivePageId()) || null;
     const result = addPage(this.getPages(), {
       icon,
+      name,
       pageType,
       pageConfig,
       initialWidgets,
@@ -226,6 +235,8 @@ export class PageUiCoordinator {
     this.setWidgets(result.page?.widgets || []);
     this.setPageCreatorOpen(false);
     this.setNewPageType(PAGE_TYPES.GRID);
+    this.setNewPageName("");
+    this.setNewPageIcon("grid");
     this.savePages();
     this.syncDocks();
     this.syncPageCreator();
@@ -236,7 +247,9 @@ export class PageUiCoordinator {
   openPageCreator() {
     if (!this.getIsEditing()) return false;
     this.setPageCreatorOpen(true);
-    this.setNewPageType(this.getNewPageType() || PAGE_TYPES.GRID);
+    const type = this.getNewPageType() || PAGE_TYPES.GRID;
+    this.setNewPageType(type);
+    if (!this.getNewPageIcon()) this.setNewPageIcon(getDefaultPageIcon(type));
     this.syncPageCreator();
     return true;
   }
@@ -244,6 +257,11 @@ export class PageUiCoordinator {
   closePageCreator() {
     this.setPageCreatorOpen(false);
     this.syncPageCreator();
+    return true;
+  }
+
+  setPageCreatorName(name = "") {
+    this.setNewPageName(String(name || ""));
     return true;
   }
 
@@ -256,8 +274,10 @@ export class PageUiCoordinator {
     const nextType = !supportsMediaPageTheme(this.getThemeStyle()) && type === PAGE_TYPES.MEDIA_PLAYERS
       ? PAGE_TYPES.GRID
       : (type || PAGE_TYPES.GRID);
+    const nextIcon = getDefaultPageIcon(nextType);
     this.setNewPageType(nextType);
-    this.updatePageCreatorTypeSelectionFn(this.getRoot(), nextType);
+    this.setNewPageIcon(nextIcon);
+    this.updatePageCreatorTypeSelectionFn(this.getRoot(), nextType, nextIcon);
     return true;
   }
 
@@ -271,7 +291,10 @@ export class PageUiCoordinator {
     if (!this.getIsEditing()) return false;
     return this.addPage({
       pageType: PAGE_TYPES.WEATHER,
-      icon: getDefaultPageIcon(PAGE_TYPES.WEATHER),
+      icon: this.getNewPageIcon() && this.getNewPageIcon() !== "grid"
+        ? this.getNewPageIcon()
+        : getDefaultPageIcon(PAGE_TYPES.WEATHER),
+      name: this.getNewPageName(),
       pageConfig: weatherSeed.config,
       initialWidgets: weatherSeed.widgets,
     });
@@ -289,7 +312,10 @@ export class PageUiCoordinator {
     }
     return this.addPage({
       pageType,
-      icon: getDefaultPageIcon(pageType),
+      name: this.getNewPageName(),
+      icon: this.getNewPageIcon() && (pageType === PAGE_TYPES.GRID || this.getNewPageIcon() !== "grid")
+        ? this.getNewPageIcon()
+        : getDefaultPageIcon(pageType),
       pageConfig: createDefaultPageConfig(pageType),
       initialWidgets: [],
     });
@@ -334,7 +360,6 @@ export class PageUiCoordinator {
     this.setPages(result.pages);
     this.savePages();
     this.syncDocks();
-    this.syncSettingsDom();
     return true;
   }
 

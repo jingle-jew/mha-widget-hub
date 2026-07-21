@@ -30,10 +30,12 @@ test("widget manager only exposes concrete renderable widgets", () => {
   }));
 });
 
-test("placeholder-only categories are absent from the widget manager", () => {
+test("placeholder-only categories are absent and security exposes the camera widget", () => {
   const categoryIds = WIDGET_MANAGER_CATEGORIES.map(category => category.id);
+  const security = WIDGET_MANAGER_CATEGORIES.find(category => category.id === "security");
   assert.ok(!categoryIds.includes("actions"));
-  assert.ok(!categoryIds.includes("security"));
+  assert.ok(categoryIds.includes("security"));
+  assert.ok(security?.widgets.some(item => item.kind === "camera"));
   assert.ok(!categoryIds.includes("system"));
 });
 

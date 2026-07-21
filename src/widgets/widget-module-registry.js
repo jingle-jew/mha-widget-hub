@@ -1,6 +1,7 @@
 import { WIDGET_MODULE as emptyWidgetModule } from "./empty-widget.js";
 import { WIDGET_MODULE as buttonWidgetModule } from "./simple-button-widget.js";
 import { WIDGET_MODULE as clockWidgetModule } from "./clock-widget.js";
+import { WIDGET_MODULE as cameraWidgetModule } from "./camera-widget.js";
 import { WIDGET_MODULE as mediaWidgetModule } from "./media-widget.js?media-page-ios-card-v1";
 import { WIDGET_MODULE as scenesWidgetModule } from "./scenes-widget.js";
 import { WIDGET_MODULE as sliderWidgetModule } from "./slider-widget.js";
@@ -15,6 +16,7 @@ import { WIDGET_MODULE as weatherRadarWidgetModule } from "./weather-radar-widge
 export const WIDGET_MODULES = Object.freeze([
   emptyWidgetModule,
   clockWidgetModule,
+  cameraWidgetModule,
   buttonWidgetModule,
   scenesWidgetModule,
   sliderWidgetModule,

@@ -186,8 +186,8 @@
 
 :host([data-theme-style="ios"]) .mha-ios-organic-wallpaper .sheet-2 {
   --mha-ios-sheet-drift-distance: var(--mha-ios-sheet-2-drift-distance);
-  --mha-ios-sheet-drift-from-x: calc(var(--mha-ios-sheet-drift-distance) * -1);
-  --mha-ios-sheet-drift-to-x: var(--mha-ios-sheet-drift-distance);
+  --mha-ios-sheet-drift-from-x: calc((var(--mha-ios-sheet-drift-distance) * -1) - 36px);
+  --mha-ios-sheet-drift-to-x: calc(var(--mha-ios-sheet-drift-distance) - 36px);
   --mha-ios-sheet-drift-from-y: 0px;
   --mha-ios-sheet-drift-to-y: 0px;
   animation-duration: var(--mha-ios-sheet-2-drift-duration);

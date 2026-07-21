@@ -334,8 +334,34 @@
 }
 
 @media (min-width: 768px) {
+  :host([data-theme-style="oneui"][data-dock-position="bottom"]) {
+    --mha-oneui-compact-dock-height: clamp(5rem, 5.4vw, 5.45rem);
+    --mha-oneui-compact-dock-padding-inline: clamp(.3rem, .45vw, .42rem);
+    --mha-oneui-compact-dock-padding-block: clamp(.24rem, .34vw, .32rem);
+    --mha-oneui-compact-dock-gap: clamp(.2rem, .32vw, .3rem);
+    --mha-oneui-compact-dock-icon-size: clamp(2.55rem, 2.8vw, 2.9rem);
+    --mha-oneui-compact-dock-item-height: calc(
+      var(--mha-oneui-compact-dock-height)
+      - (var(--mha-oneui-compact-dock-padding-block) * 2)
+    );
+    --mha-oneui-compact-dock-item-row-gap: clamp(.12rem, .18vw, .18rem);
+    --mha-oneui-compact-dock-item-padding-block-start: clamp(.26rem, .34vw, .34rem);
+    --mha-oneui-compact-dock-item-padding-block-end: clamp(.28rem, .38vw, .38rem);
+    --mha-shell-bottom-dock-capsule-size: var(--mha-oneui-compact-dock-height);
+    --mha-shell-bottom-dock-clearance: max(
+      var(--mha-safe-bottom, 0px),
+      clamp(.55rem, .8vw, .8rem)
+    );
+    --mha-shell-bottom-dock-height: calc(
+      var(--mha-shell-bottom-dock-capsule-size)
+      + var(--mha-shell-bottom-dock-clearance)
+    );
+    --mha-bottom-dock-clearance: var(--mha-shell-bottom-dock-clearance);
+    --mha-bottom-dock-height: var(--mha-shell-bottom-dock-height);
+  }
+
   :host([data-theme-style="oneui"][data-dock-position="bottom"]) .mha-dock.mha-dock {
-    --mha-oneui-bottom-dock-item-width: 6.95rem;
+    --mha-oneui-bottom-dock-item-width: clamp(7.15rem, 8.2vw, 8rem);
     padding-block: var(--mha-oneui-compact-dock-padding-block);
     padding-inline: var(--mha-oneui-compact-dock-padding-inline);
     gap: var(--mha-oneui-compact-dock-gap);

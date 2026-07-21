@@ -74,6 +74,16 @@
   touch-action: none;
 }
 
+/* A full vertical SliderWidget is a direct-manipulation surface. Declaring the
+ * gesture contract before pointerdown prevents touch browsers from handing the
+ * drag to page scrolling before JavaScript can capture the pointer. */
+.mha-widget[data-widget-kind="slider"] .mha-slider[data-orientation="vertical"],
+.mha-widget[data-widget-kind="slider"] .mha-slider[data-orientation="vertical"] .mha-slider-input,
+.mha-widget[data-widget-kind="slider"] .mha-slider-widget-unit--vertical .mha-slider,
+.mha-widget[data-widget-kind="slider"] .mha-slider-widget-unit--vertical .mha-slider-input {
+  touch-action: none;
+}
+
 .mha-slider-input::-webkit-slider-runnable-track {
   block-size: var(--mha-slider-track-h);
   border-radius: 999px;

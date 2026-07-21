@@ -83,7 +83,7 @@ test("default first-launch pages are one grid, one weather page, and one media p
     })),
     [
       { id: "home", name: "Home", icon: "home", type: "grid", widgets: 0, autoPopulatePending: false },
-      { id: "weather", name: "Weather", icon: "weather", type: "weather", widgets: 0, autoPopulatePending: true },
+      { id: "weather", name: "Weather", icon: "cloud", type: "weather", widgets: 0, autoPopulatePending: true },
       { id: "media", name: "Media Players", icon: "media-player", type: "media-players", widgets: 0, autoPopulatePending: false },
     ],
   );
