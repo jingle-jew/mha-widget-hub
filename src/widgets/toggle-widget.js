@@ -142,7 +142,21 @@ export function createToggleWidgetContent(widget = {}, {
     onOpenDetails?.(detailsTrigger, event, context.hass);
   };
 
-  root.append(iconBubble, textStack, toggle, detailsTrigger);
+  const toggleHitTarget = document.createElement("button");
+  toggleHitTarget.type = "button";
+  toggleHitTarget.className = "mha-toggle-widget-toggle-hit-target";
+  toggleHitTarget.tabIndex = -1;
+  toggleHitTarget.setAttribute("aria-label", `${data.label}: ${t("states.toggle", "Toggle")}`);
+  toggleHitTarget.onclick = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (toggleHitTarget.closest(".mha-widget")?.classList.contains("is-editing")) return;
+    const input = toggle.querySelector(".mha-toggle-input");
+    if (!input || input.disabled) return;
+    input.click();
+  };
+
+  root.append(iconBubble, textStack, toggle, detailsTrigger, toggleHitTarget);
 
   if (bindToHass) {
     root.__mhaUpdateFromHass = nextHass => {

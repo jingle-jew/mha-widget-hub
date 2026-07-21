@@ -63,13 +63,32 @@
 
 .mha-toggle-widget-details-trigger {
   position: absolute;
-  inset: 0;
+  inset-block: 0;
+  inset-inline-start: 0;
+  inline-size: 66.6667%;
   padding: 0;
   border: 0;
   background: transparent;
   color: inherit;
   font: inherit;
   cursor: pointer;
+  z-index: 1;
+}
+
+.mha-toggle-widget-toggle-hit-target {
+  appearance: none;
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  inline-size: 33.3333%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  z-index: 2;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .mha-toggle-widget-details-trigger:disabled {
@@ -96,7 +115,7 @@
 
 .mha-toggle-widget-control {
   position: relative;
-  z-index: 2;
+  z-index: 3;
 }
 
 .mha-toggle-widget-icon-bubble {

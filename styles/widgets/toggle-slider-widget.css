@@ -42,24 +42,29 @@
   display: grid;
   align-items: stretch;
   padding-block-end: calc(var(--mha-toggle-slider-gap) / 2);
+  overflow: visible;
 }
 
 .combined-toggle-slider__toggle > .mha-toggle-widget {
+  position: static;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   column-gap: var(--mha-toggle-slider-gap);
   min-inline-size: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 
 .combined-toggle-slider__slider {
+  position: relative;
+  z-index: 4;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr);
   align-items: center;
   padding-block-start: calc(var(--mha-toggle-slider-gap) / 2);
+  pointer-events: none;
 }
 
 .combined-toggle-slider__slider-value {
@@ -80,6 +85,7 @@
   inline-size: 100%;
   block-size: 100%;
   min-block-size: 0;
+  pointer-events: auto;
 }
 
 .combined-toggle-slider__control .mha-slider-rotor {
