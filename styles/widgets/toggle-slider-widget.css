@@ -55,6 +55,10 @@
   overflow: visible;
 }
 
+.combined-toggle-slider__toggle > .mha-toggle-widget::after {
+  inset-block: 12% 50%;
+}
+
 
 .combined-toggle-slider__slider {
   position: relative;

@@ -61,6 +61,24 @@
   position: relative;
 }
 
+.mha-toggle-widget::after {
+  content: "";
+  position: absolute;
+  inset-block: 12%;
+  inset-inline-start: 66.6667%;
+  inline-size: 1px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    color-mix(in srgb, var(--mha-text-primary) 14%, transparent) 22%,
+    color-mix(in srgb, var(--mha-text-primary) 14%, transparent) 78%,
+    transparent
+  );
+  transform: translateX(-.5px);
+  pointer-events: none;
+  z-index: 1;
+}
+
 .mha-toggle-widget-details-trigger {
   position: absolute;
   inset-block: 0;
