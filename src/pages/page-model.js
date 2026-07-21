@@ -147,7 +147,7 @@ export function createDefaultPages({ normalizeWidget = identity } = {}) {
     {
       id: "weather",
       name: "Weather",
-      icon: "weather",
+      icon: "cloud",
       type: PAGE_TYPES.WEATHER,
       config: {
         ...createDefaultPageConfig(PAGE_TYPES.WEATHER),
