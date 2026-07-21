@@ -52,6 +52,22 @@ function getPoint(event) {
   };
 }
 
+function capturePointer(element, pointerId) {
+  try {
+    element?.setPointerCapture?.(pointerId);
+  } catch {
+    /* Older WebViews may reject capture while the native gesture arbiter is settling. */
+  }
+}
+
+function releasePointer(element, pointerId) {
+  try {
+    element?.releasePointerCapture?.(pointerId);
+  } catch {
+    /* The pointer may already have been cancelled or implicitly released. */
+  }
+}
+
 function getDistance(a, b) {
   const dx = a.x - b.x;
   const dy = a.y - b.y;
@@ -227,7 +243,7 @@ export function createWidgetDragCoordinator(host, {
     clearHoveredWidget(session);
     clearHoveredDeleteTarget(session);
     clearTouchLock();
-    session.element?.releasePointerCapture?.(session.pointerId);
+    releasePointer(session.element, session.pointerId);
     if (clearSourceState) {
       session.element?.classList?.remove?.("is-drag-source", "is-drag-armed");
       if (session.element?.dataset) delete session.element.dataset.dragState;
@@ -239,7 +255,6 @@ export function createWidgetDragCoordinator(host, {
     session.armed = true;
     host._activeMoveWidgetId = session.widgetId;
     host._pendingWidgetPlacement = null;
-    session.element?.setPointerCapture?.(session.pointerId);
     host?.classList?.remove?.("is-widget-drag-pending");
     host?.classList?.add?.("is-widget-dragging");
     session.element?.classList?.add?.("is-drag-source", "is-drag-armed");
@@ -278,6 +293,12 @@ export function createWidgetDragCoordinator(host, {
         cancelled: false,
         timer: null,
       };
+      /*
+       * Capture immediately, before the long-press delay. Older Android WebViews
+       * can otherwise hand the stream to native scrolling and emit pointercancel
+       * as soon as the finger starts moving, even though the widget armed visually.
+       */
+      capturePointer(element, event.pointerId);
       host?.classList?.add?.("is-widget-drag-pending");
       session.timer = setTimeout(() => armDragSession(session), longPressDelay);
     };
