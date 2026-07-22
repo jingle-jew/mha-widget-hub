@@ -22,6 +22,7 @@
     "release:zip": "node tools/create-release-zip.mjs",
     "deploy:dev": "node tools/deploy-dev.mjs",
     "install:git-hooks": "node tools/install-git-hooks.mjs",
+    "serve:network": "python3 tools/serve-repository.py",
     "theme-studio": "node tools/theme-studio/server/index.js",
     "theme-studio:check": "node tools/theme-studio/check.mjs",
     "theme-studio:test": "node --test tests/theme-studio.test.js"
