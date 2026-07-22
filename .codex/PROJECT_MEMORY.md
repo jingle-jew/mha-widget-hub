@@ -1,12 +1,32 @@
 # Mémoire persistante — MHA Widget Hub
 
-Dernière consolidation : 2026-07-19
+Dernière consolidation : 2026-07-22
 
 Ce fichier contient les connaissances durables qui seraient coûteuses à redécouvrir.
 Le code et les tests actuels restent la source de vérité. Les instructions de travail
 appartiennent à `AGENTS.md`.
 
 ## Décisions et raisons
+
+### 2026-07-22 — Entrer en édition depuis les surfaces de widgets tactiles
+
+- **Statut :** confirmé.
+- **Décision :** sur mobile et tablette, le long-press d'entrée en édition est
+  disponible sur la grille vide et sur les surfaces tap-only des widgets. Les
+  contrôles de manipulation directe (`slider`, `toggle`, champs et outils de
+  redimensionnement) restent exclus. Le geste ne capture ni ne bloque le
+  pointeur avant son activation; mouvement et scroll conservent leur priorité.
+  Après une activation réussie, seul le clic consécutif du widget d'origine est
+  neutralisé.
+- **Pourquoi :** les écrans denses offrent peu de grille vide, mais détourner un
+  slider ou un switch de son geste natif rendrait les contrôles imprévisibles.
+  La suppression ponctuelle du clic permet aux libellés, boutons, scènes,
+  caméras et contrôles média de conserver leur tap court sans déclencher leur
+  action au relâchement d'un long-press.
+- **Conséquence :** les futurs widgets tap-only bénéficient automatiquement du
+  geste. Tout nouveau contrôle qui possède son propre press/drag doit être
+  ajouté au contrat d'exclusion du coordinateur central et couvert par ses
+  tests, sans créer de gestionnaire de long-press propre au widget.
 
 ### 2026-07-19 — Composer le popup lumière autour de deux colonnes stables
 
