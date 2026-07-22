@@ -5,3 +5,23 @@ test-results/
 .DS_Store
 /dist/
 /custom_components/mha_widget_hub/frontend/
+
+# Local secrets and machine-specific config
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.local
+*.pem
+*.key
+*.p12
+*.pfx
+*.token
+*.secret
+secrets.yaml
+secrets.yml
+.ssh/
+id_rsa*
+id_dsa*
+id_ecdsa*
+id_ed25519*

@@ -8,9 +8,10 @@
   },
   "scripts": {
     "test": "node --test",
+    "check:secrets": "node tools/check-secrets.mjs",
     "check:syntax": "node tools/check-syntax.mjs",
     "check:package": "node tools/check-frontend-package.mjs",
-    "check": "npm run check:syntax && npm run check:icons && npm test && npm run check:package",
+    "check": "npm run check:secrets && npm run check:syntax && npm run check:icons && npm test && npm run check:package",
     "check:layout": "playwright test tests/geometry",
     "sync:frontend": "node tools/sync-integration-frontend.mjs",
     "build:integration": "node tools/build-integration-package.mjs",
@@ -20,6 +21,7 @@
     "build": "npm run check && npm run build:integration",
     "release:zip": "node tools/create-release-zip.mjs",
     "deploy:dev": "node tools/deploy-dev.mjs",
+    "install:git-hooks": "node tools/install-git-hooks.mjs",
     "theme-studio": "node tools/theme-studio/server/index.js",
     "theme-studio:check": "node tools/theme-studio/check.mjs",
     "theme-studio:test": "node --test tests/theme-studio.test.js"
