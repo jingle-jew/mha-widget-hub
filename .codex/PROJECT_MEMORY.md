@@ -156,6 +156,24 @@ appartiennent à `AGENTS.md`.
   entrée procédurale doit préserver cette séparation entre renderer temporel et
   effets météo indépendants.
 
+### 2026-07-22 — Réutiliser les paysages météo comme fonds des pages Grid
+
+- **Statut :** confirmé.
+- **Décision :** le sous-panneau global « Fond d’écran » propose le fond du
+  thème ou l’image importée, puis chaque paysage déclaré dans
+  `weather-background-assets.js`. Un choix météo est persisté sous
+  `mha_grid_wallpaper` et active le moteur de scène météo existant sur toutes
+  les pages `grid`; les pages Météo conservent leur paysage configuré par page
+  et les pages Média leur artwork dédié.
+- **Pourquoi :** les paysages météo sont des sources de fond MHA réutilisables,
+  pas une implémentation propre au layout de la page Météo. Une préférence
+  globale reste cohérente avec le panneau de fond d’écran existant et évite de
+  dupliquer les assets, les effets ou leur moteur de rendu.
+- **Conséquence :** toute nouvelle entrée de la registry devient
+  automatiquement sélectionnable comme fond Grid. Le pipeline distingue
+  désormais l’activation d’une page Météo de celle d’un fond météo afin de
+  préserver les priorités des pages spécialisées.
+
 ## Pièges connus
 
 - Les contrôles MHA vivent dans le Shadow DOM du hub. Pour détecter un clic

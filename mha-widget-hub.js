@@ -598,6 +598,9 @@ _migrateLegacyCustomWallpaper(){
 _readCustomWallpapers(){
   return this._appearanceCoordinator.readCustomWallpapers();
 }
+_readGridWallpaper(){
+  return this._wallpaperController.readGridWallpaper();
+}
 _applyCustomWallpaperState(themeState=this._themeController.read()){
   return this._appearanceCoordinator.applyCustomWallpaperState(themeState);
 }
@@ -606,6 +609,15 @@ _saveCustomWallpaper(mode,payload){
 }
 _resetCustomWallpaper(mode){
   return this._appearanceCoordinator.resetCustomWallpaper(mode);
+}
+_applyGridWallpaperFromSettings(value="theme"){
+  const preference=value==="theme"
+    ? {type:"theme",weatherLandscapeId:this._gridWallpaper?.weatherLandscapeId}
+    : {type:"weather",weatherLandscapeId:normalizeWeatherLandscapeId(value)};
+  this._gridWallpaper=this._wallpaperController.saveGridWallpaper(preference);
+  this._syncSettingsDom();
+  this._syncActivePageBackdropState({activePage:this._getActivePage()});
+  return this._gridWallpaper;
 }
 async _syncAutoAccentFromWallpaper(){
   return this._appearanceCoordinator.syncAutoAccentFromWallpaper();

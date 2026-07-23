@@ -82,7 +82,11 @@ export const es = Object.freeze({
     visualStyle: "Estilo visual",
     iosGlass: "Cristal iOS",
     wallpaper: "Fondo de pantalla",
-    wallpaperDescription: "Elige una imagen separada para los temas claro y oscuro.",
+    wallpaperDescription: "Elige un fondo meteorológico MHA o una imagen separada para los temas claro y oscuro.",
+    gridWallpaper: "Fondo de páginas Grid",
+    wallpaperOptions: Object.freeze({
+      theme: "Tema MHA o imagen importada",
+    }),
     weatherPage: "Página del tiempo",
     weatherPageDescription: "Elige el paisaje utilizado por la página del tiempo.",
     weatherPageSettings: "Ajustes de la página del tiempo",

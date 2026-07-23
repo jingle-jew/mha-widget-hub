@@ -1,12 +1,16 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  DEFAULT_GRID_WALLPAPER,
+  GRID_WALLPAPER_STORAGE_KEY,
   LEGACY_WALLPAPER_STORAGE_KEY,
   WALLPAPER_MAX_BYTES,
   WALLPAPER_STORAGE_KEYS,
   migrateLegacyWallpaper,
+  readGridWallpaper,
   readWallpapers,
   resetWallpaper,
+  saveGridWallpaper,
   saveWallpaper,
   validateWallpaperFile,
 } from "../src/settings/wallpaper-storage.js";
@@ -72,6 +76,33 @@ test("light and dark wallpapers are stored and reset independently", () => {
   assert.deepEqual(readWallpapers(storage), {
     light: null,
     dark: darkWallpaper,
+  });
+});
+
+test("grid wallpaper selection persists registered weather landscapes only", () => {
+  const storage = createStorage();
+
+  assert.deepEqual(readGridWallpaper(storage), DEFAULT_GRID_WALLPAPER);
+  assert.deepEqual(saveGridWallpaper(storage, {
+    type: "weather",
+    weatherLandscapeId: "celestial-gradient",
+  }), {
+    type: "weather",
+    weatherLandscapeId: "celestial-gradient",
+  });
+  assert.deepEqual(readGridWallpaper(storage), {
+    type: "weather",
+    weatherLandscapeId: "celestial-gradient",
+  });
+  assert.ok(storage.getItem(GRID_WALLPAPER_STORAGE_KEY));
+
+  storage.setItem(GRID_WALLPAPER_STORAGE_KEY, JSON.stringify({
+    type: "weather",
+    weatherLandscapeId: "missing-landscape",
+  }));
+  assert.deepEqual(readGridWallpaper(storage), {
+    type: "weather",
+    weatherLandscapeId: "alpine-lake",
   });
 });
 

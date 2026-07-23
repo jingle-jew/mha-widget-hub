@@ -33,7 +33,12 @@ import {
   resolveMediaPageNowPlayingId,
 } from "../pages/media-page.js?v=media-page-ios-cards-v3";
 import { syncMediaPageSettingsPanel } from "../pages/media-page-settings.js?v=media-persistence-v4";
-import { isMediaPageExperienceActive, isWeatherPage } from "../pages/page-types.js?v=media-persistence-v2";
+import {
+  isMediaPageExperienceActive,
+  isWeatherPage,
+  normalizePageType,
+  PAGE_TYPES,
+} from "../pages/page-types.js?v=media-persistence-v2";
 import { WEATHER_PAGE_WIDGET_MANAGER_CATEGORY_ID } from "../pages/weather-page-widget-catalog.js";
 import {
   captureSettingsPanelsUiState,
@@ -51,6 +56,32 @@ import {
 } from "../widgets/widget-placement-orchestrator.js";
 
 const STYLE_SETTLE_TIMEOUT_MS = 900;
+
+export function resolveWeatherBackdropContext({
+  activePage = null,
+  gridWallpaper = {},
+  themeStyle = "",
+} = {}) {
+  const weatherPageActive = isWeatherPage(activePage);
+  const gridWeatherActive = normalizePageType(activePage?.type) === PAGE_TYPES.GRID
+    && gridWallpaper?.type === "weather"
+    && !isMediaPageExperienceActive(activePage, themeStyle);
+  const weatherBackgroundActive = weatherPageActive || gridWeatherActive;
+
+  return {
+    weatherPageActive,
+    weatherBackgroundActive,
+    page: gridWeatherActive
+      ? {
+        ...activePage,
+        config: {
+          ...(activePage?.config || {}),
+          weatherLandscapeId: gridWallpaper.weatherLandscapeId,
+        },
+      }
+      : activePage,
+  };
+}
 
 function getMediaPageWallpaperLayers(host) {
   return [
@@ -247,8 +278,16 @@ export function createRenderPipeline(host, options = {}) {
     const background = host.shadowRoot?.querySelector?.(".mha-background") || null;
     const scenes = [...background?.querySelectorAll?.(".mha-weather-background") || []];
     const currentScene = scenes.find(scene => scene.dataset.active === "true") || scenes.at(-1) || null;
-    const weatherActive = isWeatherPage(activePage);
-    host.dataset.weatherPageActive = String(weatherActive);
+    const weatherBackdrop = resolveWeatherBackdropContext({
+      activePage,
+      gridWallpaper: host._gridWallpaper,
+      themeStyle: host.dataset.themeStyle || "",
+    });
+    const weatherPageActive = weatherBackdrop.weatherPageActive;
+    const weatherActive = weatherBackdrop.weatherBackgroundActive;
+    const weatherBackgroundPage = weatherBackdrop.page;
+    host.dataset.weatherPageActive = String(weatherPageActive);
+    host.dataset.weatherBackgroundActive = String(weatherActive);
 
     if (!background) return;
     if (!weatherActive) {
@@ -258,7 +297,7 @@ export function createRenderPipeline(host, options = {}) {
       return;
     }
 
-    const nextScene = createWeatherPageBackground(activePage, host._hass);
+    const nextScene = createWeatherPageBackground(weatherBackgroundPage, host._hass);
     if (currentScene?.dataset.sceneKey === nextScene.dataset.sceneKey) {
       host._weatherBackgroundPendingSceneKey = "";
       syncWeatherPageBackgroundState(currentScene, nextScene);

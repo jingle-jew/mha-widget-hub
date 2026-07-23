@@ -1731,6 +1731,13 @@
   transform: translate(-50%, -50%);
 }
 
+.mha-settings-weather-landscape-preview[data-renderer="theme"] {
+  background:
+    radial-gradient(circle at 72% 28%, color-mix(in srgb, var(--mha-accent) 58%, transparent), transparent 34%),
+    radial-gradient(circle at 24% 76%, color-mix(in srgb, var(--mha-surface-accent) 54%, transparent), transparent 38%),
+    linear-gradient(145deg, var(--mha-surface-canvas), var(--mha-surface-secondary));
+}
+
 /* Structural Liquid tiles stay borderless; selected and active controls keep
  * their state borders from the rules above.
  */

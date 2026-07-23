@@ -82,7 +82,11 @@ export const en = Object.freeze({
     visualStyle: "Visual style",
     iosGlass: "iOS glass",
     wallpaper: "Wallpaper",
-    wallpaperDescription: "Choose a separate image for light and dark themes.",
+    wallpaperDescription: "Choose an MHA weather background or separate images for light and dark themes.",
+    gridWallpaper: "Grid page wallpaper",
+    wallpaperOptions: Object.freeze({
+      theme: "MHA theme or imported image",
+    }),
     weatherPage: "Weather page",
     weatherPageDescription: "Choose the landscape used by the Weather page.",
     weatherPageSettings: "Weather page settings",
