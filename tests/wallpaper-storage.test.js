@@ -79,31 +79,22 @@ test("light and dark wallpapers are stored and reset independently", () => {
   });
 });
 
-test("grid wallpaper selection persists registered weather landscapes only", () => {
+test("grid wallpaper preference persists the weather background toggle", () => {
   const storage = createStorage();
 
   assert.deepEqual(readGridWallpaper(storage), DEFAULT_GRID_WALLPAPER);
   assert.deepEqual(saveGridWallpaper(storage, {
-    type: "weather",
-    weatherLandscapeId: "celestial-gradient",
+    useWeatherBackground: true,
   }), {
-    type: "weather",
-    weatherLandscapeId: "celestial-gradient",
+    useWeatherBackground: true,
   });
   assert.deepEqual(readGridWallpaper(storage), {
-    type: "weather",
-    weatherLandscapeId: "celestial-gradient",
+    useWeatherBackground: true,
   });
   assert.ok(storage.getItem(GRID_WALLPAPER_STORAGE_KEY));
 
-  storage.setItem(GRID_WALLPAPER_STORAGE_KEY, JSON.stringify({
-    type: "weather",
-    weatherLandscapeId: "missing-landscape",
-  }));
-  assert.deepEqual(readGridWallpaper(storage), {
-    type: "weather",
-    weatherLandscapeId: "alpine-lake",
-  });
+  storage.setItem(GRID_WALLPAPER_STORAGE_KEY, JSON.stringify({ type: "theme" }));
+  assert.deepEqual(readGridWallpaper(storage), { useWeatherBackground: false });
 });
 
 test("legacy wallpaper migrates once to the effective theme without duplication", () => {

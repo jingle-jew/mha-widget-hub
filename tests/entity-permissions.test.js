@@ -96,3 +96,58 @@ test("widget configuration options exclude entities denied to the current user",
   assert.deepEqual(result.options.map(option => option.label), ["Cuisine"]);
   assert.equal(result.draft.entityId, "light.kitchen");
 });
+
+test("admin keeps switch domains separate while MHA merges their permitted entities", () => {
+  const hass = {
+    user: { id: "user-1" },
+    states: {
+      "switch.allowed": {
+        entity_id: "switch.allowed",
+        state: "off",
+        attributes: { friendly_name: "Prise autorisée" },
+      },
+      "switch.blocked": {
+        entity_id: "switch.blocked",
+        state: "off",
+        attributes: { friendly_name: "Prise bloquée" },
+      },
+      "input_boolean.allowed": {
+        entity_id: "input_boolean.allowed",
+        state: "on",
+        attributes: { friendly_name: "Mode autorisé" },
+      },
+      "input_boolean.blocked": {
+        entity_id: "input_boolean.blocked",
+        state: "off",
+        attributes: { friendly_name: "Mode bloqué" },
+      },
+    },
+  };
+  const config = normalizeEntityVisibilityConfig({
+    users: {
+      "user-1": {
+        unrestricted: false,
+        allowedEntities: {
+          switch: ["switch.allowed"],
+          input_boolean: ["input_boolean.allowed"],
+        },
+      },
+    },
+  });
+
+  assert.deepEqual(
+    getAllowedDomains()
+      .filter(domain => ["switch", "input_boolean"].includes(domain.value))
+      .map(domain => domain.value),
+    ["switch", "input_boolean"],
+  );
+
+  const result = createToggleConfigDraft({
+    entityId: "input_boolean.allowed",
+  }, hass, config);
+  assert.equal(result.draft.deviceType, "switch");
+  assert.deepEqual(
+    result.options.map(option => option.value),
+    ["input_boolean.allowed", "switch.allowed"],
+  );
+});

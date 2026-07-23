@@ -84,9 +84,8 @@ export const fr = Object.freeze({
     wallpaper: "Fond d’écran",
     wallpaperDescription: "Choisis un fond météo MHA ou une image distincte pour les thèmes clair et sombre.",
     gridWallpaper: "Fond des pages Grid",
-    wallpaperOptions: Object.freeze({
-      theme: "Thème MHA ou image importée",
-    }),
+    useWeatherWallpaper: "Utiliser le fond d’écran météo",
+    useWeatherWallpaperDescription: "Utilise sur les pages Grid le paysage configuré pour la page Météo.",
     weatherPage: "Page Météo",
     weatherPageDescription: "Choisis le paysage utilisé par la page Météo.",
     weatherPageSettings: "Paramètres de la page Météo",

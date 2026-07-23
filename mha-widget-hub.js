@@ -610,11 +610,10 @@ _saveCustomWallpaper(mode,payload){
 _resetCustomWallpaper(mode){
   return this._appearanceCoordinator.resetCustomWallpaper(mode);
 }
-_applyGridWallpaperFromSettings(value="theme"){
-  const preference=value==="theme"
-    ? {type:"theme",weatherLandscapeId:this._gridWallpaper?.weatherLandscapeId}
-    : {type:"weather",weatherLandscapeId:normalizeWeatherLandscapeId(value)};
-  this._gridWallpaper=this._wallpaperController.saveGridWallpaper(preference);
+_applyGridWallpaperFromSettings(enabled=false){
+  this._gridWallpaper=this._wallpaperController.saveGridWallpaper({
+    useWeatherBackground:Boolean(enabled),
+  });
   this._syncSettingsDom();
   this._syncActivePageBackdropState({activePage:this._getActivePage()});
   return this._gridWallpaper;

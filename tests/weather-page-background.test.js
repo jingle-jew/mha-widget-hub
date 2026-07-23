@@ -91,12 +91,14 @@ test("registered weather landscapes can drive standard grid page backdrops", () 
   const gridPage = { id: "home", name: "Home", widgets: [] };
   const gridBackdrop = resolveWeatherBackdropContext({
     activePage: gridPage,
-    gridWallpaper: { type: "weather", weatherLandscapeId: "celestial-gradient" },
+    gridWallpaper: { useWeatherBackground: true },
+    weatherLandscapeId: "celestial-gradient",
     themeStyle: "oneui",
   });
   const themeBackdrop = resolveWeatherBackdropContext({
     activePage: gridPage,
-    gridWallpaper: { type: "theme", weatherLandscapeId: "alpine-lake" },
+    gridWallpaper: { useWeatherBackground: false },
+    weatherLandscapeId: "alpine-lake",
     themeStyle: "oneui",
   });
 
@@ -120,7 +122,7 @@ test("dedicated Weather and Media page backdrops keep priority over the grid pre
     config: {},
     widgets: [],
   };
-  const gridWallpaper = { type: "weather", weatherLandscapeId: "celestial-gradient" };
+  const gridWallpaper = { useWeatherBackground: true };
   const weatherBackdrop = resolveWeatherBackdropContext({
     activePage: weatherPage,
     gridWallpaper,

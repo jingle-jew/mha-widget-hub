@@ -633,8 +633,10 @@ Supported device types:
 | Value | Label | Domain |
 |---|---|---|
 | `light` | Light | `light` |
-| `switch` | Switch | `switch` |
-| `input_boolean` | Boolean | `input_boolean` |
+| `switch` | Switch | `switch`, `input_boolean` |
+
+MHA presents `switch` and `input_boolean` entities together as switches. MHA
+Admin keeps both domains separate for entity permissions.
 
 Draft fields:
 
@@ -669,8 +671,7 @@ Current button types:
 | Value | Label |
 |---|---|
 | `light` | Light |
-| `switch` | Switch |
-| `input_boolean` | Boolean |
+| `switch` | Switch (`switch` and `input_boolean` entities) |
 | `button` | HA button |
 | `action` | Custom action |
 

@@ -8,6 +8,21 @@ appartiennent à `AGENTS.md`.
 
 ## Décisions et raisons
 
+### 2026-07-22 — Fusionner les interrupteurs et booléens uniquement dans MHA
+
+- **Statut :** confirmé.
+- **Décision :** MHA Admin conserve `switch` et `input_boolean` comme deux
+  domaines distincts pour les permissions. Dans les configurateurs des widgets
+  MHA qui supportent les deux domaines, leurs entités sont regroupées sous le
+  seul type visible « Interrupteur ».
+- **Pourquoi :** les deux domaines partagent la même interaction marche/arrêt
+  dans les widgets, mais leurs permissions doivent rester administrables
+  séparément.
+- **Conséquence :** le regroupement ne transforme jamais l'identifiant de
+  l'entité. Les appels Home Assistant continuent de résoudre le domaine réel de
+  chaque `entityId`; les anciennes configurations qui utilisent le type
+  `input_boolean` sont normalisées vers le type d'affichage `switch`.
+
 ### 2026-07-22 — Entrer en édition depuis les surfaces de widgets tactiles
 
 - **Statut :** confirmé.
@@ -159,20 +174,20 @@ appartiennent à `AGENTS.md`.
 ### 2026-07-22 — Réutiliser les paysages météo comme fonds des pages Grid
 
 - **Statut :** confirmé.
-- **Décision :** le sous-panneau global « Fond d’écran » propose le fond du
-  thème ou l’image importée, puis chaque paysage déclaré dans
-  `weather-background-assets.js`. Un choix météo est persisté sous
-  `mha_grid_wallpaper` et active le moteur de scène météo existant sur toutes
-  les pages `grid`; les pages Météo conservent leur paysage configuré par page
-  et les pages Média leur artwork dédié.
+- **Décision :** le sous-panneau global « Fond d’écran » expose un toggle
+  « Utiliser le fond d’écran météo ». Son état est persisté sous
+  `mha_grid_wallpaper`; lorsqu’il est actif, toutes les pages `grid` réutilisent
+  le paysage configuré pour la page Météo, avec `alpine-lake` comme repli. Les
+  pages Météo conservent leur paysage configuré par page et les pages Média leur
+  artwork dédié.
 - **Pourquoi :** les paysages météo sont des sources de fond MHA réutilisables,
   pas une implémentation propre au layout de la page Météo. Une préférence
   globale reste cohérente avec le panneau de fond d’écran existant et évite de
   dupliquer les assets, les effets ou leur moteur de rendu.
-- **Conséquence :** toute nouvelle entrée de la registry devient
-  automatiquement sélectionnable comme fond Grid. Le pipeline distingue
-  désormais l’activation d’une page Météo de celle d’un fond météo afin de
-  préserver les priorités des pages spécialisées.
+- **Conséquence :** le choix du paysage reste centralisé dans les réglages de la
+  page Météo; le panneau de fond d’écran décide seulement si les pages Grid le
+  réutilisent. Le pipeline distingue l’activation d’une page Météo de celle
+  d’un fond météo afin de préserver les priorités des pages spécialisées.
 
 ## Pièges connus
 

@@ -56,7 +56,7 @@ test("hub state ingress coordinator initializes persisted shell state", () => {
       return { light: null, dark: null };
     },
     _readGridWallpaper() {
-      return { type: "weather", weatherLandscapeId: "celestial-gradient" };
+      return { useWeatherBackground: true };
     },
     _applyCustomWallpaperState() {
       host.didApplyWallpaper = true;
@@ -89,10 +89,7 @@ test("hub state ingress coordinator initializes persisted shell state", () => {
   assert.equal(host._hasPersistedStatusBarMode, true);
   assert.equal(host._statusBarMode, "top-bar");
   assert.equal(host._language, "fr");
-  assert.deepEqual(host._gridWallpaper, {
-    type: "weather",
-    weatherLandscapeId: "celestial-gradient",
-  });
+  assert.deepEqual(host._gridWallpaper, { useWeatherBackground: true });
   assert.equal(host._activePageId, "home");
   assert.equal(host._widgets[0]?.id, "clock");
   assert.equal(host.upgradedProperty, "hass");

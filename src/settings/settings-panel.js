@@ -578,41 +578,19 @@ function createSettingsNavTile({ icon = "gear", label, description = "", onClick
   return button;
 }
 
-function createWeatherLandscapePicker({
-  value,
-  onChange,
-  includeThemeWallpaper = false,
-} = {}) {
-  const selectedId = includeThemeWallpaper && value === "theme"
-    ? "theme"
-    : normalizeWeatherLandscapeId(value);
+function createWeatherLandscapePicker({ value, onChange } = {}) {
+  const selectedId = normalizeWeatherLandscapeId(value);
   const picker = document.createElement("div");
   picker.className = "mha-settings-weather-landscape-grid";
   picker.setAttribute("role", "radiogroup");
-  picker.setAttribute(
-    "aria-label",
-    includeThemeWallpaper
-      ? t("settings.gridWallpaper", "Grid page wallpaper")
-      : t("settings.weatherLandscape", "Landscape"),
-  );
+  picker.setAttribute("aria-label", t("settings.weatherLandscape", "Landscape"));
 
-  const options = [
-    ...(includeThemeWallpaper ? [{
-      value: "theme",
-      label: "Theme or imported image",
-      labelKey: "settings.wallpaperOptions.theme",
-      type: "theme",
-      renderer: "theme",
-    }] : []),
-    ...getWeatherLandscapeOptions(),
-  ];
-
-  options.forEach(option => {
+  getWeatherLandscapeOptions().forEach(option => {
     const label = t(option.labelKey, option.label);
     const choice = createMhaRadio({
       label,
       checked: option.value === selectedId,
-      name: includeThemeWallpaper ? "mha-grid-wallpaper" : "mha-weather-landscape",
+      name: "mha-weather-landscape",
       value: option.value,
       indicatorPlacement: "end",
       className: "mha-settings-weather-landscape-option",
@@ -626,9 +604,7 @@ function createWeatherLandscapePicker({
     const preview = document.createElement("span");
     preview.className = "mha-settings-weather-landscape-preview";
     preview.dataset.renderer = option.renderer;
-    if (option.type === "theme") {
-      preview.dataset.renderer = "theme";
-    } else if (option.type === "procedural") {
+    if (option.type === "procedural") {
       preview.style.background = option.preview?.background || "";
       preview.dataset.period = option.preview?.period || "sunset";
     } else {
@@ -1312,11 +1288,10 @@ export function createSettingsPanel({
 
   if (!isScreensaverScope && settingsPage === "wallpaper") {
     sections.push(createSection(t("settings.gridWallpaper", "Grid page wallpaper"), [
-      createWeatherLandscapePicker({
-        value: gridWallpaper?.type === "weather"
-          ? gridWallpaper.weatherLandscapeId
-          : "theme",
-        includeThemeWallpaper: true,
+      createSwitch({
+        label: t("settings.useWeatherWallpaper", "Use weather wallpaper"),
+        description: t("settings.useWeatherWallpaperDescription", "Use the Weather page landscape on Grid pages."),
+        checked: gridWallpaper?.useWeatherBackground === true,
         onChange: onGridWallpaperChange,
       }),
     ]));

@@ -60,11 +60,12 @@ const STYLE_SETTLE_TIMEOUT_MS = 900;
 export function resolveWeatherBackdropContext({
   activePage = null,
   gridWallpaper = {},
+  weatherLandscapeId = "",
   themeStyle = "",
 } = {}) {
   const weatherPageActive = isWeatherPage(activePage);
   const gridWeatherActive = normalizePageType(activePage?.type) === PAGE_TYPES.GRID
-    && gridWallpaper?.type === "weather"
+    && gridWallpaper?.useWeatherBackground === true
     && !isMediaPageExperienceActive(activePage, themeStyle);
   const weatherBackgroundActive = weatherPageActive || gridWeatherActive;
 
@@ -76,7 +77,7 @@ export function resolveWeatherBackdropContext({
         ...activePage,
         config: {
           ...(activePage?.config || {}),
-          weatherLandscapeId: gridWallpaper.weatherLandscapeId,
+          weatherLandscapeId,
         },
       }
       : activePage,
@@ -281,6 +282,8 @@ export function createRenderPipeline(host, options = {}) {
     const weatherBackdrop = resolveWeatherBackdropContext({
       activePage,
       gridWallpaper: host._gridWallpaper,
+      weatherLandscapeId: host._pages?.find(page => isWeatherPage(page))
+        ?.config?.weatherLandscapeId,
       themeStyle: host.dataset.themeStyle || "",
     });
     const weatherPageActive = weatherBackdrop.weatherPageActive;

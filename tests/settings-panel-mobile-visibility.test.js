@@ -471,31 +471,25 @@ test("Weather page customization tile opens its dedicated landscape subpanel", (
   assert.equal(backCount, 1);
 }));
 
-test("Wallpaper subpanel exposes registered weather landscapes for grid pages", () => withMockDocument(() => {
+test("Wallpaper subpanel exposes a weather background toggle for grid pages", () => withMockDocument(() => {
   const changes = [];
   const panel = createSettingsPanel({
     open: true,
     scope: "all",
     settingsPage: "wallpaper",
-    gridWallpaper: { type: "weather", weatherLandscapeId: "celestial-gradient" },
+    gridWallpaper: { useWeatherBackground: true },
     onGridWallpaperChange: value => changes.push(value),
   });
-  const choices = panel.querySelectorAll(".mha-settings-weather-landscape-option");
-  const themeChoice = choices.find(choice => choice.dataset.landscapeId === "theme");
-  const alpineChoice = choices.find(choice => choice.dataset.landscapeId === "alpine-lake");
-  const celestialChoice = choices.find(choice => choice.dataset.landscapeId === "celestial-gradient");
+  const toggle = panel.querySelector(".mha-toggle-input");
 
   assert.equal(hasText(panel, "Grid page wallpaper"), true);
-  assert.equal(choices.length, 3);
-  assert.ok(themeChoice);
-  assert.ok(alpineChoice);
-  assert.equal(celestialChoice.dataset.selected, "true");
+  assert.equal(hasText(panel, "Use weather wallpaper"), true);
+  assert.equal(panel.querySelectorAll(".mha-settings-weather-landscape-option").length, 0);
+  assert.equal(toggle.checked, true);
 
-  alpineChoice.querySelector("input").checked = true;
-  alpineChoice.querySelector("input").listeners.change({
-    target: alpineChoice.querySelector("input"),
-  });
-  assert.deepEqual(changes, ["alpine-lake"]);
+  toggle.checked = false;
+  toggle.listeners.change({ currentTarget: toggle });
+  assert.deepEqual(changes, [false]);
 }));
 
 test("settings panel hides the iOS glass variant selector", () => withMockDocument(() => {

@@ -28,7 +28,7 @@ test("createHubRuntimeDefaults returns the expected initial runtime state", () =
   assert.equal(defaults._statusBarMode, "top-bar");
   assert.equal(defaults._language, "auto");
   assert.deepEqual(defaults._customWallpapers, { light: null, dark: null });
-  assert.deepEqual(defaults._gridWallpaper, { type: "theme", weatherLandscapeId: "alpine-lake" });
+  assert.deepEqual(defaults._gridWallpaper, { useWeatherBackground: false });
   assert.deepEqual(defaults._pages, []);
   assert.equal(defaults._activePageId, "");
   assert.deepEqual(defaults._widgets, []);

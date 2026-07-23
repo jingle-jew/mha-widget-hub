@@ -2,12 +2,15 @@ import { getEntityDomain } from "../ha/entity.js";
 import { resolveWidgetIconName } from "../ui/icon-name-resolver.js";
 import { createIconPickerControl, normalizeIconPickerValue } from "./icon-picker.js";
 import { createInlineIconNameRow } from "./icon-picker-field.js";
-import { getEntityOptionsByDomain } from "./light-options.js";
+import {
+  getEntityOptionsByDomain,
+  getMhaSwitchEntityOptions,
+  isMhaSwitchEntityDomain,
+} from "./light-options.js";
 
 export const BUTTON_TYPES = Object.freeze([
   Object.freeze({ value: "light", label: "Light" }),
   Object.freeze({ value: "switch", label: "Switch" }),
-  Object.freeze({ value: "input_boolean", label: "Boolean" }),
   Object.freeze({ value: "button", label: "Button HA" }),
   Object.freeze({ value: "action", label: "Custom action" }),
 ]);
@@ -18,7 +21,8 @@ export const BUTTON_ACTIONS = Object.freeze([
 ]);
 
 function getButtonType(value) {
-  return BUTTON_TYPES.find(type => type.value === value) || BUTTON_TYPES[0];
+  const normalizedValue = isMhaSwitchEntityDomain(value) ? "switch" : value;
+  return BUTTON_TYPES.find(type => type.value === normalizedValue) || BUTTON_TYPES[0];
 }
 
 export function createButtonConfigDraft(widget = {}, hass, visibilityConfig) {
@@ -51,9 +55,12 @@ export function createButtonConfigDraft(widget = {}, hass, visibilityConfig) {
 
 export function reconcileButtonConfigDraft(draft, hass, visibilityConfig) {
   const buttonType = getButtonType(draft.buttonType);
+  draft.buttonType = buttonType.value;
   const options = buttonType.value === "action"
     ? []
-    : getEntityOptionsByDomain(hass, buttonType.value, visibilityConfig);
+    : buttonType.value === "switch"
+      ? getMhaSwitchEntityOptions(hass, visibilityConfig)
+      : getEntityOptionsByDomain(hass, buttonType.value, visibilityConfig);
   if (buttonType.value !== "action" && !options.some(option => option.value === draft.entityId)) {
     draft.entityId = options[0]?.value || "";
   }

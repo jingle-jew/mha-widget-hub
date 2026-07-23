@@ -1,8 +1,3 @@
-import {
-  DEFAULT_WEATHER_LANDSCAPE_ID,
-  WEATHER_LANDSCAPES,
-} from "../pages/weather-background-assets.js";
-
 export const LEGACY_WALLPAPER_STORAGE_KEY = "mha_custom_wallpaper";
 export const WALLPAPER_STORAGE_KEYS = Object.freeze({
   light: "mha_custom_wallpaper_light",
@@ -10,8 +5,7 @@ export const WALLPAPER_STORAGE_KEYS = Object.freeze({
 });
 export const GRID_WALLPAPER_STORAGE_KEY = "mha_grid_wallpaper";
 export const DEFAULT_GRID_WALLPAPER = Object.freeze({
-  type: "theme",
-  weatherLandscapeId: DEFAULT_WEATHER_LANDSCAPE_ID,
+  useWeatherBackground: false,
 });
 
 export const WALLPAPER_MAX_BYTES = 5 * 1024 * 1024;
@@ -133,13 +127,10 @@ export function resetWallpaper(storage, mode) {
 }
 
 export function normalizeGridWallpaper(value = DEFAULT_GRID_WALLPAPER) {
-  const type = value?.type === "weather" ? "weather" : "theme";
-  const requestedLandscapeId = String(value?.weatherLandscapeId || "").trim();
-  const weatherLandscapeId = Object.hasOwn(WEATHER_LANDSCAPES, requestedLandscapeId)
-    ? requestedLandscapeId
-    : DEFAULT_WEATHER_LANDSCAPE_ID;
-
-  return { type, weatherLandscapeId };
+  return {
+    useWeatherBackground: value?.useWeatherBackground === true
+      || value?.type === "weather",
+  };
 }
 
 export function readGridWallpaper(storage) {

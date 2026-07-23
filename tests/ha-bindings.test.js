@@ -34,6 +34,7 @@ import {
 } from "../src/ha/weather.js";
 import { getClockWeatherText } from "../src/widgets/clock-widget.js";
 import {
+  BUTTON_TYPES,
   buildButtonWidgetConfig,
   createButtonConfigDraft,
 } from "../src/widget-config/button-config.js";
@@ -60,6 +61,7 @@ import {
   createToggleSliderConfigDraft,
 } from "../src/widget-config/toggle-slider-config.js";
 import {
+  TOGGLE_DEVICE_TYPES,
   buildToggleWidgetConfig,
   createToggleConfigDraft,
   updateToggleDeviceType,
@@ -833,7 +835,7 @@ test("toggle-slider configuration returns no selection without compatible lights
   assert.equal(config.selected, null);
 });
 
-test("toggle configuration filters supported domains and stores one entity id", () => {
+test("toggle configuration merges switches and booleans under the switch type", () => {
   const hass = {
     states: {
       "light.kitchen": entity("light.kitchen", "on", {
@@ -856,12 +858,19 @@ test("toggle configuration filters supported domains and stores one entity id", 
   assert.equal(light.draft.entityId, "light.kitchen");
   assert.equal(light.draft.label, "Cuisine");
   assert.equal(light.draft.icon, "auto");
+  assert.deepEqual(TOGGLE_DEVICE_TYPES.map(type => type.value), ["light", "switch"]);
 
   const switchConfig = updateToggleDeviceType(light.draft, "switch", hass);
-  assert.deepEqual(switchConfig.options.map(option => option.label), ["Cafetière"]);
+  assert.deepEqual(
+    switchConfig.options.map(option => option.value),
+    ["switch.coffee", "input_boolean.guest"],
+  );
 
-  const booleanConfig = updateToggleDeviceType(light.draft, "input_boolean", hass);
-  assert.deepEqual(booleanConfig.options.map(option => option.label), ["Mode invités"]);
+  const booleanConfig = createToggleConfigDraft({
+    entityId: "input_boolean.guest",
+  }, hass);
+  assert.equal(booleanConfig.draft.deviceType, "switch");
+  assert.equal(booleanConfig.draft.entityId, "input_boolean.guest");
 
   const configured = buildToggleWidgetConfig({
     kind: "toggle",
@@ -874,6 +883,42 @@ test("toggle configuration filters supported domains and stores one entity id", 
     label: "Mode invités",
     icon: "auto",
   });
+});
+
+test("button configuration merges switches and booleans under the switch type", () => {
+  const hass = {
+    states: {
+      "switch.coffee": entity("switch.coffee", "off", {
+        friendly_name: "Cafetière",
+      }),
+      "input_boolean.guest": entity("input_boolean.guest", "off", {
+        friendly_name: "Mode invités",
+      }),
+    },
+  };
+
+  const config = createButtonConfigDraft({
+    buttonType: "input_boolean",
+    entityId: "input_boolean.guest",
+  }, hass);
+
+  assert.deepEqual(
+    BUTTON_TYPES.map(type => type.value),
+    ["light", "switch", "button", "action"],
+  );
+  assert.equal(config.draft.buttonType, "switch");
+  assert.equal(config.draft.entityId, "input_boolean.guest");
+  assert.deepEqual(
+    config.options.map(option => option.value),
+    ["switch.coffee", "input_boolean.guest"],
+  );
+
+  const configured = buildButtonWidgetConfig({
+    kind: "button",
+    variant: "simple-button",
+  }, config.draft, hass);
+  assert.equal(configured.buttonType, "switch");
+  assert.equal(configured.entityId, "input_boolean.guest");
 });
 
 test("button configuration persists manual icon selections", () => {

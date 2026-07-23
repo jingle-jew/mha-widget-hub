@@ -2,7 +2,11 @@ import { getEntityDomain } from "../ha/entity.js";
 import { resolveWidgetIconName } from "../ui/icon-name-resolver.js";
 import { createIconPickerControl, normalizeIconPickerValue } from "./icon-picker.js";
 import { createInlineIconNameRow } from "./icon-picker-field.js";
-import { getEntityOptionsByDomain } from "./light-options.js";
+import {
+  getEntityOptionsByDomain,
+  getMhaSwitchEntityOptions,
+  isMhaSwitchEntityDomain,
+} from "./light-options.js";
 
 export const TOGGLE_DEVICE_TYPES = Object.freeze([
   Object.freeze({
@@ -15,15 +19,11 @@ export const TOGGLE_DEVICE_TYPES = Object.freeze([
     label: "Switch",
     emptyLabel: "No switch available",
   }),
-  Object.freeze({
-    value: "input_boolean",
-    label: "Boolean",
-    emptyLabel: "No boolean available",
-  }),
 ]);
 
 function getToggleDeviceType(domain) {
-  return TOGGLE_DEVICE_TYPES.find(option => option.value === domain) || TOGGLE_DEVICE_TYPES[0];
+  const normalizedDomain = isMhaSwitchEntityDomain(domain) ? "switch" : domain;
+  return TOGGLE_DEVICE_TYPES.find(option => option.value === normalizedDomain) || TOGGLE_DEVICE_TYPES[0];
 }
 
 export function createToggleConfigDraft(widget = {}, hass, visibilityConfig) {
@@ -42,7 +42,10 @@ export function createToggleConfigDraft(widget = {}, hass, visibilityConfig) {
 
 export function reconcileToggleConfigDraft(draft, hass, visibilityConfig) {
   const deviceType = getToggleDeviceType(draft.deviceType);
-  const options = getEntityOptionsByDomain(hass, deviceType.value, visibilityConfig);
+  draft.deviceType = deviceType.value;
+  const options = deviceType.value === "switch"
+    ? getMhaSwitchEntityOptions(hass, visibilityConfig)
+    : getEntityOptionsByDomain(hass, deviceType.value, visibilityConfig);
   const currentIsValid = options.some(option => option.value === draft.entityId);
 
   if (!currentIsValid) {
