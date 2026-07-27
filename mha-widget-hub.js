@@ -92,10 +92,14 @@ import {
   createDefaultPageConfig,
   isMediaPageExperienceActive,
   isMediaPlayersPage,
+  isOverviewPage,
   isWeatherPage,
   normalizeMediaPageConfig,
   PAGE_TYPES,
 } from "./src/pages/page-types.js?v=media-persistence-v2";
+import {
+  normalizeOverviewPageConfig,
+} from "./src/pages/overview-page-config.js";
 
 const MHA_FRONTEND_ROOT_URL = window.__MHA_FRONTEND_ROOT_URL__
   ? new URL(window.__MHA_FRONTEND_ROOT_URL__)
@@ -541,11 +545,21 @@ _buildMediaPageSettingsProps(){
     onConfigChange:(patch)=>this._updateActiveMediaPageConfig(patch),
   };
 }
+_buildOverviewPageProps(){
+  return {
+    hass:this._hass,
+    visibilityConfig:this._entityVisibilityConfig,
+    onConfigChange:(config)=>this._updateActiveOverviewPageConfig(config),
+    onSheetOpenChange:(open)=>{
+      this.dataset.overviewSheetOpen=String(Boolean(open));
+    },
+  };
+}
 _syncMediaPageSettingsDom(){
   return this.render();
 }
 _canAddWidgetToActivePage(){
-  return true;
+  return !isOverviewPage(this._getActivePage());
 }
 _openMediaPageSettings(){
   if(!isMediaPlayersPage(this._getActivePage()))return false;
@@ -590,6 +604,17 @@ _updateActiveMediaPageConfig(patch={}){
 }
 _selectMediaPagePlayer(playerId=""){
   return this._updateActiveMediaPageConfig({selectedPlayerId:String(playerId||"").trim()});
+}
+_updateActiveOverviewPageConfig(config={}){
+  const page=this._getActivePage();
+  if(!isOverviewPage(page))return false;
+  const normalized=normalizeOverviewPageConfig(config);
+  const result=updatePageConfig(this._pages,page.id,normalized);
+  if(!result)return false;
+  this._pages=result.pages;
+  this._recordPersistenceResult(this._savePages());
+  this._syncSettingsDom();
+  return true;
 }
 
 _migrateLegacyCustomWallpaper(){
@@ -949,8 +974,10 @@ _getPageTransitionDirection(previousPage=null,nextPage=null){
     const themeStyle=this.dataset.themeStyle||this._themeController?.read?.()?.themeStyle||"";
     const previousIsMediaPage=isMediaPageExperienceActive(previousPage,themeStyle);
     const nextIsMediaPage=isMediaPageExperienceActive(nextPage,themeStyle);
+    const previousIsOverviewPage=isOverviewPage(previousPage);
+    const nextIsOverviewPage=isOverviewPage(nextPage);
     const pageTypeChanged=previousIsMediaPage!==nextIsMediaPage;
-    const nextPageNeedsDedicatedRender=isMediaPageExperienceActive(
+    const nextPageNeedsDedicatedRender=nextIsOverviewPage||isMediaPageExperienceActive(
       nextPage,
       themeStyle,
     );
@@ -987,6 +1014,7 @@ _getPageTransitionDirection(previousPage=null,nextPage=null){
     const canRefreshGridInPlace=currentPanel
       && activeGrid
       && !previousIsMediaPage
+      && !previousIsOverviewPage
       && !nextPageNeedsDedicatedRender;
 
     if(canRefreshGridInPlace){

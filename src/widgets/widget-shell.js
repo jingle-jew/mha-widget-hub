@@ -37,6 +37,7 @@ export function createWidgetShell(
     onUpdateWidgetConfig,
     hass,
     entityVisibilityConfig,
+    interactive,
   } = {},
 ) {
   const widgetKind = resolveWidgetKind(widget);
@@ -61,6 +62,7 @@ export function createWidgetShell(
     isEditing,
     hass,
     entityVisibilityConfig,
+    ...(typeof interactive === "boolean" ? { interactive } : {}),
     updateWidgetConfig: (config) => onUpdateWidgetConfig?.(widget.id, config),
   };
 

@@ -658,7 +658,10 @@ export class GridRuntime {
     const grid = root?.querySelector?.(".mha-grid");
     const area = root?.querySelector?.(".mha-widget-area");
     if (!grid || !area) {
-      return this.host?.dataset?.mediaPageActive === "true" && !grid;
+      return (
+        this.host?.dataset?.mediaPageActive === "true"
+        || this.host?.dataset?.activePageType === "overview"
+      ) && !grid;
     }
 
     const style = this.getStyle(grid);

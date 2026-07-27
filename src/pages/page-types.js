@@ -8,10 +8,15 @@ import {
   DEFAULT_WEATHER_LANDSCAPE_ID,
   normalizeWeatherLandscapeId,
 } from "./weather-background-assets.js";
+import {
+  createDefaultOverviewPageConfig,
+  normalizeOverviewPageConfig,
+} from "./overview-page-config.js";
 
 export const PAGE_TYPES = Object.freeze({
   GRID: "grid",
   MEDIA_PLAYERS: "media-players",
+  OVERVIEW: "overview",
   WEATHER: "weather",
 });
 
@@ -63,6 +68,9 @@ export function createDefaultPageConfig(type = PAGE_TYPES.GRID, {
   if (normalizedType === PAGE_TYPES.WEATHER) {
     return normalizeWeatherPageConfig({ weatherEntityId });
   }
+  if (normalizedType === PAGE_TYPES.OVERVIEW) {
+    return createDefaultOverviewPageConfig();
+  }
   if (normalizedType !== PAGE_TYPES.MEDIA_PLAYERS) return {};
 
   const uniquePlayerIds = [...new Set(
@@ -112,6 +120,9 @@ export function normalizePageConfig(type = PAGE_TYPES.GRID, config = {}) {
   if (normalizedType === PAGE_TYPES.WEATHER) {
     return normalizeWeatherPageConfig(config);
   }
+  if (normalizedType === PAGE_TYPES.OVERVIEW) {
+    return normalizeOverviewPageConfig(config);
+  }
   return {};
 }
 
@@ -119,6 +130,7 @@ export function getDefaultPageName(type = PAGE_TYPES.GRID, index = 0) {
   const normalizedType = normalizePageType(type);
   if (normalizedType === PAGE_TYPES.MEDIA_PLAYERS) return "Media Players";
   if (normalizedType === PAGE_TYPES.WEATHER) return "Weather";
+  if (normalizedType === PAGE_TYPES.OVERVIEW) return t("settings.pageTypeLabels.overview", "Overview");
   return index === 0 ? "Home" : `Page ${index + 1}`;
 }
 
@@ -126,6 +138,7 @@ export function getDefaultPageIcon(type = PAGE_TYPES.GRID) {
   const normalizedType = normalizePageType(type);
   if (normalizedType === PAGE_TYPES.MEDIA_PLAYERS) return "media-player";
   if (normalizedType === PAGE_TYPES.WEATHER) return "weather";
+  if (normalizedType === PAGE_TYPES.OVERVIEW) return "home";
   return "grid";
 }
 
@@ -135,6 +148,10 @@ export function isMediaPlayersPage(page = {}) {
 
 export function isWeatherPage(page = {}) {
   return normalizePageType(page?.type) === PAGE_TYPES.WEATHER;
+}
+
+export function isOverviewPage(page = {}) {
+  return normalizePageType(page?.type) === PAGE_TYPES.OVERVIEW;
 }
 
 export function isMediaPagePanelWidget(widget = {}) {
@@ -216,6 +233,13 @@ export function getPageCreatorTypeOptions({ themeStyle = "oneui" } = {}) {
     icon: "weather",
     label: t("settings.pageTypeLabels.weather", "Weather"),
     description: t("settings.pageTypeDescriptions.weather", "A weather dashboard built from MHA widgets."),
+  }));
+
+  options.push(Object.freeze({
+    value: PAGE_TYPES.OVERVIEW,
+    icon: "home",
+    label: t("settings.pageTypeLabels.overview", "Overview"),
+    description: t("settings.pageTypeDescriptions.overview", "Browse Home Assistant rooms and their MHA devices."),
   }));
 
   if (supportsMediaPageTheme(themeStyle)) {

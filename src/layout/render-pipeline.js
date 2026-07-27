@@ -32,9 +32,11 @@ import {
   createMediaPage,
   resolveMediaPageNowPlayingId,
 } from "../pages/media-page.js?v=media-page-ios-cards-v3";
+import { createOverviewPage } from "../pages/overview-page.js";
 import { syncMediaPageSettingsPanel } from "../pages/media-page-settings.js?v=media-persistence-v4";
 import {
   isMediaPageExperienceActive,
+  isOverviewPage,
   isWeatherPage,
   normalizePageType,
   PAGE_TYPES,
@@ -773,6 +775,21 @@ export function createRenderPipeline(host, options = {}) {
     return { panel, content };
   }
 
+  function createOverviewPagePanel(page = {}, layout = "desktop", units = 4) {
+    const content = createOverviewPage(page, {
+      ...(host._buildOverviewPageProps?.() || {}),
+      layout,
+      mobileGridUnits: units,
+    });
+    const panel = createPagePanel({
+      page,
+      kind: "overview",
+      content,
+    });
+    panel.classList.add("mha-page-panel--overview");
+    return { panel, content };
+  }
+
   function syncShellBackgroundSurface(bg) {
     if (!bg?.style) return;
 
@@ -872,6 +889,13 @@ export function createRenderPipeline(host, options = {}) {
     let grid = null;
     let activeSurface = null;
     if (!pageStage) return { positions, grid, activeSurface };
+    if (isOverviewPage(activePage)) {
+      const overviewPanel = createOverviewPagePanel(activePage, layout, units);
+      pageStage.append(overviewPanel.panel);
+      activeSurface = overviewPanel.content;
+      host._wireDockAutoHide(activeSurface);
+      return { positions, grid, activeSurface };
+    }
     if (isMediaPageExperienceActive(activePage, host.dataset.themeStyle || "")) {
       const mediaPanel = createMediaPagePanel(activePage);
       grid = mediaPanel.content?.__mhaGrid || mediaPanel.content?.querySelector?.(".mha-grid") || null;
