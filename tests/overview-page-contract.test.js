@@ -28,6 +28,10 @@ test("overview owns a specialized 6 + 4 layout with independent section scrollin
   assert.match(pageStyles, /grid-template-columns:\s*minmax\(0, 6fr\) minmax\(0, 4fr\)/);
   assert.match(pageStyles, /grid-template-rows:\s*auto minmax\(0, 1fr\) auto/);
   assert.match(pageStyles, /\.mha-overview-section-body\s*\{[^}]*overflow-y:\s*auto/s);
+  assert.match(
+    pageStyles,
+    /\.mha-overview-section\s*\{[^}]*border:\s*0[^}]*background:\s*transparent[^}]*box-shadow:\s*none[^}]*-webkit-backdrop-filter:\s*none[^}]*backdrop-filter:\s*none/s,
+  );
   assert.equal(pageSource.includes('className = "mha-grid"'), false);
   assert.match(styleManifest, /styles\/pages\/overview-page\.css/);
 });

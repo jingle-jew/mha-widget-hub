@@ -32,12 +32,12 @@
   min-inline-size: 0;
   min-block-size: 0;
   overflow: hidden;
-  border: 1px solid var(--mha-widget-border);
+  border: 0;
   border-radius: var(--mha-panel-radius, var(--mha-radius-xl));
-  background: var(--mha-panel-surface, var(--mha-surface-panel, var(--mha-primary-surface)));
-  box-shadow: var(--mha-shadow-panel, var(--mha-shadow-primary));
-  -webkit-backdrop-filter: var(--mha-panel-filter, none);
-  backdrop-filter: var(--mha-panel-filter, none);
+  background: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 .mha-overview-section-header,
