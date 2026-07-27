@@ -1,6 +1,6 @@
 # Mémoire persistante — MHA Widget Hub
 
-Dernière consolidation : 2026-07-22
+Dernière consolidation : 2026-07-27
 
 Ce fichier contient les connaissances durables qui seraient coûteuses à redécouvrir.
 Le code et les tests actuels restent la source de vérité. Les instructions de travail
@@ -212,6 +212,12 @@ appartiennent à `AGENTS.md`.
 
 ## Pièges connus
 
+- Dans `overview-page-controller.js`, les fonctions de timer injectées doivent
+  être enveloppées avant d'être stockées sur le contrôleur. Appeler directement
+  un `setTimeout` global comme une méthode du contrôleur peut interrompre
+  `selectArea()` avant sa notification : l'identifiant est alors modifié en
+  mémoire, mais la section Appareils reste sur son placeholder jusqu'à un autre
+  rendu, notamment l'entrée en édition.
 - Les contrôles MHA vivent dans le Shadow DOM du hub. Pour détecter un clic
   extérieur depuis `document`, utiliser `event.composedPath()` plutôt que le
   seul `event.target` : ce dernier est retargeté vers l'hôte et peut faire

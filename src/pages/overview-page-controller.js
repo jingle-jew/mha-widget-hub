@@ -16,8 +16,8 @@ export class OverviewPageController {
     this.config = normalizeOverviewPageConfig(config);
     this.mobile = Boolean(mobile);
     this.onStateChange = onStateChange;
-    this.setTimeoutFn = setTimeoutFn;
-    this.clearTimeoutFn = clearTimeoutFn;
+    this.setTimeoutFn = (...args) => setTimeoutFn(...args);
+    this.clearTimeoutFn = (...args) => clearTimeoutFn(...args);
     this.selectedAreaId = "";
     this.editingSection = "";
     this.sheetOpen = false;

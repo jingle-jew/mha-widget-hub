@@ -67,7 +67,35 @@ test("overview local editing sections are isolated and suspend inactivity", () =
   assert.equal(controller.setEditingSection("devices"), true);
   assert.equal(controller.read().editingSection, "devices");
   assert.equal(controller.setEditingSection(""), true);
+  assert.equal(controller.read().selectedAreaId, "living");
   assert.equal(callbacks.size, 1);
+});
+
+test("overview timers keep their native call context out of controller transitions", () => {
+  const timerContexts = [];
+  const clearContexts = [];
+  const controller = createOverviewPageController({
+    config: { inactivitySeconds: 15 },
+    setTimeoutFn: function setTimeoutHarness() {
+      timerContexts.push(this);
+      return 1;
+    },
+    clearTimeoutFn: function clearTimeoutHarness() {
+      clearContexts.push(this);
+    },
+  });
+
+  assert.equal(controller.selectArea("living"), true);
+  assert.equal(controller.setEditingSection("devices"), true);
+  assert.equal(controller.setEditingSection(""), true);
+
+  assert.deepEqual(timerContexts, [undefined, undefined]);
+  assert.deepEqual(clearContexts, [undefined]);
+  assert.deepEqual(controller.read(), {
+    selectedAreaId: "living",
+    editingSection: "",
+    sheetOpen: false,
+  });
 });
 
 test("mobile overview couples room selection and sheet state", () => {
