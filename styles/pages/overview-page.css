@@ -223,7 +223,8 @@
   z-index: 120;
 }
 
-.mha-overview-sheet-surface {
+.mha-overview-sheet.mha-page-creator
+  .mha-overview-sheet-surface.mha-page-creator-sheet {
   box-sizing: border-box;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;

@@ -41,6 +41,7 @@ import { createScreensaverSettingsBridge } from "./src/screensaver/screensaver-s
 import { createWidgetLayoutStateCoordinator } from "./src/widgets/widget-layout-state-coordinator.js";
 import { createWidgetResizeCoordinator } from "./src/widgets/widget-resize-coordinator.js";
 import { createWidgetSurfaceCoordinator } from "./src/widgets/widget-surface-coordinator.js";
+import { syncWidgetSurfaceOpenState } from "./src/widgets/widget-placement-orchestrator.js";
 import {
   computeResponsiveState,
   DEFAULT_WIDGETS,
@@ -549,9 +550,11 @@ _buildOverviewPageProps(){
   return {
     hass:this._hass,
     visibilityConfig:this._entityVisibilityConfig,
+    surfaceRoot:this.shadowRoot,
     onConfigChange:(config)=>this._updateActiveOverviewPageConfig(config),
     onSheetOpenChange:(open)=>{
       this.dataset.overviewSheetOpen=String(Boolean(open));
+      syncWidgetSurfaceOpenState(this.shadowRoot);
     },
   };
 }

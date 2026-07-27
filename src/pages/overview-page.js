@@ -266,11 +266,34 @@ function replaceChildrenWithDestroy(root, ...children) {
   root.replaceChildren(...children);
 }
 
+export function syncOverviewSheetPortal({
+  surfaceRoot,
+  currentSheet = null,
+  nextSheet = null,
+  destroy = destroyDomSubtree,
+} = {}) {
+  if (currentSheet && currentSheet !== nextSheet) {
+    destroy(currentSheet);
+    currentSheet.remove?.();
+  }
+
+  if (!nextSheet) return null;
+  if (!surfaceRoot || typeof surfaceRoot.append !== "function") {
+    destroy(nextSheet);
+    nextSheet.remove?.();
+    return null;
+  }
+
+  if (nextSheet.parentNode !== surfaceRoot) surfaceRoot.append(nextSheet);
+  return nextSheet;
+}
+
 export function createOverviewPage(page = {}, {
   hass,
   visibilityConfig,
   layout = "desktop",
   mobileGridUnits = 4,
+  surfaceRoot = null,
   onConfigChange = () => {},
   onSheetOpenChange = () => {},
 } = {}) {
@@ -290,6 +313,7 @@ export function createOverviewPage(page = {}, {
   let discoveryErrors = {};
   let discoveryPending = true;
   let discoveryTimer = null;
+  let activeMobileSheet = null;
   let destroyed = false;
 
   const controller = createOverviewPageController({
@@ -603,9 +627,14 @@ export function createOverviewPage(page = {}, {
       event.preventDefault();
       close();
     };
+    const onActivity = () => controller.activity();
     panel.addEventListener("keydown", onKeyDown);
+    panel.addEventListener("pointerdown", onActivity, { passive: true });
+    panel.addEventListener("wheel", onActivity, { passive: true });
     panel.__mhaDestroy = () => {
       panel.removeEventListener("keydown", onKeyDown);
+      panel.removeEventListener("pointerdown", onActivity);
+      panel.removeEventListener("wheel", onActivity);
     };
     requestAnimationFrame(() => {
       const surface = panel.querySelector(".mha-overview-sheet-surface");
@@ -626,10 +655,13 @@ export function createOverviewPage(page = {}, {
       onClick: () => controller.toggleEditingSection("rooms"),
     }));
     mobileRoot.append(grid, footer);
-    if (controller.sheetOpen && controller.selectedAreaId) {
-      mobileRoot.append(createMobileSheet(getArea()));
-    }
     return mobileRoot;
+  }
+
+  function resolveSheetSurfaceRoot() {
+    if (surfaceRoot && typeof surfaceRoot.append === "function") return surfaceRoot;
+    const rootNode = root.getRootNode?.();
+    return rootNode?.host && typeof rootNode.append === "function" ? rootNode : null;
   }
 
   function syncHostSheetState() {
@@ -643,8 +675,16 @@ export function createOverviewPage(page = {}, {
     if (destroyed) return;
     const roomScroll = root.querySelector?.(".mha-overview-section--rooms .mha-overview-section-body")?.scrollTop || 0;
     const deviceScroll = root.querySelector?.(".mha-overview-section--devices .mha-overview-section-body")?.scrollTop || 0;
-    const sheetScroll = root.querySelector?.(".mha-overview-sheet-body")?.scrollTop || 0;
+    const sheetScroll = activeMobileSheet?.querySelector?.(".mha-overview-sheet-body")?.scrollTop || 0;
     replaceChildrenWithDestroy(root, mobile ? createMobileLayout() : createDesktopLayout());
+    const nextMobileSheet = mobile && controller.sheetOpen && controller.selectedAreaId
+      ? createMobileSheet(getArea())
+      : null;
+    activeMobileSheet = syncOverviewSheetPortal({
+      surfaceRoot: resolveSheetSurfaceRoot(),
+      currentSheet: activeMobileSheet,
+      nextSheet: nextMobileSheet,
+    });
     root.dataset.selectedAreaId = controller.selectedAreaId;
     root.dataset.editingSection = controller.editingSection;
     root.dataset.discoveryPending = String(discoveryPending);
@@ -656,7 +696,7 @@ export function createOverviewPage(page = {}, {
       if (roomsBody) roomsBody.scrollTop = roomScroll;
       if (devicesBody) devicesBody.scrollTop = reason === "area-selected" ? 0 : deviceScroll;
     } else {
-      const body = root.querySelector?.(".mha-overview-sheet-body");
+      const body = activeMobileSheet?.querySelector?.(".mha-overview-sheet-body");
       if (body) body.scrollTop = reason === "area-selected" ? 0 : sheetScroll;
     }
   }
@@ -709,6 +749,10 @@ export function createOverviewPage(page = {}, {
     destroyed = true;
     clearTimeout(discoveryTimer);
     discoveryTimer = null;
+    activeMobileSheet = syncOverviewSheetPortal({
+      surfaceRoot: resolveSheetSurfaceRoot(),
+      currentSheet: activeMobileSheet,
+    });
     controller.destroy();
     root.removeEventListener("pointerdown", activity);
     root.removeEventListener("keydown", activity);

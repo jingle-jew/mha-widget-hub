@@ -19,6 +19,10 @@ const renderPipeline = readFileSync(
   new URL("../src/layout/render-pipeline.js", import.meta.url),
   "utf8",
 );
+const hostSource = readFileSync(
+  new URL("../mha-widget-hub.js", import.meta.url),
+  "utf8",
+);
 
 test("overview owns a specialized 6 + 4 layout with independent section scrolling", () => {
   assert.match(pageStyles, /grid-template-columns:\s*minmax\(0, 6fr\) minmax\(0, 4fr\)/);
@@ -28,11 +32,28 @@ test("overview owns a specialized 6 + 4 layout with independent section scrollin
   assert.match(styleManifest, /styles\/pages\/overview-page\.css/);
 });
 
-test("overview mobile follows Grid columns, uses a four-column sheet, and blocks the background", () => {
+test("overview mobile follows Grid columns and portals its four-column sheet outside the page panel", () => {
   assert.match(renderPipeline, /mobileGridUnits:\s*units/);
   assert.match(pageStyles, /\.mha-overview-mobile \.mha-overview-room-grid\s*\{[^}]*repeat\(var\(--mha-overview-room-columns\),/s);
   assert.match(pageStyles, /\.mha-overview-device-grid\s*\{[^}]*repeat\(4,/s);
   assert.match(pageSource, /createPanelShell\(/);
+  assert.match(pageSource, /applyPanelSurfaceContract\(createPanelShell\(/);
+  assert.match(pageSource, /panel\.dataset\.mobileLayout\s*=\s*"true"/);
+  assert.match(hostSource, /surfaceRoot:\s*this\.shadowRoot/);
+  assert.match(
+    hostSource,
+    /onSheetOpenChange:\s*\(open\)\s*=>\s*\{[^}]*syncWidgetSurfaceOpenState\(this\.shadowRoot\)/s,
+  );
+  assert.match(pageSource, /activeMobileSheet\s*=\s*syncOverviewSheetPortal\(\{[\s\S]*surfaceRoot:\s*resolveSheetSurfaceRoot\(\)/);
+  assert.doesNotMatch(pageSource, /mobileRoot\.append\(createMobileSheet/);
+  assert.match(
+    pageStyles,
+    /\.mha-overview-sheet\.mha-page-creator\s+\.mha-overview-sheet-surface\.mha-page-creator-sheet\s*\{[^}]*grid-template-rows:\s*auto minmax\(0, 1fr\) auto/s,
+  );
+  assert.match(
+    pageStyles,
+    /\.mha-overview-sheet-body\s*\{[^}]*min-block-size:\s*0[^}]*overflow-y:\s*auto/s,
+  );
   assert.match(pageStyles, /data-overview-sheet-open="true"[^}]*\.mha-widget-area\s*\{[^}]*overflow:\s*hidden/s);
   assert.match(pageStyles, /data-overview-sheet-open="true"[^}]*\.mha-mobile-dock/s);
 });

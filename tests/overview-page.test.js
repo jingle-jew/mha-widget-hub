@@ -14,7 +14,33 @@ import {
 import {
   createOverviewEntityWidget,
   resolveOverviewRoomGridUnits,
+  syncOverviewSheetPortal,
 } from "../src/pages/overview-page.js";
+
+function createPortalNode(name) {
+  return {
+    name,
+    parentNode: null,
+    removed: false,
+    remove() {
+      const siblings = this.parentNode?.children;
+      const index = Array.isArray(siblings) ? siblings.indexOf(this) : -1;
+      if (index >= 0) siblings.splice(index, 1);
+      this.removed = true;
+      this.parentNode = null;
+    },
+  };
+}
+
+function createSurfaceRoot() {
+  return {
+    children: [],
+    append(node) {
+      node.parentNode = this;
+      this.children.push(node);
+    },
+  };
+}
 
 test("overview is a public specialized page type with defaults", () => {
   assert.equal(PAGE_TYPES.OVERVIEW, "overview");
@@ -106,4 +132,42 @@ test("overview room columns follow mobile Grid presets and stay 6 on larger layo
   assert.equal(resolveOverviewRoomGridUnits("mobile", 9), 9);
   assert.equal(resolveOverviewRoomGridUnits("tablet", 12), 6);
   assert.equal(resolveOverviewRoomGridUnits("desktop", 20), 6);
+});
+
+test("overview mobile sheet portal mounts outside the page and replaces its previous surface", () => {
+  const surfaceRoot = createSurfaceRoot();
+  const previous = createPortalNode("previous");
+  const next = createPortalNode("next");
+  const destroyed = [];
+  surfaceRoot.append(previous);
+
+  const mounted = syncOverviewSheetPortal({
+    surfaceRoot,
+    currentSheet: previous,
+    nextSheet: next,
+    destroy: node => destroyed.push(node.name),
+  });
+
+  assert.equal(mounted, next);
+  assert.equal(next.parentNode, surfaceRoot);
+  assert.deepEqual(surfaceRoot.children, [next]);
+  assert.equal(previous.removed, true);
+  assert.deepEqual(destroyed, ["previous"]);
+});
+
+test("overview mobile sheet portal destroys and removes its surface on close", () => {
+  const surfaceRoot = createSurfaceRoot();
+  const current = createPortalNode("current");
+  surfaceRoot.append(current);
+  const destroyed = [];
+
+  const mounted = syncOverviewSheetPortal({
+    surfaceRoot,
+    currentSheet: current,
+    destroy: node => destroyed.push(node.name),
+  });
+
+  assert.equal(mounted, null);
+  assert.equal(current.removed, true);
+  assert.deepEqual(destroyed, ["current"]);
 });

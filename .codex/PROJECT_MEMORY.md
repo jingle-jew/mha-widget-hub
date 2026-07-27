@@ -218,6 +218,20 @@ appartiennent à `AGENTS.md`.
   `selectArea()` avant sa notification : l'identifiant est alors modifié en
   mémoire, mais la section Appareils reste sur son placeholder jusqu'à un autre
   rendu, notamment l'entrée en édition.
+- Les sheets et popups globaux ne doivent pas être montés sous une
+  `.mha-page-panel`. Ce panneau porte un `transform` pour les transitions et
+  devient donc le containing block de ses descendants `position: fixed`; une
+  surface qui y reste imbriquée est limitée au rectangle rembourré de
+  `.mha-widget-area`. Comme les autres surfaces MHA, les overlays appartenant à
+  une page doivent conserver `createPanelShell()` et
+  `applyPanelSurfaceContract()`, mais être portalisés directement sous le
+  `shadowRoot`, avec destruction explicite lors du rerender et de la fermeture.
+- Après l'ajout ou le retrait d'une surface portalisée, recalculer
+  `is-widget-surface-open` avec `syncWidgetSurfaceOpenState()`. Avec des surfaces
+  imbriquées, fermer la popup enfant conserve légitimement le flou tant que la
+  sheet parente reste ouverte; si le retrait de cette dernière ne resynchronise
+  pas l'hôte, le filtre demeure appliqué alors qu'aucune surface n'est encore
+  présente.
 - Les contrôles MHA vivent dans le Shadow DOM du hub. Pour détecter un clic
   extérieur depuis `document`, utiliser `event.composedPath()` plutôt que le
   seul `event.target` : ce dernier est retargeté vers l'hôte et peut faire
