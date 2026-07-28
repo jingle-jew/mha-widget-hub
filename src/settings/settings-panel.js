@@ -1383,21 +1383,12 @@ export function createSettingsPanel({
     ];
 
     if (themeStyle === "ios") {
-      appearanceControls.push(
-        createPercentageSlider({
-          label: t("settings.glassTint", "Glass tint"),
-          value: iosGlassTint,
-          min: 0,
-          max: 100,
-          onInput: onIosGlassTintChange,
-        }),
-        createSelect({
-          label: t("settings.widgetTint", "Widget tint"),
-          value: iosWidgetTint,
-          options: IOS_WIDGET_TINT_OPTIONS,
-          onChange: onIosWidgetTintChange,
-        }),
-      );
+      appearanceControls.push(createSelect({
+        label: t("settings.widgetTint", "Widget tint"),
+        value: iosWidgetTint,
+        options: IOS_WIDGET_TINT_OPTIONS,
+        onChange: onIosWidgetTintChange,
+      }));
     }
 
     appearanceControls.push(
@@ -1426,7 +1417,18 @@ export function createSettingsPanel({
         min: 0,
         max: 100,
         onInput: onOneUiPrimarySurfaceOpacityChange,
-        previewClassName: "is-oneui-opacity-previewing",
+        previewClassName: "is-widget-surface-previewing",
+      }));
+    }
+
+    if (themeStyle === "ios") {
+      appearanceControls.push(createPercentageSlider({
+        label: t("settings.glassTint", "Glass tint"),
+        value: iosGlassTint,
+        min: 0,
+        max: 100,
+        onInput: onIosGlassTintChange,
+        previewClassName: "is-widget-surface-previewing",
       }));
     }
 

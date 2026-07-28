@@ -33,7 +33,11 @@ appartiennent à `AGENTS.md`.
   pilotent plus le CSS de production; ils restent synchronisés comme contrat de
   migration/compatibilité aux endpoints. Le slider met à jour les propriétés
   CSS en direct sans reconstruire la grille ni le panneau de réglages; le
-  sélecteur spécial resynchronise seulement le panneau.
+  sélecteur spécial resynchronise seulement le panneau. « Teinte du verre »
+  reste le dernier contrôle de la section Apparence. Pendant son geste actif,
+  il partage avec le slider d’opacité OneUI l’état de prévisualisation des
+  surfaces : scrim, sheet et blur du settings-panel sont masqués, tandis que le
+  slider reste visible et stable devant le dashboard.
 
 ### 2026-07-27 — Limiter la famille Calendrier à six formats natifs
 

@@ -509,6 +509,9 @@ test("settings panel exposes independent iOS glass and special-widget tint contr
 
   assert.equal(hasText(iosPanel, "Glass tint"), true);
   assert.equal(hasText(iosPanel, "Widget tint"), true);
+  const appearanceSection = iosPanel.querySelector('[data-settings-section="appearance"]');
+  assert.equal(appearanceSection.children.at(-1).className, "mha-settings-range-field");
+  assert.equal(hasText(appearanceSection.children.at(-1), "Glass tint"), true);
   const slider = iosPanel.querySelector(".mha-settings-range-input");
   assert.equal(slider.value, "36");
   slider.value = "73";
@@ -685,15 +688,42 @@ test("OneUI opacity preview hides panel layers only while the slider is armed", 
   slider.getRootNode = () => ({ host });
 
   slider.listeners.pointerdown({ button: 0, pointerId: 7 });
-  assert.equal(panel.classList.contains("is-oneui-opacity-previewing"), true);
-  assert.equal(host.classList.contains("is-oneui-opacity-previewing"), true);
+  assert.equal(panel.classList.contains("is-widget-surface-previewing"), true);
+  assert.equal(host.classList.contains("is-widget-surface-previewing"), true);
 
   slider.value = "31";
   slider.listeners.input();
   assert.deepEqual(values, [31]);
-  assert.equal(panel.classList.contains("is-oneui-opacity-previewing"), true);
+  assert.equal(panel.classList.contains("is-widget-surface-previewing"), true);
 
   slider.listeners.pointerup({ pointerId: 7 });
-  assert.equal(panel.classList.contains("is-oneui-opacity-previewing"), false);
-  assert.equal(host.classList.contains("is-oneui-opacity-previewing"), false);
+  assert.equal(panel.classList.contains("is-widget-surface-previewing"), false);
+  assert.equal(host.classList.contains("is-widget-surface-previewing"), false);
+}));
+
+test("iOS glass tint preview hides panel layers only while the slider is armed", () => withMockDocument(() => {
+  const values = [];
+  const panel = createSettingsPanel({
+    open: true,
+    scope: "all",
+    settingsPage: "main",
+    themeStyle: "ios",
+    onIosGlassTintChange: value => values.push(value),
+  });
+  const slider = panel.querySelector(".mha-settings-range-input");
+  const host = createMockNode("mha-control-hub");
+  slider.getRootNode = () => ({ host });
+
+  slider.listeners.pointerdown({ button: 0, pointerId: 9 });
+  assert.equal(panel.classList.contains("is-widget-surface-previewing"), true);
+  assert.equal(host.classList.contains("is-widget-surface-previewing"), true);
+
+  slider.value = "64";
+  slider.listeners.input();
+  assert.deepEqual(values, [64]);
+  assert.equal(panel.classList.contains("is-widget-surface-previewing"), true);
+
+  slider.listeners.pointerup({ pointerId: 9 });
+  assert.equal(panel.classList.contains("is-widget-surface-previewing"), false);
+  assert.equal(host.classList.contains("is-widget-surface-previewing"), false);
 }));
