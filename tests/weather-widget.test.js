@@ -102,9 +102,9 @@ test("weather summary metric combines current weather with the contextual brief"
   assert.equal(findByClass(content, "mha-weather-summary-eyebrow"), null);
   assert.equal(findByClass(content, "mha-weather-summary-temperature")?.textContent, "26°C");
   assert.equal(findByClass(content, "mha-weather-summary-location")?.textContent, "Val-d'Or");
-  assert.match(
+  assert.equal(
     findByClass(content, "mha-weather-summary-text")?.textContent,
-    /^Sun and clouds will alternate /,
+    "This evening, sun and clouds will alternate.",
   );
   assert.equal(content.dataset.summaryNarrativeKind, "summary");
 });

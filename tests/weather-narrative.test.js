@@ -61,6 +61,54 @@ test("weather brief switches to the next period after the current period midpoin
   assert.equal(model.headline, "Le ciel restera nuageux cet après-midi.");
 });
 
+test("weather brief uses the fluid partly cloudy wording in the evening", () => {
+  const now = new Date(2026, 6, 14, 18, 30);
+  const model = buildWeatherNarrativeModel(weather({
+    hourlyForecast: [
+      forecastAt(2026, 6, 14, 19, "partlycloudy"),
+      forecastAt(2026, 6, 14, 20, "partlycloudy"),
+    ],
+  }), now);
+
+  assert.equal(model.periodKey, "evening");
+  assert.equal(model.headline, "Ce soir, alternance de soleil et nuages.");
+});
+
+test("weather brief reuses the partly cloudy wording outside the evening", () => {
+  const now = new Date(2026, 6, 14, 8, 0);
+  const model = buildWeatherNarrativeModel(weather({
+    hourlyForecast: [
+      forecastAt(2026, 6, 14, 9, "partlycloudy"),
+      forecastAt(2026, 6, 14, 10, "partlycloudy"),
+    ],
+  }), now);
+
+  assert.equal(model.periodKey, "morning");
+  assert.equal(model.headline, "Ce matin, alternance de soleil et nuages.");
+});
+
+test("weather brief keeps the merged partly cloudy wording natural in every language", () => {
+  const now = new Date(2026, 6, 14, 18, 30);
+  const partlyCloudyWeather = weather({
+    hourlyForecast: [
+      forecastAt(2026, 6, 14, 19, "partlycloudy"),
+      forecastAt(2026, 6, 14, 20, "partlycloudy"),
+    ],
+  });
+
+  setLanguage("en");
+  assert.equal(
+    buildWeatherNarrativeModel(partlyCloudyWeather, now).headline,
+    "This evening, sun and clouds will alternate.",
+  );
+
+  setLanguage("es");
+  assert.equal(
+    buildWeatherNarrativeModel(partlyCloudyWeather, now).headline,
+    "Esta noche, alternancia de sol y nubes.",
+  );
+});
+
 test("weather brief keeps future advisories separate from the period summary", () => {
   const now = new Date(2026, 6, 14, 8, 0);
   const model = buildWeatherNarrativeModel(weather({

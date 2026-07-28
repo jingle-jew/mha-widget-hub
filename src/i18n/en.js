@@ -656,7 +656,7 @@ export const en = Object.freeze({
       messages: Object.freeze({
         periodSunny: "Sunshine will dominate {period}.",
         periodClear: "The sky will stay clear {period}.",
-        periodPartlyCloudy: "Sun and clouds will alternate {period}.",
+        periodPartlyCloudy: "{period}, sun and clouds will alternate.",
         periodCloudy: "The sky will be cloudy {period}.",
         periodRain: "Rain will accompany {period}.",
         periodSnow: "Snow will accompany {period}.",

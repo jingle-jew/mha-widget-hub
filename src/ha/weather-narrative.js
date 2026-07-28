@@ -117,6 +117,11 @@ function translateMessage(key, fallback, params = {}) {
   return t(`widgets.weatherNarrative.messages.${key}`, fallback, params);
 }
 
+function capitalizeFirst(value = "") {
+  const [first = "", ...rest] = String(value);
+  return `${first.toLocaleUpperCase(getLanguage())}${rest.join("")}`;
+}
+
 function createEvent({
   kind,
   chartKind,
@@ -229,7 +234,7 @@ function getDominantPeriodCondition(items = [], fallbackCondition = "") {
 const PERIOD_MESSAGE_FALLBACKS = Object.freeze({
   sunny: "Sunshine will dominate {period}.",
   clear: "The sky will stay clear {period}.",
-  partlyCloudy: "Sun and clouds will alternate {period}.",
+  partlyCloudy: "{period}, sun and clouds will alternate.",
   cloudy: "The sky will be cloudy {period}.",
   rain: "Rain will accompany {period}.",
   snow: "Snow will accompany {period}.",
@@ -257,15 +262,19 @@ function buildPeriodSummary(weather, now) {
   const periodItems = getPeriodForecastItems(weather, period, now);
   const dominant = getDominantPeriodCondition(periodItems, weather.condition);
   const periodLabel = getNarrativePeriodLabel(period, now);
+  const messageKey = `period${dominant.kind[0].toUpperCase()}${dominant.kind.slice(1)}`;
+  const messagePeriod = dominant.kind === "partlyCloudy"
+    ? capitalizeFirst(periodLabel.label)
+    : periodLabel.label;
   return {
     key: dominant.kind,
     periodKey: periodLabel.key,
     period: periodLabel.label,
     target: period.start,
     headline: translateMessage(
-      `period${dominant.kind[0].toUpperCase()}${dominant.kind.slice(1)}`,
+      messageKey,
       PERIOD_MESSAGE_FALLBACKS[dominant.kind],
-      { period: periodLabel.label },
+      { period: messagePeriod },
     ),
     mood: PERIOD_MOODS[dominant.kind],
     icon: dominant.condition || weather.condition || "weather",
