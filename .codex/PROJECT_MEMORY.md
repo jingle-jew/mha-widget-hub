@@ -275,23 +275,24 @@ appartiennent à `AGENTS.md`.
   entrée procédurale doit préserver cette séparation entre renderer temporel et
   effets météo indépendants.
 
-### 2026-07-22 — Réutiliser les paysages météo comme fonds des pages Grid
+### 2026-07-28 — Réutiliser les paysages météo comme fonds des pages Grid et Aperçu
 
 - **Statut :** confirmé.
 - **Décision :** le sous-panneau global « Fond d’écran » expose un toggle
   « Utiliser le fond d’écran météo ». Son état est persisté sous
-  `mha_grid_wallpaper`; lorsqu’il est actif, toutes les pages `grid` réutilisent
-  le paysage configuré pour la page Météo, avec `alpine-lake` comme repli. Les
-  pages Météo conservent leur paysage configuré par page et les pages Média leur
-  artwork dédié.
+  `mha_grid_wallpaper`; lorsqu’il est actif, toutes les pages `grid` et
+  `overview` réutilisent le paysage configuré pour la page Météo, avec
+  `alpine-lake` comme repli. Les pages Météo conservent leur paysage configuré
+  par page et les pages Média leur artwork dédié.
 - **Pourquoi :** les paysages météo sont des sources de fond MHA réutilisables,
   pas une implémentation propre au layout de la page Météo. Une préférence
   globale reste cohérente avec le panneau de fond d’écran existant et évite de
   dupliquer les assets, les effets ou leur moteur de rendu.
 - **Conséquence :** le choix du paysage reste centralisé dans les réglages de la
-  page Météo; le panneau de fond d’écran décide seulement si les pages Grid le
-  réutilisent. Le pipeline distingue l’activation d’une page Météo de celle
-  d’un fond météo afin de préserver les priorités des pages spécialisées.
+  page Météo; le panneau de fond d’écran décide seulement si les pages Grid et
+  Aperçu le réutilisent. Le pipeline distingue l’activation d’une page Météo de
+  celle d’un fond météo partagé afin de préserver les priorités des pages
+  spécialisées.
 
 ## Pièges connus
 

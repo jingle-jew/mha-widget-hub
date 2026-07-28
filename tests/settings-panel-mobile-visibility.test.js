@@ -473,7 +473,7 @@ test("Weather page customization tile opens its dedicated landscape subpanel", (
   assert.equal(backCount, 1);
 }));
 
-test("Wallpaper subpanel exposes a weather background toggle for grid pages", () => withMockDocument(() => {
+test("Wallpaper subpanel exposes a weather background toggle for Grid and Overview pages", () => withMockDocument(() => {
   const changes = [];
   const panel = createSettingsPanel({
     open: true,
@@ -484,7 +484,7 @@ test("Wallpaper subpanel exposes a weather background toggle for grid pages", ()
   });
   const toggle = panel.querySelector(".mha-toggle-input");
 
-  assert.equal(hasText(panel, "Grid page wallpaper"), true);
+  assert.equal(hasText(panel, "Grid and Overview page wallpaper"), true);
   assert.equal(hasText(panel, "Use weather wallpaper"), true);
   assert.equal(panel.querySelectorAll(".mha-settings-weather-landscape-option").length, 0);
   assert.equal(toggle.checked, true);

@@ -87,8 +87,9 @@ function findLayer(scene, className) {
   return scene.children.find(child => child.className === className);
 }
 
-test("registered weather landscapes can drive standard grid page backdrops", () => {
+test("registered weather landscapes can drive Grid and Overview page backdrops", () => {
   const gridPage = { id: "home", name: "Home", widgets: [] };
+  const overviewPage = { id: "overview", type: "overview", name: "Overview", widgets: [] };
   const gridBackdrop = resolveWeatherBackdropContext({
     activePage: gridPage,
     gridWallpaper: { useWeatherBackground: true },
@@ -101,10 +102,19 @@ test("registered weather landscapes can drive standard grid page backdrops", () 
     weatherLandscapeId: "alpine-lake",
     themeStyle: "oneui",
   });
+  const overviewBackdrop = resolveWeatherBackdropContext({
+    activePage: overviewPage,
+    gridWallpaper: { useWeatherBackground: true },
+    weatherLandscapeId: "celestial-gradient",
+    themeStyle: "oneui",
+  });
 
   assert.equal(gridBackdrop.weatherPageActive, false);
   assert.equal(gridBackdrop.weatherBackgroundActive, true);
   assert.equal(gridBackdrop.page.config.weatherLandscapeId, "celestial-gradient");
+  assert.equal(overviewBackdrop.weatherPageActive, false);
+  assert.equal(overviewBackdrop.weatherBackgroundActive, true);
+  assert.equal(overviewBackdrop.page.config.weatherLandscapeId, "celestial-gradient");
   assert.equal(themeBackdrop.weatherBackgroundActive, false);
   assert.equal(themeBackdrop.page, gridPage);
 });
