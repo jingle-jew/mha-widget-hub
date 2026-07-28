@@ -8,6 +8,32 @@ appartiennent à `AGENTS.md`.
 
 ## Décisions et raisons
 
+### 2026-07-28 — Séparer la publication HACS du déploiement de développement
+
+- **Statut :** confirmé.
+- **Décision :** HACS installe exclusivement l'asset de release
+  `mha-widget-hub-hacs.zip`, déclaré par `zip_release: true` et `filename` dans
+  `hacs.json`. Cette archive place directement l'intégration complète à sa
+  racine. Le déploiement local `npm run deploy:dev` reste un flux indépendant :
+  avant `rsync`, il crée si nécessaire le seul dossier distant
+  `mha_widget_hub` et en rend récursivement l'utilisateur SSH propriétaire,
+  avec une élévation `sudo` interactive uniquement lorsque les droits HACS
+  `root:root` l'exigent.
+- **Pourquoi :** le frontend d'intégration est généré depuis les sources
+  canoniques et volontairement ignoré par Git. Télécharger l'archive source
+  d'une branche ou d'un commit peut donc laisser l'intégration sans frontend;
+  avec le HACS observé, un hash court utilisé comme branche produisait en plus
+  un téléchargement `refs/heads/<hash>` en 404. Inversement, un `rsync` lancé
+  comme utilisateur SSH ne peut ni créer ni modifier un dossier recréé par HACS
+  sous `root:root`.
+- **Conséquence :** toute release HACS doit être réellement publiée avec
+  `mha-widget-hub-hacs.zip`; un tag ou un brouillon sans cet asset n'est pas
+  installable. Le test de packaging verrouille le nom et l'activation du mode
+  ZIP. Le déploiement de développement limite toute modification de
+  propriétaire au chemin validé se terminant par `/mha_widget_hub`, ne
+  préserve ni owner ni group via `rsync`, et normalise les permissions
+  distantes à `755` pour les dossiers et `644` pour les fichiers.
+
 ### 2026-07-27 — Doser la teinte du verre des widgets iOS
 
 - **Statut :** confirmé.

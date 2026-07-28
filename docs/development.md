@@ -94,6 +94,11 @@ npm run release:zip         # build staging + manual and HACS ZIPs under dist/
 npm run deploy:dev          # stage temporarily, then deploy with rsync
 ```
 
+`deploy:dev` checks that the remote integration directory is writable before
+running `rsync`. If HACS recreated or removed that root-owned directory, run the
+command from an interactive terminal: it will request the remote user's `sudo`
+password once to create the directory and restore ownership for development.
+
 `npm run build` runs the checks and `build:integration`; it does not regenerate
 the ignored local frontend folder.
 
