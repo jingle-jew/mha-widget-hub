@@ -532,6 +532,7 @@ Current widget modules include:
 
 - `empty-widget`
 - `clock-widget`
+- `calendar-widget`
 - `simple-button-widget`
 - `scenes-widget`
 - `slider-widget`

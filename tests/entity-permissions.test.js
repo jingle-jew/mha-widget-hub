@@ -46,6 +46,7 @@ test("restricted users only receive explicitly allowed entities by domain", () =
 test("domain inventory includes binary_sensor and entity lists use human names", () => {
   assert.ok(getAllowedDomains().some(domain => domain.value === "binary_sensor"));
   assert.ok(getAllowedDomains().some(domain => domain.value === "button"));
+  assert.ok(getAllowedDomains().some(domain => domain.value === "calendar"));
   const entities = getEntitiesForDomain({
     states: {
       "binary_sensor.front_door": {

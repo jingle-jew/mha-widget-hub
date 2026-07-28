@@ -515,6 +515,7 @@ export const en = Object.freeze({
       configureToggle: "Configure toggle",
       configureButton: "Configure button",
       configureCamera: "Configure camera",
+      configureCalendar: "Configure calendar",
       refresh: "Refresh",
       refreshOptions: Object.freeze({
         oneSecond: "Every second",
@@ -530,6 +531,7 @@ export const en = Object.freeze({
       toggleHint: "Choose the device type, entity, and display name.",
       buttonHint: "Choose an authorized entity or a Home Assistant service.",
       cameraHint: "Choose the camera entity and the name displayed in the header.",
+      calendarHint: "Choose one or more authorized calendars to display.",
       weatherHint: "Choose the authorized weather entity to display.",
       mediaHint: "Choose the media player and display name.",
       scenesButtonHint: "Configure only this button with a Mode or Routine.",
@@ -601,6 +603,18 @@ export const en = Object.freeze({
       imageAlt: "Camera image",
       unavailable: "Camera image unavailable",
       refreshNow: "Refresh camera image",
+    }),
+    calendar: Object.freeze({
+      calendars: "Calendars",
+      noCalendars: "No authorized and available calendar.",
+      today: "Today",
+      tomorrow: "Tomorrow",
+      upcoming: "Upcoming",
+      noEvent: "No event",
+      allDay: "all day",
+      loading: "Loading events…",
+      previewCelebration: "Celebration",
+      previewAppointment: "Appointment",
     }),
     weather: Object.freeze({
       title: "Weather",
@@ -688,6 +702,7 @@ export const en = Object.freeze({
     }),
     categories: Object.freeze({
       utilities: "Utilities",
+      calendar: "Calendar",
       lights: "Lights & switches",
       climate: "Climate",
       media: "Media",
@@ -696,6 +711,7 @@ export const en = Object.freeze({
     }),
     categoryDescriptions: Object.freeze({
       utilities: "Clocks and quick info.",
+      calendar: "Dates, agendas, and upcoming events.",
       lights: "Lights, switches, buttons, and brightness.",
       climate: "Temperature and comfort.",
       media: "Playback and volume.",
@@ -718,6 +734,30 @@ export const en = Object.freeze({
       "analog-ios": Object.freeze({
         label: "Analog iOS",
         description: "Classic iOS dial.",
+      }),
+      "calendar-date": Object.freeze({
+        label: "Large date",
+        description: "Day, month, and date in a monumental format.",
+      }),
+      "calendar-month": Object.freeze({
+        label: "Mini month",
+        description: "Compact monthly grid.",
+      }),
+      "calendar-next-event": Object.freeze({
+        label: "Date and next event",
+        description: "Current date and next event.",
+      }),
+      "calendar-compact-agenda": Object.freeze({
+        label: "Compact agenda",
+        description: "Today and the next scheduled days.",
+      }),
+      "calendar-agenda": Object.freeze({
+        label: "Detailed agenda",
+        description: "Events grouped chronologically by day.",
+      }),
+      "calendar-timeline": Object.freeze({
+        label: "Two-day timeline",
+        description: "Today and tomorrow on an hourly grid.",
       }),
       "simple-button": Object.freeze({
         label: "Simple button",

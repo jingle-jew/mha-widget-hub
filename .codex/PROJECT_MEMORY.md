@@ -8,6 +8,24 @@ appartiennent à `AGENTS.md`.
 
 ## Décisions et raisons
 
+### 2026-07-27 — Limiter la famille Calendrier à six formats natifs
+
+- **Statut :** confirmé.
+- **Décision :** la catégorie `calendar` est un seul module registry-driven qui
+  expose six compositions fortement inspirées des widgets Calendrier de la
+  référence : date monumentale `2×2`, mini-mois `2×2`, date et prochain
+  événement `2×2`, agenda compact `4×2`, agenda détaillé `4×4` et chronologie
+  deux jours `4×4`. Les formats panoramiques `8×4` et `4×8` sont explicitement
+  exclus et ne doivent pas être réintroduits implicitement par redimensionnement.
+- **Pourquoi :** conserver la hiérarchie et la densité de la référence sans
+  élargir le contrat global des tailles ni créer des panneaux hors norme.
+- **Conséquence :** date et mini-mois restent directs et sans entité; les quatre
+  variantes événementielles utilisent un flux `configure-first` avec sélection
+  multiple de calendriers autorisés. Le domaine `calendar` appartient aux
+  permissions MHA Admin, les événements `calendar.get_events` sont normalisés et
+  mis en cache par connexion/fenêtre, et le contenu laisse le shell posséder la
+  surface, le contour et l’ombre via les tokens sémantiques du thème.
+
 ### 2026-07-22 — Fusionner les interrupteurs et booléens uniquement dans MHA
 
 - **Statut :** confirmé.
