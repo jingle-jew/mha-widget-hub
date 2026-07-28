@@ -81,12 +81,12 @@ Patch the popup adapter:
 
 Example request:
 
-> In iOS Frosted, make Widget Manager previews use the Settings section surface.
+> In iOS, make Widget Manager previews use the Settings section surface.
 
 Patch only that theme/context:
 
 ```css
-:host([data-theme-style="ios"][data-ios-glass="frosted"]) {
+:host([data-theme-style="ios"]) {
   --mha-preview-surface: var(--mha-panel-section-surface);
   --mha-preview-border: var(--mha-panel-section-border);
 }

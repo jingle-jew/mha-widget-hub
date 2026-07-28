@@ -340,7 +340,13 @@
   opacity: .94;
 }
 
-:host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-widget[data-widget-kind="weather"] {
+:host([data-theme-style="ios"]:not([data-ios-widget-tint="tinted"])) .mha-widget[data-widget-kind="weather"] {
+  background: var(--mha-widget-shell-surface, var(--mha-surface-primary));
+  border-color: var(--mha-widget-shell-border, var(--mha-border-primary));
+  box-shadow: var(--mha-widget-shell-shadow, var(--mha-shadow-primary));
+}
+
+:host([data-theme-style="ios"][data-ios-widget-tint="tinted"]) .mha-widget[data-widget-kind="weather"] {
   --mha-weather-bg-start: #79cff8;
   --mha-weather-bg-end: #397bc7;
   --mha-weather-frosted-glow-1: rgba(255,255,255,.42);
@@ -358,7 +364,7 @@
     0 16px 38px rgba(25,58,104,.16);
 }
 
-:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="dark"]) .mha-widget[data-widget-kind="weather"] {
+:host([data-theme-style="ios"][data-ios-widget-tint="tinted"][data-theme="dark"]) .mha-widget[data-widget-kind="weather"] {
   --mha-weather-frosted-theme-overlay: linear-gradient(180deg, rgba(255,255,255,.025), rgba(0,8,24,.22));
   border-color: rgba(255,255,255,.16);
   box-shadow:
@@ -366,21 +372,21 @@
     0 18px 42px rgba(0,0,0,.24);
 }
 
-:host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-widget[data-widget-kind="weather"][data-weather-condition="sunny"] {
+:host([data-theme-style="ios"][data-ios-widget-tint="tinted"]) .mha-widget[data-widget-kind="weather"][data-weather-condition="sunny"] {
   --mha-weather-bg-start: #65d8f2;
   --mha-weather-bg-end: #2f83df;
   --mha-weather-frosted-glow-1: rgba(255,249,190,.58);
   --mha-weather-frosted-glow-2: rgba(126,238,255,.32);
 }
 
-:host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-widget[data-widget-kind="weather"][data-weather-condition="clear-night"] {
+:host([data-theme-style="ios"][data-ios-widget-tint="tinted"]) .mha-widget[data-widget-kind="weather"][data-weather-condition="clear-night"] {
   --mha-weather-bg-start: #303b78;
   --mha-weather-bg-end: #101a42;
   --mha-weather-frosted-glow-1: rgba(202,214,255,.24);
   --mha-weather-frosted-glow-2: rgba(135,113,255,.22);
 }
 
-:host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-widget[data-widget-kind="weather"]:is(
+:host([data-theme-style="ios"][data-ios-widget-tint="tinted"]) .mha-widget[data-widget-kind="weather"]:is(
   [data-weather-condition="cloudy"],
   [data-weather-condition="fog"],
   [data-weather-condition="windy"]
@@ -391,7 +397,7 @@
   --mha-weather-frosted-glow-2: rgba(184,215,229,.18);
 }
 
-:host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-widget[data-widget-kind="weather"]:is(
+:host([data-theme-style="ios"][data-ios-widget-tint="tinted"]) .mha-widget[data-widget-kind="weather"]:is(
   [data-weather-condition="rainy"],
   [data-weather-condition="pouring"],
   [data-weather-condition="hail"]
@@ -402,7 +408,7 @@
   --mha-weather-frosted-glow-2: rgba(85,155,203,.22);
 }
 
-:host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-widget[data-widget-kind="weather"]:is(
+:host([data-theme-style="ios"][data-ios-widget-tint="tinted"]) .mha-widget[data-widget-kind="weather"]:is(
   [data-weather-condition="lightning"],
   [data-weather-condition="lightning-rainy"],
   [data-weather-condition="exceptional"]
@@ -413,7 +419,7 @@
   --mha-weather-frosted-glow-2: rgba(136,111,255,.22);
 }
 
-:host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-widget[data-widget-kind="weather"]:is(
+:host([data-theme-style="ios"][data-ios-widget-tint="tinted"]) .mha-widget[data-widget-kind="weather"]:is(
   [data-weather-condition="snowy"],
   [data-weather-condition="snowy-rainy"]
 ) {
@@ -423,7 +429,7 @@
   --mha-weather-frosted-glow-2: rgba(211,246,255,.34);
 }
 
-:host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-widget[data-widget-kind="weather"]:is(
+:host([data-theme-style="ios"][data-ios-widget-tint="tinted"]) .mha-widget[data-widget-kind="weather"]:is(
   [data-weather-condition="unknown"],
   [data-weather-condition="unavailable"]
 ) {
@@ -1244,34 +1250,34 @@
   }
 }
 
-:host([data-ios-glass][data-theme]) .mha-widget[data-widget-kind="weather"] {
+:host([data-theme-style="ios"][data-theme]) .mha-widget[data-widget-kind="weather"] {
   --mha-weather-bg-glow: transparent;
 }
 
-:host([data-ios-glass][data-theme]) .mha-widget[data-widget-kind="weather"],
-:host([data-ios-glass][data-theme]) .mha-widget[data-widget-kind="weather"] * {
+:host([data-theme-style="ios"][data-theme]) .mha-widget[data-widget-kind="weather"],
+:host([data-theme-style="ios"][data-theme]) .mha-widget[data-widget-kind="weather"] * {
   text-shadow: none !important;
 }
 
-:host([data-ios-glass][data-theme]) .mha-widget[data-widget-kind="weather"] .mha-weather-current-icon,
-:host([data-ios-glass][data-theme]) .mha-widget[data-widget-kind="weather"] .mha-weather-current-icon *,
-:host([data-ios-glass][data-theme]) .mha-widget[data-widget-kind="weather"] .mha-weather-icon,
-:host([data-ios-glass][data-theme]) .mha-widget[data-widget-kind="weather"] .mha-weather-icon * {
+:host([data-theme-style="ios"][data-theme]) .mha-widget[data-widget-kind="weather"] .mha-weather-current-icon,
+:host([data-theme-style="ios"][data-theme]) .mha-widget[data-widget-kind="weather"] .mha-weather-current-icon *,
+:host([data-theme-style="ios"][data-theme]) .mha-widget[data-widget-kind="weather"] .mha-weather-icon,
+:host([data-theme-style="ios"][data-theme]) .mha-widget[data-widget-kind="weather"] .mha-weather-icon * {
   filter: none !important;
 }
 
-:host([data-ios-glass][data-theme]) .mha-widget[data-widget-kind="weather"] .mha-weather-current-glow,
-:host([data-ios-glass][data-theme]) .mha-widget[data-widget-kind="weather"] .mha-weather-current-moon-glow {
+:host([data-theme-style="ios"][data-theme]) .mha-widget[data-widget-kind="weather"] .mha-weather-current-glow,
+:host([data-theme-style="ios"][data-theme]) .mha-widget[data-widget-kind="weather"] .mha-weather-current-moon-glow {
   display: none;
 }
 
-:host([data-ios-glass][data-theme]) .mha-widget[data-widget-kind="weather"] .mha-weather-current-icon *,
-:host([data-ios-glass][data-theme]) .mha-widget[data-widget-kind="weather"] .mha-weather-current-icon {
+:host([data-theme-style="ios"][data-theme]) .mha-widget[data-widget-kind="weather"] .mha-weather-current-icon *,
+:host([data-theme-style="ios"][data-theme]) .mha-widget[data-widget-kind="weather"] .mha-weather-current-icon {
   animation: none !important;
 }
 
-:host([data-ios-glass][data-theme]) .mha-widget[data-widget-kind="weather"] .mha-weather-widget-chip,
-:host([data-ios-glass][data-theme]) .mha-widget[data-widget-kind="weather"] .mha-weather-widget-forecast-row {
+:host([data-theme-style="ios"][data-theme]) .mha-widget[data-widget-kind="weather"] .mha-weather-widget-chip,
+:host([data-theme-style="ios"][data-theme]) .mha-widget[data-widget-kind="weather"] .mha-weather-widget-forecast-row {
   box-shadow: none !important;
 }
 

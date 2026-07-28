@@ -91,14 +91,14 @@ test("all six calendar previews render native DOM content", () => {
   });
 });
 
-test("Frosted calendar references change only the outer shell material", () => {
+test("tinted calendar references change only the outer shell material", () => {
   const css = readFileSync(new URL("../styles/widgets/calendar-widget.css", import.meta.url), "utf8");
-  const frostedBlocks = [...css.matchAll(
-    /:host\([^)]*data-ios-glass="frosted"[^)]*\) \.mha-widget\[data-widget-kind="calendar"\] \{([\s\S]*?)\n\}/g,
+  const tintedBlocks = [...css.matchAll(
+    /:host\([^)]*data-ios-widget-tint="tinted"[^)]*\) \.mha-widget\[data-widget-kind="calendar"\] \{([\s\S]*?)\n\}/g,
   )];
 
-  assert.equal(frostedBlocks.length, 2);
-  frostedBlocks.forEach(([, block]) => {
+  assert.equal(tintedBlocks.length, 2);
+  tintedBlocks.forEach(([, block]) => {
     assert.match(block, /--mha-widget-shell-surface:/);
     assert.match(block, /--mha-widget-shell-border:/);
     assert.match(block, /--mha-widget-shell-filter:/);

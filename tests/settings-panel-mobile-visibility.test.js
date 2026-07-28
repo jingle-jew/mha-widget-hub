@@ -351,7 +351,8 @@ test("settings panel replaces only the appearance section when visual style chan
   assert.equal(updateSettingsPanel(oneUiPanel, iosPanel), true);
   assert.equal(oneUiPanel.querySelector(".mha-settings-body"), originalBody);
   assert.notEqual(oneUiPanel.querySelector('[data-settings-section="appearance"]'), originalAppearance);
-  assert.equal(oneUiPanel.querySelector(".mha-settings-range-input"), null);
+  assert.ok(oneUiPanel.querySelector(".mha-settings-range-input"));
+  assert.equal(hasText(oneUiPanel, "Glass tint"), true);
   assert.equal(originalBody.scrollTop, 137);
   assert.equal(oneUiPanel.replacedWith, undefined);
 }));
@@ -492,30 +493,38 @@ test("Wallpaper subpanel exposes a weather background toggle for grid pages", ()
   assert.deepEqual(changes, [false]);
 }));
 
-test("settings panel exposes the iOS glass selector and forwards its selection", () => withMockDocument(() => {
-  const changes = [];
+test("settings panel exposes independent iOS glass and special-widget tint controls", () => withMockDocument(() => {
+  const glassChanges = [];
+  const widgetChanges = [];
   const iosPanel = createSettingsPanel({
     open: true,
     scope: "all",
     settingsPage: "main",
     themeStyle: "ios",
-    themeVariant: "liquid",
-    iosGlass: "liquid",
-    onIosGlassChange: value => changes.push(value),
+    iosGlassTint: 36,
+    iosWidgetTint: "transparent",
+    onIosGlassTintChange: value => glassChanges.push(value),
+    onIosWidgetTintChange: value => widgetChanges.push(value),
   });
 
-  assert.equal(hasText(iosPanel, "iOS glass"), true);
-  assert.equal(hasText(iosPanel, "Liquid Glass"), true);
-  const trigger = iosPanel.querySelectorAll(".mha-select-trigger")
-    .find(control => control.getAttribute("aria-label") === "iOS glass");
-  const glassSelect = trigger.closest(".mha-select");
-  const input = glassSelect.querySelector(".mha-select-native");
-  const frostedOption = glassSelect.querySelectorAll("[role='option']")
-    .find(option => option.dataset.value === "frosted");
-  assert.equal(input.value, "liquid");
+  assert.equal(hasText(iosPanel, "Glass tint"), true);
+  assert.equal(hasText(iosPanel, "Widget tint"), true);
+  const slider = iosPanel.querySelector(".mha-settings-range-input");
+  assert.equal(slider.value, "36");
+  slider.value = "73";
+  slider.listeners.input();
 
-  frostedOption.listeners.click();
-  assert.deepEqual(changes, ["frosted"]);
+  const trigger = iosPanel.querySelectorAll(".mha-select-trigger")
+    .find(control => control.getAttribute("aria-label") === "Widget tint");
+  const widgetTintSelect = trigger.closest(".mha-select");
+  const input = widgetTintSelect.querySelector(".mha-select-native");
+  const tintedOption = widgetTintSelect.querySelectorAll("[role='option']")
+    .find(option => option.dataset.value === "tinted");
+  assert.equal(input.value, "transparent");
+
+  tintedOption.listeners.click();
+  assert.deepEqual(glassChanges, [73]);
+  assert.deepEqual(widgetChanges, ["tinted"]);
 }));
 
 test("settings panel hides the Alexa theme option", () => withMockDocument(() => {
@@ -629,7 +638,7 @@ test("MHA checkbox and radio primitives keep native semantics behind custom indi
   assert.deepEqual(checkboxValues, [true]);
 }));
 
-test("settings panel exposes primary surface opacity only for OneUI", () => withMockDocument(() => {
+test("settings panel exposes the OneUI opacity control only for OneUI", () => withMockDocument(() => {
   const values = [];
   const oneUiPanel = createSettingsPanel({
     open: true,
@@ -653,7 +662,8 @@ test("settings panel exposes primary surface opacity only for OneUI", () => with
   assert.equal(slider.max, "100");
   assert.equal(slider.value, "42");
   assert.equal(hasText(oneUiPanel, "Widget opacity"), true);
-  assert.equal(iosPanel.querySelector(".mha-settings-range-input"), null);
+  assert.equal(hasText(iosPanel, "Widget opacity"), false);
+  assert.equal(hasText(iosPanel, "Glass tint"), true);
 
   slider.value = "0";
   slider.listeners.input();

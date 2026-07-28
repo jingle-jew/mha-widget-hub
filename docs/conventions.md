@@ -597,7 +597,7 @@ Prefer host dataset selectors for theme/system state:
 
 ```css
 :host([data-theme-style="ios"])
-:host([data-theme-style="ios"][data-ios-glass="liquid"])
+:host([data-theme-style="ios"][data-ios-widget-tint="tinted"])
 :host([data-theme="dark"])
 :host([data-accent="blue"])
 ```

@@ -48,12 +48,14 @@ The default theme style is:
 oneui
 ```
 
-The iOS theme currently exposes two variants:
+The iOS registry retains two endpoint variants for compatibility and Theme
+Studio tooling:
 
 - Liquid Glass;
 - Frosted Glass.
 
-These are theme variants, not separate theme styles.
+These are not separate theme styles. The Settings panel exposes them as the
+continuous **Glass tint** control rather than as a binary variant selector.
 
 ---
 
@@ -164,6 +166,8 @@ Synchronized attributes include:
 | `data-theme-style` | Visual system: `ios`, `oneui`, `material`, or `alexa` |
 | `data-theme-variant` | Generic theme variant id |
 | `data-ios-glass` | Legacy iOS compatibility attribute: `liquid` or `frosted` |
+| `data-ios-glass-tint` | iOS generic widget surface mix from `0` to `100` |
+| `data-ios-widget-tint` | Special Calendar/Weather surface: `transparent` or `tinted` |
 | `data-accent` | Active accent key |
 | `data-accent-mode` | `manual` or `auto` |
 | `data-icon-shape-setting` | `auto`, `rounded-square`, `squircle`, or `circle` |
@@ -185,6 +189,8 @@ The theme controller uses these local storage keys:
 | `mha-dev-theme-style` | Dev fallback for visual style |
 | `mha-theme-variant` | Generic theme variant |
 | `mha-theme-variant-{themeStyle}` | Per-theme variant |
+| `mha-ios-glass-tint` | iOS generic widget surface mix from `0` to `100` |
+| `mha-ios-widget-tint` | Special Calendar/Weather surface selection |
 | `mha-ios-glass` | Legacy iOS glass variant |
 | `mha-dev-ios-glass` | Legacy dev fallback for iOS glass variant |
 | `mha-accent-mode` | Global accent mode |
@@ -364,23 +370,30 @@ Themes should not define:
 
 ### iOS
 
-The iOS theme contains two glass variants:
+The iOS theme contains two glass material endpoints:
 
 - Liquid Glass;
 - Frosted Glass.
 
-Liquid and Frosted are not separate registry entries. Do not add `ios-liquid` and `ios-frosted` to `theme-registry.js` unless the architecture intentionally changes.
+Liquid and Frosted are not separate registry entries. Do not add `ios-liquid`
+and `ios-frosted` to `theme-registry.js` unless the architecture intentionally
+changes.
 
 Current direction:
 
 - use the current Liquid Glass implementation as the canonical iOS identity;
-- limit the Liquid/Frosted selector to outer widget surfaces only;
+- use **Glass tint** to mix only generic outer widget surfaces from Liquid at
+  0% to Frosted at 100%;
 - keep dock, status bar, panels, settings, icons, typography, geometry and
-  widget internals identical between the two variants;
-- give Calendar an opaque light/dark Frosted shell matching the macOS
+  widget internals independent from the slider;
+- use **Widget tint** as an independent `transparent`/`tinted` surface selector
+  for the six Calendar widgets and the main WeatherWidget only;
+- give tinted Calendar widgets an opaque light/dark shell matching the macOS
   references;
-- give the main WeatherWidget family a Frosted gradient driven by the current
-  Home Assistant condition;
+- give the tinted main WeatherWidget a gradient driven by the current Home
+  Assistant condition;
+- leave Weather metrics, Weather summary and Weather radar outside this special
+  selector;
 - avoid heavy colored shadows or decorative glow;
 - keep generic Frosted widget shells more opaque and classic.
 

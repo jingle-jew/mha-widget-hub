@@ -22,6 +22,8 @@ export class AppearanceCoordinator {
     setTheme = () => ({}),
     setThemeStyle = () => ({}),
     setIosGlass = () => ({}),
+    setIosGlassTint = () => ({}),
+    setIosWidgetTint = () => ({}),
     setAccent = () => ({}),
     setAccentMode = () => ({}),
     setIconShape = () => ({}),
@@ -58,6 +60,8 @@ export class AppearanceCoordinator {
     this.setTheme = (...args) => setTheme(...args);
     this.setThemeStyle = (...args) => setThemeStyle(...args);
     this.setIosGlass = (...args) => setIosGlass(...args);
+    this.setIosGlassTint = (...args) => setIosGlassTint(...args);
+    this.setIosWidgetTint = (...args) => setIosWidgetTint(...args);
     this.setAccent = (...args) => setAccent(...args);
     this.setAccentMode = (...args) => setAccentMode(...args);
     this.setIconShape = (...args) => setIconShape(...args);
@@ -300,6 +304,17 @@ export class AppearanceCoordinator {
 
   applyIosGlassFromSettings(value = "liquid") {
     this.setIosGlass(value);
+    this.syncSettingsDom();
+    return true;
+  }
+
+  applyIosGlassTintFromSettings(value = 0) {
+    this.setIosGlassTint(value);
+    return true;
+  }
+
+  applyIosWidgetTintFromSettings(value = "transparent") {
+    this.setIosWidgetTint(value);
     this.syncSettingsDom();
     return true;
   }

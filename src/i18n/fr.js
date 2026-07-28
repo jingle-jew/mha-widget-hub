@@ -81,6 +81,12 @@ export const fr = Object.freeze({
     theme: "Thème",
     visualStyle: "Style visuel",
     iosGlass: "Verre iOS",
+    glassTint: "Teinte du verre",
+    widgetTint: "Teinte des widgets",
+    widgetTintOptions: Object.freeze({
+      transparent: "Transparent",
+      tinted: "Teinté",
+    }),
     wallpaper: "Fond d’écran",
     wallpaperDescription: "Choisis un fond météo MHA ou une image distincte pour les thèmes clair et sombre.",
     gridWallpaper: "Fond des pages Grid",

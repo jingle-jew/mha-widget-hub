@@ -532,8 +532,7 @@ MHA should support multiple visual systems while keeping a consistent internal t
 Current major visual systems:
 
 - OneUI;
-- iOS Liquid Glass;
-- iOS Frosted Glass;
+- iOS with adjustable Liquid–Frosted glass tint;
 - Material You.
 
 Future themes should not require widget-specific hacks.

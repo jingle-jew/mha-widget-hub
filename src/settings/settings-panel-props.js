@@ -43,6 +43,8 @@ export function buildSettingsPanelState({
     themeStyle: themeState.themeStyle,
     themeVariant: themeState.themeVariant || "",
     iosGlass: themeState.iosGlass,
+    iosGlassTint: themeState.iosGlassTint ?? 0,
+    iosWidgetTint: themeState.iosWidgetTint || "transparent",
     accent: themeState.accent,
     accentMode: themeState.accentMode,
     accentPaletteExpanded,

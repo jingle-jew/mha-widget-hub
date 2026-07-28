@@ -230,6 +230,8 @@ constructor(){
     setTheme:(value)=>this._themeController.setTheme(value),
     setThemeStyle:(value)=>this._themeController.setThemeStyle(value),
     setIosGlass:(value)=>this._themeController.setIosGlass(value),
+    setIosGlassTint:(value)=>this._themeController.setIosGlassTint(value),
+    setIosWidgetTint:(value)=>this._themeController.setIosWidgetTint(value),
     setAccent:(value)=>this._themeController.setAccent(value),
     setAccentMode:(value)=>this._themeController.setAccentMode(value),
     setIconShape:(value)=>this._themeController.setIconShape(value),
@@ -859,6 +861,14 @@ _applyThemeStyleFromSettings(value="oneui"){
 
 _applyIosGlassFromSettings(value="liquid"){
   return this._appearanceCoordinator.applyIosGlassFromSettings(value);
+}
+
+_applyIosGlassTintFromSettings(value=0){
+  return this._appearanceCoordinator.applyIosGlassTintFromSettings(value);
+}
+
+_applyIosWidgetTintFromSettings(value="transparent"){
+  return this._appearanceCoordinator.applyIosWidgetTintFromSettings(value);
 }
 
 _applyAccentFromSettings(value=""){

@@ -7,11 +7,29 @@ import {
 } from "./theme-registry.js";
 
 export const THEME_STYLES = Object.freeze(new Set(getThemeStyleIds()));
+export const DEFAULT_IOS_GLASS_TINT = 0;
+export const DEFAULT_IOS_WIDGET_TINT = "transparent";
 export const DEFAULT_ONEUI_PRIMARY_SURFACE_OPACITY = 68;
 export const ONEUI_WIDGET_NOISE_FADE_START = 50;
 export const ONEUI_WIDGET_NOISE_MAX_OPACITY = 0.14;
 
+const IOS_GLASS_TINT_STORAGE_KEY = "mha-ios-glass-tint";
+const IOS_WIDGET_TINT_STORAGE_KEY = "mha-ios-widget-tint";
 const ONEUI_PRIMARY_SURFACE_OPACITY_STORAGE_KEY = "mha-oneui-primary-surface-opacity";
+
+export function normalizeIosGlassTint(value = DEFAULT_IOS_GLASS_TINT) {
+  const numericValue = Number(value);
+  if (!Number.isFinite(numericValue)) return DEFAULT_IOS_GLASS_TINT;
+  return Math.round(Math.max(0, Math.min(100, numericValue)));
+}
+
+export function normalizeIosWidgetTint(value = DEFAULT_IOS_WIDGET_TINT) {
+  return value === "tinted" ? "tinted" : DEFAULT_IOS_WIDGET_TINT;
+}
+
+export function resolveIosGlassCompatibility(value = DEFAULT_IOS_GLASS_TINT) {
+  return normalizeIosGlassTint(value) >= 50 ? "frosted" : "liquid";
+}
 
 export function normalizeOneUiPrimarySurfaceOpacity(value = DEFAULT_ONEUI_PRIMARY_SURFACE_OPACITY) {
   const numericValue = Number(value);
@@ -98,6 +116,30 @@ export function getStoredIosGlass(host) {
   return normalizeIosGlass(stored);
 }
 
+export function getStoredIosGlassTint(host, legacyIosGlass = getStoredIosGlass(host)) {
+  const stored = localStorage.getItem(IOS_GLASS_TINT_STORAGE_KEY)
+    ?? document.documentElement.dataset.iosGlassTint
+    ?? host?.dataset?.iosGlassTint;
+
+  if (stored !== null && stored !== undefined && stored !== "") {
+    return normalizeIosGlassTint(stored);
+  }
+
+  return normalizeIosGlass(legacyIosGlass) === "frosted" ? 100 : DEFAULT_IOS_GLASS_TINT;
+}
+
+export function getStoredIosWidgetTint(host, legacyIosGlass = getStoredIosGlass(host)) {
+  const stored = localStorage.getItem(IOS_WIDGET_TINT_STORAGE_KEY)
+    ?? document.documentElement.dataset.iosWidgetTint
+    ?? host?.dataset?.iosWidgetTint;
+
+  if (stored !== null && stored !== undefined && stored !== "") {
+    return normalizeIosWidgetTint(stored);
+  }
+
+  return normalizeIosGlass(legacyIosGlass) === "frosted" ? "tinted" : DEFAULT_IOS_WIDGET_TINT;
+}
+
 export function normalizeAccentMode(themeStyle = "oneui", mode = "manual") {
   return supportsAutoAccent(themeStyle) && mode === "auto" ? "auto" : "manual";
 }
@@ -178,7 +220,10 @@ export function readThemeState(host) {
   const theme = resolveTheme(themeSetting);
   const themeStyle = getStoredThemeStyle(host);
   const themeVariant = getStoredThemeVariant(host, themeStyle);
-  const iosGlass = themeStyle === "ios" ? normalizeIosGlass(themeVariant) : getStoredIosGlass(host);
+  const legacyIosGlass = themeStyle === "ios" ? normalizeIosGlass(themeVariant) : getStoredIosGlass(host);
+  const iosGlassTint = getStoredIosGlassTint(host, legacyIosGlass);
+  const iosWidgetTint = getStoredIosWidgetTint(host, legacyIosGlass);
+  const iosGlass = resolveIosGlassCompatibility(iosGlassTint);
   const accentMode = getStoredAccentMode(host, themeStyle);
   const accent = getStoredAccent(host, themeStyle);
   const iconShapeSetting = getStoredIconShapeSetting(host);
@@ -190,7 +235,9 @@ export function readThemeState(host) {
     theme,
     themeStyle,
     iosGlass,
-    themeVariant,
+    iosGlassTint,
+    iosWidgetTint,
+    themeVariant: themeStyle === "ios" ? iosGlass : themeVariant,
     accent,
     accentMode,
     iconShapeSetting,
@@ -249,6 +296,34 @@ function syncOneUiPrimarySurfaceOpacity(host, state) {
   document.documentElement.style?.setProperty?.(widgetNoiseProperty, String(widgetNoiseOpacity));
 }
 
+function formatDecimal(value, digits = 4) {
+  return Number(value.toFixed(digits)).toString();
+}
+
+export function syncIosGlassTintProperties(target, state = {}) {
+  const properties = [
+    "--mha-ios-glass-tint",
+    "--mha-ios-glass-tint-percent",
+    "--mha-ios-liquid-percent",
+    "--mha-ios-widget-noise-opacity",
+    "--mha-ios-widget-highlight-opacity",
+  ];
+
+  if (!target?.style) return;
+  if (state.themeStyle !== "ios") {
+    properties.forEach(property => target.style.removeProperty?.(property));
+    return;
+  }
+
+  const tint = normalizeIosGlassTint(state.iosGlassTint);
+  const mix = tint / 100;
+  target.style.setProperty("--mha-ios-glass-tint", formatDecimal(mix));
+  target.style.setProperty("--mha-ios-glass-tint-percent", `${tint}%`);
+  target.style.setProperty("--mha-ios-liquid-percent", `${100 - tint}%`);
+  target.style.setProperty("--mha-ios-widget-noise-opacity", formatDecimal(0.072 + ((0.065 - 0.072) * mix)));
+  target.style.setProperty("--mha-ios-widget-highlight-opacity", formatDecimal(0.56 + ((0.16 - 0.56) * mix)));
+}
+
 export function syncThemeAttributes(host) {
   const state = readThemeState(host);
   const root = document.documentElement;
@@ -257,6 +332,8 @@ export function syncThemeAttributes(host) {
   setAttribute(host, "theme", state.theme);
   setAttribute(host, "themeStyle", state.themeStyle);
   setAttribute(host, "iosGlass", state.iosGlass);
+  setAttribute(host, "iosGlassTint", String(state.iosGlassTint));
+  setAttribute(host, "iosWidgetTint", state.iosWidgetTint);
   setAttribute(host, "themeVariant", state.themeVariant);
   setAttribute(host, "accent", state.accent);
   setAttribute(host, "accentMode", state.accentMode);
@@ -268,6 +345,8 @@ export function syncThemeAttributes(host) {
   setAttribute(root, "theme", state.theme);
   setAttribute(root, "themeStyle", state.themeStyle);
   setAttribute(root, "iosGlass", state.iosGlass);
+  setAttribute(root, "iosGlassTint", String(state.iosGlassTint));
+  setAttribute(root, "iosWidgetTint", state.iosWidgetTint);
   setAttribute(root, "themeVariant", state.themeVariant);
   setAttribute(root, "accent", state.accent);
   setAttribute(root, "accentMode", state.accentMode);
@@ -277,6 +356,8 @@ export function syncThemeAttributes(host) {
 
   syncOneUiBlobPalette(host, state);
   syncOneUiPrimarySurfaceOpacity(host, state);
+  syncIosGlassTintProperties(host, state);
+  syncIosGlassTintProperties(root, state);
 
   return state;
 }
@@ -325,6 +406,8 @@ export class ThemeController {
     if (themeStyle === "ios") {
       localStorage.setItem("mha-ios-glass", themeVariant);
       localStorage.setItem("mha-dev-ios-glass", themeVariant);
+      localStorage.setItem(IOS_GLASS_TINT_STORAGE_KEY, themeVariant === "frosted" ? "100" : "0");
+      localStorage.setItem(IOS_WIDGET_TINT_STORAGE_KEY, themeVariant === "frosted" ? "tinted" : "transparent");
     }
 
     return this.sync();
@@ -332,6 +415,25 @@ export class ThemeController {
 
   setIosGlass(value = "liquid") {
     return this.setThemeVariant(value);
+  }
+
+  setIosGlassTint(value = DEFAULT_IOS_GLASS_TINT) {
+    const tint = normalizeIosGlassTint(value);
+    const compatibilityValue = resolveIosGlassCompatibility(tint);
+    localStorage.setItem(IOS_GLASS_TINT_STORAGE_KEY, String(tint));
+    localStorage.setItem("mha-dev-ios-glass-tint", String(tint));
+    localStorage.setItem("mha-ios-glass", compatibilityValue);
+    localStorage.setItem("mha-dev-ios-glass", compatibilityValue);
+    localStorage.setItem("mha-theme-variant", compatibilityValue);
+    localStorage.setItem("mha-theme-variant-ios", compatibilityValue);
+    return this.sync();
+  }
+
+  setIosWidgetTint(value = DEFAULT_IOS_WIDGET_TINT) {
+    const tint = normalizeIosWidgetTint(value);
+    localStorage.setItem(IOS_WIDGET_TINT_STORAGE_KEY, tint);
+    localStorage.setItem("mha-dev-ios-widget-tint", tint);
+    return this.sync();
   }
 
   setAccent(value = "") {

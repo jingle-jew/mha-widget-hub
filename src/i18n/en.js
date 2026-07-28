@@ -81,6 +81,12 @@ export const en = Object.freeze({
     theme: "Theme",
     visualStyle: "Visual style",
     iosGlass: "iOS glass",
+    glassTint: "Glass tint",
+    widgetTint: "Widget tint",
+    widgetTintOptions: Object.freeze({
+      transparent: "Transparent",
+      tinted: "Tinted",
+    }),
     wallpaper: "Wallpaper",
     wallpaperDescription: "Choose an MHA weather background or separate images for light and dark themes.",
     gridWallpaper: "Grid page wallpaper",

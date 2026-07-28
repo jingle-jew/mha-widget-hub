@@ -196,6 +196,8 @@ export function renderAdminPanel(shadowRoot, {
     host.dataset.theme = theme.theme;
     host.dataset.themeStyle = theme.themeStyle;
     host.dataset.iosGlass = theme.iosGlass;
+    host.dataset.iosGlassTint = String(theme.iosGlassTint ?? 0);
+    host.dataset.iosWidgetTint = theme.iosWidgetTint || "transparent";
   }
 
   return root;

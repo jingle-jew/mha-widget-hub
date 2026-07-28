@@ -96,6 +96,8 @@ function createHarness(overrides = {}) {
       return state.themeState;
     },
     setIosGlass: (value) => calls.push(["setIosGlass", value]),
+    setIosGlassTint: (value) => calls.push(["setIosGlassTint", value]),
+    setIosWidgetTint: (value) => calls.push(["setIosWidgetTint", value]),
     setAccent: (value) => calls.push(["setAccent", value]),
     setAccentMode: (value) => calls.push(["setAccentMode", value]),
     setIconShape: (value) => calls.push(["setIconShape", value]),
@@ -292,6 +294,27 @@ test("iOS glass changes only persist the surface selection and resync settings",
 
   assert.deepEqual(harness.calls, [
     ["setIosGlass", "frosted"],
+    "syncSettingsDom",
+  ]);
+});
+
+test("iOS glass tint updates continuously without rebuilding the settings panel", () => {
+  const harness = createHarness();
+
+  assert.equal(harness.coordinator.applyIosGlassTintFromSettings(63), true);
+
+  assert.deepEqual(harness.calls, [
+    ["setIosGlassTint", 63],
+  ]);
+});
+
+test("iOS special-widget tint persists and resyncs the selector", () => {
+  const harness = createHarness();
+
+  assert.equal(harness.coordinator.applyIosWidgetTintFromSettings("tinted"), true);
+
+  assert.deepEqual(harness.calls, [
+    ["setIosWidgetTint", "tinted"],
     "syncSettingsDom",
   ]);
 });

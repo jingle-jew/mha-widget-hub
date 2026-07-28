@@ -69,32 +69,38 @@ test("the manifest loads raw mappings before the shared glass and widget contrac
   assert(indexOf("styles/widgets/widget-shell.css") < indexOf("styles/widgets/widget-shell-contract.css"));
 });
 
-test("iOS glass variants are isolated to widget-shell material files", async () => {
-  const allowedVariantFiles = new Set([
-    "styles/themes/ios-raw-materials.css",
-    "styles/themes/ios-surface-map.css",
+test("iOS tint controls remain isolated to generic and special widget surfaces", async () => {
+  const allowedSpecialSurfaceFiles = new Set([
     "styles/widgets/calendar-widget.css",
     "styles/widgets/weather-widget.css",
   ]);
   const paths = getStyleManifest().map(([path]) => path);
   const sources = await Promise.all(paths.map(async path => [path, await read(path)]));
-  const offenders = sources
+  const legacySelectorOffenders = sources
+    .filter(([, source]) => /data-ios-glass="(?:liquid|frosted)"/.test(source))
+    .map(([path]) => path);
+  const specialSurfaceOffenders = sources
     .filter(([path, source]) => (
-      /data-ios-glass="(?:liquid|frosted)"/.test(source)
-      && !allowedVariantFiles.has(path)
+      /data-ios-widget-tint="(?:transparent|tinted)"/.test(source)
+      && !allowedSpecialSurfaceFiles.has(path)
     ))
     .map(([path]) => path);
 
-  assert.deepEqual(offenders, []);
+  assert.deepEqual(legacySelectorOffenders, []);
+  assert.deepEqual(specialSurfaceOffenders, []);
 
   const surfaceMap = await read("styles/themes/ios-surface-map.css");
-  const frostedWidgetBlock = surfaceMap.match(
-    /:host\(\[data-theme-style="ios"\]\[data-ios-glass="frosted"\]\) \.mha-widget \{([\s\S]*?)\n\}/,
+  const mixedWidgetBlock = surfaceMap.match(
+    /:host\(\[data-theme-style="ios"\]\) \.mha-widget \{([\s\S]*?)\n\}/,
   )?.[1] || "";
-  assert.match(frostedWidgetBlock, /--mha-widget-shell-surface:/);
-  assert.match(frostedWidgetBlock, /--mha-widget-shell-filter|--mha-widget-shell-blur:/);
+  assert.match(mixedWidgetBlock, /--mha-widget-shell-surface:\s*color-mix/);
+  assert.match(mixedWidgetBlock, /--mha-ios-liquid-percent/);
+  assert.match(mixedWidgetBlock, /--mha-ios-glass-tint-percent/);
+  assert.match(mixedWidgetBlock, /--mha-widget-shell-shadow:/);
+  assert.match(mixedWidgetBlock, /--mha-glass-noise-opacity:\s*var\(--mha-ios-widget-noise-opacity/);
+  assert.doesNotMatch(mixedWidgetBlock, /--mha-widget-shell-(?:filter|blur|saturation):/);
   assert.doesNotMatch(
-    frostedWidgetBlock,
+    mixedWidgetBlock,
     /--mha-(?:surface-(?:shell|panel|popup)|shell-(?:surface|dock|status|panel)|dock-|statusbar-|system-window-)/,
   );
 });

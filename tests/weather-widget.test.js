@@ -583,16 +583,20 @@ test("weather widget shell exposes the normalized surface mode to CSS", () => {
   assert.equal(weatherShell.dataset.weatherCondition, "partlycloudy");
 });
 
-test("Frosted iOS weather surfaces expose condition-specific gradient palettes", () => {
+test("tinted iOS weather surfaces expose condition-specific gradient palettes", () => {
   const css = readFileSync(new URL("../styles/widgets/weather-widget.css", import.meta.url), "utf8");
 
-  assert.match(css, /data-ios-glass="frosted"[^\n]*data-widget-kind="weather"/);
+  assert.match(css, /data-ios-widget-tint="tinted"[^\n]*data-widget-kind="weather"/);
+  assert.match(
+    css,
+    /not\(\[data-ios-widget-tint="tinted"\]\)[^\{]*\{[\s\S]*?background:\s*var\(--mha-widget-shell-surface/,
+  );
   ["sunny", "clear-night", "cloudy", "rainy", "lightning", "snowy", "unknown"].forEach(condition => {
     assert.match(css, new RegExp(`data-weather-condition="${condition}"`));
   });
   assert.doesNotMatch(
     css,
-    /data-ios-glass="frosted"[^}]*\.mha-weather-widget-(?:chip|forecast-row)/,
+    /data-ios-widget-tint="tinted"[^}]*\.mha-weather-widget-(?:chip|forecast-row)/,
   );
 });
 

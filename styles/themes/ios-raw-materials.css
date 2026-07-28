@@ -7,6 +7,13 @@
  */
 
 :host([data-theme-style="ios"]) {
+  /* Runtime mix controls. ThemeController overrides these values on the host. */
+  --mha-ios-glass-tint: 0;
+  --mha-ios-glass-tint-percent: 0%;
+  --mha-ios-liquid-percent: 100%;
+  --mha-ios-widget-noise-opacity: .072;
+  --mha-ios-widget-highlight-opacity: .56;
+
   /* Hybrid Liquid/Frosted optical response. */
   --mha-ios-raw-liquid-shell-blur: 14px;
   --mha-ios-raw-liquid-shell-saturation: 165%;
@@ -127,7 +134,7 @@
 /* Frosted is an alternate widget-shell material. It deliberately defines no
  * global shell, panel, dock, status-bar, control, icon or text role: the iOS
  * theme outside widget shells always keeps the Liquid material above. */
-:host([data-theme-style="ios"][data-ios-glass="frosted"]) {
+:host([data-theme-style="ios"]) {
   --mha-ios-raw-frosted-shell-blur: 24px;
   --mha-ios-raw-frosted-shell-saturation: 145%;
   --mha-ios-raw-frosted-shell-highlight:
@@ -166,7 +173,7 @@
   --mha-ios-frosted-widget-highlight-opacity: var(--mha-ios-raw-frosted-shell-highlight-opacity);
 }
 
-:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="light"]) {
+:host([data-theme-style="ios"][data-theme="light"]) {
   --mha-ios-raw-frosted-shell-surface: rgba(242,242,247,.72);
   --mha-ios-raw-frosted-shell-border: rgba(255,255,255,.56);
   --mha-ios-raw-frosted-shell-shadow:
@@ -188,7 +195,7 @@
   --mha-ios-raw-frosted-control-border-active: rgba(110,92,78,.26);
 }
 
-:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="dark"]) {
+:host([data-theme-style="ios"][data-theme="dark"]) {
   --mha-ios-raw-frosted-shell-surface: rgba(44,44,46,.68);
   --mha-ios-raw-frosted-shell-border: rgba(255,255,255,.14);
   --mha-ios-raw-frosted-shell-shadow:

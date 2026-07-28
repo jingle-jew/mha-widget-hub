@@ -8,25 +8,32 @@ appartiennent à `AGENTS.md`.
 
 ## Décisions et raisons
 
-### 2026-07-27 — Limiter Liquid/Frosted à la matière externe des widgets iOS
+### 2026-07-27 — Doser la teinte du verre des widgets iOS
 
 - **Statut :** confirmé.
 - **Décision :** Liquid Glass est le contrat visuel canonique de tout le thème
-  iOS. Le sélecteur Liquid/Frosted du panneau d’apparence ne peut modifier que
-  la matière de la coque externe `.mha-widget` : surface, bordure, ombre, blur,
-  saturation, reflet et grain. Le dock, la barre d’état, les panels, les
-  réglages, les contrôles internes, les textes, icônes, rayons, géométries et la
-  page Média restent strictement Liquid dans les deux choix.
-- **Pourquoi :** le choix doit être une variante de surface des widgets, pas un
-  second thème iOS susceptible de faire diverger l’interface ou ses composants.
-- **Conséquence :** les sélecteurs `data-ios-glass` de production restent
-  confinés aux matières brutes, à l’adaptateur de coque et aux exceptions de
-  surface Calendrier/Météo, frontière protégée par test. En Frosted, les six
-  formats Calendrier ont une coque claire blanche ou sombre presque noire; le
-  widget principal `kind: weather` publie sa condition HA normalisée sur sa
-  coque pour choisir un gradient adapté. Les métriques, le radar et le bref
-  météo conservent leur identité existante. Changer le choix persiste la valeur
-  et resynchronise les réglages sans reconstruire la grille.
+  iOS. Le slider « Teinte du verre » dose de `0` à `100` la matière de la coque
+  externe des widgets génériques entre les endpoints Liquid et Frosted :
+  surface normale/édition, bordure, ombre, reflet et grain. Le dock, la barre
+  d’état, les panels, les réglages, les contrôles internes, les textes, icônes,
+  rayons, géométries et la page Média restent strictement Liquid sur toute la
+  course.
+- **Décision spéciale :** le sélecteur indépendant « Teinte des widgets » vaut
+  `transparent` ou `tinted`. `transparent` fait hériter la coque générique
+  dosée aux six formats Calendrier et au widget principal `kind: weather`;
+  `tinted` donne aux Calendriers une coque claire blanche ou sombre presque
+  noire et à Météo un gradient adapté à la condition HA courante. Les métriques,
+  le radar et le bref météo restent hors de ce sélecteur.
+- **Pourquoi :** le dosage doit rester un réglage de matière des widgets, pas un
+  second thème iOS, et les surfaces expressives Calendrier/Météo doivent pouvoir
+  être activées sans déplacer le dosage du verre générique.
+- **Conséquence :** `mha-ios-glass-tint` / `data-ios-glass-tint` transportent le
+  pourcentage et `mha-ios-widget-tint` / `data-ios-widget-tint` transportent le
+  choix spécial. `data-ios-glass` et les anciennes clés Liquid/Frosted ne
+  pilotent plus le CSS de production; ils restent synchronisés comme contrat de
+  migration/compatibilité aux endpoints. Le slider met à jour les propriétés
+  CSS en direct sans reconstruire la grille ni le panneau de réglages; le
+  sélecteur spécial resynchronise seulement le panneau.
 
 ### 2026-07-27 — Limiter la famille Calendrier à six formats natifs
 

@@ -206,7 +206,8 @@ This lets MHA Core say:
 
 while still allowing a theme or mode to say:
 
-> In Frosted Glass, widget shells should use the section surface instead.
+> Toward the Frosted endpoint, widget shells should progressively use more of
+> the Frosted section surface.
 
 Component tokens are acceptable when they adapt global roles to a specific component. They become a problem when they become a second design system with unclear rules.
 
@@ -355,14 +356,14 @@ Example:
 
 ```css
 /* Theme raw tokens */
-:host([data-theme-style="ios"][data-ios-glass="liquid"]) {
+:host([data-theme-style="ios"]) {
   --mha-ios-liquid-shell-surface: linear-gradient(...);
   --mha-ios-liquid-shell-border: rgba(...);
   --mha-ios-liquid-shell-blur: 6px;
 }
 
 /* Global semantic mapping */
-:host([data-theme-style="ios"][data-ios-glass="liquid"]) {
+:host([data-theme-style="ios"]) {
   --mha-surface-primary: var(--mha-ios-liquid-shell-surface);
   --mha-border-primary: var(--mha-ios-liquid-shell-border);
   --mha-blur-primary: var(--mha-ios-liquid-shell-blur);
@@ -391,18 +392,19 @@ But sometimes a theme variant may need a difference.
 
 Example:
 
-- Liquid: widget shell uses the shell/primary surface.
-- Frosted: widget shell uses the section/on-primary surface.
+- 0% tint: widget shell uses the Liquid primary surface.
+- 100% tint: widget shell uses the Frosted section surface.
+- intermediate values mix the two endpoint surfaces.
 
 This is where adapter tokens help:
 
 ```css
-:host([data-theme-style="ios"][data-ios-glass="liquid"]) {
-  --mha-widget-shell-surface: var(--mha-surface-primary);
-}
-
-:host([data-theme-style="ios"][data-ios-glass="frosted"]) {
-  --mha-widget-shell-surface: var(--mha-surface-on-primary);
+:host([data-theme-style="ios"]) .mha-widget {
+  --mha-widget-shell-surface: color-mix(
+    in srgb,
+    var(--mha-ios-raw-liquid-primary-surface) var(--mha-ios-liquid-percent),
+    var(--mha-ios-frosted-widget-surface) var(--mha-ios-glass-tint-percent)
+  );
 }
 ```
 

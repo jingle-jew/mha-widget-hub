@@ -5,10 +5,14 @@ import {
   normalizeAccentMode,
   normalizeIconShapeSetting,
   normalizeIosGlass,
+  normalizeIosGlassTint,
+  normalizeIosWidgetTint,
   normalizeThemeSetting,
   normalizeThemeStyle,
   readThemeState,
+  resolveIosGlassCompatibility,
   resolveIconShape,
+  syncIosGlassTintProperties,
 } from "../settings/theme-controller.js";
 
 export const EXTENSION_PANEL_APPEARANCE_STORAGE = "mha-extension-panel-appearance";
@@ -20,6 +24,8 @@ const DATA_ATTRIBUTES = Object.freeze({
   theme: "theme",
   themeStyle: "themeStyle",
   iosGlass: "iosGlass",
+  iosGlassTint: "iosGlassTint",
+  iosWidgetTint: "iosWidgetTint",
   accent: "accent",
   accentMode: "accentMode",
   iconShapeSetting: "iconShapeSetting",
@@ -66,11 +72,21 @@ export function readExtensionPanelAppearance(panelId = "") {
     return { mode };
   }
 
+  const legacyIosGlass = normalizeIosGlass(config.iosGlass);
+  const iosGlassTint = config.iosGlassTint === undefined
+    ? (legacyIosGlass === "frosted" ? 100 : 0)
+    : normalizeIosGlassTint(config.iosGlassTint);
+  const iosWidgetTint = config.iosWidgetTint === undefined
+    ? (legacyIosGlass === "frosted" ? "tinted" : "transparent")
+    : normalizeIosWidgetTint(config.iosWidgetTint);
+
   return {
     mode,
     themeSetting: normalizeThemeSetting(config.themeSetting),
     themeStyle: normalizeThemeStyle(config.themeStyle),
-    iosGlass: normalizeIosGlass(config.iosGlass),
+    iosGlass: resolveIosGlassCompatibility(iosGlassTint),
+    iosGlassTint,
+    iosWidgetTint,
     accentMode: config.accentMode,
     accent: config.accent,
     iconShapeSetting: normalizeIconShapeSetting(config.iconShapeSetting),
@@ -102,7 +118,9 @@ function resolveCustomState(globalState, config) {
   const themeSetting = normalizeThemeSetting(config.themeSetting || globalState.themeSetting);
   const theme = resolveTheme(themeSetting);
   const themeStyle = normalizeThemeStyle(config.themeStyle || globalState.themeStyle);
-  const iosGlass = normalizeIosGlass(config.iosGlass || globalState.iosGlass);
+  const iosGlassTint = normalizeIosGlassTint(config.iosGlassTint ?? globalState.iosGlassTint);
+  const iosWidgetTint = normalizeIosWidgetTint(config.iosWidgetTint || globalState.iosWidgetTint);
+  const iosGlass = resolveIosGlassCompatibility(iosGlassTint);
   const accentMode = normalizeAccentMode(themeStyle, config.accentMode || globalState.accentMode);
   const accent = normalizeAccent(themeStyle, config.accent || globalState.accent);
   const iconShapeSetting = normalizeIconShapeSetting(config.iconShapeSetting || globalState.iconShapeSetting);
@@ -113,6 +131,8 @@ function resolveCustomState(globalState, config) {
     theme,
     themeStyle,
     iosGlass,
+    iosGlassTint,
+    iosWidgetTint,
     accent,
     accentMode,
     iconShapeSetting,
@@ -154,10 +174,11 @@ export function applyExtensionPanelAppearance(host, state = {}) {
   if (!host) return state;
 
   for (const [key, attributeName] of Object.entries(DATA_ATTRIBUTES)) {
-    if (!state[key]) continue;
+    if (state[key] === undefined || state[key] === null || state[key] === "") continue;
     setAttribute(host, attributeName, state[key]);
   }
 
+  syncIosGlassTintProperties(host, state);
   host.style.colorScheme = state.theme === "light" ? "light" : "dark";
   return state;
 }

@@ -1,8 +1,8 @@
 /*
  * MHA iOS Surface Map
  * Phase 4: raw iOS materials -> global surface contract.
- * Liquid remains the global iOS contract; Frosted is adapted only at the
- * outer widget boundary.
+ * Liquid remains the global iOS contract outside widgets. Widget shells mix
+ * their Liquid and Frosted endpoints through --mha-ios-glass-tint-percent.
  */
 
 :host([data-theme-style="ios"]) {
@@ -66,19 +66,65 @@
   --mha-widget-control-surface: var(--mha-surface-control);
 }
 
-:host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-widget {
-  --mha-widget-shell-surface: var(--mha-ios-frosted-widget-surface);
-  --mha-widget-shell-border: var(--mha-ios-frosted-widget-border);
-  --mha-widget-shell-shadow: var(--mha-ios-frosted-widget-shadow);
-  --mha-widget-shell-blur: var(--mha-ios-frosted-widget-blur);
-  --mha-widget-shell-saturation: var(--mha-ios-frosted-widget-saturation);
-  --mha-widget-shell-highlight: var(--mha-ios-frosted-widget-highlight);
-  --mha-widget-shell-highlight-opacity: var(--mha-ios-frosted-widget-highlight-opacity);
-  --mha-widget-shell-surface-edit: var(--mha-ios-frosted-widget-surface-edit);
-  --mha-widget-shell-border-edit: var(--mha-ios-frosted-widget-border-edit);
-  --mha-widget-shell-shadow-edit: var(--mha-ios-frosted-widget-shadow);
+:host([data-theme-style="ios"]) .mha-widget {
+  --mha-widget-shell-surface: color-mix(
+    in srgb,
+    var(--mha-ios-raw-liquid-primary-surface) var(--mha-ios-liquid-percent, 100%),
+    var(--mha-ios-frosted-widget-surface) var(--mha-ios-glass-tint-percent, 0%)
+  );
+  --mha-widget-shell-border: color-mix(
+    in srgb,
+    var(--mha-ios-raw-liquid-primary-border) var(--mha-ios-liquid-percent, 100%),
+    var(--mha-ios-frosted-widget-border) var(--mha-ios-glass-tint-percent, 0%)
+  );
+  --mha-widget-shell-shadow: var(--mha-ios-widget-mixed-shadow);
+  --mha-widget-shell-highlight: var(--mha-ios-raw-liquid-shell-highlight);
+  --mha-widget-shell-highlight-opacity: var(--mha-ios-widget-highlight-opacity, .56);
+  --mha-widget-shell-surface-edit: var(--mha-ios-widget-mixed-surface-edit);
+  --mha-widget-shell-border-edit: color-mix(
+    in srgb,
+    var(--mha-ios-raw-liquid-control-border-active) var(--mha-ios-liquid-percent, 100%),
+    var(--mha-ios-frosted-widget-border-edit) var(--mha-ios-glass-tint-percent, 0%)
+  );
+  --mha-widget-shell-shadow-edit: var(--mha-ios-widget-mixed-shadow);
   --mha-glass-noise-image: var(--mha-glass-noise-texture);
-  --mha-glass-noise-opacity: .065;
+  --mha-glass-noise-opacity: var(--mha-ios-widget-noise-opacity, .072);
   --mha-glass-noise-size: 80px 80px;
   --mha-glass-noise-blend-mode: soft-light;
+}
+
+:host([data-theme-style="ios"][data-theme="light"]) {
+  --mha-ios-widget-mixed-shadow:
+    0 12px 30px color-mix(in srgb, rgba(34,48,78,.09) var(--mha-ios-liquid-percent, 100%), transparent),
+    inset 0 1px 0 color-mix(in srgb, rgba(255,255,255,.54) var(--mha-ios-liquid-percent, 100%), transparent),
+    0 6px 16px color-mix(in srgb, rgba(76,92,120,.055) var(--mha-ios-glass-tint-percent, 0%), transparent),
+    0 1px 4px color-mix(in srgb, rgba(76,92,120,.035) var(--mha-ios-glass-tint-percent, 0%), transparent);
+  --mha-ios-widget-mixed-surface-edit:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, rgba(255,255,255,.88) var(--mha-ios-glass-tint-percent, 0%), transparent),
+      color-mix(in srgb, rgba(255,240,230,.70) var(--mha-ios-glass-tint-percent, 0%), transparent)
+    ),
+    linear-gradient(
+      color-mix(in srgb, rgba(255,255,255,.76) var(--mha-ios-liquid-percent, 100%), transparent),
+      color-mix(in srgb, rgba(255,255,255,.76) var(--mha-ios-liquid-percent, 100%), transparent)
+    );
+}
+
+:host([data-theme-style="ios"][data-theme="dark"]) {
+  --mha-ios-widget-mixed-shadow:
+    0 16px 40px color-mix(in srgb, rgba(0,0,0,.20) var(--mha-ios-liquid-percent, 100%), transparent),
+    inset 0 1px 0 color-mix(in srgb, rgba(255,255,255,.28) var(--mha-ios-liquid-percent, 100%), transparent),
+    0 18px 46px color-mix(in srgb, rgba(0,0,0,.20) var(--mha-ios-glass-tint-percent, 0%), transparent),
+    0 6px 18px color-mix(in srgb, rgba(0,0,0,.12) var(--mha-ios-glass-tint-percent, 0%), transparent);
+  --mha-ios-widget-mixed-surface-edit:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, rgba(255,236,219,.26) var(--mha-ios-glass-tint-percent, 0%), transparent),
+      color-mix(in srgb, rgba(255,255,255,.15) var(--mha-ios-glass-tint-percent, 0%), transparent)
+    ),
+    linear-gradient(
+      color-mix(in srgb, rgba(255,255,255,.82) var(--mha-ios-liquid-percent, 100%), transparent),
+      color-mix(in srgb, rgba(255,255,255,.82) var(--mha-ios-liquid-percent, 100%), transparent)
+    );
 }

@@ -9,9 +9,9 @@
   overflow: hidden;
 }
 
-/* Frosted Calendar follows the opaque macOS reference while preserving the
- * current Liquid content, typography, geometry and event styling. */
-:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="light"]) .mha-widget[data-widget-kind="calendar"] {
+/* Tinted Calendar follows the opaque macOS reference while preserving the
+ * current content, typography, geometry and event styling. */
+:host([data-theme-style="ios"][data-ios-widget-tint="tinted"][data-theme="light"]) .mha-widget[data-widget-kind="calendar"] {
   --mha-widget-shell-surface:
     linear-gradient(145deg, rgba(255,255,255,.97), rgba(246,246,248,.92));
   --mha-widget-shell-border: rgba(255,255,255,.72);
@@ -25,7 +25,7 @@
   --mha-glass-noise-opacity: .025;
 }
 
-:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="dark"]) .mha-widget[data-widget-kind="calendar"] {
+:host([data-theme-style="ios"][data-ios-widget-tint="tinted"][data-theme="dark"]) .mha-widget[data-widget-kind="calendar"] {
   --mha-widget-shell-surface:
     linear-gradient(145deg, rgba(13,13,14,.97), rgba(1,1,2,.93));
   --mha-widget-shell-border: rgba(255,255,255,.13);

@@ -83,6 +83,8 @@ export function createSettingsSurfaceCoordinator(host) {
         onThemeChange: (value) => host._applyThemeFromSettings(value),
         onThemeStyleChange: (value) => host._applyThemeStyleFromSettings(value),
         onIosGlassChange: (value) => host._applyIosGlassFromSettings(value),
+        onIosGlassTintChange: (value) => host._applyIosGlassTintFromSettings(value),
+        onIosWidgetTintChange: (value) => host._applyIosWidgetTintFromSettings(value),
         onAccentChange: (value) => host._applyAccentFromSettings(value),
         onAccentModeChange: (value) => host._applyAccentModeFromSettings(value),
         onAccentPaletteExpandedChange: (value) => host._setAccentPaletteExpanded(value),
