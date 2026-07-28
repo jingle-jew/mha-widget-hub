@@ -1678,7 +1678,7 @@
  * Keep the range control at its stable layout position while temporarily
  * removing every visual layer that obscures the widgets behind the panel.
  */
-:host(.is-widget-surface-previewing) .mha-settings-backdrop {
+:host([data-theme-style].is-settings-open.is-widget-surface-previewing) .mha-settings-backdrop {
   visibility: hidden;
   opacity: 0;
   background: transparent;
@@ -1686,25 +1686,36 @@
   backdrop-filter: none;
 }
 
-:host(.is-widget-surface-previewing) .mha-background,
-:host(.is-widget-surface-previewing) .mha-shell,
-:host(.is-widget-surface-previewing) .mha-dock,
-:host(.is-widget-surface-previewing) .mha-mobile-dock,
-:host(.is-widget-surface-previewing) .mha-edit-button {
+:host([data-theme-style].is-settings-open.is-widget-surface-previewing) .mha-background,
+:host([data-theme-style].is-settings-open.is-widget-surface-previewing) .mha-shell,
+:host([data-theme-style].is-settings-open.is-widget-surface-previewing) .mha-dock,
+:host([data-theme-style].is-settings-open.is-widget-surface-previewing) .mha-mobile-dock,
+:host([data-theme-style].is-settings-open.is-widget-surface-previewing) .mha-edit-button {
   -webkit-filter: none;
   filter: none;
+  transform: none;
+  transition: none;
 }
 
-:host(.is-widget-surface-previewing)
+:host([data-theme-style].is-settings-open.is-widget-surface-previewing)
   .mha-settings-panel.is-widget-surface-previewing .mha-settings-scrim,
-:host(.is-widget-surface-previewing)
+:host([data-theme-style].is-settings-open.is-widget-surface-previewing)
   .mha-settings-panel.is-widget-surface-previewing .mha-settings-header,
-:host(.is-widget-surface-previewing)
+:host([data-theme-style].is-settings-open.is-widget-surface-previewing)
   .mha-settings-panel.is-widget-surface-previewing .mha-settings-body > .mha-settings-section {
   visibility: hidden;
 }
 
-:host(.is-widget-surface-previewing)
+:host([data-theme-style].is-settings-open.is-widget-surface-previewing)
+  .mha-settings-panel.is-widget-surface-previewing .mha-settings-body > .mha-settings-section {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+:host([data-theme-style].is-settings-open.is-widget-surface-previewing)
   .mha-settings-panel.is-widget-surface-previewing .mha-settings-sheet {
   border-color: transparent;
   background: transparent;
@@ -1713,24 +1724,24 @@
   backdrop-filter: none;
 }
 
-:host(.is-widget-surface-previewing)
+:host([data-theme-style].is-settings-open.is-widget-surface-previewing)
   .mha-settings-panel.is-widget-surface-previewing .mha-settings-sheet::before,
-:host(.is-widget-surface-previewing)
+:host([data-theme-style].is-settings-open.is-widget-surface-previewing)
   .mha-settings-panel.is-widget-surface-previewing .mha-settings-sheet::after {
   opacity: 0;
 }
 
-:host(.is-widget-surface-previewing)
+:host([data-theme-style].is-settings-open.is-widget-surface-previewing)
   .mha-settings-panel.is-widget-surface-previewing .mha-settings-body {
   scrollbar-width: none;
 }
 
-:host(.is-widget-surface-previewing)
+:host([data-theme-style].is-settings-open.is-widget-surface-previewing)
   .mha-settings-panel.is-widget-surface-previewing .mha-settings-body::-webkit-scrollbar {
   display: none;
 }
 
-:host(.is-widget-surface-previewing)
+:host([data-theme-style].is-settings-open.is-widget-surface-previewing)
   .mha-settings-panel.is-widget-surface-previewing .mha-settings-range-field {
   position: relative;
   z-index: 1;

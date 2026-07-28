@@ -37,7 +37,12 @@ appartiennent à `AGENTS.md`.
   reste le dernier contrôle de la section Apparence. Pendant son geste actif,
   il partage avec le slider d’opacité OneUI l’état de prévisualisation des
   surfaces : scrim, sheet et blur du settings-panel sont masqués, tandis que le
-  slider reste visible et stable devant le dashboard.
+  slider reste visible et stable devant le dashboard. Les sélecteurs CSS de cet
+  état doivent combiner `data-theme-style`, `is-settings-open` et
+  `is-widget-surface-previewing` afin de surpasser aussi bien le blur d’ouverture
+  du settings-panel que `widget-surface-backdrop.css`, chargé plus tard. L’état
+  neutralise `filter`, `-webkit-filter`, la transformation du dashboard et le
+  backdrop de la section qui contient le slider.
 
 ### 2026-07-27 — Limiter la famille Calendrier à six formats natifs
 

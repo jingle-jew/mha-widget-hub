@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import { setLanguage } from "../src/i18n/index.js";
@@ -727,3 +728,27 @@ test("iOS glass tint preview hides panel layers only while the slider is armed",
   assert.equal(panel.classList.contains("is-widget-surface-previewing"), false);
   assert.equal(host.classList.contains("is-widget-surface-previewing"), false);
 }));
+
+test("widget surface preview clears higher-priority open-panel filters", () => {
+  const css = readFileSync(
+    new URL("../styles/settings/settings-panel.css", import.meta.url),
+    "utf8",
+  );
+  const dashboardRule = css.match(
+    /:host\(\[data-theme-style\]\.is-settings-open\.is-widget-surface-previewing\) \.mha-background,[\s\S]*?\.mha-edit-button \{([^}]+)\}/,
+  )?.[1];
+  const sectionRules = [...css.matchAll(
+    /:host\(\[data-theme-style\]\.is-settings-open\.is-widget-surface-previewing\)\s+\.mha-settings-panel\.is-widget-surface-previewing \.mha-settings-body > \.mha-settings-section \{([^}]+)\}/g,
+  )].map(match => match[1]);
+  const sectionRule = sectionRules.find(rule => rule.includes("background: transparent"));
+
+  assert.ok(dashboardRule);
+  assert.match(dashboardRule, /-webkit-filter:\s*none;/);
+  assert.match(dashboardRule, /filter:\s*none;/);
+  assert.match(dashboardRule, /transform:\s*none;/);
+  assert.match(dashboardRule, /transition:\s*none;/);
+  assert.ok(sectionRule);
+  assert.match(sectionRule, /background:\s*transparent;/);
+  assert.match(sectionRule, /-webkit-backdrop-filter:\s*none;/);
+  assert.match(sectionRule, /backdrop-filter:\s*none;/);
+});
