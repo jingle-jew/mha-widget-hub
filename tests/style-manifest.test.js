@@ -20,10 +20,12 @@ test("style manifest appends theme dock styles after the core dock layers", () =
   const coreDockIndex = manifestPaths.indexOf("styles/layout/mobile-dock-contract.css");
   const oneuiDockIndex = manifestPaths.indexOf("styles/themes/oneui-dock.css");
   const materialDockIndex = manifestPaths.indexOf("styles/themes/material-dock.css");
+  const calendarWidgetIndex = manifestPaths.indexOf("styles/widgets/calendar-widget.css");
 
   assert.notEqual(coreDockIndex, -1);
   assert.notEqual(oneuiDockIndex, -1);
   assert.notEqual(materialDockIndex, -1);
+  assert.notEqual(calendarWidgetIndex, -1);
   assert.notEqual(formControlsIndex, -1);
   assert(formControlsIndex < oneuiThemeIndex);
   assert(oneuiDockIndex > coreDockIndex);

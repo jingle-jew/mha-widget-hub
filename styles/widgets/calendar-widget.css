@@ -1,0 +1,443 @@
+/*
+ * MHA Calendar widgets
+ *
+ * The widget shell owns the theme surface, border, radius and shadow. Calendar
+ * content only consumes semantic text, divider, nested-surface and accent roles.
+ */
+
+.mha-widget[data-widget-kind="calendar"] {
+  overflow: hidden;
+}
+
+/* Tinted Calendar follows the opaque macOS reference while preserving the
+ * current content, typography, geometry and event styling. */
+:host([data-theme-style="ios"][data-ios-widget-tint="tinted"][data-theme="light"]) .mha-widget[data-widget-kind="calendar"] {
+  --mha-widget-shell-surface:
+    linear-gradient(145deg, rgba(255,255,255,.97), rgba(246,246,248,.92));
+  --mha-widget-shell-border: rgba(255,255,255,.72);
+  --mha-widget-shell-shadow:
+    0 8px 24px rgba(54,62,78,.08),
+    inset 0 1px 0 rgba(255,255,255,.92);
+  --mha-widget-shell-filter: blur(28px) saturate(128%) brightness(1.01);
+  --mha-widget-shell-highlight:
+    linear-gradient(180deg, rgba(255,255,255,.30), transparent 38%);
+  --mha-widget-shell-highlight-opacity: .20;
+  --mha-glass-noise-opacity: .025;
+}
+
+:host([data-theme-style="ios"][data-ios-widget-tint="tinted"][data-theme="dark"]) .mha-widget[data-widget-kind="calendar"] {
+  --mha-widget-shell-surface:
+    linear-gradient(145deg, rgba(13,13,14,.97), rgba(1,1,2,.93));
+  --mha-widget-shell-border: rgba(255,255,255,.13);
+  --mha-widget-shell-shadow:
+    0 14px 34px rgba(0,0,0,.28),
+    inset 0 1px 0 rgba(255,255,255,.09);
+  --mha-widget-shell-filter: blur(28px) saturate(118%) brightness(.96);
+  --mha-widget-shell-highlight:
+    linear-gradient(180deg, rgba(255,255,255,.10), transparent 42%);
+  --mha-widget-shell-highlight-opacity: .14;
+  --mha-glass-noise-opacity: .035;
+}
+
+.mha-calendar-widget {
+  --mha-calendar-color-1: var(--mha-accent-surface, var(--mha-accent));
+  --mha-calendar-color-2: color-mix(in srgb, var(--mha-accent) 52%, #38c9d6 48%);
+  --mha-calendar-color-3: color-mix(in srgb, var(--mha-accent) 48%, #a855f7 52%);
+  --mha-calendar-color-4: color-mix(in srgb, var(--mha-accent) 42%, #f59e0b 58%);
+  --mha-calendar-color-5: color-mix(in srgb, var(--mha-accent) 45%, #22c55e 55%);
+  --mha-calendar-color-6: color-mix(in srgb, var(--mha-accent) 48%, #ec4899 52%);
+  --mha-calendar-today-accent: var(--mha-accent-surface, var(--mha-accent));
+  box-sizing: border-box;
+  inline-size: 100%;
+  block-size: 100%;
+  min-inline-size: 0;
+  min-block-size: 0;
+  padding: clamp(.9rem, 3.4cqi, 1.55rem);
+  color: var(--mha-primary-text, var(--mha-text-primary));
+  container-type: size;
+  overflow: hidden;
+}
+
+.mha-calendar-date-hero,
+.mha-calendar-month,
+.mha-calendar-next-event,
+.mha-calendar-compact-agenda,
+.mha-calendar-agenda,
+.mha-calendar-timeline {
+  inline-size: 100%;
+  block-size: 100%;
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
+.mha-calendar-section-title,
+.mha-calendar-date-weekday,
+.mha-calendar-month-title,
+.mha-calendar-agenda-heading,
+.mha-calendar-timeline-day {
+  color: var(--mha-tertiary-text, var(--mha-text-tertiary));
+  font-size: clamp(.66rem, 3.5cqi, .9rem);
+  font-weight: var(--mha-font-weight-heavy);
+  letter-spacing: .015em;
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+
+.mha-calendar-date-weekday,
+.mha-calendar-date-hero-weekday,
+.mha-calendar-month-title,
+.mha-calendar-agenda-heading,
+.mha-calendar-timeline-column:first-child .mha-calendar-timeline-day {
+  color: var(--mha-calendar-today-accent);
+}
+
+.mha-calendar-empty {
+  min-inline-size: 0;
+  margin: 0;
+  color: var(--mha-secondary-text, var(--mha-text-secondary));
+  font-size: clamp(.68rem, 3.2cqi, .92rem);
+  line-height: 1.25;
+}
+
+/* Date monumentale -------------------------------------------------------- */
+
+.mha-calendar-date-hero {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: clamp(.2rem, 1.5cqi, .55rem);
+}
+
+.mha-calendar-date-hero-title {
+  display: flex;
+  align-items: baseline;
+  gap: .28em;
+  font-size: clamp(1.2rem, 12cqi, 2.6rem);
+  font-weight: var(--mha-font-weight-heavy);
+  letter-spacing: -.045em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.mha-calendar-date-hero-weekday {
+  color: var(--mha-calendar-today-accent);
+}
+
+.mha-calendar-date-hero-month {
+  color: var(--mha-tertiary-text, var(--mha-text-tertiary));
+}
+
+.mha-calendar-date-hero-number {
+  color: var(--mha-primary-text, var(--mha-text-primary));
+  font-size: clamp(5rem, 50cqi, 10rem);
+  font-weight: var(--mha-font-weight-heavy);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.085em;
+  line-height: .72;
+}
+
+/* Mini-mois --------------------------------------------------------------- */
+
+.mha-calendar-month {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: clamp(.38rem, 2.6cqi, .7rem);
+}
+
+.mha-calendar-month-title {
+  font-size: clamp(.72rem, 4.3cqi, 1rem);
+}
+
+.mha-calendar-month-weekdays,
+.mha-calendar-month-days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  align-items: center;
+  text-align: center;
+}
+
+.mha-calendar-month-weekdays {
+  color: var(--mha-secondary-text, var(--mha-text-secondary));
+  font-size: clamp(.56rem, 3.3cqi, .76rem);
+  font-weight: var(--mha-font-weight-heavy);
+}
+
+.mha-calendar-month-days {
+  grid-auto-rows: minmax(0, 1fr);
+  color: var(--mha-primary-text, var(--mha-text-primary));
+  font-size: clamp(.58rem, 3.7cqi, .82rem);
+  font-weight: var(--mha-font-weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.mha-calendar-month-day {
+  align-self: center;
+  justify-self: center;
+  display: grid;
+  place-items: center;
+  inline-size: clamp(1.2rem, 7.6cqi, 1.75rem);
+  aspect-ratio: 1;
+  border-radius: 999px;
+}
+
+.mha-calendar-month-day[data-current-month="false"] {
+  color: var(--mha-text-disabled);
+}
+
+.mha-calendar-month-day[data-today="true"] {
+  color: var(--mha-on-accent-surface, #fff);
+  background: var(--mha-calendar-today-accent);
+}
+
+/* Date et événements ------------------------------------------------------ */
+
+.mha-calendar-date-block {
+  min-inline-size: 0;
+}
+
+.mha-calendar-date-block.is-compact {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: .15rem;
+}
+
+.mha-calendar-date-number {
+  color: var(--mha-primary-text, var(--mha-text-primary));
+  font-size: clamp(2.7rem, 23cqi, 5.1rem);
+  font-weight: var(--mha-font-weight-medium);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.06em;
+  line-height: .86;
+}
+
+.mha-calendar-event {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: .38rem;
+  min-inline-size: 0;
+  min-block-size: 1.55rem;
+  padding: .18rem .48rem .18rem .28rem;
+  border: 1px solid color-mix(in srgb, var(--mha-calendar-event-color) 24%, transparent);
+  border-radius: 999px;
+  color: color-mix(in srgb, var(--mha-calendar-event-color) 76%, var(--mha-primary-text) 24%);
+  background: color-mix(in srgb, var(--mha-calendar-event-color) 14%, var(--mha-on-primary-surface) 86%);
+  font-size: clamp(.62rem, 2.8cqi, .86rem);
+  font-weight: var(--mha-font-weight-heavy);
+  line-height: 1.1;
+  overflow: hidden;
+}
+
+.mha-calendar-event.is-condensed {
+  min-block-size: 1.35rem;
+  padding-block: .12rem;
+}
+
+.mha-calendar-event-marker {
+  display: block;
+  inline-size: .62rem;
+  block-size: .62rem;
+  border: .17rem solid color-mix(in srgb, var(--mha-on-accent-surface, #fff) 90%, transparent);
+  border-radius: 999px;
+  background: var(--mha-calendar-event-color);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--mha-calendar-event-color) 72%, transparent);
+}
+
+.mha-calendar-event-summary {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mha-calendar-event-time {
+  color: var(--mha-secondary-text, var(--mha-text-secondary));
+  font-size: .88em;
+  font-weight: var(--mha-font-weight-bold);
+  white-space: nowrap;
+}
+
+.mha-calendar-next-event {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: clamp(.75rem, 6cqi, 1.35rem);
+}
+
+.mha-calendar-next-event-content {
+  display: grid;
+  align-content: start;
+  gap: .48rem;
+  min-inline-size: 0;
+}
+
+/* Agenda compact 4x2 ------------------------------------------------------ */
+
+.mha-calendar-compact-agenda {
+  display: grid;
+  grid-template-columns: minmax(0, .82fr) minmax(0, 1.25fr);
+  gap: clamp(1rem, 5cqi, 2.4rem);
+}
+
+.mha-calendar-compact-today {
+  display: grid;
+  align-content: space-between;
+  gap: .75rem;
+  min-inline-size: 0;
+}
+
+.mha-calendar-compact-upcoming {
+  display: grid;
+  align-content: start;
+  gap: clamp(.55rem, 2.4cqi, .9rem);
+  min-inline-size: 0;
+  overflow: hidden;
+}
+
+.mha-calendar-compact-agenda .mha-calendar-date-number {
+  font-size: clamp(3.2rem, 18cqi, 5.6rem);
+}
+
+.mha-calendar-compact-agenda .mha-calendar-agenda-group {
+  gap: .28rem;
+}
+
+/* Agenda détaillé 4x4 ----------------------------------------------------- */
+
+.mha-calendar-agenda {
+  display: grid;
+  align-content: start;
+  gap: clamp(.7rem, 2.4cqi, 1.1rem);
+  overflow: hidden;
+}
+
+.mha-calendar-agenda-header {
+  min-inline-size: 0;
+}
+
+.mha-calendar-agenda-heading {
+  color: var(--mha-calendar-today-accent);
+}
+
+.mha-calendar-agenda-group {
+  display: grid;
+  gap: .38rem;
+  min-inline-size: 0;
+}
+
+.mha-calendar-agenda .mha-calendar-agenda-group {
+  grid-template-columns: minmax(8.5rem, .62fr) minmax(0, 1.7fr);
+  align-items: center;
+  column-gap: .8rem;
+}
+
+.mha-calendar-agenda .mha-calendar-agenda-group > :not(.mha-calendar-section-title) {
+  grid-column: 2;
+}
+
+.mha-calendar-agenda .mha-calendar-section-title {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  align-self: start;
+  padding-block-start: .32rem;
+}
+
+/* Chronologie 4x4 --------------------------------------------------------- */
+
+.mha-calendar-timeline {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(1rem, 4cqi, 2.2rem);
+}
+
+.mha-calendar-timeline-column {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: .6rem;
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
+.mha-calendar-timeline-header {
+  display: grid;
+  align-content: start;
+  gap: .3rem;
+  min-block-size: clamp(3.15rem, 11cqi, 4.8rem);
+}
+
+.mha-calendar-timeline-date {
+  color: var(--mha-primary-text, var(--mha-text-primary));
+  font-size: clamp(2.3rem, 12cqi, 4.2rem);
+  font-weight: var(--mha-font-weight-medium);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.055em;
+  line-height: .85;
+}
+
+.mha-calendar-timeline-hours {
+  display: grid;
+  grid-auto-rows: minmax(0, 1fr);
+  min-block-size: 0;
+}
+
+.mha-calendar-timeline-hour {
+  display: grid;
+  grid-template-columns: clamp(2.6rem, 10cqi, 3.7rem) minmax(0, 1fr);
+  align-items: start;
+  min-block-size: 0;
+}
+
+.mha-calendar-timeline-hour-label {
+  padding-block-start: .08rem;
+  color: var(--mha-tertiary-text, var(--mha-text-tertiary));
+  font-size: clamp(.58rem, 2.6cqi, .82rem);
+  font-weight: var(--mha-font-weight-bold);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.mha-calendar-timeline-track {
+  position: relative;
+  min-inline-size: 0;
+  block-size: 100%;
+  border-block-start: 1px solid var(--mha-tertiary-border, var(--mha-border-subtle));
+}
+
+.mha-calendar-timeline-track .mha-calendar-event {
+  position: relative;
+  z-index: 2;
+  margin-block-start: .18rem;
+}
+
+.mha-calendar-now-line {
+  position: absolute;
+  z-index: 3;
+  inset-inline: -.12rem 0;
+  inset-block-start: calc(var(--mha-calendar-minute-offset, 0) * 100%);
+  block-size: 2px;
+  border-radius: 999px;
+  background: var(--mha-calendar-today-accent);
+}
+
+.mha-calendar-now-line::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block-start: 50%;
+  inline-size: .48rem;
+  block-size: .48rem;
+  border-radius: 999px;
+  background: inherit;
+  transform: translate(-25%, -50%);
+}
+
+@container (max-width: 24rem) {
+  .mha-calendar-agenda .mha-calendar-agenda-group {
+    grid-template-columns: minmax(6.5rem, .65fr) minmax(0, 1.35fr);
+  }
+
+  .mha-calendar-timeline {
+    gap: .75rem;
+  }
+}

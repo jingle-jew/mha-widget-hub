@@ -20,6 +20,7 @@ const CATALOG_WIDGET_CONFIG_KEYS = Object.freeze([
   "weatherEntityId",
   "attribute",
   "unit",
+  "calendarEntityIds",
 ]);
 
 function getCatalogWidgetConfig(item = {}) {

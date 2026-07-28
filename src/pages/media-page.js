@@ -45,10 +45,7 @@ function createIconButton({ label, icon, className = "", onClick = () => {} } = 
 
 function resolveEffectiveVisualStyle(themeStyle = "oneui", pageVisualStyle = "theme") {
   if (pageVisualStyle !== "theme") return pageVisualStyle;
-  if (themeStyle === "ios") {
-    const variant = globalThis.document?.documentElement?.dataset?.themeVariant || "";
-    return variant === "frosted-glass" ? "frosted-glass" : "liquid-glass";
-  }
+  if (themeStyle === "ios") return "liquid-glass";
   if (themeStyle === "material") return "material-you";
   if (themeStyle === "alexa") return "alexa";
   return "oneui";

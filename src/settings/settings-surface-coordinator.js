@@ -64,6 +64,7 @@ export function createSettingsSurfaceCoordinator(host) {
       isMobileLayout: Boolean(responsiveState.isMobileLayout ?? host._isMobileLauncherLayout?.()),
       isMobileLandscape: Boolean(settingsCapabilities.isMobileLandscape),
       customWallpapers: host._customWallpapers,
+      gridWallpaper: host._gridWallpaper,
       weatherLandscapeId: normalizeWeatherLandscapeId(weatherPage?.config?.weatherLandscapeId),
       hass: host._hass,
       entityVisibilityConfig: host._entityVisibilityConfig,
@@ -82,6 +83,8 @@ export function createSettingsSurfaceCoordinator(host) {
         onThemeChange: (value) => host._applyThemeFromSettings(value),
         onThemeStyleChange: (value) => host._applyThemeStyleFromSettings(value),
         onIosGlassChange: (value) => host._applyIosGlassFromSettings(value),
+        onIosGlassTintChange: (value) => host._applyIosGlassTintFromSettings(value),
+        onIosWidgetTintChange: (value) => host._applyIosWidgetTintFromSettings(value),
         onAccentChange: (value) => host._applyAccentFromSettings(value),
         onAccentModeChange: (value) => host._applyAccentModeFromSettings(value),
         onAccentPaletteExpandedChange: (value) => host._setAccentPaletteExpanded(value),
@@ -119,6 +122,7 @@ export function createSettingsSurfaceCoordinator(host) {
         onDockPositionChange: (value) => host._applyDockPositionFromSettings(value),
         onWallpaperImport: (mode, payload) => host._saveCustomWallpaper(mode, payload),
         onWallpaperReset: (mode) => host._resetCustomWallpaper(mode),
+        onGridWallpaperChange: (value) => host._applyGridWallpaperFromSettings(value),
       },
     });
   }

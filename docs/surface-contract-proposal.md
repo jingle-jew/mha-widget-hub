@@ -358,7 +358,7 @@ A theme should define raw theme values, then map them to MHA global roles.
 Example for iOS Liquid:
 
 ```css
-:host([data-theme-style="ios"][data-ios-glass="liquid"]) {
+:host([data-theme-style="ios"]) {
   /* Raw theme material values */
   --mha-ios-liquid-shell-surface: linear-gradient(...);
   --mha-ios-liquid-shell-border: rgba(...);
@@ -385,12 +385,12 @@ Example for iOS Liquid:
 Then a mode-specific adapter can say:
 
 ```css
-:host([data-theme-style="ios"][data-ios-glass="liquid"]) {
-  --mha-widget-shell-surface: var(--mha-surface-shell);
-}
-
-:host([data-theme-style="ios"][data-ios-glass="frosted"]) {
-  --mha-widget-shell-surface: var(--mha-surface-on-primary);
+:host([data-theme-style="ios"]) .mha-widget {
+  --mha-widget-shell-surface: color-mix(
+    in srgb,
+    var(--mha-ios-raw-liquid-primary-surface) var(--mha-ios-liquid-percent),
+    var(--mha-ios-frosted-widget-surface) var(--mha-ios-glass-tint-percent)
+  );
 }
 ```
 

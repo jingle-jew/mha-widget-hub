@@ -220,6 +220,7 @@ export function createHubStateIngressCoordinator(host, {
     host._applyHaSidebarMode(host._hideHaSidebar);
     host._migrateLegacyCustomWallpaper();
     host._customWallpapers = host._readCustomWallpapers();
+    host._gridWallpaper = host._readGridWallpaper();
     host._applyCustomWallpaperState();
     host._syncAutoAccentFromWallpaper();
     host._pages = readPages();

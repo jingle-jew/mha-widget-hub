@@ -1,0 +1,47 @@
+name: Sync dev after merge
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - master
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-dev-after-merge
+  cancel-in-progress: false
+
+jobs:
+  sync-dev:
+    name: Fast-forward dev to master
+    if: >-
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.head.ref == 'dev' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout master
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          fetch-depth: 0
+
+      - name: Fetch branch state
+        run: >-
+          git fetch --no-tags origin
+          +refs/heads/master:refs/remotes/origin/master
+          +refs/heads/dev:refs/remotes/origin/dev
+
+      - name: Verify fast-forward
+        run: |
+          if ! git merge-base --is-ancestor origin/dev origin/master; then
+            echo "origin/dev cannot be fast-forwarded to origin/master." >&2
+            exit 1
+          fi
+
+      - name: Sync remote dev
+        run: git push origin origin/master:refs/heads/dev

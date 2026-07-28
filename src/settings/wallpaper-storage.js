@@ -3,6 +3,10 @@ export const WALLPAPER_STORAGE_KEYS = Object.freeze({
   light: "mha_custom_wallpaper_light",
   dark: "mha_custom_wallpaper_dark",
 });
+export const GRID_WALLPAPER_STORAGE_KEY = "mha_grid_wallpaper";
+export const DEFAULT_GRID_WALLPAPER = Object.freeze({
+  useWeatherBackground: false,
+});
 
 export const WALLPAPER_MAX_BYTES = 5 * 1024 * 1024;
 export const WALLPAPER_ALLOWED_MIME_TYPES = new Set([
@@ -120,4 +124,29 @@ export function resetWallpaper(storage, mode) {
   if (!key) return false;
   storage.removeItem(key);
   return true;
+}
+
+export function normalizeGridWallpaper(value = DEFAULT_GRID_WALLPAPER) {
+  return {
+    useWeatherBackground: value?.useWeatherBackground === true
+      || value?.type === "weather",
+  };
+}
+
+export function readGridWallpaper(storage) {
+  const raw = storage.getItem(GRID_WALLPAPER_STORAGE_KEY);
+  if (!raw) return { ...DEFAULT_GRID_WALLPAPER };
+
+  try {
+    return normalizeGridWallpaper(JSON.parse(raw));
+  } catch (error) {
+    console.warn("[MHA] Grid wallpaper preference could not be read.", error);
+    return { ...DEFAULT_GRID_WALLPAPER };
+  }
+}
+
+export function saveGridWallpaper(storage, value) {
+  const wallpaper = normalizeGridWallpaper(value);
+  storage.setItem(GRID_WALLPAPER_STORAGE_KEY, JSON.stringify(wallpaper));
+  return wallpaper;
 }

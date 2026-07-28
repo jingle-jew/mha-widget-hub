@@ -13,7 +13,7 @@ import {
 import { SETTINGS_PANEL_VISIBILITY_TRANSITION_MS } from "../panels/panel-transition-timing.js";
 import { syncPanelVisibility } from "../panels/panel-visibility-controller.js";
 import { validateWallpaperFile } from "./wallpaper-storage.js";
-import { getThemeStyleOptions, getThemeVariantOptions } from "./theme-registry.js";
+import { getThemeStyleOptions } from "./theme-registry.js";
 import { createIconPickerControl } from "../widget-config/icon-picker.js";
 import {
   getWeatherLandscapeOptions,
@@ -44,6 +44,11 @@ const LANGUAGE_OPTIONS = [
   { value: "en", label: "English", labelKey: "settings.languageOptions.en" },
   { value: "fr", label: "Français", labelKey: "settings.languageOptions.fr" },
   { value: "es", label: "Español", labelKey: "settings.languageOptions.es" },
+];
+
+const IOS_WIDGET_TINT_OPTIONS = [
+  { value: "transparent", label: "Transparent", labelKey: "settings.widgetTintOptions.transparent" },
+  { value: "tinted", label: "Tinted", labelKey: "settings.widgetTintOptions.tinted" },
 ];
 
 const STATUS_BAR_MODE_OPTIONS = [
@@ -301,6 +306,7 @@ function createPercentageSlider({
   min = 0,
   max = 100,
   onInput,
+  previewClassName = "",
 } = {}) {
   const normalizedValue = Math.max(min, Math.min(max, Number(value) || 0));
   const field = document.createElement("label");
@@ -341,10 +347,11 @@ function createPercentageSlider({
 
   let activePointerId = null;
   const setPreviewActive = (active) => {
+    if (!previewClassName) return;
     const panel = input.closest?.(".mha-settings-panel");
     const host = input.getRootNode?.()?.host;
-    panel?.classList?.toggle?.("is-oneui-opacity-previewing", active);
-    host?.classList?.toggle?.("is-oneui-opacity-previewing", active);
+    panel?.classList?.toggle?.(previewClassName, active);
+    host?.classList?.toggle?.(previewClassName, active);
   };
   const finishPreview = (event) => {
     if (
@@ -1076,6 +1083,8 @@ export function createSettingsPanel({
   themeStyle = "oneui",
   themeVariant = "",
   iosGlass = "liquid",
+  iosGlassTint = 0,
+  iosWidgetTint = "transparent",
   accent = "",
   accentMode = "manual",
   accentPaletteExpanded = false,
@@ -1103,6 +1112,7 @@ export function createSettingsPanel({
   isMobileLayout = false,
   isMobileLandscape = false,
   customWallpapers = {},
+  gridWallpaper = {},
   weatherLandscapeId = "alpine-lake",
   supportsDockPosition,
   supportsSidebarToggle,
@@ -1113,6 +1123,8 @@ export function createSettingsPanel({
   onThemeStyleChange,
   onThemeVariantChange,
   onIosGlassChange,
+  onIosGlassTintChange,
+  onIosWidgetTintChange,
   onAccentChange,
   onAccentModeChange,
   onAccentPaletteExpandedChange,
@@ -1148,6 +1160,7 @@ export function createSettingsPanel({
   onDockPositionChange,
   onWallpaperImport,
   onWallpaperReset,
+  onGridWallpaperChange,
 } = {}) {
   const isScreensaverScope = scope === "screensaver";
   const root = applyPanelSurfaceContract(createPanelShell({
@@ -1285,6 +1298,14 @@ export function createSettingsPanel({
   }
 
   if (!isScreensaverScope && settingsPage === "wallpaper") {
+    sections.push(createSection(t("settings.gridWallpaper", "Grid page wallpaper"), [
+      createSwitch({
+        label: t("settings.useWeatherWallpaper", "Use weather wallpaper"),
+        description: t("settings.useWeatherWallpaperDescription", "Use the Weather page landscape on Grid pages."),
+        checked: gridWallpaper?.useWeatherBackground === true,
+        onChange: onGridWallpaperChange,
+      }),
+    ]));
     sections.push(createSection(t("settings.lightTheme", "Light theme"), [
       createWallpaperControls({
         mode: "light",
@@ -1361,14 +1382,12 @@ export function createSettingsPanel({
       }),
     ];
 
-    const themeVariantOptions = getThemeVariantOptions(themeStyle);
-    if (themeStyle !== "ios" && themeVariantOptions.length) {
-      const effectiveThemeVariant = themeVariant || iosGlass;
+    if (themeStyle === "ios") {
       appearanceControls.push(createSelect({
-        label: t("settings.themeVariant", "Theme variant"),
-        value: effectiveThemeVariant,
-        options: themeVariantOptions,
-        onChange: onThemeVariantChange || onIosGlassChange,
+        label: t("settings.widgetTint", "Widget tint"),
+        value: iosWidgetTint,
+        options: IOS_WIDGET_TINT_OPTIONS,
+        onChange: onIosWidgetTintChange,
       }));
     }
 
@@ -1398,6 +1417,18 @@ export function createSettingsPanel({
         min: 0,
         max: 100,
         onInput: onOneUiPrimarySurfaceOpacityChange,
+        previewClassName: "is-widget-surface-previewing",
+      }));
+    }
+
+    if (themeStyle === "ios") {
+      appearanceControls.push(createPercentageSlider({
+        label: t("settings.glassTint", "Glass tint"),
+        value: iosGlassTint,
+        min: 0,
+        max: 100,
+        onInput: onIosGlassTintChange,
+        previewClassName: "is-widget-surface-previewing",
       }));
     }
 
@@ -1412,7 +1443,7 @@ export function createSettingsPanel({
       createSettingsNavTile({
         icon: "dashboard",
         label: t("settings.wallpaper", "Wallpaper"),
-        description: t("settings.wallpaperDescription", "Choose a separate image for light and dark themes."),
+        description: t("settings.wallpaperDescription", "Choose an MHA weather background or separate images for light and dark themes."),
         onClick: onOpenWallpaperSettings,
       }),
       createSettingsNavTile({

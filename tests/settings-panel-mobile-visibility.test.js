@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import { setLanguage } from "../src/i18n/index.js";
@@ -351,7 +352,8 @@ test("settings panel replaces only the appearance section when visual style chan
   assert.equal(updateSettingsPanel(oneUiPanel, iosPanel), true);
   assert.equal(oneUiPanel.querySelector(".mha-settings-body"), originalBody);
   assert.notEqual(oneUiPanel.querySelector('[data-settings-section="appearance"]'), originalAppearance);
-  assert.equal(oneUiPanel.querySelector(".mha-settings-range-input"), null);
+  assert.ok(oneUiPanel.querySelector(".mha-settings-range-input"));
+  assert.equal(hasText(oneUiPanel, "Glass tint"), true);
   assert.equal(originalBody.scrollTop, 137);
   assert.equal(oneUiPanel.replacedWith, undefined);
 }));
@@ -471,17 +473,62 @@ test("Weather page customization tile opens its dedicated landscape subpanel", (
   assert.equal(backCount, 1);
 }));
 
-test("settings panel hides the iOS glass variant selector", () => withMockDocument(() => {
+test("Wallpaper subpanel exposes a weather background toggle for grid pages", () => withMockDocument(() => {
+  const changes = [];
+  const panel = createSettingsPanel({
+    open: true,
+    scope: "all",
+    settingsPage: "wallpaper",
+    gridWallpaper: { useWeatherBackground: true },
+    onGridWallpaperChange: value => changes.push(value),
+  });
+  const toggle = panel.querySelector(".mha-toggle-input");
+
+  assert.equal(hasText(panel, "Grid page wallpaper"), true);
+  assert.equal(hasText(panel, "Use weather wallpaper"), true);
+  assert.equal(panel.querySelectorAll(".mha-settings-weather-landscape-option").length, 0);
+  assert.equal(toggle.checked, true);
+
+  toggle.checked = false;
+  toggle.listeners.change({ currentTarget: toggle });
+  assert.deepEqual(changes, [false]);
+}));
+
+test("settings panel exposes independent iOS glass and special-widget tint controls", () => withMockDocument(() => {
+  const glassChanges = [];
+  const widgetChanges = [];
   const iosPanel = createSettingsPanel({
     open: true,
     scope: "all",
     settingsPage: "main",
     themeStyle: "ios",
-    themeVariant: "liquid",
-    iosGlass: "liquid",
+    iosGlassTint: 36,
+    iosWidgetTint: "transparent",
+    onIosGlassTintChange: value => glassChanges.push(value),
+    onIosWidgetTintChange: value => widgetChanges.push(value),
   });
 
-  assert.equal(hasText(iosPanel, "Theme variant"), false);
+  assert.equal(hasText(iosPanel, "Glass tint"), true);
+  assert.equal(hasText(iosPanel, "Widget tint"), true);
+  const appearanceSection = iosPanel.querySelector('[data-settings-section="appearance"]');
+  assert.equal(appearanceSection.children.at(-1).className, "mha-settings-range-field");
+  assert.equal(hasText(appearanceSection.children.at(-1), "Glass tint"), true);
+  const slider = iosPanel.querySelector(".mha-settings-range-input");
+  assert.equal(slider.value, "36");
+  slider.value = "73";
+  slider.listeners.input();
+
+  const trigger = iosPanel.querySelectorAll(".mha-select-trigger")
+    .find(control => control.getAttribute("aria-label") === "Widget tint");
+  const widgetTintSelect = trigger.closest(".mha-select");
+  const input = widgetTintSelect.querySelector(".mha-select-native");
+  const tintedOption = widgetTintSelect.querySelectorAll("[role='option']")
+    .find(option => option.dataset.value === "tinted");
+  assert.equal(input.value, "transparent");
+
+  tintedOption.listeners.click();
+  assert.deepEqual(glassChanges, [73]);
+  assert.deepEqual(widgetChanges, ["tinted"]);
 }));
 
 test("settings panel hides the Alexa theme option", () => withMockDocument(() => {
@@ -595,7 +642,7 @@ test("MHA checkbox and radio primitives keep native semantics behind custom indi
   assert.deepEqual(checkboxValues, [true]);
 }));
 
-test("settings panel exposes primary surface opacity only for OneUI", () => withMockDocument(() => {
+test("settings panel exposes the OneUI opacity control only for OneUI", () => withMockDocument(() => {
   const values = [];
   const oneUiPanel = createSettingsPanel({
     open: true,
@@ -619,7 +666,8 @@ test("settings panel exposes primary surface opacity only for OneUI", () => with
   assert.equal(slider.max, "100");
   assert.equal(slider.value, "42");
   assert.equal(hasText(oneUiPanel, "Widget opacity"), true);
-  assert.equal(iosPanel.querySelector(".mha-settings-range-input"), null);
+  assert.equal(hasText(iosPanel, "Widget opacity"), false);
+  assert.equal(hasText(iosPanel, "Glass tint"), true);
 
   slider.value = "0";
   slider.listeners.input();
@@ -641,15 +689,66 @@ test("OneUI opacity preview hides panel layers only while the slider is armed", 
   slider.getRootNode = () => ({ host });
 
   slider.listeners.pointerdown({ button: 0, pointerId: 7 });
-  assert.equal(panel.classList.contains("is-oneui-opacity-previewing"), true);
-  assert.equal(host.classList.contains("is-oneui-opacity-previewing"), true);
+  assert.equal(panel.classList.contains("is-widget-surface-previewing"), true);
+  assert.equal(host.classList.contains("is-widget-surface-previewing"), true);
 
   slider.value = "31";
   slider.listeners.input();
   assert.deepEqual(values, [31]);
-  assert.equal(panel.classList.contains("is-oneui-opacity-previewing"), true);
+  assert.equal(panel.classList.contains("is-widget-surface-previewing"), true);
 
   slider.listeners.pointerup({ pointerId: 7 });
-  assert.equal(panel.classList.contains("is-oneui-opacity-previewing"), false);
-  assert.equal(host.classList.contains("is-oneui-opacity-previewing"), false);
+  assert.equal(panel.classList.contains("is-widget-surface-previewing"), false);
+  assert.equal(host.classList.contains("is-widget-surface-previewing"), false);
 }));
+
+test("iOS glass tint preview hides panel layers only while the slider is armed", () => withMockDocument(() => {
+  const values = [];
+  const panel = createSettingsPanel({
+    open: true,
+    scope: "all",
+    settingsPage: "main",
+    themeStyle: "ios",
+    onIosGlassTintChange: value => values.push(value),
+  });
+  const slider = panel.querySelector(".mha-settings-range-input");
+  const host = createMockNode("mha-control-hub");
+  slider.getRootNode = () => ({ host });
+
+  slider.listeners.pointerdown({ button: 0, pointerId: 9 });
+  assert.equal(panel.classList.contains("is-widget-surface-previewing"), true);
+  assert.equal(host.classList.contains("is-widget-surface-previewing"), true);
+
+  slider.value = "64";
+  slider.listeners.input();
+  assert.deepEqual(values, [64]);
+  assert.equal(panel.classList.contains("is-widget-surface-previewing"), true);
+
+  slider.listeners.pointerup({ pointerId: 9 });
+  assert.equal(panel.classList.contains("is-widget-surface-previewing"), false);
+  assert.equal(host.classList.contains("is-widget-surface-previewing"), false);
+}));
+
+test("widget surface preview clears higher-priority open-panel filters", () => {
+  const css = readFileSync(
+    new URL("../styles/settings/settings-panel.css", import.meta.url),
+    "utf8",
+  );
+  const dashboardRule = css.match(
+    /:host\(\[data-theme-style\]\.is-settings-open\.is-widget-surface-previewing\) \.mha-background,[\s\S]*?\.mha-edit-button \{([^}]+)\}/,
+  )?.[1];
+  const sectionRules = [...css.matchAll(
+    /:host\(\[data-theme-style\]\.is-settings-open\.is-widget-surface-previewing\)\s+\.mha-settings-panel\.is-widget-surface-previewing \.mha-settings-body > \.mha-settings-section \{([^}]+)\}/g,
+  )].map(match => match[1]);
+  const sectionRule = sectionRules.find(rule => rule.includes("background: transparent"));
+
+  assert.ok(dashboardRule);
+  assert.match(dashboardRule, /-webkit-filter:\s*none;/);
+  assert.match(dashboardRule, /filter:\s*none;/);
+  assert.match(dashboardRule, /transform:\s*none;/);
+  assert.match(dashboardRule, /transition:\s*none;/);
+  assert.ok(sectionRule);
+  assert.match(sectionRule, /background:\s*transparent;/);
+  assert.match(sectionRule, /-webkit-backdrop-filter:\s*none;/);
+  assert.match(sectionRule, /backdrop-filter:\s*none;/);
+});

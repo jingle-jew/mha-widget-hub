@@ -27,8 +27,7 @@ MHA is intentionally built around its own native widget system. It does not depe
 ### Visual Systems
 
 - OneUI
-- iOS Liquid Glass
-- iOS Frosted Glass
+- iOS with adjustable Liquid–Frosted glass tint
 - Material You
 - Alexa
 

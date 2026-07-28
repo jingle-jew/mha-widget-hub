@@ -731,12 +731,20 @@ Default:
 oneui
 ```
 
-iOS Liquid/Frosted is not two separate registry themes. It is controlled by:
+iOS Liquid/Frosted is not two separate registry themes. Generic widget shells
+use a continuous value and special Calendar/Weather surfaces use an independent
+choice:
 
 ```text
-data-ios-glass="liquid"
-data-ios-glass="frosted"
+data-ios-glass-tint="0..100"
+data-ios-widget-tint="transparent|tinted"
 ```
+
+Liquid remains the canonical iOS material for the shell, dock, status bar,
+panels, settings, system icons and widget internals. The continuous mapping is
+therefore scoped to `.mha-widget`, with Calendar and Weather refinements owned
+by their CSS modules. `data-ios-glass` remains synchronized only as a legacy
+endpoint compatibility attribute and must not drive production CSS.
 
 ---
 

@@ -414,6 +414,11 @@ Examples:
 | Token pattern | Owner | Purpose |
 |---|---|---|
 | `--mha-ios-*` | iOS theme | Raw iOS Liquid/Frosted material recipes. |
+| `--mha-ios-glass-tint` | iOS runtime | Normalized generic widget mix from `0` to `1`. |
+| `--mha-ios-glass-tint-percent` | iOS runtime | Frosted endpoint weight used by widget adapters. |
+| `--mha-ios-liquid-percent` | iOS runtime | Liquid endpoint weight used by widget adapters. |
+| `--mha-ios-widget-noise-opacity` | iOS runtime | Interpolated outer-widget noise opacity. |
+| `--mha-ios-widget-highlight-opacity` | iOS runtime | Interpolated outer-widget highlight opacity. |
 | `--mha-oneui-*` | OneUI theme | Raw OneUI material recipes. |
 | `--mha-material-*` | Material theme | Raw Material You material recipes. |
 

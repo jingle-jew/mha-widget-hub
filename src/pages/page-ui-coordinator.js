@@ -24,6 +24,7 @@ import {
   getDefaultPageIcon,
   isMediaPageExperienceActive,
   isMediaPlayersPage,
+  isOverviewPage,
   PAGE_TYPES,
   supportsMediaPageTheme,
 } from "./page-types.js?v=media-persistence-v2";
@@ -134,11 +135,12 @@ export class PageUiCoordinator {
     const dockDefinition = getThemeDockDefinition(themeStyle);
     const activePage = this.getPages().find(page => page.id === this.getActivePageId()) || null;
     const isMediaPage = isMediaPageExperienceActive(activePage, themeStyle);
+    const isSpecializedPage = isMediaPage || isOverviewPage(activePage);
     return this.createDockPropsFn({
       ...this.buildDockStatePropsFn({
         pages: this.getPages(),
         activePageId: this.getActivePageId(),
-        isEditing: this.getIsEditing() && !isMediaPage,
+        isEditing: this.getIsEditing() && !isSpecializedPage,
       }),
       themeStyle,
       dockPosition: this.getDockPosition(),
@@ -175,7 +177,7 @@ export class PageUiCoordinator {
   }
 
   pageNeedsFullRender(page = null) {
-    return isMediaPageExperienceActive(page, this.getThemeStyle());
+    return isOverviewPage(page) || isMediaPageExperienceActive(page, this.getThemeStyle());
   }
 
   shouldUseFullRenderForPageTransition(previousPage, nextPage) {
@@ -214,6 +216,7 @@ export class PageUiCoordinator {
     this.recordPersistenceResult(this.writeActivePage(result.activePageId));
     this.setWidgets(this.readWidgets());
     const nextPage = this.getPages().find(page => page.id === result.activePageId) || null;
+    if (isOverviewPage(nextPage)) this.exitEditMode();
     this.refreshAfterActivePageChange(previousPage, nextPage);
     this.syncDocks();
     return true;
@@ -237,6 +240,7 @@ export class PageUiCoordinator {
     this.setNewPageType(PAGE_TYPES.GRID);
     this.setNewPageName("");
     this.setNewPageIcon("grid");
+    if (isOverviewPage(result.page)) this.exitEditMode();
     this.savePages();
     this.syncDocks();
     this.syncPageCreator();

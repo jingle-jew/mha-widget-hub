@@ -182,7 +182,12 @@
       document.documentElement.dataset.themeStyle = themeStyle;
       document.documentElement.dataset.accent = accent;
       document.documentElement.dataset.accentMode = "manual";
-      document.documentElement.dataset.iosGlass = localStorage.getItem("mha-ios-glass") || "liquid";
+      const iosGlass = localStorage.getItem("mha-ios-glass") || "liquid";
+      document.documentElement.dataset.iosGlass = iosGlass;
+      document.documentElement.dataset.iosGlassTint = localStorage.getItem("mha-ios-glass-tint")
+        || (iosGlass === "frosted" ? "100" : "0");
+      document.documentElement.dataset.iosWidgetTint = localStorage.getItem("mha-ios-widget-tint")
+        || (iosGlass === "frosted" ? "tinted" : "transparent");
       document.documentElement.dataset.iconShapeSetting = "auto";
       document.documentElement.dataset.iconShape = "squircle";
       styleSelect.value = themeStyle;

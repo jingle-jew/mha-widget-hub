@@ -6,7 +6,14 @@
  * aliases only; they must not contain independent visual values.
  */
 
-:host([data-theme-style="ios"][data-ios-glass="liquid"]) {
+:host([data-theme-style="ios"]) {
+  /* Runtime mix controls. ThemeController overrides these values on the host. */
+  --mha-ios-glass-tint: 0;
+  --mha-ios-glass-tint-percent: 0%;
+  --mha-ios-liquid-percent: 100%;
+  --mha-ios-widget-noise-opacity: .072;
+  --mha-ios-widget-highlight-opacity: .56;
+
   /* Hybrid Liquid/Frosted optical response. */
   --mha-ios-raw-liquid-shell-blur: 14px;
   --mha-ios-raw-liquid-shell-saturation: 165%;
@@ -68,7 +75,7 @@
   --mha-shell-highlight-opacity: var(--mha-ios-raw-liquid-shell-highlight-opacity);
 }
 
-:host([data-theme-style="ios"][data-ios-glass="liquid"][data-theme="light"]) {
+:host([data-theme-style="ios"][data-theme="light"]) {
   --mha-ios-raw-liquid-shell-surface:
     radial-gradient(circle at 20% 8%, rgba(255,255,255,.38), transparent 34%),
     linear-gradient(145deg, rgba(255,255,255,.34), rgba(255,255,255,.19) 56%, rgba(213,226,255,.16));
@@ -78,6 +85,7 @@
     inset 0 1px 0 rgba(255,255,255,.54);
 
   --mha-ios-raw-liquid-primary-surface: rgba(255,255,255,.32);
+  --mha-ios-raw-liquid-widget-surface: rgba(255,255,255,.20);
   --mha-ios-raw-liquid-primary-border: rgba(255,255,255,.54);
   --mha-ios-raw-liquid-primary-shadow: var(--mha-ios-raw-liquid-shell-shadow);
 
@@ -96,7 +104,7 @@
   --mha-ios-raw-liquid-control-border-active: rgba(255,255,255,.78);
 }
 
-:host([data-theme-style="ios"][data-ios-glass="liquid"][data-theme="dark"]) {
+:host([data-theme-style="ios"][data-theme="dark"]) {
   --mha-ios-raw-liquid-shell-surface:
     radial-gradient(circle at 20% 8%, rgba(255,255,255,.24), transparent 34%),
     linear-gradient(145deg, rgba(224,236,255,.16), rgba(255,255,255,.085) 56%, rgba(140,168,255,.07));
@@ -106,6 +114,7 @@
     inset 0 1px 0 rgba(255,255,255,.28);
 
   --mha-ios-raw-liquid-primary-surface: rgba(255,255,255,.12);
+  --mha-ios-raw-liquid-widget-surface: rgba(255,255,255,.07);
   --mha-ios-raw-liquid-primary-border: rgba(235,243,255,.28);
   --mha-ios-raw-liquid-primary-shadow: var(--mha-ios-raw-liquid-shell-shadow);
 
@@ -124,9 +133,10 @@
   --mha-ios-raw-liquid-control-border-active: rgba(255,255,255,.44);
 }
 
-/* Legacy Frosted remains an internal compatibility path for stored settings;
- * it is not exposed as an iOS user option. */
-:host([data-theme-style="ios"][data-ios-glass="frosted"]) {
+/* Frosted is an alternate widget-shell material. It deliberately defines no
+ * global shell, panel, dock, status-bar, control, icon or text role: the iOS
+ * theme outside widget shells always keeps the Liquid material above. */
+:host([data-theme-style="ios"]) {
   --mha-ios-raw-frosted-shell-blur: 24px;
   --mha-ios-raw-frosted-shell-saturation: 145%;
   --mha-ios-raw-frosted-shell-highlight:
@@ -142,16 +152,6 @@
   --mha-ios-raw-frosted-control-blur: var(--mha-ios-raw-frosted-shell-blur);
   --mha-ios-raw-frosted-control-saturation: var(--mha-ios-raw-frosted-shell-saturation);
 
-  --mha-surface-blur: var(--mha-ios-raw-frosted-shell-blur);
-  --mha-surface-saturation: var(--mha-ios-raw-frosted-shell-saturation);
-  --mha-glass-noise-image: var(--mha-glass-noise-texture);
-  --mha-glass-noise-opacity: .065;
-  --mha-glass-noise-size: 80px 80px;
-  --mha-glass-noise-blend-mode: soft-light;
-  --mha-widget-reflection-opacity: var(--mha-ios-raw-frosted-shell-highlight-opacity);
-  --mha-widget-reflection: var(--mha-ios-raw-frosted-shell-highlight);
-  --mha-widget-shell-highlight: var(--mha-ios-raw-frosted-shell-highlight);
-
   --mha-ios-frosted-blur: var(--mha-ios-raw-frosted-shell-blur);
   --mha-ios-frosted-shadow: var(--mha-ios-raw-frosted-shell-shadow);
   --mha-ios-frosted-surface: var(--mha-ios-raw-frosted-primary-surface);
@@ -164,27 +164,18 @@
   --mha-ios-frosted-tile-border: var(--mha-ios-raw-frosted-tile-border);
   --mha-ios-frosted-tile-shadow: var(--mha-ios-raw-frosted-tile-shadow);
 
-  --mha-widget-surface: var(--mha-ios-frosted-surface);
-  --mha-widget-surface-edit: var(--mha-ios-frosted-surface-active);
-  --mha-widget-border: var(--mha-ios-frosted-border);
-  --mha-widget-border-edit: var(--mha-ios-frosted-border-active);
-  --mha-widget-shadow: var(--mha-ios-frosted-shadow);
-  --mha-control-surface: var(--mha-ios-frosted-surface-muted);
-  --mha-control-surface-edit: var(--mha-ios-frosted-surface-active);
-  --mha-ios-control-active-surface: var(--mha-ios-frosted-surface-active);
-  --mha-ios-control-active-border: var(--mha-ios-frosted-border-active);
-  --mha-floating-shadow: var(--mha-ios-frosted-shadow);
-  --mha-dock-shadow: var(--mha-ios-frosted-shadow);
-  --mha-dock-surface: var(--mha-ios-raw-frosted-shell-surface);
-  --mha-dock-slot-surface: var(--mha-ios-raw-frosted-section-surface);
-  --mha-statusbar-surface: var(--mha-ios-raw-frosted-shell-surface);
-  --mha-statusbar-highlight: var(--mha-ios-raw-frosted-shell-highlight);
-  --mha-statusbar-highlight-opacity: var(--mha-ios-raw-frosted-shell-highlight-opacity);
-  --mha-shell-highlight: var(--mha-ios-raw-frosted-shell-highlight);
-  --mha-shell-highlight-opacity: var(--mha-ios-raw-frosted-shell-highlight-opacity);
+  --mha-ios-frosted-widget-surface: var(--mha-ios-raw-frosted-section-surface);
+  --mha-ios-frosted-widget-surface-edit: var(--mha-ios-raw-frosted-control-surface-active);
+  --mha-ios-frosted-widget-border: var(--mha-ios-raw-frosted-section-border);
+  --mha-ios-frosted-widget-border-edit: var(--mha-ios-raw-frosted-control-border-active);
+  --mha-ios-frosted-widget-shadow: var(--mha-ios-raw-frosted-primary-shadow);
+  --mha-ios-frosted-widget-blur: var(--mha-ios-raw-frosted-primary-blur);
+  --mha-ios-frosted-widget-saturation: var(--mha-ios-raw-frosted-primary-saturation);
+  --mha-ios-frosted-widget-highlight: var(--mha-ios-raw-frosted-shell-highlight);
+  --mha-ios-frosted-widget-highlight-opacity: var(--mha-ios-raw-frosted-shell-highlight-opacity);
 }
 
-:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="light"]) {
+:host([data-theme-style="ios"][data-theme="light"]) {
   --mha-ios-raw-frosted-shell-surface: rgba(242,242,247,.72);
   --mha-ios-raw-frosted-shell-border: rgba(255,255,255,.56);
   --mha-ios-raw-frosted-shell-shadow:
@@ -206,7 +197,7 @@
   --mha-ios-raw-frosted-control-border-active: rgba(110,92,78,.26);
 }
 
-:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="dark"]) {
+:host([data-theme-style="ios"][data-theme="dark"]) {
   --mha-ios-raw-frosted-shell-surface: rgba(44,44,46,.68);
   --mha-ios-raw-frosted-shell-border: rgba(255,255,255,.14);
   --mha-ios-raw-frosted-shell-shadow:

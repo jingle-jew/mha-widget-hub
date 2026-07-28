@@ -68,3 +68,59 @@ test("the manifest loads raw mappings before the shared glass and widget contrac
   assert(indexOf("styles/core/glass-surface.css") < indexOf("styles/widgets/widget-shell.css"));
   assert(indexOf("styles/widgets/widget-shell.css") < indexOf("styles/widgets/widget-shell-contract.css"));
 });
+
+test("iOS tint controls remain isolated to generic and special widget surfaces", async () => {
+  const allowedSpecialSurfaceFiles = new Set([
+    "styles/widgets/calendar-widget.css",
+    "styles/widgets/weather-widget.css",
+  ]);
+  const paths = getStyleManifest().map(([path]) => path);
+  const sources = await Promise.all(paths.map(async path => [path, await read(path)]));
+  const legacySelectorOffenders = sources
+    .filter(([, source]) => /data-ios-glass="(?:liquid|frosted)"/.test(source))
+    .map(([path]) => path);
+  const specialSurfaceOffenders = sources
+    .filter(([path, source]) => (
+      /data-ios-widget-tint="(?:transparent|tinted)"/.test(source)
+      && !allowedSpecialSurfaceFiles.has(path)
+    ))
+    .map(([path]) => path);
+
+  assert.deepEqual(legacySelectorOffenders, []);
+  assert.deepEqual(specialSurfaceOffenders, []);
+
+  const surfaceMap = await read("styles/themes/ios-surface-map.css");
+  const mixedWidgetBlock = surfaceMap.match(
+    /:host\(\[data-theme-style="ios"\]\) \.mha-widget \{([\s\S]*?)\n\}/,
+  )?.[1] || "";
+  assert.match(mixedWidgetBlock, /--mha-widget-shell-surface:\s*color-mix/);
+  assert.match(mixedWidgetBlock, /--mha-ios-raw-liquid-widget-surface/);
+  assert.doesNotMatch(
+    mixedWidgetBlock,
+    /var\(--mha-ios-raw-liquid-primary-surface\) var\(--mha-ios-liquid-percent/,
+  );
+  assert.match(mixedWidgetBlock, /--mha-ios-liquid-percent/);
+  assert.match(mixedWidgetBlock, /--mha-ios-glass-tint-percent/);
+  assert.match(mixedWidgetBlock, /--mha-widget-shell-shadow:/);
+  assert.match(mixedWidgetBlock, /--mha-glass-noise-opacity:\s*var\(--mha-ios-widget-noise-opacity/);
+  assert.doesNotMatch(mixedWidgetBlock, /--mha-widget-shell-(?:filter|blur|saturation):/);
+  assert.doesNotMatch(
+    mixedWidgetBlock,
+    /--mha-(?:surface-(?:shell|panel|popup)|shell-(?:surface|dock|status|panel)|dock-|statusbar-|system-window-)/,
+  );
+});
+
+test("iOS Liquid widget endpoint is more transparent than global primary surfaces", async () => {
+  const raw = await read("styles/themes/ios-raw-materials.css");
+  const light = raw.match(
+    /:host\(\[data-theme-style="ios"\]\[data-theme="light"\]\) \{([\s\S]*?)\n\}/,
+  )?.[1] || "";
+  const dark = raw.match(
+    /:host\(\[data-theme-style="ios"\]\[data-theme="dark"\]\) \{([\s\S]*?)\n\}/,
+  )?.[1] || "";
+
+  assert.match(light, /--mha-ios-raw-liquid-primary-surface:\s*rgba\(255,255,255,\.32\)/);
+  assert.match(light, /--mha-ios-raw-liquid-widget-surface:\s*rgba\(255,255,255,\.20\)/);
+  assert.match(dark, /--mha-ios-raw-liquid-primary-surface:\s*rgba\(255,255,255,\.12\)/);
+  assert.match(dark, /--mha-ios-raw-liquid-widget-surface:\s*rgba\(255,255,255,\.07\)/);
+});

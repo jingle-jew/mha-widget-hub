@@ -1,6 +1,7 @@
 export const WIDGET_MANAGER_METADATA = Object.freeze({
   categories: Object.freeze({
     utilities: Object.freeze({ label: "Utilities", description: "Clocks and quick info.", icon: "clock", order: 10 }),
+    calendar: Object.freeze({ label: "Calendar", description: "Dates, agendas, and upcoming events.", icon: "calendar", order: 15 }),
     lights: Object.freeze({ label: "Lights & switches", description: "Lights, switches, buttons, and brightness.", icon: "light", order: 20 }),
     climate: Object.freeze({ label: "Climate", description: "Temperature and comfort.", icon: "temperature", order: 40 }),
     media: Object.freeze({ label: "Media", description: "Playback and volume.", icon: "media-player", order: 50 }),

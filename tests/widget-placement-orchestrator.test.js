@@ -88,6 +88,42 @@ test("widget surface open state includes panels waiting for their opening frame"
   assert.equal(host.dataset.widgetSurfaceOpen, "true");
 });
 
+test("widget surface blur clears after nested light and overview sheets both close", () => {
+  const toggles = [];
+  const host = {
+    classList: {
+      toggle(name, value) {
+        toggles.push([name, value]);
+      },
+    },
+    dataset: {},
+  };
+  let lightPopupOpen = true;
+  let overviewSheetOpen = true;
+  const root = {
+    host,
+    querySelector() {
+      return lightPopupOpen || overviewSheetOpen ? {} : null;
+    },
+    querySelectorAll() {
+      return [];
+    },
+  };
+
+  syncWidgetSurfaceOpenState(root);
+  lightPopupOpen = false;
+  syncWidgetSurfaceOpenState(root);
+  overviewSheetOpen = false;
+  syncWidgetSurfaceOpenState(root);
+
+  assert.deepEqual(toggles, [
+    ["is-widget-surface-open", true],
+    ["is-widget-surface-open", true],
+    ["is-widget-surface-open", false],
+  ]);
+  assert.equal(host.dataset.widgetSurfaceOpen, "false");
+});
+
 test("page creator panel props retain state and callback routing", () => {
   const onClose = () => {};
   const onSelectPageType = () => {};

@@ -1,8 +1,10 @@
 import {
   migrateLegacyWallpaper,
+  readGridWallpaper,
   readLegacyWallpaper,
   readWallpapers,
   resetWallpaper,
+  saveGridWallpaper,
   saveWallpaper,
 } from "./wallpaper-storage.js";
 import { ACCENT_REFERENCE_COLORS, DEFAULT_ACCENT_BY_STYLE } from "./accent-palettes.js";
@@ -417,6 +419,14 @@ export class WallpaperController {
   reset(mode) {
     resetWallpaper(this.storage, mode);
     return this.apply();
+  }
+
+  readGridWallpaper() {
+    return readGridWallpaper(this.storage);
+  }
+
+  saveGridWallpaper(value) {
+    return saveGridWallpaper(this.storage, value);
   }
 
   destroy() {

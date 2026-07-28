@@ -1,8 +1,8 @@
-:host([data-weather-page-active="true"]) .mha-background-wallpaper,
-:host([data-weather-page-active="true"]) .mha-ios-organic-wallpaper,
-:host([data-weather-page-active="true"]) .mha-background-media,
-:host([data-weather-page-active="true"]) .mha-background-media-overlay,
-:host([data-weather-page-active="true"]) .mha-background > span {
+:host([data-weather-background-active="true"]) .mha-background-wallpaper,
+:host([data-weather-background-active="true"]) .mha-ios-organic-wallpaper,
+:host([data-weather-background-active="true"]) .mha-background-media,
+:host([data-weather-background-active="true"]) .mha-background-media-overlay,
+:host([data-weather-background-active="true"]) .mha-background > span {
   opacity: 0;
   visibility: hidden;
 }

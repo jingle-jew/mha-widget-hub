@@ -41,6 +41,7 @@ import { createScreensaverSettingsBridge } from "./src/screensaver/screensaver-s
 import { createWidgetLayoutStateCoordinator } from "./src/widgets/widget-layout-state-coordinator.js";
 import { createWidgetResizeCoordinator } from "./src/widgets/widget-resize-coordinator.js";
 import { createWidgetSurfaceCoordinator } from "./src/widgets/widget-surface-coordinator.js";
+import { syncWidgetSurfaceOpenState } from "./src/widgets/widget-placement-orchestrator.js";
 import {
   computeResponsiveState,
   DEFAULT_WIDGETS,
@@ -92,10 +93,14 @@ import {
   createDefaultPageConfig,
   isMediaPageExperienceActive,
   isMediaPlayersPage,
+  isOverviewPage,
   isWeatherPage,
   normalizeMediaPageConfig,
   PAGE_TYPES,
 } from "./src/pages/page-types.js?v=media-persistence-v2";
+import {
+  normalizeOverviewPageConfig,
+} from "./src/pages/overview-page-config.js";
 
 const MHA_FRONTEND_ROOT_URL = window.__MHA_FRONTEND_ROOT_URL__
   ? new URL(window.__MHA_FRONTEND_ROOT_URL__)
@@ -225,6 +230,8 @@ constructor(){
     setTheme:(value)=>this._themeController.setTheme(value),
     setThemeStyle:(value)=>this._themeController.setThemeStyle(value),
     setIosGlass:(value)=>this._themeController.setIosGlass(value),
+    setIosGlassTint:(value)=>this._themeController.setIosGlassTint(value),
+    setIosWidgetTint:(value)=>this._themeController.setIosWidgetTint(value),
     setAccent:(value)=>this._themeController.setAccent(value),
     setAccentMode:(value)=>this._themeController.setAccentMode(value),
     setIconShape:(value)=>this._themeController.setIconShape(value),
@@ -541,11 +548,23 @@ _buildMediaPageSettingsProps(){
     onConfigChange:(patch)=>this._updateActiveMediaPageConfig(patch),
   };
 }
+_buildOverviewPageProps(){
+  return {
+    hass:this._hass,
+    visibilityConfig:this._entityVisibilityConfig,
+    surfaceRoot:this.shadowRoot,
+    onConfigChange:(config)=>this._updateActiveOverviewPageConfig(config),
+    onSheetOpenChange:(open)=>{
+      this.dataset.overviewSheetOpen=String(Boolean(open));
+      syncWidgetSurfaceOpenState(this.shadowRoot);
+    },
+  };
+}
 _syncMediaPageSettingsDom(){
   return this.render();
 }
 _canAddWidgetToActivePage(){
-  return true;
+  return !isOverviewPage(this._getActivePage());
 }
 _openMediaPageSettings(){
   if(!isMediaPlayersPage(this._getActivePage()))return false;
@@ -591,12 +610,26 @@ _updateActiveMediaPageConfig(patch={}){
 _selectMediaPagePlayer(playerId=""){
   return this._updateActiveMediaPageConfig({selectedPlayerId:String(playerId||"").trim()});
 }
+_updateActiveOverviewPageConfig(config={}){
+  const page=this._getActivePage();
+  if(!isOverviewPage(page))return false;
+  const normalized=normalizeOverviewPageConfig(config);
+  const result=updatePageConfig(this._pages,page.id,normalized);
+  if(!result)return false;
+  this._pages=result.pages;
+  this._recordPersistenceResult(this._savePages());
+  this._syncSettingsDom();
+  return true;
+}
 
 _migrateLegacyCustomWallpaper(){
   return this._appearanceCoordinator.migrateLegacyCustomWallpaper();
 }
 _readCustomWallpapers(){
   return this._appearanceCoordinator.readCustomWallpapers();
+}
+_readGridWallpaper(){
+  return this._wallpaperController.readGridWallpaper();
 }
 _applyCustomWallpaperState(themeState=this._themeController.read()){
   return this._appearanceCoordinator.applyCustomWallpaperState(themeState);
@@ -606,6 +639,14 @@ _saveCustomWallpaper(mode,payload){
 }
 _resetCustomWallpaper(mode){
   return this._appearanceCoordinator.resetCustomWallpaper(mode);
+}
+_applyGridWallpaperFromSettings(enabled=false){
+  this._gridWallpaper=this._wallpaperController.saveGridWallpaper({
+    useWeatherBackground:Boolean(enabled),
+  });
+  this._syncSettingsDom();
+  this._syncActivePageBackdropState({activePage:this._getActivePage()});
+  return this._gridWallpaper;
 }
 async _syncAutoAccentFromWallpaper(){
   return this._appearanceCoordinator.syncAutoAccentFromWallpaper();
@@ -822,6 +863,14 @@ _applyIosGlassFromSettings(value="liquid"){
   return this._appearanceCoordinator.applyIosGlassFromSettings(value);
 }
 
+_applyIosGlassTintFromSettings(value=0){
+  return this._appearanceCoordinator.applyIosGlassTintFromSettings(value);
+}
+
+_applyIosWidgetTintFromSettings(value="transparent"){
+  return this._appearanceCoordinator.applyIosWidgetTintFromSettings(value);
+}
+
 _applyAccentFromSettings(value=""){
   return this._appearanceCoordinator.applyAccentFromSettings(value);
 }
@@ -938,8 +987,10 @@ _getPageTransitionDirection(previousPage=null,nextPage=null){
     const themeStyle=this.dataset.themeStyle||this._themeController?.read?.()?.themeStyle||"";
     const previousIsMediaPage=isMediaPageExperienceActive(previousPage,themeStyle);
     const nextIsMediaPage=isMediaPageExperienceActive(nextPage,themeStyle);
+    const previousIsOverviewPage=isOverviewPage(previousPage);
+    const nextIsOverviewPage=isOverviewPage(nextPage);
     const pageTypeChanged=previousIsMediaPage!==nextIsMediaPage;
-    const nextPageNeedsDedicatedRender=isMediaPageExperienceActive(
+    const nextPageNeedsDedicatedRender=nextIsOverviewPage||isMediaPageExperienceActive(
       nextPage,
       themeStyle,
     );
@@ -976,6 +1027,7 @@ _getPageTransitionDirection(previousPage=null,nextPage=null){
     const canRefreshGridInPlace=currentPanel
       && activeGrid
       && !previousIsMediaPage
+      && !previousIsOverviewPage
       && !nextPageNeedsDedicatedRender;
 
     if(canRefreshGridInPlace){

@@ -32,8 +32,15 @@ import {
   createMediaPage,
   resolveMediaPageNowPlayingId,
 } from "../pages/media-page.js?v=media-page-ios-cards-v3";
+import { createOverviewPage } from "../pages/overview-page.js";
 import { syncMediaPageSettingsPanel } from "../pages/media-page-settings.js?v=media-persistence-v4";
-import { isMediaPageExperienceActive, isWeatherPage } from "../pages/page-types.js?v=media-persistence-v2";
+import {
+  isMediaPageExperienceActive,
+  isOverviewPage,
+  isWeatherPage,
+  normalizePageType,
+  PAGE_TYPES,
+} from "../pages/page-types.js?v=media-persistence-v2";
 import { WEATHER_PAGE_WIDGET_MANAGER_CATEGORY_ID } from "../pages/weather-page-widget-catalog.js";
 import {
   captureSettingsPanelsUiState,
@@ -51,6 +58,33 @@ import {
 } from "../widgets/widget-placement-orchestrator.js";
 
 const STYLE_SETTLE_TIMEOUT_MS = 900;
+
+export function resolveWeatherBackdropContext({
+  activePage = null,
+  gridWallpaper = {},
+  weatherLandscapeId = "",
+  themeStyle = "",
+} = {}) {
+  const weatherPageActive = isWeatherPage(activePage);
+  const gridWeatherActive = normalizePageType(activePage?.type) === PAGE_TYPES.GRID
+    && gridWallpaper?.useWeatherBackground === true
+    && !isMediaPageExperienceActive(activePage, themeStyle);
+  const weatherBackgroundActive = weatherPageActive || gridWeatherActive;
+
+  return {
+    weatherPageActive,
+    weatherBackgroundActive,
+    page: gridWeatherActive
+      ? {
+        ...activePage,
+        config: {
+          ...(activePage?.config || {}),
+          weatherLandscapeId,
+        },
+      }
+      : activePage,
+  };
+}
 
 function getMediaPageWallpaperLayers(host) {
   return [
@@ -247,8 +281,18 @@ export function createRenderPipeline(host, options = {}) {
     const background = host.shadowRoot?.querySelector?.(".mha-background") || null;
     const scenes = [...background?.querySelectorAll?.(".mha-weather-background") || []];
     const currentScene = scenes.find(scene => scene.dataset.active === "true") || scenes.at(-1) || null;
-    const weatherActive = isWeatherPage(activePage);
-    host.dataset.weatherPageActive = String(weatherActive);
+    const weatherBackdrop = resolveWeatherBackdropContext({
+      activePage,
+      gridWallpaper: host._gridWallpaper,
+      weatherLandscapeId: host._pages?.find(page => isWeatherPage(page))
+        ?.config?.weatherLandscapeId,
+      themeStyle: host.dataset.themeStyle || "",
+    });
+    const weatherPageActive = weatherBackdrop.weatherPageActive;
+    const weatherActive = weatherBackdrop.weatherBackgroundActive;
+    const weatherBackgroundPage = weatherBackdrop.page;
+    host.dataset.weatherPageActive = String(weatherPageActive);
+    host.dataset.weatherBackgroundActive = String(weatherActive);
 
     if (!background) return;
     if (!weatherActive) {
@@ -258,7 +302,7 @@ export function createRenderPipeline(host, options = {}) {
       return;
     }
 
-    const nextScene = createWeatherPageBackground(activePage, host._hass);
+    const nextScene = createWeatherPageBackground(weatherBackgroundPage, host._hass);
     if (currentScene?.dataset.sceneKey === nextScene.dataset.sceneKey) {
       host._weatherBackgroundPendingSceneKey = "";
       syncWeatherPageBackgroundState(currentScene, nextScene);
@@ -731,6 +775,21 @@ export function createRenderPipeline(host, options = {}) {
     return { panel, content };
   }
 
+  function createOverviewPagePanel(page = {}, layout = "desktop", units = 4) {
+    const content = createOverviewPage(page, {
+      ...(host._buildOverviewPageProps?.() || {}),
+      layout,
+      mobileGridUnits: units,
+    });
+    const panel = createPagePanel({
+      page,
+      kind: "overview",
+      content,
+    });
+    panel.classList.add("mha-page-panel--overview");
+    return { panel, content };
+  }
+
   function syncShellBackgroundSurface(bg) {
     if (!bg?.style) return;
 
@@ -830,6 +889,13 @@ export function createRenderPipeline(host, options = {}) {
     let grid = null;
     let activeSurface = null;
     if (!pageStage) return { positions, grid, activeSurface };
+    if (isOverviewPage(activePage)) {
+      const overviewPanel = createOverviewPagePanel(activePage, layout, units);
+      pageStage.append(overviewPanel.panel);
+      activeSurface = overviewPanel.content;
+      host._wireDockAutoHide(activeSurface);
+      return { positions, grid, activeSurface };
+    }
     if (isMediaPageExperienceActive(activePage, host.dataset.themeStyle || "")) {
       const mediaPanel = createMediaPagePanel(activePage);
       grid = mediaPanel.content?.__mhaGrid || mediaPanel.content?.querySelector?.(".mha-grid") || null;

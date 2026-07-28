@@ -57,6 +57,7 @@ export function createHubRuntimeDefaults() {
     _statusBarMode: "top-bar",
     _language: "auto",
     _customWallpapers: { light: null, dark: null },
+    _gridWallpaper: { useWeatherBackground: false },
     _pages: [],
     _activePageId: "",
     _widgets: [],

@@ -1,12 +1,16 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  DEFAULT_GRID_WALLPAPER,
+  GRID_WALLPAPER_STORAGE_KEY,
   LEGACY_WALLPAPER_STORAGE_KEY,
   WALLPAPER_MAX_BYTES,
   WALLPAPER_STORAGE_KEYS,
   migrateLegacyWallpaper,
+  readGridWallpaper,
   readWallpapers,
   resetWallpaper,
+  saveGridWallpaper,
   saveWallpaper,
   validateWallpaperFile,
 } from "../src/settings/wallpaper-storage.js";
@@ -73,6 +77,24 @@ test("light and dark wallpapers are stored and reset independently", () => {
     light: null,
     dark: darkWallpaper,
   });
+});
+
+test("grid wallpaper preference persists the weather background toggle", () => {
+  const storage = createStorage();
+
+  assert.deepEqual(readGridWallpaper(storage), DEFAULT_GRID_WALLPAPER);
+  assert.deepEqual(saveGridWallpaper(storage, {
+    useWeatherBackground: true,
+  }), {
+    useWeatherBackground: true,
+  });
+  assert.deepEqual(readGridWallpaper(storage), {
+    useWeatherBackground: true,
+  });
+  assert.ok(storage.getItem(GRID_WALLPAPER_STORAGE_KEY));
+
+  storage.setItem(GRID_WALLPAPER_STORAGE_KEY, JSON.stringify({ type: "theme" }));
+  assert.deepEqual(readGridWallpaper(storage), { useWeatherBackground: false });
 });
 
 test("legacy wallpaper migrates once to the effective theme without duplication", () => {

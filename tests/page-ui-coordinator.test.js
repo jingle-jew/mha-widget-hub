@@ -189,6 +189,28 @@ test("selecting a media page keeps edit mode available while using the dedicated
   assert.equal(calls.exitEditMode, 0);
 });
 
+test("selecting an overview page exits global editing and uses the dedicated transition", () => {
+  const { coordinator, state, calls } = createHarness({
+    state: {
+      pages: [
+        { id: "home", name: "Home", icon: "home", type: "grid", widgets: [] },
+        { id: "overview", name: "Overview", icon: "home", type: "overview", widgets: [] },
+      ],
+    },
+  });
+
+  assert.equal(coordinator.selectPage("overview"), true);
+  assert.equal(state.activePageId, "overview");
+  assert.equal(calls.exitEditMode, 1);
+  assert.deepEqual(calls.transitionPageRender, [{
+    previousPageId: "home",
+    nextPageId: "overview",
+    previousPageType: "grid",
+    nextPageType: "overview",
+  }]);
+  assert.equal(calls.refreshActiveGridOnly, 0);
+});
+
 test("deleting a selected dock-detail page returns settings to dock and cleans positions when the active page changes", () => {
   const { coordinator, state, calls } = createHarness({
     state: {
@@ -251,6 +273,31 @@ test("creating a media page resets the page creator state and keeps the media pa
   assert.equal(calls.refreshActiveGridOnly, 0);
   assert.equal(calls.syncWidgetDropSlots, 0);
   assert.equal(calls.renderRoot, 0);
+});
+
+test("creating an overview page uses its defaults and leaves global editing", () => {
+  const { coordinator, state, calls } = createHarness({
+    state: {
+      pageCreatorOpen: true,
+      newPageType: "overview",
+      newPageIcon: "grid",
+    },
+  });
+
+  assert.equal(coordinator.createPageFromCreator(), true);
+  const page = state.pages.at(-1);
+  assert.equal(page?.type, "overview");
+  assert.equal(page?.name, "Overview");
+  assert.equal(page?.icon, "home");
+  assert.deepEqual(page?.widgets, []);
+  assert.deepEqual(page?.config, {
+    inactivitySeconds: 15,
+    roomOrder: [],
+    hiddenRoomIds: [],
+    areas: {},
+  });
+  assert.equal(calls.exitEditMode, 1);
+  assert.equal(calls.transitionPageRender.at(-1)?.nextPageType, "overview");
 });
 
 test("page creator stays available in mobile landscape while editing", () => {
@@ -373,6 +420,21 @@ test("buildDockProps keeps media page widget editing out of dock edit mode", () 
       pages: [
         { id: "home", name: "Home", icon: "home", type: "grid", widgets: [] },
         { id: "media", name: "Media Players", icon: "media-player", type: "media-players", widgets: [] },
+      ],
+    },
+  });
+
+  assert.equal(coordinator.buildDockProps().isEditing, false);
+});
+
+test("buildDockProps keeps overview local editing isolated from dock edit mode", () => {
+  const { coordinator } = createHarness({
+    state: {
+      activePageId: "overview",
+      isEditing: true,
+      pages: [
+        { id: "home", name: "Home", icon: "home", type: "grid", widgets: [] },
+        { id: "overview", name: "Overview", icon: "home", type: "overview", widgets: [] },
       ],
     },
   });

@@ -1,12 +1,104 @@
 # Mémoire persistante — MHA Widget Hub
 
-Dernière consolidation : 2026-07-19
+Dernière consolidation : 2026-07-28
 
 Ce fichier contient les connaissances durables qui seraient coûteuses à redécouvrir.
 Le code et les tests actuels restent la source de vérité. Les instructions de travail
 appartiennent à `AGENTS.md`.
 
 ## Décisions et raisons
+
+### 2026-07-27 — Doser la teinte du verre des widgets iOS
+
+- **Statut :** confirmé.
+- **Décision :** Liquid Glass est le contrat visuel canonique de tout le thème
+  iOS. Le slider « Teinte du verre » dose de `0` à `100` la matière de la coque
+  externe des widgets génériques entre les endpoints Liquid et Frosted :
+  surface normale/édition, bordure, ombre, reflet et grain. Le dock, la barre
+  d’état, les panels, les réglages, les contrôles internes, les textes, icônes,
+  rayons, géométries et la page Média restent strictement Liquid sur toute la
+  course.
+- **Décision spéciale :** le sélecteur indépendant « Teinte des widgets » vaut
+  `transparent` ou `tinted`. `transparent` fait hériter la coque générique
+  dosée aux six formats Calendrier et au widget principal `kind: weather`;
+  `tinted` donne aux Calendriers une coque claire blanche ou sombre presque
+  noire et à Météo un gradient adapté à la condition HA courante. Les métriques,
+  le radar et le bref météo restent hors de ce sélecteur.
+- **Pourquoi :** le dosage doit rester un réglage de matière des widgets, pas un
+  second thème iOS, et les surfaces expressives Calendrier/Météo doivent pouvoir
+  être activées sans déplacer le dosage du verre générique.
+- **Conséquence :** `mha-ios-glass-tint` / `data-ios-glass-tint` transportent le
+  pourcentage et `mha-ios-widget-tint` / `data-ios-widget-tint` transportent le
+  choix spécial. `data-ios-glass` et les anciennes clés Liquid/Frosted ne
+  pilotent plus le CSS de production; ils restent synchronisés comme contrat de
+  migration/compatibilité aux endpoints. Le slider met à jour les propriétés
+  CSS en direct sans reconstruire la grille ni le panneau de réglages; le
+  sélecteur spécial resynchronise seulement le panneau. À `0`, la coque utilise
+  un endpoint Liquid propre aux widgets (`.20` d’alpha en clair, `.07` en sombre)
+  plutôt que la surface primaire globale (`.32`/`.12`); les panels, contrôles et
+  autres surfaces iOS ne changent donc pas. « Teinte du verre » reste le dernier
+  contrôle de la section Apparence. Pendant son geste actif,
+  il partage avec le slider d’opacité OneUI l’état de prévisualisation des
+  surfaces : scrim, sheet et blur du settings-panel sont masqués, tandis que le
+  slider reste visible et stable devant le dashboard. Les sélecteurs CSS de cet
+  état doivent combiner `data-theme-style`, `is-settings-open` et
+  `is-widget-surface-previewing` afin de surpasser aussi bien le blur d’ouverture
+  du settings-panel que `widget-surface-backdrop.css`, chargé plus tard. L’état
+  neutralise `filter`, `-webkit-filter`, la transformation du dashboard et le
+  backdrop de la section qui contient le slider.
+
+### 2026-07-27 — Limiter la famille Calendrier à six formats natifs
+
+- **Statut :** confirmé.
+- **Décision :** la catégorie `calendar` est un seul module registry-driven qui
+  expose six compositions fortement inspirées des widgets Calendrier de la
+  référence : date monumentale `2×2`, mini-mois `2×2`, date et prochain
+  événement `2×2`, agenda compact `4×2`, agenda détaillé `4×4` et chronologie
+  deux jours `4×4`. Les formats panoramiques `8×4` et `4×8` sont explicitement
+  exclus et ne doivent pas être réintroduits implicitement par redimensionnement.
+- **Pourquoi :** conserver la hiérarchie et la densité de la référence sans
+  élargir le contrat global des tailles ni créer des panneaux hors norme.
+- **Conséquence :** date et mini-mois restent directs et sans entité; les quatre
+  variantes événementielles utilisent un flux `configure-first` avec sélection
+  multiple de calendriers autorisés. Le domaine `calendar` appartient aux
+  permissions MHA Admin, les événements `calendar.get_events` sont normalisés et
+  mis en cache par connexion/fenêtre, et le contenu laisse le shell posséder la
+  surface, le contour et l’ombre via les tokens sémantiques du thème.
+
+### 2026-07-22 — Fusionner les interrupteurs et booléens uniquement dans MHA
+
+- **Statut :** confirmé.
+- **Décision :** MHA Admin conserve `switch` et `input_boolean` comme deux
+  domaines distincts pour les permissions. Dans les configurateurs des widgets
+  MHA qui supportent les deux domaines, leurs entités sont regroupées sous le
+  seul type visible « Interrupteur ».
+- **Pourquoi :** les deux domaines partagent la même interaction marche/arrêt
+  dans les widgets, mais leurs permissions doivent rester administrables
+  séparément.
+- **Conséquence :** le regroupement ne transforme jamais l'identifiant de
+  l'entité. Les appels Home Assistant continuent de résoudre le domaine réel de
+  chaque `entityId`; les anciennes configurations qui utilisent le type
+  `input_boolean` sont normalisées vers le type d'affichage `switch`.
+
+### 2026-07-22 — Entrer en édition depuis les surfaces de widgets tactiles
+
+- **Statut :** confirmé.
+- **Décision :** sur mobile et tablette, le long-press d'entrée en édition est
+  disponible sur la grille vide et sur les surfaces tap-only des widgets. Les
+  contrôles de manipulation directe (`slider`, `toggle`, champs et outils de
+  redimensionnement) restent exclus. Le geste ne capture ni ne bloque le
+  pointeur avant son activation; mouvement et scroll conservent leur priorité.
+  Après une activation réussie, seul le clic consécutif du widget d'origine est
+  neutralisé.
+- **Pourquoi :** les écrans denses offrent peu de grille vide, mais détourner un
+  slider ou un switch de son geste natif rendrait les contrôles imprévisibles.
+  La suppression ponctuelle du clic permet aux libellés, boutons, scènes,
+  caméras et contrôles média de conserver leur tap court sans déclencher leur
+  action au relâchement d'un long-press.
+- **Conséquence :** les futurs widgets tap-only bénéficient automatiquement du
+  geste. Tout nouveau contrôle qui possède son propre press/drag doit être
+  ajouté au contrat d'exclusion du coordinateur central et couvert par ses
+  tests, sans créer de gestionnaire de long-press propre au widget.
 
 ### 2026-07-19 — Composer le popup lumière autour de deux colonnes stables
 
@@ -60,6 +152,27 @@ appartiennent à `AGENTS.md`.
   Média. Les couplages historiques encore présents avec
   `media-widget.css` ou les tokens du dock sont une dette à réduire par correctifs
   ciblés; ne pas les étendre.
+
+### 2026-07-22 — Garder Aperçu comme page spécialisée à configuration partagée
+
+- **Statut :** confirmé.
+- **Décision :** le type de page `overview` possède son propre rendu dans
+  `src/pages/overview-page.js` et ne crée aucune `.mha-grid` ordinaire. Sur
+  tablette/desktop, son contrat logique reste `6 + 4`; sur mobile, la grille de
+  pièces reçoit le nombre de colonnes de la Grid responsive active et les
+  appareils restent dans une sheet quatre colonnes. Les deux layouts consomment
+  une seule configuration normalisée par `overview-page-config.js`.
+- **Pourquoi :** deux grilles génériques concurrentes rendraient les
+  coordinateurs globaux ambigus, tandis qu'une configuration mobile séparée
+  ferait diverger ordre, visibilité et variantes d'une même pièce.
+- **Conséquence :** `page.config` ne conserve que le délai d'inactivité, les
+  identifiants ordonnés/masqués et les variantes par pièce; sélection, sheet,
+  timer et modes d'édition restent du runtime local non persisté. La découverte
+  de `area-discovery.js` lit les trois registres HA avec cache par connexion,
+  donne priorité à l'`area_id` direct de l'entité et applique les permissions
+  MHA avant le rendu. Les appareils réutilisent exclusivement les shells et
+  renderers MHA `button`, `toggle` et `media`; l'édition locale les rend
+  non interactifs sans activer l'édition Grid globale.
 
 ### 2026-07-15 — Centraliser les contrôles de choix MHA
 
@@ -136,8 +249,46 @@ appartiennent à `AGENTS.md`.
   entrée procédurale doit préserver cette séparation entre renderer temporel et
   effets météo indépendants.
 
+### 2026-07-22 — Réutiliser les paysages météo comme fonds des pages Grid
+
+- **Statut :** confirmé.
+- **Décision :** le sous-panneau global « Fond d’écran » expose un toggle
+  « Utiliser le fond d’écran météo ». Son état est persisté sous
+  `mha_grid_wallpaper`; lorsqu’il est actif, toutes les pages `grid` réutilisent
+  le paysage configuré pour la page Météo, avec `alpine-lake` comme repli. Les
+  pages Météo conservent leur paysage configuré par page et les pages Média leur
+  artwork dédié.
+- **Pourquoi :** les paysages météo sont des sources de fond MHA réutilisables,
+  pas une implémentation propre au layout de la page Météo. Une préférence
+  globale reste cohérente avec le panneau de fond d’écran existant et évite de
+  dupliquer les assets, les effets ou leur moteur de rendu.
+- **Conséquence :** le choix du paysage reste centralisé dans les réglages de la
+  page Météo; le panneau de fond d’écran décide seulement si les pages Grid le
+  réutilisent. Le pipeline distingue l’activation d’une page Météo de celle
+  d’un fond météo afin de préserver les priorités des pages spécialisées.
+
 ## Pièges connus
 
+- Dans `overview-page-controller.js`, les fonctions de timer injectées doivent
+  être enveloppées avant d'être stockées sur le contrôleur. Appeler directement
+  un `setTimeout` global comme une méthode du contrôleur peut interrompre
+  `selectArea()` avant sa notification : l'identifiant est alors modifié en
+  mémoire, mais la section Appareils reste sur son placeholder jusqu'à un autre
+  rendu, notamment l'entrée en édition.
+- Les sheets et popups globaux ne doivent pas être montés sous une
+  `.mha-page-panel`. Ce panneau porte un `transform` pour les transitions et
+  devient donc le containing block de ses descendants `position: fixed`; une
+  surface qui y reste imbriquée est limitée au rectangle rembourré de
+  `.mha-widget-area`. Comme les autres surfaces MHA, les overlays appartenant à
+  une page doivent conserver `createPanelShell()` et
+  `applyPanelSurfaceContract()`, mais être portalisés directement sous le
+  `shadowRoot`, avec destruction explicite lors du rerender et de la fermeture.
+- Après l'ajout ou le retrait d'une surface portalisée, recalculer
+  `is-widget-surface-open` avec `syncWidgetSurfaceOpenState()`. Avec des surfaces
+  imbriquées, fermer la popup enfant conserve légitimement le flou tant que la
+  sheet parente reste ouverte; si le retrait de cette dernière ne resynchronise
+  pas l'hôte, le filtre demeure appliqué alors qu'aucune surface n'est encore
+  présente.
 - Les contrôles MHA vivent dans le Shadow DOM du hub. Pour détecter un clic
   extérieur depuis `document`, utiliser `event.composedPath()` plutôt que le
   seul `event.target` : ce dernier est retargeté vers l'hôte et peut faire

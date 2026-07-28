@@ -560,7 +560,7 @@
   );
 }
 
-:host([data-theme-style="ios"][data-ios-glass="liquid"]) .mha-widget[data-widget-kind="media"] {
+:host([data-theme-style="ios"]) .mha-widget[data-widget-kind="media"] {
   --mha-media-artwork-radius: clamp(1.2rem, 12cqb, 1.9rem);
   --mha-media-artwork-scale: 1.04;
   --mha-media-control-radius: 999px;
@@ -595,38 +595,6 @@
   --mha-media-progress-track: color-mix(in srgb, rgba(255,255,255,.22) 86%, transparent);
   --mha-media-progress-fill:
     linear-gradient(90deg, color-mix(in srgb, rgba(255,255,255,.82) 28%, var(--mha-accent)), var(--mha-accent));
-}
-
-:host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-widget[data-widget-kind="media"] {
-  --mha-media-artwork-radius: clamp(1rem, 10cqb, 1.5rem);
-  --mha-media-artwork-scale: .96;
-  --mha-media-control-radius: 999px;
-  --mha-media-control-padding-inline: .56rem;
-  --mha-media-play-button-scale: 1.02;
-  --mha-media-progress-height: clamp(.3rem, 2.2cqb, .5rem);
-  --mha-media-title-weight: var(--mha-font-weight-bold);
-  --mha-media-title-letter-spacing: -.028em;
-  --mha-media-subtitle-weight: var(--mha-font-weight-semibold);
-  --mha-media-background-overlay:
-    linear-gradient(180deg, rgba(255,255,255,.12), rgba(0,0,0,.08)),
-    color-mix(in srgb, var(--mha-widget-surface) 88%, transparent);
-  --mha-media-backdrop-opacity: .48;
-  --mha-media-backdrop-blur: 18px;
-  --mha-media-backdrop-saturate: 118%;
-  --mha-media-backdrop-scale: 1.14;
-  --mha-media-artwork-border: color-mix(in srgb, rgba(255,255,255,.44) 72%, transparent);
-  --mha-media-artwork-shadow:
-    inset 0 1px 0 rgba(255,255,255,.22),
-    0 6px 18px rgba(0,0,0,.06);
-  --mha-media-control-surface: color-mix(in srgb, var(--mha-widget-surface) 88%, rgba(255,255,255,.06));
-  --mha-media-control-border: color-mix(in srgb, rgba(255,255,255,.34) 72%, transparent);
-  --mha-media-control-shadow: inset 0 1px 0 rgba(255,255,255,.16);
-  --mha-media-control-active-surface:
-    linear-gradient(145deg, color-mix(in srgb, var(--mha-accent) 40%, rgba(255,255,255,.28)), color-mix(in srgb, var(--mha-accent) 62%, rgba(255,255,255,.08)));
-  --mha-media-chip-surface: color-mix(in srgb, var(--mha-widget-surface) 92%, transparent);
-  --mha-media-chip-border: color-mix(in srgb, rgba(255,255,255,.26) 76%, transparent);
-  --mha-media-progress-track: color-mix(in srgb, var(--mha-text-primary) 10%, rgba(255,255,255,.16));
-  --mha-media-progress-fill: color-mix(in srgb, var(--mha-accent) 72%, rgba(255,255,255,.24));
 }
 
 :host([data-theme-style="oneui"]) .mha-widget[data-widget-kind="media"] {

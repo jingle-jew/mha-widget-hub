@@ -46,7 +46,7 @@
 }
 
 .combined-toggle-slider__toggle > .mha-toggle-widget {
-  position: static;
+  position: relative;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
@@ -56,7 +56,7 @@
 }
 
 .combined-toggle-slider__toggle > .mha-toggle-widget::after {
-  inset-block: 12% 50%;
+  inset-block: 12%;
 }
 
 
@@ -89,6 +89,13 @@
   inline-size: 100%;
   block-size: 100%;
   min-block-size: 0;
+  pointer-events: auto;
+}
+
+/* The widget shell makes presentation-only spans ignore pointers. The slider
+ * rotor is a span too, so its native range must explicitly opt back into hit
+ * testing instead of inheriting pointer-events: none from the rotor. */
+.combined-toggle-slider__control .mha-slider-input {
   pointer-events: auto;
 }
 

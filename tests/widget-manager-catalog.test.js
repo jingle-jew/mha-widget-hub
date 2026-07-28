@@ -45,9 +45,25 @@ test("widget manager categories expose icon names instead of legacy glyph text",
   );
 
   assert.equal(iconsByCategory.utilities, "clock");
+  assert.equal(iconsByCategory.calendar, "calendar");
   assert.equal(iconsByCategory.lights, "light");
   assert.equal(iconsByCategory.climate, "temperature");
   assert.equal(iconsByCategory.media, "media-player");
+});
+
+test("calendar category exposes the six confirmed theme-native formats", () => {
+  const calendar = WIDGET_MANAGER_CATEGORIES.find(category => category.id === "calendar");
+
+  assert.equal(calendar?.widgets.length, 6);
+  assert.ok(calendar?.widgets.every(item => item.kind === "calendar"));
+  assert.deepEqual(calendar?.widgets.map(item => item.size), [
+    { w: 2, h: 2 },
+    { w: 2, h: 2 },
+    { w: 2, h: 2 },
+    { w: 4, h: 2 },
+    { w: 4, h: 4 },
+    { w: 4, h: 4 },
+  ]);
 });
 
 test("lights category includes switches and replaces actions", () => {

@@ -364,6 +364,7 @@ test("registered widgets expose preview renderer manifests", async () => {
     ["weather-narrative", "live"],
     ["weather-radar", "live"],
     ["camera", "live"],
+    ["calendar", "live"],
   ]);
 
   for (const [kind, definition] of Object.entries(WIDGET_REGISTRY)) {
@@ -386,4 +387,5 @@ test("config manifests expose widget-owned field renderers", async () => {
   assert.equal(typeof WIDGET_CONFIG_REGISTRY.media.renderFields, "function");
   assert.equal(typeof WIDGET_CONFIG_REGISTRY.scenes.renderFields, "function");
   assert.equal(typeof WIDGET_CONFIG_REGISTRY.camera.renderFields, "function");
+  assert.equal(typeof WIDGET_CONFIG_REGISTRY.calendar.renderFields, "function");
 });

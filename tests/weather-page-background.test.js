@@ -23,6 +23,7 @@ import {
   normalizeMoonPhase,
   resolveCelestialGradientState,
 } from "../src/pages/weather-celestial-gradient.js";
+import { resolveWeatherBackdropContext } from "../src/layout/render-pipeline.js";
 
 function createFakeElement(tagName) {
   const properties = new Map();
@@ -85,6 +86,60 @@ function createHass(condition, cloudCoverage) {
 function findLayer(scene, className) {
   return scene.children.find(child => child.className === className);
 }
+
+test("registered weather landscapes can drive standard grid page backdrops", () => {
+  const gridPage = { id: "home", name: "Home", widgets: [] };
+  const gridBackdrop = resolveWeatherBackdropContext({
+    activePage: gridPage,
+    gridWallpaper: { useWeatherBackground: true },
+    weatherLandscapeId: "celestial-gradient",
+    themeStyle: "oneui",
+  });
+  const themeBackdrop = resolveWeatherBackdropContext({
+    activePage: gridPage,
+    gridWallpaper: { useWeatherBackground: false },
+    weatherLandscapeId: "alpine-lake",
+    themeStyle: "oneui",
+  });
+
+  assert.equal(gridBackdrop.weatherPageActive, false);
+  assert.equal(gridBackdrop.weatherBackgroundActive, true);
+  assert.equal(gridBackdrop.page.config.weatherLandscapeId, "celestial-gradient");
+  assert.equal(themeBackdrop.weatherBackgroundActive, false);
+  assert.equal(themeBackdrop.page, gridPage);
+});
+
+test("dedicated Weather and Media page backdrops keep priority over the grid preference", () => {
+  const weatherPage = {
+    id: "weather",
+    type: "weather",
+    config: { weatherLandscapeId: "alpine-lake" },
+    widgets: [],
+  };
+  const mediaPage = {
+    id: "media",
+    type: "media-players",
+    config: {},
+    widgets: [],
+  };
+  const gridWallpaper = { useWeatherBackground: true };
+  const weatherBackdrop = resolveWeatherBackdropContext({
+    activePage: weatherPage,
+    gridWallpaper,
+    themeStyle: "oneui",
+  });
+  const mediaBackdrop = resolveWeatherBackdropContext({
+    activePage: mediaPage,
+    gridWallpaper,
+    themeStyle: "oneui",
+  });
+
+  assert.equal(weatherBackdrop.weatherPageActive, true);
+  assert.equal(weatherBackdrop.weatherBackgroundActive, true);
+  assert.equal(weatherBackdrop.page, weatherPage);
+  assert.equal(mediaBackdrop.weatherBackgroundActive, false);
+  assert.equal(mediaBackdrop.page, mediaPage);
+});
 
 test("weather conditions map to the three landscape ambiences", () => {
   ["sunny", "clear", "clear-day", "clear-night", "clear_night", "clearnight", "exceptional"].forEach(condition => {

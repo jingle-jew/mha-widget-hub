@@ -67,11 +67,24 @@ Depending on device size, the dock may appear:
 MHA currently includes:
 
 - OneUI
-- iOS Liquid Glass
-- iOS Frosted Glass
+- iOS with an adjustable glass tint
 - Material
 
 Themes can be changed at any time from the settings panel.
+
+With the iOS style selected, **Glass tint** continuously mixes the outer surface
+of standard widgets between the Liquid endpoint at 0% and the Frosted endpoint
+at 100%. The rest of the iOS interface remains visually identical.
+
+**Widget tint** independently controls the special Calendar and main Weather
+surfaces:
+
+- **Transparent** makes them inherit the same adjustable generic glass surface;
+- **Tinted** gives Calendar its dedicated light/dark reference surface and gives
+  the main Weather widget a gradient adapted to the current condition.
+
+Weather metrics, Weather summary and Weather radar are not special surfaces and
+continue to follow their existing contracts.
 
 ---
 

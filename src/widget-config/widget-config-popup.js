@@ -9,7 +9,7 @@ import {
   PANEL_SURFACE_ROLES,
 } from "../panels/panel-surface-contract.js";
 import { t } from "../i18n/index.js";
-import { createMhaRadio, createMhaSelect } from "../ui/form-controls.js";
+import { createMhaCheckbox, createMhaRadio, createMhaSelect } from "../ui/form-controls.js";
 
 export function supportsWidgetConfiguration(widget = {}) {
   return Boolean(getWidgetConfigType(widget));
@@ -83,6 +83,20 @@ function createRadioControl({ label = "", name = "", value = "", checked = false
   });
 }
 
+function createCheckboxControl({ label = "", value = "", checked = false, disabled = false, onChange } = {}) {
+  return createMhaCheckbox({
+    label,
+    value,
+    checked,
+    disabled,
+    indicatorPlacement: "end",
+    className: "mha-widget-config-choice",
+    inputClassName: "mha-widget-config-choice-input",
+    labelClassName: "mha-widget-config-choice-label",
+    onChange,
+  });
+}
+
 function configOptionLabel(group, option = {}) {
   if (!option?.value) return option?.label || "";
   return t(`${group}.${option.value}`, option.label);
@@ -95,6 +109,7 @@ function emptyLabelForConfigOption(group, option = {}) {
 
 function createRenderHelpers() {
   return Object.freeze({
+    createCheckboxControl,
     createField,
     createRadioControl,
     createSelectControl,

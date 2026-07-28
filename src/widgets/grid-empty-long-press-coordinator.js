@@ -1,35 +1,21 @@
 const DEFAULT_LONG_PRESS_DELAY_MS = 560;
 const DEFAULT_MOVE_TOLERANCE_PX = 10;
+const DEFAULT_CLICK_SUPPRESSION_GRACE_MS = 500;
 
-export const GRID_EMPTY_LONG_PRESS_BLOCKED_SELECTOR = [
-  ".mha-widget",
-  ".mha-widget button",
-  ".mha-widget a",
-  ".mha-widget input",
-  ".mha-widget select",
-  ".mha-widget textarea",
-  ".mha-widget [role='button']",
-  ".mha-widget [data-action]",
-  ".mha-dock",
-  ".mha-mobile-dock",
-  ".mha-settings-panel",
-  ".mha-widget-manager-panel",
-  ".mha-widget-config-panel",
-  ".mha-page-creator-panel",
-  ".mha-panel",
-  ".mha-drop-slot",
-  ".mha-widget-drop-slot",
+export const WIDGET_LONG_PRESS_BLOCKED_SELECTOR = [
+  // These controls own a press/drag gesture. Tap-only controls remain eligible
+  // and have their trailing click suppressed only when the hold actually wins.
+  ".mha-slider",
+  ".mha-toggle",
+  "input",
+  "select",
+  "textarea",
+  ".mha-widget-tools",
+  ".mha-widget-move-overlay",
   ".mha-widget-resize",
   ".mha-widget-resize-handle",
   ".mha-resize-handle",
   "[data-resize-handle='true']",
-  "button",
-  "a",
-  "input",
-  "select",
-  "textarea",
-  "[role='button']",
-  "[data-action]",
 ].join(", ");
 
 function getPoint(event) {
@@ -72,9 +58,11 @@ export function canStartGridEmptyLongPress({ host, grid, event, target } = {}) {
   if (!isPrimaryPointer(event)) return false;
   if (!target?.closest) return false;
   if (!grid.contains?.(target)) return false;
-  if (target !== grid) return false;
-  if (target.closest(GRID_EMPTY_LONG_PRESS_BLOCKED_SELECTOR)) return false;
-  return true;
+  if (target === grid) return true;
+
+  const widget = target.closest(".mha-widget");
+  if (!widget || !grid.contains?.(widget)) return false;
+  return !target.closest(WIDGET_LONG_PRESS_BLOCKED_SELECTOR);
 }
 
 export function createGridEmptyLongPressCoordinator(host, {
@@ -84,6 +72,7 @@ export function createGridEmptyLongPressCoordinator(host, {
   let boundGrid = null;
   let scrollArea = null;
   let session = null;
+  let clickSuppression = null;
   let handlers = null;
 
   function clearSession() {
@@ -92,14 +81,32 @@ export function createGridEmptyLongPressCoordinator(host, {
     session = null;
   }
 
+  function clearClickSuppression() {
+    if (!clickSuppression) return;
+    if (clickSuppression.timer) clearTimeout(clickSuppression.timer);
+    clickSuppression = null;
+  }
+
+  function armClickSuppression(originWidget, pointerId) {
+    if (!originWidget) return;
+    clearClickSuppression();
+    clickSuppression = {
+      originWidget,
+      pointerId,
+      timer: 0,
+    };
+  }
+
   function clear() {
     clearSession();
+    clearClickSuppression();
     if (boundGrid && handlers) {
       boundGrid.removeEventListener("pointerdown", handlers.onPointerDown);
       boundGrid.removeEventListener("pointermove", handlers.onPointerMove);
       boundGrid.removeEventListener("pointerup", handlers.onPointerEnd);
       boundGrid.removeEventListener("pointercancel", handlers.onPointerEnd);
       boundGrid.removeEventListener("lostpointercapture", handlers.onPointerEnd);
+      boundGrid.removeEventListener("click", handlers.onClick, true);
     }
     if (scrollArea && handlers) {
       scrollArea.removeEventListener("scroll", handlers.onScroll);
@@ -114,7 +121,9 @@ export function createGridEmptyLongPressCoordinator(host, {
       clearSession();
       return;
     }
+    const { originWidget, pointerId } = session;
     host.toggleEditMode?.();
+    if (host?._isEditing) armClickSuppression(originWidget, pointerId);
     clearSession();
   }
 
@@ -126,12 +135,20 @@ export function createGridEmptyLongPressCoordinator(host, {
     scrollArea = grid.closest?.(".mha-widget-area") || null;
 
     const onPointerDown = (event) => {
+      if (
+        clickSuppression
+        && event.isPrimary !== false
+        && event.pointerId !== clickSuppression.pointerId
+      ) {
+        clearClickSuppression();
+      }
       clearSession();
       const target = resolveGridLongPressTarget({ host, event, grid: boundGrid });
       if (!canStartGridEmptyLongPress({ host, grid: boundGrid, event, target })) return;
       session = {
         pointerId: event.pointerId,
         start: getPoint(event),
+        originWidget: target.closest?.(".mha-widget") || null,
         timer: setTimeout(() => trigger(), longPressDelay),
       };
     };
@@ -142,17 +159,38 @@ export function createGridEmptyLongPressCoordinator(host, {
     };
 
     const onPointerEnd = (event) => {
+      if (clickSuppression && event.pointerId === clickSuppression.pointerId) {
+        if (event.type === "pointerup") {
+          clickSuppression.timer = setTimeout(
+            () => clearClickSuppression(),
+            DEFAULT_CLICK_SUPPRESSION_GRACE_MS,
+          );
+        } else {
+          clearClickSuppression();
+        }
+      }
       if (!session || event.pointerId !== session.pointerId) return;
       clearSession();
     };
 
     const onScroll = () => clearSession();
 
+    const onClick = (event) => {
+      if (!clickSuppression) return;
+      const targetWidget = event.target?.closest?.(".mha-widget") || null;
+      if (targetWidget !== clickSuppression.originWidget) return;
+      event.preventDefault?.();
+      event.stopPropagation?.();
+      event.stopImmediatePropagation?.();
+      clearClickSuppression();
+    };
+
     handlers = {
       onPointerDown,
       onPointerMove,
       onPointerEnd,
       onScroll,
+      onClick,
     };
 
     boundGrid.addEventListener("pointerdown", onPointerDown);
@@ -160,6 +198,7 @@ export function createGridEmptyLongPressCoordinator(host, {
     boundGrid.addEventListener("pointerup", onPointerEnd);
     boundGrid.addEventListener("pointercancel", onPointerEnd);
     boundGrid.addEventListener("lostpointercapture", onPointerEnd);
+    boundGrid.addEventListener("click", onClick, true);
     scrollArea?.addEventListener("scroll", onScroll, { passive: true });
   }
 
