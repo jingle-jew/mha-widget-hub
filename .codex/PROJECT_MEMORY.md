@@ -1,6 +1,6 @@
 # Mémoire persistante — MHA Widget Hub
 
-Dernière consolidation : 2026-07-27
+Dernière consolidation : 2026-07-28
 
 Ce fichier contient les connaissances durables qui seraient coûteuses à redécouvrir.
 Le code et les tests actuels restent la source de vérité. Les instructions de travail
@@ -33,8 +33,11 @@ appartiennent à `AGENTS.md`.
   pilotent plus le CSS de production; ils restent synchronisés comme contrat de
   migration/compatibilité aux endpoints. Le slider met à jour les propriétés
   CSS en direct sans reconstruire la grille ni le panneau de réglages; le
-  sélecteur spécial resynchronise seulement le panneau. « Teinte du verre »
-  reste le dernier contrôle de la section Apparence. Pendant son geste actif,
+  sélecteur spécial resynchronise seulement le panneau. À `0`, la coque utilise
+  un endpoint Liquid propre aux widgets (`.20` d’alpha en clair, `.07` en sombre)
+  plutôt que la surface primaire globale (`.32`/`.12`); les panels, contrôles et
+  autres surfaces iOS ne changent donc pas. « Teinte du verre » reste le dernier
+  contrôle de la section Apparence. Pendant son geste actif,
   il partage avec le slider d’opacité OneUI l’état de prévisualisation des
   surfaces : scrim, sheet et blur du settings-panel sont masqués, tandis que le
   slider reste visible et stable devant le dashboard. Les sélecteurs CSS de cet

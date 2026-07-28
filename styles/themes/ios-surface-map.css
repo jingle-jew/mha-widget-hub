@@ -69,7 +69,7 @@
 :host([data-theme-style="ios"]) .mha-widget {
   --mha-widget-shell-surface: color-mix(
     in srgb,
-    var(--mha-ios-raw-liquid-primary-surface) var(--mha-ios-liquid-percent, 100%),
+    var(--mha-ios-raw-liquid-widget-surface, var(--mha-ios-raw-liquid-primary-surface)) var(--mha-ios-liquid-percent, 100%),
     var(--mha-ios-frosted-widget-surface) var(--mha-ios-glass-tint-percent, 0%)
   );
   --mha-widget-shell-border: color-mix(

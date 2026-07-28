@@ -94,6 +94,11 @@ test("iOS tint controls remain isolated to generic and special widget surfaces",
     /:host\(\[data-theme-style="ios"\]\) \.mha-widget \{([\s\S]*?)\n\}/,
   )?.[1] || "";
   assert.match(mixedWidgetBlock, /--mha-widget-shell-surface:\s*color-mix/);
+  assert.match(mixedWidgetBlock, /--mha-ios-raw-liquid-widget-surface/);
+  assert.doesNotMatch(
+    mixedWidgetBlock,
+    /var\(--mha-ios-raw-liquid-primary-surface\) var\(--mha-ios-liquid-percent/,
+  );
   assert.match(mixedWidgetBlock, /--mha-ios-liquid-percent/);
   assert.match(mixedWidgetBlock, /--mha-ios-glass-tint-percent/);
   assert.match(mixedWidgetBlock, /--mha-widget-shell-shadow:/);
@@ -103,4 +108,19 @@ test("iOS tint controls remain isolated to generic and special widget surfaces",
     mixedWidgetBlock,
     /--mha-(?:surface-(?:shell|panel|popup)|shell-(?:surface|dock|status|panel)|dock-|statusbar-|system-window-)/,
   );
+});
+
+test("iOS Liquid widget endpoint is more transparent than global primary surfaces", async () => {
+  const raw = await read("styles/themes/ios-raw-materials.css");
+  const light = raw.match(
+    /:host\(\[data-theme-style="ios"\]\[data-theme="light"\]\) \{([\s\S]*?)\n\}/,
+  )?.[1] || "";
+  const dark = raw.match(
+    /:host\(\[data-theme-style="ios"\]\[data-theme="dark"\]\) \{([\s\S]*?)\n\}/,
+  )?.[1] || "";
+
+  assert.match(light, /--mha-ios-raw-liquid-primary-surface:\s*rgba\(255,255,255,\.32\)/);
+  assert.match(light, /--mha-ios-raw-liquid-widget-surface:\s*rgba\(255,255,255,\.20\)/);
+  assert.match(dark, /--mha-ios-raw-liquid-primary-surface:\s*rgba\(255,255,255,\.12\)/);
+  assert.match(dark, /--mha-ios-raw-liquid-widget-surface:\s*rgba\(255,255,255,\.07\)/);
 });
