@@ -738,6 +738,11 @@ data-ios-glass="liquid"
 data-ios-glass="frosted"
 ```
 
+This variant attribute is a widget-surface switch. Liquid remains the
+canonical iOS material for the shell, dock, status bar, panels, settings,
+system icons and widget internals. Frosted mappings must therefore be scoped
+to `.mha-widget`, with widget-specific refinements owned by their CSS modules.
+
 ---
 
 ## 24. Settings Architecture

@@ -1,10 +1,11 @@
 /*
  * MHA iOS Surface Map
  * Phase 4: raw iOS materials -> global surface contract.
- * No component selectors are migrated here.
+ * Liquid remains the global iOS contract; Frosted is adapted only at the
+ * outer widget boundary.
  */
 
-:host([data-theme-style="ios"][data-ios-glass="liquid"]) {
+:host([data-theme-style="ios"]) {
   --mha-surface-shell: var(--mha-ios-raw-liquid-shell-surface);
   --mha-surface-primary: var(--mha-ios-raw-liquid-primary-surface);
   --mha-surface-on-primary: var(--mha-ios-raw-liquid-section-surface);
@@ -65,63 +66,19 @@
   --mha-widget-control-surface: var(--mha-surface-control);
 }
 
-:host([data-theme-style="ios"][data-ios-glass="frosted"]) {
-  --mha-surface-shell: var(--mha-ios-raw-frosted-shell-surface);
-  --mha-surface-primary: var(--mha-ios-raw-frosted-primary-surface);
-  --mha-surface-on-primary: var(--mha-ios-raw-frosted-section-surface);
-  --mha-surface-secondary: var(--mha-ios-raw-frosted-tile-surface);
-  --mha-surface-on-secondary: var(--mha-ios-raw-frosted-control-surface);
-  --mha-surface-control: var(--mha-ios-raw-frosted-control-surface);
-  --mha-surface-control-hover: var(--mha-ios-raw-frosted-tile-surface-hover);
-  --mha-surface-control-active: var(--mha-ios-raw-frosted-control-surface-active);
-  --mha-surface-panel: var(--mha-ios-raw-frosted-shell-surface);
-  --mha-surface-popup: var(--mha-ios-raw-frosted-shell-surface);
-
-  --mha-border-shell: var(--mha-ios-raw-frosted-shell-border);
-  --mha-border-primary: var(--mha-ios-raw-frosted-primary-border);
-  --mha-border-on-primary: var(--mha-ios-raw-frosted-section-border);
-  --mha-border-secondary: var(--mha-ios-raw-frosted-tile-border);
-  --mha-border-control: var(--mha-ios-raw-frosted-control-border);
-  --mha-border-panel: var(--mha-ios-raw-frosted-shell-border);
-  --mha-border-popup: var(--mha-ios-raw-frosted-shell-border);
-
-  --mha-shadow-shell: var(--mha-ios-raw-frosted-shell-shadow);
-  --mha-shadow-primary: var(--mha-ios-raw-frosted-primary-shadow);
-  --mha-shadow-secondary: var(--mha-ios-raw-frosted-tile-shadow);
-  --mha-shadow-panel: var(--mha-ios-raw-frosted-shell-shadow);
-  --mha-shadow-popup: var(--mha-ios-raw-frosted-shell-shadow);
-
-  --mha-blur-shell: var(--mha-ios-raw-frosted-shell-blur);
-  --mha-blur-primary: var(--mha-ios-raw-frosted-primary-blur);
-  --mha-blur-secondary: var(--mha-ios-raw-frosted-tile-blur);
-  --mha-blur-panel: var(--mha-ios-raw-frosted-shell-blur);
-  --mha-blur-popup: var(--mha-ios-raw-frosted-shell-blur);
-  --mha-saturation-shell: var(--mha-ios-raw-frosted-shell-saturation);
-  --mha-saturation-primary: var(--mha-ios-raw-frosted-primary-saturation);
-  --mha-saturation-panel: var(--mha-ios-raw-frosted-shell-saturation);
-  --mha-saturation-popup: var(--mha-ios-raw-frosted-shell-saturation);
-
-  --mha-system-window-surface: var(--mha-surface-panel);
-  --mha-system-window-border: var(--mha-border-panel);
-  --mha-system-window-shadow: var(--mha-shadow-panel);
-  --mha-system-window-blur: var(--mha-blur-panel);
-
-  --mha-primary-surface: var(--mha-surface-primary);
-  --mha-on-primary-surface: var(--mha-surface-on-primary);
-  --mha-secondary-surface: var(--mha-surface-secondary);
-  --mha-primary-border: var(--mha-border-primary);
-  --mha-secondary-border: var(--mha-border-secondary);
-
-  --mha-shell-surface: var(--mha-surface-shell);
-  --mha-shell-status-surface: var(--mha-surface-shell);
-  --mha-shell-dock-surface: var(--mha-surface-shell);
-  --mha-shell-panel-surface: var(--mha-surface-panel);
-  --mha-shell-border: var(--mha-border-shell);
-  --mha-shell-shadow: var(--mha-shadow-shell);
-  --mha-shell-blur: var(--mha-blur-shell);
-
-  --mha-widget-shell-surface: var(--mha-surface-on-primary);
-  --mha-widget-shell-border: var(--mha-border-on-primary);
-  --mha-widget-shell-shadow: var(--mha-shadow-primary);
-  --mha-widget-control-surface: var(--mha-surface-control);
+:host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-widget {
+  --mha-widget-shell-surface: var(--mha-ios-frosted-widget-surface);
+  --mha-widget-shell-border: var(--mha-ios-frosted-widget-border);
+  --mha-widget-shell-shadow: var(--mha-ios-frosted-widget-shadow);
+  --mha-widget-shell-blur: var(--mha-ios-frosted-widget-blur);
+  --mha-widget-shell-saturation: var(--mha-ios-frosted-widget-saturation);
+  --mha-widget-shell-highlight: var(--mha-ios-frosted-widget-highlight);
+  --mha-widget-shell-highlight-opacity: var(--mha-ios-frosted-widget-highlight-opacity);
+  --mha-widget-shell-surface-edit: var(--mha-ios-frosted-widget-surface-edit);
+  --mha-widget-shell-border-edit: var(--mha-ios-frosted-widget-border-edit);
+  --mha-widget-shell-shadow-edit: var(--mha-ios-frosted-widget-shadow);
+  --mha-glass-noise-image: var(--mha-glass-noise-texture);
+  --mha-glass-noise-opacity: .065;
+  --mha-glass-noise-size: 80px 80px;
+  --mha-glass-noise-blend-mode: soft-light;
 }

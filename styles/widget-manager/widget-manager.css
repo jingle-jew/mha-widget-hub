@@ -616,46 +616,31 @@
   }
 }
 
-/* iOS panels consume the same material tokens as widget shells. */
-:host([data-theme-style="ios"][data-ios-glass="liquid"][data-theme]) .mha-widget-manager-sheet.mha-settings-sheet {
+/* Widget Manager always keeps the canonical Liquid iOS panel material. Live
+ * widget previews still inherit their own selected widget-shell material. */
+:host([data-theme-style="ios"][data-theme]) .mha-widget-manager-sheet.mha-settings-sheet {
   background: var(--mha-primary-surface);
   border-color: var(--mha-primary-border);
   box-shadow: var(--mha-shadow-panel);
 }
 
-:host([data-theme-style="ios"][data-ios-glass="liquid"]) .mha-widget-manager-category,
-:host([data-theme-style="ios"][data-ios-glass="liquid"]) .mha-widget-manager-widget,
-:host([data-theme-style="ios"][data-ios-glass="liquid"]) .mha-widget-manager-back {
+:host([data-theme-style="ios"]) .mha-widget-manager-category,
+:host([data-theme-style="ios"]) .mha-widget-manager-widget,
+:host([data-theme-style="ios"]) .mha-widget-manager-back {
   background: var(--mha-on-primary-surface);
   border-color: transparent;
   box-shadow: var(--mha-ios-liquid-shadow);
 }
 
-:host([data-theme-style="ios"][data-ios-glass="liquid"]) .mha-widget-manager-category:hover,
-:host([data-theme-style="ios"][data-ios-glass="liquid"]) .mha-widget-manager-category:focus-visible,
-:host([data-theme-style="ios"][data-ios-glass="liquid"]) .mha-widget-manager-widget:hover,
-:host([data-theme-style="ios"][data-ios-glass="liquid"]) .mha-widget-manager-widget:focus-visible {
+:host([data-theme-style="ios"]) .mha-widget-manager-category:hover,
+:host([data-theme-style="ios"]) .mha-widget-manager-category:focus-visible,
+:host([data-theme-style="ios"]) .mha-widget-manager-widget:hover,
+:host([data-theme-style="ios"]) .mha-widget-manager-widget:focus-visible {
   background: color-mix(in srgb, white 14%, var(--mha-ios-liquid-surface));
   border-color: transparent;
 }
 
-:host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-widget-manager-category,
-:host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-widget-manager-widget,
-:host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-widget-manager-back {
-  background: var(--mha-on-primary-surface);
-  border-color: var(--mha-ios-frosted-tile-border);
-  box-shadow: var(--mha-ios-frosted-tile-shadow);
-}
-
-:host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-widget-manager-category:hover,
-:host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-widget-manager-category:focus-visible,
-:host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-widget-manager-widget:hover,
-:host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-widget-manager-widget:focus-visible {
-  background: var(--mha-ios-frosted-tile-surface-hover);
-  border-color: var(--mha-ios-frosted-tile-border);
-}
-
-:host([data-theme-style="ios"][data-ios-glass="liquid"]) .mha-widget-manager-sheet,
-:host([data-theme-style="ios"][data-ios-glass="liquid"]) .mha-widget-manager-preview-area {
+:host([data-theme-style="ios"]) .mha-widget-manager-sheet,
+:host([data-theme-style="ios"]) .mha-widget-manager-preview-area {
   border-color: var(--mha-primary-border);
 }

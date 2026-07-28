@@ -153,21 +153,11 @@
   filter: saturate(.72);
 }
 
-:host([data-theme-style="ios"]:is([data-ios-glass="liquid"], [data-ios-glass="frosted"])) .slider2__thumb {
+:host([data-theme-style="ios"]) .slider2__thumb {
   opacity: 0;
   background: transparent;
   border-color: transparent;
   box-shadow: none;
-}
-
-:host([data-theme-style="ios"][data-ios-glass="frosted"]) .slider2__surface {
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.12),
-    inset 0 -1px 0 rgba(0,0,0,.08);
-}
-
-:host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-widget[data-widget-kind="toggle-slider"] .slider2 {
-  --mha-ios-slider-track-surface: var(--mha-ios-frosted-surface-muted);
 }
 
 @media (prefers-reduced-motion: reduce) {

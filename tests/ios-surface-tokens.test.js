@@ -68,3 +68,33 @@ test("the manifest loads raw mappings before the shared glass and widget contrac
   assert(indexOf("styles/core/glass-surface.css") < indexOf("styles/widgets/widget-shell.css"));
   assert(indexOf("styles/widgets/widget-shell.css") < indexOf("styles/widgets/widget-shell-contract.css"));
 });
+
+test("iOS glass variants are isolated to widget-shell material files", async () => {
+  const allowedVariantFiles = new Set([
+    "styles/themes/ios-raw-materials.css",
+    "styles/themes/ios-surface-map.css",
+    "styles/widgets/calendar-widget.css",
+    "styles/widgets/weather-widget.css",
+  ]);
+  const paths = getStyleManifest().map(([path]) => path);
+  const sources = await Promise.all(paths.map(async path => [path, await read(path)]));
+  const offenders = sources
+    .filter(([path, source]) => (
+      /data-ios-glass="(?:liquid|frosted)"/.test(source)
+      && !allowedVariantFiles.has(path)
+    ))
+    .map(([path]) => path);
+
+  assert.deepEqual(offenders, []);
+
+  const surfaceMap = await read("styles/themes/ios-surface-map.css");
+  const frostedWidgetBlock = surfaceMap.match(
+    /:host\(\[data-theme-style="ios"\]\[data-ios-glass="frosted"\]\) \.mha-widget \{([\s\S]*?)\n\}/,
+  )?.[1] || "";
+  assert.match(frostedWidgetBlock, /--mha-widget-shell-surface:/);
+  assert.match(frostedWidgetBlock, /--mha-widget-shell-filter|--mha-widget-shell-blur:/);
+  assert.doesNotMatch(
+    frostedWidgetBlock,
+    /--mha-(?:surface-(?:shell|panel|popup)|shell-(?:surface|dock|status|panel)|dock-|statusbar-|system-window-)/,
+  );
+});

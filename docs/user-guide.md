@@ -73,6 +73,11 @@ MHA currently includes:
 
 Themes can be changed at any time from the settings panel.
 
+With the iOS style selected, the **iOS glass** control switches widget surfaces
+between Liquid and Frosted. The rest of the iOS interface remains visually
+identical. Frosted Calendar widgets follow dedicated light/dark surfaces, while
+the main Weather widgets adapt their gradient to the current condition.
+
 ---
 
 ## Wallpapers

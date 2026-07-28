@@ -373,10 +373,16 @@ Liquid and Frosted are not separate registry entries. Do not add `ios-liquid` an
 
 Current direction:
 
-- preserve glass/surface identity;
+- use the current Liquid Glass implementation as the canonical iOS identity;
+- limit the Liquid/Frosted selector to outer widget surfaces only;
+- keep dock, status bar, panels, settings, icons, typography, geometry and
+  widget internals identical between the two variants;
+- give Calendar an opaque light/dark Frosted shell matching the macOS
+  references;
+- give the main WeatherWidget family a Frosted gradient driven by the current
+  Home Assistant condition;
 - avoid heavy colored shadows or decorative glow;
-- keep Liquid lighter and more translucent;
-- keep Frosted more opaque and classic.
+- keep generic Frosted widget shells more opaque and classic.
 
 ### OneUI
 

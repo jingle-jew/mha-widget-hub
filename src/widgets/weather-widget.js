@@ -1,5 +1,5 @@
 import { createCurrentWeatherIcon } from "./weather-current-icons.js";
-import { createWeatherIcon } from "./weather-icons.js";
+import { createWeatherIcon, normalizeWeatherCondition } from "./weather-icons.js";
 import {
   buildWeatherModel,
   fetchWeatherForecastBundle,
@@ -311,8 +311,15 @@ function createForecastStack(forecast = [], title = "", forecastType = "daily") 
   return stack;
 }
 
+function syncWeatherConditionDataset(target, condition = "unknown") {
+  if (!target?.dataset) return;
+  target.dataset.weatherCondition = normalizeWeatherCondition(condition);
+}
+
 function renderWeather(root, data, variant, widget = {}) {
   root.replaceChildren();
+  syncWeatherConditionDataset(root, data.condition);
+  syncWeatherConditionDataset(root.closest?.(".mha-widget"), data.condition);
   root.dataset.entityAllowed = String(data.entityAllowed);
   root.dataset.entityAvailable = String(data.entityAvailable);
   if (!data.entityId || !data.entityAllowed || !data.entityAvailable) {
@@ -436,8 +443,12 @@ export function createWeatherWidgetContent(widget = {}, {
 }
 
 export const WEATHER_WIDGET_CONTENT_RENDERER = Object.freeze({
-  decorateShell: ({ shell, widget }) => {
+  decorateShell: ({ shell, widget, hass, entityVisibilityConfig }) => {
     shell.dataset.weatherSurfaceMode = normalizeWeatherSurfaceMode(widget.surfaceMode);
+    syncWeatherConditionDataset(
+      shell,
+      buildWeatherModel(hass, widget, entityVisibilityConfig).condition,
+    );
   },
   render: ({ widget, widgetW, widgetH, hass, entityVisibilityConfig }) => createWeatherWidgetContent(widget, {
     widgetW,

@@ -284,6 +284,18 @@ test("appearance refresh resyncs the page creator with the new theme style", () 
   ]);
 });
 
+test("iOS glass changes only persist the surface selection and resync settings", () => {
+  const harness = createHarness();
+
+  assert.equal(harness.coordinator.applyIosGlassFromSettings("frosted"), true);
+  harness.flushRaf();
+
+  assert.deepEqual(harness.calls, [
+    ["setIosGlass", "frosted"],
+    "syncSettingsDom",
+  ]);
+});
+
 test("theme style changes overlap outgoing and incoming themes in one crossfade", () => {
   const harness = createHarness();
   harness.host._pageUiCoordinator = {

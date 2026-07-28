@@ -9,6 +9,36 @@
   overflow: hidden;
 }
 
+/* Frosted Calendar follows the opaque macOS reference while preserving the
+ * current Liquid content, typography, geometry and event styling. */
+:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="light"]) .mha-widget[data-widget-kind="calendar"] {
+  --mha-widget-shell-surface:
+    linear-gradient(145deg, rgba(255,255,255,.97), rgba(246,246,248,.92));
+  --mha-widget-shell-border: rgba(255,255,255,.72);
+  --mha-widget-shell-shadow:
+    0 8px 24px rgba(54,62,78,.08),
+    inset 0 1px 0 rgba(255,255,255,.92);
+  --mha-widget-shell-filter: blur(28px) saturate(128%) brightness(1.01);
+  --mha-widget-shell-highlight:
+    linear-gradient(180deg, rgba(255,255,255,.30), transparent 38%);
+  --mha-widget-shell-highlight-opacity: .20;
+  --mha-glass-noise-opacity: .025;
+}
+
+:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="dark"]) .mha-widget[data-widget-kind="calendar"] {
+  --mha-widget-shell-surface:
+    linear-gradient(145deg, rgba(13,13,14,.97), rgba(1,1,2,.93));
+  --mha-widget-shell-border: rgba(255,255,255,.13);
+  --mha-widget-shell-shadow:
+    0 14px 34px rgba(0,0,0,.28),
+    inset 0 1px 0 rgba(255,255,255,.09);
+  --mha-widget-shell-filter: blur(28px) saturate(118%) brightness(.96);
+  --mha-widget-shell-highlight:
+    linear-gradient(180deg, rgba(255,255,255,.10), transparent 42%);
+  --mha-widget-shell-highlight-opacity: .14;
+  --mha-glass-noise-opacity: .035;
+}
+
 .mha-calendar-widget {
   --mha-calendar-color-1: var(--mha-accent-surface, var(--mha-accent));
   --mha-calendar-color-2: color-mix(in srgb, var(--mha-accent) 52%, #38c9d6 48%);

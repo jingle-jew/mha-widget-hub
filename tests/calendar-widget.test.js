@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 
 import {
   buildCalendarMonthDays,
@@ -87,5 +88,20 @@ test("all six calendar previews render native DOM content", () => {
     assert.equal(content.dataset.calendarVariant, variantName);
     assert.equal(content.childNodes.length, 1);
     content.__mhaDestroy();
+  });
+});
+
+test("Frosted calendar references change only the outer shell material", () => {
+  const css = readFileSync(new URL("../styles/widgets/calendar-widget.css", import.meta.url), "utf8");
+  const frostedBlocks = [...css.matchAll(
+    /:host\([^)]*data-ios-glass="frosted"[^)]*\) \.mha-widget\[data-widget-kind="calendar"\] \{([\s\S]*?)\n\}/g,
+  )];
+
+  assert.equal(frostedBlocks.length, 2);
+  frostedBlocks.forEach(([, block]) => {
+    assert.match(block, /--mha-widget-shell-surface:/);
+    assert.match(block, /--mha-widget-shell-border:/);
+    assert.match(block, /--mha-widget-shell-filter:/);
+    assert.doesNotMatch(block, /--mha-(?:primary|secondary|tertiary)-text:/);
   });
 });

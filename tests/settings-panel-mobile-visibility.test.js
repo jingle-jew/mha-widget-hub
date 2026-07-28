@@ -492,7 +492,8 @@ test("Wallpaper subpanel exposes a weather background toggle for grid pages", ()
   assert.deepEqual(changes, [false]);
 }));
 
-test("settings panel hides the iOS glass variant selector", () => withMockDocument(() => {
+test("settings panel exposes the iOS glass selector and forwards its selection", () => withMockDocument(() => {
+  const changes = [];
   const iosPanel = createSettingsPanel({
     open: true,
     scope: "all",
@@ -500,9 +501,21 @@ test("settings panel hides the iOS glass variant selector", () => withMockDocume
     themeStyle: "ios",
     themeVariant: "liquid",
     iosGlass: "liquid",
+    onIosGlassChange: value => changes.push(value),
   });
 
-  assert.equal(hasText(iosPanel, "Theme variant"), false);
+  assert.equal(hasText(iosPanel, "iOS glass"), true);
+  assert.equal(hasText(iosPanel, "Liquid Glass"), true);
+  const trigger = iosPanel.querySelectorAll(".mha-select-trigger")
+    .find(control => control.getAttribute("aria-label") === "iOS glass");
+  const glassSelect = trigger.closest(".mha-select");
+  const input = glassSelect.querySelector(".mha-select-native");
+  const frostedOption = glassSelect.querySelectorAll("[role='option']")
+    .find(option => option.dataset.value === "frosted");
+  assert.equal(input.value, "liquid");
+
+  frostedOption.listeners.click();
+  assert.deepEqual(changes, ["frosted"]);
 }));
 
 test("settings panel hides the Alexa theme option", () => withMockDocument(() => {

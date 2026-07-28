@@ -526,7 +526,12 @@ test("weather widget updates its internal layout while resizing", () => {
   });
 
   assert.equal(content.dataset.weatherSize, "2x2");
+  assert.equal(content.dataset.weatherCondition, "sunny");
   assert.equal(content.childNodes.length, 1);
+
+  hass.states["weather.home"].state = "rainy";
+  content.__mhaUpdateFromHass(hass);
+  assert.equal(content.dataset.weatherCondition, "rainy");
 
   content.__mhaUpdateWidgetSize({ widgetW: 3, widgetH: 2 });
 
@@ -545,6 +550,7 @@ test("weather widget shell exposes the normalized surface mode to CSS", () => {
     widget: { kind: "weather" },
   });
   assert.equal(implicitShell.dataset.weatherSurfaceMode, "dynamic");
+  assert.equal(implicitShell.dataset.weatherCondition, "unknown");
 
   const dynamicShell = { dataset: {} };
   WEATHER_WIDGET_CONTENT_RENDERER.decorateShell({
@@ -559,6 +565,35 @@ test("weather widget shell exposes the normalized surface mode to CSS", () => {
     widget: { kind: "weather", surfaceMode: "default" },
   });
   assert.equal(defaultShell.dataset.weatherSurfaceMode, "default");
+
+  const weatherShell = { dataset: {} };
+  WEATHER_WIDGET_CONTENT_RENDERER.decorateShell({
+    shell: weatherShell,
+    widget: { kind: "weather", entityId: "weather.home" },
+    hass: {
+      states: {
+        "weather.home": {
+          entity_id: "weather.home",
+          state: "partly-cloudy",
+          attributes: {},
+        },
+      },
+    },
+  });
+  assert.equal(weatherShell.dataset.weatherCondition, "partlycloudy");
+});
+
+test("Frosted iOS weather surfaces expose condition-specific gradient palettes", () => {
+  const css = readFileSync(new URL("../styles/widgets/weather-widget.css", import.meta.url), "utf8");
+
+  assert.match(css, /data-ios-glass="frosted"[^\n]*data-widget-kind="weather"/);
+  ["sunny", "clear-night", "cloudy", "rainy", "lightning", "snowy", "unknown"].forEach(condition => {
+    assert.match(css, new RegExp(`data-weather-condition="${condition}"`));
+  });
+  assert.doesNotMatch(
+    css,
+    /data-ios-glass="frosted"[^}]*\.mha-weather-widget-(?:chip|forecast-row)/,
+  );
 });
 
 test("OneUI weather surface choices highlight only the selected option", () => {

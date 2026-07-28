@@ -301,7 +301,6 @@ export class AppearanceCoordinator {
   applyIosGlassFromSettings(value = "liquid") {
     this.setIosGlass(value);
     this.syncSettingsDom();
-    this.scheduleAppearanceDomRefresh();
     return true;
   }
 

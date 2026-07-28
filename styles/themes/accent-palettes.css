@@ -131,12 +131,9 @@
     0 12px 30px color-mix(in srgb, var(--mha-accent) 26%, transparent);
 }
 
-/* iOS variants separate app/dock icon personality:
- * - Frosted keeps the saturated, colorful app-icon treatment above.
- * - Liquid makes dock icons read as translucent glass objects instead of
- *   opaque accent tiles.
- */
-:host([data-theme-style="ios"][data-ios-glass="liquid"]) {
+/* The current Liquid icon treatment is the canonical iOS identity. Glass
+ * variants only affect widget-shell materials. */
+:host([data-theme-style="ios"]) {
   --mha-system-icon-bg:
     linear-gradient(145deg,
       color-mix(in srgb, rgba(255,255,255,.58) 58%, var(--mha-accent) 14%),
@@ -150,7 +147,7 @@
     0 14px 32px rgba(32,52,92,.16);
 }
 
-:host([data-theme-style="ios"][data-ios-glass="liquid"][data-theme="light"]) {
+:host([data-theme-style="ios"][data-theme="light"]) {
   --mha-system-icon-bg:
     linear-gradient(145deg,
       color-mix(in srgb, rgba(255,255,255,.72) 70%, var(--mha-accent) 10%),
@@ -217,7 +214,7 @@
   --mha-dock-active-indicator: rgba(255,255,255,.86);
 }
 
-:host([data-theme-style="ios"][data-ios-glass="liquid"]) {
+:host([data-theme-style="ios"]) {
   --mha-dock-active-icon-bg:
     linear-gradient(145deg,
       color-mix(in srgb, rgba(255,255,255,.72) 72%, var(--mha-accent) 10%),

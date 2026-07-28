@@ -80,19 +80,6 @@
   box-shadow: var(--mha-statusbar-shadow, var(--mha-shell-shadow, var(--mha-shadow-shell, none))) !important;
 }
 
-/* Keep Frosted's approved calm reflection unless a token overrides it later. */
-:host([data-theme-style="ios"][data-ios-glass="frosted"]) .mha-status-bar::after {
-  opacity: var(--mha-statusbar-highlight-opacity, .18);
-  background: var(
-    --mha-statusbar-highlight,
-    linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,.055) 42%, transparent 72%)
-  );
-}
-
-:host([data-theme-style="ios"][data-ios-glass="frosted"][data-theme="dark"]) .mha-status-bar::after {
-  opacity: var(--mha-statusbar-highlight-opacity, .12);
-}
-
 /* Preserve Material's opaque tonal status bar. */
 :host([data-theme-style="material"]) .mha-status-bar {
   background: var(--mha-shell-status-surface, var(--mha-surface-tonal));

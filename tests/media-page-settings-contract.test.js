@@ -64,6 +64,8 @@ test("media page settings persist the effective player selection with non-player
 
 test("media page settings no longer exposes the visual style option", () => {
   assert.doesNotMatch(source, /getMediaPageVisualStyleOptions|mediaPage\.visualStyle|controlId: "visual-style"|visualStyle: value/);
+  assert.doesNotMatch(mediaPageSource, /dataset\?\.themeVariant|dataset\.themeVariant/);
+  assert.match(mediaPageSource, /if \(themeStyle === "ios"\) return "liquid-glass";/);
 });
 
 test("media page settings panel restores its own scrim instead of inheriting the transparent settings sub-panel scrim", () => {
