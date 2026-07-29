@@ -160,6 +160,35 @@ appartiennent à `AGENTS.md`.
   retardés; la représentation visuelle peut volontairement rester en retrait
   le temps de charger ses ressources et de terminer une animation premium.
 
+### 2026-07-28 — Piloter le travail visuel par l'activité réelle
+
+- **Statut :** confirmé.
+- **Décision :** `src/core/activity-coordinator.js` est le propriétaire unique
+  des états runtime `active`, `idle-visible`, `covered` et `hidden`, de
+  l'observation viewport partagée et des cadences seconde/minute/jour. Les
+  callbacks du dashboard ne tournent pas sous une surface couvrante, ceux des
+  overlays ne tournent que lorsqu'ils sont visibles et aucun timer de cadence
+  ne subsiste lorsque le document est caché. Le retour visible déclenche une
+  seule réconciliation. Les composants doivent consommer ce contrat via
+  `component-cadence.js` et `widget-runtime-activity.js` plutôt que créer un
+  timer répétitif ou un `IntersectionObserver` local.
+- **Pourquoi :** les mises à jour Home Assistant, animations, requêtes caméra et
+  reconstructions DOM continuaient auparavant même lorsqu'elles ne pouvaient
+  produire aucun pixel utile. Centraliser l'activité évite ce travail tout en
+  conservant les animations lentes qui font partie de l'identité MHA lorsque la
+  surface redevient pertinente.
+- **Conséquence :** `hass-update-router.js` calcule une seule fois les entités
+  modifiées, puis route chaque composant selon ses dépendances et sa signature;
+  un dashboard couvert ou un document caché diffère son rendu jusqu'à la
+  réconciliation. La caméra suspend timers et requêtes lorsqu'elle est couverte,
+  cachée ou hors viewport, puis reprend une fois. Le CSS runtime met en pause
+  les animations inobservables. Les cadences Calendrier, Bref météo, Aperçu et
+  Média partagent le coordinateur. Les surfaces lourdes fermées restent non
+  montées et les feuilles de style déjà conformes au manifeste conservent leur
+  nœud DOM lors d'un rerender racine. Tout nouveau rendu coûteux doit préférer
+  une synchronisation en place et une signature stable avant de reconstruire
+  son DOM ou réassigner ses ressources.
+
 ### 2026-07-15 — Garder la page Média autonome
 
 - **Statut :** confirmé.
@@ -203,11 +232,13 @@ appartiennent à `AGENTS.md`.
   de `.mha-grid`; `grid-runtime.js` doit alors ignorer ses widgets spécialisés
   au lieu de leur réappliquer les dimensions et positions de la grille globale.
   Sinon, au retour sur Overview, une carte 8 colonnes peut créer des pistes CSS
-  implicites dans la grille Appareils 4 colonnes; le rafraîchissement de découverte
-  à 60 secondes reconstruit ensuite le DOM et masque temporairement la cause.
+  implicites dans la grille Appareils 4 colonnes. La découverte à cadence minute
+  calcule maintenant une signature stable sans son horodatage de requête et ne
+  reconstruit le DOM que lorsque son modèle a réellement changé; elle ne doit
+  donc plus servir de réparation implicite d'un layout invalide.
   Sur tablette/desktop, l'action `+` de cette portée est placée à
   droite dans l'en-tête Appareils et reste la cible de suppression du drag; le
-  bouton d'ajout flottant global y est masqué. Sélection, sheet et timer restent
+  bouton d'ajout flottant global y est masqué. Sélection, sheet et cadence restent
   du runtime non persisté. La découverte de `area-discovery.js` continue
   d'appliquer les permissions MHA avant le rendu.
 
