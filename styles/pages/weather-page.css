@@ -26,6 +26,12 @@
   opacity: 1;
 }
 
+.mha-weather-background[data-active="false"] *,
+.mha-weather-background[data-active="false"] *::before,
+.mha-weather-background[data-active="false"] *::after {
+  animation-play-state: paused !important;
+}
+
 .mha-weather-background__landscape {
   position: absolute;
   inset: 0;

@@ -276,6 +276,34 @@ test("media page keeps the previous artwork palette until its replacement loads"
   assert.equal(page.dataset.artworkPalette, "true");
 });
 
+test("media artwork does not reassign an unchanged image URL", () => {
+  let sourceWrites = 0;
+  const image = {
+    dataset: {},
+    complete: false,
+    matches: selector => selector === "img",
+    addEventListener() {},
+    removeEventListener() {},
+    removeAttribute() {},
+  };
+  Object.defineProperty(image, "src", {
+    get: () => image.dataset.assignedSource || "",
+    set: (value) => {
+      sourceWrites += 1;
+      image.dataset.assignedSource = value;
+    },
+  });
+  const artwork = {
+    dataset: {},
+    querySelector: () => image,
+    closest: () => null,
+  };
+
+  assert.equal(setMediaArtworkImage(artwork, "/cover.jpg"), true);
+  assert.equal(setMediaArtworkImage(artwork, "/cover.jpg"), false);
+  assert.equal(sourceWrites, 1);
+});
+
 test("media transition cache hides temporary idle metadata and artwork gaps", () => {
   assert.equal(MEDIA_TRANSITION_GRACE_MS, 5000);
   const cache = createMediaTransitionCache();

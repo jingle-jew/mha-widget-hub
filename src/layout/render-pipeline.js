@@ -26,7 +26,8 @@ import { getLayoutForWidth } from "./responsive.js";
 import { createPagePanel } from "../pages/page-panel.js";
 import {
   createWeatherPageBackground,
-  syncWeatherPageBackgroundState,
+  resolveWeatherPageBackgroundState,
+  syncWeatherPageBackgroundResolvedState,
 } from "../pages/weather-page-background.js";
 import {
   createMediaPage,
@@ -303,16 +304,18 @@ export function createRenderPipeline(host, options = {}) {
       return;
     }
 
-    const nextScene = createWeatherPageBackground(weatherBackgroundPage, host._hass);
-    if (currentScene?.dataset.sceneKey === nextScene.dataset.sceneKey) {
+    const nextState = resolveWeatherPageBackgroundState(weatherBackgroundPage, host._hass);
+    if (currentScene?.dataset.sceneKey === nextState.sceneKey) {
       host._weatherBackgroundPendingSceneKey = "";
-      syncWeatherPageBackgroundState(currentScene, nextScene);
+      syncWeatherPageBackgroundResolvedState(currentScene, nextState);
       currentScene.dataset.active = "true";
       scenes.filter(scene => scene !== currentScene).forEach(scene => scene.remove?.());
       return;
     }
 
-    if (host._weatherBackgroundPendingSceneKey === nextScene.dataset.sceneKey) return;
+    if (host._weatherBackgroundPendingSceneKey === nextState.sceneKey) return;
+
+    const nextScene = createWeatherPageBackground(weatherBackgroundPage, host._hass, nextState);
 
     const mountNextScene = () => {
       const requestId = (host._weatherBackgroundRequestId || 0) + 1;

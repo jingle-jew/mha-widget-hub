@@ -197,8 +197,9 @@ export function setMediaArtworkImage(artwork, artworkUrl = "") {
   const image = artwork.querySelector(".mha-media-widget-artwork-image");
   const hasArtwork = Boolean(artworkUrl);
   artwork.dataset.hasArtwork = String(hasArtwork);
-  if (!image) return;
+  if (!image) return false;
   if (hasArtwork) {
+    if (image.dataset.artworkUrl === artworkUrl) return false;
     if (image.dataset.artworkUrl && image.dataset.artworkUrl !== artworkUrl) {
       const paletteRoot = resolveMediaArtworkPaletteRoot(artwork);
       /* Keep continuity for surfaces whose complete visual contract is driven
@@ -211,12 +212,15 @@ export function setMediaArtworkImage(artwork, artworkUrl = "") {
     image.src = artworkUrl;
     image.alt = "";
     syncMediaArtworkTone(artwork, image);
+    return true;
   } else {
+    if (!image.dataset.artworkUrl && !image.getAttribute?.("src")) return false;
     detachMediaArtworkPaletteListener(image);
     delete image.__mhaArtworkPaletteCache;
     delete image.dataset.artworkUrl;
     image.removeAttribute("src");
     clearMediaArtworkPalette(resolveMediaArtworkPaletteRoot(artwork));
+    return true;
   }
 }
 
@@ -484,12 +488,18 @@ export function setMediaBackgroundImage(root, artworkUrl = "") {
   const image = root.querySelector(".mha-media-widget-background-image");
   const hasArtwork = Boolean(artworkUrl);
   root.dataset.hasArtwork = String(hasArtwork);
-  if (!image) return;
+  if (!image) return false;
   if (hasArtwork) {
+    if (image.dataset.artworkUrl === artworkUrl) return false;
+    image.dataset.artworkUrl = artworkUrl;
     image.src = artworkUrl;
     image.alt = "";
+    return true;
   } else {
+    if (!image.dataset.artworkUrl && !image.getAttribute?.("src")) return false;
+    delete image.dataset.artworkUrl;
     image.removeAttribute("src");
+    return true;
   }
 }
 
@@ -668,6 +678,22 @@ export function renderMediaControls(controls, data, { mode = "playback", interac
   const toggle = controls.querySelector(".mha-media-widget-control-toggle");
   if (!group || !toggle) return;
 
+  const renderSignature = JSON.stringify([
+    mode,
+    interactive,
+    data.playing,
+    data.muted,
+    data.volumeLabel,
+    data.canPrevious,
+    data.canPlayPause,
+    data.canNext,
+    data.canVolumeDown,
+    data.canVolumeUp,
+    data.canMute,
+  ]);
+  if (controls.dataset.renderSignature === renderSignature) return false;
+  controls.dataset.renderSignature = renderSignature;
+
   controls.dataset.mode = mode;
   const widgetRoot = controls.closest(".mha-media-page-player-widget");
   if (widgetRoot) widgetRoot.dataset.mediaControlsMode = mode;
@@ -694,6 +720,33 @@ export function renderMediaControls(controls, data, { mode = "playback", interac
   toggle.disabled = false;
   toggle.setAttribute("aria-disabled", String(!interactive));
   toggle.tabIndex = interactive ? 0 : -1;
+  return true;
+}
+
+export function createMediaRenderSignature(data = {}) {
+  return JSON.stringify([
+    data.entityId,
+    data.state,
+    data.playing,
+    data.title,
+    data.subtitle,
+    data.name,
+    data.app,
+    data.artworkUrl,
+    data.volumeLabel,
+    data.muted,
+    data.canPrevious,
+    data.canPlayPause,
+    data.canNext,
+    data.canVolumeDown,
+    data.canVolumeUp,
+    data.canMute,
+    data.progress?.available,
+    data.progress?.current,
+    data.progress?.duration,
+    data.progress?.ratio,
+    data.usingGraceCache,
+  ]);
 }
 
 export function resolveMediaControlsToggleMode(currentMode = "playback", {
@@ -908,6 +961,7 @@ export function createMediaWidgetContent(widget = {}, {
   const transitionCache = createMediaTransitionCache();
   let graceTimer = null;
   const data = buildMediaWidgetData(widget, hass, transitionCache);
+  let appliedRenderSignature = createMediaRenderSignature(data);
   const context = {
     hass,
     entity: data.entity,
@@ -943,6 +997,9 @@ export function createMediaWidgetContent(widget = {}, {
     runMediaPlayerAction(context.hass, context.entity, action);
   };
   const applyData = nextData => {
+    const nextRenderSignature = createMediaRenderSignature(nextData);
+    if (nextRenderSignature === appliedRenderSignature) return false;
+    appliedRenderSignature = nextRenderSignature;
     context.entity = nextData.entity;
     context.data = nextData;
     root.dataset.state = nextData.state;
@@ -980,6 +1037,7 @@ export function createMediaWidgetContent(widget = {}, {
       interactive,
       onAction,
     });
+    return true;
   };
   const scheduleGraceRefresh = nextData => {
     if (graceTimer) {
@@ -1069,11 +1127,15 @@ export function createMediaWidgetContent(widget = {}, {
     applyData(nextData);
     scheduleGraceRefresh(nextData);
   };
+  root.__mhaGetHassRenderSignature = nextHass => createMediaRenderSignature(
+    buildMediaWidgetData(widget, nextHass, transitionCache),
+  );
 
   root.__mhaDestroy = () => {
     if (graceTimer) clearTimeout(graceTimer);
     graceTimer = null;
     delete root.__mhaUpdateFromHass;
+    delete root.__mhaGetHassRenderSignature;
     context.hass = null;
     context.entity = null;
   };

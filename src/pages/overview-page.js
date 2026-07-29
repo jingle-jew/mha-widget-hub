@@ -1,8 +1,6 @@
 import { destroyDomSubtree } from "../core/dom-lifecycle.js";
-import {
-  AREA_REGISTRY_CACHE_TTL_MS,
-  discoverOverviewAreas,
-} from "../ha/area-discovery.js";
+import { bindComponentCadence } from "../core/component-cadence.js";
+import { discoverOverviewAreas } from "../ha/area-discovery.js";
 import { getEntityDomain } from "../ha/entity.js";
 import { t } from "../i18n/index.js";
 import {
@@ -46,6 +44,13 @@ export function resolveOverviewRoomGridUnits(layout = "desktop", mobileGridUnits
   if (layout !== "mobile") return 6;
   const units = Math.round(Number(mobileGridUnits));
   return Number.isFinite(units) ? Math.max(2, Math.min(12, units)) : 4;
+}
+
+export function createOverviewDiscoverySignature(result = {}) {
+  return JSON.stringify({
+    areas: result.areas || [],
+    errors: result.errors || {},
+  });
 }
 
 function createOverviewWidgetId(prefix = "item", id = "") {
@@ -417,7 +422,7 @@ export function createOverviewPage(page = {}, {
   let discoveredAreas = [];
   let discoveryErrors = {};
   let discoveryPending = true;
-  let discoveryTimer = null;
+  let discoverySignature = "";
   let activeMobileSheet = null;
   let destroyed = false;
 
@@ -798,8 +803,11 @@ export function createOverviewPage(page = {}, {
       force,
     });
     if (destroyed) return false;
+    const nextDiscoverySignature = createOverviewDiscoverySignature(result);
+    const discoveryChanged = nextDiscoverySignature !== discoverySignature;
     discoveredAreas = result.areas || [];
     discoveryErrors = result.errors || {};
+    discoverySignature = nextDiscoverySignature;
     discoveryPending = false;
     const reconciled = reconcileOverviewPageConfig(currentConfig, discoveredAreas);
     if (JSON.stringify(reconciled) !== JSON.stringify(currentConfig)) {
@@ -808,11 +816,13 @@ export function createOverviewPage(page = {}, {
       onConfigChange(reconciled);
     }
     if (controller.selectedAreaId && !getArea()) controller.clearSelection("selected-room-removed");
-    else render("discovery-complete");
-    clearTimeout(discoveryTimer);
-    discoveryTimer = setTimeout(() => refreshDiscovery(), AREA_REGISTRY_CACHE_TTL_MS + 250);
+    else if (discoveryChanged) render("discovery-complete");
     return true;
   }
+
+  const unbindDiscoveryCadence = bindComponentCadence(root, "minute", () => {
+    void refreshDiscovery();
+  }, { scope: "dashboard" });
 
   const activity = () => controller.activity();
   root.addEventListener("pointerdown", activity, { passive: true });
@@ -837,8 +847,7 @@ export function createOverviewPage(page = {}, {
     if (controller.editingSection === "devices") {
       onDeviceEditingChange({ editing: false, destroyed: true });
     }
-    clearTimeout(discoveryTimer);
-    discoveryTimer = null;
+    unbindDiscoveryCadence();
     activeMobileSheet = syncOverviewSheetPortal({
       surfaceRoot: resolveSheetSurfaceRoot(),
       currentSheet: activeMobileSheet,

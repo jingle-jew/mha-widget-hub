@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createBootLifecycleCoordinator } from "../src/core/boot-lifecycle-coordinator.js";
+import { createOverviewDiscoverySignature } from "../src/pages/overview-page.js";
 
 const pageSource = readFileSync(
   new URL("../src/pages/overview-page.js", import.meta.url),
@@ -112,4 +113,12 @@ test("the global HA update contract reaches overview widgets rendered inside the
     ["overview", hass],
     ["sheet-widget", hass],
   ]);
+});
+
+test("overview discovery signatures ignore fetch timestamps", () => {
+  const areas = [{ id: "living-room", name: "Living room", entities: [] }];
+  assert.equal(
+    createOverviewDiscoverySignature({ areas, errors: {}, loadedAt: 1 }),
+    createOverviewDiscoverySignature({ areas, errors: {}, loadedAt: 99_000 }),
+  );
 });

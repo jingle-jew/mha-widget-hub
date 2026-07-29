@@ -3,6 +3,7 @@ import {
   normalizeCalendarEntityIdsForRuntime,
 } from "../ha/calendar.js";
 import { t } from "../i18n/index.js";
+import { bindComponentCadence } from "../core/component-cadence.js";
 import {
   buildCalendarWidgetConfig,
   createCalendarConfigDraft,
@@ -447,18 +448,16 @@ export function createCalendarWidgetContent(widget = {}, {
     void load(nextHass);
   };
 
-  let clock = null;
-  if (!preview && typeof globalThis.setInterval === "function") {
-    clock = globalThis.setInterval(() => {
+  const unbindCadence = preview
+    ? () => {}
+    : bindComponentCadence(root, "minute", () => {
       void load(currentHass);
-    }, 60 * 1000);
-    clock?.unref?.();
-  }
+    }, { scope: "dashboard" });
 
   root.__mhaDestroy = () => {
     destroyed = true;
     requestId += 1;
-    if (clock != null) globalThis.clearInterval?.(clock);
+    unbindCadence();
     delete root.__mhaUpdateFromHass;
     delete root.__mhaDestroy;
   };

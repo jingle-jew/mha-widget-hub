@@ -8,6 +8,7 @@ import {
   createScreensaverElement,
   syncScreensaverElement,
 } from "./screensaver-orchestrator.js";
+import { updateScreensaverState } from "./screensaver.js";
 
 export class ScreensaverCoordinator {
   constructor({
@@ -26,6 +27,7 @@ export class ScreensaverCoordinator {
     getCalendarSignature = getNowBarCalendarSignature,
     createElement = createScreensaverElement,
     syncElement = syncScreensaverElement,
+    syncVisibility = updateScreensaverState,
   } = {}) {
     this.getScreensaverState = (...args) => getScreensaverState(...args);
     this.getIsVisible = (...args) => getIsVisible(...args);
@@ -42,6 +44,7 @@ export class ScreensaverCoordinator {
     this.getCalendarSignature = (...args) => getCalendarSignature(...args);
     this.createElement = (...args) => createElement(...args);
     this.syncElement = (...args) => syncElement(...args);
+    this.syncVisibility = (...args) => syncVisibility(...args);
     this.nowBarCalendarEvents = {};
     this.nowBarCalendarRequestId = 0;
     this.nowBarCalendarSignature = "";
@@ -79,6 +82,8 @@ export class ScreensaverCoordinator {
       return Promise.resolve(false);
     }
 
+    if (!force && !this.getIsVisible()) return Promise.resolve(false);
+
     const timestamp = this.now();
     const recentlyFetched = timestamp - this.nowBarCalendarFetchedAt < 60000;
     if (!force && signature === this.nowBarCalendarSignature && recentlyFetched) {
@@ -100,11 +105,19 @@ export class ScreensaverCoordinator {
   syncDom(root, { force = false } = {}) {
     this.onSyncVisibilityState();
     const existing = root?.querySelector?.(".mha-screensaver");
+    const isVisible = this.getIsVisible();
+    if (existing && !isVisible && !force) {
+      this.syncVisibility(existing, { isVisible: false });
+      return existing;
+    }
     return this.syncElement({
       root,
       existing,
       force,
-      props: this.buildProps(),
+      props: {
+        ...this.buildProps(),
+        isVisible,
+      },
     });
   }
 

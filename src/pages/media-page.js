@@ -1,4 +1,7 @@
 import { runMediaPlayerAction } from "../ha/actions.js";
+import { bindComponentCadence } from "../core/component-cadence.js";
+import { bindComponentHassContract } from "../core/hass-update-router.js";
+import { destroyDomSubtree } from "../core/dom-lifecycle.js";
 import {
   formatMediaDuration,
   getMediaStateLabel,
@@ -24,6 +27,7 @@ import {
   createMediaArtwork,
   createMediaPlaybackButtons,
   createMediaProgress,
+  createMediaRenderSignature,
   createMediaPagePlayerWidget,
   createMediaWidgetContent,
   createMediaTitleStack,
@@ -32,6 +36,20 @@ import {
   setMediaArtworkImage,
   setMediaProgressState,
 } from "../widgets/media-widget.js?media-page-ios-card-v1";
+
+export function createMediaPageRenderSignature(view = {}) {
+  return JSON.stringify([
+    (view.availablePlayers || []).map(player => [player.entity_id, player.name]),
+    (view.enabledPlayers || []).map(player => [player.entity_id, player.name]),
+    view.selectedPlayerId,
+    view.stateLabel,
+    view.deviceName,
+    view.effectiveVisualStyle,
+    view.blurBackground,
+    view.statusLine,
+    createMediaRenderSignature(view.media),
+  ]);
+}
 
 function createIconButton({ label, icon, className = "", onClick = () => {} } = {}) {
   const button = document.createElement("button");
@@ -237,8 +255,11 @@ function buildViewState(page = {}, hass, visibilityConfig, cache = null, selecti
   };
 }
 
-function syncControlGroup(container, buttons = []) {
+function syncControlGroup(container, buttons = [], signature = "") {
+  if (signature && container.dataset.renderSignature === signature) return false;
+  container.dataset.renderSignature = signature;
   container.replaceChildren(...buttons);
+  return true;
 }
 
 export function swapOrderedIds(ids = [], sourceId = "", targetId = "") {
@@ -468,7 +489,7 @@ export function createMediaPage(page = {}, {
   });
   root.__mhaSyncMobileDockState = mobileScrollCoordinator.syncDockState;
 
-  let progressTimer = 0;
+  let progressCadenceActive = false;
   let mediaStateConfirmationTimer = 0;
   let visualTransitionTimer = 0;
   let automaticPlayerCards = [];
@@ -628,7 +649,7 @@ export function createMediaPage(page = {}, {
     if (automaticPlayerCards.length !== view.enabledPlayers.length
       || automaticPlayerCards.some((card, index) => card.dataset.mediaPlayerId !== view.enabledPlayers[index]?.entity_id)) {
       automaticPlayerCards.forEach((card) => {
-        card.__mhaDestroy?.();
+        destroyDomSubtree(card);
         card.remove();
       });
       automaticPlayerCards = view.enabledPlayers.map((player) => {
@@ -681,20 +702,20 @@ export function createMediaPage(page = {}, {
           delete card.dataset.pointerDragging;
           clearPlayerDragState();
         });
-        card.append(createMediaWidgetContent(widget, {
+        const component = createMediaWidgetContent(widget, {
           widgetW: widget.w,
           widgetH: widget.h,
           hass: context.hass,
           onSelect: playerId => {
             if (!isEditing()) selectPlayer(playerId);
           },
-        }));
+        });
+        bindComponentHassContract(component, widget);
+        card.append(component);
         card.setAttribute("role", "listitem");
         playerList.append(card);
         return card;
       });
-    } else {
-      automaticPlayerCards.forEach((card) => card.querySelector(".mha-media-widget")?.__mhaUpdateFromHass?.(context.hass));
     }
     automaticPlayerCards.forEach((card) => {
       card.dataset.selected = String(card.dataset.mediaPlayerId === view.selectedPlayerId);
@@ -720,6 +741,12 @@ export function createMediaPage(page = {}, {
     syncControlGroup(
       playbackGroup,
       createMediaPlaybackButtons(view.media, { onAction }),
+      JSON.stringify([
+        view.media.playing,
+        view.media.canPrevious,
+        view.media.canPlayPause,
+        view.media.canNext,
+      ]),
     );
     applyProgress(view);
   };
@@ -765,15 +792,18 @@ export function createMediaPage(page = {}, {
   };
 
   const syncProgressTicker = () => {
-    if (progressTimer) {
-      clearInterval(progressTimer);
-      progressTimer = 0;
-    }
-    if (context.view.media.entity?.state !== "playing" || !context.view.media.progress.available) return;
-    progressTimer = window.setInterval(() => {
-      refresh({ progressOnly: true });
-    }, 1000);
+    progressCadenceActive = Boolean(
+      context.view.media.entity?.state === "playing"
+      && context.view.media.progress.available,
+    );
   };
+
+  const unbindProgressCadence = bindComponentCadence(root, "second", () => {
+    refresh({ progressOnly: true });
+  }, {
+    scope: "dashboard",
+    isEnabled: () => progressCadenceActive,
+  });
 
   applyView(context.view);
   scheduleMediaStateConfirmation(context.view);
@@ -785,6 +815,14 @@ export function createMediaPage(page = {}, {
     refresh();
     syncProgressTicker();
   };
+  root.__mhaEntityDependencies = new Set(["media_player.*"]);
+  root.__mhaGetHassRenderSignature = nextHass => createMediaPageRenderSignature(buildViewState(
+    context.page,
+    nextHass,
+    context.visibilityConfig,
+    transitionCache,
+    selectionState,
+  ));
 
   root.__mhaResetScrollPosition = resetScrollPosition;
 
@@ -821,8 +859,8 @@ export function createMediaPage(page = {}, {
   };
 
   root.__mhaDestroy = () => {
-    if (progressTimer) clearInterval(progressTimer);
-    progressTimer = 0;
+    progressCadenceActive = false;
+    unbindProgressCadence();
     clearInactiveSelectionTimer();
     clearMediaStateConfirmationTimer();
     if (visualTransitionTimer) clearTimeout(visualTransitionTimer);
@@ -830,8 +868,9 @@ export function createMediaPage(page = {}, {
     mobileScrollCoordinator.destroy();
     const host = getMediaPageHost(root);
     if (host?.dataset) delete host.dataset.mediaPlayersSheetOpen;
-    automaticPlayerCards.forEach((card) => card.__mhaDestroy?.());
+    automaticPlayerCards.forEach(card => destroyDomSubtree(card));
     automaticPlayerCards = [];
+    delete root.__mhaGetHassRenderSignature;
   };
 
   return root;

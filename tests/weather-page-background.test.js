@@ -13,9 +13,11 @@ import {
 } from "../src/pages/weather-background-assets.js";
 import {
   createWeatherPageBackground,
+  resolveWeatherPageBackgroundState,
   resolveWeatherPeriod,
   resolveWeatherPeriodTransition,
   syncWeatherPageBackgroundState,
+  syncWeatherPageBackgroundResolvedState,
 } from "../src/pages/weather-page-background.js";
 import {
   CELESTIAL_GRADIENT_PROFILES,
@@ -475,4 +477,24 @@ test("celestial gradient keeps weather effects separate and syncs state without 
   assert.equal(current.children, originalChildren);
   assert.equal(current.style.getPropertyValue("--mha-celestial-sun-x"), "72%");
   assert.equal(current.dataset.celestialProgress, "0.42");
+}));
+
+test("unchanged weather scenes synchronize dynamic state without constructing a replacement", () => withFakeDocument(() => {
+  const page = { config: { weatherLandscapeId: "celestial-gradient" } };
+  const hass = createHass("partlycloudy", 50);
+  const now = new Date("2026-07-28T12:00:00");
+  const state = resolveWeatherPageBackgroundState(page, hass, now);
+  const scene = createWeatherPageBackground(page, hass, state);
+  const originalChildren = scene.children;
+
+  syncWeatherPageBackgroundResolvedState(scene, {
+    ...state,
+    windSpeedKmh: 42,
+    cloudCover: 80,
+  });
+
+  assert.equal(scene.children, originalChildren);
+  assert.equal(scene.dataset.sceneKey, state.sceneKey);
+  assert.ok(Number(scene.style.getPropertyValue("--mha-weather-wind-factor")) > 1.7);
+  assert.equal(scene.style.getPropertyValue("--mha-weather-cloud-opacity"), "0.8");
 }));

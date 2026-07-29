@@ -10,6 +10,7 @@ import {
 } from "../widget-config/weather-config.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
 import { t } from "../i18n/index.js";
+import { bindComponentCadence } from "../core/component-cadence.js";
 
 const FORECAST_REFRESH_MS = 10 * 60 * 1000;
 
@@ -71,7 +72,6 @@ export function createWeatherNarrativeWidgetContent(widget = {}, {
     forecastEntityId: "",
     forecastCheckedAt: 0,
     forecastRequestId: 0,
-    clock: null,
   };
   const root = document.createElement("div");
   root.className = "mha-weather-narrative-widget";
@@ -106,14 +106,14 @@ export function createWeatherNarrativeWidgetContent(widget = {}, {
   };
   root.__mhaDestroy = () => {
     context.forecastRequestId += 1;
-    if (context.clock != null) globalThis.clearInterval?.(context.clock);
+    unbindCadence();
     delete root.__mhaUpdateFromHass;
     delete root.__mhaDestroy;
   };
   root.__mhaUpdateFromHass(hass);
-  if (typeof globalThis.setInterval === "function") {
-    context.clock = globalThis.setInterval(renderCurrent, 60 * 1000);
-  }
+  const unbindCadence = bindComponentCadence(root, "minute", renderCurrent, {
+    scope: "dashboard",
+  });
   return root;
 }
 

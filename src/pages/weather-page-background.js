@@ -452,10 +452,9 @@ function appendFog(scene) {
   scene.append(field);
 }
 
-export function createWeatherPageBackground(page = {}, hass = null) {
+export function resolveWeatherPageBackgroundState(page = {}, hass = null, now = new Date()) {
   const weatherEntity = resolveWeatherEntity(page, hass);
   const condition = normalizeCondition(weatherEntity?.state);
-  const now = new Date();
   const isDay = resolveIsDay(hass, now);
   const period = resolveWeatherPeriod(hass, isDay, now);
   const periodTransition = resolveWeatherPeriodTransition(hass, isDay, now);
@@ -473,6 +472,44 @@ export function createWeatherPageBackground(page = {}, hass = null) {
   const cloudCover = Number(weatherEntity?.attributes?.cloud_coverage);
   const cloudProfile = resolveCloudProfile(condition, cloudCover);
   const cloudy = CLOUDY_CONDITIONS.has(condition);
+  const celestialState = backgroundAsset.renderer === "celestial-gradient"
+    ? resolveCelestialGradientState({ hass, isDay, now, period, transition: periodTransition })
+    : null;
+
+  return {
+    backgroundAsset,
+    celestialState,
+    cloudCover,
+    cloudProfile,
+    cloudy,
+    condition,
+    hass,
+    isDay,
+    now,
+    period,
+    periodTransition,
+    sceneKey: `${backgroundAsset.key}:condition-${condition}:cloud-${cloudProfile.key}-${cloudProfile.count}`,
+    weatherEntity,
+    windSpeedKmh,
+    winter,
+  };
+}
+
+export function createWeatherPageBackground(page = {}, hass = null, resolvedState = null) {
+  const state = resolvedState || resolveWeatherPageBackgroundState(page, hass);
+  const {
+    backgroundAsset,
+    celestialState,
+    cloudCover,
+    cloudProfile,
+    cloudy,
+    condition,
+    isDay,
+    period,
+    sceneKey,
+    windSpeedKmh,
+    winter,
+  } = state;
 
   const scene = document.createElement("div");
   scene.className = "mha-weather-background";
@@ -483,7 +520,7 @@ export function createWeatherPageBackground(page = {}, hass = null) {
   scene.dataset.landscapeId = backgroundAsset.landscapeId;
   scene.dataset.renderer = backgroundAsset.renderer;
   scene.dataset.ambience = backgroundAsset.ambience;
-  scene.dataset.sceneKey = `${backgroundAsset.key}:condition-${condition}:cloud-${cloudProfile.key}-${cloudProfile.count}`;
+  scene.dataset.sceneKey = sceneKey;
   scene.dataset.assetKey = backgroundAsset.key;
   scene.dataset.assetUrl = backgroundAsset.url;
   scene.dataset.cloudy = String(cloudy);
@@ -514,9 +551,6 @@ export function createWeatherPageBackground(page = {}, hass = null) {
   );
   scene.setAttribute("aria-hidden", "true");
 
-  const celestialState = backgroundAsset.renderer === "celestial-gradient"
-    ? resolveCelestialGradientState({ hass, isDay, now, period, transition: periodTransition })
-    : null;
   const landscape = celestialState
     ? createCelestialGradientLayer(celestialState)
     : createLayer("mha-weather-background__landscape");
@@ -610,5 +644,35 @@ export function syncWeatherPageBackgroundState(currentScene, nextScene) {
     if (nextScene.dataset[key] === undefined) delete currentScene.dataset[key];
     else currentScene.dataset[key] = nextScene.dataset[key];
   });
+  return currentScene;
+}
+
+export function syncWeatherPageBackgroundResolvedState(currentScene, state = {}) {
+  if (!currentScene || !state.backgroundAsset) return currentScene;
+  const {
+    backgroundAsset,
+    celestialState,
+    cloudCover,
+    cloudy,
+    isDay,
+    period,
+    windSpeedKmh,
+  } = state;
+  currentScene.style.setProperty("--mha-weather-wind-factor", String(resolveWindFactor(windSpeedKmh)));
+  currentScene.style.setProperty(
+    "--mha-weather-cloud-opacity",
+    String(Number.isFinite(cloudCover) ? Math.max(0.38, Math.min(0.96, cloudCover / 100)) : (cloudy ? 0.82 : 0.42)),
+  );
+  currentScene.dataset.daytime = isDay ? "day" : "night";
+  currentScene.dataset.period = period;
+  if (backgroundAsset.renderer === "celestial-gradient" && celestialState) {
+    currentScene.dataset.celestialFrom = celestialState.from;
+    currentScene.dataset.celestialTo = celestialState.to;
+    currentScene.dataset.celestialProgress = String(celestialState.progress);
+    currentScene.dataset.moonPhase = celestialState.moon.phase;
+    currentScene.dataset.sunVisible = String(celestialState.sun.opacity > 0);
+    currentScene.dataset.moonVisible = String(celestialState.moon.opacity > 0);
+    applyCelestialGradientState(currentScene, celestialState);
+  }
   return currentScene;
 }
