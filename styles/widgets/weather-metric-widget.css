@@ -798,23 +798,6 @@
   grid-template-rows: auto minmax(0, 1fr) auto;
 }
 
-.mha-weather-metric-widget[data-metric-layout="summary"]::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  border-radius: inherit;
-  background:
-    var(--mha-weather-summary-sky-overlay),
-    linear-gradient(
-      180deg,
-      var(--mha-weather-summary-gradient-top) 0%,
-      var(--mha-weather-summary-gradient-mid) 50%,
-      var(--mha-weather-summary-gradient-bottom) 100%
-    );
-  pointer-events: none;
-}
-
 .mha-weather-metric-widget[data-metric-layout="summary"] > * {
   position: relative;
   z-index: 1;

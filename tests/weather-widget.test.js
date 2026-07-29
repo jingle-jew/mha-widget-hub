@@ -397,6 +397,10 @@ test("weather metric progress accents keep a fallback when the theme accent toke
 test("weather summary reserves the flexible center row for its main narrative", () => {
   const css = readFileSync(new URL("../styles/widgets/weather-metric-widget.css", import.meta.url), "utf8");
 
+  assert.doesNotMatch(
+    css,
+    /\.mha-weather-metric-widget\[data-metric-layout="summary"\]::before/,
+  );
   assert.match(
     css,
     /> \.mha-weather-metric-widget\[data-weather-metric-size="4x2"\]\[data-metric-layout="summary"\]\s*\{[^}]*grid-template-rows:\s*auto minmax\(0, 1fr\);/,
