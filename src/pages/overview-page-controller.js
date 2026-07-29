@@ -72,7 +72,6 @@ export class OverviewPageController {
 
   setEditingSection(section = "") {
     const next = VALID_EDITING_SECTIONS.has(section) ? section : "";
-    if (next === "devices" && !this.selectedAreaId) return false;
     if (next === this.editingSection) return true;
     this.editingSection = next;
     if (next) this.clearInactivityTimer();

@@ -12,7 +12,9 @@ import {
   PAGE_TYPES,
 } from "../src/pages/page-types.js";
 import {
+  buildOverviewDeviceWidgets,
   createOverviewEntityWidget,
+  persistOverviewAreaDeviceWidgets,
   resolveOverviewRoomGridUnits,
   syncOverviewSheetPortal,
 } from "../src/pages/overview-page.js";
@@ -125,6 +127,45 @@ test("overview maps every supported domain without exposing another size", () =>
     const widget = createOverviewEntityWidget({ entityId, domain }, variant);
     assert.deepEqual([widget.kind, widget.w, widget.h], [kind, w, h]);
   });
+});
+
+test("overview device grids preserve discovered widgets, arbitrary additions, and removals", () => {
+  const area = {
+    id: "living",
+    entities: [
+      { entityId: "light.floor", domain: "light", name: "Floor" },
+      { entityId: "switch.fan", domain: "switch", name: "Fan" },
+    ],
+  };
+  const initial = buildOverviewDeviceWidgets(area, {}, []);
+  const custom = {
+    id: "summary-clock",
+    kind: "clock",
+    type: "clock",
+    variant: "digital",
+    w: 2,
+    h: 2,
+  };
+  const retained = initial.filter(widget => widget.overviewEntityId !== "switch.fan");
+  retained[0] = { ...retained[0], w: 3, h: 1 };
+  const config = persistOverviewAreaDeviceWidgets({}, area, [...retained, custom]);
+  const resolved = buildOverviewDeviceWidgets(area, config, []);
+
+  assert.deepEqual(
+    resolved.map(widget => widget.id),
+    ["overview-entity-light-floor", "summary-clock"],
+  );
+  assert.deepEqual([resolved[0].w, resolved[0].h], [3, 1]);
+  assert.deepEqual(config.areas.living.removedEntityIds, ["switch.fan"]);
+  assert.equal(config.areas.living.deviceWidgetsConfigured, true);
+});
+
+test("overview summary widgets are independent from discovered room devices", () => {
+  const summary = [{ id: "summary-clock", kind: "clock", type: "clock", w: 2, h: 2 }];
+  assert.deepEqual(
+    buildOverviewDeviceWidgets(null, {}, summary).map(widget => widget.id),
+    ["summary-clock"],
+  );
 });
 
 test("overview room columns follow mobile Grid presets and stay 6 on larger layouts", () => {

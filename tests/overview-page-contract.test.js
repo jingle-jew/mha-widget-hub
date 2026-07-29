@@ -32,7 +32,7 @@ test("overview owns a specialized 6 + 4 layout with independent section scrollin
     pageStyles,
     /\.mha-overview-section\s*\{[^}]*border:\s*0[^}]*background:\s*transparent[^}]*box-shadow:\s*none[^}]*-webkit-backdrop-filter:\s*none[^}]*backdrop-filter:\s*none/s,
   );
-  assert.equal(pageSource.includes('className = "mha-grid"'), false);
+  assert.match(pageSource, /if \(editing\) grid\.classList\.add\("mha-grid"\)/);
   assert.match(styleManifest, /styles\/pages\/overview-page\.css/);
 });
 
@@ -68,6 +68,8 @@ test("overview keeps HA child updates and local editing isolated", () => {
   assert.match(pageSource, /interactive:\s*!isEditing/);
   assert.match(pageStyles, /data-active-page-type="overview"[^}]*\.mha-primary-edit-button/s);
   assert.match(pageStyles, /data-active-page-type="overview"[^}]*\.mha-add-widget-button/s);
+  assert.match(hostSource, /overview-devices:\$\{contextId\}/);
+  assert.match(hostSource, /_overviewDeviceEditContext\.persistWidgets\(this\._widgets\)/);
 });
 
 test("the global HA update contract reaches overview widgets rendered inside the sheet", () => {

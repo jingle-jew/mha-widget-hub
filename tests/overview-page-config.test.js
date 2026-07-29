@@ -68,6 +68,9 @@ test("overview config normalization repairs arrays, duplicates, and invalid vari
         variants: {
           "button.coffee": "button-2x1",
         },
+        deviceWidgets: [],
+        deviceWidgetsConfigured: false,
+        removedEntityIds: ["switch.counter"],
       },
     },
   });

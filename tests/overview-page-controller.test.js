@@ -71,6 +71,14 @@ test("overview local editing sections are isolated and suspend inactivity", () =
   assert.equal(callbacks.size, 1);
 });
 
+test("overview devices editing is available for the summary without a selected room", () => {
+  const { controller } = createTimerHarness();
+  assert.equal(controller.setEditingSection("devices"), true);
+  assert.equal(controller.read().selectedAreaId, "");
+  assert.equal(controller.read().editingSection, "devices");
+  assert.equal(controller.setEditingSection(""), true);
+});
+
 test("overview timers keep their native call context out of controller transitions", () => {
   const timerContexts = [];
   const clearContexts = [];

@@ -329,6 +329,8 @@ export const en = Object.freeze({
     selectRoom: "Select a room to show its devices.",
     noDevices: "No compatible devices are available in this room.",
     noVisibleDevices: "No visible compatible devices are available in this room.",
+    emptySummary: "No widgets in the summary yet.",
+    emptySummaryEditing: "Add widgets to build the summary.",
     roomDevices: "Room devices",
     movePrevious: "Move earlier",
     moveNext: "Move later",

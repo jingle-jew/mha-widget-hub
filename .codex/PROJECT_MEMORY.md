@@ -179,26 +179,29 @@ appartiennent à `AGENTS.md`.
   `media-widget.css` ou les tokens du dock sont une dette à réduire par correctifs
   ciblés; ne pas les étendre.
 
-### 2026-07-22 — Garder Aperçu comme page spécialisée à configuration partagée
+### 2026-07-28 — Garder Aperçu spécialisé avec une portée Grid locale pour Appareils
 
 - **Statut :** confirmé.
 - **Décision :** le type de page `overview` possède son propre rendu dans
-  `src/pages/overview-page.js` et ne crée aucune `.mha-grid` ordinaire. Sur
-  tablette/desktop, son contrat logique reste `6 + 4`; sur mobile, la grille de
-  pièces reçoit le nombre de colonnes de la Grid responsive active et les
-  appareils restent dans une sheet quatre colonnes. Les deux layouts consomment
-  une seule configuration normalisée par `overview-page-config.js`.
-- **Pourquoi :** deux grilles génériques concurrentes rendraient les
-  coordinateurs globaux ambigus, tandis qu'une configuration mobile séparée
-  ferait diverger ordre, visibilité et variantes d'une même pièce.
-- **Conséquence :** `page.config` ne conserve que le délai d'inactivité, les
-  identifiants ordonnés/masqués et les variantes par pièce; sélection, sheet,
-  timer et modes d'édition restent du runtime local non persisté. La découverte
-  de `area-discovery.js` lit les trois registres HA avec cache par connexion,
-  donne priorité à l'`area_id` direct de l'entité et applique les permissions
-  MHA avant le rendu. Les appareils réutilisent exclusivement les shells et
-  renderers MHA `button`, `toggle` et `media`; l'édition locale les rend
-  non interactifs sans activer l'édition Grid globale.
+  `src/pages/overview-page.js`. Sur tablette/desktop, son contrat logique reste
+  `6 + 4`; sur mobile, la grille de pièces reçoit le nombre de colonnes de la
+  Grid responsive active et les appareils restent dans une sheet quatre
+  colonnes. La section Appareils devient temporairement une `.mha-grid` de
+  quatre colonnes uniquement pendant son édition et emprunte alors le moteur
+  commun de placement, drag-and-drop, redimensionnement et configuration.
+- **Pourquoi :** réutiliser le moteur Grid évite un second contrat de gestes et
+  de positions, mais sa portée doit rester explicitement liée au contexte
+  `summary` ou `area:<id>` afin de ne pas détourner les widgets d'une autre page
+  ou d'une autre pièce.
+- **Conséquence :** sans pièce sélectionnée sur tablette/desktop, `page.widgets`
+  représente le Résumé. Chaque pièce persiste son contenu édité dans
+  `page.config.areas[areaId].deviceWidgets`, avec les entités découvertes
+  supprimées dans `removedEntityIds`; les nouvelles entités découvertes sont
+  encore ajoutées automatiquement. Les positions utilisent des clés synthétiques
+  séparées par contexte, layout et grille `4x100`. L'éditeur de Pièces reste
+  local et indépendant. Sélection, sheet et timer restent du runtime non
+  persisté. La découverte de `area-discovery.js` continue d'appliquer les
+  permissions MHA avant le rendu.
 
 ### 2026-07-15 — Centraliser les contrôles de choix MHA
 

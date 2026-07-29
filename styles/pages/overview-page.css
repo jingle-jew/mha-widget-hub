@@ -121,6 +121,32 @@
   grid-auto-rows: var(--mha-overview-device-unit);
 }
 
+.mha-overview-device-grid.mha-grid {
+  --mha-active-grid-units: 4;
+  --mha-active-grid-rows: 100;
+  --mha-grid-column-size: var(--mha-overview-device-unit);
+  --mha-grid-row-size: var(--mha-overview-device-unit);
+  inline-size: 100%;
+  block-size: auto;
+  max-block-size: none;
+  padding: 0 !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows: none;
+  grid-auto-rows: var(--mha-overview-device-unit);
+  justify-content: stretch;
+}
+
+:host(.is-editing[data-overview-device-editing="true"])
+  .mha-overview-section--rooms .mha-widget {
+  animation: none !important;
+}
+
+:host(.is-editing[data-overview-device-editing="true"])
+  .mha-overview-section--rooms .mha-widget > [data-widget-component] {
+  opacity: 1;
+  pointer-events: auto !important;
+}
+
 .mha-overview-room-grid > .mha-widget,
 .mha-overview-device-grid > .mha-widget {
   grid-column: span var(--mha-widget-w);
@@ -249,9 +275,15 @@
 }
 
 :host([data-active-page-type="overview"]) .mha-primary-edit-button,
-:host([data-active-page-type="overview"]) .mha-add-widget-button {
+:host([data-active-page-type="overview"]:not([data-overview-device-editing="true"]))
+  .mha-add-widget-button {
   display: none !important;
   pointer-events: none;
+}
+
+:host([data-active-page-type="overview"][data-overview-device-editing="true"])
+  .mha-add-widget-button {
+  pointer-events: auto;
 }
 
 :host([data-layout="mobile"]) .mha-page-panel--overview {

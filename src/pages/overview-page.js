@@ -13,8 +13,8 @@ import {
 import { createPanelShell } from "../panels/panel-shell.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
 import { createWidgetShell } from "../widgets/widget-shell.js";
+import { normalizeStoredWidgetContract } from "../widgets/widget-storage.js";
 import {
-  getAllowedOverviewVariants,
   moveOverviewItem,
   normalizeOverviewPageConfig,
   orderOverviewAreas,
@@ -62,6 +62,7 @@ export function createOverviewEntityWidget(entity = {}, variant = "") {
     title: entity?.name || entityId,
     icon: entity?.icon || "",
     iconCategory: domain,
+    overviewEntityId: entityId,
   };
 
   if (variant === OVERVIEW_VARIANTS.BUTTON) {
@@ -111,6 +112,85 @@ export function createOverviewEntityWidget(entity = {}, variant = "") {
     w: 4,
     h: 1,
   };
+}
+
+export function buildOverviewDeviceWidgets(area = null, config = {}, summaryWidgets = []) {
+  if (!area) {
+    return (Array.isArray(summaryWidgets) ? summaryWidgets : [])
+      .map(widget => normalizeStoredWidgetContract(widget));
+  }
+
+  const areaId = getAreaId(area);
+  const normalized = reconcileOverviewPageConfig(config, [area]);
+  const areaConfig = normalized.areas[areaId] || {};
+  const entities = orderOverviewEntities(area, normalized);
+  const entitiesById = new Map(entities.map(entity => [getEntityId(entity), entity]));
+  const removedEntityIds = new Set([
+    ...(areaConfig.hiddenEntityIds || []),
+    ...(areaConfig.removedEntityIds || []),
+  ]);
+  const storedWidgets = areaConfig.deviceWidgetsConfigured
+    ? (areaConfig.deviceWidgets || [])
+    : [];
+  const resolved = [];
+  const representedEntityIds = new Set();
+
+  storedWidgets.forEach((storedWidget) => {
+    const entityId = String(storedWidget?.overviewEntityId || "").trim();
+    if (entityId) {
+      const entity = entitiesById.get(entityId);
+      if (!entity || removedEntityIds.has(entityId)) return;
+      representedEntityIds.add(entityId);
+      const base = createOverviewEntityWidget(
+        entity,
+        areaConfig.variants?.[entityId],
+      );
+      resolved.push(normalizeStoredWidgetContract({
+        ...base,
+        ...storedWidget,
+        id: base.id,
+        entityId,
+        entity_id: entityId,
+        overviewEntityId: entityId,
+      }));
+      return;
+    }
+    resolved.push(normalizeStoredWidgetContract(storedWidget));
+  });
+
+  entities.forEach((entity) => {
+    const entityId = getEntityId(entity);
+    if (!entityId || representedEntityIds.has(entityId) || removedEntityIds.has(entityId)) return;
+    resolved.push(normalizeStoredWidgetContract(createOverviewEntityWidget(
+      entity,
+      areaConfig.variants?.[entityId],
+    )));
+  });
+
+  return resolved;
+}
+
+export function persistOverviewAreaDeviceWidgets(config = {}, area = {}, widgets = []) {
+  const areaId = getAreaId(area);
+  if (!areaId) return normalizeOverviewPageConfig(config);
+  const discoveredEntityIds = new Set(
+    (area?.entities || []).map(getEntityId).filter(Boolean),
+  );
+  const normalizedWidgets = (Array.isArray(widgets) ? widgets : [])
+    .map(widget => normalizeStoredWidgetContract(widget));
+  const retainedEntityIds = new Set(
+    normalizedWidgets
+      .map(widget => String(widget?.overviewEntityId || "").trim())
+      .filter(Boolean),
+  );
+
+  return updateOverviewAreaConfig(config, areaId, current => ({
+    ...current,
+    hiddenEntityIds: [...discoveredEntityIds].filter(id => !retainedEntityIds.has(id)),
+    removedEntityIds: [...discoveredEntityIds].filter(id => !retainedEntityIds.has(id)),
+    deviceWidgets: normalizedWidgets,
+    deviceWidgetsConfigured: true,
+  }));
 }
 
 function stripStandardWidgetTools(shell) {
@@ -295,6 +375,11 @@ export function createOverviewPage(page = {}, {
   mobileGridUnits = 4,
   surfaceRoot = null,
   onConfigChange = () => {},
+  onSummaryWidgetsChange = () => false,
+  onDeviceEditingChange = () => false,
+  createEditableWidgetElement = null,
+  getEditableWidgetPositions = () => ({}),
+  getDeviceWidgetPositions = () => ({}),
   onSheetOpenChange = () => {},
 } = {}) {
   const mobile = layout === "mobile";
@@ -341,8 +426,41 @@ export function createOverviewPage(page = {}, {
     return normalized;
   }
 
-  function updateAreaConfig(areaId, updater) {
-    return persistConfig(updateOverviewAreaConfig(currentConfig, areaId, updater));
+  function getDeviceWidgets(area = getArea()) {
+    return buildOverviewDeviceWidgets(area, currentConfig, currentPage?.widgets || []);
+  }
+
+  function persistDeviceWidgets(widgets = [], area = getArea()) {
+    const normalizedWidgets = (Array.isArray(widgets) ? widgets : [])
+      .map(widget => normalizeStoredWidgetContract(widget));
+    if (!area) {
+      currentPage = { ...currentPage, widgets: normalizedWidgets };
+      onSummaryWidgetsChange(normalizedWidgets);
+      render("summary-widgets-changed");
+      return true;
+    }
+    persistConfig(persistOverviewAreaDeviceWidgets(currentConfig, area, normalizedWidgets));
+    render("area-widgets-changed");
+    return true;
+  }
+
+  function setDeviceEditing(editing) {
+    const nextEditing = Boolean(editing);
+    if (nextEditing === (controller.editingSection === "devices")) return true;
+    const area = getArea();
+    if (nextEditing) {
+      const contextId = area ? `area:${getAreaId(area)}` : "summary";
+      const accepted = onDeviceEditingChange({
+        editing: true,
+        contextId,
+        widgets: getDeviceWidgets(area),
+        persistWidgets: widgets => persistDeviceWidgets(widgets, area),
+      });
+      if (accepted === false) return false;
+      return controller.setEditingSection("devices");
+    }
+    onDeviceEditingChange({ editing: false });
+    return controller.setEditingSection("");
   }
 
   function createRoomGrid({ mobileGrid = false } = {}) {
@@ -390,6 +508,7 @@ export function createOverviewPage(page = {}, {
         const activate = (event) => {
           if (editing || hidden) return;
           event.preventDefault();
+          if (controller.editingSection === "devices") setDeviceEditing(false);
           controller.selectArea(areaId);
         };
         content.addEventListener("click", activate);
@@ -452,107 +571,50 @@ export function createOverviewPage(page = {}, {
     return grid;
   }
 
-  function cycleEntityVariant(areaId, entity) {
-    const entityId = getEntityId(entity);
-    const allowed = getAllowedOverviewVariants(entity.domain);
-    if (allowed.length < 2) return;
-    updateAreaConfig(areaId, areaConfig => {
-      const current = areaConfig.variants?.[entityId];
-      const index = Math.max(0, allowed.indexOf(current));
-      return {
-        ...areaConfig,
-        variants: {
-          ...areaConfig.variants,
-          [entityId]: allowed[(index + 1) % allowed.length],
-        },
-      };
-    });
-    render("device-variant-changed");
-  }
-
   function createDeviceGrid(area) {
     const grid = document.createElement("div");
     grid.className = "mha-overview-device-grid";
     grid.setAttribute("role", "list");
-    if (!area) {
-      grid.append(createEmptyState(t("overview.selectRoom", "Select a room to show its devices.")));
-      return grid;
-    }
-
-    const areaId = getAreaId(area);
-    const areaConfig = currentConfig.areas[areaId] || {
-      entityOrder: [],
-      hiddenEntityIds: [],
-      variants: {},
-    };
     const editing = controller.editingSection === "devices";
-    const hiddenIds = new Set(areaConfig.hiddenEntityIds);
-    const ordered = orderOverviewEntities(area, currentConfig);
-    const entities = editing ? ordered : ordered.filter(entity => !hiddenIds.has(getEntityId(entity)));
+    const widgets = getDeviceWidgets(area);
+    const contextId = area ? `area:${getAreaId(area)}` : "summary";
+    const positions = editing
+      ? (getEditableWidgetPositions() || {})
+      : (getDeviceWidgetPositions(contextId) || {});
+    if (editing) grid.classList.add("mha-grid");
 
-    entities.forEach((entity, index) => {
-      const entityId = getEntityId(entity);
-      const hidden = hiddenIds.has(entityId);
-      const variant = areaConfig.variants?.[entityId];
-      const widget = createOverviewEntityWidget(entity, variant);
-      const shell = createSpecializedShell(widget, {
-        units: 4,
-        layout,
-        hass: currentHass,
-        visibilityConfig: currentVisibilityConfig,
-        isEditing: editing,
-      });
-      shell.dataset.entityId = entityId;
-      shell.dataset.overviewVariant = variant;
-      shell.setAttribute("role", "listitem");
-      if (editing) {
-        appendLocalEditor(shell, {
-          hidden,
-          canMovePrevious: index > 0,
-          canMoveNext: index < entities.length - 1,
-          canChangeVariant: getAllowedOverviewVariants(entity.domain).length > 1,
-          onMovePrevious: () => {
-            updateAreaConfig(areaId, current => ({
-              ...current,
-              entityOrder: moveOverviewItem(
-                current.entityOrder,
-                entityId,
-                -1,
-                entities.map(getEntityId),
-              ),
-            }));
-            render("devices-reordered");
-          },
-          onMoveNext: () => {
-            updateAreaConfig(areaId, current => ({
-              ...current,
-              entityOrder: moveOverviewItem(
-                current.entityOrder,
-                entityId,
-                1,
-                entities.map(getEntityId),
-              ),
-            }));
-            render("devices-reordered");
-          },
-          onToggleHidden: () => {
-            updateAreaConfig(areaId, current => ({
-              ...current,
-              hiddenEntityIds: setOverviewItemHidden(current.hiddenEntityIds, entityId, !hidden),
-            }));
-            render("device-visibility-changed");
-          },
-          onChangeVariant: () => cycleEntityVariant(areaId, entity),
+    widgets.forEach((widget) => {
+      const shell = editing && typeof createEditableWidgetElement === "function"
+        ? createEditableWidgetElement(widget, {
+          units: 4,
+          rows: 100,
+          layout,
+          position: positions?.[widget.id],
+        })
+        : createSpecializedShell(widget, {
+          units: 4,
+          layout,
+          hass: currentHass,
+          visibilityConfig: currentVisibilityConfig,
         });
+      shell.classList.add("mha-overview-widget");
+      if (widget.overviewEntityId) shell.dataset.entityId = widget.overviewEntityId;
+      const position = positions?.[widget.id];
+      if (position && !editing) {
+        shell.style.gridColumn = `${position.x} / span ${Math.min(4, Number(widget.w) || 1)}`;
+        shell.style.gridRow = `${position.y} / span ${Math.max(1, Number(widget.h) || 1)}`;
       }
+      shell.setAttribute("role", "listitem");
       grid.append(shell);
     });
 
-    if (!entities.length) {
+    if (!widgets.length) {
       grid.append(createEmptyState(
-        editing
-          ? t("overview.noDevices", "No compatible devices are available in this room.")
-          : t("overview.noVisibleDevices", "No visible compatible devices are available in this room."),
+        area
+          ? t("overview.noVisibleDevices", "No visible compatible devices are available in this room.")
+          : editing
+            ? t("overview.emptySummaryEditing", "Add widgets to build your summary.")
+            : t("overview.emptySummary", "No summary widgets yet."),
       ));
     }
     return grid;
@@ -566,6 +628,7 @@ export function createOverviewPage(page = {}, {
       body: createRoomGrid(),
       footer: createEditButton({
         editing: controller.editingSection === "rooms",
+        disabled: controller.editingSection === "devices",
         onClick: () => controller.toggleEditingSection("rooms"),
       }),
       className: "mha-overview-section--rooms",
@@ -576,8 +639,8 @@ export function createOverviewPage(page = {}, {
       body: createDeviceGrid(selectedArea),
       footer: createEditButton({
         editing: controller.editingSection === "devices",
-        disabled: !selectedArea,
-        onClick: () => controller.toggleEditingSection("devices"),
+        disabled: controller.editingSection === "rooms",
+        onClick: () => setDeviceEditing(controller.editingSection !== "devices"),
       }),
       className: "mha-overview-section--devices",
     });
@@ -595,10 +658,11 @@ export function createOverviewPage(page = {}, {
     footer.append(createEditButton({
       editing: controller.editingSection === "devices",
       disabled: !area,
-      onClick: () => controller.toggleEditingSection("devices"),
+      onClick: () => setDeviceEditing(controller.editingSection !== "devices"),
     }));
     const close = () => {
       const areaId = controller.selectedAreaId;
+      if (controller.editingSection === "devices") setDeviceEditing(false);
       controller.closeSheet();
       requestAnimationFrame(() => {
         root.querySelector?.(`[data-area-id="${areaId}"] .mha-simple-button-widget`)?.focus?.({ preventScroll: true });
@@ -747,6 +811,9 @@ export function createOverviewPage(page = {}, {
   root.__mhaController = controller;
   root.__mhaDestroy = () => {
     destroyed = true;
+    if (controller.editingSection === "devices") {
+      onDeviceEditingChange({ editing: false, destroyed: true });
+    }
     clearTimeout(discoveryTimer);
     discoveryTimer = null;
     activeMobileSheet = syncOverviewSheetPortal({

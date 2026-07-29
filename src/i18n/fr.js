@@ -329,6 +329,8 @@ export const fr = Object.freeze({
     selectRoom: "Sélectionne une pièce pour afficher ses appareils.",
     noDevices: "Aucun appareil compatible n’est disponible dans cette pièce.",
     noVisibleDevices: "Aucun appareil compatible visible n’est disponible dans cette pièce.",
+    emptySummary: "Aucun widget dans le résumé.",
+    emptySummaryEditing: "Ajoute des widgets pour composer le résumé.",
     roomDevices: "Appareils de la pièce",
     movePrevious: "Déplacer avant",
     moveNext: "Déplacer après",

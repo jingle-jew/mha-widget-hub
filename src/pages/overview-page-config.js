@@ -19,6 +19,12 @@ function uniqueStrings(value) {
   )];
 }
 
+function normalizeStoredOverviewWidgets(value) {
+  return (Array.isArray(value) ? value : [])
+    .filter(widget => widget && typeof widget === "object" && !Array.isArray(widget))
+    .map(widget => ({ ...widget }));
+}
+
 function normalizeInactivitySeconds(value) {
   const seconds = Math.round(Number(value));
   if (!Number.isFinite(seconds)) return OVERVIEW_DEFAULT_INACTIVITY_SECONDS;
@@ -42,6 +48,9 @@ function normalizeAreaConfig(config = {}) {
     entityOrder: uniqueStrings(config?.entityOrder),
     hiddenEntityIds: uniqueStrings(config?.hiddenEntityIds),
     variants,
+    deviceWidgets: normalizeStoredOverviewWidgets(config?.deviceWidgets),
+    deviceWidgetsConfigured: config?.deviceWidgetsConfigured === true,
+    removedEntityIds: uniqueStrings(config?.removedEntityIds || config?.hiddenEntityIds),
   };
 }
 
@@ -122,6 +131,7 @@ export function reconcileOverviewPageConfig(config = {}, discoveredAreas = []) {
       variants[entityId] = normalizeOverviewVariant(domain, variants[entityId]);
     });
     nextAreas[areaId] = {
+      ...current,
       entityOrder: appendMissingIds(current.entityOrder, entityIds),
       hiddenEntityIds: current.hiddenEntityIds,
       variants,

@@ -317,7 +317,7 @@ constructor(){
     getWidgets:()=>this._widgets,
     getWidgetPositions:()=>this._widgetPositions,
     setWidgetPositions:(positions)=>{this._widgetPositions=positions;},
-    getActivePageId:()=>this._activePageId,
+    getActivePageId:()=>this._getWidgetPositionScopeId(),
     getGridBounds:()=>this._getGridBounds(),
     getEffectiveLayout:()=>this._getRuntimeLayout(),
     getRuntimeGridPreset:()=>this._getRuntimeGridPreset(),
@@ -554,6 +554,11 @@ _buildOverviewPageProps(){
     visibilityConfig:this._entityVisibilityConfig,
     surfaceRoot:this.shadowRoot,
     onConfigChange:(config)=>this._updateActiveOverviewPageConfig(config),
+    onSummaryWidgetsChange:(widgets)=>this._updateActiveOverviewSummaryWidgets(widgets),
+    onDeviceEditingChange:(context)=>this._setOverviewDeviceEditing(context),
+    createEditableWidgetElement:(widget,options)=>this._createWidgetElement(widget,options),
+    getEditableWidgetPositions:()=>this._getActiveWidgetPositions({create:true}),
+    getDeviceWidgetPositions:(contextId)=>this._getOverviewDeviceWidgetPositions(contextId),
     onSheetOpenChange:(open)=>{
       this.dataset.overviewSheetOpen=String(Boolean(open));
       syncWidgetSurfaceOpenState(this.shadowRoot);
@@ -564,7 +569,51 @@ _syncMediaPageSettingsDom(){
   return this.render();
 }
 _canAddWidgetToActivePage(){
-  return !isOverviewPage(this._getActivePage());
+  return !isOverviewPage(this._getActivePage())||Boolean(this._overviewDeviceEditContext);
+}
+
+_getWidgetPositionScopeId(){
+  const pageId=this._activePageId||"home";
+  const contextId=String(this._overviewDeviceEditContext?.contextId||"").trim();
+  return contextId?`${pageId}:overview-devices:${contextId}`:pageId;
+}
+_getOverviewDeviceWidgetPositions(contextId="summary"){
+  const scope=`${this._activePageId||"home"}:overview-devices:${String(contextId||"summary")}`;
+  const key=`${scope}:${this._getRuntimeLayout()}:4x100`;
+  const positions=this._widgetPositions?.[key];
+  return positions&&typeof positions==="object"&&!Array.isArray(positions)?positions:{};
+}
+_setOverviewDeviceEditing(context={}){
+  if(context?.editing){
+    if(!isOverviewPage(this._getActivePage()))return false;
+    this._overviewDeviceEditContext={
+      contextId:String(context.contextId||"summary"),
+      persistWidgets:typeof context.persistWidgets==="function"?context.persistWidgets:()=>false,
+    };
+    this.dataset.overviewDeviceEditing="true";
+    this._isEditing=true;
+    clearWidgetPlacementState(this);
+    this._widgets=this._normalizeWidgetsToGridBounds(
+      (Array.isArray(context.widgets)?context.widgets:[]).map(normalizeStoredWidgetContract),
+    );
+    this._syncEditModeDom();
+    this._syncDocksDom();
+    return true;
+  }
+  this._clearOverviewDeviceEditContext();
+  return true;
+}
+_clearOverviewDeviceEditContext(){
+  if(!this._overviewDeviceEditContext)return false;
+  this._overviewDeviceEditContext=null;
+  this.dataset.overviewDeviceEditing="false";
+  this._isEditing=false;
+  clearWidgetPlacementState(this);
+  this._widgets=this._readWidgets();
+  this._syncEditModeDom();
+  this._syncDocksDom();
+  this._syncWidgetDropSlots();
+  return true;
 }
 _openMediaPageSettings(){
   if(!isMediaPlayersPage(this._getActivePage()))return false;
@@ -619,6 +668,14 @@ _updateActiveOverviewPageConfig(config={}){
   this._pages=result.pages;
   this._recordPersistenceResult(this._savePages());
   this._syncSettingsDom();
+  return true;
+}
+_updateActiveOverviewSummaryWidgets(widgets=[]){
+  const page=this._getActivePage();
+  if(!isOverviewPage(page))return false;
+  const normalized=(Array.isArray(widgets)?widgets:[]).map(normalizeStoredWidgetContract);
+  this._pages=this._pages.map(item=>item.id===page.id?{...item,widgets:normalized}:item);
+  this._recordPersistenceResult(this._savePages());
   return true;
 }
 
@@ -946,6 +1003,7 @@ toggleEditMode(){
   this._isEditing=getNextEditMode(this._isEditing);
 
   if(!this._isEditing){
+    if(this._overviewDeviceEditContext)this._clearOverviewDeviceEditContext();
     clearWidgetPlacementState(this);
     const grid=this.shadowRoot?.querySelector?.(".mha-grid");
     if(grid)this._renderWidgetDropSlots(grid);
@@ -959,6 +1017,11 @@ toggleEditMode(){
 }
 _disableEditMode(){
   if(!this._isEditing)return false;
+  if(this._overviewDeviceEditContext){
+    this._clearOverviewDeviceEditContext();
+    this._scheduleSquareUnitSync();
+    return true;
+  }
   this._isEditing=false;
   clearWidgetPlacementState(this);
   const grid=this.shadowRoot?.querySelector?.(".mha-grid");
@@ -1184,6 +1247,12 @@ _getWidgetShellProps(widget,{units,position,widgetId=widget?.id||""}={}){
 }
 
 _saveWidgets(){
+  if(this._overviewDeviceEditContext){
+    this._widgets=this._normalizeWidgetsToGridBounds(
+      this._widgets.map(normalizeStoredWidgetContract),
+    );
+    return this._overviewDeviceEditContext.persistWidgets(this._widgets)!==false;
+  }
   return saveWidgetsForCurrentPage(this,{
     normalizeStoredWidgetContractRef:normalizeStoredWidgetContract,
   });
@@ -1235,7 +1304,7 @@ _toggleWidgetMoveMode(id){
   return getWidgetInteractionSurfaceCoordinatorForHost(this).toggleMoveMode(id);
 }
 _activePageAllowsUnboundedRows(){
-  return isWeatherPage(this._getActivePage());
+  return Boolean(this._overviewDeviceEditContext)||isWeatherPage(this._getActivePage());
 }
 _isPositionMapValidForWidgets(nextPositions,widgets,units,rowUnits){
   return isPositionMapValidForWidgets(nextPositions,widgets,units,rowUnits,{
@@ -1408,10 +1477,10 @@ _getRuntimeGridPreset(){
   return this._gridRuntime.getRuntimeGridPreset();
 }
 _getRuntimeGridUnits(){
-  return this._gridRuntime.getGridBounds().units;
+  return this._overviewDeviceEditContext?4:this._gridRuntime.getGridBounds().units;
 }
 _getRuntimeGridRows(){
-  return this._gridRuntime.getGridBounds().rowUnits;
+  return this._overviewDeviceEditContext?100:this._gridRuntime.getGridBounds().rowUnits;
 }
 _isMobileLauncherLayout(){
   return getResponsiveDockCoordinatorForHost(this).isMobileLauncherLayout();
@@ -1420,7 +1489,9 @@ _syncSquareUnit(){
   return this._gridRuntime.syncSquareUnit();
 }
 _getGridBounds(){
-  return this._gridRuntime.getGridBounds();
+  return this._overviewDeviceEditContext
+    ?{units:4,rowUnits:100,columns:4,rows:100}
+    :this._gridRuntime.getGridBounds();
 }
 /* LEGACY AUTO-PACK VALIDATOR SCOPE
  * Kept for resize/fallback checks that still need an auto-fit heuristic.
@@ -1442,8 +1513,14 @@ _getGridMetrics(){
   if(!grid)return null;
   const runtimeStyle=this.style;
   const gridStyle=getComputedStyle(grid);
-  const columnSize=parseFloat(runtimeStyle?.getPropertyValue?.("--mha-grid-column-size"))||parseFloat(gridStyle.getPropertyValue("--mha-grid-column-size"))||parseFloat(gridStyle.gridTemplateColumns.split(" ")[0])||72;
-  const rowSize=parseFloat(runtimeStyle?.getPropertyValue?.("--mha-grid-row-size"))||parseFloat(gridStyle.getPropertyValue("--mha-grid-row-size"))||parseFloat(gridStyle.gridAutoRows)||72;
+  const renderedColumnSize=parseFloat(gridStyle.gridTemplateColumns.split(" ")[0]);
+  const renderedRowSize=parseFloat(gridStyle.gridAutoRows);
+  const columnSize=this._overviewDeviceEditContext
+    ?renderedColumnSize||72
+    :parseFloat(runtimeStyle?.getPropertyValue?.("--mha-grid-column-size"))||parseFloat(gridStyle.getPropertyValue("--mha-grid-column-size"))||renderedColumnSize||72;
+  const rowSize=this._overviewDeviceEditContext
+    ?renderedRowSize||renderedColumnSize||72
+    :parseFloat(runtimeStyle?.getPropertyValue?.("--mha-grid-row-size"))||parseFloat(gridStyle.getPropertyValue("--mha-grid-row-size"))||renderedRowSize||72;
   const gap=parseFloat(gridStyle.columnGap||gridStyle.gap||"0")||0;
   const availableRect=this._getAvailableContentRect?.()||null;
   return{
