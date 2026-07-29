@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  compactWidgetPositionsAfterHeightShrink,
   doesWidgetLayoutFitGrid,
   findWidgetAtCandidatePosition,
   getAdjacentWidgetGroupInDirection,
@@ -43,6 +44,65 @@ test("packing respects desktop rows and can continue on mobile", () => {
       a: { x: 1, y: 1 },
       b: { x: 1, y: 3 },
     },
+  );
+});
+
+test("height shrink compaction brings displaced widgets upward without changing columns", () => {
+  const widgets = [
+    widget("media", 4, 2),
+    widget("announcement", 4, 1),
+    widget("communications", 4, 1),
+  ];
+  const positions = {
+    media: { x: 1, y: 1 },
+    announcement: { x: 1, y: 7 },
+    communications: { x: 1, y: 8 },
+  };
+
+  assert.deepEqual(
+    compactWidgetPositionsAfterHeightShrink(
+      widgets,
+      positions,
+      "media",
+      6,
+      4,
+      12,
+    ),
+    {
+      media: { x: 1, y: 1 },
+      announcement: { x: 1, y: 3 },
+      communications: { x: 1, y: 4 },
+    },
+  );
+  assert.deepEqual(positions, {
+    media: { x: 1, y: 1 },
+    announcement: { x: 1, y: 7 },
+    communications: { x: 1, y: 8 },
+  });
+});
+
+test("height shrink compaction preserves widgets above the released rows and avoids collisions", () => {
+  const widgets = [
+    widget("media", 2, 2),
+    widget("side", 2, 4),
+    widget("below", 4, 1),
+  ];
+  const positions = {
+    media: { x: 1, y: 1 },
+    side: { x: 3, y: 1 },
+    below: { x: 1, y: 5 },
+  };
+
+  assert.deepEqual(
+    compactWidgetPositionsAfterHeightShrink(
+      widgets,
+      positions,
+      "media",
+      4,
+      4,
+      8,
+    ),
+    positions,
   );
 });
 

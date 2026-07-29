@@ -336,11 +336,16 @@ constructor(){
     getGridMetrics:()=>this._getGridMetrics(),
     getActiveGridUnits:()=>this._getRuntimeGridUnits(),
     getWidgetPosition:(widgetId)=>this._getActiveWidgetPositions({create:true})?.[widgetId]||null,
+    getActiveWidgetPositions:(options)=>this._getActiveWidgetPositions(options),
+    getGridBounds:()=>this._getGridBounds(),
+    getEffectiveLayout:()=>this._getRuntimeLayout(),
     doesWidgetLayoutFitGrid:(widgets)=>this._doesWidgetLayoutFitGrid(widgets),
     normalizeWidgetsToGridBounds:(widgets)=>this._normalizeWidgetsToGridBounds(widgets),
     clampWidgetSizeToGridBounds:(widget,size)=>this._clampWidgetSizeToGridBounds(widget,size),
     queryWidgetElement:(widgetId)=>this.shadowRoot?.querySelector?.(`[data-widget-id="${widgetId}"]`),
     saveWidgets:()=>this._saveWidgets(),
+    saveCurrentWidgetPositions:(positions)=>this._saveCurrentWidgetPositions(positions),
+    applyWidgetPositionsToDom:(positions)=>this._applyWidgetPositionsToDom(positions),
     replaceWidgetDom:(widgetId)=>this._replaceWidgetDom(widgetId),
     rerenderWidgetContent:(widgetId)=>this._widgetSurfaceCoordinator?.rerenderWidgetContent(widgetId)===true,
     scheduleSquareUnitSync:()=>this._scheduleSquareUnitSync(),
@@ -559,6 +564,7 @@ _buildOverviewPageProps(){
     createEditableWidgetElement:(widget,options)=>this._createWidgetElement(widget,options),
     getEditableWidgetPositions:()=>this._getActiveWidgetPositions({create:true}),
     getDeviceWidgetPositions:(contextId)=>this._getOverviewDeviceWidgetPositions(contextId),
+    onOpenWidgetManager:()=>this._openWidgetManager(),
     onSheetOpenChange:(open)=>{
       this.dataset.overviewSheetOpen=String(Boolean(open));
       syncWidgetSurfaceOpenState(this.shadowRoot);

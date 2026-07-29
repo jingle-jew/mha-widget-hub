@@ -55,6 +55,9 @@ function createHarness(overrides = {}) {
       rowStep: 20,
     },
     position: { x: 2, y: 3 },
+    positions: { clock: { x: 2, y: 3 } },
+    gridBounds: { units: 4, rowUnits: 12 },
+    effectiveLayout: "desktop",
     ...overrides.state,
   };
 
@@ -71,7 +74,10 @@ function createHarness(overrides = {}) {
     },
     getGridMetrics: () => state.gridMetrics,
     getActiveGridUnits: () => state.activeGridUnits,
-    getWidgetPosition: () => state.position,
+    getWidgetPosition: widgetId => state.positions?.[widgetId] || state.position,
+    getActiveWidgetPositions: () => state.positions,
+    getGridBounds: () => state.gridBounds,
+    getEffectiveLayout: () => state.effectiveLayout,
     doesWidgetLayoutFitGrid: overrides.doesWidgetLayoutFitGrid || (() => true),
     normalizeWidgetsToGridBounds: overrides.normalizeWidgetsToGridBounds || (widgets => widgets),
     clampWidgetSizeToGridBounds: overrides.clampWidgetSizeToGridBounds || ((_widget, size) => ({
@@ -83,6 +89,14 @@ function createHarness(overrides = {}) {
     saveWidgets: () => {
       effects.push(["saveWidgets"]);
       return true;
+    },
+    saveCurrentWidgetPositions: (positions) => {
+      state.positions = positions;
+      effects.push(["saveCurrentWidgetPositions", structuredClone(positions)]);
+      return true;
+    },
+    applyWidgetPositionsToDom: (positions) => {
+      effects.push(["applyWidgetPositionsToDom", structuredClone(positions)]);
     },
     replaceWidgetDom: (widgetId) => {
       effects.push(["replaceWidgetDom", widgetId]);
@@ -231,6 +245,47 @@ test("finishResize clears the live state, saves widgets, and rebuilds the resize
     ["setResizeState", null],
     ["saveWidgets"],
     ["replaceWidgetDom", "clock"],
+  ]);
+});
+
+test("finishResize compacts widgets displaced by a previous height growth", () => {
+  const { coordinator, state, effects } = createHarness({
+    state: {
+      resizeState: {
+        pointerId: 12,
+        widgetId: "media",
+        startX: 0,
+        startY: 0,
+        startW: 4,
+        startH: 6,
+        metrics: { columnStep: 10, rowStep: 20 },
+      },
+      widgets: [
+        { id: "media", kind: "empty", w: 4, h: 2 },
+        { id: "announcement", kind: "empty", w: 4, h: 1 },
+        { id: "communications", kind: "empty", w: 4, h: 1 },
+      ],
+      positions: {
+        media: { x: 1, y: 1 },
+        announcement: { x: 1, y: 7 },
+        communications: { x: 1, y: 8 },
+      },
+    },
+  });
+
+  coordinator.finishResize();
+
+  assert.deepEqual(state.positions, {
+    media: { x: 1, y: 1 },
+    announcement: { x: 1, y: 3 },
+    communications: { x: 1, y: 4 },
+  });
+  assert.deepEqual(effects, [
+    ["setResizeState", null],
+    ["saveWidgets"],
+    ["saveCurrentWidgetPositions", state.positions],
+    ["applyWidgetPositionsToDom", state.positions],
+    ["replaceWidgetDom", "media"],
   ]);
 });
 

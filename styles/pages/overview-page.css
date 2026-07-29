@@ -50,6 +50,8 @@
 }
 
 .mha-overview-section-header {
+  justify-content: space-between;
+  gap: .75rem;
   min-block-size: clamp(3.25rem, 7vh, 4.35rem);
   border-block-end: 1px solid color-mix(in srgb, var(--mha-widget-border) 72%, transparent);
 }
@@ -90,6 +92,28 @@
 .mha-overview-edit-button:disabled {
   opacity: .42;
   cursor: default;
+}
+
+:host([data-active-page-type="overview"][data-overview-device-editing="true"])
+  .mha-overview-header-add-button {
+  appearance: none;
+  position: relative !important;
+  inset: auto !important;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  inline-size: clamp(2.25rem, 4vw, 2.65rem) !important;
+  block-size: clamp(2.25rem, 4vw, 2.65rem) !important;
+  min-inline-size: clamp(2.25rem, 4vw, 2.65rem) !important;
+  min-block-size: clamp(2.25rem, 4vw, 2.65rem) !important;
+  padding: 0 !important;
+  border: 1px solid var(--mha-system-button-border, var(--mha-widget-border));
+  border-radius: 999px !important;
+  overflow: hidden;
+  opacity: 1 !important;
+  pointer-events: auto;
+  cursor: pointer;
+  transform: none !important;
 }
 
 .mha-overview-room-grid,
@@ -284,6 +308,12 @@
 :host([data-active-page-type="overview"][data-overview-device-editing="true"])
   .mha-add-widget-button {
   pointer-events: auto;
+}
+
+:host([data-active-page-type="overview"]:not([data-layout="mobile"]))
+  .mha-main-edit-button.mha-add-widget-button {
+  display: none !important;
+  pointer-events: none;
 }
 
 :host([data-layout="mobile"]) .mha-page-panel--overview {

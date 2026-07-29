@@ -70,6 +70,16 @@ test("overview keeps HA child updates and local editing isolated", () => {
   assert.match(pageStyles, /data-active-page-type="overview"[^}]*\.mha-add-widget-button/s);
   assert.match(hostSource, /overview-devices:\$\{contextId\}/);
   assert.match(hostSource, /_overviewDeviceEditContext\.persistWidgets\(this\._widgets\)/);
+  assert.match(pageSource, /headerAction:\s*controller\.editingSection === "devices"/);
+  assert.match(pageSource, /mha-add-widget-button mha-overview-header-add-button/);
+  assert.match(
+    pageStyles,
+    /data-active-page-type="overview"[^}]*mha-overview-header-add-button[\s\S]*position:\s*relative\s*!important/,
+  );
+  assert.match(
+    pageStyles,
+    /not\(\[data-layout="mobile"\]\)[^}]*mha-main-edit-button\.mha-add-widget-button[\s\S]*display:\s*none\s*!important/,
+  );
 });
 
 test("the global HA update contract reaches overview widgets rendered inside the sheet", () => {

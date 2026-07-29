@@ -3,6 +3,7 @@ import {
   normalizeWidgetForKind,
   sizeToString,
 } from "../layout/layout-engine.js";
+import { compactWidgetPositionsAfterHeightShrink } from "../layout/placement-calculations.js";
 
 export class WidgetResizeCoordinator {
   constructor({
@@ -13,17 +14,23 @@ export class WidgetResizeCoordinator {
     getGridMetrics = () => null,
     getActiveGridUnits = () => 1,
     getWidgetPosition = () => null,
+    getActiveWidgetPositions = () => null,
+    getGridBounds = () => ({ units: 1, rowUnits: 1 }),
+    getEffectiveLayout = () => "desktop",
     doesWidgetLayoutFitGrid = () => true,
     normalizeWidgetsToGridBounds = widgets => widgets,
     clampWidgetSizeToGridBounds = (_widget, size) => size,
     queryWidgetElement = () => null,
     saveWidgets = () => false,
+    saveCurrentWidgetPositions = () => false,
+    applyWidgetPositionsToDom = () => {},
     replaceWidgetDom = () => false,
     rerenderWidgetContent = () => false,
     scheduleSquareUnitSync = () => {},
     normalizeWidgetForKindFn = normalizeWidgetForKind,
     getWidgetDensityFn = getWidgetDensity,
     sizeToStringFn = sizeToString,
+    compactWidgetPositionsFn = compactWidgetPositionsAfterHeightShrink,
   } = {}) {
     this.getResizeState = (...args) => getResizeState(...args);
     this.setResizeState = (...args) => setResizeState(...args);
@@ -32,17 +39,23 @@ export class WidgetResizeCoordinator {
     this.getGridMetrics = (...args) => getGridMetrics(...args);
     this.getActiveGridUnits = (...args) => getActiveGridUnits(...args);
     this.getWidgetPosition = (...args) => getWidgetPosition(...args);
+    this.getActiveWidgetPositions = (...args) => getActiveWidgetPositions(...args);
+    this.getGridBounds = (...args) => getGridBounds(...args);
+    this.getEffectiveLayout = (...args) => getEffectiveLayout(...args);
     this.doesWidgetLayoutFitGrid = (...args) => doesWidgetLayoutFitGrid(...args);
     this.normalizeWidgetsToGridBounds = (...args) => normalizeWidgetsToGridBounds(...args);
     this.clampWidgetSizeToGridBounds = (...args) => clampWidgetSizeToGridBounds(...args);
     this.queryWidgetElement = (...args) => queryWidgetElement(...args);
     this.saveWidgets = (...args) => saveWidgets(...args);
+    this.saveCurrentWidgetPositions = (...args) => saveCurrentWidgetPositions(...args);
+    this.applyWidgetPositionsToDom = (...args) => applyWidgetPositionsToDom(...args);
     this.replaceWidgetDom = (...args) => replaceWidgetDom(...args);
     this.rerenderWidgetContent = (...args) => rerenderWidgetContent(...args);
     this.scheduleSquareUnitSync = (...args) => scheduleSquareUnitSync(...args);
     this.normalizeWidgetForKindFn = (...args) => normalizeWidgetForKindFn(...args);
     this.getWidgetDensityFn = (...args) => getWidgetDensityFn(...args);
     this.sizeToStringFn = (...args) => sizeToStringFn(...args);
+    this.compactWidgetPositionsFn = (...args) => compactWidgetPositionsFn(...args);
   }
 
   startResize(widgetId, event) {
@@ -175,6 +188,25 @@ export class WidgetResizeCoordinator {
     this.queryWidgetElement(state.widgetId)?.classList?.remove?.("is-resizing");
     this.setResizeState(null);
     this.saveWidgets();
+    const resizedWidget = this.getWidgets().find(widget => widget.id === state.widgetId);
+    const resizedSize = resizedWidget ? this.normalizeWidgetForKindFn(resizedWidget) : null;
+    if (resizedSize && resizedSize.h < state.startH) {
+      const positions = this.getActiveWidgetPositions({ create: true });
+      const { units, rowUnits } = this.getGridBounds();
+      const compacted = this.compactWidgetPositionsFn(
+        this.getWidgets(),
+        positions,
+        state.widgetId,
+        state.startH,
+        units,
+        rowUnits,
+        { layout: this.getEffectiveLayout() },
+      );
+      if (compacted && JSON.stringify(compacted) !== JSON.stringify(positions)) {
+        this.saveCurrentWidgetPositions(compacted);
+        this.applyWidgetPositionsToDom(compacted);
+      }
+    }
     if (this.replaceWidgetDom(state.widgetId)) return;
     this.scheduleSquareUnitSync();
   }

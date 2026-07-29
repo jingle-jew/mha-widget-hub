@@ -12,6 +12,7 @@ import {
 } from "../panels/panel-surface-contract.js";
 import { createPanelShell } from "../panels/panel-shell.js";
 import { createIconSymbol } from "../ui/icon-symbol.js";
+import { setFloatingControlButtonIcon } from "../ui/floating-control-icons.js";
 import { createWidgetShell } from "../widgets/widget-shell.js";
 import { normalizeStoredWidgetContract } from "../widgets/widget-storage.js";
 import {
@@ -316,6 +317,23 @@ function createEditButton({ editing = false, disabled = false, onClick }) {
   return button;
 }
 
+function createHeaderAddButton({ onClick } = {}) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "mha-add-widget-button mha-overview-header-add-button";
+  button.dataset.dragDelete = "false";
+  const label = t("settings.addWidget", "Add widget");
+  button.setAttribute("aria-label", label);
+  setFloatingControlButtonIcon(button, { name: "plus", label });
+  button.onclick = (event) => {
+    if (button.dataset.dragDelete === "true") return;
+    event.preventDefault();
+    event.stopPropagation();
+    onClick?.();
+  };
+  return button;
+}
+
 function createEmptyState(message) {
   const empty = document.createElement("p");
   empty.className = "mha-overview-empty";
@@ -323,7 +341,7 @@ function createEmptyState(message) {
   return empty;
 }
 
-function createSection({ title, body, footer, className = "" }) {
+function createSection({ title, body, footer, headerAction = null, className = "" }) {
   const section = document.createElement("section");
   section.className = ["mha-overview-section", className].filter(Boolean).join(" ");
   const header = document.createElement("header");
@@ -331,6 +349,7 @@ function createSection({ title, body, footer, className = "" }) {
   const heading = document.createElement("h2");
   heading.textContent = title;
   header.append(heading);
+  if (headerAction) header.append(headerAction);
   const content = document.createElement("div");
   content.className = "mha-overview-section-body";
   content.append(body);
@@ -380,6 +399,7 @@ export function createOverviewPage(page = {}, {
   createEditableWidgetElement = null,
   getEditableWidgetPositions = () => ({}),
   getDeviceWidgetPositions = () => ({}),
+  onOpenWidgetManager = () => {},
   onSheetOpenChange = () => {},
 } = {}) {
   const mobile = layout === "mobile";
@@ -637,6 +657,9 @@ export function createOverviewPage(page = {}, {
     const devices = createSection({
       title: t("overview.devices", "Devices"),
       body: createDeviceGrid(selectedArea),
+      headerAction: controller.editingSection === "devices"
+        ? createHeaderAddButton({ onClick: onOpenWidgetManager })
+        : null,
       footer: createEditButton({
         editing: controller.editingSection === "devices",
         disabled: controller.editingSection === "rooms",

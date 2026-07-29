@@ -199,9 +199,29 @@ appartiennent à `AGENTS.md`.
   supprimées dans `removedEntityIds`; les nouvelles entités découvertes sont
   encore ajoutées automatiquement. Les positions utilisent des clés synthétiques
   séparées par contexte, layout et grille `4x100`. L'éditeur de Pièces reste
-  local et indépendant. Sélection, sheet et timer restent du runtime non
-  persisté. La découverte de `area-discovery.js` continue d'appliquer les
-  permissions MHA avant le rendu.
+  local et indépendant. Sur tablette/desktop, l'action `+` de cette portée est
+  placée à droite dans l'en-tête Appareils et reste la cible de suppression du
+  drag; le bouton d'ajout flottant global y est masqué. Sélection, sheet et timer
+  restent du runtime non persisté. La découverte de `area-discovery.js` continue
+  d'appliquer les permissions MHA avant le rendu.
+
+### 2026-07-28 — Compacter verticalement après une réduction de hauteur
+
+- **Statut :** confirmé.
+- **Décision :** lorsqu'un widget est réduit en hauteur, les widgets que son
+  ancien encombrement avait repoussés sous lui remontent automatiquement. La
+  compaction conserve leur colonne, ne dépasse pas le nombre de lignes libérées
+  et refuse tout chevauchement; elle s'applique au moteur partagé des pages Grid
+  et de la portée Appareils d'Aperçu.
+- **Pourquoi :** l'agrandissement invalide la carte de positions et déclenche un
+  repack, alors que la réduction laisse cette carte valide avec des trous. Une
+  compaction bornée restaure l'espace libéré sans effacer les placements manuels
+  ailleurs dans la grille.
+- **Conséquence :** `widget-resize-coordinator.js` déclenche la compaction à la
+  fin du geste uniquement si la hauteur a diminué;
+  `compactWidgetPositionsAfterHeightShrink()` dans
+  `placement-calculations.js` calcule et persiste la nouvelle carte avant le
+  remplacement final du widget.
 
 ### 2026-07-15 — Centraliser les contrôles de choix MHA
 

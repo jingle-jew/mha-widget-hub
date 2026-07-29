@@ -62,6 +62,74 @@ export function packWidgets(
   return positions;
 }
 
+export function compactWidgetPositionsAfterHeightShrink(
+  widgets,
+  positions,
+  resizedWidgetId,
+  previousHeight,
+  units,
+  rowUnits,
+  { layout = "desktop" } = {},
+) {
+  const sourceWidgets = Array.isArray(widgets) ? widgets : [];
+  const sourcePositions = positions && typeof positions === "object" ? positions : null;
+  const resizedWidget = sourceWidgets.find(widget => widget.id === resizedWidgetId);
+  const resizedPosition = sourcePositions?.[resizedWidgetId];
+  if (!resizedWidget || !resizedPosition) return sourcePositions;
+
+  const resizedSize = normalizeWidgetForKind(resizedWidget, { units, rowUnits, layout });
+  const releasedRows = Math.max(0, Number(previousHeight) - resizedSize.h);
+  if (!releasedRows) return sourcePositions;
+
+  const next = Object.fromEntries(
+    Object.entries(sourcePositions).map(([id, position]) => [id, { ...position }]),
+  );
+  const firstDisplacedRow = resizedPosition.y + Number(previousHeight);
+  const ordered = sourceWidgets
+    .map((widget, index) => ({ widget, index, position: next[widget.id] }))
+    .filter(item => (
+      item.widget.id !== resizedWidgetId
+      && item.position
+      && item.position.y >= firstDisplacedRow
+    ))
+    .sort((a, b) => (
+      a.position.y - b.position.y
+      || a.position.x - b.position.x
+      || a.index - b.index
+    ));
+
+  ordered.forEach(({ widget, position }) => {
+    const size = normalizeWidgetForKind(widget, { units, rowUnits, layout });
+    const earliestRow = Math.max(1, position.y - releasedRows);
+
+    for (let y = earliestRow; y < position.y; y += 1) {
+      const candidateRect = getWidgetRectFromPosition(
+        widget,
+        { x: position.x, y },
+        units,
+        { rowUnits, layout },
+      );
+      const overlaps = sourceWidgets.some(other => {
+        if (other.id === widget.id || !next[other.id]) return false;
+        return rectsOverlap(
+          candidateRect,
+          getWidgetRectFromPosition(
+            other,
+            next[other.id],
+            units,
+            { rowUnits, layout },
+          ),
+        );
+      });
+      if (overlaps) continue;
+      next[widget.id] = { x: position.x, y };
+      break;
+    }
+  });
+
+  return next;
+}
+
 export function findWidgetAtCandidatePosition(
   widgets,
   ignoredWidgetId,
