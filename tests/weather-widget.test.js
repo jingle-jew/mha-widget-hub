@@ -96,6 +96,7 @@ test("weather summary metric combines current weather with the contextual brief"
     widgetW: 4,
     widgetH: 2,
     hass,
+    now: () => new Date(2026, 6, 28, 18, 30),
   });
 
   assert.equal(content.dataset.metricLayout, "summary");

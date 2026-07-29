@@ -431,11 +431,12 @@ function getFallbackSummaryDayPhase(date = new Date()) {
   return "night";
 }
 
-function getSummaryDayPhase(hass) {
+function getSummaryDayPhase(hass, now = new Date()) {
   const sun = getFirstSunEntityState(hass);
   const attributes = sun?.attributes || {};
-  const minutesToSunrise = getMinutesUntil(attributes.next_rising);
-  const minutesToSunset = getMinutesUntil(attributes.next_setting);
+  const timestamp = now.getTime();
+  const minutesToSunrise = getMinutesUntil(attributes.next_rising, timestamp);
+  const minutesToSunset = getMinutesUntil(attributes.next_setting, timestamp);
 
   if (sun?.state === "above_horizon") {
     return minutesToSunset != null && minutesToSunset >= 0 && minutesToSunset <= 120
@@ -447,20 +448,20 @@ function getSummaryDayPhase(hass) {
       ? "dawn"
       : "night";
   }
-  return getFallbackSummaryDayPhase();
+  return getFallbackSummaryDayPhase(now);
 }
 
-function applySummaryAtmosphere(root, weather = {}, hass) {
-  root.dataset.summaryPhase = getSummaryDayPhase(hass);
+function applySummaryAtmosphere(root, weather = {}, hass, now = new Date()) {
+  root.dataset.summaryPhase = getSummaryDayPhase(hass, now);
   root.dataset.summarySky = getSummarySkyKind(weather.condition);
 }
 
-function renderSummaryMetric(root, weather = {}, hass) {
-  const narrative = buildWeatherNarrativeModel(weather);
+function renderSummaryMetric(root, weather = {}, hass, now = new Date()) {
+  const narrative = buildWeatherNarrativeModel(weather, now);
   root.dataset.metricLayout = "summary";
   root.dataset.summaryNarrativeKind = narrative.kind || "summary";
   root.dataset.summaryNarrativeMood = narrative.mood || "neutral";
-  applySummaryAtmosphere(root, weather, hass);
+  applySummaryAtmosphere(root, weather, hass, now);
 
   const body = document.createElement("section");
   body.className = "mha-weather-summary-body";
@@ -504,7 +505,7 @@ function renderSunMetric(root, model, header) {
   );
 }
 
-function renderMetric(root, model, { weatherModel = null, hass = null } = {}) {
+function renderMetric(root, model, { weatherModel = null, hass = null, now = new Date() } = {}) {
   root.replaceChildren();
   root.dataset.metricKey = model.metricKey;
   root.dataset.metricKind = model.valueKind || "number";
@@ -556,7 +557,7 @@ function renderMetric(root, model, { weatherModel = null, hass = null } = {}) {
   }
 
   if (model.metricKey === "summary") {
-    renderSummaryMetric(root, weatherModel || {}, hass);
+    renderSummaryMetric(root, weatherModel || {}, hass, now);
     return;
   }
 
@@ -691,6 +692,7 @@ export function createWeatherMetricWidgetContent(widget = {}, {
   widgetH = 2,
   hass,
   entityVisibilityConfig,
+  now = () => new Date(),
 } = {}) {
   const context = {
     hass,
@@ -721,7 +723,7 @@ export function createWeatherMetricWidgetContent(widget = {}, {
         entityId: getSummaryWeatherEntityId(widget, context.hass),
       }, entityVisibilityConfig, context.forecastBundle)
       : null;
-    renderMetric(root, model, { weatherModel, hass: context.hass });
+    renderMetric(root, model, { weatherModel, hass: context.hass, now: now() });
   };
 
   const hydrateSummaryForecasts = nextHass => {
