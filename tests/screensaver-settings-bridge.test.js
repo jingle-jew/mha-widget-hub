@@ -126,3 +126,33 @@ test("screensaver settings bridge syncs calendar refresh and settings surfaces f
     "syncSettingsDom",
   ]);
 });
+
+test("explicit screensaver wake bypasses settings activity blocking and syncs the DOM", () => {
+  const calls = [];
+  const host = {
+    _screensaverSettingsOpen: true,
+    _screensaverController: {
+      handleActivity(options) {
+        calls.push(["handleActivity", options]);
+        return true;
+      },
+    },
+    _screensaverCoordinator: {
+      syncDom(root, options) {
+        calls.push(["syncDom", root, options]);
+      },
+    },
+    _isMobileLauncherLayout() {
+      return false;
+    },
+    shadowRoot: {},
+  };
+
+  const bridge = createScreensaverSettingsBridge(host);
+
+  assert.equal(bridge.wake(), true);
+  assert.deepEqual(calls, [
+    ["handleActivity", { settingsOpen: false }],
+    ["syncDom", host.shadowRoot, { force: false }],
+  ]);
+});

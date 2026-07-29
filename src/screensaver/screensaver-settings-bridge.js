@@ -64,6 +64,15 @@ export function createScreensaverSettingsBridge(host) {
     if (deactivated) syncDom();
   }
 
+  function wake() {
+    if (isMobileScreensaverUnsupported()) return false;
+    const deactivated = host._screensaverController.handleActivity({
+      settingsOpen: false,
+    });
+    if (deactivated) syncDom();
+    return deactivated;
+  }
+
   function syncSettingsSurfaces() {
     host._syncSettingsDom();
   }
@@ -163,6 +172,7 @@ export function createScreensaverSettingsBridge(host) {
     setActive,
     scheduleIdleTimer,
     handleUserActivity,
+    wake,
     applyEnabledFromSettings,
     applyDelayFromSettings,
     applyPreviewFromSettings,

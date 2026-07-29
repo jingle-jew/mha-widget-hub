@@ -990,6 +990,9 @@ _scheduleScreensaverIdleTimer(){
 _handleUserActivity(){
   return getScreensaverSettingsBridgeForHost(this).handleUserActivity();
 }
+_wakeScreensaver(){
+  return getScreensaverSettingsBridgeForHost(this).wake();
+}
 _applyScreensaverEnabledFromSettings(enabled=false){
   return getScreensaverSettingsBridgeForHost(this).applyEnabledFromSettings(enabled);
 }
