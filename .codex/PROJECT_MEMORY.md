@@ -171,7 +171,10 @@ appartiennent à `AGENTS.md`.
   ne subsiste lorsque le document est caché. Le retour visible déclenche une
   seule réconciliation. Les composants doivent consommer ce contrat via
   `component-cadence.js` et `widget-runtime-activity.js` plutôt que créer un
-  timer répétitif ou un `IntersectionObserver` local.
+  timer répétitif ou un `IntersectionObserver` local. L'état `covered` dérive
+  exclusivement des états logiques du screensaver et des settings ainsi que de
+  `_widgetSurfaceOpen`; les classes et datasets correspondants sont des miroirs
+  de présentation, jamais des sources de vérité.
 - **Pourquoi :** les mises à jour Home Assistant, animations, requêtes caméra et
   reconstructions DOM continuaient auparavant même lorsqu'elles ne pouvaient
   produire aucun pixel utile. Centraliser l'activité évite ce travail tout en
@@ -187,7 +190,13 @@ appartiennent à `AGENTS.md`.
   montées et les feuilles de style déjà conformes au manifeste conservent leur
   nœud DOM lors d'un rerender racine. Tout nouveau rendu coûteux doit préférer
   une synchronisation en place et une signature stable avant de reconstruire
-  son DOM ou réassigner ses ressources.
+  son DOM ou réassigner ses ressources. `syncWidgetSurfaceOpenState()` est le
+  seul propriétaire de `_widgetSurfaceOpen`; un rerender racine doit l'appeler
+  dès qu'il retire les anciennes surfaces. Le réveil désactive le screensaver
+  avant de réconcilier l'activité. Enfin, la révélation initiale ne doit jamais
+  attendre indéfiniment une animation suspendue : elle termine immédiatement
+  en état `covered`/`hidden`, possède une borne temporelle et resynchronise une
+  fois l'activité ainsi que la pastille active du dock.
 
 ### 2026-07-15 — Garder la page Média autonome
 

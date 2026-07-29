@@ -894,6 +894,7 @@ export function createRenderPipeline(host, options = {}) {
         destroyDomSubtree(node);
         node.remove?.();
       });
+    syncWidgetSurfaceOpenState(root);
     if (!criticalBootStyle.parentNode) root.append(criticalBootStyle);
     links.filter(link => !link.parentNode).forEach(link => root.append(link));
     const dockProps = host._getDockProps();

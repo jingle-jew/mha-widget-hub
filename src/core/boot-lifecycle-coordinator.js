@@ -8,6 +8,13 @@ const ACTIVITY_EVENT_TYPES = Object.freeze([
   "scroll",
 ]);
 
+const BOOT_REVEAL_MAX_WAIT_MS = 800;
+
+export function handleRuntimeUserActivity(host, activityCoordinator) {
+  host?._handleUserActivity?.();
+  activityCoordinator?.markActive?.();
+}
+
 export function createBootLifecycleCoordinator(host) {
   function hasMountedApp() {
     if (Object.hasOwn(host, "_hasMountedApp") && typeof host._hasMountedApp === "function") {
@@ -127,25 +134,45 @@ export function createBootLifecycleCoordinator(host) {
     host.classList.add("is-boot-revealing");
     const grid = host.shadowRoot?.querySelector?.(".mha-grid")
       || host.shadowRoot?.querySelector?.(".mha-page-panel");
+    let revealFinished = false;
     const finishReveal = () => {
+      if (revealFinished) return;
+      revealFinished = true;
+      clearTimeout(host._bootRevealTimer);
+      host._bootRevealTimer = 0;
       host.classList.remove("is-boot-revealing");
       document.getElementById("mha-widget-hub-boot-style")?.remove();
+      host._syncRuntimeActivity?.();
+      host._updateDockActiveState?.();
       const pending = host._pendingDeferredUi;
       host._pendingDeferredUi = null;
       if (pending) host._appendDeferredUi(pending);
       host._scheduleIconSymbolRefresh();
     };
-    if (fallback || window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches || !grid) {
+    const runtimeActivity = host._getActivityCoordinator?.().read?.() || "active";
+    if (
+      fallback
+      || window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches
+      || !grid
+      || runtimeActivity === "covered"
+      || runtimeActivity === "hidden"
+    ) {
       requestAnimationFrame(finishReveal);
       return;
     }
     requestAnimationFrame(() => {
+      const nextRuntimeActivity = host._getActivityCoordinator?.().read?.() || "active";
+      if (nextRuntimeActivity === "covered" || nextRuntimeActivity === "hidden") {
+        finishReveal();
+        return;
+      }
       const animations = grid.getAnimations?.()
         .filter((animation) => animation.effect?.getTiming?.().iterations !== Infinity) || [];
       if (!animations.length) {
         finishReveal();
         return;
       }
+      host._bootRevealTimer = setTimeout(finishReveal, BOOT_REVEAL_MAX_WAIT_MS);
       Promise.allSettled(animations.map((animation) => animation.finished)).then(finishReveal);
     });
   }
@@ -252,10 +279,7 @@ export function createBootLifecycleCoordinator(host) {
     window.matchMedia?.("(prefers-color-scheme: light)")?.addEventListener?.("change", host._systemThemeListener);
     ensureMounted({ force: isReconnect, reason: isReconnect ? "panel reconnect" : "initial connection" });
     scheduleHassUpdate();
-    host._activityListener = () => {
-      activityCoordinator.markActive();
-      host._handleUserActivity();
-    };
+    host._activityListener = () => handleRuntimeUserActivity(host, activityCoordinator);
     ACTIVITY_EVENT_TYPES.forEach((type) => window.addEventListener(type, host._activityListener, { passive: true }));
     host._scheduleScreensaverIdleTimer();
     host._resizeListener = () => {
@@ -281,6 +305,8 @@ export function createBootLifecycleCoordinator(host) {
     host._activityCoordinator?.stop?.();
     clearTimeout(host._bootWatchdog);
     host._bootWatchdog = 0;
+    clearTimeout(host._bootRevealTimer);
+    host._bootRevealTimer = 0;
     cancelAnimationFrame(host._hassUpdateFrame);
     host._hassUpdateFrame = 0;
     cancelAnimationFrame(host._readyRaf);

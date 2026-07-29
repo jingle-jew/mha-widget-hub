@@ -24,6 +24,13 @@ const WIDGET_SURFACE_SELECTOR = [
   ".mha-light-control-popup",
 ].join(",");
 
+export function hasOpenWidgetSurface(root) {
+  return Boolean(root?.querySelector?.(OPEN_WIDGET_SURFACE_SELECTOR))
+    || [...root?.querySelectorAll?.(WIDGET_SURFACE_SELECTOR) || []].some(panel => (
+      panel?._mhaDesiredOpenState === true && !panel.hidden
+    ));
+}
+
 export function applyWidgetSurfaceHostLayoutState(root, panel) {
   const host = root?.host;
   if (!host || !panel?.dataset) return panel;
@@ -55,14 +62,13 @@ export function applyWidgetSurfaceHostLayoutState(root, panel) {
 
 export function syncWidgetSurfaceOpenState(root) {
   const host = root?.host;
-  if (!host) return;
-  const open = Boolean(root?.querySelector?.(OPEN_WIDGET_SURFACE_SELECTOR))
-    || [...root?.querySelectorAll?.(WIDGET_SURFACE_SELECTOR) || []].some(panel => (
-      panel?._mhaDesiredOpenState === true && !panel.hidden
-    ));
-  host.classList.toggle("is-widget-surface-open", open);
-  host.dataset.widgetSurfaceOpen = String(open);
+  if (!host) return false;
+  const open = hasOpenWidgetSurface(root);
+  host._widgetSurfaceOpen = open;
+  host.classList?.toggle?.("is-widget-surface-open", open);
+  if (host.dataset) host.dataset.widgetSurfaceOpen = String(open);
   host._syncRuntimeActivity?.();
+  return open;
 }
 
 export function buildWidgetManagerPanelProps({

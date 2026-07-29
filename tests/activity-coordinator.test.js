@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   RUNTIME_ACTIVITY_STATES,
   createActivityCoordinator,
+  isHostRuntimeCovered,
 } from "../src/core/activity-coordinator.js";
 
 function createHarness({ idleAfterMs = 1000 } = {}) {
@@ -48,6 +49,22 @@ function createHarness({ idleAfterMs = 1000 } = {}) {
     setTimestamp(value) { timestamp = value; },
   };
 }
+
+test("runtime coverage ignores stale presentation classes", () => {
+  const host = {
+    _getScreensaverVisible: () => false,
+    _settingsOpen: false,
+    _screensaverSettingsOpen: false,
+    _widgetSurfaceOpen: false,
+    classList: {
+      contains: () => true,
+    },
+  };
+
+  assert.equal(isHostRuntimeCovered(host), false);
+  host._widgetSurfaceOpen = true;
+  assert.equal(isHostRuntimeCovered(host), true);
+});
 
 test("activity coordinator exposes active, idle-visible, covered, and hidden states", () => {
   const harness = createHarness();

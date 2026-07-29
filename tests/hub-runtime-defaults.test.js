@@ -19,6 +19,7 @@ test("createHubRuntimeDefaults returns the expected initial runtime state", () =
   assert.equal(defaults._settingsOpen, false);
   assert.equal(defaults._settingsPage, "main");
   assert.equal(defaults._widgetManagerOpen, false);
+  assert.equal(defaults._widgetSurfaceOpen, false);
   assert.equal(defaults._widgetConfigSession, null);
   assert.equal(defaults._pendingWidgetPlacement, null);
   assert.equal(defaults._dockPosition, "left");

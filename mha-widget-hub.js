@@ -17,7 +17,10 @@ import {
 } from "./src/core/mha-persistence.js?v=phase1";
 import {destroyDomSubtree} from "./src/core/dom-lifecycle.js";
 import { createBootLifecycleCoordinator } from "./src/core/boot-lifecycle-coordinator.js";
-import { createActivityCoordinator } from "./src/core/activity-coordinator.js";
+import {
+  createActivityCoordinator,
+  isHostRuntimeCovered,
+} from "./src/core/activity-coordinator.js";
 import {ICONS} from "./src/components/icons.js";
 import { createRenderPipeline } from "./src/layout/render-pipeline.js?v=media-page-ios-cards-v3";
 import { createResponsiveDockCoordinator } from "./src/layout/responsive-dock-coordinator.js";
@@ -160,12 +163,7 @@ function getActivityCoordinatorForHost(host){
   if(!host._activityCoordinator){
     host._activityCoordinator=createActivityCoordinator({
       host,
-      isCovered:()=>Boolean(
-        host._getScreensaverVisible?.()
-        || host.classList?.contains?.("is-settings-open")
-        || host.classList?.contains?.("is-screensaver-settings-open")
-        || host.classList?.contains?.("is-widget-surface-open")
-      ),
+      isCovered:()=>isHostRuntimeCovered(host),
     });
   }
   return host._activityCoordinator;

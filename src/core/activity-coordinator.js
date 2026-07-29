@@ -37,6 +37,15 @@ function isDocumentHidden(documentRef) {
   return documentRef?.visibilityState === "hidden";
 }
 
+export function isHostRuntimeCovered(host) {
+  return Boolean(
+    host?._getScreensaverVisible?.()
+    || host?._settingsOpen
+    || host?._screensaverSettingsOpen
+    || host?._widgetSurfaceOpen
+  );
+}
+
 export class ActivityCoordinator {
   constructor({
     host = null,

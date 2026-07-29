@@ -23,6 +23,9 @@ function createMockClassList() {
 function createMockStyle() {
   return {
     values: {},
+    getPropertyValue(name) {
+      return this.values[name] || "";
+    },
     setProperty(name, value) {
       this.values[name] = value;
     },
@@ -508,6 +511,65 @@ test("mountRenderShell preserves the existing background node across rerenders",
     shadowRoot.childNodes.find(node => node?.getAttribute?.("data-mha-critical-boot") != null),
     firstCriticalStyle,
   );
+
+  globalThis.document = previousDocument;
+});
+
+test("mountRenderShell clears stale widget-surface coverage after removing old panels", async () => {
+  const prototype = await loadHubPrototype();
+  const previousDocument = globalThis.document;
+  globalThis.document = {
+    ...globalThis.document,
+    createElement(tag) {
+      return createMockElement(tag);
+    },
+    createElementNS(namespace, tag) {
+      return createMockElement(tag, namespace);
+    },
+  };
+
+  const shadowRoot = createMockShadowRoot();
+  const stalePanel = createMockElement("section");
+  stalePanel.className = "mha-media-page-settings-panel";
+  stalePanel.dataset.open = "true";
+  shadowRoot.append(stalePanel);
+  const classes = new Set(["is-widget-surface-open"]);
+  let activitySyncs = 0;
+  const host = {
+    shadowRoot,
+    dataset: {
+      wallpaperKind: "css",
+      wallpaperSource: "theme",
+      widgetSurfaceOpen: "true",
+    },
+    style: createMockStyle(),
+    classList: {
+      toggle(name, enabled) {
+        if (enabled) classes.add(name);
+        else classes.delete(name);
+      },
+    },
+    _widgetSurfaceOpen: true,
+    _activeWallpaper: { kind: "css", source: "theme", renderValue: "" },
+    _getDockProps: () => ({ usesDock: true }),
+    _syncRuntimeActivity() {
+      activitySyncs += 1;
+    },
+  };
+  shadowRoot.host = host;
+
+  prototype._mountRenderShell.call(host, {
+    layoutMode: "auto",
+    layout: "tablet",
+    cols: 4,
+    units: 8,
+  });
+
+  assert.equal(stalePanel.parentNode, null);
+  assert.equal(host._widgetSurfaceOpen, false);
+  assert.equal(host.dataset.widgetSurfaceOpen, "false");
+  assert.equal(classes.has("is-widget-surface-open"), false);
+  assert.equal(activitySyncs, 1);
 
   globalThis.document = previousDocument;
 });

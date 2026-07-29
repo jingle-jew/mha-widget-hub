@@ -103,6 +103,36 @@ test("widget surface open state includes panels waiting for their opening frame"
 
   assert.deepEqual(toggles, [["is-widget-surface-open", true]]);
   assert.equal(host.dataset.widgetSurfaceOpen, "true");
+  assert.equal(host._widgetSurfaceOpen, true);
+});
+
+test("widget surface synchronization clears a stale covered presentation state", () => {
+  const classes = new Set(["is-widget-surface-open"]);
+  let activitySyncs = 0;
+  const host = {
+    _widgetSurfaceOpen: true,
+    classList: {
+      toggle(name, enabled) {
+        if (enabled) classes.add(name);
+        else classes.delete(name);
+      },
+    },
+    dataset: { widgetSurfaceOpen: "true" },
+    _syncRuntimeActivity() {
+      activitySyncs += 1;
+    },
+  };
+  const root = {
+    host,
+    querySelector: () => null,
+    querySelectorAll: () => [],
+  };
+
+  assert.equal(syncWidgetSurfaceOpenState(root), false);
+  assert.equal(host._widgetSurfaceOpen, false);
+  assert.equal(host.dataset.widgetSurfaceOpen, "false");
+  assert.equal(classes.has("is-widget-surface-open"), false);
+  assert.equal(activitySyncs, 1);
 });
 
 test("widget surface blur clears after nested light and overview sheets both close", () => {
