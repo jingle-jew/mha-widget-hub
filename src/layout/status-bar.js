@@ -1,5 +1,15 @@
 import { normalizeStatusBarMode } from "../core/status-bar-mode.js";
 
+const STATUS_TIME_FORMATTER = new Intl.DateTimeFormat("fr-CA", {
+  hour: "2-digit",
+  minute: "2-digit",
+});
+const STATUS_DATE_FORMATTER = new Intl.DateTimeFormat("fr-CA", {
+  weekday: "short",
+  month: "short",
+  day: "numeric",
+});
+
 export function createStatusBar({
   layoutMode = "auto",
   layout = "mobile",
@@ -29,19 +39,13 @@ export function createStatusBar({
   return el;
 }
 
-export function updateStatusTime(root) {
+export function updateStatusTime(root, now = new Date()) {
   const time = root.querySelector("[data-status-time]");
   const date = root.querySelector("[data-status-date]");
   if (!time || !date) return;
 
-  const now = new Date();
-  time.textContent = new Intl.DateTimeFormat("fr-CA", {
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(now);
-  date.textContent = new Intl.DateTimeFormat("fr-CA", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-  }).format(now);
+  const nextTime = STATUS_TIME_FORMATTER.format(now);
+  const nextDate = STATUS_DATE_FORMATTER.format(now);
+  if (time.textContent !== nextTime) time.textContent = nextTime;
+  if (date.textContent !== nextDate) date.textContent = nextDate;
 }

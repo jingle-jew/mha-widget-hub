@@ -17,6 +17,7 @@ import {
 } from "./src/core/mha-persistence.js?v=phase1";
 import {destroyDomSubtree} from "./src/core/dom-lifecycle.js";
 import { createBootLifecycleCoordinator } from "./src/core/boot-lifecycle-coordinator.js";
+import { createActivityCoordinator } from "./src/core/activity-coordinator.js";
 import {ICONS} from "./src/components/icons.js";
 import { createRenderPipeline } from "./src/layout/render-pipeline.js?v=media-page-ios-cards-v3";
 import { createResponsiveDockCoordinator } from "./src/layout/responsive-dock-coordinator.js";
@@ -154,6 +155,20 @@ function getBootLifecycleCoordinatorForHost(host){
     host._bootLifecycleCoordinator=createBootLifecycleCoordinator(host);
   }
   return host._bootLifecycleCoordinator;
+}
+function getActivityCoordinatorForHost(host){
+  if(!host._activityCoordinator){
+    host._activityCoordinator=createActivityCoordinator({
+      host,
+      isCovered:()=>Boolean(
+        host._getScreensaverVisible?.()
+        || host.classList?.contains?.("is-settings-open")
+        || host.classList?.contains?.("is-screensaver-settings-open")
+        || host.classList?.contains?.("is-widget-surface-open")
+      ),
+    });
+  }
+  return host._activityCoordinator;
 }
 function getScreensaverSettingsBridgeForHost(host){
   if(!host._screensaverSettingsBridge){
@@ -471,6 +486,9 @@ _removeConnectionListeners(){
 _scheduleHassUpdate(){
   return getBootLifecycleCoordinatorForHost(this).scheduleHassUpdate();
 }
+_getActivityCoordinator(){
+  return getActivityCoordinatorForHost(this);
+}
 updateFromHass(){
   return getBootLifecycleCoordinatorForHost(this).updateFromHass();
 }
@@ -720,11 +738,11 @@ _getEditButtonIcon(editing=this._isEditing){
 _getWidgetManagerCategories(){
   return getWidgetFlowCoordinatorForHost(this).getWidgetManagerCategories();
 }
-_updateStatusDom(){
-  updateStatusTime(this.shadowRoot);
+_updateStatusDom(now){
+  updateStatusTime(this.shadowRoot,now);
 }
-_updateClockWidgets(){
-  updateClockWidgets(this.shadowRoot);
+_updateClockWidgets(now){
+  updateClockWidgets(this.shadowRoot,now);
 }
 _updateScreensaverClockVariant(variant){
   updateScreensaverClock(this.shadowRoot,variant);

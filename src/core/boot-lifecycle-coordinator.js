@@ -55,14 +55,8 @@ export function createBootLifecycleCoordinator(host) {
         reason: event?.type || "lifecycle recovery",
       });
     };
-    host._visibilityRecoveryListener = () => {
-      if (document.visibilityState === "visible") {
-        ensureMounted({ reason: "visibility change" });
-      }
-    };
     window.addEventListener("pageshow", host._lifecycleRecoveryListener);
     window.addEventListener("location-changed", host._lifecycleRecoveryListener);
-    document.addEventListener("visibilitychange", host._visibilityRecoveryListener);
   }
 
   function removeConnectionListeners() {
@@ -70,9 +64,7 @@ export function createBootLifecycleCoordinator(host) {
     host._connectionListenersAttached = false;
     window.removeEventListener("pageshow", host._lifecycleRecoveryListener);
     window.removeEventListener("location-changed", host._lifecycleRecoveryListener);
-    document.removeEventListener("visibilitychange", host._visibilityRecoveryListener);
     host._lifecycleRecoveryListener = null;
-    host._visibilityRecoveryListener = null;
   }
 
   function updateFromHass() {
@@ -194,6 +186,28 @@ export function createBootLifecycleCoordinator(host) {
     host._hasConnectedOnce = true;
     startBootWatchdog();
     addConnectionListeners();
+    const activityCoordinator = host._getActivityCoordinator();
+    activityCoordinator.start();
+    host._activityStateCleanup = activityCoordinator.subscribe((state, previousState) => {
+      if (previousState === "hidden" && state !== "hidden") {
+        ensureMounted({ reason: "visibility change" });
+      }
+    });
+    host._clockCadenceCleanups = [
+      activityCoordinator.subscribeCadence("second", (now) => {
+        host._updateStatusDom(now);
+        host._updateClockWidgets(now);
+      }, { scope: "dashboard" }),
+      activityCoordinator.subscribeCadence("second", () => {
+        const screensaverState = host._screensaverController.read();
+        if (host._getScreensaverVisible()) {
+          host._updateScreensaverClockVariant(screensaverState.clockVariant);
+        }
+      }, {
+        scope: "overlay",
+        isEnabled: () => host._getScreensaverVisible(),
+      }),
+    ];
     host._systemThemeListener = () => {
       if (host._themeController.read().themeSetting === "auto") {
         host._transitionSystemThemeChange();
@@ -202,15 +216,10 @@ export function createBootLifecycleCoordinator(host) {
     window.matchMedia?.("(prefers-color-scheme: light)")?.addEventListener?.("change", host._systemThemeListener);
     ensureMounted({ force: isReconnect, reason: isReconnect ? "panel reconnect" : "initial connection" });
     scheduleHassUpdate();
-    host._clockTimer = setInterval(() => {
-      host._updateStatusDom();
-      host._updateClockWidgets();
-      const screensaverState = host._screensaverController.read();
-      if (host._getScreensaverVisible()) {
-        host._updateScreensaverClockVariant(screensaverState.clockVariant);
-      }
-    }, 1000);
-    host._activityListener = () => host._handleUserActivity();
+    host._activityListener = () => {
+      activityCoordinator.markActive();
+      host._handleUserActivity();
+    };
     ACTIVITY_EVENT_TYPES.forEach((type) => window.addEventListener(type, host._activityListener, { passive: true }));
     host._scheduleScreensaverIdleTimer();
     host._resizeListener = () => {
@@ -229,7 +238,11 @@ export function createBootLifecycleCoordinator(host) {
     host._connectionActive = false;
     removeConnectionListeners();
     window.matchMedia?.("(prefers-color-scheme: light)")?.removeEventListener?.("change", host._systemThemeListener);
-    clearInterval(host._clockTimer);
+    host._clockCadenceCleanups?.forEach?.(cleanup => cleanup());
+    host._clockCadenceCleanups = [];
+    host._activityStateCleanup?.();
+    host._activityStateCleanup = null;
+    host._activityCoordinator?.stop?.();
     clearTimeout(host._bootWatchdog);
     host._bootWatchdog = 0;
     cancelAnimationFrame(host._hassUpdateFrame);
