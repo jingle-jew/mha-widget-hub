@@ -206,6 +206,18 @@ function createEmptyState(text = "") {
 
 export function syncMediaPageSettingsPanel(root, props = {}) {
   const existing = root?.querySelector?.(".mha-media-page-settings-panel") || null;
+  if (!existing && !props.open) {
+    syncWidgetSurfaceOpenState(root);
+    return null;
+  }
+  if (existing && !props.open) {
+    syncPanelVisibility(existing, false, {
+      transitionMs: SETTINGS_PANEL_VISIBILITY_TRANSITION_MS,
+      closeStateDatasetKey: "panelCloseState",
+    });
+    syncWidgetSurfaceOpenState(root);
+    return existing;
+  }
   const next = applyWidgetSurfaceHostLayoutState(root, createMediaPageSettingsPanel(props));
   const panel = replaceSettingsPanelPreservingUiState({
     root,

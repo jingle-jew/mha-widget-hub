@@ -482,6 +482,10 @@ test("mountRenderShell preserves the existing background node across rerenders",
     units: 8,
   });
   const firstBackground = shadowRoot.querySelector(".mha-background");
+  const firstLinks = [...first.links];
+  const firstCriticalStyle = shadowRoot.childNodes.find(node => (
+    node?.getAttribute?.("data-mha-critical-boot") != null
+  ));
 
   const second = prototype._mountRenderShell.call(host, {
     layoutMode: "auto",
@@ -498,6 +502,12 @@ test("mountRenderShell preserves the existing background node across rerenders",
   assert.equal(shadowRoot.appended.filter(node => node?.className === "mha-background").length, 1);
   assert.equal(wallpaper.src, "/wallpapers/animated.webp");
   assert.equal(backgroundRemoveCalls, 0);
+  assert.equal(second.links.length, firstLinks.length);
+  second.links.forEach((link, index) => assert.equal(link, firstLinks[index]));
+  assert.equal(
+    shadowRoot.childNodes.find(node => node?.getAttribute?.("data-mha-critical-boot") != null),
+    firstCriticalStyle,
+  );
 
   globalThis.document = previousDocument;
 });
@@ -1586,6 +1596,10 @@ test("deferred UI rebuilds settings through syncSettingsDom instead of appending
   const host = {
     isConnected: true,
     _renderId: 17,
+    _settingsOpen: true,
+    _screensaverSettingsOpen: false,
+    _pageCreatorOpen: false,
+    _mediaPageSettingsOpen: false,
     shadowRoot,
     _screensaverCoordinator: {
       createDomElement() {
@@ -1653,6 +1667,10 @@ test("deferred UI rebuilds settings through syncSettingsDom instead of appending
     shadowRoot.appended.filter(node => node?.className === "mha-settings-panel").length,
     1,
   );
+  assert.equal(shadowRoot.querySelector(".mha-widget-manager-panel"), null);
+  assert.equal(shadowRoot.querySelector(".mha-page-creator"), null);
+  assert.equal(shadowRoot.querySelector(".mha-widget-config-popup"), null);
+  assert.equal(shadowRoot.querySelector(".mha-media-page-settings-panel"), null);
 
   globalThis.document = previousDocument;
 });
@@ -1685,6 +1703,10 @@ test("deferred UI restores settings panel scroll state after a full rerender", a
   const host = {
     isConnected: true,
     _renderId: 21,
+    _settingsOpen: true,
+    _screensaverSettingsOpen: false,
+    _pageCreatorOpen: false,
+    _mediaPageSettingsOpen: false,
     shadowRoot,
     dataset: {
       wallpaperKind: "image",

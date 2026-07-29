@@ -8,10 +8,27 @@ import {
   buildWidgetManagerPanelProps,
   createPageCreatorPanel,
   createWidgetConfigPanel,
+  syncWidgetConfigPanel,
   syncWidgetManagerPanel,
   syncPageCreatorPanel,
   syncWidgetSurfaceOpenState,
 } from "../src/widgets/widget-placement-orchestrator.js";
+
+test("closed widget surfaces remain unmounted until first use", () => {
+  let appendCalls = 0;
+  const root = {
+    querySelector: () => null,
+    querySelectorAll: () => [],
+    append: () => {
+      appendCalls += 1;
+    },
+  };
+
+  assert.equal(syncWidgetManagerPanel(root, { open: false }), null);
+  assert.equal(syncWidgetConfigPanel(root, { session: null }), null);
+  assert.equal(syncPageCreatorPanel(root, { open: false }), null);
+  assert.equal(appendCalls, 0);
+});
 
 test("widget manager panel props retain state and callback routing", () => {
   const onClose = () => {};

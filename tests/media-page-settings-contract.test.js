@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
+import { syncMediaPageSettingsPanel } from "../src/pages/media-page-settings.js";
 
 const source = readFileSync(
   new URL("../src/pages/media-page-settings.js", import.meta.url),
@@ -22,6 +23,20 @@ const widgetManagerCss = readFileSync(
   new URL("../styles/widget-manager/widget-manager.css", import.meta.url),
   "utf8",
 );
+
+test("closed media settings stay unmounted until opened", () => {
+  let appendCalls = 0;
+  const panel = syncMediaPageSettingsPanel({
+    querySelector: () => null,
+    querySelectorAll: () => [],
+    append: () => {
+      appendCalls += 1;
+    },
+  }, { open: false });
+
+  assert.equal(panel, null);
+  assert.equal(appendCalls, 0);
+});
 
 test("media page settings panel sync reuses the shared panel visibility/orchestration flow", () => {
   assert.match(

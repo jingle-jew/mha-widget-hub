@@ -120,3 +120,26 @@ test("settings coordinator updates in place for the same view and replaces chang
   assert.equal(existingScreensaver.replacedWith, created[1]);
   assert.equal(created[1].body.scrollTop, 0);
 });
+
+test("settings coordinator does not construct closed panels before first use", () => {
+  let createCalls = 0;
+  const result = syncSettingsPanels({
+    root: {
+      querySelector: () => null,
+      append() {
+        throw new Error("closed panels must not be appended");
+      },
+    },
+    props: {
+      all: { open: false, scope: "all" },
+      screensaver: { open: false, scope: "screensaver" },
+    },
+    createPanel: () => {
+      createCalls += 1;
+      return createPanel();
+    },
+  });
+
+  assert.deepEqual(result, { all: null, screensaver: null });
+  assert.equal(createCalls, 0);
+});

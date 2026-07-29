@@ -137,6 +137,8 @@ export function syncPageCreatorPanel(root, props) {
   const [existing, ...stalePanels] = panels;
   stalePanels.forEach(panel => panel?.remove?.());
 
+  if (!existing && !props?.open) return null;
+
   if (existing && !props?.open) {
     syncPageCreatorPanelVisibility(existing, false, { animateClose: true });
     return existing;

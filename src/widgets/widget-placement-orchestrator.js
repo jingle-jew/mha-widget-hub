@@ -96,10 +96,18 @@ export function createWidgetManagerPanel(props = {}) {
 }
 
 export function syncWidgetManagerPanel(root, props = {}) {
+  if (!root) return null;
   const existing = root?.querySelector?.(".mha-widget-manager-panel");
+  if (!props.open) {
+    existing?.remove?.();
+    syncWidgetSurfaceOpenState(root);
+    return null;
+  }
   if (existing) existing.remove();
-  root?.append?.(applyWidgetSurfaceHostLayoutState(root, createWidgetManagerPanel(props)));
+  const panel = applyWidgetSurfaceHostLayoutState(root, createWidgetManagerPanel(props));
+  root?.append?.(panel);
   syncWidgetSurfaceOpenState(root);
+  return panel;
 }
 
 export function buildWidgetConfigPanelProps({
@@ -130,10 +138,18 @@ export function createWidgetConfigPanel(props = {}) {
 }
 
 export function syncWidgetConfigPanel(root, props = {}) {
+  if (!root) return null;
   const existing = root?.querySelector?.(".mha-widget-config-popup");
+  if (!props.session) {
+    existing?.remove?.();
+    syncWidgetSurfaceOpenState(root);
+    return null;
+  }
   if (existing) existing.remove();
-  root?.append?.(applyWidgetSurfaceHostLayoutState(root, createWidgetConfigPanel(props)));
+  const panel = applyWidgetSurfaceHostLayoutState(root, createWidgetConfigPanel(props));
+  root?.append?.(panel);
   syncWidgetSurfaceOpenState(root);
+  return panel;
 }
 
 export function buildPageCreatorPanelProps({

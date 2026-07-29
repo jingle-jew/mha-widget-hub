@@ -98,19 +98,25 @@ export function syncSettingsPanels({
   createPanel = createSettingsPanel,
   updatePanel = updateSettingsPanel,
 } = {}) {
-  const all = replaceSettingsPanelPreservingUiState({
-    root,
-    existing: root?.querySelector?.('.mha-settings-panel[data-settings-scope="all"]'),
-    next: decorateSettingsPanel(createPanel(props.all), props.all),
-    updatePanel,
-  });
+  const existingAll = root?.querySelector?.('.mha-settings-panel[data-settings-scope="all"]');
+  const all = props.all?.open || existingAll
+    ? replaceSettingsPanelPreservingUiState({
+      root,
+      existing: existingAll,
+      next: decorateSettingsPanel(createPanel(props.all), props.all),
+      updatePanel,
+    })
+    : null;
 
-  const screensaver = replaceSettingsPanelPreservingUiState({
-    root,
-    existing: root?.querySelector?.('.mha-settings-panel[data-settings-scope="screensaver"]'),
-    next: appendLayoutModeControl(createPanel(props.screensaver)),
-    updatePanel,
-  });
+  const existingScreensaver = root?.querySelector?.('.mha-settings-panel[data-settings-scope="screensaver"]');
+  const screensaver = props.screensaver?.open || existingScreensaver
+    ? replaceSettingsPanelPreservingUiState({
+      root,
+      existing: existingScreensaver,
+      next: appendLayoutModeControl(createPanel(props.screensaver)),
+      updatePanel,
+    })
+    : null;
 
   return { all, screensaver };
 }

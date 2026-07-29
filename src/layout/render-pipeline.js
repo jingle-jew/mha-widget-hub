@@ -585,37 +585,45 @@ export function createRenderPipeline(host, options = {}) {
       }
 
       host.shadowRoot.append(host._screensaverCoordinator.createDomElement());
-      host._syncSettingsDom?.();
+      if (host._settingsOpen || host._screensaverSettingsOpen) host._syncSettingsDom?.();
       restoreSettingsPanelsUiState(host.shadowRoot, host._settingsPanelsUiState);
       host._settingsPanelsUiState = null;
-      const widgetManagerWeatherScoped = isWeatherPage(host._getActivePage?.());
-      host.shadowRoot.append(applyWidgetSurfaceHostLayoutState(host.shadowRoot, createWidgetManagerPanel(buildWidgetManagerPanelProps({
-        open: host._widgetManagerOpen,
-        activeCategory: host._widgetManagerCategory || (widgetManagerWeatherScoped ? WEATHER_PAGE_WIDGET_MANAGER_CATEGORY_ID : ""),
-        categories: host._getWidgetManagerCategories?.() || [],
-        singleCategory: widgetManagerWeatherScoped,
-        emptyLabel: widgetManagerWeatherScoped ? t("widgets.weatherManager.empty", "No weather widgets available for this integration.") : "",
-        onClose: () => host._closeWidgetManager(),
-        onBack: () => host._showWidgetManagerCategories(),
-        onSelectCategory: (id) => host._selectWidgetManagerCategory(id),
-        onSelectWidget: (item) => host._beginWidgetPlacement(item),
-      }))));
-      host.shadowRoot.append(applyWidgetSurfaceHostLayoutState(
-        host.shadowRoot,
-        createPageCreatorPanel(host._pageUiCoordinator.buildPageCreatorProps()),
-      ));
-      syncMediaPageSettingsPanel(host.shadowRoot, host._buildMediaPageSettingsProps?.() || {});
-      host.shadowRoot.append(applyWidgetSurfaceHostLayoutState(
-        host.shadowRoot,
-        createWidgetConfigPanel(buildWidgetConfigPanelProps({
-          session: host._widgetConfigSession,
-          hass: host._hass,
-          visibilityConfig: host._entityVisibilityConfig,
-          onCancel: () => host._closeWidgetConfig(),
-          onSave: () => host._saveWidgetConfig(),
-          onRerender: () => host._syncWidgetConfigDom(),
-        })),
-      ));
+      if (host._widgetManagerOpen) {
+        const widgetManagerWeatherScoped = isWeatherPage(host._getActivePage?.());
+        host.shadowRoot.append(applyWidgetSurfaceHostLayoutState(host.shadowRoot, createWidgetManagerPanel(buildWidgetManagerPanelProps({
+          open: true,
+          activeCategory: host._widgetManagerCategory || (widgetManagerWeatherScoped ? WEATHER_PAGE_WIDGET_MANAGER_CATEGORY_ID : ""),
+          categories: host._getWidgetManagerCategories?.() || [],
+          singleCategory: widgetManagerWeatherScoped,
+          emptyLabel: widgetManagerWeatherScoped ? t("widgets.weatherManager.empty", "No weather widgets available for this integration.") : "",
+          onClose: () => host._closeWidgetManager(),
+          onBack: () => host._showWidgetManagerCategories(),
+          onSelectCategory: (id) => host._selectWidgetManagerCategory(id),
+          onSelectWidget: (item) => host._beginWidgetPlacement(item),
+        }))));
+      }
+      if (host._pageCreatorOpen) {
+        host.shadowRoot.append(applyWidgetSurfaceHostLayoutState(
+          host.shadowRoot,
+          createPageCreatorPanel(host._pageUiCoordinator.buildPageCreatorProps()),
+        ));
+      }
+      if (host._mediaPageSettingsOpen) {
+        syncMediaPageSettingsPanel(host.shadowRoot, host._buildMediaPageSettingsProps?.() || {});
+      }
+      if (host._widgetConfigSession) {
+        host.shadowRoot.append(applyWidgetSurfaceHostLayoutState(
+          host.shadowRoot,
+          createWidgetConfigPanel(buildWidgetConfigPanelProps({
+            session: host._widgetConfigSession,
+            hass: host._hass,
+            visibilityConfig: host._entityVisibilityConfig,
+            onCancel: () => host._closeWidgetConfig(),
+            onSave: () => host._saveWidgetConfig(),
+            onRerender: () => host._syncWidgetConfigDom(),
+          })),
+        ));
+      }
       syncWidgetSurfaceOpenState(host.shadowRoot);
       host._syncEditModeDom();
       host._syncScreensaverVisibilityState();
@@ -844,23 +852,17 @@ export function createRenderPipeline(host, options = {}) {
   }
 
   function mountRenderShell({ layoutMode, layout, cols, units, statusBarMode = "top-bar" }) {
-    const persistentBackground = host.shadowRoot?.querySelector?.(".mha-background") || null;
-    host._settingsPanelsUiState = captureSettingsPanelsUiState(host.shadowRoot);
-    if (persistentBackground) {
-      const removableChildren = [
-        ...host.shadowRoot.childNodes || [],
-      ].filter(node => node !== persistentBackground);
-      removableChildren.forEach((node) => {
-        destroyDomSubtree(node);
-        node.remove?.();
-      });
-    } else {
-      destroyDomSubtree(host.shadowRoot);
-      host.shadowRoot.innerHTML = "";
-    }
-
-    const criticalBootStyle = createCriticalBootStyleElement(host.ownerDocument || document);
-    const links = createFrontendStyleElements(
+    const root = host.shadowRoot;
+    const childNodes = [...root?.childNodes || []];
+    const persistentBackground = root?.querySelector?.(".mha-background") || null;
+    const existingCriticalBootStyle = childNodes.find(node => (
+      node?.getAttribute?.("data-mha-critical-boot") != null
+    )) || null;
+    const existingLinks = childNodes.filter(node => (
+      node?.getAttribute?.("rel") === "stylesheet"
+      && node?.getAttribute?.("data-mha-style-layer") != null
+    ));
+    const expectedLinks = createFrontendStyleElements(
       styleManifest,
       {
         frontendRootUrl,
@@ -868,7 +870,32 @@ export function createRenderPipeline(host, options = {}) {
       },
       host.ownerDocument || document,
     );
-    host.shadowRoot.append(criticalBootStyle, ...links);
+    const stylesMatch = existingLinks.length === expectedLinks.length
+      && existingLinks.every((link, index) => (
+        link.getAttribute?.("href") === expectedLinks[index]?.getAttribute?.("href")
+        && link.getAttribute?.("data-mha-style-layer")
+          === expectedLinks[index]?.getAttribute?.("data-mha-style-layer")
+      ));
+    const links = stylesMatch ? existingLinks : expectedLinks;
+    if (!stylesMatch) existingLinks.forEach(link => link.remove?.());
+    const nextCriticalBootStyle = createCriticalBootStyleElement(host.ownerDocument || document);
+    const criticalBootStyle = existingCriticalBootStyle || nextCriticalBootStyle;
+    if (
+      existingCriticalBootStyle
+      && existingCriticalBootStyle.textContent !== nextCriticalBootStyle.textContent
+    ) {
+      existingCriticalBootStyle.textContent = nextCriticalBootStyle.textContent;
+    }
+    host._settingsPanelsUiState = captureSettingsPanelsUiState(host.shadowRoot);
+    const persistentNodes = new Set([persistentBackground, criticalBootStyle, ...links].filter(Boolean));
+    [...root?.childNodes || []]
+      .filter(node => !persistentNodes.has(node))
+      .forEach((node) => {
+        destroyDomSubtree(node);
+        node.remove?.();
+      });
+    if (!criticalBootStyle.parentNode) root.append(criticalBootStyle);
+    links.filter(link => !link.parentNode).forEach(link => root.append(link));
     const dockProps = host._getDockProps();
     const { bg, shell, pageStage } = createShell({
       layoutMode,
@@ -881,9 +908,9 @@ export function createRenderPipeline(host, options = {}) {
     const background = persistentBackground || bg;
     ensureIosOrganicWallpaperNode(background);
     syncShellBackgroundSurface(background);
-    if (!persistentBackground) host.shadowRoot.append(background);
+    if (!persistentBackground) root.append(background);
     syncWeatherPageBackdropState();
-    host.shadowRoot.append(shell);
+    root.append(shell);
     return { links, pageStage };
   }
 
