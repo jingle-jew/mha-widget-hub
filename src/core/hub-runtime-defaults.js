@@ -13,6 +13,8 @@ export function createHubRuntimeDefaults() {
     _entityVisibilityConfig: normalizeEntityVisibilityConfig(null),
     _entityVisibilityUserId: "",
     _hassUpdateFrame: 0,
+    _lastRoutedHass: null,
+    _hassReconcilePending: false,
     _hasConnectedOnce: false,
     _connectionActive: false,
     _connectionListenersAttached: false,

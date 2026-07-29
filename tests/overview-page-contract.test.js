@@ -93,6 +93,9 @@ test("the global HA update contract reaches overview widgets rendered inside the
   };
   const host = {
     _hass: hass,
+    _lastRoutedHass: null,
+    _hassReconcilePending: false,
+    _getActivityCoordinator: () => ({ read: () => "active" }),
     shadowRoot: {
       querySelectorAll: selector => {
         assert.equal(selector, "[data-widget-component]");

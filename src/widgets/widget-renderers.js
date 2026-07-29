@@ -3,6 +3,7 @@ import { getWidgetRendererName } from "./widget-registry.js";
 import { createWidgetRenderContext } from "./widget-preview-context.js";
 import { WIDGET_CONTENT_RENDERERS } from "./widget-renderer-registry.js";
 import { bindWidgetRuntimeActivity } from "./widget-runtime-activity.js";
+import { bindComponentHassContract } from "../core/hass-update-router.js";
 
 function getRenderer(widget) {
   const rendererName = getWidgetRendererName(widget);
@@ -39,6 +40,7 @@ export function rerenderRegisteredWidgetContent(
 
   const current = shell.querySelector?.("[data-widget-component]") || null;
   const next = renderer.render({ widget, ...renderContext });
+  if (next) bindComponentHassContract(next, widget);
 
   if (!current) {
     if (!next) return false;

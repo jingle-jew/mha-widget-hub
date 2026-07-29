@@ -20,6 +20,7 @@ import {
   bindWidgetRuntimeActivity,
   destroyWidgetRuntimeActivity,
 } from "./widget-runtime-activity.js";
+import { bindComponentHassContract } from "../core/hass-update-router.js";
 
 export function createWidgetShell(
   widget,
@@ -94,6 +95,7 @@ export function createWidgetShell(
   decorateWidgetShell(shell, widget, renderContext);
   const content = createRegisteredWidgetContent(widget, renderContext);
   if (content) {
+    bindComponentHassContract(content, widget);
     shell.append(content);
     bindWidgetRuntimeActivity(shell, content);
   }

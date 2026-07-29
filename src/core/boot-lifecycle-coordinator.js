@@ -1,3 +1,5 @@
+import { routeHassUpdate } from "./hass-update-router.js";
+
 const ACTIVITY_EVENT_TYPES = Object.freeze([
   "pointerdown",
   "touchstart",
@@ -67,16 +69,38 @@ export function createBootLifecycleCoordinator(host) {
     host._lifecycleRecoveryListener = null;
   }
 
-  function updateFromHass() {
-    host.shadowRoot?.querySelectorAll?.("[data-widget-component]")?.forEach((component) => {
-      component.__mhaUpdateFromHass?.(host._hass);
-    });
+  function updateFromHass({ force = false } = {}) {
+    const activityState = host._getActivityCoordinator().read();
+    if (activityState === "hidden") {
+      host._hassReconcilePending = true;
+      return { changedEntityIds: new Set(), updateCount: 0, deferred: true };
+    }
+
+    let result = { changedEntityIds: new Set(), updateCount: 0, deferred: false };
+    if (activityState === "covered") {
+      host._hassReconcilePending = true;
+    } else {
+      const forceReconcile = force || host._hassReconcilePending;
+      result = routeHassUpdate({
+        root: host.shadowRoot,
+        previousHass: host._lastRoutedHass,
+        nextHass: host._hass,
+        force: forceReconcile,
+      });
+      host._lastRoutedHass = host._hass;
+      host._hassReconcilePending = false;
+    }
     host._screensaverCoordinator.requestNowBarCalendarEvents();
     host._syncScreensaverDom();
+    return result;
   }
 
   function scheduleHassUpdate() {
     if (!host.isConnected || host._hassUpdateFrame) return;
+    if (host._getActivityCoordinator().read() === "hidden") {
+      host._hassReconcilePending = true;
+      return;
+    }
     host._hassUpdateFrame = requestAnimationFrame(() => {
       host._hassUpdateFrame = 0;
       updateFromHass();
@@ -189,8 +213,20 @@ export function createBootLifecycleCoordinator(host) {
     const activityCoordinator = host._getActivityCoordinator();
     activityCoordinator.start();
     host._activityStateCleanup = activityCoordinator.subscribe((state, previousState) => {
+      if (state === "hidden" && host._hassUpdateFrame) {
+        cancelAnimationFrame(host._hassUpdateFrame);
+        host._hassUpdateFrame = 0;
+        host._hassReconcilePending = true;
+      }
       if (previousState === "hidden" && state !== "hidden") {
         ensureMounted({ reason: "visibility change" });
+      }
+      if (
+        ["hidden", "covered"].includes(previousState)
+        && ["active", "idle-visible"].includes(state)
+      ) {
+        host._hassReconcilePending = true;
+        scheduleHassUpdate();
       }
     });
     host._clockCadenceCleanups = [
