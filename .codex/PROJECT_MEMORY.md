@@ -199,10 +199,16 @@ appartiennent à `AGENTS.md`.
   supprimées dans `removedEntityIds`; les nouvelles entités découvertes sont
   encore ajoutées automatiquement. Les positions utilisent des clés synthétiques
   séparées par contexte, layout et grille `4x100`. L'éditeur de Pièces reste
-  local et indépendant. Sur tablette/desktop, l'action `+` de cette portée est
-  placée à droite dans l'en-tête Appareils et reste la cible de suppression du
-  drag; le bouton d'ajout flottant global y est masqué. Sélection, sheet et timer
-  restent du runtime non persisté. La découverte de `area-discovery.js` continue
+  local et indépendant. Hors édition, Overview ne contient volontairement pas
+  de `.mha-grid`; `grid-runtime.js` doit alors ignorer ses widgets spécialisés
+  au lieu de leur réappliquer les dimensions et positions de la grille globale.
+  Sinon, au retour sur Overview, une carte 8 colonnes peut créer des pistes CSS
+  implicites dans la grille Appareils 4 colonnes; le rafraîchissement de découverte
+  à 60 secondes reconstruit ensuite le DOM et masque temporairement la cause.
+  Sur tablette/desktop, l'action `+` de cette portée est placée à
+  droite dans l'en-tête Appareils et reste la cible de suppression du drag; le
+  bouton d'ajout flottant global y est masqué. Sélection, sheet et timer restent
+  du runtime non persisté. La découverte de `area-discovery.js` continue
   d'appliquer les permissions MHA avant le rendu.
 
 ### 2026-07-28 — Compacter verticalement après une réduction de hauteur

@@ -1423,3 +1423,44 @@ test("runtime owns and cancels scheduled frames", () => {
   assert.equal(runtime.gridRuntimeFrame, 0);
   assert.equal(runtime.squareUnitFrame, 0);
 });
+
+test("global grid runtime does not overwrite a non-editing overview device grid", () => {
+  let widgetsRead = 0;
+  let positionsRead = 0;
+  let positionsApplied = 0;
+  const root = {
+    querySelector(selector) {
+      if (selector === ".mha-grid") return null;
+      return null;
+    },
+  };
+  const runtime = createGridRuntime({
+    host: {
+      dataset: { activePageType: "overview" },
+      style: createStyle(),
+      shadowRoot: root,
+      isConnected: true,
+    },
+    getLayoutMode: () => "desktop",
+    getEffectiveLayout: () => "desktop",
+    getWidgets: () => {
+      widgetsRead += 1;
+      return [{ id: "camera", kind: "camera", w: 4, h: 3 }];
+    },
+    getPositions: () => {
+      positionsRead += 1;
+      return { camera: { x: 5, y: 1 } };
+    },
+    applyPositions: () => {
+      positionsApplied += 1;
+    },
+  });
+
+  assert.deepEqual(runtime.syncGridRuntimeMetrics(), {
+    squareUnitSynced: true,
+    skippedSpecializedPage: true,
+  });
+  assert.equal(widgetsRead, 0);
+  assert.equal(positionsRead, 0);
+  assert.equal(positionsApplied, 0);
+});

@@ -802,10 +802,22 @@ export class GridRuntime {
   }
 
   syncGridRuntimeMetrics() {
+    const root = this.getRoot();
+    const primaryGrid = root?.querySelector?.(".mha-grid") || null;
+    if (
+      !primaryGrid
+      && this.host?.dataset?.activePageType === "overview"
+    ) {
+      return {
+        squareUnitSynced: true,
+        skippedSpecializedPage: true,
+      };
+    }
+
     const runtime = this.syncRuntimeLayoutAttrs();
     const positions = this.getPositions();
     this.getWidgets().forEach(widget => {
-      const element = this.getRoot()?.querySelector?.(
+      const element = root?.querySelector?.(
         `[data-widget-id="${widget.id}"]`,
       );
       if (!element) return;
