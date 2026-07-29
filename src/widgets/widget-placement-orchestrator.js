@@ -62,6 +62,7 @@ export function syncWidgetSurfaceOpenState(root) {
     ));
   host.classList.toggle("is-widget-surface-open", open);
   host.dataset.widgetSurfaceOpen = String(open);
+  host._syncRuntimeActivity?.();
 }
 
 export function buildWidgetManagerPanelProps({

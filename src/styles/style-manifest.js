@@ -5,6 +5,7 @@ const entry = (path, layer) => Object.freeze([path, layer]);
 
 const STATIC_STYLE_MANIFEST_BEFORE_THEMES = Object.freeze([
   entry("styles/core/base.css", "base"),
+  entry("styles/core/runtime-activity.css", "base"),
   entry("styles/core/tokens.css", "tokens"),
   entry("styles/components/icon.css", "component"),
   entry("styles/components/icon-symbol.css", "component"),

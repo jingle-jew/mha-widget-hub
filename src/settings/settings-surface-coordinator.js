@@ -148,6 +148,7 @@ export function createSettingsSurfaceCoordinator(host) {
       root: host.shadowRoot,
       props: getProps(),
     });
+    host._syncRuntimeActivity?.();
   }
 
   return {

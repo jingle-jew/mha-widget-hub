@@ -146,6 +146,7 @@ export function createScreensaverSettingsBridge(host) {
     const visible = getVisible();
     host.classList.toggle("is-screensaver-visible", visible);
     host.dataset.screensaverVisible = String(visible);
+    host._syncRuntimeActivity?.();
   }
 
   function syncDom({ force = false } = {}) {

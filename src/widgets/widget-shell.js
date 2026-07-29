@@ -16,6 +16,10 @@ import {
   resolveWidgetKind,
 } from "./widget-registry.js";
 import { t } from "../i18n/index.js";
+import {
+  bindWidgetRuntimeActivity,
+  destroyWidgetRuntimeActivity,
+} from "./widget-runtime-activity.js";
 
 export function createWidgetShell(
   widget,
@@ -89,7 +93,11 @@ export function createWidgetShell(
 
   decorateWidgetShell(shell, widget, renderContext);
   const content = createRegisteredWidgetContent(widget, renderContext);
-  if (content) shell.append(content);
+  if (content) {
+    shell.append(content);
+    bindWidgetRuntimeActivity(shell, content);
+  }
+  shell.__mhaDestroy = () => destroyWidgetRuntimeActivity(shell);
 
   shell.addEventListener("mha-configure-widget-slot", (event) => {
     const detail = event?.detail || {};

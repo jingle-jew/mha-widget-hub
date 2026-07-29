@@ -44,6 +44,7 @@ export class ActivityCoordinator {
     now = Date.now,
     setTimeoutRef = globalThis.setTimeout,
     clearTimeoutRef = globalThis.clearTimeout,
+    IntersectionObserverClass = globalThis.IntersectionObserver,
     isCovered = () => false,
     idleAfterMs = 15 * 1000,
   } = {}) {
@@ -52,6 +53,7 @@ export class ActivityCoordinator {
     this.now = now;
     this.setTimeoutRef = setTimeoutRef;
     this.clearTimeoutRef = clearTimeoutRef;
+    this.IntersectionObserverClass = IntersectionObserverClass;
     this.isCovered = isCovered;
     this.idleAfterMs = Math.max(0, Number(idleAfterMs) || 0);
     this.state = RUNTIME_ACTIVITY_STATES.ACTIVE;
@@ -64,6 +66,8 @@ export class ActivityCoordinator {
       Object.values(RUNTIME_CADENCES).map(cadence => [cadence, new Set()]),
     );
     this.lastCadenceKeys = new Map();
+    this.viewportSubscriptions = new Map();
+    this.viewportObserver = null;
     this.onVisibilityChange = () => this.sync({ reconcile: true });
   }
 
@@ -86,6 +90,7 @@ export class ActivityCoordinator {
     this.state = nextState;
     if (this.host?.dataset) this.host.dataset.runtimeActivity = nextState;
     if (changed) {
+      this.syncComponents();
       this.stateSubscribers.forEach(callback => callback(nextState, previousState));
     }
     if (reconcile && previousState === RUNTIME_ACTIVITY_STATES.HIDDEN && nextState !== previousState) {
@@ -112,6 +117,55 @@ export class ActivityCoordinator {
     if (typeof callback !== "function") return () => {};
     this.stateSubscribers.add(callback);
     return () => this.stateSubscribers.delete(callback);
+  }
+
+  syncComponents(root = this.host?.shadowRoot) {
+    const components = root?.querySelectorAll?.("[data-widget-component]") || [];
+    components.forEach(component => {
+      component.dataset.runtimeActivity = this.state;
+      component.__mhaSetRuntimeActivity?.(this.state);
+    });
+    return components.length;
+  }
+
+  ensureViewportObserver() {
+    if (this.viewportObserver || typeof this.IntersectionObserverClass !== "function") {
+      return this.viewportObserver;
+    }
+    this.viewportObserver = new this.IntersectionObserverClass((entries) => {
+      entries.forEach((entry) => {
+        const subscription = this.viewportSubscriptions.get(entry.target);
+        if (!subscription) return;
+        const visible = Boolean(entry.isIntersecting && entry.intersectionRatio > 0);
+        entry.target.dataset.runtimeViewport = visible ? "visible" : "hidden";
+        subscription(visible, entry);
+      });
+    }, { threshold: 0 });
+    return this.viewportObserver;
+  }
+
+  observeViewport(element, callback = () => {}) {
+    if (!element) return () => {};
+    element.dataset.runtimeViewportTracked = "true";
+    element.dataset.runtimeActivity = this.state;
+    element.__mhaSetRuntimeActivity?.(this.state);
+    this.viewportSubscriptions.set(element, callback);
+    const observer = this.ensureViewportObserver();
+    if (observer) {
+      element.dataset.runtimeViewport = "hidden";
+      callback(false, null);
+      observer.observe(element);
+    } else {
+      element.dataset.runtimeViewport = "visible";
+      callback(true, null);
+    }
+    return () => {
+      this.viewportSubscriptions.delete(element);
+      this.viewportObserver?.unobserve?.(element);
+      delete element.dataset.runtimeViewportTracked;
+      delete element.dataset.runtimeViewport;
+      delete element.dataset.runtimeActivity;
+    };
   }
 
   canRunScope(scope = "dashboard") {
@@ -205,6 +259,9 @@ export class ActivityCoordinator {
     this.started = true;
     this.lastActivityAt = this.now();
     this.documentRef?.addEventListener?.("visibilitychange", this.onVisibilityChange);
+    this.viewportSubscriptions.forEach((_callback, element) => {
+      this.ensureViewportObserver()?.observe?.(element);
+    });
     this.sync();
     this.runCadences({ force: true });
     return true;
@@ -214,6 +271,7 @@ export class ActivityCoordinator {
     if (!this.started) return false;
     this.started = false;
     this.documentRef?.removeEventListener?.("visibilitychange", this.onVisibilityChange);
+    this.viewportObserver?.disconnect?.();
     if (this.idleTimer) this.clearTimeoutRef(this.idleTimer);
     if (this.cadenceTimer) this.clearTimeoutRef(this.cadenceTimer);
     this.idleTimer = 0;
@@ -226,6 +284,9 @@ export class ActivityCoordinator {
     this.stateSubscribers.clear();
     this.cadenceSubscribers.forEach(subscribers => subscribers.clear());
     this.lastCadenceKeys.clear();
+    this.viewportObserver?.disconnect?.();
+    this.viewportObserver = null;
+    this.viewportSubscriptions.clear();
   }
 }
 

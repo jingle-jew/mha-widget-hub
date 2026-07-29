@@ -2,6 +2,7 @@ import { destroyDomSubtree } from "../core/dom-lifecycle.js";
 import { getWidgetRendererName } from "./widget-registry.js";
 import { createWidgetRenderContext } from "./widget-preview-context.js";
 import { WIDGET_CONTENT_RENDERERS } from "./widget-renderer-registry.js";
+import { bindWidgetRuntimeActivity } from "./widget-runtime-activity.js";
 
 function getRenderer(widget) {
   const rendererName = getWidgetRendererName(widget);
@@ -49,16 +50,19 @@ export function rerenderRegisteredWidgetContent(
     } else if (typeof shell.append === "function") {
       shell.append(next);
     }
+    bindWidgetRuntimeActivity(shell, next);
     return true;
   }
 
   if (!next) {
     destroyDomSubtreeFn(current);
     current.remove?.();
+    bindWidgetRuntimeActivity(shell, null);
     return true;
   }
 
   destroyDomSubtreeFn(current);
   current.replaceWith?.(next);
+  bindWidgetRuntimeActivity(shell, next);
   return true;
 }

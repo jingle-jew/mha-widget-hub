@@ -489,6 +489,12 @@ _scheduleHassUpdate(){
 _getActivityCoordinator(){
   return getActivityCoordinatorForHost(this);
 }
+_syncRuntimeActivity(){
+  const coordinator=getActivityCoordinatorForHost(this);
+  coordinator.sync();
+  coordinator.syncComponents(this.shadowRoot);
+  return coordinator.read();
+}
 updateFromHass(){
   return getBootLifecycleCoordinatorForHost(this).updateFromHass();
 }

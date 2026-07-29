@@ -119,3 +119,33 @@ test("cadence scopes separate dashboard work from covered overlay work", () => {
   assert.equal(dashboardCalls, 2);
   assert.equal(overlayCalls, 1);
 });
+
+test("one viewport observer publishes visibility and runtime state to tracked widgets", () => {
+  let observerCallback = null;
+  const observed = [];
+  class FakeIntersectionObserver {
+    constructor(callback) { observerCallback = callback; }
+    observe(element) { observed.push(element); }
+    unobserve() {}
+    disconnect() {}
+  }
+  const harness = createHarness();
+  harness.coordinator.IntersectionObserverClass = FakeIntersectionObserver;
+  const calls = [];
+  const component = {
+    dataset: {},
+    __mhaSetRuntimeActivity: state => calls.push(["activity", state]),
+  };
+  const cleanup = harness.coordinator.observeViewport(component, visible => calls.push(["viewport", visible]));
+  assert.equal(observed[0], component);
+  assert.equal(component.dataset.runtimeViewport, "hidden");
+  observerCallback([{ target: component, isIntersecting: true, intersectionRatio: 1 }]);
+  assert.equal(component.dataset.runtimeViewport, "visible");
+  assert.deepEqual(calls, [
+    ["activity", "active"],
+    ["viewport", false],
+    ["viewport", true],
+  ]);
+  cleanup();
+  assert.equal(component.dataset.runtimeViewport, undefined);
+});

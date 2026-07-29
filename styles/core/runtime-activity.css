@@ -1,0 +1,24 @@
+/* Runtime activity is independent from reduced-motion preferences: it freezes
+ * work that cannot currently contribute to the visible interface. */
+:host([data-runtime-activity="covered"]) :is(
+  .mha-background,
+  .mha-background *,
+  .mha-shell,
+  .mha-shell *,
+  .mha-dock,
+  .mha-dock *,
+  .mha-mobile-dock,
+  .mha-mobile-dock *,
+  .mha-edit-button,
+  .mha-page-panel-snapshot,
+  .mha-page-panel-snapshot *
+),
+:host([data-runtime-activity="hidden"]) *,
+:host([data-runtime-activity="hidden"]) *::before,
+:host([data-runtime-activity="hidden"]) *::after,
+[data-widget-component][data-runtime-viewport="hidden"],
+[data-widget-component][data-runtime-viewport="hidden"] *,
+[data-widget-component][data-runtime-viewport="hidden"] *::before,
+[data-widget-component][data-runtime-viewport="hidden"] *::after {
+  animation-play-state: paused !important;
+}

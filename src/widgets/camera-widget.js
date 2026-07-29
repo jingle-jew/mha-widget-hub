@@ -13,6 +13,129 @@ export const CAMERA_WIDGET_KIND = "camera";
 const CAMERA_REFRESH_INTERVALS = Object.freeze([0, 1000, 3000, 5000]);
 const DEFAULT_CAMERA_REFRESH_INTERVAL = 5000;
 
+export function createCameraRefreshController({
+  refreshInterval = DEFAULT_CAMERA_REFRESH_INTERVAL,
+  createImage = () => new Image(),
+  setTimeoutRef = globalThis.setTimeout,
+  clearTimeoutRef = globalThis.clearTimeout,
+  now = Date.now,
+  onImageReady = () => {},
+  onImageUnavailable = () => {},
+} = {}) {
+  let sourceUrl = "";
+  let refreshTimer = null;
+  let refreshSequence = 0;
+  let destroyed = false;
+  let viewportVisible = false;
+  let activityState = "active";
+  let refreshPending = false;
+
+  const canRefresh = () => (
+    !destroyed
+    && viewportVisible
+    && activityState !== "hidden"
+    && activityState !== "covered"
+  );
+
+  const clearRefreshTimer = () => {
+    if (refreshTimer === null) return;
+    clearTimeoutRef(refreshTimer);
+    refreshTimer = null;
+  };
+
+  const scheduleRefresh = () => {
+    clearRefreshTimer();
+    if (!canRefresh() || refreshInterval <= 0 || !sourceUrl) return;
+    refreshTimer = setTimeoutRef(() => {
+      refreshTimer = null;
+      refreshImage();
+    }, refreshInterval);
+  };
+
+  const refreshImage = () => {
+    if (!sourceUrl) return false;
+    if (!canRefresh()) {
+      refreshPending = true;
+      clearRefreshTimer();
+      return false;
+    }
+    refreshPending = false;
+    refreshSequence += 1;
+    const requestSequence = refreshSequence;
+    const nextUrl = createRefreshedImageUrl(sourceUrl, `${now()}-${requestSequence}`);
+    const preloader = createImage();
+    preloader.decoding = "async";
+    preloader.onload = () => {
+      if (destroyed || requestSequence !== refreshSequence) return;
+      onImageReady(nextUrl);
+      scheduleRefresh();
+    };
+    preloader.onerror = () => {
+      if (destroyed || requestSequence !== refreshSequence) return;
+      onImageUnavailable();
+      scheduleRefresh();
+    };
+    preloader.src = nextUrl;
+    return true;
+  };
+
+  const resume = () => {
+    if (!canRefresh() || !sourceUrl) return false;
+    if (refreshPending) return refreshImage();
+    scheduleRefresh();
+    return true;
+  };
+
+  return {
+    setSourceUrl(nextUrl = "") {
+      const normalized = String(nextUrl || "");
+      if (normalized === sourceUrl) return false;
+      sourceUrl = normalized;
+      refreshSequence += 1;
+      clearRefreshTimer();
+      if (!sourceUrl) {
+        refreshPending = false;
+        onImageUnavailable();
+        return true;
+      }
+      refreshPending = true;
+      refreshImage();
+      return true;
+    },
+    setRuntimeActivity(nextState = "active") {
+      activityState = nextState;
+      if (!canRefresh()) {
+        clearRefreshTimer();
+        refreshSequence += 1;
+        refreshPending = Boolean(sourceUrl);
+        return false;
+      }
+      return resume();
+    },
+    setViewportVisible(visible) {
+      viewportVisible = Boolean(visible);
+      if (!canRefresh()) {
+        clearRefreshTimer();
+        refreshSequence += 1;
+        refreshPending = Boolean(sourceUrl);
+        return false;
+      }
+      return resume();
+    },
+    refreshNow() {
+      clearRefreshTimer();
+      refreshPending = true;
+      return refreshImage();
+    },
+    destroy() {
+      destroyed = true;
+      refreshSequence += 1;
+      clearRefreshTimer();
+      sourceUrl = "";
+    },
+  };
+}
+
 function normalizeCameraRefreshInterval(value) {
   const numericValue = Number(value);
   return CAMERA_REFRESH_INTERVALS.includes(numericValue)
@@ -91,50 +214,21 @@ export function createCameraWidgetContent(widget = {}, { hass, preview = false }
   root.append(createCameraHeader(widget), viewport);
 
   const refreshInterval = preview ? 0 : normalizeCameraRefreshInterval(widget.refreshInterval);
-  let currentImageUrl = "";
-  let refreshTimer = null;
-  let refreshSequence = 0;
-  let destroyed = false;
-
-  function clearRefreshTimer() {
-    if (refreshTimer === null) return;
-    globalThis.clearTimeout(refreshTimer);
-    refreshTimer = null;
-  }
-
-  function scheduleRefresh() {
-    clearRefreshTimer();
-    if (destroyed || refreshInterval <= 0 || !currentImageUrl) return;
-    refreshTimer = globalThis.setTimeout(() => {
-      refreshTimer = null;
-      refreshImage();
-    }, refreshInterval);
-  }
-
-  function refreshImage() {
-    if (destroyed || !currentImageUrl) return;
-    refreshSequence += 1;
-    const requestSequence = refreshSequence;
-    const nextUrl = createRefreshedImageUrl(currentImageUrl, `${Date.now()}-${requestSequence}`);
-    const preloader = new Image();
-    preloader.decoding = "async";
-    preloader.onload = () => {
-      if (destroyed || requestSequence !== refreshSequence) return;
+  const refreshController = createCameraRefreshController({
+    refreshInterval,
+    onImageReady(nextUrl) {
       image.src = nextUrl;
       viewport.dataset.imageState = "ready";
-      scheduleRefresh();
-    };
-    preloader.onerror = () => {
-      if (destroyed || requestSequence !== refreshSequence) return;
-      if (!image.getAttribute("src")) viewport.dataset.imageState = "unavailable";
-      scheduleRefresh();
-    };
-    preloader.src = nextUrl;
-  }
+    },
+    onImageUnavailable() {
+      if (!image.getAttribute("src")) viewport.dataset.imageState = preview ? "preview" : "unavailable";
+    },
+  });
+  refreshController.setViewportVisible(preview);
+
   function requestManualRefresh() {
     if (preview) return;
-    clearRefreshTimer();
-    refreshImage();
+    refreshController.refreshNow();
   }
 
   viewport.addEventListener("click", requestManualRefresh);
@@ -148,23 +242,22 @@ export function createCameraWidgetContent(widget = {}, { hass, preview = false }
     const model = buildCameraModel(nextHass, widget);
     root.dataset.entityId = model.entityId;
     if (model.imageUrl) {
-      if (model.imageUrl === currentImageUrl) return;
-      currentImageUrl = model.imageUrl;
-      clearRefreshTimer();
-      refreshImage();
+      refreshController.setSourceUrl(model.imageUrl);
       return;
     }
-    currentImageUrl = "";
-    clearRefreshTimer();
+    refreshController.setSourceUrl("");
     image.removeAttribute("src");
     viewport.dataset.imageState = preview ? "preview" : "unavailable";
   }
 
   root.__mhaUpdateFromHass = nextHass => applyModel(nextHass);
+  root.__mhaSetRuntimeActivity = state => refreshController.setRuntimeActivity(state);
+  root.__mhaSetRuntimeViewport = visible => refreshController.setViewportVisible(visible);
   root.__mhaDestroy = () => {
-    destroyed = true;
-    clearRefreshTimer();
+    refreshController.destroy();
     delete root.__mhaUpdateFromHass;
+    delete root.__mhaSetRuntimeActivity;
+    delete root.__mhaSetRuntimeViewport;
     delete root.__mhaDestroy;
   };
   applyModel(hass);
