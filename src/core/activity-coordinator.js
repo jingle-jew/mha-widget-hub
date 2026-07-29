@@ -57,11 +57,12 @@ export class ActivityCoordinator {
     isCovered = () => false,
     idleAfterMs = 15 * 1000,
   } = {}) {
+    const timerReceiver = documentRef?.defaultView || globalThis.window || globalThis;
     this.host = host;
     this.documentRef = documentRef;
     this.now = now;
-    this.setTimeoutRef = setTimeoutRef;
-    this.clearTimeoutRef = clearTimeoutRef;
+    this.setTimeoutRef = (...args) => Reflect.apply(setTimeoutRef, timerReceiver, args);
+    this.clearTimeoutRef = (...args) => Reflect.apply(clearTimeoutRef, timerReceiver, args);
     this.IntersectionObserverClass = IntersectionObserverClass;
     this.isCovered = isCovered;
     this.idleAfterMs = Math.max(0, Number(idleAfterMs) || 0);

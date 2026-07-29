@@ -66,6 +66,39 @@ test("runtime coverage ignores stale presentation classes", () => {
   assert.equal(isHostRuntimeCovered(host), true);
 });
 
+test("native window timers keep their required Window receiver", () => {
+  const timerWindow = {};
+  const calls = [];
+  const documentRef = {
+    defaultView: timerWindow,
+    visibilityState: "visible",
+    addEventListener() {},
+    removeEventListener() {},
+  };
+  let nextTimerId = 0;
+  const coordinator = createActivityCoordinator({
+    documentRef,
+    now: () => 0,
+    setTimeoutRef(callback, delay) {
+      assert.equal(this, timerWindow);
+      calls.push(["set", delay]);
+      nextTimerId += 1;
+      return nextTimerId;
+    },
+    clearTimeoutRef(timerId) {
+      assert.equal(this, timerWindow);
+      calls.push(["clear", timerId]);
+    },
+  });
+
+  coordinator.start();
+  coordinator.markActive();
+  coordinator.stop();
+
+  assert.ok(calls.some(([type]) => type === "set"));
+  assert.ok(calls.some(([type]) => type === "clear"));
+});
+
 test("activity coordinator exposes active, idle-visible, covered, and hidden states", () => {
   const harness = createHarness();
   const { coordinator, documentRef, host } = harness;
