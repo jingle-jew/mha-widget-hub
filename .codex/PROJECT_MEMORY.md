@@ -367,6 +367,9 @@ appartiennent à `AGENTS.md`.
   colonnes responsive avec `100` lignes. Les pièces masquées restent dans la
   portée d'édition afin de pouvoir être réaffichées, mais ne sont pas rendues
   hors édition. Cette portée n'expose ni ajout ni cible de suppression par drag.
+  Lorsqu'une pièce est masquée, conserver l'ordre visuel courant des autres
+  boutons, placer la pièce ciblée après les pièces déjà masquées, puis repacker
+  et persister toute la carte de positions afin de combler immédiatement le trou.
   Hors édition, Overview ne contient volontairement pas de `.mha-grid`;
   `grid-runtime.js` doit alors ignorer ses widgets spécialisés
   au lieu de leur réappliquer les dimensions et positions de la grille globale.

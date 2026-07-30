@@ -256,6 +256,41 @@ function createRoomWidget(area, { selected = false, hidden = false } = {}) {
   };
 }
 
+export function orderOverviewRoomWidgetsForVisibility(
+  widgets = [],
+  positions = {},
+  { areaId = "", hidden = false, hiddenAreaIds = [] } = {},
+) {
+  const targetAreaId = String(areaId || "").trim();
+  const hiddenIds = new Set((Array.isArray(hiddenAreaIds) ? hiddenAreaIds : [])
+    .map(id => String(id || "").trim())
+    .filter(Boolean));
+  const ordered = (Array.isArray(widgets) ? widgets : [])
+    .map((widget, index) => ({ widget, index, position: positions?.[widget?.id] }))
+    .sort((a, b) => {
+      const aY = Number(a.position?.y);
+      const bY = Number(b.position?.y);
+      const aX = Number(a.position?.x);
+      const bX = Number(b.position?.x);
+      const aPositioned = Number.isInteger(aY) && Number.isInteger(aX);
+      const bPositioned = Number.isInteger(bY) && Number.isInteger(bX);
+      if (aPositioned && bPositioned) return aY - bY || aX - bX || a.index - b.index;
+      if (aPositioned !== bPositioned) return aPositioned ? -1 : 1;
+      return a.index - b.index;
+    })
+    .map(item => item.widget);
+  const visibleWidgets = ordered.filter(widget => !hiddenIds.has(String(widget?.overviewAreaId || "")));
+  const hiddenWidgets = ordered.filter(widget => hiddenIds.has(String(widget?.overviewAreaId || "")));
+
+  if (!hidden || !targetAreaId) return [...visibleWidgets, ...hiddenWidgets];
+  const target = hiddenWidgets.find(widget => String(widget?.overviewAreaId || "") === targetAreaId);
+  return [
+    ...visibleWidgets,
+    ...hiddenWidgets.filter(widget => widget !== target),
+    ...(target ? [target] : []),
+  ];
+}
+
 function createSpecializedShell(widget, {
   units = 4,
   layout = "desktop",
@@ -372,6 +407,7 @@ export function createOverviewPage(page = {}, {
   createEditableWidgetElement = null,
   getEditableWidgetPositions = () => ({}),
   getWidgetPositions = () => ({}),
+  repackEditableWidgets = () => false,
   onOpenWidgetManager = () => {},
   onSheetOpenChange = () => {},
   onContextChange = () => {},
@@ -572,10 +608,30 @@ export function createOverviewPage(page = {}, {
         appendRoomVisibilityButton(shell, {
           hidden,
           onToggleHidden: () => {
+            const nextHiddenRoomIds = setOverviewItemHidden(
+              currentConfig.hiddenRoomIds,
+              areaId,
+              !hidden,
+            );
             persistConfig({
               ...currentConfig,
-              hiddenRoomIds: setOverviewItemHidden(currentConfig.hiddenRoomIds, areaId, !hidden),
+              hiddenRoomIds: nextHiddenRoomIds,
             });
+            const roomWidgets = getOrderedAreas({ includeHidden: true })
+              .map(room => createRoomWidget(room, {
+                selected: controller.selectedAreaId === getAreaId(room),
+                hidden: nextHiddenRoomIds.includes(getAreaId(room)),
+              }))
+              .map(widget => normalizeStoredWidgetContract(widget));
+            repackEditableWidgets(orderOverviewRoomWidgetsForVisibility(
+              roomWidgets,
+              getEditableWidgetPositions() || {},
+              {
+                areaId,
+                hidden: !hidden,
+                hiddenAreaIds: nextHiddenRoomIds,
+              },
+            ));
             if (!hidden && controller.selectedAreaId === areaId) controller.clearSelection("selected-room-hidden");
             else render("room-visibility-changed");
           },

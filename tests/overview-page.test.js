@@ -14,6 +14,7 @@ import {
 import {
   buildOverviewDeviceWidgets,
   createOverviewEntityWidget,
+  orderOverviewRoomWidgetsForVisibility,
   persistOverviewAreaDeviceWidgets,
   resolveOverviewRoomGridUnits,
   syncOverviewSheetPortal,
@@ -181,6 +182,49 @@ test("overview room visibility actions use dedicated system icons", () => {
   assert.equal(getSystemIconName("hide"), "hide");
   assert.equal(getSystemIconName("visibility"), "show");
   assert.equal(getSystemIconName("visibility-off"), "hide");
+});
+
+test("hiding a room moves it after visible and already-hidden rooms", () => {
+  const widgets = ["living", "office", "garage", "kitchen"].map((overviewAreaId, index) => ({
+    id: `room-${overviewAreaId}`,
+    overviewAreaId,
+    index,
+  }));
+  const positions = {
+    "room-living": { x: 1, y: 1 },
+    "room-office": { x: 3, y: 1 },
+    "room-garage": { x: 5, y: 1 },
+    "room-kitchen": { x: 1, y: 3 },
+  };
+
+  assert.deepEqual(
+    orderOverviewRoomWidgetsForVisibility(widgets, positions, {
+      areaId: "office",
+      hidden: true,
+      hiddenAreaIds: ["garage", "office"],
+    }).map(widget => widget.overviewAreaId),
+    ["living", "kitchen", "garage", "office"],
+  );
+});
+
+test("showing a room keeps visible rooms first and hidden rooms last", () => {
+  const widgets = ["living", "kitchen", "garage", "office"].map(overviewAreaId => ({
+    id: `room-${overviewAreaId}`,
+    overviewAreaId,
+  }));
+  const positions = Object.fromEntries(widgets.map((widget, index) => [
+    widget.id,
+    { x: (index * 2) + 1, y: 1 },
+  ]));
+
+  assert.deepEqual(
+    orderOverviewRoomWidgetsForVisibility(widgets, positions, {
+      areaId: "garage",
+      hidden: false,
+      hiddenAreaIds: ["office"],
+    }).map(widget => widget.overviewAreaId),
+    ["living", "kitchen", "garage", "office"],
+  );
 });
 
 test("overview mobile sheet portal mounts outside the page and replaces its previous surface", () => {

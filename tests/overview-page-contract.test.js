@@ -94,6 +94,8 @@ test("overview rooms reuse Grid positioning with a system hide/show action", () 
   assert.match(pageSource, /appendRoomVisibilityButton\(shell,\s*\{/);
   assert.match(pageSource, /createSystemIconButton\(\{[\s\S]*icon:\s*hidden\s*\?\s*"show"\s*:\s*"hide"/);
   assert.match(pageSource, /getWidgetPositions\(\{[\s\S]*scope:\s*"overview-rooms"[\s\S]*units:\s*gridUnits/);
+  assert.match(pageSource, /repackEditableWidgets\(orderOverviewRoomWidgetsForVisibility\(/);
+  assert.match(hostSource, /_clearCurrentWidgetPositions\(\);[\s\S]*_getActiveWidgetPositions\(\{create:true\}\)/);
   assert.match(interactionSource, /canRemoveWidgetFromActivePage\?\.\(\)\s*!==\s*false/);
   assert.doesNotMatch(pageSource, /appendLocalEditor/);
   assert.doesNotMatch(pageSource, /mha-overview-item-tool/);

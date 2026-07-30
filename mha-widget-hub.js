@@ -590,6 +590,7 @@ _buildOverviewPageProps(){
     createEditableWidgetElement:(widget,options)=>this._createWidgetElement(widget,options),
     getEditableWidgetPositions:()=>this._getActiveWidgetPositions({create:true}),
     getWidgetPositions:(context)=>this._getOverviewWidgetPositions(context),
+    repackEditableWidgets:(widgets)=>this._repackOverviewEditableWidgets(widgets),
     onOpenWidgetManager:()=>this._openWidgetManager(),
     onContextChange:(context={})=>{
       const pageId=String(context.pageId||"");
@@ -670,6 +671,15 @@ _clearOverviewEditContext(){
   this._syncDocksDom();
   this._syncWidgetDropSlots();
   return true;
+}
+_repackOverviewEditableWidgets(widgets=[]){
+  if(!this._overviewEditContext||this._overviewEditContext.section!=="rooms")return false;
+  const normalized=(Array.isArray(widgets)?widgets:[]).map(normalizeStoredWidgetContract);
+  const currentIds=new Set(this._widgets.map(widget=>widget.id));
+  if(normalized.length!==currentIds.size||normalized.some(widget=>!currentIds.has(widget.id)))return false;
+  this._widgets=this._normalizeWidgetsToGridBounds(normalized);
+  this._clearCurrentWidgetPositions();
+  return Boolean(this._getActiveWidgetPositions({create:true}));
 }
 _openMediaPageSettings(){
   if(!isMediaPlayersPage(this._getActivePage()))return false;
