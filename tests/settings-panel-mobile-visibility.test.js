@@ -234,8 +234,11 @@ test("global settings main page contains only tiles leading to subpanels", () =>
     scope: "all",
     settingsPage: "main",
     onOpenAppearanceSettings: () => opened.push("appearance"),
+    onOpenWallpaperSettings: () => opened.push("wallpaper"),
+    onOpenWeatherPageSettings: () => opened.push("weather-page"),
+    onOpenNowBarSettings: () => opened.push("screensaver-nowbar"),
     onOpenCustomizationSettings: () => opened.push("customization"),
-    onOpenNavigationSettings: () => opened.push("navigation"),
+    onOpenDockSettings: () => opened.push("dock"),
     onOpenLayoutSettings: () => opened.push("layout"),
   }));
   const body = panel.querySelector(".mha-settings-body");
@@ -244,15 +247,47 @@ test("global settings main page contains only tiles leading to subpanels", () =>
   assert.equal(body.children.every(child => child.className === "mha-settings-nav-tile"), true);
   assert.deepEqual(tiles.map(tile => collectTextNodes(tile).find(Boolean)), [
     "Appearance",
+    "Wallpaper",
+    "Weather page",
+    "Screensaver and Now Bar",
     "Customization",
-    "Navigation",
+    "Dock",
     "Layout",
     "Advanced",
   ]);
-  tiles.slice(0, 4).forEach(tile => tile.listeners.click());
-  assert.deepEqual(opened, ["appearance", "customization", "navigation", "layout"]);
+  tiles.slice(0, 7).forEach(tile => tile.listeners.click());
+  assert.deepEqual(opened, [
+    "appearance",
+    "wallpaper",
+    "weather-page",
+    "screensaver-nowbar",
+    "customization",
+    "dock",
+    "layout",
+  ]);
   assert.equal(panel.querySelector(".mha-select-native"), null);
   assert.equal(panel.querySelector(".mha-toggle-input"), null);
+}));
+
+test("global settings keeps category controls inside second-level subpanels", () => withMockDocument(() => {
+  const customization = createSettingsPanel({
+    open: true,
+    scope: "all",
+    settingsPage: "customization",
+  });
+  const appearance = createSettingsPanel({
+    open: true,
+    scope: "all",
+    settingsPage: "appearance",
+    supportsSidebarToggle: true,
+    showsStatusBarOptions: true,
+  });
+
+  assert.equal(customization.querySelectorAll(".mha-settings-nav-tile").length, 0);
+  assert.equal(appearance.querySelectorAll(".mha-settings-nav-tile").length, 0);
+  assert.equal(hasText(customization, "Language"), true);
+  assert.equal(hasText(appearance, "Hide Home Assistant sidebar"), true);
+  assert.equal(hasText(appearance, "Status bar"), true);
 }));
 
 test("layout controls live in the dedicated layout subpanel", () => withMockDocument(() => {
@@ -272,14 +307,14 @@ test("settings panel hides dock-only controls on mobile and keeps them on deskto
   const mobileMain = createSettingsPanel({
     open: true,
     scope: "all",
-    settingsPage: "navigation",
+    settingsPage: "appearance",
     isMobileLayout: true,
   });
 
   const desktopMain = createSettingsPanel({
     open: true,
     scope: "all",
-    settingsPage: "navigation",
+    settingsPage: "appearance",
     isMobileLayout: false,
   });
 
@@ -326,7 +361,7 @@ test("settings panel keeps mobile-landscape navigation options filtered even wit
   const mobileLandscapeMain = createSettingsPanel({
     open: true,
     scope: "all",
-    settingsPage: "navigation",
+    settingsPage: "appearance",
     isMobileLayout: true,
     isMobileLandscape: true,
     supportsDockPosition: false,
@@ -473,7 +508,7 @@ test("dock detail embeds the shared icon manager directly", () => withMockDocume
   assert.deepEqual(changes, [["home", "home"]]);
 }));
 
-test("Weather page customization tile opens its dedicated landscape subpanel", () => withMockDocument(() => {
+test("Weather page main tile opens its dedicated landscape subpanel", () => withMockDocument(() => {
   let openCount = 0;
   let backCount = 0;
   const changes = [];
@@ -481,7 +516,7 @@ test("Weather page customization tile opens its dedicated landscape subpanel", (
   const main = createSettingsPanel({
     open: true,
     scope: "all",
-    settingsPage: "customization",
+    settingsPage: "main",
     onOpenWeatherPageSettings: () => { openCount += 1; },
   });
   const weatherTile = main.querySelectorAll(".mha-settings-nav-tile")

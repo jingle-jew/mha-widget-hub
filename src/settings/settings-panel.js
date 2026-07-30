@@ -1037,7 +1037,7 @@ export function updateSettingsPanel(existing, next) {
   normalizeThemeAppearanceStack(existing);
 
   const page = existing.dataset.settingsPage || "";
-  if (!["main", "appearance", "customization", "navigation", "layout", "screensaver-nowbar", "screensaver"].includes(page)) return false;
+  if (!["main", "appearance", "customization", "layout", "screensaver-nowbar", "screensaver"].includes(page)) return false;
 
   const valueSignatureChanged = getValueControlSignature(existing) !== getValueControlSignature(next);
   const accentSignatureChanged = getAccentSwatchSignature(existing) !== getAccentSwatchSignature(next);
@@ -1146,7 +1146,6 @@ export function createSettingsPanel({
   onResetGrid,
   onOpenAppearanceSettings,
   onOpenCustomizationSettings,
-  onOpenNavigationSettings,
   onOpenLayoutSettings,
   onSettingsMainBack,
   onOpenWallpaperSettings,
@@ -1213,21 +1212,19 @@ export function createSettingsPanel({
       ? t("settings.appearance", "Appearance")
       : settingsPage === "customization"
         ? t("settings.customization", "Customization")
-        : settingsPage === "navigation"
-          ? t("settings.navigation", "Navigation")
-          : settingsPage === "layout"
-            ? t("settings.layout", "Layout")
-            : settingsPage === "dock"
-      ? t("settings.dock", "Dock")
-      : settingsPage === "dock-detail"
-        ? t("settings.dockIcon", "Dock icon")
-        : settingsPage === "wallpaper"
-          ? t("settings.wallpaper", "Wallpaper")
-          : settingsPage === "weather-page"
-            ? t("settings.weatherPageSettings", "Weather page settings")
-            : settingsPage === "screensaver-nowbar" || settingsPage === "nowbar"
-              ? t("settings.screensaverAndNowBar", "Screensaver and Now Bar")
-              : t("settings.title", "Settings");
+        : settingsPage === "layout"
+          ? t("settings.layout", "Layout")
+          : settingsPage === "dock"
+            ? t("settings.dock", "Dock")
+            : settingsPage === "dock-detail"
+              ? t("settings.dockIcon", "Dock icon")
+              : settingsPage === "wallpaper"
+                ? t("settings.wallpaper", "Wallpaper")
+                : settingsPage === "weather-page"
+                  ? t("settings.weatherPageSettings", "Weather page settings")
+                  : settingsPage === "screensaver-nowbar" || settingsPage === "nowbar"
+                    ? t("settings.screensaverAndNowBar", "Screensaver and Now Bar")
+                    : t("settings.title", "Settings");
 
   title.append(eyebrow, h2);
 
@@ -1240,7 +1237,7 @@ export function createSettingsPanel({
   const headerActions = document.createElement("div");
   headerActions.className = "mha-settings-header-actions";
 
-  const topLevelSubpages = ["appearance", "customization", "navigation", "layout"];
+  const topLevelSubpages = ["appearance", "customization", "layout"];
   if (!isScreensaverScope && (topLevelSubpages.includes(settingsPage) || settingsPage === "dock" || settingsPage === "wallpaper" || settingsPage === "weather-page" || settingsPage === "screensaver-nowbar" || settingsPage === "nowbar")) {
     headerActions.append(createBackButton({
       label: t("settings.backToSettings", "Back to settings"),
@@ -1281,15 +1278,35 @@ export function createSettingsPanel({
       }),
       createSettingsNavTile({
         icon: "dashboard",
+        label: t("settings.wallpaper", "Wallpaper"),
+        description: t("settings.wallpaperDescription", "Choose an MHA weather background or separate images for light and dark themes."),
+        onClick: onOpenWallpaperSettings,
+      }),
+      createSettingsNavTile({
+        icon: "weather",
+        label: t("settings.weatherPage", "Weather page"),
+        description: t("settings.weatherPageDescription", "Choose the landscape used by the Weather page."),
+        onClick: onOpenWeatherPageSettings,
+      }),
+      ...(supportsScreensaver ? [
+        createSettingsNavTile({
+          icon: "star",
+          label: t("settings.screensaverAndNowBar", "Screensaver and Now Bar"),
+          description: t("settings.screensaverNowBarDescription", "Configure the screensaver and displayed content."),
+          onClick: onOpenNowBarSettings,
+        }),
+      ] : []),
+      createSettingsNavTile({
+        icon: "dashboard",
         label: t("settings.customization", "Customization"),
-        description: t("settings.customizationDescription", "Configure language, wallpapers, the Weather page, screensaver and Now Bar."),
+        description: t("settings.customizationDescription", "Choose the interface language."),
         onClick: onOpenCustomizationSettings,
       }),
       createSettingsNavTile({
         icon: "apps",
-        label: t("settings.navigation", "Navigation"),
-        description: t("settings.navigationDescription", "Configure the Home Assistant sidebar, status bar and dock."),
-        onClick: onOpenNavigationSettings,
+        label: t("settings.dock", "Dock"),
+        description: t("settings.dockDescription", "Reorder dock pages and change their icons."),
+        onClick: onOpenDockSettings,
       }),
       createSettingsNavTile({
         icon: "grid",
@@ -1469,6 +1486,24 @@ export function createSettingsPanel({
       }),
     );
 
+    if (showSidebarToggle) {
+      appearanceControls.push(createSwitch({
+        label: t("settings.hideHaSidebar", "Hide Home Assistant sidebar"),
+        description: t("settings.hideHaSidebarDescription", "Hide the native Home Assistant sidebar for a more immersive experience."),
+        checked: hideHaSidebar,
+        onChange: onHideHaSidebarChange,
+      }));
+    }
+
+    if (showStatusBarSettings) {
+      appearanceControls.push(createSelect({
+        label: t("settings.statusBar", "Status bar"),
+        value: statusBarMode,
+        options: STATUS_BAR_MODE_OPTIONS,
+        onChange: onStatusBarModeChange,
+      }));
+    }
+
     if (themeStyle === "oneui") {
       appearanceControls.push(createPercentageSlider({
         label: t("settings.primarySurfaceOpacity", "Widget opacity"),
@@ -1502,54 +1537,6 @@ export function createSettingsPanel({
         value: language,
         options: LANGUAGE_OPTIONS,
         onChange: onLanguageChange,
-      }),
-      createSettingsNavTile({
-        icon: "dashboard",
-        label: t("settings.wallpaper", "Wallpaper"),
-        description: t("settings.wallpaperDescription", "Choose an MHA weather background or separate images for light and dark themes."),
-        onClick: onOpenWallpaperSettings,
-      }),
-      createSettingsNavTile({
-        icon: "weather",
-        label: t("settings.weatherPage", "Weather page"),
-        description: t("settings.weatherPageDescription", "Choose the landscape used by the Weather page."),
-        onClick: onOpenWeatherPageSettings,
-      }),
-      ...(supportsScreensaver ? [
-        createSettingsNavTile({
-          icon: "star",
-          label: t("settings.screensaverAndNowBar", "Screensaver and Now Bar"),
-          description: t("settings.screensaverNowBarDescription", "Configure the screensaver and displayed content."),
-          onClick: onOpenNowBarSettings,
-        }),
-      ] : []),
-    ]));
-    return finalizeSettingsPanel(root, header, body, onClose);
-  }
-
-  if (!isScreensaverScope && settingsPage === "navigation") {
-    body.append(createSection(t("settings.navigation", "Navigation"), [
-      ...(showSidebarToggle ? [
-        createSwitch({
-          label: t("settings.hideHaSidebar", "Hide Home Assistant sidebar"),
-          description: t("settings.hideHaSidebarDescription", "Hide the native Home Assistant sidebar for a more immersive experience."),
-          checked: hideHaSidebar,
-          onChange: onHideHaSidebarChange,
-        }),
-      ] : []),
-      ...(showStatusBarSettings ? [
-        createSelect({
-          label: t("settings.statusBar", "Status bar"),
-          value: statusBarMode,
-          options: STATUS_BAR_MODE_OPTIONS,
-          onChange: onStatusBarModeChange,
-        }),
-      ] : []),
-      createSettingsNavTile({
-        icon: "apps",
-        label: t("settings.dock", "Dock"),
-        description: t("settings.dockDescription", "Reorder dock pages and change their icons."),
-        onClick: onOpenDockSettings,
       }),
     ]));
     return finalizeSettingsPanel(root, header, body, onClose);

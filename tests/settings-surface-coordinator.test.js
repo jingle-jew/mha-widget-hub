@@ -174,19 +174,19 @@ test("settings surface coordinator owns both open-state flags and panel sync", (
   assert.deepEqual(weatherThemeBackgroundChanges, [false]);
   host.lastSync.props.all.onOpenAppearanceSettings();
   host.lastSync.props.all.onOpenCustomizationSettings();
-  host.lastSync.props.all.onOpenNavigationSettings();
   host.lastSync.props.all.onOpenLayoutSettings();
   host.lastSync.props.all.onWallpaperMainBack();
   host.lastSync.props.all.onNowBarMainBack();
+  host.lastSync.props.all.onWeatherPageMainBack();
   host.lastSync.props.all.onDockMainBack();
   assert.deepEqual(openedSettingsPages, [
     "appearance",
     "customization",
-    "navigation",
     "layout",
-    "customization",
-    "customization",
-    "navigation",
+    "main",
+    "main",
+    "main",
+    "main",
   ]);
 });
 

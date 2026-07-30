@@ -12,17 +12,21 @@ appartiennent à `AGENTS.md`.
 
 - **Statut :** confirmé.
 - **Décision :** la page principale du settings-panel global ne contient que
-  cinq tuiles de navigation : `Apparence`, `Personnalisation`, `Navigation`,
-  `Disposition` et `Avancé`. Aucun select, toggle, slider ou bouton d'action
-  directe ne vit à ce niveau. Les anciens contrôles d'apparence, de langue, de
-  navigation et de disposition appartiennent désormais au sous-panneau de leur
-  catégorie.
+  des tuiles de navigation et ne mène jamais à une catégorie intermédiaire qui
+  contiendrait elle-même une autre tuile de sous-panneau. `Apparence`, `Fond
+  d'écran`, `Page Météo`, `Économiseur d'écran et Now Bar`, `Personnalisation`,
+  `Dock`, `Disposition` et `Avancé` sont donc accessibles directement depuis ce
+  menu lorsque leurs capacités sont disponibles. Aucun select, toggle, slider
+  ou bouton d'action directe ne vit au premier niveau.
 - **Pourquoi :** le premier niveau doit servir de menu stable et lisible, pas
-  mélanger navigation et réglages éditables.
-- **Conséquence :** `Fond d'écran`, `Page Météo` et `Économiseur d'écran et Now
-  Bar` restent sous `Personnalisation`; `Dock` reste sous `Navigation`; leurs
-  boutons retour reviennent vers ce parent logique. Le mode de disposition et
-  la réinitialisation de la grille restent ensemble sous `Disposition`.
+  mélanger navigation et réglages éditables, et le parcours des réglages doit se
+  limiter au panneau principal puis au panneau choisi.
+- **Conséquence :** `Personnalisation` ne possède que le choix de langue. Les
+  contrôles de sidebar Home Assistant et de status bar appartiennent à
+  `Apparence`, avant les sliders de prévisualisation de surface. Les quatre
+  panneaux spécialisés et leur bouton retour pointent directement vers le menu
+  principal. Le mode de disposition et la réinitialisation de la grille restent
+  ensemble sous `Disposition`.
 
 ### 2026-07-29 — Initialiser MHA avec Aperçu, Météo et Lecteurs média
 
