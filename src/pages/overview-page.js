@@ -9,12 +9,11 @@ import {
   PANEL_SURFACE_ROLES,
 } from "../panels/panel-surface-contract.js";
 import { createPanelShell } from "../panels/panel-shell.js";
-import { createIconSymbol } from "../ui/icon-symbol.js";
 import { setFloatingControlButtonIcon } from "../ui/floating-control-icons.js";
+import { createSystemIconButton } from "../system/system-buttons.js";
 import { createWidgetShell } from "../widgets/widget-shell.js";
 import { normalizeStoredWidgetContract } from "../widgets/widget-storage.js";
 import {
-  moveOverviewItem,
   normalizeOverviewPageConfig,
   orderOverviewAreas,
   orderOverviewEntities,
@@ -28,6 +27,12 @@ import { createOverviewPageController } from "./overview-page-controller.js";
 const STANDARD_WIDGET_TOOL_SELECTOR = [
   ".mha-widget-tools",
   ".mha-widget-move-overlay",
+  ".mha-size-badge",
+  ".mha-widget-resize-handle",
+].join(",");
+
+const ROOM_NON_POSITION_TOOL_SELECTOR = [
+  ".mha-tool-button--dimension",
   ".mha-size-badge",
   ".mha-widget-resize-handle",
 ].join(",");
@@ -204,64 +209,26 @@ function stripStandardWidgetTools(shell) {
   return shell;
 }
 
-function createToolButton({ label, icon, disabled = false, onClick }) {
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "mha-overview-item-tool";
-  button.disabled = disabled;
-  button.setAttribute("aria-label", label);
-  button.append(createIconSymbol({ name: icon, label }));
-  button.onclick = (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    onClick?.();
-  };
-  return button;
-}
-
-function appendLocalEditor(shell, {
-  hidden = false,
-  canMovePrevious = false,
-  canMoveNext = false,
-  canChangeVariant = false,
-  onMovePrevious,
-  onMoveNext,
-  onToggleHidden,
-  onChangeVariant,
-} = {}) {
-  shell.classList.add("is-overview-editing");
+function appendRoomVisibilityButton(shell, { hidden = false, onToggleHidden } = {}) {
   shell.dataset.overviewHidden = String(hidden);
-  const tools = document.createElement("div");
-  tools.className = "mha-overview-item-tools";
-  tools.append(
-    createToolButton({
-      label: t("overview.movePrevious", "Move earlier"),
-      icon: "arrow-up",
-      disabled: !canMovePrevious,
-      onClick: onMovePrevious,
-    }),
-    createToolButton({
-      label: t("overview.moveNext", "Move later"),
-      icon: "arrow-down",
-      disabled: !canMoveNext,
-      onClick: onMoveNext,
-    }),
-  );
-  if (canChangeVariant) {
-    tools.append(createToolButton({
-      label: t("overview.changeVariant", "Change variant"),
-      icon: "resize",
-      onClick: onChangeVariant,
-    }));
-  }
-  tools.append(createToolButton({
-    label: hidden
-      ? t("overview.showItem", "Show")
-      : t("overview.hideItem", "Hide"),
-    icon: hidden ? "visibility" : "close",
-    onClick: onToggleHidden,
+  shell.querySelectorAll?.(ROOM_NON_POSITION_TOOL_SELECTOR).forEach(node => node.remove());
+  const tools = shell.querySelector?.(".mha-widget-tools");
+  if (!tools) return shell;
+  const label = hidden
+    ? t("overview.showItem", "Show")
+    : t("overview.hideItem", "Hide");
+  tools.prepend(createSystemIconButton({
+    icon: hidden ? "show" : "hide",
+    label,
+    size: "sm",
+    className: "mha-overview-room-visibility-button",
+    onClick: (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      onToggleHidden?.();
+    },
   }));
-  shell.append(tools);
+  return shell;
 }
 
 function createRoomWidget(area, { selected = false, hidden = false } = {}) {
@@ -279,6 +246,7 @@ function createRoomWidget(area, { selected = false, hidden = false } = {}) {
     title: area?.name || areaId,
     icon: area?.icon || "home",
     iconCategory: "home",
+    overviewAreaId: areaId,
     active: selected,
     state: hidden
       ? t("overview.hidden", "Hidden")
@@ -400,10 +368,10 @@ export function createOverviewPage(page = {}, {
   surfaceRoot = null,
   onConfigChange = () => {},
   onSummaryWidgetsChange = () => false,
-  onDeviceEditingChange = () => false,
+  onEditingChange = () => false,
   createEditableWidgetElement = null,
   getEditableWidgetPositions = () => ({}),
-  getDeviceWidgetPositions = () => ({}),
+  getWidgetPositions = () => ({}),
   onOpenWidgetManager = () => {},
   onSheetOpenChange = () => {},
   onContextChange = () => {},
@@ -470,22 +438,57 @@ export function createOverviewPage(page = {}, {
     return true;
   }
 
+  function setRoomEditing(editing) {
+    const nextEditing = Boolean(editing);
+    if (nextEditing === (controller.editingSection === "rooms")) return true;
+    if (nextEditing) {
+      const widgets = getOrderedAreas({ includeHidden: true })
+        .map(area => createRoomWidget(area, {
+          selected: controller.selectedAreaId === getAreaId(area),
+          hidden: currentConfig.hiddenRoomIds.includes(getAreaId(area)),
+        }))
+        .map(widget => normalizeStoredWidgetContract(widget));
+      const accepted = onEditingChange({
+        editing: true,
+        section: "rooms",
+        scope: "overview-rooms",
+        contextId: "rooms",
+        units: roomGridUnits,
+        rows: 100,
+        allowAdd: false,
+        allowRemove: false,
+        widgets,
+        persistWidgets: () => true,
+      });
+      if (accepted === false) return false;
+      return controller.setEditingSection("rooms");
+    }
+    onEditingChange({ editing: false });
+    return controller.setEditingSection("");
+  }
+
   function setDeviceEditing(editing) {
     const nextEditing = Boolean(editing);
     if (nextEditing === (controller.editingSection === "devices")) return true;
     const area = getArea();
     if (nextEditing) {
       const contextId = area ? `area:${getAreaId(area)}` : "summary";
-      const accepted = onDeviceEditingChange({
+      const accepted = onEditingChange({
         editing: true,
+        section: "devices",
+        scope: "overview-devices",
         contextId,
+        units: 4,
+        rows: 100,
+        allowAdd: true,
+        allowRemove: true,
         widgets: getDeviceWidgets(area),
         persistWidgets: widgets => persistDeviceWidgets(widgets, area),
       });
       if (accepted === false) return false;
       return controller.setEditingSection("devices");
     }
-    onDeviceEditingChange({ editing: false });
+    onEditingChange({ editing: false });
     return controller.setEditingSection("");
   }
 
@@ -500,21 +503,43 @@ export function createOverviewPage(page = {}, {
     const editing = controller.editingSection === "rooms";
     const areas = getOrderedAreas({ includeHidden: editing });
     const hiddenIds = new Set(currentConfig.hiddenRoomIds);
+    const positions = editing
+      ? (getEditableWidgetPositions() || {})
+      : (getWidgetPositions({
+        section: "rooms",
+        scope: "overview-rooms",
+        contextId: "rooms",
+        units: gridUnits,
+        rows: 100,
+      }) || {});
+    if (editing) grid.classList.add("mha-grid");
 
-    areas.forEach((area, index) => {
+    areas.forEach((area) => {
       const areaId = getAreaId(area);
       const hidden = hiddenIds.has(areaId);
       const selected = controller.selectedAreaId === areaId;
-      const shell = createSpecializedShell(createRoomWidget(area, { selected, hidden }), {
-        units: gridUnits,
-        layout,
-        hass: currentHass,
-        visibilityConfig: currentVisibilityConfig,
-        isEditing: editing,
-      });
+      const widget = normalizeStoredWidgetContract(createRoomWidget(area, { selected, hidden }));
+      const shell = editing && typeof createEditableWidgetElement === "function"
+        ? createEditableWidgetElement(widget, {
+          units: gridUnits,
+          rows: 100,
+          layout,
+          position: positions?.[widget.id],
+        })
+        : createSpecializedShell(widget, {
+          units: gridUnits,
+          layout,
+          hass: currentHass,
+          visibilityConfig: currentVisibilityConfig,
+        });
       shell.dataset.areaId = areaId;
       shell.dataset.overviewSelected = String(selected);
       shell.setAttribute("role", "listitem");
+      const position = positions?.[widget.id];
+      if (position && !editing) {
+        shell.style.gridColumn = `${position.x} / span ${Math.min(gridUnits, Number(widget.w) || 1)}`;
+        shell.style.gridRow = `${position.y} / span ${Math.max(1, Number(widget.h) || 1)}`;
+      }
       const content = shell.querySelector(".mha-simple-button-widget");
       content?.__mhaDestroy?.();
       content?.removeAttribute?.("data-widget-component");
@@ -544,34 +569,8 @@ export function createOverviewPage(page = {}, {
       }
 
       if (editing) {
-        appendLocalEditor(shell, {
+        appendRoomVisibilityButton(shell, {
           hidden,
-          canMovePrevious: index > 0,
-          canMoveNext: index < areas.length - 1,
-          onMovePrevious: () => {
-            persistConfig({
-              ...currentConfig,
-              roomOrder: moveOverviewItem(
-                currentConfig.roomOrder,
-                areaId,
-                -1,
-                areas.map(getAreaId),
-              ),
-            });
-            render("rooms-reordered");
-          },
-          onMoveNext: () => {
-            persistConfig({
-              ...currentConfig,
-              roomOrder: moveOverviewItem(
-                currentConfig.roomOrder,
-                areaId,
-                1,
-                areas.map(getAreaId),
-              ),
-            });
-            render("rooms-reordered");
-          },
           onToggleHidden: () => {
             persistConfig({
               ...currentConfig,
@@ -606,7 +605,13 @@ export function createOverviewPage(page = {}, {
     const contextId = area ? `area:${getAreaId(area)}` : "summary";
     const positions = editing
       ? (getEditableWidgetPositions() || {})
-      : (getDeviceWidgetPositions(contextId) || {});
+      : (getWidgetPositions({
+        section: "devices",
+        scope: "overview-devices",
+        contextId,
+        units: 4,
+        rows: 100,
+      }) || {});
     if (editing) grid.classList.add("mha-grid");
 
     widgets.forEach((widget) => {
@@ -655,7 +660,7 @@ export function createOverviewPage(page = {}, {
       footer: createEditButton({
         editing: controller.editingSection === "rooms",
         disabled: controller.editingSection === "devices",
-        onClick: () => controller.toggleEditingSection("rooms"),
+        onClick: () => setRoomEditing(controller.editingSection !== "rooms"),
       }),
       className: "mha-overview-section--rooms",
     });
@@ -745,7 +750,7 @@ export function createOverviewPage(page = {}, {
     footer.className = "mha-overview-mobile-footer";
     footer.append(createEditButton({
       editing: controller.editingSection === "rooms",
-      onClick: () => controller.toggleEditingSection("rooms"),
+      onClick: () => setRoomEditing(controller.editingSection !== "rooms"),
     }));
     mobileRoot.append(grid, footer);
     return mobileRoot;
@@ -851,8 +856,8 @@ export function createOverviewPage(page = {}, {
   root.__mhaController = controller;
   root.__mhaDestroy = () => {
     destroyed = true;
-    if (controller.editingSection === "devices") {
-      onDeviceEditingChange({ editing: false, destroyed: true });
+    if (controller.editingSection) {
+      onEditingChange({ editing: false, destroyed: true });
     }
     unbindDiscoveryCadence();
     activeMobileSheet = syncOverviewSheetPortal({

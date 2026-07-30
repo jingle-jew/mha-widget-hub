@@ -340,16 +340,19 @@ appartiennent à `AGENTS.md`.
   `media-widget.css` ou les tokens du dock sont une dette à réduire par correctifs
   ciblés; ne pas les étendre.
 
-### 2026-07-28 — Garder Aperçu spécialisé avec une portée Grid locale pour Appareils
+### 2026-07-29 — Garder Aperçu spécialisé avec des portées Grid locales par section
 
 - **Statut :** confirmé.
 - **Décision :** le type de page `overview` possède son propre rendu dans
   `src/pages/overview-page.js`. Sur tablette/desktop, son contrat logique reste
   `6 + 4`; sur mobile, la grille de pièces reçoit le nombre de colonnes de la
   Grid responsive active et les appareils restent dans une sheet quatre
-  colonnes. La section Appareils devient temporairement une `.mha-grid` de
-  quatre colonnes uniquement pendant son édition et emprunte alors le moteur
-  commun de placement, drag-and-drop, redimensionnement et configuration.
+  colonnes. Pendant leur édition, Appareils et Pièces deviennent chacune une
+  `.mha-grid` locale et empruntent le moteur commun de placement et de
+  drag-and-drop. Appareils conserve une portée quatre colonnes avec ajout,
+  suppression, redimensionnement et configuration; Pièces conserve ses boutons
+  fixes dans la grille responsive et ajoute seulement l'action système
+  `Masquer/Afficher` à l'outil de déplacement commun.
 - **Pourquoi :** réutiliser le moteur Grid évite un second contrat de gestes et
   de positions, mais sa portée doit rester explicitement liée au contexte
   `summary` ou `area:<id>` afin de ne pas détourner les widgets d'une autre page
@@ -358,10 +361,14 @@ appartiennent à `AGENTS.md`.
   représente le Résumé. Chaque pièce persiste son contenu édité dans
   `page.config.areas[areaId].deviceWidgets`, avec les entités découvertes
   supprimées dans `removedEntityIds`; les nouvelles entités découvertes sont
-  encore ajoutées automatiquement. Les positions utilisent des clés synthétiques
-  séparées par contexte, layout et grille `4x100`. L'éditeur de Pièces reste
-  local et indépendant. Hors édition, Overview ne contient volontairement pas
-  de `.mha-grid`; `grid-runtime.js` doit alors ignorer ses widgets spécialisés
+  encore ajoutées automatiquement. Les positions Appareils utilisent des clés
+  synthétiques séparées par contexte, layout et grille `4x100`; les positions
+  Pièces utilisent la portée `overview-rooms:rooms`, le layout et le nombre de
+  colonnes responsive avec `100` lignes. Les pièces masquées restent dans la
+  portée d'édition afin de pouvoir être réaffichées, mais ne sont pas rendues
+  hors édition. Cette portée n'expose ni ajout ni cible de suppression par drag.
+  Hors édition, Overview ne contient volontairement pas de `.mha-grid`;
+  `grid-runtime.js` doit alors ignorer ses widgets spécialisés
   au lieu de leur réappliquer les dimensions et positions de la grille globale.
   Sinon, au retour sur Overview, une carte 8 colonnes peut créer des pistes CSS
   implicites dans la grille Appareils 4 colonnes. La découverte à cadence minute

@@ -18,6 +18,7 @@ import {
   resolveOverviewRoomGridUnits,
   syncOverviewSheetPortal,
 } from "../src/pages/overview-page.js";
+import { getSystemIconName } from "../src/system/system-icons.js";
 
 function createPortalNode(name) {
   return {
@@ -173,6 +174,13 @@ test("overview room columns follow mobile Grid presets and stay 6 on larger layo
   assert.equal(resolveOverviewRoomGridUnits("mobile", 9), 9);
   assert.equal(resolveOverviewRoomGridUnits("tablet", 12), 6);
   assert.equal(resolveOverviewRoomGridUnits("desktop", 20), 6);
+});
+
+test("overview room visibility actions use dedicated system icons", () => {
+  assert.equal(getSystemIconName("show"), "show");
+  assert.equal(getSystemIconName("hide"), "hide");
+  assert.equal(getSystemIconName("visibility"), "show");
+  assert.equal(getSystemIconName("visibility-off"), "hide");
 });
 
 test("overview mobile sheet portal mounts outside the page and replaces its previous surface", () => {

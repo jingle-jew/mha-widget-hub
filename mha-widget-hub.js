@@ -586,10 +586,10 @@ _buildOverviewPageProps(){
     surfaceRoot:this.shadowRoot,
     onConfigChange:(config)=>this._updateActiveOverviewPageConfig(config),
     onSummaryWidgetsChange:(widgets)=>this._updateActiveOverviewSummaryWidgets(widgets),
-    onDeviceEditingChange:(context)=>this._setOverviewDeviceEditing(context),
+    onEditingChange:(context)=>this._setOverviewEditing(context),
     createEditableWidgetElement:(widget,options)=>this._createWidgetElement(widget,options),
     getEditableWidgetPositions:()=>this._getActiveWidgetPositions({create:true}),
-    getDeviceWidgetPositions:(contextId)=>this._getOverviewDeviceWidgetPositions(contextId),
+    getWidgetPositions:(context)=>this._getOverviewWidgetPositions(context),
     onOpenWidgetManager:()=>this._openWidgetManager(),
     onContextChange:(context={})=>{
       const pageId=String(context.pageId||"");
@@ -610,28 +610,41 @@ _syncMediaPageSettingsDom(){
   return this.render();
 }
 _canAddWidgetToActivePage(){
-  return !isOverviewPage(this._getActivePage())||Boolean(this._overviewDeviceEditContext);
+  return !isOverviewPage(this._getActivePage())||this._overviewEditContext?.allowAdd===true;
+}
+_canRemoveWidgetFromActivePage(){
+  return !isOverviewPage(this._getActivePage())||this._overviewEditContext?.allowRemove===true;
 }
 
 _getWidgetPositionScopeId(){
   const pageId=this._activePageId||"home";
-  const contextId=String(this._overviewDeviceEditContext?.contextId||"").trim();
-  return contextId?`${pageId}:overview-devices:${contextId}`:pageId;
+  const contextId=String(this._overviewEditContext?.contextId||"").trim();
+  const scope=String(this._overviewEditContext?.scope||"").trim();
+  return contextId&&scope?`${pageId}:${scope}:${contextId}`:pageId;
 }
-_getOverviewDeviceWidgetPositions(contextId="summary"){
-  const scope=`${this._activePageId||"home"}:overview-devices:${String(contextId||"summary")}`;
-  const key=`${scope}:${this._getRuntimeLayout()}:4x100`;
+_getOverviewWidgetPositions({scope="overview-devices",contextId="summary",units=4,rows=100}={}){
+  const positionScope=`${this._activePageId||"home"}:${String(scope||"overview-devices")}:${String(contextId||"summary")}`;
+  const key=`${positionScope}:${this._getRuntimeLayout()}:${Math.max(1,Number(units)||1)}x${Math.max(1,Number(rows)||1)}`;
   const positions=this._widgetPositions?.[key];
   return positions&&typeof positions==="object"&&!Array.isArray(positions)?positions:{};
 }
-_setOverviewDeviceEditing(context={}){
+_setOverviewEditing(context={}){
   if(context?.editing){
     if(!isOverviewPage(this._getActivePage()))return false;
-    this._overviewDeviceEditContext={
+    const section=context.section==="rooms"?"rooms":"devices";
+    this._overviewEditContext={
+      section,
+      scope:String(context.scope||(section==="rooms"?"overview-rooms":"overview-devices")),
       contextId:String(context.contextId||"summary"),
+      units:Math.max(1,Math.round(Number(context.units)||4)),
+      rows:Math.max(1,Math.round(Number(context.rows)||100)),
+      allowAdd:context.allowAdd===true,
+      allowRemove:context.allowRemove===true,
       persistWidgets:typeof context.persistWidgets==="function"?context.persistWidgets:()=>false,
     };
-    this.dataset.overviewDeviceEditing="true";
+    this.dataset.overviewEditingSection=section;
+    this.dataset.overviewDeviceEditing=String(section==="devices");
+    this.dataset.overviewRoomEditing=String(section==="rooms");
     this._isEditing=true;
     clearWidgetPlacementState(this);
     this._widgets=this._normalizeWidgetsToGridBounds(
@@ -641,13 +654,15 @@ _setOverviewDeviceEditing(context={}){
     this._syncDocksDom();
     return true;
   }
-  this._clearOverviewDeviceEditContext();
+  this._clearOverviewEditContext();
   return true;
 }
-_clearOverviewDeviceEditContext(){
-  if(!this._overviewDeviceEditContext)return false;
-  this._overviewDeviceEditContext=null;
+_clearOverviewEditContext(){
+  if(!this._overviewEditContext)return false;
+  this._overviewEditContext=null;
+  this.dataset.overviewEditingSection="";
   this.dataset.overviewDeviceEditing="false";
+  this.dataset.overviewRoomEditing="false";
   this._isEditing=false;
   clearWidgetPlacementState(this);
   this._widgets=this._readWidgets();
@@ -1067,7 +1082,7 @@ toggleEditMode(){
   this._isEditing=getNextEditMode(this._isEditing);
 
   if(!this._isEditing){
-    if(this._overviewDeviceEditContext)this._clearOverviewDeviceEditContext();
+    if(this._overviewEditContext)this._clearOverviewEditContext();
     clearWidgetPlacementState(this);
     const grid=this.shadowRoot?.querySelector?.(".mha-grid");
     if(grid)this._renderWidgetDropSlots(grid);
@@ -1081,8 +1096,8 @@ toggleEditMode(){
 }
 _disableEditMode(){
   if(!this._isEditing)return false;
-  if(this._overviewDeviceEditContext){
-    this._clearOverviewDeviceEditContext();
+  if(this._overviewEditContext){
+    this._clearOverviewEditContext();
     this._scheduleSquareUnitSync();
     return true;
   }
@@ -1311,11 +1326,11 @@ _getWidgetShellProps(widget,{units,position,widgetId=widget?.id||""}={}){
 }
 
 _saveWidgets(){
-  if(this._overviewDeviceEditContext){
+  if(this._overviewEditContext){
     this._widgets=this._normalizeWidgetsToGridBounds(
       this._widgets.map(normalizeStoredWidgetContract),
     );
-    return this._overviewDeviceEditContext.persistWidgets(this._widgets)!==false;
+    return this._overviewEditContext.persistWidgets(this._widgets)!==false;
   }
   return saveWidgetsForCurrentPage(this,{
     normalizeStoredWidgetContractRef:normalizeStoredWidgetContract,
@@ -1368,7 +1383,7 @@ _toggleWidgetMoveMode(id){
   return getWidgetInteractionSurfaceCoordinatorForHost(this).toggleMoveMode(id);
 }
 _activePageAllowsUnboundedRows(){
-  return Boolean(this._overviewDeviceEditContext)||isWeatherPage(this._getActivePage());
+  return Boolean(this._overviewEditContext)||isWeatherPage(this._getActivePage());
 }
 _isPositionMapValidForWidgets(nextPositions,widgets,units,rowUnits){
   return isPositionMapValidForWidgets(nextPositions,widgets,units,rowUnits,{
@@ -1534,13 +1549,15 @@ _getLogicalGridPreset(){
   );
 }
 _getRuntimeGridPreset(){
-  return this._gridRuntime.getRuntimeGridPreset();
+  return this._overviewEditContext
+    ?{columns:this._overviewEditContext.units,rows:this._overviewEditContext.rows}
+    :this._gridRuntime.getRuntimeGridPreset();
 }
 _getRuntimeGridUnits(){
-  return this._overviewDeviceEditContext?4:this._gridRuntime.getGridBounds().units;
+  return this._overviewEditContext?.units||this._gridRuntime.getGridBounds().units;
 }
 _getRuntimeGridRows(){
-  return this._overviewDeviceEditContext?100:this._gridRuntime.getGridBounds().rowUnits;
+  return this._overviewEditContext?.rows||this._gridRuntime.getGridBounds().rowUnits;
 }
 _isMobileLauncherLayout(){
   return getResponsiveDockCoordinatorForHost(this).isMobileLauncherLayout();
@@ -1549,8 +1566,13 @@ _syncSquareUnit(){
   return this._gridRuntime.syncSquareUnit();
 }
 _getGridBounds(){
-  return this._overviewDeviceEditContext
-    ?{units:4,rowUnits:100,columns:4,rows:100}
+  return this._overviewEditContext
+    ?{
+      units:this._overviewEditContext.units,
+      rowUnits:this._overviewEditContext.rows,
+      columns:this._overviewEditContext.units,
+      rows:this._overviewEditContext.rows,
+    }
     :this._gridRuntime.getGridBounds();
 }
 /* LEGACY AUTO-PACK VALIDATOR SCOPE
@@ -1575,10 +1597,10 @@ _getGridMetrics(){
   const gridStyle=getComputedStyle(grid);
   const renderedColumnSize=parseFloat(gridStyle.gridTemplateColumns.split(" ")[0]);
   const renderedRowSize=parseFloat(gridStyle.gridAutoRows);
-  const columnSize=this._overviewDeviceEditContext
+  const columnSize=this._overviewEditContext
     ?renderedColumnSize||72
     :parseFloat(runtimeStyle?.getPropertyValue?.("--mha-grid-column-size"))||parseFloat(gridStyle.getPropertyValue("--mha-grid-column-size"))||renderedColumnSize||72;
-  const rowSize=this._overviewDeviceEditContext
+  const rowSize=this._overviewEditContext
     ?renderedRowSize||renderedColumnSize||72
     :parseFloat(runtimeStyle?.getPropertyValue?.("--mha-grid-row-size"))||parseFloat(gridStyle.getPropertyValue("--mha-grid-row-size"))||renderedRowSize||72;
   const gap=parseFloat(gridStyle.columnGap||gridStyle.gap||"0")||0;

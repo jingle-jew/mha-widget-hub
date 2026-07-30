@@ -437,3 +437,57 @@ test("widget interaction coordinator turns the add button into a trash target du
     globalThis.document = previousDocument;
   }
 });
+
+test("widget interaction coordinator does not expose a trash target for non-removable rooms", () => {
+  const previousDocument = globalThis.document;
+  globalThis.document = {
+    createElement: () => ({
+      dataset: {}, setAttribute() {}, append() {}, appendChild() {},
+      classList: { add() {} }, style: {},
+    }),
+    createElementNS: () => ({
+      dataset: {}, setAttribute() {}, append() {}, appendChild() {},
+      classList: { add() {} }, style: {},
+    }),
+  };
+  const editButton = {
+    hidden: false, dataset: {}, setAttribute() {}, append() {}, replaceChildren() {},
+  };
+  const addButton = {
+    hidden: false,
+    dataset: {},
+    classList: { remove() {} },
+    setAttribute() {},
+    replaceChildren() {},
+  };
+  const host = {
+    _isEditing: true,
+    _widgets: [],
+    dataset: { layout: "desktop" },
+    shadowRoot: {
+      querySelector(selector) {
+        if (selector === ".mha-primary-edit-button") return editButton;
+        if (selector === ".mha-add-widget-button") return addButton;
+        return null;
+      },
+      querySelectorAll: () => [],
+    },
+    classList: {
+      toggle() {},
+      remove() {},
+      contains: token => token === "is-widget-dragging",
+    },
+    _syncPageCreatorDom() {},
+    _syncWidgetConfigDom() {},
+    _canAddWidgetToActivePage: () => false,
+    _canRemoveWidgetFromActivePage: () => false,
+  };
+
+  try {
+    createWidgetInteractionSurfaceCoordinator(host).syncEditModeDom();
+    assert.equal(addButton.hidden, true);
+    assert.equal(addButton.dataset.dragDelete, "false");
+  } finally {
+    globalThis.document = previousDocument;
+  }
+});

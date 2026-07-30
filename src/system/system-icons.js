@@ -10,6 +10,8 @@ export const SYSTEM_ICONS = Object.freeze({
   edit: "pencil",
   settings: "settings",
   delete: "trash",
+  show: "eye",
+  hide: "eye-off",
 });
 
 const SYSTEM_ICON_ALIASES = Object.freeze({
@@ -21,6 +23,8 @@ const SYSTEM_ICON_ALIASES = Object.freeze({
   remove: "close",
   pencil: "edit",
   gear: "settings",
+  visibility: "show",
+  "visibility-off": "hide",
 });
 
 export function getSystemIcon(name = "") {

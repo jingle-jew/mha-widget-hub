@@ -160,6 +160,21 @@
   justify-content: stretch;
 }
 
+.mha-overview-room-grid.mha-grid {
+  --mha-active-grid-units: var(--mha-overview-room-columns);
+  --mha-active-grid-rows: 100;
+  --mha-grid-column-size: var(--mha-overview-room-unit);
+  --mha-grid-row-size: var(--mha-overview-room-unit);
+  inline-size: 100%;
+  block-size: auto;
+  max-block-size: none;
+  padding: 0 !important;
+  grid-template-columns: repeat(var(--mha-overview-room-columns), minmax(0, 1fr));
+  grid-template-rows: none;
+  grid-auto-rows: var(--mha-overview-room-unit);
+  justify-content: stretch;
+}
+
 :host(.is-editing[data-overview-device-editing="true"])
   .mha-overview-section--rooms .mha-widget {
   animation: none !important;
@@ -184,55 +199,22 @@
   outline-offset: -2px;
 }
 
-.mha-overview-widget.is-overview-editing {
-  isolation: isolate;
-}
-
-.mha-overview-widget.is-overview-editing > [data-widget-component] {
-  pointer-events: none;
-  opacity: .58;
-}
-
 .mha-overview-widget[data-overview-hidden="true"] > [data-widget-component] {
   opacity: .28;
 }
 
-.mha-overview-item-tools {
-  position: absolute;
-  inset: clamp(.35rem, 1cqi, .55rem);
-  z-index: 12;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(.25rem, .8cqi, .4rem);
-  place-content: center;
-  border-radius: calc(var(--mha-widget-radius) - .2rem);
-  background: color-mix(in srgb, var(--mha-control-surface) 82%, transparent);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
+.mha-overview-room-visibility-button.mha-system-button {
+  --mha-system-button-size: var(--mha-control-height);
+  --mha-system-button-icon-size: 1rem;
+  --mha-system-button-bg: var(--mha-edit-control-bg, rgba(20, 22, 30, .96));
+  --mha-system-button-color: var(--mha-edit-control-color, #fff);
+  --mha-system-button-border: var(--mha-edit-control-border, rgba(255,255,255,.22));
 }
 
-.mha-overview-item-tool {
-  box-sizing: border-box;
-  display: grid;
-  place-items: center;
-  min-inline-size: 0;
-  min-block-size: 2rem;
-  padding: .25rem;
-  border: 1px solid var(--mha-widget-border);
-  border-radius: var(--mha-radius-md, .75rem);
-  background: var(--mha-control-surface);
-  color: var(--mha-text-primary);
-  cursor: pointer;
-}
-
-.mha-overview-item-tool:disabled {
-  opacity: .32;
-  cursor: default;
-}
-
-.mha-overview-item-tool .mha-icon-symbol {
-  inline-size: 1.05rem;
-  block-size: 1.05rem;
+:host(.is-editing) .mha-overview-widget.is-move-target
+  .mha-overview-room-visibility-button {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .mha-overview-empty {

@@ -57,6 +57,7 @@ export function createHubRuntimeDefaults() {
     _newPageName: "",
     _newPageIcon: "grid",
     _mediaPageSettingsOpen: false,
+    _overviewEditContext: null,
     _dockPosition: "left",
     _hideHaSidebar: false,
     _showDockLabels: false,

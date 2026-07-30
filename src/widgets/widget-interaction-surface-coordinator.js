@@ -52,7 +52,8 @@ export function createWidgetInteractionSurfaceCoordinator(host) {
     const add = host.shadowRoot.querySelector(".mha-add-widget-button");
     if (add) {
       const isDraggingWidget = Boolean(host.classList?.contains?.("is-widget-dragging"));
-      const showDeleteTarget = host._isEditing && isDraggingWidget;
+      const canRemoveWidget = host._canRemoveWidgetFromActivePage?.() !== false;
+      const showDeleteTarget = host._isEditing && isDraggingWidget && canRemoveWidget;
       const canAddWidget = host._canAddWidgetToActivePage?.() !== false;
       const label = showDeleteTarget
         ? t("common.delete", "Delete")

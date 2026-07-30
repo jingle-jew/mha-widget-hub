@@ -24,6 +24,10 @@ const hostSource = readFileSync(
   new URL("../mha-widget-hub.js", import.meta.url),
   "utf8",
 );
+const interactionSource = readFileSync(
+  new URL("../src/widgets/widget-interaction-surface-coordinator.js", import.meta.url),
+  "utf8",
+);
 
 test("overview owns a specialized 6 + 4 layout with independent section scrolling", () => {
   assert.match(pageStyles, /grid-template-columns:\s*minmax\(0, 6fr\) minmax\(0, 4fr\)/);
@@ -34,6 +38,7 @@ test("overview owns a specialized 6 + 4 layout with independent section scrollin
     /\.mha-overview-section\s*\{[^}]*border:\s*0[^}]*background:\s*transparent[^}]*box-shadow:\s*none[^}]*-webkit-backdrop-filter:\s*none[^}]*backdrop-filter:\s*none/s,
   );
   assert.match(pageSource, /if \(editing\) grid\.classList\.add\("mha-grid"\)/);
+  assert.match(pageStyles, /\.mha-overview-room-grid\.mha-grid\s*\{[^}]*--mha-active-grid-units:\s*var\(--mha-overview-room-columns\)/s);
   assert.match(styleManifest, /styles\/pages\/overview-page\.css/);
 });
 
@@ -69,8 +74,8 @@ test("overview keeps HA child updates and local editing isolated", () => {
   assert.match(pageSource, /interactive:\s*!isEditing/);
   assert.match(pageStyles, /data-active-page-type="overview"[^}]*\.mha-primary-edit-button/s);
   assert.match(pageStyles, /data-active-page-type="overview"[^}]*\.mha-add-widget-button/s);
-  assert.match(hostSource, /overview-devices:\$\{contextId\}/);
-  assert.match(hostSource, /_overviewDeviceEditContext\.persistWidgets\(this\._widgets\)/);
+  assert.match(hostSource, /`\$\{pageId\}:\$\{scope\}:\$\{contextId\}`/);
+  assert.match(hostSource, /_overviewEditContext\.persistWidgets\(this\._widgets\)/);
   assert.match(pageSource, /headerAction:\s*controller\.editingSection === "devices"/);
   assert.match(pageSource, /mha-add-widget-button mha-overview-header-add-button/);
   assert.match(
@@ -81,6 +86,17 @@ test("overview keeps HA child updates and local editing isolated", () => {
     pageStyles,
     /not\(\[data-layout="mobile"\]\)[^}]*mha-main-edit-button\.mha-add-widget-button[\s\S]*display:\s*none\s*!important/,
   );
+});
+
+test("overview rooms reuse Grid positioning with a system hide/show action", () => {
+  assert.match(pageSource, /section:\s*"rooms"[\s\S]*scope:\s*"overview-rooms"[\s\S]*allowAdd:\s*false[\s\S]*allowRemove:\s*false/);
+  assert.match(pageSource, /createEditableWidgetElement\(widget,\s*\{[\s\S]*units:\s*gridUnits[\s\S]*position:\s*positions\?\.\[widget\.id\]/);
+  assert.match(pageSource, /appendRoomVisibilityButton\(shell,\s*\{/);
+  assert.match(pageSource, /createSystemIconButton\(\{[\s\S]*icon:\s*hidden\s*\?\s*"show"\s*:\s*"hide"/);
+  assert.match(pageSource, /getWidgetPositions\(\{[\s\S]*scope:\s*"overview-rooms"[\s\S]*units:\s*gridUnits/);
+  assert.match(interactionSource, /canRemoveWidgetFromActivePage\?\.\(\)\s*!==\s*false/);
+  assert.doesNotMatch(pageSource, /appendLocalEditor/);
+  assert.doesNotMatch(pageSource, /mha-overview-item-tool/);
 });
 
 test("the global HA update contract reaches overview widgets rendered inside the sheet", () => {
