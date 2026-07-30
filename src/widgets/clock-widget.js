@@ -200,11 +200,16 @@ function createDigitalWeatherClock(widget = {}, now = new Date(), {
   weather.dataset.weatherText = "";
 
   clock.append(time, date, weather);
-  clock.__mhaUpdateFromHass = nextHass => {
-    const model = buildWeatherModel(nextHass, widget, entityVisibilityConfig);
+  clock.__mhaUpdateFromHass = (
+    nextHass,
+    nextWidget = widget,
+    nextEntityVisibilityConfig = entityVisibilityConfig,
+  ) => {
+    const model = buildWeatherModel(nextHass, nextWidget, nextEntityVisibilityConfig);
     weather.dataset.weatherText = getClockWeatherText(model);
     clock.dataset.weatherAllowed = String(model.entityAllowed);
     clock.dataset.weatherAvailable = String(model.entityAvailable);
+    clock.dataset.weatherEntityId = String(model.entityId || "");
     updateClockWidget(clock, "digital-weather");
   };
   clock.__mhaDestroy = () => {
@@ -322,7 +327,9 @@ export const CLOCK_WIDGET_DEFINITION = Object.freeze({
   shell: Object.freeze({
     configureMode: (widget = {}) => (widget.variant === "digital-weather" ? "config" : "variant"),
   }),
-  placementFlow: "direct",
+  placementFlow: (widget = {}) => (
+    widget.variant === "digital-weather" ? "configure-first" : "direct"
+  ),
   variants: [
     variant("digital", "Digital", 2, 2),
     variant("digital-weather", "Digital weather", 2, 2),

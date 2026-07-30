@@ -1,7 +1,10 @@
 import test, { beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
 
-import { createScreensaver } from "../src/screensaver/screensaver.js";
+import {
+  createScreensaver,
+  updateScreensaverClockVariant,
+} from "../src/screensaver/screensaver.js";
 import { installDeterministicI18n } from "../tools/i18n-deterministic.mjs";
 
 installDeterministicI18n(beforeEach);
@@ -116,6 +119,50 @@ test("screensaver now bar renders dynamic tile text without i18n keys", () => {
   assert.ok(subtitle);
   assert.equal(title.textContent, "Ocean Drive");
   assert.equal(subtitle.textContent, "Duke Dumont");
+});
+
+test("screensaver digital weather clock uses and refreshes the Now Bar weather entity", () => {
+  const hass = {
+    config: { unit_system: { temperature: "°C" } },
+    states: {
+      "weather.home": {
+        entity_id: "weather.home",
+        state: "sunny",
+        attributes: {
+          friendly_name: "Home",
+          temperature: 22,
+          temperature_unit: "°C",
+        },
+      },
+    },
+  };
+  const screensaver = createScreensaver({
+    isVisible: true,
+    showNowBar: false,
+    clockVariant: "digital-weather",
+    hass,
+    weatherEntityId: "weather.home",
+  });
+
+  assert.equal(
+    screensaver.querySelector(".mha-clock-weather")?.textContent,
+    "22°C · Sunny",
+  );
+  assert.equal(
+    screensaver.querySelector(".mha-screensaver-clock-region")?.dataset.weatherEntityId,
+    "weather.home",
+  );
+
+  hass.states["weather.home"].attributes.temperature = 23;
+  assert.equal(updateScreensaverClockVariant(
+    screensaver,
+    "digital-weather",
+    { hass, weatherEntityId: "weather.home" },
+  ), false);
+  assert.equal(
+    screensaver.querySelector(".mha-clock-weather")?.textContent,
+    "23°C · Sunny",
+  );
 });
 
 test("screensaver now bar calendar fallback stays a calendar tile", () => {

@@ -111,6 +111,41 @@ test("widget manager can open directly on a requested category", async () => {
   assert.equal(state.widgetManagerCategory, "media");
 });
 
+test("digital weather clock opens weather configuration before placement", async () => {
+  const { coordinator, state } = await createHarness({
+    state: {
+      widgetManagerOpen: true,
+      widgetManagerCategory: "utilities",
+      hass: {
+        states: {
+          "weather.home": {
+            entity_id: "weather.home",
+            state: "sunny",
+            attributes: { friendly_name: "Home" },
+          },
+        },
+        user: { name: "Test" },
+        locale: { language: "en" },
+      },
+    },
+  });
+
+  coordinator.beginWidgetPlacement({
+    kind: "clock",
+    category: "utilities",
+    variant: "digital-weather",
+    label: "Digital weather",
+    size: { w: 2, h: 2 },
+  });
+
+  assert.equal(state.widgetManagerOpen, false);
+  assert.equal(state.pendingWidgetPlacement, null);
+  assert.equal(state.widgetConfigSession?.mode, "create");
+  assert.equal(state.widgetConfigSession?.configType, "weather");
+  assert.equal(state.widgetConfigSession?.widget.variant, "digital-weather");
+  assert.equal(state.widgetConfigSession?.draft.entityId, "weather.home");
+});
+
 test("weather pages open a single-category weather widget manager", async () => {
   const { coordinator, state } = await createHarness({
     state: {

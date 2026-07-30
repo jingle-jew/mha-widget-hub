@@ -8,6 +8,7 @@ import {
   getNowBarEntityOptions,
   normalizeCalendarEvents,
   normalizeNowBarConfig,
+  resolveNowBarWeatherEntity,
 } from "../src/screensaver/nowbar-data.js";
 
 function entity(entityId, state, attributes = {}) {
@@ -162,6 +163,23 @@ test("now bar tiles use selected Home Assistant media, weather and light states"
     icon: "music",
     category: "media_player",
   });
+});
+
+test("now bar weather source prefers the first available selected entity", () => {
+  const hass = {
+    states: {
+      "weather.unavailable": entity("weather.unavailable", "unavailable"),
+      "weather.home": entity("weather.home", "sunny"),
+    },
+  };
+  const config = {
+    entities: {
+      weather: ["weather.unavailable", "weather.home"],
+    },
+  };
+
+  assert.equal(resolveNowBarWeatherEntity(hass, config)?.entity_id, "weather.home");
+  assert.equal(buildNowBarTiles({ hass, config })[1]?.title, "Home");
 });
 
 test("now bar summarizes lit rooms without double-counting lights in the same area", () => {

@@ -59,6 +59,9 @@
     --mha-ios-raw-liquid-nowbar-surface,
     var(--mha-surface-primary)
   );
+  --mha-shell-nowbar-wallpaper-tint: var(--mha-ios-raw-liquid-nowbar-wallpaper-tint);
+  --mha-shell-nowbar-wallpaper-blur: var(--mha-ios-raw-liquid-nowbar-wallpaper-blur);
+  --mha-shell-nowbar-wallpaper-saturation: var(--mha-ios-raw-liquid-nowbar-wallpaper-saturation);
   --mha-shell-nowbar-icon-surface: var(--mha-ios-raw-liquid-nowbar-icon-surface);
   --mha-shell-nowbar-icon-color: var(--mha-ios-raw-liquid-nowbar-icon-color);
   --mha-shell-nowbar-icon-border: var(--mha-ios-raw-liquid-nowbar-icon-border);

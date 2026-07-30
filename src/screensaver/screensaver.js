@@ -14,6 +14,17 @@ import { createWeatherIcon } from "../widgets/weather-icons.js";
 
 export const CLOCK_VARIANTS = ["none", ...CLOCK_WIDGET_VARIANTS];
 
+const NOWBAR_ACTIVE_CHANGE_EVENT = "mha-nowbar-active-change";
+const NOWBAR_WALLPAPER_CLIP_CLASS = "mha-screensaver-nowbar-wallpaper-clip";
+const NOWBAR_WALLPAPER_SAMPLE_CLASS = "mha-screensaver-nowbar-wallpaper-sample";
+const BACKGROUND_SAMPLE_PROPERTIES = Object.freeze([
+  "background-color",
+  "background-image",
+  "background-position",
+  "background-repeat",
+  "background-size",
+]);
+
 export function normalizeClockVariant(value = "digital") {
   return CLOCK_VARIANTS.includes(value) ? value : "digital";
 }
@@ -126,7 +137,11 @@ function createAnalogClock(now = new Date()) {
   return wrap;
 }
 
-function createClockContent(variant = "digital") {
+function createClockContent(variant = "digital", {
+  hass,
+  entityVisibilityConfig,
+  weatherEntityId = "",
+} = {}) {
   const normalized = normalizeClockVariant(variant);
 
   if (normalized === "none") {
@@ -140,15 +155,26 @@ function createClockContent(variant = "digital") {
     variant: normalizeClockWidgetVariant(normalized),
     className: "mha-screensaver-clock",
     screensaver: true,
+    widget: {
+      kind: "clock",
+      type: "clock",
+      variant: normalizeClockWidgetVariant(normalized),
+      entityId: String(weatherEntityId || ""),
+    },
+    hass,
+    entityVisibilityConfig,
   });
 }
 
-function createClock(variant = "digital") {
+function createClock(variant = "digital", context = {}) {
   const normalized = normalizeClockVariant(variant);
   const region = document.createElement("section");
   region.className = "mha-screensaver-clock-region";
   region.dataset.clockVariant = normalized;
   region.dataset.clockHidden = String(normalized === "none");
+  region.dataset.weatherEntityId = normalized === "digital-weather"
+    ? String(context.weatherEntityId || "")
+    : "";
   region.tabIndex = -1;
   region.setAttribute("role", "presentation");
   region.setAttribute("aria-label", t("settings.screensaverClock", "Screensaver clock"));
@@ -160,7 +186,7 @@ function createClock(variant = "digital") {
   layer.className = "mha-screensaver-clock-layer mha-screensaver-clock-layer--current";
   layer.dataset.clockVariant = normalized;
   layer.dataset.clockHidden = String(normalized === "none");
-  layer.append(createClockContent(normalized));
+  layer.append(createClockContent(normalized, context));
 
   stage.append(layer);
   region.append(stage);
@@ -318,6 +344,82 @@ function createNowBarTile(item, index) {
   content.append(title, subtitle);
   tile.append(visual, content);
   return tile;
+}
+
+function getScreensaverBackground(root) {
+  const treeRoot = root?.getRootNode?.();
+  if (!treeRoot || treeRoot === root) return null;
+
+  const directBackground = [...(treeRoot.children || [])]
+    .find(node => node?.classList?.contains?.("mha-background"));
+  return directBackground || treeRoot.querySelector?.(".mha-background") || null;
+}
+
+function removeNowBarWallpaperSamples(root) {
+  const tiles = root?.querySelectorAll?.(".mha-screensaver-nowbar-tile") || [];
+  [...tiles].forEach((tile) => {
+    tile.querySelector?.(`.${NOWBAR_WALLPAPER_CLIP_CLASS}`)?.remove?.();
+    tile.querySelector?.(`.${NOWBAR_WALLPAPER_SAMPLE_CLASS}`)?.remove?.();
+    delete tile.dataset.wallpaperSampleReady;
+  });
+}
+
+function createNowBarWallpaperSample(background) {
+  const clip = document.createElement("div");
+  clip.className = NOWBAR_WALLPAPER_CLIP_CLASS;
+  clip.setAttribute("aria-hidden", "true");
+
+  const sample = document.createElement("div");
+  sample.className = NOWBAR_WALLPAPER_SAMPLE_CLASS;
+
+  [...(background?.childNodes || [])].forEach((child) => {
+    if (typeof child?.cloneNode === "function") sample.append(child.cloneNode(true));
+  });
+
+  const computedStyle = globalThis.getComputedStyle?.(background);
+  if (computedStyle?.getPropertyValue) {
+    BACKGROUND_SAMPLE_PROPERTIES.forEach((property) => {
+      sample.style.setProperty(property, computedStyle.getPropertyValue(property));
+    });
+  }
+
+  [sample, ...(sample.querySelectorAll?.("*") || [])].forEach((node) => {
+    node.style?.setProperty?.("animation", "none");
+    node.style?.setProperty?.("transition", "none");
+    node.style?.setProperty?.("pointer-events", "none");
+  });
+
+  clip.append(sample);
+  return { clip, sample };
+}
+
+export function syncScreensaverNowBarWallpaperSample(root) {
+  const treeRoot = root?.getRootNode?.();
+  const host = treeRoot?.host;
+  const background = getScreensaverBackground(root);
+  const tiles = [...(root?.querySelectorAll?.(".mha-screensaver-nowbar-tile") || [])];
+
+  removeNowBarWallpaperSamples(root);
+  if (host?.dataset?.themeStyle !== "ios" || !background || !tiles.length) return false;
+
+  const backgroundRect = background.getBoundingClientRect?.();
+  if (!backgroundRect?.width || !backgroundRect?.height) return false;
+
+  let synced = false;
+  tiles.forEach((tile) => {
+    const tileRect = tile.getBoundingClientRect?.();
+    if (!tileRect?.width || !tileRect?.height) return;
+
+    const { clip, sample } = createNowBarWallpaperSample(background);
+    sample.style.setProperty("left", `${backgroundRect.left - tileRect.left}px`);
+    sample.style.setProperty("top", `${backgroundRect.top - tileRect.top}px`);
+    sample.style.setProperty("inline-size", `${backgroundRect.width}px`);
+    sample.style.setProperty("block-size", `${backgroundRect.height}px`);
+    tile.prepend(clip);
+    tile.dataset.wallpaperSampleReady = "true";
+    synced = true;
+  });
+  return synced;
 }
 
 function normalizeNowBarTile(item = {}) {
@@ -511,6 +613,13 @@ function createNowBar({ items: enabledItems = {}, tiles = null } = {}) {
       tile.dataset.active = String(relativePosition === 0);
       setTileTransform(tile, position);
     });
+
+    if (progress === 0) {
+      now.dataset.activeIndex = String(activeIndex);
+      if (typeof globalThis.CustomEvent === "function") {
+        now.dispatchEvent?.(new CustomEvent(NOWBAR_ACTIVE_CHANGE_EVENT, { bubbles: true }));
+      }
+    }
   };
 
   const stopNowBarEvent = (event) => {
@@ -696,6 +805,9 @@ export function createScreensaver({
   nowBarItems = {},
   nowBarTiles = null,
   clockVariant = "digital",
+  hass,
+  entityVisibilityConfig,
+  weatherEntityId = "",
   onOpenScreensaverSettings,
   onWake,
 } = {}) {
@@ -727,7 +839,11 @@ export function createScreensaver({
   const shade = document.createElement("div");
   shade.className = "mha-screensaver-shade";
 
-  const clockRegion = createClock(clockVariant);
+  const clockRegion = createClock(clockVariant, {
+    hass,
+    entityVisibilityConfig,
+    weatherEntityId,
+  });
 
   root.append(shade, clockRegion);
 
@@ -763,13 +879,38 @@ export function updateScreensaverState(root, { isVisible = false } = {}) {
   return true;
 }
 
-export function updateScreensaverClockVariant(root, variant = "digital") {
+export function updateScreensaverClockVariant(root, variant = "digital", {
+  hass,
+  entityVisibilityConfig,
+  weatherEntityId = "",
+} = {}) {
   const normalized = normalizeClockVariant(variant);
   if (!root) return false;
-  if (root.dataset.clockVariant === normalized) return false;
 
   const existing = root.querySelector?.(".mha-screensaver-clock-region");
-  const next = createClock(normalized);
+  if (root.dataset.clockVariant === normalized && existing) {
+    if (normalized === "digital-weather") {
+      const normalizedWeatherEntityId = String(weatherEntityId || "");
+      existing.dataset.weatherEntityId = normalizedWeatherEntityId;
+      existing.querySelector?.(".mha-clock-widget")?.__mhaUpdateFromHass?.(
+        hass,
+        {
+          kind: "clock",
+          type: "clock",
+          variant: normalized,
+          entityId: normalizedWeatherEntityId,
+        },
+        entityVisibilityConfig,
+      );
+    }
+    return false;
+  }
+
+  const next = createClock(normalized, {
+    hass,
+    entityVisibilityConfig,
+    weatherEntityId,
+  });
   if (existing) {
     existing.replaceWith(next);
   } else {

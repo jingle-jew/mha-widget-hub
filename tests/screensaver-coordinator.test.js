@@ -156,6 +156,43 @@ test("screensaver coordinator syncs DOM with fetched now bar tiles", async () =>
   assert.equal(syncedProps.nowBarTiles[0].subtitle, "true");
 });
 
+test("screensaver clock receives the same available weather entity as the Now Bar", () => {
+  const hass = {
+    states: {
+      "weather.unavailable": {
+        entity_id: "weather.unavailable",
+        state: "unavailable",
+        attributes: {},
+      },
+      "weather.home": {
+        entity_id: "weather.home",
+        state: "sunny",
+        attributes: { friendly_name: "Home" },
+      },
+    },
+  };
+  const coordinator = createScreensaverCoordinator({
+    getScreensaverState: () => ({
+      nowBar: true,
+      nowBarItems: { weather: true },
+      clockVariant: "digital-weather",
+    }),
+    getIsVisible: () => true,
+    getHass: () => hass,
+    getNowBarConfig: () => ({
+      entities: {
+        weather: ["weather.unavailable", "weather.home"],
+      },
+    }),
+  });
+
+  const props = coordinator.buildProps();
+
+  assert.equal(props.weatherEntityId, "weather.home");
+  assert.equal(props.hass, hass);
+  assert.equal(props.nowBarTiles.find(tile => tile.key === "weather")?.title, "Home");
+});
+
 test("visible screensaver sync requests calendar events immediately", async () => {
   let fetchCalls = 0;
   const coordinator = createScreensaverCoordinator({

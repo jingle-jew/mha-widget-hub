@@ -203,6 +203,25 @@
   will-change: transform;
 }
 
+.mha-screensaver-nowbar-wallpaper-clip {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  isolation: isolate;
+  contain: paint;
+  pointer-events: none;
+}
+
+.mha-screensaver-nowbar-wallpaper-sample {
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+  transform: translateZ(0);
+  transform-origin: center;
+}
+
 .mha-screensaver-nowbar-visual,
 .mha-screensaver-nowbar-content {
   position: relative;
@@ -267,6 +286,7 @@
   background: var(--mha-widget-reflection, none);
   opacity: var(--mha-widget-reflection-opacity, 0);
   mix-blend-mode: screen;
+  z-index: 3;
 }
 
 .mha-screensaver-nowbar.is-nowbar-dragging .mha-screensaver-nowbar-tile,

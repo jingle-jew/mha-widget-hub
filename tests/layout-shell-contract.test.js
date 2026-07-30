@@ -224,6 +224,46 @@ test("iOS Now Bar uses a dedicated readable notification surface", () => {
   );
 });
 
+test("iOS Now Bar samples the wallpaper without filtering stacked tiles", () => {
+  const baseSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "screensaver", "screensaver.css"),
+    "utf8",
+  );
+  const contractSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "screensaver", "screensaver-contract.css"),
+    "utf8",
+  );
+  const mapSource = fs.readFileSync(
+    path.join(THEME_ROOT, "ios-surface-map.css"),
+    "utf8",
+  );
+
+  assert.match(
+    baseSource,
+    /\.mha-screensaver-nowbar-wallpaper-clip\s*\{[\s\S]*position:\s*absolute;[\s\S]*border-radius:\s*inherit;[\s\S]*overflow:\s*hidden;[\s\S]*contain:\s*paint;/,
+  );
+  assert.match(
+    baseSource,
+    /\.mha-screensaver-nowbar-wallpaper-sample\s*\{[\s\S]*position:\s*absolute;[\s\S]*z-index:\s*0;/,
+  );
+  assert.match(
+    contractSource,
+    /:host\(\[data-theme-style="ios"\]\) \.mha-screensaver-nowbar-tile\s*\{[\s\S]*-webkit-backdrop-filter:\s*none;[\s\S]*backdrop-filter:\s*none;/,
+  );
+  assert.match(
+    contractSource,
+    /\.mha-screensaver-nowbar-tile\[data-wallpaper-sample-ready="true"\]::before\s*\{[\s\S]*background:\s*var\(--mha-shell-nowbar-wallpaper-tint,/,
+  );
+  assert.match(
+    contractSource,
+    /\.mha-screensaver-nowbar-wallpaper-sample\s*\{[\s\S]*blur\(var\(--mha-shell-nowbar-wallpaper-blur,[\s\S]*saturate\(var\(--mha-shell-nowbar-wallpaper-saturation,/,
+  );
+  assert.match(
+    mapSource,
+    /--mha-shell-nowbar-wallpaper-tint:\s*var\(--mha-ios-raw-liquid-nowbar-wallpaper-tint\);/,
+  );
+});
+
 test("iOS Now Bar icons use an opaque accent surface with adaptive contrast", () => {
   const contractSource = fs.readFileSync(
     path.join(REPO_ROOT, "styles", "screensaver", "screensaver-contract.css"),

@@ -31,6 +31,8 @@
   --mha-ios-raw-liquid-tile-saturation: var(--mha-ios-raw-liquid-shell-saturation);
   --mha-ios-raw-liquid-control-blur: var(--mha-ios-raw-liquid-shell-blur);
   --mha-ios-raw-liquid-control-saturation: var(--mha-ios-raw-liquid-shell-saturation);
+  --mha-ios-raw-liquid-nowbar-wallpaper-blur: 18px;
+  --mha-ios-raw-liquid-nowbar-wallpaper-saturation: 135%;
   --mha-ios-raw-liquid-nowbar-icon-surface: var(--mha-accent-strong, var(--mha-accent));
   --mha-ios-raw-liquid-nowbar-icon-color: var(--mha-accent-contrast, #fff);
   --mha-ios-raw-liquid-nowbar-icon-border:
@@ -91,6 +93,7 @@
   --mha-ios-raw-liquid-primary-surface: rgba(255,255,255,.32);
   --mha-ios-raw-liquid-widget-surface: rgba(255,255,255,.20);
   --mha-ios-raw-liquid-nowbar-surface: rgba(242,242,247,.86);
+  --mha-ios-raw-liquid-nowbar-wallpaper-tint: rgba(242,242,247,.42);
   --mha-ios-raw-liquid-primary-border: rgba(255,255,255,.54);
   --mha-ios-raw-liquid-primary-shadow: var(--mha-ios-raw-liquid-shell-shadow);
 
@@ -121,6 +124,7 @@
   --mha-ios-raw-liquid-primary-surface: rgba(255,255,255,.12);
   --mha-ios-raw-liquid-widget-surface: rgba(255,255,255,.07);
   --mha-ios-raw-liquid-nowbar-surface: rgba(44,44,46,.88);
+  --mha-ios-raw-liquid-nowbar-wallpaper-tint: rgba(44,44,46,.48);
   --mha-ios-raw-liquid-primary-border: rgba(235,243,255,.28);
   --mha-ios-raw-liquid-primary-shadow: var(--mha-ios-raw-liquid-shell-shadow);
 

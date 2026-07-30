@@ -8,6 +8,24 @@ appartiennent à `AGENTS.md`.
 
 ## Décisions et raisons
 
+### 2026-07-29 — Configurer l’horloge météo et partager la source du screensaver
+
+- **Statut :** confirmé.
+- **Décision :** la variante `clock/digital-weather` suit un flux
+  `configure-first` lorsqu’elle est choisie dans le gestionnaire, alors que les
+  autres variantes d’horloge restent en placement direct. Sur le screensaver,
+  cette même variante ne possède ni réglage ni stockage météo propre : elle
+  reçoit l’entité effectivement utilisée par la Now Bar, soit la première
+  entité météo sélectionnée encore disponible, et se rafraîchit sur les mises à
+  jour Home Assistant sans reconstruire l’horloge.
+- **Pourquoi :** le contrat déclarait déjà cette variante comme configurable,
+  mais son ancien flux `direct` contournait le popup. Le composant partagé du
+  screensaver était par ailleurs créé sans `hass` ni `entityId`, ce qui rendait
+  systématiquement sa ligne météo vide.
+- **Conséquence :** ajouter l’horloge numérique météo ouvre le sélecteur météo;
+  choisir ou modifier les entités météo de la Now Bar pilote aussi l’horloge du
+  screensaver. Aucune préférence supplémentaire n’est introduite.
+
 ### 2026-07-29 — Présenter la Now Bar comme une notification du thème
 
 - **Statut :** confirmé.
@@ -15,14 +33,20 @@ appartiennent à `AGENTS.md`.
   notifications de leur thème de référence : capsules pour OneUI et Material
   You, rectangle arrondi historique pour iOS. Chaque tuile place à gauche un
   visuel dans le composant `.mha-icon`, afin d'hériter sans réglage propre de la
-  forme d'icône globale sélectionnée dans Apparence. En iOS, la Now Bar utilise
-  le rôle dédié `--mha-shell-nowbar-surface`, plus dense que la surface des
-  widgets génériques en clair comme en sombre, afin de rester lisible sur le
-  fond d'écran tout en conservant blur et reflets Liquid Glass. Cette surface
-  est uniforme, sans dégradé propre à la tuile. Ses visuels hors artwork
-  utilisent aussi une surface d'accent opaque et la couleur de contraste de la
-  palette; les glyphes météo deviennent monochromes dans ce contexte afin que
-  toutes leurs composantes restent lisibles sur cette bulle.
+  forme d'icône globale sélectionnée dans Apparence. En iOS, chaque tuile
+  contient un échantillon visuel isolé de la vraie `.mha-background`, aligné sur
+  sa position à l'écran, puis flouté et recouvert d'une teinte translucide.
+  L'échantillon reste dans un masque intermédiaire qui hérite du rayon de la
+  tuile et isole sa peinture; l'`overflow` de la carte seule ne suffit pas à
+  contenir de façon fiable le filtre composité dans WebKit. Le
+  `backdrop-filter` direct est désactivé sur les tuiles iOS : une tuile ne doit
+  jamais intégrer les autres cartes empilées dans son flou. Le rôle dense
+  `--mha-shell-nowbar-surface` reste le repli avant que l'échantillon soit prêt;
+  `--mha-shell-nowbar-wallpaper-tint` calibre ensuite la lisibilité sans ajouter
+  de dégradé propre à la tuile. Les visuels hors artwork utilisent une surface
+  d'accent opaque et la couleur de contraste de la palette; les glyphes météo
+  deviennent monochromes dans ce contexte afin que toutes leurs composantes
+  restent lisibles sur cette bulle.
 - **Contenu :** Média montre l'artwork uniquement pendant une lecture active et
   lorsqu'une image valide existe, sinon une icône générique de musique;
   Météo montre le glyphe de la condition courante; Calendrier compose le jour et

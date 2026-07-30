@@ -44,7 +44,8 @@ test("widget capabilities and flows are read from the widget contract", () => {
   assert.equal(getWidgetShellBehavior({ kind: "scenes" }).configureMode, "variant");
   assert.equal(getWidgetPlacementFlow({ kind: "scenes" }), "slot-config-first");
   assert.equal(getWidgetPlacementFlow({ kind: "button" }), "configure-first");
-  assert.equal(getWidgetPlacementFlow({ kind: "clock" }), "direct");
+  assert.equal(getWidgetPlacementFlow({ kind: "clock", variant: "digital" }), "direct");
+  assert.equal(getWidgetPlacementFlow({ kind: "clock", variant: "digital-weather" }), "configure-first");
   assert.equal(getWidgetPlacementFlow({ kind: "weather-metric", metricKey: "summary" }), "configure-first");
   assert.equal(getWidgetPlacementFlow({ kind: "weather-metric", metricKey: "humidity" }), "direct");
   assert.equal(getWidgetCapabilities({ kind: "weather", displayMode: "current" }).resizable, true);

@@ -188,8 +188,17 @@ function getSelectedAvailableEntities(hass, ids, domain) {
     .filter(entity => entity && getEntityDomain(entity.entity_id) === domain);
 }
 
+export function resolveNowBarWeatherEntity(hass, config = {}) {
+  const normalized = normalizeNowBarConfig(config);
+  const selected = getSelectedAvailableEntities(
+    hass,
+    normalized.entities.weather,
+    "weather",
+  );
+  return selected.find(isEntityAvailable) || selected[0] || null;
+}
+
 function buildWeatherTile(hass, config) {
-  const selected = getSelectedAvailableEntities(hass, config.entities.weather, "weather");
   if (!config.entities.weather.length) {
     return {
       key: "weather",
@@ -198,7 +207,7 @@ function buildWeatherTile(hass, config) {
     };
   }
 
-  const entity = selected.find(isEntityAvailable) || selected[0];
+  const entity = resolveNowBarWeatherEntity(hass, config);
   if (!entity) {
     return {
       key: "weather",

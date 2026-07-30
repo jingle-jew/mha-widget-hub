@@ -51,6 +51,30 @@
 
 :host([data-theme-style="ios"]) .mha-screensaver-nowbar-tile {
   border-radius: clamp(1.35rem, 4vw, 2rem);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+:host([data-theme-style="ios"])
+  .mha-screensaver-nowbar-tile[data-wallpaper-sample-ready="true"] {
+  background: transparent;
+}
+
+:host([data-theme-style="ios"])
+  .mha-screensaver-nowbar-tile[data-wallpaper-sample-ready="true"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  pointer-events: none;
+  background: var(--mha-shell-nowbar-wallpaper-tint, rgba(242,242,247,.42));
+}
+
+:host([data-theme-style="ios"]) .mha-screensaver-nowbar-wallpaper-sample {
+  filter:
+    blur(var(--mha-shell-nowbar-wallpaper-blur, 18px))
+    saturate(var(--mha-shell-nowbar-wallpaper-saturation, 135%));
 }
 
 :host([data-theme-style="ios"])

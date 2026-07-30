@@ -2,6 +2,7 @@ import {
   buildNowBarTiles,
   fetchNowBarCalendarEvents,
   normalizeNowBarConfig,
+  resolveNowBarWeatherEntity,
 } from "./nowbar-data.js";
 import { discoverOverviewAreas } from "../ha/area-discovery.js";
 import { getNowBarCalendarSignature } from "./screensaver-props.js";
@@ -123,10 +124,16 @@ export class ScreensaverCoordinator {
   }
 
   buildProps() {
+    const hass = this.getHass();
+    const nowBarConfig = this.getNowBarConfig();
+    const weatherEntity = resolveNowBarWeatherEntity(hass, nowBarConfig);
     return {
       isVisible: this.getIsVisible(),
       screensaverState: this.getScreensaverState(),
       nowBarTiles: this.getNowBarTiles(),
+      hass,
+      entityVisibilityConfig: this.getVisibilityConfig(),
+      weatherEntityId: weatherEntity?.entity_id || "",
       onClockVariantChange: this.onClockVariantChange,
       onOpenScreensaverSettings: this.onOpenScreensaverSettings,
       onWake: this.onWake,

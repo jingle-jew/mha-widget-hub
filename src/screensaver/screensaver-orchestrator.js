@@ -1,5 +1,6 @@
 import {
   createScreensaver,
+  syncScreensaverNowBarWallpaperSample,
   updateScreensaverClockVariant,
   updateScreensaverNowBar,
   updateScreensaverState,
@@ -7,6 +8,8 @@ import {
 import { buildScreensaverViewState } from "./screensaver-props.js";
 
 const NOWBAR_INTERACTION_GUARD = "__mhaNowBarInteractionGuard";
+const NOWBAR_WALLPAPER_SAMPLE_SYNC = "__mhaNowBarWallpaperSampleSync";
+const NOWBAR_WALLPAPER_SAMPLE_RESIZE_OBSERVER = "__mhaNowBarWallpaperSampleResizeObserver";
 const NOWBAR_WHEEL_COOLDOWN = 820;
 const NOWBAR_STACK_POSITIONS = Object.freeze([
   { y: 0, scale: 1, z: 4 },
@@ -89,10 +92,51 @@ function installNowBarInteractionGuard(root) {
   }, { capture: true });
 }
 
+function scheduleNowBarWallpaperSampleSync(root) {
+  if (!root || root[NOWBAR_WALLPAPER_SAMPLE_SYNC]) return;
+
+  const run = () => {
+    root[NOWBAR_WALLPAPER_SAMPLE_SYNC] = 0;
+    syncScreensaverNowBarWallpaperSample(root);
+  };
+
+  if (typeof globalThis.requestAnimationFrame === "function") {
+    root[NOWBAR_WALLPAPER_SAMPLE_SYNC] = globalThis.requestAnimationFrame(run);
+  }
+}
+
+function installNowBarWallpaperSampleSync(root) {
+  if (!root || root[NOWBAR_WALLPAPER_SAMPLE_RESIZE_OBSERVER]) return;
+
+  root.addEventListener("mha-nowbar-active-change", () => {
+    scheduleNowBarWallpaperSampleSync(root);
+  });
+
+  if (typeof globalThis.ResizeObserver === "function") {
+    const observer = new globalThis.ResizeObserver(() => {
+      scheduleNowBarWallpaperSampleSync(root);
+    });
+    observer.observe(root);
+    root[NOWBAR_WALLPAPER_SAMPLE_RESIZE_OBSERVER] = observer;
+  } else {
+    root[NOWBAR_WALLPAPER_SAMPLE_RESIZE_OBSERVER] = true;
+  }
+
+  scheduleNowBarWallpaperSampleSync(root);
+}
+
+function disposeNowBarWallpaperSampleSync(root) {
+  root?.[NOWBAR_WALLPAPER_SAMPLE_RESIZE_OBSERVER]?.disconnect?.();
+  if (root) root[NOWBAR_WALLPAPER_SAMPLE_RESIZE_OBSERVER] = null;
+}
+
 export function buildScreensaverProps({
   isVisible = false,
   screensaverState = {},
   nowBarTiles = [],
+  hass = null,
+  entityVisibilityConfig = null,
+  weatherEntityId = "",
   onClockVariantChange = () => {},
   onOpenScreensaverSettings = () => {},
   onWake = () => {},
@@ -103,6 +147,9 @@ export function buildScreensaverProps({
       screensaverState,
       nowBarTiles,
     }),
+    hass,
+    entityVisibilityConfig,
+    weatherEntityId,
     onClockVariantChange,
     onOpenScreensaverSettings,
     onWake,
@@ -112,6 +159,7 @@ export function buildScreensaverProps({
 export function createScreensaverElement(props = {}) {
   const element = createScreensaver(buildScreensaverProps(props));
   installNowBarInteractionGuard(element);
+  installNowBarWallpaperSampleSync(element);
   return element;
 }
 
@@ -124,22 +172,31 @@ export function syncScreensaverElement({
   if (!existing) {
     const next = createScreensaverElement(props);
     root?.append?.(next);
+    syncScreensaverNowBarWallpaperSample(next);
     return next;
   }
 
   if (force) {
     const next = createScreensaverElement(props);
+    disposeNowBarWallpaperSampleSync(existing);
     existing.replaceWith(next);
+    syncScreensaverNowBarWallpaperSample(next);
     return next;
   }
 
   updateScreensaverState(existing, { isVisible: Boolean(props.isVisible) });
-  updateScreensaverClockVariant(existing, props.screensaverState?.clockVariant);
+  updateScreensaverClockVariant(existing, props.screensaverState?.clockVariant, {
+    hass: props.hass,
+    entityVisibilityConfig: props.entityVisibilityConfig,
+    weatherEntityId: props.weatherEntityId,
+  });
   updateScreensaverNowBar(existing, {
     showNowBar: props.screensaverState?.nowBar,
     nowBarItems: props.screensaverState?.nowBarItems,
     nowBarTiles: props.nowBarTiles,
   });
   installNowBarInteractionGuard(existing);
+  installNowBarWallpaperSampleSync(existing);
+  syncScreensaverNowBarWallpaperSample(existing);
   return existing;
 }
