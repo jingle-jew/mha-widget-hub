@@ -23,6 +23,7 @@ function createHost(stateRef) {
     _getActivityCoordinator: () => ({ read: () => stateRef.value }),
     shadowRoot: { querySelectorAll: () => [component] },
     _screensaverCoordinator: {
+      requestNowBarAreas() {},
       requestNowBarCalendarEvents() {
         screensaverUpdates += 1;
       },

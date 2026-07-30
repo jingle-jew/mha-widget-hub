@@ -97,6 +97,7 @@ export function createBootLifecycleCoordinator(host) {
       host._lastRoutedHass = host._hass;
       host._hassReconcilePending = false;
     }
+    host._screensaverCoordinator.requestNowBarAreas();
     host._screensaverCoordinator.requestNowBarCalendarEvents();
     host._syncScreensaverDom();
     return result;

@@ -103,7 +103,10 @@ test("the global HA update contract reaches overview widgets rendered inside the
         return [overviewRoot, sheetWidget];
       },
     },
-    _screensaverCoordinator: { requestNowBarCalendarEvents() {} },
+    _screensaverCoordinator: {
+      requestNowBarAreas() {},
+      requestNowBarCalendarEvents() {},
+    },
     _syncScreensaverDom() {},
   };
 

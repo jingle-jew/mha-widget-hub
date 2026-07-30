@@ -1,6 +1,7 @@
 import test, { beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import { installDeterministicI18n } from "../tools/i18n-deterministic.mjs";
+import { setLanguage, t } from "../src/i18n/index.js";
 import {
   buildNowBarTiles,
   fetchNowBarCalendarEvents,
@@ -10,6 +11,14 @@ import {
 
 function entity(entityId, state, attributes = {}) {
   return { entity_id: entityId, state, attributes };
+}
+
+function lightArea(id, name, entityIds) {
+  return {
+    id,
+    name,
+    entities: entityIds.map(entityId => ({ entityId, domain: "light" })),
+  };
 }
 
 installDeterministicI18n(beforeEach);
@@ -103,6 +112,10 @@ test("now bar tiles use selected Home Assistant media, weather and light states"
 
   const tiles = buildNowBarTiles({
     hass,
+    areas: [
+      lightArea("kitchen", "Kitchen", ["light.kitchen"]),
+      lightArea("hall", "Hall", ["light.hall"]),
+    ],
     config: {
       entities: {
         media: ["media_player.kitchen", "media_player.living_room"],
@@ -116,11 +129,67 @@ test("now bar tiles use selected Home Assistant media, weather and light states"
   assert.deepEqual(
     tiles.map(tile => [tile.key, tile.title, tile.subtitle]),
     [
-      ["now", "Now Bar", "1 lights on"],
+      ["now", "Now Bar", "Lit room: Kitchen."],
       ["weather", "Home", "22°C · Sunny"],
       ["media", "Ocean Drive", "Duke Dumont"],
     ],
   );
+});
+
+test("now bar summarizes lit rooms without double-counting lights in the same area", () => {
+  const areas = [
+    lightArea("bedroom", "Bedroom", ["light.bedside", "light.ceiling"]),
+    lightArea("hall", "Hall", ["light.hall"]),
+    lightArea("kitchen", "Kitchen", ["light.kitchen"]),
+    lightArea("living", "Living room", ["light.floor", "light.table"]),
+    lightArea("office", "Office", ["light.office"]),
+  ];
+  const hass = {
+    states: Object.fromEntries(areas.flatMap(area => area.entities).map(({ entityId }) => [
+      entityId,
+      entity(entityId, "off"),
+    ])),
+  };
+  const config = {
+    now: { items: ["lightsOn"] },
+    tiles: { now: true, weather: false, calendar: false, media: false },
+  };
+  const subtitle = () => buildNowBarTiles({ hass, areas, config })[0].subtitle;
+
+  assert.equal(subtitle(), "All lights are off.");
+
+  hass.states["light.floor"].state = "on";
+  hass.states["light.table"].state = "on";
+  assert.equal(subtitle(), "Lit room: Living room.");
+
+  hass.states["light.kitchen"].state = "on";
+  assert.equal(subtitle(), "Lit rooms: Kitchen and Living room.");
+
+  hass.states["light.hall"].state = "on";
+  assert.equal(subtitle(), "Lights are on in 3 rooms.");
+
+  hass.states["light.bedside"].state = "on";
+  hass.states["light.office"].state = "on";
+  assert.equal(subtitle(), "All rooms are lit.");
+});
+
+test("now bar exposes the agreed French room-lighting copy", () => {
+  setLanguage("fr");
+
+  assert.equal(t("settings.nowBarData.allLightsOff"), "Toutes les lumières sont éteintes.");
+  assert.equal(
+    t("settings.nowBarData.oneLitRoom", "", { room: "Salon" }),
+    "Pièce éclairée : Salon.",
+  );
+  assert.equal(
+    t("settings.nowBarData.twoLitRooms", "", { first: "Cuisine", second: "Salon" }),
+    "Pièces éclairées : Cuisine et Salon.",
+  );
+  assert.equal(
+    t("settings.nowBarData.litRoomCount", "", { count: 3 }),
+    "Les lumières sont allumées dans 3 pièces.",
+  );
+  assert.equal(t("settings.nowBarData.allRoomsLit"), "Toutes les pièces sont éclairées.");
 });
 
 test("now bar calendar tile uses fetched events and handles empty selections", () => {

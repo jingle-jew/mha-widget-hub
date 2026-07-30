@@ -3,6 +3,38 @@ import test from "node:test";
 
 import { createScreensaverCoordinator } from "../src/screensaver/screensaver-coordinator.js";
 
+test("screensaver coordinator discovers and caches Now Bar areas", async () => {
+  let discoveryCalls = 0;
+  let changedCalls = 0;
+  let currentTime = 1000;
+  const hass = { connection: {}, states: {} };
+  const coordinator = createScreensaverCoordinator({
+    getHass: () => hass,
+    getNowBarConfig: () => ({
+      tiles: { now: true },
+      now: { items: ["lightsOn"] },
+    }),
+    now: () => currentTime,
+    discoverAreas: async () => {
+      discoveryCalls += 1;
+      return { areas: [{ id: "living", name: "Living room", entities: [] }] };
+    },
+    onAreaDataChange: () => {
+      changedCalls += 1;
+    },
+  });
+
+  assert.equal(await coordinator.requestNowBarAreas(), true);
+  assert.equal(await coordinator.requestNowBarAreas(), false);
+  assert.equal(discoveryCalls, 1);
+  assert.equal(changedCalls, 1);
+
+  currentTime += 60001;
+  assert.equal(await coordinator.requestNowBarAreas(), false);
+  assert.equal(discoveryCalls, 2);
+  assert.equal(changedCalls, 1);
+});
+
 test("screensaver coordinator caches calendar fetches by signature and recency", async () => {
   let fetchCalls = 0;
   let currentTime = 1000;

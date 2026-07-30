@@ -1,12 +1,31 @@
 # Mémoire persistante — MHA Widget Hub
 
-Dernière consolidation : 2026-07-28
+Dernière consolidation : 2026-07-29
 
 Ce fichier contient les connaissances durables qui seraient coûteuses à redécouvrir.
 Le code et les tests actuels restent la source de vérité. Les instructions de travail
 appartiennent à `AGENTS.md`.
 
 ## Décisions et raisons
+
+### 2026-07-29 — Résumer l’éclairage de la Now Bar par pièces éclairées
+
+- **Statut :** confirmé.
+- **Décision :** l’élément « Lumières allumées » de la Now Bar ne compte plus
+  les entités `light.*`. Sans ajouter de réglage, il compte les pièces équipées
+  dans lesquelles au moins une lumière autorisée est `on`. Une pièce équipée
+  contient au moins une lumière assignée directement à son aire Home Assistant
+  ou héritant de l’aire de son appareil; les lumières sans aire sont exclues.
+- **Pourquoi :** Home Assistant expose comme `light.*` aussi bien les ampoules
+  physiques que des groupes représentant un luminaire ou une pièce. Compter les
+  entités doublait donc fréquemment la perception de l’éclairage, tandis
+  qu’exclure automatiquement tous les groupes aurait confondu leurs intentions.
+- **Conséquence :** zéro pièce produit « Toutes les lumières sont éteintes. »;
+  une ou deux pièces nomment les pièces; trois pièces ou plus affichent le
+  nombre; lorsque toutes les pièces équipées sont éclairées, la Now Bar affiche
+  « Toutes les pièces sont éclairées. ». La découverte réutilise le cache des
+  registres de `area-discovery.js`, respecte les permissions MHA, se prépare sur
+  les mises à jour Home Assistant et se rafraîchit au plus une fois par minute.
 
 ### 2026-07-28 — Séparer la publication HACS du déploiement de développement
 

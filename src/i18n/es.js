@@ -206,7 +206,12 @@ export const es = Object.freeze({
       rooms: "Estados de habitaciones",
     }),
     nowBarData: Object.freeze({
-      lightsOn: "{count} luces encendidas",
+      allLightsOff: "Todas las luces están apagadas.",
+      oneLitRoom: "Habitación iluminada: {room}.",
+      twoLitRooms: "Habitaciones iluminadas: {first} y {second}.",
+      litRoomCount: "Las luces están encendidas en {count} habitaciones.",
+      allRoomsLit: "Todas las habitaciones están iluminadas.",
+      noLightRooms: "No hay habitaciones con luces configuradas.",
       roomsUnavailable: "Estados de habitaciones no disponibles",
       noNowItems: "No hay elementos Now seleccionados",
       noNowItemsAvailable: "No hay elementos Now disponibles.",

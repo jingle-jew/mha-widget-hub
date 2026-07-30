@@ -86,20 +86,67 @@ export function getNowBarEntityOptions(hass, visibilityConfig) {
   };
 }
 
-function buildNowTile(hass, config) {
+function buildLightRoomSummary(hass, areas) {
+  if (!Array.isArray(areas)) {
+    return t("settings.nowBarData.roomsUnavailable", "Room states unavailable");
+  }
+
+  const equippedRooms = areas
+    .map(area => ({
+      id: String(area?.id || area?.area_id || "").trim(),
+      name: String(area?.name || area?.id || area?.area_id || "").trim(),
+      lights: (Array.isArray(area?.entities) ? area.entities : [])
+        .map(entity => String(entity?.entityId || entity?.entity_id || "").trim())
+        .filter(entityId => getEntityDomain(entityId) === "light"),
+    }))
+    .filter(room => room.id && room.name && room.lights.length > 0);
+
+  if (!equippedRooms.length) {
+    return t(
+      "settings.nowBarData.noLightRooms",
+      "No rooms have configured lights",
+    );
+  }
+
+  const litRooms = equippedRooms
+    .filter(room => room.lights.some(entityId => (
+      normalizeEntityStateValue(hass?.states?.[entityId]?.state) === "on"
+    )))
+    .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
+
+  if (!litRooms.length) {
+    return t("settings.nowBarData.allLightsOff", "All lights are off.");
+  }
+  if (litRooms.length === equippedRooms.length) {
+    return t("settings.nowBarData.allRoomsLit", "All rooms are lit.");
+  }
+  if (litRooms.length === 1) {
+    return t(
+      "settings.nowBarData.oneLitRoom",
+      "Lit room: {room}.",
+      { room: litRooms[0].name },
+    );
+  }
+  if (litRooms.length === 2) {
+    return t(
+      "settings.nowBarData.twoLitRooms",
+      "Lit rooms: {first} and {second}.",
+      { first: litRooms[0].name, second: litRooms[1].name },
+    );
+  }
+  return t(
+    "settings.nowBarData.litRoomCount",
+    "Lights are on in {count} rooms.",
+    { count: litRooms.length },
+  );
+}
+
+function buildNowTile(hass, config, areas) {
   const enabled = new Set(config.now.items);
   const lines = [];
 
   if (enabled.has("lightsOn")) {
-    const lightsOn = Object.values(hass?.states || {})
-      .filter(entity => getEntityDomain(entity?.entity_id) === "light")
-      .filter(entity => normalizeEntityStateValue(entity?.state) === "on")
-      .length;
-    lines.push(t(
-      "settings.nowBarData.lightsOn",
-      "{count} lights on",
-      { count: lightsOn },
-    ));
+    lines.push(buildLightRoomSummary(hass, areas));
   }
 
   if (enabled.has("rooms")) {
@@ -294,10 +341,11 @@ export function buildNowBarTiles({
   hass,
   config = createDefaultNowBarConfig(),
   calendarEvents = {},
+  areas = null,
 } = {}) {
   const normalized = normalizeNowBarConfig(config);
   const builders = {
-    now: () => buildNowTile(hass, normalized),
+    now: () => buildNowTile(hass, normalized, areas),
     weather: () => buildWeatherTile(hass, normalized),
     calendar: () => buildCalendarTile(hass, normalized, calendarEvents),
     media: () => buildMediaTile(hass, normalized),

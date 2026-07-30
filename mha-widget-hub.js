@@ -62,7 +62,7 @@ import { createPlacementController } from "./src/layout/placement-controller.js"
 import { createGridRuntime } from "./src/layout/grid-runtime.js";
 import {normalizeClockVariant,updateScreensaverClock} from "./src/screensaver/screensaver.js";
 import { createScreensaverController } from "./src/screensaver/screensaver-controller.js";
-import { createScreensaverCoordinator } from "./src/screensaver/screensaver-coordinator.js?v=phase9";
+import { createScreensaverCoordinator } from "./src/screensaver/screensaver-coordinator.js?v=phase10";
 import {
   applyHaSidebarMode,
   scheduleHaSidebarReservedWidthSync,
@@ -270,12 +270,14 @@ constructor(){
     getScreensaverState:()=>this._screensaverController.read(),
     getIsVisible:()=>this._getScreensaverVisible(),
     getHass:()=>this._hass,
+    getVisibilityConfig:()=>this._entityVisibilityConfig,
     getNowBarConfig:()=>this._screensaverController.read().nowBarConfig,
     onClockVariantChange:v=>this._applyScreensaverClockVariantFromSettings(v),
     onOpenScreensaverSettings:()=>this._openScreensaverSettings(),
     onWake:()=>this._wakeScreensaver(),
     onSyncVisibilityState:()=>this._syncScreensaverVisibilityState(),
     onCalendarEventsChange:()=>this._syncScreensaverDom(),
+    onAreaDataChange:()=>this._syncScreensaverDom(),
   });
   this._pageUiCoordinator=createPageUiCoordinator({
     getRoot:()=>this.shadowRoot,
