@@ -194,6 +194,18 @@ test("Now Bar notification tiles keep theme geometry and the global icon-shape c
   );
 });
 
+test("screensaver centers its clock and Now Bar inside the Home Assistant content width", () => {
+  const source = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "screensaver", "screensaver.css"),
+    "utf8",
+  );
+
+  assert.match(
+    source,
+    /@media \(min-width: 768px\)\s*\{[\s\S]*?\.mha-screensaver\s*\{[\s\S]*?padding-inline-start:\s*calc\([\s\S]*?var\(--mha-ha-sidebar-reserved-inline-start, 0px\)[\s\S]*?\);/,
+  );
+});
+
 test("OneUI dark panels keep a flat outer frame", () => {
   const themeSource = fs.readFileSync(path.join(THEME_ROOT, "oneui.css"), "utf8");
   const settingsSource = fs.readFileSync(

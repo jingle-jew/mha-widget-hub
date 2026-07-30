@@ -30,6 +30,9 @@ appartiennent à `AGENTS.md`.
 - **Conséquence :** le stylage n'ajoute aucun réglage et ne modifie ni
   l'empilement, ni la navigation, ni les interactions de la Now Bar. Le contrat
   de fiabilité Calendrier restaure uniquement la lecture du prochain événement.
+  Sur tablette et desktop, le voile du screensaver reste plein écran, mais son
+  espace de contenu ajoute à gauche la réserve Home Assistant réellement
+  mesurée afin de centrer l'horloge et la Now Bar dans la zone hors-sidebar.
   Les textes et visuels de repli doivent conserver l'identité sémantique de leur
   clé (`calendar` reste Calendrier, par exemple) et ne doivent jamais
   réintroduire les anciens contenus de démonstration comme une fausse tuile
