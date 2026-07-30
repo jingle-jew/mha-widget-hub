@@ -7,6 +7,7 @@ import {
   normalizePage,
   normalizePages,
 } from "../src/pages/page-model.js";
+import { getLanguage, setLanguage } from "../src/i18n/index.js";
 
 const normalizeWidget = widget => ({
   ...widget,
@@ -69,8 +70,11 @@ test("fallback and active-page lookup remain independent from storage", () => {
   assert.equal(getActivePage([], "missing"), null);
 });
 
-test("default first-launch pages are one grid, one weather page, and one media page", () => {
+test("default first-launch pages are Overview, Weather, and Media in that order", () => {
+  const previousLanguage = getLanguage();
+  setLanguage("en");
   const pages = createDefaultPages();
+  setLanguage(previousLanguage);
 
   assert.deepEqual(
     pages.map(page => ({
@@ -82,11 +86,32 @@ test("default first-launch pages are one grid, one weather page, and one media p
       autoPopulatePending: page.config?.autoPopulatePending === true,
     })),
     [
-      { id: "home", name: "Home", icon: "home", type: "grid", widgets: 0, autoPopulatePending: false },
+      { id: "home", name: "Overview", icon: "home", type: "overview", widgets: 0, autoPopulatePending: false },
       { id: "weather", name: "Weather", icon: "cloud", type: "weather", widgets: 0, autoPopulatePending: true },
       { id: "media", name: "Media Players", icon: "media-player", type: "media-players", widgets: 0, autoPopulatePending: false },
     ],
   );
+  assert.equal(pages[0].config.inactivitySeconds, 15);
+});
+
+test("default first-launch page names follow the active language", () => {
+  const previousLanguage = getLanguage();
+
+  try {
+    setLanguage("fr");
+    assert.deepEqual(
+      createDefaultPages().map(page => page.name),
+      ["Aperçu", "Météo", "Lecteurs média"],
+    );
+
+    setLanguage("es");
+    assert.deepEqual(
+      createDefaultPages().map(page => page.name),
+      ["Vista general", "Clima", "Reproductores multimedia"],
+    );
+  } finally {
+    setLanguage(previousLanguage);
+  }
 });
 
 test("legacy media pages keep the dedicated page type and selected player config", () => {

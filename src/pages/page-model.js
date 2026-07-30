@@ -7,6 +7,7 @@ import {
   normalizePageType,
   PAGE_TYPES,
 } from "./page-types.js?v=media-persistence-v2";
+import { t } from "../i18n/index.js";
 
 function identity(value) {
   return value;
@@ -140,13 +141,15 @@ export function createDefaultPages({ normalizeWidget = identity } = {}) {
   return [
     {
       id: "home",
-      name: "Home",
+      name: t("settings.firstLaunchPageNames.overview", "Overview"),
       icon: "home",
+      type: PAGE_TYPES.OVERVIEW,
+      config: createDefaultPageConfig(PAGE_TYPES.OVERVIEW),
       widgets: [],
     },
     {
       id: "weather",
-      name: "Weather",
+      name: t("settings.firstLaunchPageNames.weather", "Weather"),
       icon: "cloud",
       type: PAGE_TYPES.WEATHER,
       config: {
@@ -157,7 +160,7 @@ export function createDefaultPages({ normalizeWidget = identity } = {}) {
     },
     {
       id: "media",
-      name: "Media Players",
+      name: t("settings.firstLaunchPageNames.media", "Media Players"),
       icon: "media-player",
       type: PAGE_TYPES.MEDIA_PLAYERS,
       config: createDefaultPageConfig(PAGE_TYPES.MEDIA_PLAYERS),

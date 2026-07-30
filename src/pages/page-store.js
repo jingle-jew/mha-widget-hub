@@ -120,14 +120,18 @@ export function migratePageStorage({
       normalizeWidgetForGrid,
     });
     storedPages = createDefaultPages({ normalizeWidget });
-    storedPages[0] = normalizePage(
-      {
-        ...storedPages[0],
-        widgets,
-      },
-      0,
-      { normalizeWidget },
-    );
+    if (widgets.length) {
+      storedPages[0] = normalizePage(
+        {
+          id: "home",
+          name: "Home",
+          icon: "home",
+          widgets,
+        },
+        0,
+        { normalizeWidget },
+      );
+    }
     if (!writeJson(STORAGE_KEYS.gridPages, storedPages)) {
       return { migrated: true, success: false };
     }

@@ -75,6 +75,7 @@ test("missing pages and invalid active ids receive persisted fallbacks", () => {
     const pagesResult = readPages();
     assert.equal(pagesResult.persistenceResult, true);
     assert.equal(pagesResult.pages[0].id, "home");
+    assert.equal(pagesResult.pages[0].type, "overview");
 
     const activeResult = readActivePageId(pagesResult.pages);
     assert.equal(activeResult.persistenceResult, true);
@@ -155,6 +156,7 @@ test("legacy widget storage migrates once into the page model", () => {
     );
     const pages = JSON.parse(storage.getItem(STORAGE_KEYS.gridPages));
     assert.equal(pages[0].id, "home");
+    assert.equal(pages[0].type, undefined);
     assert.deepEqual(
       pages[0].widgets.map(widget => [widget.id, widget.w, widget.h]),
       [["custom", 4, 2], ["default", 2, 2]],

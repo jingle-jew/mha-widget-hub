@@ -284,6 +284,11 @@ export const es = Object.freeze({
       weather: "Clima",
       "media-players": "Medios",
     }),
+    firstLaunchPageNames: Object.freeze({
+      overview: "Vista general",
+      weather: "Clima",
+      media: "Reproductores multimedia",
+    }),
     pageTypeDescriptions: Object.freeze({
       grid: "Una página estándar con widgets MHA.",
       overview: "Explora las habitaciones de Home Assistant y sus dispositivos MHA.",

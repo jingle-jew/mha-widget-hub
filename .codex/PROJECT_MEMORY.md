@@ -8,6 +8,24 @@ appartiennent à `AGENTS.md`.
 
 ## Décisions et raisons
 
+### 2026-07-29 — Initialiser MHA avec Aperçu, Météo et Lecteurs média
+
+- **Statut :** confirmé.
+- **Décision :** lorsqu’aucune page n’est encore persistée, MHA crée dans cet
+  ordre une page `overview`, une page `weather` à peuplement automatique et une
+  page `media-players`. Leurs noms de première ouverture sont localisés :
+  `Overview / Weather / Media Players` en anglais, `Aperçu / Météo / Lecteurs
+  média` en français et `Vista general / Clima / Reproductores multimedia` en
+  espagnol. La première page conserve l’identifiant interne `home` pour les
+  fallbacks historiques.
+- **Pourquoi :** une installation vierge doit commencer sur l’expérience
+  spécialisée Aperçu et exposer immédiatement les deux autres destinations
+  principales, sans page Grid générique préalable.
+- **Conséquence :** les pages déjà enregistrées ne sont ni remplacées ni
+  réordonnées. Une migration ancienne qui contient encore des widgets Grid les
+  conserve sur une page Grid `home`; seuls les états réellement vierges
+  reçoivent le nouveau trio.
+
 ### 2026-07-29 — Afficher le contexte courant dans la status bar
 
 - **Statut :** confirmé.

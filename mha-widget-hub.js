@@ -219,7 +219,7 @@ function getHubStateIngressCoordinatorForHost(host){
  * Visual style: OneUI
  * Accent: auto
  * Icon shape: auto
- * Pages: 2 grid pages + 1 media page
+ * Pages: Overview + Weather + Media
  * Screensaver: enabled
  * Screensaver delay: 30 seconds
  * Screensaver Now Bar: disabled
