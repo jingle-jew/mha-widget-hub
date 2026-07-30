@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   getLayoutForWidth,
   RESPONSIVE_BREAKPOINTS,
+  resolveResponsiveViewportMetrics,
 } from "../src/layout/responsive.js";
 import {
   computeResponsiveState,
@@ -33,6 +34,20 @@ test("manual layout modes override width-based layout selection", () => {
   assert.equal(getLayoutForWidth(390, { layoutMode: "desktop" }), "desktop");
   assert.equal(getLayoutForWidth(1600, { layoutMode: "tablet" }), "tablet");
   assert.equal(getLayoutForWidth(1600, { layoutMode: "auto" }), "desktop");
+});
+
+test("responsive viewport width stays stable when the HA sidebar narrows the host", () => {
+  const metrics = resolveResponsiveViewportMetrics(
+    {
+      getBoundingClientRect: () => ({ width: 1320, height: 900 }),
+    },
+    {
+      windowRef: { innerWidth: 1600, innerHeight: 960 },
+    },
+  );
+
+  assert.deepEqual(metrics, { width: 1600, height: 900 });
+  assert.equal(getLayoutForWidth(metrics.width), "desktop");
 });
 
 test("requested layout mode ignores the published resolved layout dataset", () => {

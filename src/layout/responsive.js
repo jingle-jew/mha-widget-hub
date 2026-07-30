@@ -20,6 +20,20 @@ export const RESPONSIVE_BREAKPOINTS = Object.freeze({
   compactDock: 520,
 });
 
+export function resolveResponsiveViewportMetrics(
+  host = null,
+  { windowRef = globalThis.window } = {},
+) {
+  const rect = host?.getBoundingClientRect?.() || {};
+  return {
+    // HA's docked sidebar narrows the panel host without changing the browser
+    // viewport. Layout identity must therefore stay stable while the grid
+    // tracks continue to size themselves from the real remaining panel width.
+    width: Math.max(0, Number(windowRef?.innerWidth) || Number(rect.width) || 0),
+    height: Math.max(0, Number(rect.height) || Number(windowRef?.innerHeight) || 0),
+  };
+}
+
 export function getLayoutForWidth(width = 0, { layoutMode = getStoredLayoutMode() } = {}) {
   const preferredMode = normalizeLayoutMode(layoutMode);
   if (preferredMode !== "auto") return preferredMode;

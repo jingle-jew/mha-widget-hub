@@ -22,7 +22,7 @@ import {
   normalizeWidgetForKind,
   sizeToString,
 } from "./layout-engine.js";
-import { getLayoutForWidth } from "./responsive.js";
+import { getLayoutForWidth, resolveResponsiveViewportMetrics } from "./responsive.js";
 import { createPagePanel } from "../pages/page-panel.js";
 import {
   createWeatherPageBackground,
@@ -196,11 +196,7 @@ function getShellViewportMetrics(host) {
   if (typeof host?._getShellViewportMetrics === "function") {
     return host._getShellViewportMetrics();
   }
-  const rect = host?.getBoundingClientRect?.() || {};
-  return {
-    width: Math.max(0, Number(rect.width) || window.innerWidth || 0),
-    height: Math.max(0, Number(rect.height) || window.innerHeight || 0),
-  };
+  return resolveResponsiveViewportMetrics(host);
 }
 
 function setHostRenderState(host, state = "ready") {

@@ -211,6 +211,23 @@ appartiennent à `AGENTS.md`.
   couvert par ses tests, sans créer de gestionnaire de long-press propre au
   widget.
 
+### 2026-07-29 — Stabiliser le layout lorsque la sidebar Home Assistant s’ouvre
+
+- **Statut :** confirmé.
+- **Décision :** en mode responsive `auto`, l’identité mobile/tablette/desktop
+  est résolue depuis la largeur du viewport du navigateur, pas depuis la
+  largeur courante du host MHA. Les métriques de pistes continuent toutefois
+  d’utiliser le rectangle réel restant dans le panneau.
+- **Pourquoi :** une sidebar HA dockée réduit le host sans modifier le viewport.
+  Près du breakpoint desktop de `1400px`, utiliser le host faisait basculer la
+  grille de desktop à tablette et réduisait fortement son nombre de colonnes;
+  les widgets grossissaient alors précisément au moment où l’espace disponible
+  diminuait.
+- **Conséquence :** ouvrir la sidebar HA peut encore produire une petite
+  variation proportionnelle des widgets, mais ne change plus à elle seule le
+  layout responsive. Un vrai redimensionnement de la fenêtre continue de
+  franchir normalement les breakpoints.
+
 ### 2026-07-19 — Composer le popup lumière autour de deux colonnes stables
 
 - **Statut :** confirmé.

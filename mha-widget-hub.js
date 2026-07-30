@@ -60,6 +60,7 @@ import {
 } from "./src/layout/placement-calculations.js";
 import { createPlacementController } from "./src/layout/placement-controller.js";
 import { createGridRuntime } from "./src/layout/grid-runtime.js";
+import { resolveResponsiveViewportMetrics } from "./src/layout/responsive.js";
 import {normalizeClockVariant,updateScreensaverClock} from "./src/screensaver/screensaver.js";
 import { createScreensaverController } from "./src/screensaver/screensaver-controller.js";
 import { createScreensaverCoordinator } from "./src/screensaver/screensaver-coordinator.js?v=phase10";
@@ -1471,11 +1472,7 @@ _getAvailableContentRect(){
 }
 
 _getShellViewportMetrics(){
-  const rect=this.getBoundingClientRect?.()||{};
-  return {
-    width:Math.max(0,Number(rect.width)||window.innerWidth||0),
-    height:Math.max(0,Number(rect.height)||window.innerHeight||0),
-  };
+  return resolveResponsiveViewportMetrics(this);
 }
 _syncResponsiveState({publish=false,viewportMetrics=null,availableContentRect=null}={}){
   const responsiveState=computeResponsiveState({
