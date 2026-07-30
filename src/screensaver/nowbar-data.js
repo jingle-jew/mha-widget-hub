@@ -1,14 +1,33 @@
 import { filterEntitiesForCurrentUser } from "../admin/entity-permissions.js";
 import { getFriendlyEntityName } from "../ha/entity-filters.js";
 import { getEntityDomain, isEntityAvailable, normalizeEntityStateValue } from "../ha/entity.js";
-import { buildMediaDisplayModel } from "../ha/media.js";
+import { buildMediaDisplayModel, getMediaArtworkUrl } from "../ha/media.js";
 import { getWeatherSummary } from "../ha/weather.js";
-import { t } from "../i18n/index.js";
+import { getLanguage, t } from "../i18n/index.js";
 
 export const NOW_BAR_TILE_KEYS = Object.freeze(["now", "weather", "calendar", "media"]);
 export const NOW_BAR_NOW_ITEMS = Object.freeze(["lightsOn", "rooms"]);
 
 const CALENDAR_LOOKAHEAD_MS = 24 * 60 * 60 * 1000;
+
+function createIconVisual(icon, category) {
+  return { type: "icon", icon, category };
+}
+
+function createWeatherVisual(condition = "unknown") {
+  return { type: "weather", condition: String(condition || "unknown") };
+}
+
+function createCalendarVisual(date = null) {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+    return createIconVisual("calendar", "utility");
+  }
+  return {
+    type: "date",
+    day: String(date.getDate()),
+    month: date.toLocaleDateString(getLanguage(), { month: "short" }),
+  };
+}
 
 function normalizeStringList(value) {
   return Array.isArray(value)
@@ -155,6 +174,7 @@ function buildNowTile(hass, config, areas) {
 
   return {
     key: "now",
+    visual: createIconVisual("bulb", "lighting"),
     title: t("settings.nowBarPreview.now.title", "Now bar"),
     subtitle: lines.length
       ? lines.join(" · ")
@@ -202,6 +222,7 @@ function buildWeatherTile(hass, config) {
     : `${attributes.temperature}${String(unit).startsWith("°") ? unit : ` ${unit}`}`;
   return {
     key: "weather",
+    visual: createWeatherVisual(entity.state),
     title: getFriendlyEntityName(entity, entity.entity_id) || t("settings.nowBarPreview.weather.title", "Weather"),
     subtitle: [temperature, getWeatherSummary(entity.state)].filter(Boolean).join(" · ")
       || t("settings.nowBarData.weatherNoData", "No weather data"),
@@ -249,8 +270,14 @@ function buildMediaTile(hass, config) {
     entityId: entity.entity_id,
     name: getFriendlyEntityName(entity, entity.entity_id),
   });
+  const artworkUrl = normalizeEntityStateValue(entity.state) === "playing"
+    ? getMediaArtworkUrl(entity)
+    : "";
   return {
     key: "media",
+    visual: artworkUrl
+      ? { type: "artwork", artworkUrl }
+      : createIconVisual("music", "media_player"),
     title: model.title || getFriendlyEntityName(entity, entity.entity_id) || t("settings.nowBarPreview.media.title", "Now Playing"),
     subtitle: model.subtitle || model.stateLabel || t("settings.nowBarData.mediaNoData", "No media data"),
   };
@@ -259,7 +286,14 @@ function buildMediaTile(hass, config) {
 function parseCalendarDate(value) {
   if (!value) return null;
   const raw = typeof value === "object" ? value.dateTime || value.date : value;
-  const date = new Date(raw);
+  const localDateMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(raw || ""));
+  const date = localDateMatch
+    ? new Date(
+      Number(localDateMatch[1]),
+      Number(localDateMatch[2]) - 1,
+      Number(localDateMatch[3]),
+    )
+    : new Date(raw);
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
@@ -281,7 +315,11 @@ export function normalizeCalendarEvents(value = {}, entityId = "") {
       ? value.events
       : Array.isArray(value.calendarEvents)
         ? value.calendarEvents
-        : [];
+        : value && typeof value === "object" && (
+          value.start || value.start_time || value.startDate
+        )
+          ? [value]
+          : [];
   return candidates
     .map(event => normalizeCalendarEvent(event, entityId))
     .filter(Boolean);
@@ -328,6 +366,7 @@ export function buildCalendarTile(hass, config, calendarEvents = {}) {
   const event = events[0];
   return {
     key: "calendar",
+    visual: createCalendarVisual(event.start),
     title: event.summary,
     subtitle: event.start.toLocaleString([], {
       weekday: "short",

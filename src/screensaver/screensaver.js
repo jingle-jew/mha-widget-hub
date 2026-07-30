@@ -7,7 +7,10 @@
 
 import { ICONS } from "../components/icons.js";
 import { t } from "../i18n/index.js";
+import { createIcon } from "../ui/icon.js";
+import { createIconSymbol } from "../ui/icon-symbol.js";
 import { CLOCK_WIDGET_VARIANTS, createClockWidgetContent, normalizeClockWidgetVariant, updateClockWidget } from "../widgets/clock-widget.js";
+import { createWeatherIcon } from "../widgets/weather-icons.js";
 
 export const CLOCK_VARIANTS = ["none", ...CLOCK_WIDGET_VARIANTS];
 
@@ -181,9 +184,9 @@ export const NOWBAR_FALLBACK_ITEMS = Object.freeze([
   },
   {
     key: "calendar",
-    title: "Security",
+    title: "Calendar",
     titleKey: "settings.nowBarPreview.calendar.title",
-    subtitle: "No critical events",
+    subtitle: "No upcoming events",
     subtitleKey: "settings.nowBarPreview.calendar.subtitle",
   },
   {
@@ -194,6 +197,13 @@ export const NOWBAR_FALLBACK_ITEMS = Object.freeze([
     subtitleKey: "settings.nowBarPreview.media.subtitle",
   },
 ]);
+
+const NOWBAR_FALLBACK_VISUALS = Object.freeze({
+  now: Object.freeze({ type: "icon", icon: "bulb", category: "lighting" }),
+  weather: Object.freeze({ type: "weather", condition: "unknown" }),
+  calendar: Object.freeze({ type: "icon", icon: "calendar", category: "utility" }),
+  media: Object.freeze({ type: "icon", icon: "music", category: "media_player" }),
+});
 
 const NOWBAR_STACK_POSITIONS = Object.freeze([
   { y: 0, scale: 1, z: 4 },
@@ -218,10 +228,84 @@ function translateOptional(key, fallback = "") {
     : String(fallback || "");
 }
 
+function normalizeNowBarVisual(visual = {}, key = "now") {
+  const fallback = NOWBAR_FALLBACK_VISUALS[key] || NOWBAR_FALLBACK_VISUALS.now;
+  if (!visual || typeof visual !== "object") return { ...fallback };
+
+  if (visual.type === "artwork" && String(visual.artworkUrl || "").trim()) {
+    return { type: "artwork", artworkUrl: String(visual.artworkUrl).trim() };
+  }
+  if (visual.type === "date" && String(visual.day || "").trim() && String(visual.month || "").trim()) {
+    return {
+      type: "date",
+      day: String(visual.day).trim(),
+      month: String(visual.month).trim(),
+    };
+  }
+  if (visual.type === "weather") {
+    return { type: "weather", condition: String(visual.condition || "unknown").trim() || "unknown" };
+  }
+  if (visual.type === "icon" && String(visual.icon || "").trim()) {
+    return {
+      type: "icon",
+      icon: String(visual.icon).trim(),
+      category: String(visual.category || fallback.category || "system").trim(),
+    };
+  }
+  return { ...fallback };
+}
+
+function createNowBarVisual(visual = {}) {
+  const className = `mha-screensaver-nowbar-visual mha-screensaver-nowbar-visual--${visual.type}`;
+  let content = null;
+
+  if (visual.type === "artwork") {
+    const image = document.createElement("img");
+    image.className = "mha-screensaver-nowbar-artwork";
+    image.src = visual.artworkUrl;
+    image.alt = "";
+    image.decoding = "async";
+    content = image;
+  } else if (visual.type === "date") {
+    const date = document.createElement("span");
+    date.className = "mha-screensaver-nowbar-date";
+    const day = document.createElement("span");
+    day.className = "mha-screensaver-nowbar-date-day";
+    day.textContent = visual.day;
+    const month = document.createElement("span");
+    month.className = "mha-screensaver-nowbar-date-month";
+    month.textContent = visual.month;
+    date.append(day, month);
+    content = date;
+  } else if (visual.type === "weather") {
+    content = createWeatherIcon(visual.condition, {
+      className: "mha-screensaver-nowbar-weather-glyph",
+    });
+  } else {
+    content = createIconSymbol({
+      name: visual.icon,
+      className: "mha-screensaver-nowbar-glyph",
+    });
+  }
+
+  return createIcon({
+    name: visual.icon || visual.type,
+    category: visual.category || (visual.type === "weather" ? "climate" : ""),
+    className,
+    children: content,
+  });
+}
+
 function createNowBarTile(item, index) {
   const tile = document.createElement("article");
   tile.className = "mha-screensaver-nowbar-tile";
   tile.dataset.nowbarItem = String(index);
+  tile.dataset.nowbarKey = item.key;
+
+  const visual = createNowBarVisual(item.visual);
+
+  const content = document.createElement("div");
+  content.className = "mha-screensaver-nowbar-content";
 
   const title = document.createElement("div");
   title.className = "mha-screensaver-nowbar-title";
@@ -231,7 +315,8 @@ function createNowBarTile(item, index) {
   subtitle.className = "mha-screensaver-nowbar-subtitle";
   subtitle.textContent = translateOptional(item.subtitleKey, item.subtitle);
 
-  tile.append(title, subtitle);
+  content.append(title, subtitle);
+  tile.append(visual, content);
   return tile;
 }
 
@@ -241,6 +326,7 @@ function normalizeNowBarTile(item = {}) {
     key: item.key || fallback.key,
     title: item.title || t(fallback.titleKey, fallback.title),
     subtitle: item.subtitle || t(fallback.subtitleKey, fallback.subtitle),
+    visual: normalizeNowBarVisual(item.visual, item.key || fallback.key),
   };
 }
 
@@ -251,9 +337,12 @@ function getNowBarFallbackTiles(enabledItems = {}) {
 }
 
 function getNowBarSignature(items = []) {
-  return items
-    .map(item => `${item.key}:${item.title}:${item.subtitle}`)
-    .join("|");
+  return JSON.stringify(items.map(item => ({
+    key: item.key,
+    title: item.title,
+    subtitle: item.subtitle,
+    visual: item.visual,
+  })));
 }
 
 function createNowBar({ items: enabledItems = {}, tiles = null } = {}) {

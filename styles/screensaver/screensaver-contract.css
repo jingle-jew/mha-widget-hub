@@ -32,6 +32,7 @@
     var(--mha-shell-dock-surface, var(--mha-widget-shell-surface))
   );
   background: var(--mha-nowbar-oneui-surface);
+  border-radius: 999px;
   border-color: var(--mha-oneui-mobile-dock-border, var(--mha-shell-border));
   box-shadow: var(--mha-shell-shadow);
   -webkit-backdrop-filter: var(--mha-oneui-dock-filter);
@@ -40,6 +41,11 @@
 
 :host([data-theme-style="material"]) .mha-screensaver-nowbar-tile {
   background: var(--mha-widget-shell-surface, var(--mha-tile-surface, var(--mha-surface-tonal)));
+  border-radius: 999px;
   border-color: transparent;
   box-shadow: var(--mha-widget-shell-shadow, var(--mha-tile-shadow, none));
+}
+
+:host([data-theme-style="ios"]) .mha-screensaver-nowbar-tile {
+  border-radius: clamp(1.35rem, 4vw, 2rem);
 }

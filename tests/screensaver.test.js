@@ -85,6 +85,9 @@ function installDom() {
     createElement(tag) {
       return new FakeNode(tag);
     },
+    createElementNS(_namespace, tag) {
+      return new FakeNode(tag);
+    },
   };
 }
 
@@ -113,4 +116,70 @@ test("screensaver now bar renders dynamic tile text without i18n keys", () => {
   assert.ok(subtitle);
   assert.equal(title.textContent, "Ocean Drive");
   assert.equal(subtitle.textContent, "Duke Dumont");
+});
+
+test("screensaver now bar calendar fallback stays a calendar tile", () => {
+  const screensaver = createScreensaver({
+    isVisible: true,
+    showNowBar: true,
+    nowBarItems: {
+      now: false,
+      weather: false,
+      calendar: true,
+      media: false,
+    },
+  });
+
+  const tile = screensaver.querySelector(".mha-screensaver-nowbar-tile");
+  const title = screensaver.querySelector(".mha-screensaver-nowbar-title");
+  const subtitle = screensaver.querySelector(".mha-screensaver-nowbar-subtitle");
+
+  assert.equal(tile?.dataset.nowbarKey, "calendar");
+  assert.equal(title?.textContent, "Calendar");
+  assert.equal(subtitle?.textContent, "No upcoming events");
+});
+
+test("screensaver now bar renders artwork, weather, date, and shaped icon visuals", () => {
+  const screensaver = createScreensaver({
+    isVisible: true,
+    showNowBar: true,
+    nowBarTiles: [
+      {
+        key: "media",
+        title: "Ocean Drive",
+        subtitle: "Duke Dumont",
+        visual: { type: "artwork", artworkUrl: "/ocean-drive.jpg" },
+      },
+      {
+        key: "weather",
+        title: "Home",
+        subtitle: "22°C · Sunny",
+        visual: { type: "weather", condition: "sunny" },
+      },
+      {
+        key: "calendar",
+        title: "Dentist",
+        subtitle: "Tomorrow",
+        visual: { type: "date", day: "29", month: "Apr" },
+      },
+      {
+        key: "now",
+        title: "Now Bar",
+        subtitle: "All lights are off.",
+        visual: { type: "icon", icon: "bulb", category: "lighting" },
+      },
+    ],
+  });
+
+  const visuals = screensaver.querySelectorAll(".mha-screensaver-nowbar-visual");
+  assert.equal(visuals.length, 4);
+  assert.ok(visuals.every(visual => String(visual.className).includes("mha-icon")));
+  assert.equal(screensaver.querySelector(".mha-screensaver-nowbar-artwork")?.src, "/ocean-drive.jpg");
+  assert.equal(
+    screensaver.querySelector(".mha-screensaver-nowbar-weather-glyph")?.dataset.weatherCondition,
+    "sunny",
+  );
+  assert.equal(screensaver.querySelector(".mha-screensaver-nowbar-date-day")?.textContent, "29");
+  assert.equal(screensaver.querySelector(".mha-screensaver-nowbar-date-month")?.textContent, "Apr");
+  assert.equal(screensaver.querySelector(".mha-screensaver-nowbar-glyph")?.dataset.iconSymbol, "bulb");
 });

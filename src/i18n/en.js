@@ -186,8 +186,8 @@ export const en = Object.freeze({
         subtitle: "Modes and shortcuts ready",
       }),
       calendar: Object.freeze({
-        title: "Security",
-        subtitle: "No critical events",
+        title: "Calendar",
+        subtitle: "No upcoming events",
       }),
       media: Object.freeze({
         title: "Ambiance",

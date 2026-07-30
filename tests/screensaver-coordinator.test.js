@@ -156,6 +156,31 @@ test("screensaver coordinator syncs DOM with fetched now bar tiles", async () =>
   assert.equal(syncedProps.nowBarTiles[0].subtitle, "true");
 });
 
+test("visible screensaver sync requests calendar events immediately", async () => {
+  let fetchCalls = 0;
+  const coordinator = createScreensaverCoordinator({
+    getScreensaverState: () => ({ nowBar: true, nowBarItems: { calendar: true }, clockVariant: "digital" }),
+    getIsVisible: () => true,
+    getHass: () => ({ states: {} }),
+    getNowBarConfig: () => ({
+      tiles: { calendar: true },
+      entities: { calendar: ["calendar.family"] },
+    }),
+    now: () => 1000,
+    fetchCalendarEvents: async () => {
+      fetchCalls += 1;
+      return { "calendar.family": { events: [] } };
+    },
+    syncElement: () => ({}),
+  });
+
+  coordinator.syncDom({ querySelector: () => null });
+  await Promise.resolve();
+  coordinator.syncDom({ querySelector: () => null });
+
+  assert.equal(fetchCalls, 1);
+});
+
 test("hidden screensaver updates neither calendar requests nor the now bar DOM", async () => {
   let fetchCalls = 0;
   let tileBuilds = 0;

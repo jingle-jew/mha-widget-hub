@@ -169,7 +169,10 @@ export class ScreensaverCoordinator {
     this.onSyncVisibilityState();
     const existing = root?.querySelector?.(".mha-screensaver");
     const isVisible = this.getIsVisible();
-    if (isVisible) void this.requestNowBarAreas();
+    if (isVisible) {
+      void this.requestNowBarAreas();
+      void this.requestNowBarCalendarEvents();
+    }
     if (existing && !isVisible && !force) {
       this.syncVisibility(existing, { isVisible: false });
       return existing;

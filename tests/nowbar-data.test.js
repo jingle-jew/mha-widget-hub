@@ -6,6 +6,7 @@ import {
   buildNowBarTiles,
   fetchNowBarCalendarEvents,
   getNowBarEntityOptions,
+  normalizeCalendarEvents,
   normalizeNowBarConfig,
 } from "../src/screensaver/nowbar-data.js";
 
@@ -99,6 +100,7 @@ test("now bar tiles use selected Home Assistant media, weather and light states"
         friendly_name: "Living room",
         media_title: "Ocean Drive",
         media_artist: "Duke Dumont",
+        media_image_url: "https://ha.example/ocean-drive.jpg",
       }),
       "weather.home": entity("weather.home", "sunny", {
         friendly_name: "Home",
@@ -134,6 +136,32 @@ test("now bar tiles use selected Home Assistant media, weather and light states"
       ["media", "Ocean Drive", "Duke Dumont"],
     ],
   );
+  assert.deepEqual(tiles.find(tile => tile.key === "now")?.visual, {
+    type: "icon",
+    icon: "bulb",
+    category: "lighting",
+  });
+  assert.deepEqual(tiles.find(tile => tile.key === "weather")?.visual, {
+    type: "weather",
+    condition: "sunny",
+  });
+  assert.deepEqual(tiles.find(tile => tile.key === "media")?.visual, {
+    type: "artwork",
+    artworkUrl: "https://ha.example/ocean-drive.jpg",
+  });
+
+  const [pausedMediaTile] = buildNowBarTiles({
+    hass,
+    config: {
+      entities: { media: ["media_player.kitchen"] },
+      tiles: { now: false, weather: false, calendar: false, media: true },
+    },
+  });
+  assert.deepEqual(pausedMediaTile.visual, {
+    type: "icon",
+    icon: "music",
+    category: "media_player",
+  });
 });
 
 test("now bar summarizes lit rooms without double-counting lights in the same area", () => {
@@ -216,6 +244,12 @@ test("now bar calendar tile uses fetched events and handles empty selections", (
 
   assert.equal(calendarTile.key, "calendar");
   assert.equal(calendarTile.title, "Dentist");
+  const eventDate = new Date(start);
+  assert.deepEqual(calendarTile.visual, {
+    type: "date",
+    day: String(eventDate.getDate()),
+    month: eventDate.toLocaleDateString("en", { month: "short" }),
+  });
 
   const [emptyCalendarTile] = buildNowBarTiles({
     hass,
@@ -224,6 +258,41 @@ test("now bar calendar tile uses fetched events and handles empty selections", (
     },
   });
   assert.equal(emptyCalendarTile.subtitle, "No calendar selected");
+});
+
+test("now bar calendar reads the entity next event and keeps all-day dates local", () => {
+  const date = "2099-07-30";
+  const [normalizedEvent] = normalizeCalendarEvents({
+    message: "Family day",
+    start: { date },
+  }, "calendar.family");
+  const expectedStart = new Date(2099, 6, 30);
+
+  assert.equal(normalizedEvent.start.getTime(), expectedStart.getTime());
+  assert.equal(normalizedEvent.start.getHours(), 0);
+
+  const [calendarTile] = buildNowBarTiles({
+    hass: {
+      states: {
+        "calendar.family": entity("calendar.family", "off", {
+          friendly_name: "Family",
+          message: "Family day",
+          start: { date },
+        }),
+      },
+    },
+    config: {
+      tiles: { now: false, weather: false, media: false, calendar: true },
+      entities: { calendar: ["calendar.family"] },
+    },
+  });
+
+  assert.equal(calendarTile.title, "Family day");
+  assert.deepEqual(calendarTile.visual, {
+    type: "date",
+    day: "30",
+    month: expectedStart.toLocaleDateString("en", { month: "short" }),
+  });
 });
 
 test("now bar calendar event fetch calls the Home Assistant calendar service", async () => {

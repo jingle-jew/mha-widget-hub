@@ -186,8 +186,8 @@ export const es = Object.freeze({
         subtitle: "Modes y accesos directos listos",
       }),
       calendar: Object.freeze({
-        title: "Seguridad",
-        subtitle: "Sin eventos críticos",
+        title: "Calendario",
+        subtitle: "No hay eventos próximos",
       }),
       media: Object.freeze({
         title: "Ambiente",

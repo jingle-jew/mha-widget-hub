@@ -8,6 +8,33 @@ appartiennent à `AGENTS.md`.
 
 ## Décisions et raisons
 
+### 2026-07-29 — Présenter la Now Bar comme une notification du thème
+
+- **Statut :** confirmé.
+- **Décision :** les tuiles de la Now Bar reprennent la géométrie des
+  notifications de leur thème de référence : capsules pour OneUI et Material
+  You, rectangle arrondi historique pour iOS. Chaque tuile place à gauche un
+  visuel dans le composant `.mha-icon`, afin d'hériter sans réglage propre de la
+  forme d'icône globale sélectionnée dans Apparence.
+- **Contenu :** Média montre l'artwork uniquement pendant une lecture active et
+  lorsqu'une image valide existe, sinon une icône générique de musique;
+  Météo montre le glyphe de la condition courante; Calendrier compose le jour et
+  le mois court localisé sur deux lignes. Calendrier récupère ses événements dès
+  que l'économiseur devient visible et complète la réponse du service avec le
+  prochain événement exposé directement par l'entité `calendar.*`; une date sans
+  heure `YYYY-MM-DD` est interprétée à minuit local, jamais à minuit UTC. Les
+  états de repli utilisent une icône sémantique propre à chaque type de tuile.
+- **Pourquoi :** rapprocher la Now Bar des notifications OneUI, Material et iOS
+  tout en rendant chaque information identifiable d'un regard et en réutilisant
+  les contrats visuels existants du produit.
+- **Conséquence :** le stylage n'ajoute aucun réglage et ne modifie ni
+  l'empilement, ni la navigation, ni les interactions de la Now Bar. Le contrat
+  de fiabilité Calendrier restaure uniquement la lecture du prochain événement.
+  Les textes et visuels de repli doivent conserver l'identité sémantique de leur
+  clé (`calendar` reste Calendrier, par exemple) et ne doivent jamais
+  réintroduire les anciens contenus de démonstration comme une fausse tuile
+  Sécurité.
+
 ### 2026-07-29 — Résumer l’éclairage de la Now Bar par pièces éclairées
 
 - **Statut :** confirmé.

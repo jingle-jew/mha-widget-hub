@@ -162,6 +162,38 @@ test("OneUI Now Bar tiles reuse the dock surface material", () => {
   );
 });
 
+test("Now Bar notification tiles keep theme geometry and the global icon-shape contract", () => {
+  const structureSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "screensaver", "screensaver.css"),
+    "utf8",
+  );
+  const contractSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "screensaver", "screensaver-contract.css"),
+    "utf8",
+  );
+
+  assert.match(
+    structureSource,
+    /\.mha-screensaver-nowbar-tile\s*\{[\s\S]*display:\s*grid;[\s\S]*grid-template-columns:\s*var\(--mha-icon-size\) minmax\(0, 1fr\);/,
+  );
+  assert.match(
+    structureSource,
+    /\.mha-screensaver-nowbar-visual\s*\{[\s\S]*--mha-icon-symbol-size:/,
+  );
+  assert.match(
+    contractSource,
+    /:host\(\[data-theme-style="oneui"\]\) \.mha-screensaver-nowbar-tile\s*\{[\s\S]*border-radius:\s*999px;/,
+  );
+  assert.match(
+    contractSource,
+    /:host\(\[data-theme-style="material"\]\) \.mha-screensaver-nowbar-tile\s*\{[\s\S]*border-radius:\s*999px;/,
+  );
+  assert.match(
+    contractSource,
+    /:host\(\[data-theme-style="ios"\]\) \.mha-screensaver-nowbar-tile\s*\{\s*border-radius:\s*clamp\(1\.35rem, 4vw, 2rem\);/,
+  );
+});
+
 test("OneUI dark panels keep a flat outer frame", () => {
   const themeSource = fs.readFileSync(path.join(THEME_ROOT, "oneui.css"), "utf8");
   const settingsSource = fs.readFileSync(

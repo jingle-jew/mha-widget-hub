@@ -171,9 +171,15 @@
 }
 
 .mha-screensaver-nowbar-tile {
+  --mha-icon-size: clamp(3.15rem, 8vw, 3.65rem);
   position: relative;
   grid-area: 1 / 1;
   inline-size: 100%;
+  min-block-size: calc(var(--mha-icon-size) + clamp(1.15rem, 3vw, 1.5rem));
+  display: grid;
+  grid-template-columns: var(--mha-icon-size) minmax(0, 1fr);
+  align-items: center;
+  column-gap: clamp(.75rem, 2.4vw, 1rem);
   padding: clamp(.85rem, 2.5vw, 1.1rem) clamp(1rem, 3vw, 1.35rem);
   border: 1px solid var(--mha-widget-border);
   border-radius: clamp(1.35rem, 4vw, 2rem);
@@ -186,6 +192,61 @@
   transform-origin: center top;
   transition: transform 260ms cubic-bezier(.2,.8,.2,1);
   will-change: transform;
+}
+
+.mha-screensaver-nowbar-visual,
+.mha-screensaver-nowbar-content {
+  position: relative;
+  z-index: 2;
+}
+
+.mha-screensaver-nowbar-visual {
+  --mha-icon-symbol-size: 56%;
+  --mha-icon-symbol-min-size: 1.25rem;
+}
+
+.mha-screensaver-nowbar-content {
+  min-inline-size: 0;
+}
+
+.mha-screensaver-nowbar-artwork {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+
+.mha-screensaver-nowbar-date {
+  display: grid;
+  place-items: center;
+  line-height: 1;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.mha-screensaver-nowbar-date-day {
+  font-size: clamp(1.05rem, 3vw, 1.3rem);
+  font-weight: var(--mha-font-weight-heavy);
+  letter-spacing: -.04em;
+}
+
+.mha-screensaver-nowbar-date-month {
+  margin-block-start: .12rem;
+  font-size: clamp(.63rem, 1.8vw, .75rem);
+  font-weight: var(--mha-font-weight-semibold);
+  text-transform: lowercase;
+}
+
+.mha-screensaver-nowbar-weather-glyph {
+  --mha-weather-sun: #ffd75e;
+  --mha-weather-moon: #f6f8ff;
+  --mha-weather-cloud: currentColor;
+  --mha-weather-rain: #79cfff;
+  --mha-weather-snow: rgba(255,255,255,.96);
+  --mha-weather-bolt: #ffe26b;
+  --mha-weather-fog: currentColor;
+  inline-size: 72%;
+  block-size: 72%;
 }
 
 .mha-screensaver-nowbar-tile::after {
@@ -207,12 +268,20 @@
 .mha-screensaver-nowbar-title {
   font-size: clamp(.95rem, 2vw, 1.1rem);
   font-weight: var(--mha-font-weight-heavy);
+  line-height: 1.16;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .mha-screensaver-nowbar-subtitle {
   margin-block-start: .25rem;
   color: var(--mha-text-secondary);
   font-size: clamp(.78rem, 1.7vw, .92rem);
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 @keyframes mha-screensaver-clock-in {

@@ -186,8 +186,8 @@ export const fr = Object.freeze({
         subtitle: "Modes et raccourcis prêts",
       }),
       calendar: Object.freeze({
-        title: "Sécurité",
-        subtitle: "Aucun événement critique",
+        title: "Calendrier",
+        subtitle: "Aucun événement à venir",
       }),
       media: Object.freeze({
         title: "Ambiance",
