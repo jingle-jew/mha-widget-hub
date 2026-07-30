@@ -886,6 +886,21 @@ _applyWeatherLandscapeFromSettings(value="alpine-lake"){
   }
   return true;
 }
+_applyWeatherThemeBackgroundFromSettings(enabled=false){
+  const activePage=this._getActivePage();
+  const weatherPage=isWeatherPage(activePage)
+    ? activePage
+    : this._pages.find(page=>isWeatherPage(page));
+  if(!weatherPage)return false;
+  const updated=this._updatePageConfig(weatherPage.id,{
+    useThemeBackground:Boolean(enabled),
+  });
+  if(!updated)return false;
+  if(weatherPage.id===this._activePageId){
+    this._syncActivePageBackdropState({activePage:this._getActivePage()});
+  }
+  return true;
+}
 _openDockPageSettings(id=""){
   return openDockPageSettingsForPage(this,id,{
     openSettingsPageRef:(page,options)=>getI18nSettingsSyncForHost(this).openSettingsPage(page,options),

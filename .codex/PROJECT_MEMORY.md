@@ -424,24 +424,30 @@ appartiennent à `AGENTS.md`.
   entrée procédurale doit préserver cette séparation entre renderer temporel et
   effets météo indépendants.
 
-### 2026-07-28 — Réutiliser les paysages météo comme fonds des pages Grid et Aperçu
+### 2026-07-29 — Choisir la source de fond des pages Météo, Grid et Aperçu
 
 - **Statut :** confirmé.
 - **Décision :** le sous-panneau global « Fond d’écran » expose un toggle
   « Utiliser le fond d’écran météo ». Son état est persisté sous
   `mha_grid_wallpaper`; lorsqu’il est actif, toutes les pages `grid` et
   `overview` réutilisent le paysage configuré pour la page Météo, avec
-  `alpine-lake` comme repli. Les pages Météo conservent leur paysage configuré
-  par page et les pages Média leur artwork dédié.
+  `alpine-lake` comme repli. Chaque page Météo expose séparément dans son
+  panneau un toggle « Utiliser le fond d’écran du thème », persisté dans sa
+  configuration sous `useThemeBackground`. Il vaut `false` par défaut; activé,
+  il masque seulement la scène météo de cette page et révèle le fond du thème
+  actif, sans effacer son `weatherLandscapeId`. Les pages Média conservent leur
+  artwork dédié.
 - **Pourquoi :** les paysages météo sont des sources de fond MHA réutilisables,
   pas une implémentation propre au layout de la page Météo. Une préférence
   globale reste cohérente avec le panneau de fond d’écran existant et évite de
-  dupliquer les assets, les effets ou leur moteur de rendu.
-- **Conséquence :** le choix du paysage reste centralisé dans les réglages de la
-  page Météo; le panneau de fond d’écran décide seulement si les pages Grid et
-  Aperçu le réutilisent. Le pipeline distingue l’activation d’une page Météo de
-  celle d’un fond météo partagé afin de préserver les priorités des pages
-  spécialisées.
+  dupliquer les assets, les effets ou leur moteur de rendu. Le réglage local
+  permet à la page Météo de suivre visuellement le thème sans détourner le
+  toggle global destiné à Grid et Aperçu.
+- **Conséquence :** le panneau de la page Météo possède le choix du paysage et
+  de sa propre source de fond; le panneau global décide seulement si Grid et
+  Aperçu réutilisent ce paysage. Le pipeline conserve l’identité de page Météo
+  même lorsque sa scène est désactivée, afin que seul le fond change. Réactiver
+  le fond météo restaure immédiatement le paysage précédemment sélectionné.
 
 ## Pièges connus
 

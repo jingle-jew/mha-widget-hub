@@ -1114,6 +1114,7 @@ export function createSettingsPanel({
   customWallpapers = {},
   gridWallpaper = {},
   weatherLandscapeId = "alpine-lake",
+  weatherUseThemeBackground = false,
   supportsDockPosition,
   supportsSidebarToggle,
   showsStatusBarOptions,
@@ -1148,6 +1149,7 @@ export function createSettingsPanel({
   onOpenWeatherPageSettings,
   onWeatherPageMainBack,
   onWeatherLandscapeChange,
+  onWeatherThemeBackgroundChange,
   onWallpaperMainBack,
   onOpenDockSettings,
   onDockBack,
@@ -1327,6 +1329,14 @@ export function createSettingsPanel({
   }
 
   if (!isScreensaverScope && settingsPage === "weather-page") {
+    sections.push(createSection(t("settings.wallpaper", "Wallpaper"), [
+      createSwitch({
+        label: t("settings.useThemeWallpaper", "Use theme wallpaper"),
+        description: t("settings.useThemeWallpaperDescription", "Use the active theme wallpaper instead of the weather landscape on the Weather page."),
+        checked: weatherUseThemeBackground === true,
+        onChange: onWeatherThemeBackgroundChange,
+      }),
+    ]));
     sections.push(createSection(t("settings.weatherLandscape", "Landscape"), [
       createWeatherLandscapePicker({
         value: weatherLandscapeId,

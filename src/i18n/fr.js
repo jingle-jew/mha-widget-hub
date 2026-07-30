@@ -93,8 +93,10 @@ export const fr = Object.freeze({
     useWeatherWallpaper: "Utiliser le fond d’écran météo",
     useWeatherWallpaperDescription: "Utilise sur les pages Grid et Aperçu le paysage configuré pour la page Météo.",
     weatherPage: "Page Météo",
-    weatherPageDescription: "Choisis le paysage utilisé par la page Météo.",
+    weatherPageDescription: "Choisis le paysage de la page Météo ou utilise le fond d’écran du thème.",
     weatherPageSettings: "Paramètres de la page Météo",
+    useThemeWallpaper: "Utiliser le fond d’écran du thème",
+    useThemeWallpaperDescription: "Utilise le fond d’écran du thème actif à la place du paysage météo sur la page Météo.",
     weatherLandscape: "Paysage",
     weatherLandscapeOptions: Object.freeze({
       alpineLake: "Lac alpin",

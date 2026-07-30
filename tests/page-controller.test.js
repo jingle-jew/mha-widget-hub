@@ -80,12 +80,18 @@ test("weather landscape selection persists through the existing page config mode
   const selected = updatePageConfig(defaulted.pages, "weather", {
     weatherLandscapeId: "celestial-gradient",
   });
+  const themed = updatePageConfig(selected.pages, "weather", {
+    useThemeBackground: true,
+  });
   const repaired = updatePageConfig(selected.pages, "weather", {
     weatherLandscapeId: "missing-landscape",
   });
 
   assert.equal(defaulted.pages[0].config.weatherLandscapeId, "alpine-lake");
+  assert.equal(defaulted.pages[0].config.useThemeBackground, false);
   assert.equal(selected.pages[0].config.weatherLandscapeId, "celestial-gradient");
+  assert.equal(themed.pages[0].config.useThemeBackground, true);
+  assert.equal(themed.pages[0].config.weatherLandscapeId, "celestial-gradient");
   assert.equal(repaired.pages[0].config.weatherLandscapeId, "alpine-lake");
 });
 

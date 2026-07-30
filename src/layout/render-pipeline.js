@@ -71,7 +71,9 @@ export function resolveWeatherBackdropContext({
   const sharedWeatherActive = [PAGE_TYPES.GRID, PAGE_TYPES.OVERVIEW].includes(activePageType)
     && gridWallpaper?.useWeatherBackground === true
     && !isMediaPageExperienceActive(activePage, themeStyle);
-  const weatherBackgroundActive = weatherPageActive || sharedWeatherActive;
+  const weatherPageUsesWeatherBackground = weatherPageActive
+    && activePage?.config?.useThemeBackground !== true;
+  const weatherBackgroundActive = weatherPageUsesWeatherBackground || sharedWeatherActive;
 
   return {
     weatherPageActive,

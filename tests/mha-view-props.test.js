@@ -103,6 +103,7 @@ test("settings panel state derives the current scope openness and preserves stat
     customWallpapers: { light: null, dark: null },
     gridWallpaper: { useWeatherBackground: true },
     weatherLandscapeId: "alpine-lake",
+    weatherUseThemeBackground: false,
     supportsDockPosition: true,
     supportsSidebarToggle: true,
     showsStatusBarOptions: true,

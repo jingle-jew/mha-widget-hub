@@ -22,6 +22,7 @@ test("settings surface coordinator owns both open-state flags and panel sync", (
   };
 
   const toggles = [];
+  const weatherThemeBackgroundChanges = [];
   const appendedNodes = [];
   const host = {
     _settingsOpen: true,
@@ -32,7 +33,10 @@ test("settings surface coordinator owns both open-state flags and panel sync", (
     _statusBarMode: "top-bar",
     _accentPaletteExpanded: true,
     _settingsPage: "dock",
-    _pages: [{ id: "home" }],
+    _pages: [
+      { id: "home" },
+      { id: "weather", type: "weather", config: { useThemeBackground: true } },
+    ],
     _activePageId: "home",
     _dockSettingsPageId: "",
     _dockPosition: "left",
@@ -126,6 +130,7 @@ test("settings surface coordinator owns both open-state flags and panel sync", (
     resetGrid() {},
     _openWallpaperSettings() {},
     _openNowBarSettings() {},
+    _openWeatherPageSettings() {},
     _openSettings() {},
     _openDockSettings() {},
     _openDockPageSettings() {},
@@ -136,6 +141,9 @@ test("settings surface coordinator owns both open-state flags and panel sync", (
     _applyDockPositionFromSettings() {},
     _saveCustomWallpaper() {},
     _resetCustomWallpaper() {},
+    _applyWeatherThemeBackgroundFromSettings(value) {
+      weatherThemeBackgroundChanges.push(value);
+    },
   };
 
   const coordinator = createSettingsSurfaceCoordinator(host);
@@ -158,6 +166,9 @@ test("settings surface coordinator owns both open-state flags and panel sync", (
   assert.equal(host.lastSync.props.all.showsStatusBarOptions, false);
   assert.equal(host.lastSync.props.all.showDockLabels, true);
   assert.equal(host.lastSync.props.all.statusBarMode, "top-bar");
+  assert.equal(host.lastSync.props.all.weatherUseThemeBackground, true);
+  host.lastSync.props.all.onWeatherThemeBackgroundChange(false);
+  assert.deepEqual(weatherThemeBackgroundChanges, [false]);
 });
 
 test("settings surface coordinator exposes the desktop default status bar as hidden until persisted", () => {

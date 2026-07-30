@@ -426,6 +426,7 @@ test("Weather page customization tile opens its dedicated landscape subpanel", (
   let openCount = 0;
   let backCount = 0;
   const changes = [];
+  const themeBackgroundChanges = [];
   const main = createSettingsPanel({
     open: true,
     scope: "all",
@@ -444,8 +445,10 @@ test("Weather page customization tile opens its dedicated landscape subpanel", (
     scope: "all",
     settingsPage: "weather-page",
     weatherLandscapeId: "alpine-lake",
+    weatherUseThemeBackground: true,
     onWeatherPageMainBack: () => { backCount += 1; },
     onWeatherLandscapeChange: value => changes.push(value),
+    onWeatherThemeBackgroundChange: value => themeBackgroundChanges.push(value),
   });
   const choices = subpanel.querySelectorAll(".mha-settings-weather-landscape-option");
   const alpineChoice = choices.find(choice => choice.dataset.landscapeId === "alpine-lake");
@@ -454,6 +457,7 @@ test("Weather page customization tile opens its dedicated landscape subpanel", (
   const celestialInput = celestialChoice.querySelector("input");
 
   assert.equal(subpanel.dataset.settingsPage, "weather-page");
+  assert.equal(hasText(subpanel, "Use theme wallpaper"), true);
   assert.equal(hasText(subpanel, "Landscape"), true);
   assert.equal(choices.length, 2);
   assert.equal(alpineChoice.dataset.selected, "true");
@@ -463,6 +467,11 @@ test("Weather page customization tile opens its dedicated landscape subpanel", (
     "celestial-gradient",
   );
   assert.equal(alpineInput.checked, true);
+  const themeBackgroundToggle = subpanel.querySelector(".mha-toggle-input");
+  assert.equal(themeBackgroundToggle.checked, true);
+  themeBackgroundToggle.checked = false;
+  themeBackgroundToggle.listeners.change({ currentTarget: themeBackgroundToggle });
+  assert.deepEqual(themeBackgroundChanges, [false]);
   celestialInput.checked = true;
   celestialInput.listeners.change({ target: celestialInput });
   assert.deepEqual(changes, ["celestial-gradient"]);

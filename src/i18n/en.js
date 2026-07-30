@@ -93,8 +93,10 @@ export const en = Object.freeze({
     useWeatherWallpaper: "Use weather wallpaper",
     useWeatherWallpaperDescription: "Use the Weather page landscape on Grid and Overview pages.",
     weatherPage: "Weather page",
-    weatherPageDescription: "Choose the landscape used by the Weather page.",
+    weatherPageDescription: "Choose the Weather page landscape or use the theme wallpaper.",
     weatherPageSettings: "Weather page settings",
+    useThemeWallpaper: "Use theme wallpaper",
+    useThemeWallpaperDescription: "Use the active theme wallpaper instead of the weather landscape on the Weather page.",
     weatherLandscape: "Landscape",
     weatherLandscapeOptions: Object.freeze({
       alpineLake: "Alpine lake",

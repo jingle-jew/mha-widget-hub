@@ -153,6 +153,27 @@ test("dedicated Weather and Media page backdrops keep priority over the grid pre
   assert.equal(mediaBackdrop.page, mediaPage);
 });
 
+test("Weather pages can reveal the active theme wallpaper without losing their page identity", () => {
+  const weatherPage = {
+    id: "weather",
+    type: "weather",
+    config: {
+      weatherLandscapeId: "celestial-gradient",
+      useThemeBackground: true,
+    },
+    widgets: [],
+  };
+  const backdrop = resolveWeatherBackdropContext({
+    activePage: weatherPage,
+    gridWallpaper: { useWeatherBackground: true },
+    themeStyle: "oneui",
+  });
+
+  assert.equal(backdrop.weatherPageActive, true);
+  assert.equal(backdrop.weatherBackgroundActive, false);
+  assert.equal(backdrop.page, weatherPage);
+});
+
 test("weather conditions map to the three landscape ambiences", () => {
   ["sunny", "clear", "clear-day", "clear-night", "clear_night", "clearnight", "exceptional"].forEach(condition => {
     assert.equal(resolveWeatherLandscapeAmbience(condition), "clear");

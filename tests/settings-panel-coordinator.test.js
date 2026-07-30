@@ -30,6 +30,7 @@ test("settings coordinator builds both scopes and preserves callback routing", (
     settingsOpen: true,
     screensaverSettingsOpen: false,
     settingsPage: "dock",
+    weatherUseThemeBackground: true,
     isMobileLayout: true,
     isMobileLandscape: true,
     supportsDockPosition: false,
@@ -72,6 +73,7 @@ test("settings coordinator builds both scopes and preserves callback routing", (
   assert.equal(props.all.isMobileLayout, true);
   assert.equal(props.all.isMobileLandscape, true);
   assert.equal(props.all.supportsDockPosition, false);
+  assert.equal(props.all.weatherUseThemeBackground, true);
   assert.equal(props.screensaver.isMobileLayout, true);
 });
 

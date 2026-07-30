@@ -50,6 +50,7 @@ export function normalizeWeatherPageConfig(config = {}) {
     weatherLandscapeId: normalizeWeatherLandscapeId(
       config.weatherLandscapeId || DEFAULT_WEATHER_LANDSCAPE_ID,
     ),
+    useThemeBackground: config.useThemeBackground === true,
     radarEntityId: String(config.radarEntityId || "").trim(),
     radarDiscoveryCompleted: config.radarDiscoveryCompleted === true,
     autoDetectedMetricKeys,
