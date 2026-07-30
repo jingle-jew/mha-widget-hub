@@ -47,9 +47,10 @@ appartiennent à `AGENTS.md`.
 - **Statut :** confirmé.
 - **Décision :** la status bar conserve sa date et son heure existantes, mais
   retire les anciennes informations de développement (`Grid foundation`, mode
-  responsive, colonnes et unités). Sa zone gauche affiche le nom canonique de
-  la page active. Dans Aperçu, une pièce sélectionnée complète temporairement
-  ce contexte sous la forme `Aperçu › Salon`.
+  responsive, colonnes et unités) ainsi que le label de marque fixe `MHA`. Sa
+  zone gauche affiche uniquement le nom canonique de la page active. Dans
+  Aperçu, une pièce sélectionnée complète temporairement ce contexte sous la
+  forme `Aperçu › Salon`.
 - **Pourquoi :** la barre doit décrire l'endroit courant dans MHA sans dupliquer
   le contenu des widgets, de la Now Bar ou du dock, ni exposer des métriques
   internes du moteur de layout.

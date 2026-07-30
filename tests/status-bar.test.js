@@ -40,6 +40,7 @@ test("status bar renders the active context without development metadata", () =>
     assert.equal(context.textContent, "Météo");
     assert.match(statusBar.innerHTML, /data-status-date/);
     assert.match(statusBar.innerHTML, /data-status-time/);
+    assert.doesNotMatch(statusBar.innerHTML, /<strong>MHA<\/strong>/);
     assert.doesNotMatch(statusBar.innerHTML, /Grid foundation|cols|units|auto →/);
   } finally {
     globalThis.document = previousDocument;

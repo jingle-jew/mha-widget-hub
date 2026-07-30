@@ -22,7 +22,6 @@ export function createStatusBar({
   el.innerHTML = `
     <div class="mha-status-brand">
       <span class="mha-dot"></span>
-      <strong>MHA</strong>
       <span class="mha-status-context" data-status-context></span>
     </div>
     <div class="mha-status-meta">
