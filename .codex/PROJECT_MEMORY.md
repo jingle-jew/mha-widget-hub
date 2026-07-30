@@ -15,7 +15,14 @@ appartiennent à `AGENTS.md`.
   notifications de leur thème de référence : capsules pour OneUI et Material
   You, rectangle arrondi historique pour iOS. Chaque tuile place à gauche un
   visuel dans le composant `.mha-icon`, afin d'hériter sans réglage propre de la
-  forme d'icône globale sélectionnée dans Apparence.
+  forme d'icône globale sélectionnée dans Apparence. En iOS, la Now Bar utilise
+  le rôle dédié `--mha-shell-nowbar-surface`, plus dense que la surface des
+  widgets génériques en clair comme en sombre, afin de rester lisible sur le
+  fond d'écran tout en conservant blur et reflets Liquid Glass. Cette surface
+  est uniforme, sans dégradé propre à la tuile. Ses visuels hors artwork
+  utilisent aussi une surface d'accent opaque et la couleur de contraste de la
+  palette; les glyphes météo deviennent monochromes dans ce contexte afin que
+  toutes leurs composantes restent lisibles sur cette bulle.
 - **Contenu :** Média montre l'artwork uniquement pendant une lecture active et
   lorsqu'une image valide existe, sinon une icône générique de musique;
   Météo montre le glyphe de la condition courante; Calendrier compose le jour et

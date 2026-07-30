@@ -15,7 +15,10 @@
 }
 
 .mha-screensaver-nowbar-tile {
-  background: var(--mha-widget-shell-surface, var(--mha-tile-surface, var(--mha-widget-surface)));
+  background: var(
+    --mha-shell-nowbar-surface,
+    var(--mha-widget-shell-surface, var(--mha-tile-surface, var(--mha-widget-surface)))
+  );
   border-color: var(--mha-widget-shell-border, var(--mha-tile-border, var(--mha-widget-border)));
   box-shadow: var(--mha-widget-shell-shadow, var(--mha-tile-shadow, var(--mha-widget-shadow)));
   color: var(--mha-text-primary);
@@ -48,4 +51,26 @@
 
 :host([data-theme-style="ios"]) .mha-screensaver-nowbar-tile {
   border-radius: clamp(1.35rem, 4vw, 2rem);
+}
+
+:host([data-theme-style="ios"])
+  .mha-screensaver-nowbar-visual:not(.mha-screensaver-nowbar-visual--artwork) {
+  --mha-icon-bg: var(--mha-shell-nowbar-icon-surface, var(--mha-accent-strong, var(--mha-accent)));
+  --mha-icon-color: var(--mha-shell-nowbar-icon-color, var(--mha-accent-contrast, #fff));
+  --mha-icon-border: var(
+    --mha-shell-nowbar-icon-border,
+    color-mix(in srgb, var(--mha-icon-color) 28%, transparent)
+  );
+  --mha-icon-symbol-color: var(--mha-icon-color);
+}
+
+:host([data-theme-style="ios"]) .mha-screensaver-nowbar-weather-glyph {
+  --mha-weather-sun: currentColor;
+  --mha-weather-sun-core: currentColor;
+  --mha-weather-moon: currentColor;
+  --mha-weather-cloud: currentColor;
+  --mha-weather-rain: currentColor;
+  --mha-weather-snow: currentColor;
+  --mha-weather-bolt: currentColor;
+  --mha-weather-fog: currentColor;
 }

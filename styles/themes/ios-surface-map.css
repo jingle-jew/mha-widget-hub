@@ -55,6 +55,13 @@
   --mha-shell-surface: var(--mha-surface-shell);
   --mha-shell-status-surface: var(--mha-surface-shell);
   --mha-shell-dock-surface: var(--mha-surface-shell);
+  --mha-shell-nowbar-surface: var(
+    --mha-ios-raw-liquid-nowbar-surface,
+    var(--mha-surface-primary)
+  );
+  --mha-shell-nowbar-icon-surface: var(--mha-ios-raw-liquid-nowbar-icon-surface);
+  --mha-shell-nowbar-icon-color: var(--mha-ios-raw-liquid-nowbar-icon-color);
+  --mha-shell-nowbar-icon-border: var(--mha-ios-raw-liquid-nowbar-icon-border);
   --mha-shell-panel-surface: var(--mha-surface-panel);
   --mha-shell-border: var(--mha-border-shell);
   --mha-shell-shadow: var(--mha-shadow-shell);

@@ -194,6 +194,68 @@ test("Now Bar notification tiles keep theme geometry and the global icon-shape c
   );
 });
 
+test("iOS Now Bar uses a dedicated readable notification surface", () => {
+  const contractSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "screensaver", "screensaver-contract.css"),
+    "utf8",
+  );
+  const mapSource = fs.readFileSync(
+    path.join(THEME_ROOT, "ios-surface-map.css"),
+    "utf8",
+  );
+  const rawSource = fs.readFileSync(
+    path.join(THEME_ROOT, "ios-raw-materials.css"),
+    "utf8",
+  );
+
+  assert.match(
+    contractSource,
+    /\.mha-screensaver-nowbar-tile\s*\{[\s\S]*background:\s*var\([\s\S]*--mha-shell-nowbar-surface,/,
+  );
+  assert.match(
+    mapSource,
+    /--mha-shell-nowbar-surface:\s*var\([\s\S]*--mha-ios-raw-liquid-nowbar-surface,/,
+  );
+  assert.match(rawSource, /--mha-ios-raw-liquid-nowbar-surface:\s*rgba\(242,242,247,\.86\);/);
+  assert.match(rawSource, /--mha-ios-raw-liquid-nowbar-surface:\s*rgba\(44,44,46,\.88\);/);
+  assert.doesNotMatch(
+    rawSource,
+    /--mha-ios-raw-liquid-nowbar-surface:\s*linear-gradient/,
+  );
+});
+
+test("iOS Now Bar icons use an opaque accent surface with adaptive contrast", () => {
+  const contractSource = fs.readFileSync(
+    path.join(REPO_ROOT, "styles", "screensaver", "screensaver-contract.css"),
+    "utf8",
+  );
+  const mapSource = fs.readFileSync(
+    path.join(THEME_ROOT, "ios-surface-map.css"),
+    "utf8",
+  );
+  const rawSource = fs.readFileSync(
+    path.join(THEME_ROOT, "ios-raw-materials.css"),
+    "utf8",
+  );
+
+  assert.match(
+    contractSource,
+    /:host\(\[data-theme-style="ios"\]\)\s*\.mha-screensaver-nowbar-visual:not\(\.mha-screensaver-nowbar-visual--artwork\)\s*\{[\s\S]*--mha-icon-bg:\s*var\(--mha-shell-nowbar-icon-surface,[\s\S]*--mha-icon-color:\s*var\(--mha-shell-nowbar-icon-color,[\s\S]*--mha-icon-symbol-color:\s*var\(--mha-icon-color\);/,
+  );
+  assert.match(
+    contractSource,
+    /:host\(\[data-theme-style="ios"\]\) \.mha-screensaver-nowbar-weather-glyph\s*\{[\s\S]*--mha-weather-sun:\s*currentColor;[\s\S]*--mha-weather-fog:\s*currentColor;/,
+  );
+  assert.match(
+    mapSource,
+    /--mha-shell-nowbar-icon-surface:\s*var\(--mha-ios-raw-liquid-nowbar-icon-surface\);[\s\S]*--mha-shell-nowbar-icon-color:\s*var\(--mha-ios-raw-liquid-nowbar-icon-color\);/,
+  );
+  assert.match(
+    rawSource,
+    /--mha-ios-raw-liquid-nowbar-icon-surface:\s*var\(--mha-accent-strong, var\(--mha-accent\)\);[\s\S]*--mha-ios-raw-liquid-nowbar-icon-color:\s*var\(--mha-accent-contrast, #fff\);/,
+  );
+});
+
 test("screensaver centers its clock and Now Bar inside the Home Assistant content width", () => {
   const source = fs.readFileSync(
     path.join(REPO_ROOT, "styles", "screensaver", "screensaver.css"),
