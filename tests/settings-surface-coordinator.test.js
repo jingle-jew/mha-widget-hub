@@ -22,6 +22,7 @@ test("settings surface coordinator owns both open-state flags and panel sync", (
   };
 
   const toggles = [];
+  const openedSettingsPages = [];
   const weatherThemeBackgroundChanges = [];
   const appendedNodes = [];
   const host = {
@@ -131,7 +132,9 @@ test("settings surface coordinator owns both open-state flags and panel sync", (
     _openWallpaperSettings() {},
     _openNowBarSettings() {},
     _openWeatherPageSettings() {},
-    _openSettings() {},
+    _openSettings(page = "main") {
+      openedSettingsPages.push(page);
+    },
     _openDockSettings() {},
     _openDockPageSettings() {},
     _moveDockPage() {},
@@ -169,6 +172,22 @@ test("settings surface coordinator owns both open-state flags and panel sync", (
   assert.equal(host.lastSync.props.all.weatherUseThemeBackground, true);
   host.lastSync.props.all.onWeatherThemeBackgroundChange(false);
   assert.deepEqual(weatherThemeBackgroundChanges, [false]);
+  host.lastSync.props.all.onOpenAppearanceSettings();
+  host.lastSync.props.all.onOpenCustomizationSettings();
+  host.lastSync.props.all.onOpenNavigationSettings();
+  host.lastSync.props.all.onOpenLayoutSettings();
+  host.lastSync.props.all.onWallpaperMainBack();
+  host.lastSync.props.all.onNowBarMainBack();
+  host.lastSync.props.all.onDockMainBack();
+  assert.deepEqual(openedSettingsPages, [
+    "appearance",
+    "customization",
+    "navigation",
+    "layout",
+    "customization",
+    "customization",
+    "navigation",
+  ]);
 });
 
 test("settings surface coordinator exposes the desktop default status bar as hidden until persisted", () => {

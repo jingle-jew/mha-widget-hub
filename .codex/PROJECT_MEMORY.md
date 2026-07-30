@@ -8,6 +8,22 @@ appartiennent à `AGENTS.md`.
 
 ## Décisions et raisons
 
+### 2026-07-29 — Réserver le panneau global principal à la navigation
+
+- **Statut :** confirmé.
+- **Décision :** la page principale du settings-panel global ne contient que
+  cinq tuiles de navigation : `Apparence`, `Personnalisation`, `Navigation`,
+  `Disposition` et `Avancé`. Aucun select, toggle, slider ou bouton d'action
+  directe ne vit à ce niveau. Les anciens contrôles d'apparence, de langue, de
+  navigation et de disposition appartiennent désormais au sous-panneau de leur
+  catégorie.
+- **Pourquoi :** le premier niveau doit servir de menu stable et lisible, pas
+  mélanger navigation et réglages éditables.
+- **Conséquence :** `Fond d'écran`, `Page Météo` et `Économiseur d'écran et Now
+  Bar` restent sous `Personnalisation`; `Dock` reste sous `Navigation`; leurs
+  boutons retour reviennent vers ce parent logique. Le mode de disposition et
+  la réinitialisation de la grille restent ensemble sous `Disposition`.
+
 ### 2026-07-29 — Initialiser MHA avec Aperçu, Météo et Lecteurs média
 
 - **Statut :** confirmé.

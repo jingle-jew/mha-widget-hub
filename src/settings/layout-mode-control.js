@@ -90,7 +90,7 @@ function applyLayoutMode(panel, value = "auto") {
 }
 
 export function appendLayoutModeControl(panel) {
-  if (!panel || panel.dataset.settingsScope !== "all" || panel.dataset.settingsPage !== "main") {
+  if (!panel || panel.dataset.settingsScope !== "all" || panel.dataset.settingsPage !== "layout") {
     return panel;
   }
   if (panel.querySelector('[data-layout-mode-control="true"]')) return panel;

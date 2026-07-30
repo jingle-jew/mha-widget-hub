@@ -3,6 +3,8 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import { setLanguage } from "../src/i18n/index.js";
+import { appendAdvancedSettingsControls } from "../src/settings/advanced-settings-control.js";
+import { appendLayoutModeControl } from "../src/settings/layout-mode-control.js";
 import { createSettingsPanel, updateSettingsPanel } from "../src/settings/settings-panel.js";
 import { createMhaCheckbox, createMhaRadio } from "../src/ui/form-controls.js";
 
@@ -24,6 +26,14 @@ function createMockNode(tagName, namespaceURI = null) {
       const children = nodes.filter(Boolean);
       children.forEach(child => { child.parentNode = this; });
       this.children.push(...children);
+    },
+    after(...nodes) {
+      const siblings = this.parentNode?.children;
+      const index = siblings?.indexOf(this) ?? -1;
+      if (index < 0) return;
+      const children = nodes.filter(Boolean);
+      children.forEach(child => { child.parentNode = this.parentNode; });
+      siblings.splice(index + 1, 0, ...children);
     },
     setAttribute(name, value) {
       this.attributes[name] = String(value);
@@ -217,18 +227,59 @@ function hasText(root, text) {
   return collectTextNodes(root).includes(text);
 }
 
+test("global settings main page contains only tiles leading to subpanels", () => withMockDocument(() => {
+  const opened = [];
+  const panel = appendAdvancedSettingsControls(createSettingsPanel({
+    open: true,
+    scope: "all",
+    settingsPage: "main",
+    onOpenAppearanceSettings: () => opened.push("appearance"),
+    onOpenCustomizationSettings: () => opened.push("customization"),
+    onOpenNavigationSettings: () => opened.push("navigation"),
+    onOpenLayoutSettings: () => opened.push("layout"),
+  }));
+  const body = panel.querySelector(".mha-settings-body");
+  const tiles = panel.querySelectorAll(".mha-settings-nav-tile");
+
+  assert.equal(body.children.every(child => child.className === "mha-settings-nav-tile"), true);
+  assert.deepEqual(tiles.map(tile => collectTextNodes(tile).find(Boolean)), [
+    "Appearance",
+    "Customization",
+    "Navigation",
+    "Layout",
+    "Advanced",
+  ]);
+  tiles.slice(0, 4).forEach(tile => tile.listeners.click());
+  assert.deepEqual(opened, ["appearance", "customization", "navigation", "layout"]);
+  assert.equal(panel.querySelector(".mha-select-native"), null);
+  assert.equal(panel.querySelector(".mha-toggle-input"), null);
+}));
+
+test("layout controls live in the dedicated layout subpanel", () => withMockDocument(() => {
+  const panel = appendLayoutModeControl(createSettingsPanel({
+    open: true,
+    scope: "all",
+    settingsPage: "layout",
+  }));
+
+  assert.equal(panel.querySelector(".mha-settings-title").textContent, "Layout");
+  assert.equal(panel.querySelector(".mha-settings-field").dataset.layoutModeControl, "true");
+  assert.equal(hasText(panel, "Reset grid"), true);
+  assert.ok(panel.querySelector(".mha-settings-back"));
+}));
+
 test("settings panel hides dock-only controls on mobile and keeps them on desktop", () => withMockDocument(() => {
   const mobileMain = createSettingsPanel({
     open: true,
     scope: "all",
-    settingsPage: "main",
+    settingsPage: "navigation",
     isMobileLayout: true,
   });
 
   const desktopMain = createSettingsPanel({
     open: true,
     scope: "all",
-    settingsPage: "main",
+    settingsPage: "navigation",
     isMobileLayout: false,
   });
 
@@ -275,7 +326,7 @@ test("settings panel keeps mobile-landscape navigation options filtered even wit
   const mobileLandscapeMain = createSettingsPanel({
     open: true,
     scope: "all",
-    settingsPage: "main",
+    settingsPage: "navigation",
     isMobileLayout: true,
     isMobileLandscape: true,
     supportsDockPosition: false,
@@ -307,7 +358,7 @@ test("settings panel updates its mobile landscape dataset in place across viewpo
   const portraitPanel = createSettingsPanel({
     open: true,
     scope: "all",
-    settingsPage: "main",
+    settingsPage: "appearance",
     isMobileLayout: true,
     isMobileLandscape: false,
     supportsDockPosition: false,
@@ -318,7 +369,7 @@ test("settings panel updates its mobile landscape dataset in place across viewpo
   const landscapePanel = createSettingsPanel({
     open: true,
     scope: "all",
-    settingsPage: "main",
+    settingsPage: "appearance",
     isMobileLayout: true,
     isMobileLandscape: true,
     supportsDockPosition: false,
@@ -335,14 +386,14 @@ test("settings panel replaces only the appearance section when visual style chan
   const oneUiPanel = createSettingsPanel({
     open: true,
     scope: "all",
-    settingsPage: "main",
+    settingsPage: "appearance",
     themeStyle: "oneui",
     oneUiPrimarySurfaceOpacity: 42,
   });
   const iosPanel = createSettingsPanel({
     open: true,
     scope: "all",
-    settingsPage: "main",
+    settingsPage: "appearance",
     themeStyle: "ios",
   });
   const originalBody = oneUiPanel.querySelector(".mha-settings-body");
@@ -362,13 +413,13 @@ test("settings panel keeps desktop close animation visible before hiding", () =>
   const openPanel = createSettingsPanel({
     open: true,
     scope: "all",
-    settingsPage: "main",
+    settingsPage: "appearance",
     isMobileLayout: false,
   });
   const closedPanel = createSettingsPanel({
     open: false,
     scope: "all",
-    settingsPage: "main",
+    settingsPage: "appearance",
     isMobileLayout: false,
   });
 
@@ -383,7 +434,7 @@ test("settings panel keeps desktop close animation visible before hiding", () =>
   const reopenedPanel = createSettingsPanel({
     open: true,
     scope: "all",
-    settingsPage: "main",
+    settingsPage: "appearance",
     isMobileLayout: false,
   });
 
@@ -430,7 +481,7 @@ test("Weather page customization tile opens its dedicated landscape subpanel", (
   const main = createSettingsPanel({
     open: true,
     scope: "all",
-    settingsPage: "main",
+    settingsPage: "customization",
     onOpenWeatherPageSettings: () => { openCount += 1; },
   });
   const weatherTile = main.querySelectorAll(".mha-settings-nav-tile")
@@ -509,7 +560,7 @@ test("settings panel exposes independent iOS glass and special-widget tint contr
   const iosPanel = createSettingsPanel({
     open: true,
     scope: "all",
-    settingsPage: "main",
+    settingsPage: "appearance",
     themeStyle: "ios",
     iosGlassTint: 36,
     iosWidgetTint: "transparent",
@@ -544,7 +595,7 @@ test("settings panel hides the Alexa theme option", () => withMockDocument(() =>
   const panel = createSettingsPanel({
     open: true,
     scope: "all",
-    settingsPage: "main",
+    settingsPage: "appearance",
     themeStyle: "oneui",
   });
 
@@ -556,7 +607,7 @@ test("settings selectors use the controlled MHA listbox and keep the native valu
   const panel = createSettingsPanel({
     open: true,
     scope: "all",
-    settingsPage: "main",
+    settingsPage: "appearance",
     theme: "auto",
     onThemeChange: value => values.push(value),
   });
@@ -656,7 +707,7 @@ test("settings panel exposes the OneUI opacity control only for OneUI", () => wi
   const oneUiPanel = createSettingsPanel({
     open: true,
     scope: "all",
-    settingsPage: "main",
+    settingsPage: "appearance",
     themeStyle: "oneui",
     oneUiPrimarySurfaceOpacity: 42,
     onOneUiPrimarySurfaceOpacityChange: value => values.push(value),
@@ -664,7 +715,7 @@ test("settings panel exposes the OneUI opacity control only for OneUI", () => wi
   const iosPanel = createSettingsPanel({
     open: true,
     scope: "all",
-    settingsPage: "main",
+    settingsPage: "appearance",
     themeStyle: "ios",
   });
 
@@ -689,7 +740,7 @@ test("OneUI opacity preview hides panel layers only while the slider is armed", 
   const panel = createSettingsPanel({
     open: true,
     scope: "all",
-    settingsPage: "main",
+    settingsPage: "appearance",
     themeStyle: "oneui",
     onOneUiPrimarySurfaceOpacityChange: value => values.push(value),
   });
@@ -716,7 +767,7 @@ test("iOS glass tint preview hides panel layers only while the slider is armed",
   const panel = createSettingsPanel({
     open: true,
     scope: "all",
-    settingsPage: "main",
+    settingsPage: "appearance",
     themeStyle: "ios",
     onIosGlassTintChange: value => values.push(value),
   });
