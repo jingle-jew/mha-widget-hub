@@ -54,7 +54,7 @@ export function canStartGridEmptyLongPress({ host, grid, event, target } = {}) {
   if (!host || !grid || !event) return false;
   if (host._isEditing) return false;
   const layout = host.dataset?.layout || host._layout || "";
-  if (layout !== "mobile" && layout !== "tablet") return false;
+  if (layout !== "mobile" && layout !== "tablet" && layout !== "desktop") return false;
   if (!isPrimaryPointer(event)) return false;
   if (!target?.closest) return false;
   if (!grid.contains?.(target)) return false;

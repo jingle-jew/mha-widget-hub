@@ -9,9 +9,9 @@ import { t } from "../i18n/index.js";
 export function createWidgetInteractionSurfaceCoordinator(host) {
   const dragCoordinator = createWidgetDragCoordinator(host);
   const gridEmptyLongPressCoordinator = createGridEmptyLongPressCoordinator(host);
-  function isTouchEditLayout() {
+  function usesLongPressEditEntry() {
     const layout = host.dataset?.layout || host._layout || "";
-    return layout === "mobile" || layout === "tablet";
+    return layout === "mobile" || layout === "tablet" || layout === "desktop";
   }
 
   function syncEditModeDom() {
@@ -42,8 +42,8 @@ export function createWidgetInteractionSurfaceCoordinator(host) {
     if (edit) {
       const label = t(host._isEditing ? "common.close" : "common.edit", host._isEditing ? "Close" : "Edit");
       edit.setAttribute("aria-label", label);
-      edit.hidden = mediaPageActive || (isTouchEditLayout() ? !host._isEditing : false);
-      edit.dataset.touchEditClose = String(!mediaPageActive && isTouchEditLayout() && host._isEditing);
+      edit.hidden = mediaPageActive || (usesLongPressEditEntry() ? !host._isEditing : false);
+      edit.dataset.touchEditClose = String(!mediaPageActive && usesLongPressEditEntry() && host._isEditing);
       setFloatingControlButtonIcon(edit, {
         name: getPrimaryEditIconName(host._isEditing),
         label,

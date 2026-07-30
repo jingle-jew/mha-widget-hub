@@ -186,25 +186,30 @@ appartiennent à `AGENTS.md`.
   chaque `entityId`; les anciennes configurations qui utilisent le type
   `input_boolean` sont normalisées vers le type d'affichage `switch`.
 
-### 2026-07-22 — Entrer en édition depuis les surfaces de widgets tactiles
+### 2026-07-29 — Unifier l’entrée en édition sur tous les layouts
 
 - **Statut :** confirmé.
-- **Décision :** sur mobile et tablette, le long-press d'entrée en édition est
-  disponible sur la grille vide et sur les surfaces tap-only des widgets. Les
-  contrôles de manipulation directe (`slider`, `toggle`, champs et outils de
-  redimensionnement) restent exclus. Le geste ne capture ni ne bloque le
-  pointeur avant son activation; mouvement et scroll conservent leur priorité.
-  Après une activation réussie, seul le clic consécutif du widget d'origine est
-  neutralisé.
-- **Pourquoi :** les écrans denses offrent peu de grille vide, mais détourner un
-  slider ou un switch de son geste natif rendrait les contrôles imprévisibles.
-  La suppression ponctuelle du clic permet aux libellés, boutons, scènes,
-  caméras et contrôles média de conserver leur tap court sans déclencher leur
-  action au relâchement d'un long-press.
+- **Décision :** sur mobile, tablette et desktop, le long-press d'entrée en
+  édition est disponible sur la grille vide et sur les surfaces tap-only des
+  widgets. Les contrôles de manipulation directe (`slider`, `toggle`, champs et
+  outils de redimensionnement) restent exclus. Le geste ne capture ni ne bloque
+  le pointeur avant son activation; mouvement et scroll conservent leur
+  priorité. Après une activation réussie, seul le clic consécutif du widget
+  d'origine est neutralisé. Le bouton crayon global reste masqué hors édition
+  sur tous les layouts; une fois l'édition active, `×` à droite et `+` à gauche
+  reprennent sur desktop la géométrie compacte et les ancrages bas de la
+  tablette.
+- **Pourquoi :** l'entrée et la sortie du mode édition doivent suivre un même
+  contrat sur tous les appareils. Les écrans denses offrent en plus peu de
+  grille vide, mais détourner un slider ou un switch de son geste natif rendrait
+  les contrôles imprévisibles. La suppression ponctuelle du clic permet aux
+  libellés, boutons, scènes, caméras et contrôles média de conserver leur clic
+  court sans déclencher leur action au relâchement d'un long-press.
 - **Conséquence :** les futurs widgets tap-only bénéficient automatiquement du
-  geste. Tout nouveau contrôle qui possède son propre press/drag doit être
-  ajouté au contrat d'exclusion du coordinateur central et couvert par ses
-  tests, sans créer de gestionnaire de long-press propre au widget.
+  geste sur tous les layouts. Tout nouveau contrôle qui possède son propre
+  press/drag doit être ajouté au contrat d'exclusion du coordinateur central et
+  couvert par ses tests, sans créer de gestionnaire de long-press propre au
+  widget.
 
 ### 2026-07-19 — Composer le popup lumière autour de deux colonnes stables
 

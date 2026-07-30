@@ -92,7 +92,7 @@ test("widget interaction coordinator clears drop-state classes", () => {
   assert.equal("data-drop-placement" in nodes[0].attributes, false);
 });
 
-test("widget interaction coordinator hides the mobile and tablet edit pencil until editing starts", () => {
+test("widget interaction coordinator hides the edit pencil on every layout until editing starts", () => {
   const previousDocument = globalThis.document;
   globalThis.document = {
     createElement() {
@@ -175,8 +175,13 @@ test("widget interaction coordinator hides the mobile and tablet edit pencil unt
     desktopHost._isEditing = false;
     const desktopCoordinator = createWidgetInteractionSurfaceCoordinator(desktopHost);
     desktopCoordinator.syncEditModeDom();
-    assert.equal(editButton.hidden, false);
+    assert.equal(editButton.hidden, true);
     assert.equal(editButton.dataset.touchEditClose, "false");
+
+    desktopHost._isEditing = true;
+    desktopCoordinator.syncEditModeDom();
+    assert.equal(editButton.hidden, false);
+    assert.equal(editButton.dataset.touchEditClose, "true");
   } finally {
     globalThis.document = previousDocument;
   }

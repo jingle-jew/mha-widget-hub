@@ -56,7 +56,7 @@ function createWidgetSurfaceTarget({ directManipulation = "" } = {}) {
   return { target, widget };
 }
 
-test("canStartGridEmptyLongPress allows an empty grid press in mobile and tablet", () => {
+test("canStartGridEmptyLongPress allows an empty grid press in mobile, tablet, and desktop", () => {
   const grid = {
     contains(node) {
       return node === this;
@@ -77,10 +77,15 @@ test("canStartGridEmptyLongPress allows an empty grid press in mobile and tablet
     ...mobileHost,
     dataset: { layout: "tablet" },
   };
+  const desktopHost = {
+    ...mobileHost,
+    dataset: { layout: "desktop" },
+  };
   const event = { button: 0, isPrimary: true, pointerType: "touch" };
 
   assert.equal(canStartGridEmptyLongPress({ host: mobileHost, grid, event, target }), true);
   assert.equal(canStartGridEmptyLongPress({ host: tabletHost, grid, event, target }), true);
+  assert.equal(canStartGridEmptyLongPress({ host: desktopHost, grid, event, target }), true);
 });
 
 test("canStartGridEmptyLongPress allows widget surfaces and tap-only controls", () => {

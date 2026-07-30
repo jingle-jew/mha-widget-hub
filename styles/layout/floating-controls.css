@@ -310,17 +310,18 @@
 }
 
 /* TOUCH EDIT ENTRY
- * Mobile and tablet enter edit mode via long press on empty grid space.
+ * Mobile, tablet, and desktop enter edit mode via long press on the grid.
  * The primary edit button is therefore hidden until edit mode is active, then
- * reused as an always-available close affordance in the top-right corner.
+ * reused as an always-available close affordance.
  */
 :host([data-layout="mobile"]) .mha-primary-edit-button[hidden],
-:host([data-layout="tablet"]) .mha-primary-edit-button[hidden] {
+:host([data-layout="tablet"]) .mha-primary-edit-button[hidden],
+:host([data-layout="desktop"]) .mha-primary-edit-button[hidden] {
   display: none !important;
 }
 
 /* TOUCH EDIT GLOBAL PILLS
- * Mobile/tablet edit controls should read like compact launcher edit chips,
+ * Edit controls should read like compact launcher edit chips on every layout,
  * not like floating action buttons. Keep the same actions and positions, but
  * switch the global + / X controls to a smaller pill geometry locally.
  */
@@ -335,7 +336,9 @@
 :host([data-layout="mobile"]) .mha-primary-edit-button[data-touch-edit-close="true"],
 :host([data-layout="mobile"].is-editing) .mha-add-widget-button:not([hidden]),
 :host([data-layout="tablet"]) .mha-primary-edit-button[data-touch-edit-close="true"],
-:host([data-layout="tablet"].is-editing) .mha-add-widget-button:not([hidden]) {
+:host([data-layout="tablet"].is-editing) .mha-add-widget-button:not([hidden]),
+:host([data-layout="desktop"]) .mha-primary-edit-button[data-touch-edit-close="true"],
+:host([data-layout="desktop"].is-editing) .mha-add-widget-button:not([hidden]) {
   inline-size: var(--mha-touch-edit-pill-width) !important;
   block-size: var(--mha-touch-edit-pill-height) !important;
   width: var(--mha-touch-edit-pill-width) !important;
@@ -352,7 +355,9 @@
 :host([data-layout="mobile"]) .mha-primary-edit-button[data-touch-edit-close="true"] .mha-floating-control-symbol,
 :host([data-layout="mobile"].is-editing) .mha-add-widget-button:not([hidden]) .mha-floating-control-symbol,
 :host([data-layout="tablet"]) .mha-primary-edit-button[data-touch-edit-close="true"] .mha-floating-control-symbol,
-:host([data-layout="tablet"].is-editing) .mha-add-widget-button:not([hidden]) .mha-floating-control-symbol {
+:host([data-layout="tablet"].is-editing) .mha-add-widget-button:not([hidden]) .mha-floating-control-symbol,
+:host([data-layout="desktop"]) .mha-primary-edit-button[data-touch-edit-close="true"] .mha-floating-control-symbol,
+:host([data-layout="desktop"].is-editing) .mha-add-widget-button:not([hidden]) .mha-floating-control-symbol {
   --mha-icon-symbol-size: var(--mha-touch-edit-pill-icon-size);
   --mha-icon-symbol-min-size: var(--mha-touch-edit-pill-icon-min-size);
 }
@@ -396,8 +401,9 @@
   transform: none !important;
 }
 
-:host([data-layout="tablet"]) .mha-primary-edit-button[data-touch-edit-close="true"] {
-  /* Tablet controls are direct children of the MHA host. Anchoring them to
+:host([data-layout="tablet"]) .mha-primary-edit-button[data-touch-edit-close="true"],
+:host([data-layout="desktop"]) .mha-primary-edit-button[data-touch-edit-close="true"] {
+  /* Tablet/desktop controls are direct children of the MHA host. Anchoring them to
    * that host keeps them inside HA's content viewport when its sidebar is
    * visible, collapsed, or expanded. */
   position: absolute;
@@ -419,7 +425,8 @@
   transform: none !important;
 }
 
-:host([data-layout="tablet"].is-editing) .mha-add-widget-button:not([hidden]) {
+:host([data-layout="tablet"].is-editing) .mha-add-widget-button:not([hidden]),
+:host([data-layout="desktop"].is-editing) .mha-add-widget-button:not([hidden]) {
   position: absolute;
   z-index: 95;
   inset-inline-start: max(

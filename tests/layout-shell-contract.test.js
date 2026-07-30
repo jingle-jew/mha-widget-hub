@@ -929,11 +929,11 @@ test("floating controls and settings sheet consume responsive variants instead o
   );
   assert.match(
     floatingControlsSource,
-    /:host\(\[data-layout="tablet"\]\) \.mha-primary-edit-button\[data-touch-edit-close="true"\]\s*\{[\s\S]*position:\s*absolute;/,
+    /:host\(\[data-layout="tablet"\]\) \.mha-primary-edit-button\[data-touch-edit-close="true"\],\s*:host\(\[data-layout="desktop"\]\) \.mha-primary-edit-button\[data-touch-edit-close="true"\]\s*\{[\s\S]*position:\s*absolute;/,
   );
   assert.match(
     floatingControlsSource,
-    /:host\(\[data-layout="tablet"\]\.is-editing\) \.mha-add-widget-button:not\(\[hidden\]\)\s*\{[\s\S]*position:\s*absolute;[\s\S]*inset-inline-start:\s*max\(/,
+    /:host\(\[data-layout="tablet"\]\.is-editing\) \.mha-add-widget-button:not\(\[hidden\]\),\s*:host\(\[data-layout="desktop"\]\.is-editing\) \.mha-add-widget-button:not\(\[hidden\]\)\s*\{[\s\S]*position:\s*absolute;[\s\S]*inset-inline-start:\s*max\(/,
   );
   assert.match(
     settingsPanelSource,
