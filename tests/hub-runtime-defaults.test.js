@@ -27,6 +27,7 @@ test("createHubRuntimeDefaults returns the expected initial runtime state", () =
   assert.equal(defaults._showDockLabels, false);
   assert.equal(defaults._hasPersistedStatusBarMode, false);
   assert.equal(defaults._statusBarMode, "top-bar");
+  assert.deepEqual(defaults._statusBarContext, { pageId: "", label: "" });
   assert.equal(defaults._language, "auto");
   assert.deepEqual(defaults._customWallpapers, { light: null, dark: null });
   assert.deepEqual(defaults._gridWallpaper, { useWeatherBackground: false });
@@ -42,6 +43,7 @@ test("createHubRuntimeDefaults returns fresh mutable containers", () => {
   assert.notEqual(first._widgetPositions, second._widgetPositions);
   assert.notEqual(first._customWallpapers, second._customWallpapers);
   assert.notEqual(first._gridWallpaper, second._gridWallpaper);
+  assert.notEqual(first._statusBarContext, second._statusBarContext);
   assert.notEqual(first._pages, second._pages);
   assert.notEqual(first._widgets, second._widgets);
   assert.notEqual(first._entityVisibilityConfig, second._entityVisibilityConfig);

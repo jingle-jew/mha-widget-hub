@@ -11,32 +11,50 @@ const STATUS_DATE_FORMATTER = new Intl.DateTimeFormat("fr-CA", {
 });
 
 export function createStatusBar({
-  layoutMode = "auto",
-  layout = "mobile",
-  logicalColumns = 1,
-  gridUnits = 2,
   statusBarMode = "top-bar",
+  pages = [],
+  activePageId = "",
 } = {}) {
   const el = document.createElement("header");
   el.className = "mha-status-bar";
   el.dataset.statusBarMode = normalizeStatusBarMode(statusBarMode);
 
-  const label = layoutMode === "auto" ? `auto → ${layout}` : layout;
   el.innerHTML = `
     <div class="mha-status-brand">
       <span class="mha-dot"></span>
       <strong>MHA</strong>
-      <span>Grid foundation</span>
+      <span class="mha-status-context" data-status-context></span>
     </div>
     <div class="mha-status-meta">
-      <span>${label}</span>
-      <span>${logicalColumns} cols · ${gridUnits} units</span>
       <span data-status-date>—</span>
       <strong data-status-time>—</strong>
     </div>
   `;
 
+  updateStatusContext(el, {
+    activePage: pages.find(page => page?.id === activePageId) || pages[0] || null,
+  });
+
   return el;
+}
+
+export function resolveStatusContextLabel(activePage = null, detail = "") {
+  const pageLabel = String(activePage?.name || activePage?.label || "").trim();
+  const detailLabel = String(detail || "").trim();
+  return [pageLabel, detailLabel].filter(Boolean).join(" › ");
+}
+
+export function updateStatusContext(root, {
+  activePage = null,
+  detail = "",
+} = {}) {
+  const context = root?.querySelector?.("[data-status-context]");
+  if (!context) return false;
+
+  const nextContext = resolveStatusContextLabel(activePage, detail);
+  if (context.textContent !== nextContext) context.textContent = nextContext;
+  context.hidden = !nextContext;
+  return true;
 }
 
 export function updateStatusTime(root, now = new Date()) {

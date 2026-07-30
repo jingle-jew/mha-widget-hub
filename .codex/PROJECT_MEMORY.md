@@ -8,6 +8,27 @@ appartiennent à `AGENTS.md`.
 
 ## Décisions et raisons
 
+### 2026-07-29 — Afficher le contexte courant dans la status bar
+
+- **Statut :** confirmé.
+- **Décision :** la status bar conserve sa date et son heure existantes, mais
+  retire les anciennes informations de développement (`Grid foundation`, mode
+  responsive, colonnes et unités). Sa zone gauche affiche le nom canonique de
+  la page active. Dans Aperçu, une pièce sélectionnée complète temporairement
+  ce contexte sous la forme `Aperçu › Salon`.
+- **Pourquoi :** la barre doit décrire l'endroit courant dans MHA sans dupliquer
+  le contenu des widgets, de la Now Bar ou du dock, ni exposer des métriques
+  internes du moteur de layout.
+- **Conséquence :** le nom de page reste possédé par le modèle de pages et se
+  resynchronise lors des changements de page et du renommage actif. Le détail
+  de pièce appartient au runtime local d'Aperçu, n'est pas persisté et disparaît
+  avec la fermeture ou l'expiration de la sélection. Les libellés longs sont
+  tronqués avant la date et l'heure plutôt que de les repousser. En mode pill,
+  la barre est positionnée dans le host MHA, qui commence déjà après la sidebar
+  Home Assistant : elle ne doit donc jamais ajouter
+  `--mha-ha-sidebar-reserved-inline-start`. Cette réserve reste nécessaire aux
+  surfaces `fixed` au viewport, notamment la top bar et le screensaver.
+
 ### 2026-07-29 — Configurer l’horloge météo et partager la source du screensaver
 
 - **Statut :** confirmé.

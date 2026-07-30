@@ -406,6 +406,7 @@ export function createOverviewPage(page = {}, {
   getDeviceWidgetPositions = () => ({}),
   onOpenWidgetManager = () => {},
   onSheetOpenChange = () => {},
+  onContextChange = () => {},
 } = {}) {
   const mobile = layout === "mobile";
   const roomGridUnits = resolveOverviewRoomGridUnits(layout, mobileGridUnits);
@@ -781,6 +782,12 @@ export function createOverviewPage(page = {}, {
     root.dataset.editingSection = controller.editingSection;
     root.dataset.discoveryPending = String(discoveryPending);
     root.dataset.discoveryError = String(Object.keys(discoveryErrors).length > 0);
+    const selectedArea = getArea();
+    onContextChange({
+      pageId: String(currentPage?.id || ""),
+      contextId: selectedArea ? `area:${getAreaId(selectedArea)}` : "",
+      label: String(selectedArea?.name || "").trim(),
+    });
     syncHostSheetState();
     if (!mobile) {
       const roomsBody = root.querySelector?.(".mha-overview-section--rooms .mha-overview-section-body");

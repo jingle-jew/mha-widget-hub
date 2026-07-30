@@ -62,6 +62,7 @@ export function createHubRuntimeDefaults() {
     _showDockLabels: false,
     _hasPersistedStatusBarMode: false,
     _statusBarMode: "top-bar",
+    _statusBarContext: { pageId: "", label: "" },
     _language: "auto",
     _customWallpapers: { light: null, dark: null },
     _gridWallpaper: { useWeatherBackground: false },

@@ -12,6 +12,7 @@ function createHarness(overrides = {}) {
     syncActivePageBackdrop: [],
     syncWidgetDropSlots: 0,
     syncSettingsDom: 0,
+    syncStatusDom: 0,
     renderRoot: 0,
     exitEditMode: 0,
     recordPersistenceResult: [],
@@ -100,6 +101,7 @@ function createHarness(overrides = {}) {
         pageType: activePage?.type || "grid",
       });
     },
+    syncStatusDom: () => { calls.syncStatusDom += 1; },
     syncWidgetDropSlots: () => { calls.syncWidgetDropSlots += 1; },
     syncSettingsDom: () => { calls.syncSettingsDom += 1; },
     renderRoot: () => { calls.renderRoot += 1; },
@@ -136,6 +138,7 @@ test("selecting a page closes placement state and reloads widgets", () => {
   assert.equal(calls.refreshActiveGridOnly, 1);
   assert.equal(calls.syncWidgetDropSlots, 1);
   assert.equal(calls.syncDocks, 1);
+  assert.equal(calls.syncStatusDom, 1);
 });
 
 test("grid and weather page changes synchronize the active backdrop before refreshing the grid", () => {

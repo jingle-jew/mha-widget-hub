@@ -14,10 +14,10 @@
      * shared outer frame edges.
      *
      * The pill status bar is absolutely positioned inside `.mha-shell`, whose
-     * own inline padding already contributes the outer frame inset. Only the
-     * Home Assistant sidebar reserve should be added on the left here.
+     * host already starts after the Home Assistant sidebar. Reapplying the HA
+     * sidebar reserve here would therefore create a second, empty left inset.
      */
-    left: var(--mha-ha-sidebar-reserved-inline-start, 0px) !important;
+    left: 0 !important;
     right: var(--mha-page-padding) !important;
     width: auto !important;
     inline-size: auto !important;

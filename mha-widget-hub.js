@@ -38,7 +38,7 @@ import {
 } from "./src/settings/theme-controller.js";
 import { createAppearanceCoordinator } from "./src/settings/appearance-coordinator.js";
 import { createWallpaperController } from "./src/settings/wallpaper-controller.js";
-import {updateStatusTime} from "./src/layout/status-bar.js";
+import {updateStatusContext,updateStatusTime} from "./src/layout/status-bar.js";
 import { normalizeStoredWidgetContract } from "./src/widgets/widget-storage.js?v=phase1";
 import {updateClockWidgets} from "./src/widgets/clock-widget.js";
 import { createScreensaverSettingsBridge } from "./src/screensaver/screensaver-settings-bridge.js";
@@ -321,6 +321,7 @@ constructor(){
     exitEditMode:()=>this._disableEditMode(),
     transitionPageRender:(previousPage,nextPage)=>this._renderPageTransition(previousPage,nextPage),
     syncActivePageBackdrop:(activePage)=>this._syncActivePageBackdropState({activePage}),
+    syncStatusDom:()=>this._updateStatusDom(),
     renderRoot:()=>this.render(),
     clearPlacementState:()=>{
       this._activeMoveWidgetId="";
@@ -590,6 +591,15 @@ _buildOverviewPageProps(){
     getEditableWidgetPositions:()=>this._getActiveWidgetPositions({create:true}),
     getDeviceWidgetPositions:(contextId)=>this._getOverviewDeviceWidgetPositions(contextId),
     onOpenWidgetManager:()=>this._openWidgetManager(),
+    onContextChange:(context={})=>{
+      const pageId=String(context.pageId||"");
+      if(pageId!==this._activePageId)return;
+      this._statusBarContext={
+        pageId,
+        label:String(context.label||"").trim(),
+      };
+      this._updateStatusDom();
+    },
     onSheetOpenChange:(open)=>{
       this.dataset.overviewSheetOpen=String(Boolean(open));
       syncWidgetSurfaceOpenState(this.shadowRoot);
@@ -747,6 +757,11 @@ _getWidgetManagerCategories(){
 }
 _updateStatusDom(now){
   updateStatusTime(this.shadowRoot,now);
+  const activePage=this._getActivePage();
+  const detail=this._statusBarContext?.pageId===activePage?.id
+    ?this._statusBarContext.label
+    :"";
+  updateStatusContext(this.shadowRoot,{activePage,detail});
 }
 _updateClockWidgets(now){
   updateClockWidgets(this.shadowRoot,now);

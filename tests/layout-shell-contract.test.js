@@ -427,7 +427,7 @@ test("frame alignment stylesheet no longer pilots grid alignment directly from d
   assert.doesNotMatch(source, /--mha-grid-track-justify:\s*(start|end|center)/);
 });
 
-test("pill status bar uses page padding as its tablet/desktop frame inset on both sides", () => {
+test("pill status bar stays inside the MHA host without reserving the HA sidebar twice", () => {
   const source = fs.readFileSync(
     path.join(REPO_ROOT, "styles", "layout", "frame-alignment.css"),
     "utf8",
@@ -439,7 +439,7 @@ test("pill status bar uses page padding as its tablet/desktop frame inset on bot
 
   assert.match(
     source,
-    /left:\s*var\(--mha-ha-sidebar-reserved-inline-start,\s*0px\)\s*!important;/,
+    /left:\s*0\s*!important;/,
   );
   assert.match(
     source,
@@ -447,7 +447,7 @@ test("pill status bar uses page padding as its tablet/desktop frame inset on bot
   );
   assert.match(
     statusSource,
-    /left:\s*var\(--mha-ha-sidebar-reserved-inline-start,\s*0px\);/,
+    /@media \(min-width:\s*768px\)[\s\S]*?\.mha-status-bar\s*\{[\s\S]*?left:\s*0;/,
   );
   assert.match(
     statusSource,
@@ -456,6 +456,10 @@ test("pill status bar uses page padding as its tablet/desktop frame inset on bot
   assert.doesNotMatch(
     source,
     /--mha-frame-edge-inset:/,
+  );
+  assert.doesNotMatch(
+    source,
+    /left:\s*var\(--mha-ha-sidebar-reserved-inline-start/,
   );
   assert.doesNotMatch(
     source,
