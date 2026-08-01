@@ -108,7 +108,6 @@ export function createSettingsSurfaceCoordinator(host) {
         onResetGrid: () => host.resetGrid(),
         onOpenAppearanceSettings: () => host._openSettings("appearance"),
         onOpenCustomizationSettings: () => host._openSettings("customization"),
-        onOpenLayoutSettings: () => host._openSettings("layout"),
         onSettingsMainBack: () => host._openSettings(),
         onOpenWallpaperSettings: () => host._openWallpaperSettings(),
         onOpenNowBarSettings: () => host._openNowBarSettings(),

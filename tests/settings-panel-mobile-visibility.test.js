@@ -27,6 +27,16 @@ function createMockNode(tagName, namespaceURI = null) {
       children.forEach(child => { child.parentNode = this; });
       this.children.push(...children);
     },
+    prepend(...nodes) {
+      const children = nodes.filter(Boolean);
+      children.forEach(child => { child.parentNode = this; });
+      this.children.unshift(...children);
+    },
+    replaceChildren(...nodes) {
+      this.children.forEach(child => { child.parentNode = null; });
+      this.children = [];
+      this.append(...nodes);
+    },
     after(...nodes) {
       const siblings = this.parentNode?.children;
       const index = siblings?.indexOf(this) ?? -1;
@@ -116,12 +126,19 @@ function createMockDocument() {
 
 function withMockDocument(run) {
   const previousDocument = globalThis.document;
+  const previousLocalStorage = globalThis.localStorage;
   globalThis.document = createMockDocument();
+  globalThis.localStorage = {
+    getItem() { return null; },
+    setItem() {},
+    removeItem() {},
+  };
   setLanguage("en");
   try {
     return run();
   } finally {
     globalThis.document = previousDocument;
+    globalThis.localStorage = previousLocalStorage;
   }
 }
 
@@ -239,7 +256,6 @@ test("global settings main page contains only tiles leading to subpanels", () =>
     onOpenNowBarSettings: () => opened.push("screensaver-nowbar"),
     onOpenCustomizationSettings: () => opened.push("customization"),
     onOpenDockSettings: () => opened.push("dock"),
-    onOpenLayoutSettings: () => opened.push("layout"),
   }));
   const body = panel.querySelector(".mha-settings-body");
   const tiles = panel.querySelectorAll(".mha-settings-nav-tile");
@@ -252,10 +268,9 @@ test("global settings main page contains only tiles leading to subpanels", () =>
     "Screensaver and Now Bar",
     "Customization",
     "Dock",
-    "Layout",
     "Advanced",
   ]);
-  tiles.slice(0, 7).forEach(tile => tile.listeners.click());
+  tiles.slice(0, 6).forEach(tile => tile.listeners.click());
   assert.deepEqual(opened, [
     "appearance",
     "wallpaper",
@@ -263,7 +278,6 @@ test("global settings main page contains only tiles leading to subpanels", () =>
     "screensaver-nowbar",
     "customization",
     "dock",
-    "layout",
   ]);
   assert.equal(panel.querySelector(".mha-select-native"), null);
   assert.equal(panel.querySelector(".mha-toggle-input"), null);
@@ -286,21 +300,29 @@ test("global settings keeps category controls inside second-level subpanels", ()
   assert.equal(customization.querySelectorAll(".mha-settings-nav-tile").length, 0);
   assert.equal(appearance.querySelectorAll(".mha-settings-nav-tile").length, 0);
   assert.equal(hasText(customization, "Language"), true);
+  assert.equal(hasText(customization, "Icon shape"), true);
+  assert.equal(hasText(customization, "Status bar"), true);
   assert.equal(hasText(appearance, "Hide Home Assistant sidebar"), true);
-  assert.equal(hasText(appearance, "Status bar"), true);
+  assert.equal(hasText(appearance, "Icon shape"), false);
+  assert.equal(hasText(appearance, "Status bar"), false);
 }));
 
-test("layout controls live in the dedicated layout subpanel", () => withMockDocument(() => {
-  const panel = appendLayoutModeControl(createSettingsPanel({
+test("layout controls live inside the Advanced subpanel", () => withMockDocument(() => {
+  let resetCount = 0;
+  const panel = appendLayoutModeControl(appendAdvancedSettingsControls(createSettingsPanel({
     open: true,
     scope: "all",
-    settingsPage: "layout",
+    settingsPage: "advanced",
+  }), {
+    onResetGrid: () => { resetCount += 1; },
   }));
 
-  assert.equal(panel.querySelector(".mha-settings-title").textContent, "Layout");
+  assert.equal(panel.querySelector(".mha-settings-title").textContent, "Advanced");
   assert.equal(panel.querySelector(".mha-settings-field").dataset.layoutModeControl, "true");
   assert.equal(hasText(panel, "Reset grid"), true);
   assert.ok(panel.querySelector(".mha-settings-back"));
+  panel.querySelector(".mha-settings-reset").listeners.click();
+  assert.equal(resetCount, 1);
 }));
 
 test("settings panel hides dock-only controls on mobile and keeps them on desktop", () => withMockDocument(() => {
@@ -315,6 +337,20 @@ test("settings panel hides dock-only controls on mobile and keeps them on deskto
     open: true,
     scope: "all",
     settingsPage: "appearance",
+    isMobileLayout: false,
+  });
+
+  const mobileCustomization = createSettingsPanel({
+    open: true,
+    scope: "all",
+    settingsPage: "customization",
+    isMobileLayout: true,
+  });
+
+  const desktopCustomization = createSettingsPanel({
+    open: true,
+    scope: "all",
+    settingsPage: "customization",
     isMobileLayout: false,
   });
 
@@ -347,8 +383,8 @@ test("settings panel hides dock-only controls on mobile and keeps them on deskto
 
   assert.equal(hasText(mobileMain, "Hide Home Assistant sidebar"), false);
   assert.equal(hasText(desktopMain, "Hide Home Assistant sidebar"), true);
-  assert.equal(hasText(mobileMain, "Status bar"), false);
-  assert.equal(hasText(desktopMain, "Status bar"), true);
+  assert.equal(hasText(mobileCustomization, "Status bar"), false);
+  assert.equal(hasText(desktopCustomization, "Status bar"), true);
   assert.equal(hasText(mobileDock, "Dock position"), false);
   assert.equal(hasText(desktopDock, "Dock position"), true);
   assert.equal(hasText(mobileDock, "Show dock labels"), true);
@@ -369,6 +405,15 @@ test("settings panel keeps mobile-landscape navigation options filtered even wit
     showsStatusBarOptions: false,
   });
 
+  const mobileLandscapeCustomization = createSettingsPanel({
+    open: true,
+    scope: "all",
+    settingsPage: "customization",
+    isMobileLayout: true,
+    isMobileLandscape: true,
+    showsStatusBarOptions: false,
+  });
+
   const mobileLandscapeDock = createSettingsPanel({
     open: true,
     scope: "all",
@@ -384,7 +429,7 @@ test("settings panel keeps mobile-landscape navigation options filtered even wit
 
   assert.equal(mobileLandscapeMain.dataset.mobileLandscape, "true");
   assert.equal(hasText(mobileLandscapeMain, "Hide Home Assistant sidebar"), false);
-  assert.equal(hasText(mobileLandscapeMain, "Status bar"), false);
+  assert.equal(hasText(mobileLandscapeCustomization, "Status bar"), false);
   assert.equal(hasText(mobileLandscapeDock, "Dock position"), false);
   assert.equal(hasText(mobileLandscapeDock, "Dock icons"), true);
 }));

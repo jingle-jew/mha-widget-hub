@@ -1037,7 +1037,7 @@ export function updateSettingsPanel(existing, next) {
   normalizeThemeAppearanceStack(existing);
 
   const page = existing.dataset.settingsPage || "";
-  if (!["main", "appearance", "customization", "layout", "screensaver-nowbar", "screensaver"].includes(page)) return false;
+  if (!["main", "appearance", "customization", "screensaver-nowbar", "screensaver"].includes(page)) return false;
 
   const valueSignatureChanged = getValueControlSignature(existing) !== getValueControlSignature(next);
   const accentSignatureChanged = getAccentSwatchSignature(existing) !== getAccentSwatchSignature(next);
@@ -1143,10 +1143,8 @@ export function createSettingsPanel({
   onScreensaverNowBarEntitySelectionChange,
   onScreensaverNowBarNowItemChange,
   onScreensaverClockVariantChange,
-  onResetGrid,
   onOpenAppearanceSettings,
   onOpenCustomizationSettings,
-  onOpenLayoutSettings,
   onSettingsMainBack,
   onOpenWallpaperSettings,
   onOpenNowBarSettings,
@@ -1212,9 +1210,7 @@ export function createSettingsPanel({
       ? t("settings.appearance", "Appearance")
       : settingsPage === "customization"
         ? t("settings.customization", "Customization")
-        : settingsPage === "layout"
-          ? t("settings.layout", "Layout")
-          : settingsPage === "dock"
+        : settingsPage === "dock"
             ? t("settings.dock", "Dock")
             : settingsPage === "dock-detail"
               ? t("settings.dockIcon", "Dock icon")
@@ -1237,7 +1233,7 @@ export function createSettingsPanel({
   const headerActions = document.createElement("div");
   headerActions.className = "mha-settings-header-actions";
 
-  const topLevelSubpages = ["appearance", "customization", "layout"];
+  const topLevelSubpages = ["appearance", "customization"];
   if (!isScreensaverScope && (topLevelSubpages.includes(settingsPage) || settingsPage === "dock" || settingsPage === "wallpaper" || settingsPage === "weather-page" || settingsPage === "screensaver-nowbar" || settingsPage === "nowbar")) {
     headerActions.append(createBackButton({
       label: t("settings.backToSettings", "Back to settings"),
@@ -1307,12 +1303,6 @@ export function createSettingsPanel({
         label: t("settings.dock", "Dock"),
         description: t("settings.dockDescription", "Reorder dock pages and change their icons."),
         onClick: onOpenDockSettings,
-      }),
-      createSettingsNavTile({
-        icon: "grid",
-        label: t("settings.layout", "Layout"),
-        description: t("settings.layoutDescription", "Choose the responsive layout mode or reset widget positions."),
-        onClick: onOpenLayoutSettings,
       }),
     );
     return finalizeSettingsPanel(root, header, body, onClose);
@@ -1478,12 +1468,6 @@ export function createSettingsPanel({
         onModeChange: onAccentModeChange,
         onExpandedChange: onAccentPaletteExpandedChange,
       }),
-      createSelect({
-        label: t("settings.iconShape", "Icon shape"),
-        value: iconShape,
-        options: ICON_SHAPE_OPTIONS,
-        onChange: onIconShapeChange,
-      }),
     );
 
     if (showSidebarToggle) {
@@ -1492,15 +1476,6 @@ export function createSettingsPanel({
         description: t("settings.hideHaSidebarDescription", "Hide the native Home Assistant sidebar for a more immersive experience."),
         checked: hideHaSidebar,
         onChange: onHideHaSidebarChange,
-      }));
-    }
-
-    if (showStatusBarSettings) {
-      appearanceControls.push(createSelect({
-        label: t("settings.statusBar", "Status bar"),
-        value: statusBarMode,
-        options: STATUS_BAR_MODE_OPTIONS,
-        onChange: onStatusBarModeChange,
       }));
     }
 
@@ -1531,24 +1506,31 @@ export function createSettingsPanel({
   }
 
   if (!isScreensaverScope && settingsPage === "customization") {
-    body.append(createSection(t("settings.customization", "Customization"), [
+    const customizationControls = [
       createSelect({
         label: t("settings.language", "Language"),
         value: language,
         options: LANGUAGE_OPTIONS,
         onChange: onLanguageChange,
       }),
-    ]));
-    return finalizeSettingsPanel(root, header, body, onClose);
-  }
+      createSelect({
+        label: t("settings.iconShape", "Icon shape"),
+        value: iconShape,
+        options: ICON_SHAPE_OPTIONS,
+        onChange: onIconShapeChange,
+      }),
+    ];
 
-  if (!isScreensaverScope && settingsPage === "layout") {
-    const resetButton = document.createElement("button");
-    resetButton.className = "mha-settings-reset";
-    resetButton.type = "button";
-    resetButton.textContent = t("settings.resetGrid", "Reset grid");
-    resetButton.addEventListener("click", () => onResetGrid?.());
-    body.append(createSection(t("settings.layout", "Layout"), [resetButton]));
+    if (showStatusBarSettings) {
+      customizationControls.push(createSelect({
+        label: t("settings.statusBar", "Status bar"),
+        value: statusBarMode,
+        options: STATUS_BAR_MODE_OPTIONS,
+        onChange: onStatusBarModeChange,
+      }));
+    }
+
+    body.append(createSection(t("settings.customization", "Customization"), customizationControls));
     return finalizeSettingsPanel(root, header, body, onClose);
   }
 

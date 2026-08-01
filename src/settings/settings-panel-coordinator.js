@@ -88,9 +88,8 @@ export function buildSettingsCoordinatorProps({
 }
 
 function decorateSettingsPanel(panel, props = {}) {
-  return appendAdvancedSettingsControls(
-    appendLayoutModeControl(panel),
-    props,
+  return appendLayoutModeControl(
+    appendAdvancedSettingsControls(panel, props),
   );
 }
 

@@ -15,18 +15,20 @@ appartiennent à `AGENTS.md`.
   des tuiles de navigation et ne mène jamais à une catégorie intermédiaire qui
   contiendrait elle-même une autre tuile de sous-panneau. `Apparence`, `Fond
   d'écran`, `Page Météo`, `Économiseur d'écran et Now Bar`, `Personnalisation`,
-  `Dock`, `Disposition` et `Avancé` sont donc accessibles directement depuis ce
-  menu lorsque leurs capacités sont disponibles. Aucun select, toggle, slider
-  ou bouton d'action directe ne vit au premier niveau.
+  `Dock` et `Avancé` sont donc accessibles directement depuis ce menu lorsque
+  leurs capacités sont disponibles. Aucun select, toggle, slider ou bouton
+  d'action directe ne vit au premier niveau.
 - **Pourquoi :** le premier niveau doit servir de menu stable et lisible, pas
   mélanger navigation et réglages éditables, et le parcours des réglages doit se
   limiter au panneau principal puis au panneau choisi.
-- **Conséquence :** `Personnalisation` ne possède que le choix de langue. Les
-  contrôles de sidebar Home Assistant et de status bar appartiennent à
-  `Apparence`, avant les sliders de prévisualisation de surface. Les quatre
-  panneaux spécialisés et leur bouton retour pointent directement vers le menu
-  principal. Le mode de disposition et la réinitialisation de la grille restent
-  ensemble sous `Disposition`.
+- **Conséquence :** `Personnalisation` regroupe la langue, la forme globale des
+  icônes et la status bar. La sidebar Home Assistant appartient à `Apparence`,
+  avant les sliders de prévisualisation de surface. Les quatre panneaux
+  spécialisés et leur bouton retour pointent directement vers le menu principal.
+  Le mode de disposition et la réinitialisation de la grille restent
+  ensemble dans une section `Disposition` du panneau `Avancé`, avant MHA
+  Insights; aucune tuile `Disposition` distincte n'est exposée sur le menu
+  principal.
 
 ### 2026-07-29 — Initialiser MHA avec Aperçu, Météo et Lecteurs média
 

@@ -123,6 +123,18 @@ function createDeviceInsightsSwitch(panel, { checked = false, onChange } = {}) {
   return field;
 }
 
+function createResetGridButton(panel, { onReset } = {}) {
+  const button = document.createElement("button");
+  button.className = "mha-settings-reset";
+  button.type = "button";
+  button.textContent = t("settings.resetGrid", "Reset grid");
+  button.addEventListener("click", () => {
+    if (onReset) onReset();
+    else getHost(panel)?.resetGrid?.();
+  });
+  return button;
+}
+
 function ensureAdvancedBackButton(panel, onBack) {
   const actions = panel.querySelector?.(".mha-settings-header-actions");
   if (!actions || actions.querySelector?.("[data-advanced-settings-back]")) return;
@@ -144,12 +156,17 @@ function renderAdvancedPanel(panel, props = {}) {
 
   const body = panel.querySelector?.(".mha-settings-body");
   if (!body || typeof body.replaceChildren !== "function") return panel;
-  body.replaceChildren(createSection(t("settings.deviceInsights", "MHA Insights"), [
-    createDeviceInsightsSwitch(panel, {
-      checked: isDeviceInsightsEnabled(),
-      onChange: props.onDeviceInsightsEnabledChange,
-    }),
-  ]));
+  body.replaceChildren(
+    createSection(t("settings.layout", "Layout"), [
+      createResetGridButton(panel, { onReset: props.onResetGrid }),
+    ]),
+    createSection(t("settings.deviceInsights", "MHA Insights"), [
+      createDeviceInsightsSwitch(panel, {
+        checked: isDeviceInsightsEnabled(),
+        onChange: props.onDeviceInsightsEnabledChange,
+      }),
+    ]),
+  );
   return panel;
 }
 
