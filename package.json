@@ -28,7 +28,7 @@
     "theme-studio:test": "node --test tests/theme-studio.test.js"
   },
   "devDependencies": {
-    "@playwright/test": "^1.62.0",
+    "@playwright/test": "^1.62.1",
     "@tabler/icons": "3.45.0"
   }
 }
