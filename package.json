@@ -29,6 +29,6 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.62.0",
-    "@tabler/icons": "3.45.0"
+    "@tabler/icons": "3.46.0"
   }
 }
