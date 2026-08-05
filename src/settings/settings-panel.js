@@ -1037,7 +1037,7 @@ export function updateSettingsPanel(existing, next) {
   normalizeThemeAppearanceStack(existing);
 
   const page = existing.dataset.settingsPage || "";
-  if (!["main", "appearance", "customization", "screensaver-nowbar", "screensaver"].includes(page)) return false;
+  if (!["main", "screensaver-nowbar", "screensaver"].includes(page)) return false;
 
   const valueSignatureChanged = getValueControlSignature(existing) !== getValueControlSignature(next);
   const accentSignatureChanged = getAccentSwatchSignature(existing) !== getAccentSwatchSignature(next);
@@ -1045,7 +1045,7 @@ export function updateSettingsPanel(existing, next) {
   let sourceControls = null;
 
   if (valueSignatureChanged || accentSignatureChanged) {
-    if (page !== "appearance") return false;
+    if (page !== "main") return false;
     const existingAppearance = existing.querySelector('[data-settings-section="appearance"]');
     const nextAppearance = next.querySelector('[data-settings-section="appearance"]');
     if (!existingAppearance || !nextAppearance || typeof existingAppearance.replaceWith !== "function") return false;
@@ -1143,12 +1143,9 @@ export function createSettingsPanel({
   onScreensaverNowBarEntitySelectionChange,
   onScreensaverNowBarNowItemChange,
   onScreensaverClockVariantChange,
-  onOpenAppearanceSettings,
-  onOpenCustomizationSettings,
-  onSettingsMainBack,
+  onResetGrid,
   onOpenWallpaperSettings,
   onOpenNowBarSettings,
-  onNowBarMainBack,
   onOpenWeatherPageSettings,
   onWeatherPageMainBack,
   onWeatherLandscapeChange,
@@ -1206,21 +1203,17 @@ export function createSettingsPanel({
   h2.className = "mha-settings-title";
   h2.textContent = isScreensaverScope
     ? t("settings.screensaver", "Screensaver")
-    : settingsPage === "appearance"
-      ? t("settings.appearance", "Appearance")
-      : settingsPage === "customization"
-        ? t("settings.customization", "Customization")
-        : settingsPage === "dock"
-            ? t("settings.dock", "Dock")
-            : settingsPage === "dock-detail"
-              ? t("settings.dockIcon", "Dock icon")
-              : settingsPage === "wallpaper"
-                ? t("settings.wallpaper", "Wallpaper")
-                : settingsPage === "weather-page"
-                  ? t("settings.weatherPageSettings", "Weather page settings")
-                  : settingsPage === "screensaver-nowbar" || settingsPage === "nowbar"
-                    ? t("settings.screensaverAndNowBar", "Screensaver and Now Bar")
-                    : t("settings.title", "Settings");
+    : settingsPage === "dock"
+      ? t("settings.dock", "Dock")
+      : settingsPage === "dock-detail"
+        ? t("settings.dockIcon", "Dock icon")
+        : settingsPage === "wallpaper"
+          ? t("settings.wallpaper", "Wallpaper")
+          : settingsPage === "weather-page"
+            ? t("settings.weatherPageSettings", "Weather page settings")
+            : settingsPage === "screensaver-nowbar" || settingsPage === "nowbar"
+              ? t("settings.screensaverAndNowBar", "Screensaver and Now Bar")
+              : t("settings.title", "Settings");
 
   title.append(eyebrow, h2);
 
@@ -1233,20 +1226,15 @@ export function createSettingsPanel({
   const headerActions = document.createElement("div");
   headerActions.className = "mha-settings-header-actions";
 
-  const topLevelSubpages = ["appearance", "customization"];
-  if (!isScreensaverScope && (topLevelSubpages.includes(settingsPage) || settingsPage === "dock" || settingsPage === "wallpaper" || settingsPage === "weather-page" || settingsPage === "screensaver-nowbar" || settingsPage === "nowbar")) {
+  if (!isScreensaverScope && (settingsPage === "dock" || settingsPage === "wallpaper" || settingsPage === "weather-page" || settingsPage === "screensaver-nowbar" || settingsPage === "nowbar")) {
     headerActions.append(createBackButton({
       label: t("settings.backToSettings", "Back to settings"),
       className: "mha-settings-back",
-      onClick: () => topLevelSubpages.includes(settingsPage)
-        ? onSettingsMainBack?.()
-        : settingsPage === "wallpaper"
+      onClick: () => settingsPage === "wallpaper"
         ? onWallpaperMainBack?.()
         : settingsPage === "weather-page"
           ? onWeatherPageMainBack?.()
-          : settingsPage === "screensaver-nowbar" || settingsPage === "nowbar"
-            ? onNowBarMainBack?.()
-            : onDockMainBack?.(),
+          : onDockMainBack?.(),
     }));
   }
 
@@ -1263,50 +1251,6 @@ export function createSettingsPanel({
   const showSidebarToggle = supportsSidebarToggle ?? !isMobileLayout;
   const showStatusBarSettings = showsStatusBarOptions ?? !isMobileLayout;
   const supportsDockLabelToggle = themeStyle !== "oneui";
-
-  if (!isScreensaverScope && settingsPage === "main") {
-    body.append(
-      createSettingsNavTile({
-        icon: "gear",
-        label: t("settings.appearance", "Appearance"),
-        description: t("settings.appearanceDescription", "Choose the theme, visual style, accent and icon shape."),
-        onClick: onOpenAppearanceSettings,
-      }),
-      createSettingsNavTile({
-        icon: "dashboard",
-        label: t("settings.wallpaper", "Wallpaper"),
-        description: t("settings.wallpaperDescription", "Choose an MHA weather background or separate images for light and dark themes."),
-        onClick: onOpenWallpaperSettings,
-      }),
-      createSettingsNavTile({
-        icon: "weather",
-        label: t("settings.weatherPage", "Weather page"),
-        description: t("settings.weatherPageDescription", "Choose the landscape used by the Weather page."),
-        onClick: onOpenWeatherPageSettings,
-      }),
-      ...(supportsScreensaver ? [
-        createSettingsNavTile({
-          icon: "star",
-          label: t("settings.screensaverAndNowBar", "Screensaver and Now Bar"),
-          description: t("settings.screensaverNowBarDescription", "Configure the screensaver and displayed content."),
-          onClick: onOpenNowBarSettings,
-        }),
-      ] : []),
-      createSettingsNavTile({
-        icon: "dashboard",
-        label: t("settings.customization", "Customization"),
-        description: t("settings.customizationDescription", "Choose the interface language."),
-        onClick: onOpenCustomizationSettings,
-      }),
-      createSettingsNavTile({
-        icon: "apps",
-        label: t("settings.dock", "Dock"),
-        description: t("settings.dockDescription", "Reorder dock pages and change their icons."),
-        onClick: onOpenDockSettings,
-      }),
-    );
-    return finalizeSettingsPanel(root, header, body, onClose);
-  }
 
   if (!isScreensaverScope && settingsPage === "dock") {
     if (showDockPositionSettings) {
@@ -1432,7 +1376,7 @@ export function createSettingsPanel({
     return finalizeSettingsPanel(root, header, body, onClose);
   }
 
-  if (!isScreensaverScope && settingsPage === "appearance") {
+  if (!isScreensaverScope) {
     const appearanceControls = [
       createSelect({
         label: t("settings.theme", "Theme"),
@@ -1468,16 +1412,13 @@ export function createSettingsPanel({
         onModeChange: onAccentModeChange,
         onExpandedChange: onAccentPaletteExpandedChange,
       }),
+      createSelect({
+        label: t("settings.iconShape", "Icon shape"),
+        value: iconShape,
+        options: ICON_SHAPE_OPTIONS,
+        onChange: onIconShapeChange,
+      }),
     );
-
-    if (showSidebarToggle) {
-      appearanceControls.push(createSwitch({
-        label: t("settings.hideHaSidebar", "Hide Home Assistant sidebar"),
-        description: t("settings.hideHaSidebarDescription", "Hide the native Home Assistant sidebar for a more immersive experience."),
-        checked: hideHaSidebar,
-        onChange: onHideHaSidebarChange,
-      }));
-    }
 
     if (themeStyle === "oneui") {
       appearanceControls.push(createPercentageSlider({
@@ -1501,40 +1442,60 @@ export function createSettingsPanel({
       }));
     }
 
-    body.append(createSection(t("settings.appearance", "Appearance"), appearanceControls, "appearance"));
-    return finalizeSettingsPanel(root, header, body, onClose);
-  }
-
-  if (!isScreensaverScope && settingsPage === "customization") {
-    const customizationControls = [
+    sections.push(createSection(t("settings.appearance", "Appearance"), appearanceControls, "appearance"));
+    sections.push(createSection(t("settings.customization", "Customization"), [
       createSelect({
         label: t("settings.language", "Language"),
         value: language,
         options: LANGUAGE_OPTIONS,
         onChange: onLanguageChange,
       }),
-      createSelect({
-        label: t("settings.iconShape", "Icon shape"),
-        value: iconShape,
-        options: ICON_SHAPE_OPTIONS,
-        onChange: onIconShapeChange,
+      createSettingsNavTile({
+        icon: "dashboard",
+        label: t("settings.wallpaper", "Wallpaper"),
+        description: t("settings.wallpaperDescription", "Choose an MHA weather background or separate images for light and dark themes."),
+        onClick: onOpenWallpaperSettings,
       }),
-    ];
-
-    if (showStatusBarSettings) {
-      customizationControls.push(createSelect({
-        label: t("settings.statusBar", "Status bar"),
-        value: statusBarMode,
-        options: STATUS_BAR_MODE_OPTIONS,
-        onChange: onStatusBarModeChange,
-      }));
-    }
-
-    body.append(createSection(t("settings.customization", "Customization"), customizationControls));
-    return finalizeSettingsPanel(root, header, body, onClose);
-  }
-
-  if (isScreensaverScope) {
+      createSettingsNavTile({
+        icon: "weather",
+        label: t("settings.weatherPage", "Weather page"),
+        description: t("settings.weatherPageDescription", "Choose the landscape used by the Weather page."),
+        onClick: onOpenWeatherPageSettings,
+      }),
+      ...(supportsScreensaver ? [
+        createSettingsNavTile({
+          icon: "star",
+          label: t("settings.screensaverAndNowBar", "Screensaver and Now Bar"),
+          description: t("settings.screensaverNowBarDescription", "Configure the screensaver and displayed content."),
+          onClick: onOpenNowBarSettings,
+        }),
+      ] : []),
+    ]));
+    sections.push(createSection(t("settings.navigation", "Navigation"), [
+      ...(showSidebarToggle ? [
+        createSwitch({
+          label: t("settings.hideHaSidebar", "Hide Home Assistant sidebar"),
+          description: t("settings.hideHaSidebarDescription", "Hide the native Home Assistant sidebar for a more immersive experience."),
+          checked: hideHaSidebar,
+          onChange: onHideHaSidebarChange,
+        }),
+      ] : []),
+      ...(showStatusBarSettings ? [
+        createSelect({
+          label: t("settings.statusBar", "Status bar"),
+          value: statusBarMode,
+          options: STATUS_BAR_MODE_OPTIONS,
+          onChange: onStatusBarModeChange,
+        }),
+      ] : []),
+      createSettingsNavTile({
+        icon: "apps",
+        label: t("settings.dock", "Dock"),
+        description: t("settings.dockDescription", "Reorder dock pages and change their icons."),
+        onClick: onOpenDockSettings,
+      }),
+    ]));
+  } else {
     sections.push(createSection(t("settings.appearance", "Appearance"), [
       createSelect({
         label: t("settings.theme", "Theme"),
@@ -1571,6 +1532,16 @@ export function createSettingsPanel({
   }
 
   body.append(...sections);
+
+  const resetButton = document.createElement("button");
+  resetButton.className = "mha-settings-reset";
+  resetButton.type = "button";
+  resetButton.textContent = t("settings.resetGrid", "Reset grid");
+  resetButton.addEventListener("click", () => onResetGrid?.());
+
+  if (!isScreensaverScope) {
+    body.append(createSection(t("settings.layout", "Layout"), [resetButton]));
+  }
 
   return finalizeSettingsPanel(root, header, body, onClose);
 }

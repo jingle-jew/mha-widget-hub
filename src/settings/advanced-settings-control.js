@@ -3,8 +3,6 @@ import { isDeviceInsightsEnabled } from "../device-insights/device-insights-stor
 import { t } from "../i18n/index.js";
 import { createBackButton } from "../system/system-buttons.js";
 import { createToggle } from "../ui/toggle.js";
-import { createIcon } from "../ui/icon.js";
-import { createIconSymbol } from "../ui/icon-symbol.js";
 
 function getHost(panel) {
   return panel?.getRootNode?.()?.host || null;
@@ -44,13 +42,6 @@ function createAdvancedTile(panel, { onClick } = {}) {
   button.type = "button";
   button.dataset.advancedSettingsEntry = "true";
   button.addEventListener("click", () => (onClick || (() => openSettingsPage(panel, "advanced")))());
-
-  button.append(createIcon({
-    name: "settings",
-    category: "utility",
-    label: t("settings.advanced", "Advanced"),
-    children: createIconSymbol({ name: "settings", label: t("settings.advanced", "Advanced") }),
-  }));
 
   const text = document.createElement("span");
   text.className = "mha-settings-nav-text";
@@ -123,18 +114,6 @@ function createDeviceInsightsSwitch(panel, { checked = false, onChange } = {}) {
   return field;
 }
 
-function createResetGridButton(panel, { onReset } = {}) {
-  const button = document.createElement("button");
-  button.className = "mha-settings-reset";
-  button.type = "button";
-  button.textContent = t("settings.resetGrid", "Reset grid");
-  button.addEventListener("click", () => {
-    if (onReset) onReset();
-    else getHost(panel)?.resetGrid?.();
-  });
-  return button;
-}
-
 function ensureAdvancedBackButton(panel, onBack) {
   const actions = panel.querySelector?.(".mha-settings-header-actions");
   if (!actions || actions.querySelector?.("[data-advanced-settings-back]")) return;
@@ -156,25 +135,34 @@ function renderAdvancedPanel(panel, props = {}) {
 
   const body = panel.querySelector?.(".mha-settings-body");
   if (!body || typeof body.replaceChildren !== "function") return panel;
-  body.replaceChildren(
-    createSection(t("settings.layout", "Layout"), [
-      createResetGridButton(panel, { onReset: props.onResetGrid }),
-    ]),
-    createSection(t("settings.deviceInsights", "MHA Insights"), [
-      createDeviceInsightsSwitch(panel, {
-        checked: isDeviceInsightsEnabled(),
-        onChange: props.onDeviceInsightsEnabledChange,
-      }),
-    ]),
-  );
+  body.replaceChildren(createSection(t("settings.deviceInsights", "MHA Insights"), [
+    createDeviceInsightsSwitch(panel, {
+      checked: isDeviceInsightsEnabled(),
+      onChange: props.onDeviceInsightsEnabledChange,
+    }),
+  ]));
   return panel;
 }
 
 function appendAdvancedEntry(panel, props = {}) {
   const body = panel.querySelector?.(".mha-settings-body");
   if (!body || typeof body.append !== "function") return panel;
-  if (body.querySelector?.("[data-advanced-settings-entry]")) return panel;
-  body.append(createAdvancedTile(panel, { onClick: props.onOpenAdvancedSettings }));
+  if (body.querySelector?.("[data-advanced-settings-section]")) return panel;
+
+  const sections = typeof body.querySelectorAll === "function"
+    ? [...body.querySelectorAll(".mha-settings-section")]
+    : [];
+  const layoutSection = sections
+    .find(section => section.querySelector?.(".mha-settings-section-title")?.textContent === t("settings.layout", "Layout"));
+  const section = createSection(t("settings.advanced", "Advanced"), [
+    createAdvancedTile(panel, { onClick: props.onOpenAdvancedSettings }),
+  ]);
+
+  if (layoutSection && typeof body.insertBefore === "function") {
+    body.insertBefore(section, layoutSection);
+  } else {
+    body.append(section);
+  }
   return panel;
 }
 

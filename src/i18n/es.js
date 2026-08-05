@@ -74,10 +74,9 @@ export const es = Object.freeze({
   settings: Object.freeze({
     title: "Ajustes",
     appearance: "Apariencia",
-    appearanceDescription: "Configura el tema, el estilo visual, el acento y la barra lateral de Home Assistant.",
     customization: "Personalización",
-    customizationDescription: "Elige el idioma, la forma de los iconos y la barra de estado.",
     language: "Idioma",
+    navigation: "Navegación",
     layout: "Diseño",
     theme: "Tema",
     visualStyle: "Estilo visual",
