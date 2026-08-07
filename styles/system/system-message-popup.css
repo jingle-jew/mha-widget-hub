@@ -1,0 +1,78 @@
+.mha-system-message-popup {
+  --mha-system-message-accent: var(--mha-border-info, var(--mha-accent));
+  --mha-system-message-surface: var(--mha-surface-info, var(--mha-surface-toast));
+  position: absolute;
+  z-index: 20;
+  inset-block-start: clamp(.75rem, 1.6vw, 1.1rem);
+  inset-inline-start: 50%;
+  max-inline-size: min(30rem, calc(100% - 7.5rem));
+  min-block-size: 2.4rem;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: .55rem;
+  padding: .56rem .85rem;
+  border: 1px solid var(--mha-system-message-accent);
+  border-radius: var(--mha-radius-pill, 999px);
+  background: var(--mha-system-message-surface, var(--mha-surface-toast, var(--mha-surface-popup)));
+  color: var(--mha-text-primary, #fff);
+  -webkit-backdrop-filter: var(--mha-filter-popup, blur(18px) saturate(130%));
+  backdrop-filter: var(--mha-filter-popup, blur(18px) saturate(130%));
+  box-shadow: var(--mha-shadow-popup, 0 .35rem 1rem rgba(0, 0, 0, .26));
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translate(-50%, -.35rem);
+  transition: opacity 160ms ease, transform 160ms ease, visibility 0s linear 160ms;
+}
+
+.mha-system-message-popup[data-open="true"] {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+  transition-delay: 0s;
+}
+
+.mha-system-message-popup[data-variant="confirmation"] {
+  --mha-system-message-accent: var(--mha-border-success, var(--mha-accent));
+  --mha-system-message-surface: var(--mha-surface-success, var(--mha-surface-toast));
+}
+
+.mha-system-message-popup[data-variant="warning"] {
+  --mha-system-message-accent: var(--mha-border-warning, var(--mha-accent));
+  --mha-system-message-surface: var(--mha-surface-warning, var(--mha-surface-toast));
+}
+
+.mha-system-message-popup[data-variant="error"] {
+  --mha-system-message-accent: var(--mha-border-danger, var(--mha-accent));
+  --mha-system-message-surface: var(--mha-surface-danger, var(--mha-surface-toast));
+}
+
+.mha-system-message-popup-icon {
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  display: grid;
+  place-items: center;
+  color: var(--mha-system-message-accent);
+}
+
+.mha-system-message-popup-icon .mha-icon-symbol {
+  --mha-icon-symbol-size: 1.1rem;
+  --mha-icon-symbol-min-size: 1.1rem;
+  --mha-icon-symbol-color: currentColor;
+}
+
+.mha-system-message-popup-text {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+  font-size: .78rem;
+  font-weight: var(--mha-font-weight-bold);
+  line-height: 1.3;
+  text-align: start;
+}
+
+@media (max-width: 767px) {
+  .mha-system-message-popup {
+    max-inline-size: calc(100% - 5.5rem);
+  }
+}

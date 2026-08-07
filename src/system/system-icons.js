@@ -12,6 +12,10 @@ export const SYSTEM_ICONS = Object.freeze({
   delete: "trash",
   show: "eye",
   hide: "eye-off",
+  confirmation: "check",
+  info: "info-circle",
+  warning: "alert-triangle",
+  error: "alert-circle",
 });
 
 const SYSTEM_ICON_ALIASES = Object.freeze({

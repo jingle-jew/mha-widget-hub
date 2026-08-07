@@ -324,7 +324,10 @@ appartiennent à `AGENTS.md`.
   geste. Esee Cloud utilise `SET_PRESET`, tandis qu'une intégration custom doit
   fournir l'action `set_preset`. L'action officielle `onvif.ptz` ne sait pas
   créer de preset : le popup doit le signaler explicitement plutôt que d'envoyer
-  une commande invalide.
+  une commande invalide. Les confirmations et messages système transitoires ne
+  doivent pas recréer un overlay local : utiliser
+  `src/system/system-message-popup.js`, ses variantes `confirmation`, `info`,
+  `warning` et `error`, ainsi que la surface globale `--mha-surface-toast`.
 
 ### 2026-07-15 — Faire du mouvement une signature visuelle MHA
 

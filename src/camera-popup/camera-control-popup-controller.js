@@ -17,6 +17,7 @@ import {
   applyWidgetSurfaceHostLayoutState,
   syncWidgetSurfaceOpenState,
 } from "../panels/widget-surface-state.js";
+import { createSystemMessagePopup, showSystemMessage } from "../system/system-message-popup.js";
 import { normalizeCameraPopupConfig } from "./camera-popup-config.js";
 import { createCameraPopupSettingsView } from "./camera-popup-settings-view.js";
 import { wireCameraPresetLongPress } from "./camera-preset-long-press.js";
@@ -374,11 +375,7 @@ export function openCameraControlPopup({
   const body = document.createElement("div");
   body.className = "mha-camera-control-popup-body";
   streamSurface = createStreamSurface(context);
-  const presetFeedback = document.createElement("div");
-  presetFeedback.className = "mha-camera-popup-preset-feedback";
-  presetFeedback.setAttribute("role", "status");
-  presetFeedback.setAttribute("aria-live", "polite");
-  presetFeedback.dataset.visible = "false";
+  const presetFeedback = createSystemMessagePopup();
 
   const syncProviderState = () => {
     const provider = resolveCameraPtzProvider(
@@ -413,16 +410,22 @@ export function openCameraControlPopup({
     }
     presetFeedbackButton = button || null;
     if (presetFeedbackButton) presetFeedbackButton.dataset.presetSaveState = state;
-    presetFeedback.textContent = message;
-    presetFeedback.dataset.state = state;
-    presetFeedback.dataset.visible = "true";
-    presetFeedbackTimer = globalThis.setTimeout?.(() => {
-      presetFeedback.dataset.visible = "false";
-      delete presetFeedback.dataset.state;
-      if (presetFeedbackButton) delete presetFeedbackButton.dataset.presetSaveState;
-      presetFeedbackButton = null;
-      presetFeedbackTimer = 0;
-    }, 2400);
+    const duration = state === "saving" ? 0 : 2400;
+    const variant = state === "saved"
+      ? "confirmation"
+      : state === "error"
+        ? "error"
+        : state === "unsupported"
+          ? "warning"
+          : "info";
+    showSystemMessage(presetFeedback, { message, variant, duration });
+    if (duration > 0) {
+      presetFeedbackTimer = globalThis.setTimeout?.(() => {
+        if (presetFeedbackButton) delete presetFeedbackButton.dataset.presetSaveState;
+        presetFeedbackButton = null;
+        presetFeedbackTimer = 0;
+      }, duration);
+    }
   };
 
   const savePreset = async (preset, button) => {
@@ -448,6 +451,7 @@ export function openCameraControlPopup({
       { label: preset.label },
     ), "saving", button);
     const saved = await runCommand("set_preset", preset.value);
+    if (!root.isConnected) return saved;
     showPresetFeedback(t(
       saved ? "cameraPopup.presetSaved" : "cameraPopup.presetSaveFailed",
       saved ? "{label} saved." : "Could not save {label}.",
