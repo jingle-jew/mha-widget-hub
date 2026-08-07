@@ -15,6 +15,10 @@ const widgetPlacementSource = readFileSync(
   new URL("../src/widgets/widget-placement-orchestrator.js", import.meta.url),
   "utf8",
 );
+const widgetSurfaceStateSource = readFileSync(
+  new URL("../src/panels/widget-surface-state.js", import.meta.url),
+  "utf8",
+);
 const mediaPageCss = readFileSync(
   new URL("../styles/pages/media-page.css", import.meta.url),
   "utf8",
@@ -100,7 +104,7 @@ test("media page settings panel restores its own scrim instead of inheriting the
 
 test("media page settings panel participates in the shared widget-surface open-state selector", () => {
   assert.match(
-    widgetPlacementSource,
+    widgetSurfaceStateSource,
     /'\.mha-media-page-settings-panel\[data-open="true"\]:not\(\[hidden\]\)'/,
   );
 });

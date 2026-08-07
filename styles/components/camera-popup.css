@@ -1,0 +1,305 @@
+/* Camera live view uses the same external geometry as the light popup. */
+.mha-camera-control-popup {
+  z-index: 155;
+}
+
+.mha-camera-control-popup-sheet {
+  inline-size: min(68rem, calc(100vw - 3rem));
+  block-size: min(44rem, calc(100dvh - 3rem));
+  max-block-size: none;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: clamp(.75rem, 1.6vw, 1.1rem);
+  overflow: hidden;
+}
+
+.mha-camera-control-popup-header {
+  min-block-size: 3.5rem;
+  padding-block-end: .2rem;
+  border-block-end: 1px solid var(--mha-popup-section-border, var(--mha-panel-section-border, var(--mha-border-subtle)));
+}
+
+.mha-camera-control-popup-body {
+  position: relative;
+  min-inline-size: 0;
+  min-block-size: 0;
+  block-size: 100%;
+  overflow: hidden;
+  border: 1px solid var(--mha-popup-section-border, var(--mha-panel-section-border, var(--mha-border-subtle)));
+  border-radius: var(--mha-radius-widget, 1.25rem);
+  background: #050607;
+  isolation: isolate;
+}
+
+.mha-camera-popup-stream,
+.mha-camera-popup-live-stream,
+.mha-camera-popup-snapshot {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+.mha-camera-popup-stream {
+  display: grid;
+  place-items: center;
+  background: #050607;
+}
+
+.mha-camera-popup-live-stream {
+  z-index: 1;
+  display: block;
+}
+
+.mha-camera-popup-live-stream[data-stream-ready="false"] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mha-camera-popup-snapshot {
+  z-index: 0;
+  object-fit: contain;
+}
+
+.mha-camera-popup-overlay-button,
+.mha-camera-popup-preset {
+  border: 1px solid color-mix(in srgb, #fff 34%, transparent);
+  background: color-mix(in srgb, #050607 64%, transparent);
+  color: #fff;
+  -webkit-backdrop-filter: blur(18px) saturate(130%);
+  backdrop-filter: blur(18px) saturate(130%);
+  box-shadow: 0 .35rem 1rem rgba(0, 0, 0, .26);
+  font: inherit;
+  cursor: pointer;
+}
+
+.mha-camera-popup-overlay-button:hover,
+.mha-camera-popup-overlay-button:focus-visible,
+.mha-camera-popup-preset:hover,
+.mha-camera-popup-preset:focus-visible {
+  border-color: color-mix(in srgb, var(--mha-accent) 76%, #fff);
+  background: color-mix(in srgb, var(--mha-accent) 44%, rgba(5, 6, 7, .68));
+}
+
+.mha-camera-popup-overlay-button:active,
+.mha-camera-popup-preset:active {
+  transform: scale(.94);
+}
+
+.mha-camera-popup-overlay-button:disabled,
+.mha-camera-popup-preset:disabled,
+.mha-camera-control-popup[data-ptz-available="false"] .mha-camera-popup-direction {
+  opacity: .42;
+  cursor: default;
+}
+
+.mha-camera-popup-settings-button {
+  position: absolute;
+  z-index: 5;
+  inset-block-start: clamp(.75rem, 1.6vw, 1.1rem);
+  inset-inline-end: clamp(.75rem, 1.6vw, 1.1rem);
+  inline-size: 2.85rem;
+  block-size: 2.85rem;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+}
+
+.mha-camera-popup-settings-button .mha-icon-symbol,
+.mha-camera-popup-direction .mha-icon-symbol {
+  --mha-icon-symbol-size: 1.25rem;
+}
+
+.mha-camera-popup-direction-pad {
+  position: absolute;
+  z-index: 4;
+  inset-inline-start: clamp(.75rem, 1.6vw, 1.1rem);
+  inset-block-end: clamp(4.6rem, 8vw, 5.2rem);
+  inline-size: clamp(8.8rem, 16vw, 10.8rem);
+  aspect-ratio: 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  gap: .35rem;
+}
+
+.mha-camera-popup-direction {
+  min-inline-size: 0;
+  min-block-size: 0;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-radius: clamp(.65rem, 1.2vw, .9rem);
+}
+
+.mha-camera-popup-direction .mha-icon-symbol {
+  transform: rotate(var(--mha-camera-ptz-icon-rotation, 0deg));
+}
+
+.mha-camera-popup-direction--up-left { grid-area: 1 / 1; }
+.mha-camera-popup-direction--up { grid-area: 1 / 2; }
+.mha-camera-popup-direction--up-right { grid-area: 1 / 3; }
+.mha-camera-popup-direction--left { grid-area: 2 / 1; }
+.mha-camera-popup-direction--right { grid-area: 2 / 3; }
+.mha-camera-popup-direction--down-left { grid-area: 3 / 1; }
+.mha-camera-popup-direction--down { grid-area: 3 / 2; }
+.mha-camera-popup-direction--down-right { grid-area: 3 / 3; }
+
+.mha-camera-popup-presets {
+  position: absolute;
+  z-index: 4;
+  inset-inline: clamp(.75rem, 1.6vw, 1.1rem);
+  inset-block-end: clamp(.75rem, 1.6vw, 1.1rem);
+  min-inline-size: 0;
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: .4rem;
+}
+
+.mha-camera-popup-preset {
+  min-inline-size: 0;
+  min-block-size: 2.65rem;
+  padding-inline: .45rem;
+  overflow: hidden;
+  border-radius: 999px;
+  font-size: .76rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mha-camera-popup-settings {
+  position: absolute;
+  z-index: 6;
+  inset-block: .7rem;
+  inset-inline-end: .7rem;
+  inline-size: min(25rem, calc(100% - 1.4rem));
+  min-block-size: 0;
+  display: grid;
+  grid-template-rows: auto auto auto auto minmax(0, 1fr) auto;
+  gap: .75rem;
+  padding: 1rem;
+  overflow: hidden;
+  border: 1px solid var(--mha-popup-section-border, var(--mha-border-subtle));
+  border-radius: var(--mha-radius-widget, 1.25rem);
+  background: var(--mha-popup-section-surface, var(--mha-panel-section-surface, var(--mha-surface-on-primary)));
+  color: var(--mha-text-primary);
+  -webkit-backdrop-filter: blur(24px) saturate(130%);
+  backdrop-filter: blur(24px) saturate(130%);
+  box-shadow: var(--mha-shadow-popup, 0 1rem 3rem rgba(0, 0, 0, .34));
+}
+
+.mha-camera-popup-settings-heading,
+.mha-camera-popup-speed-row,
+.mha-camera-popup-settings-actions {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+}
+
+.mha-camera-popup-settings-heading {
+  justify-content: space-between;
+}
+
+.mha-camera-popup-settings-heading h3,
+.mha-camera-popup-settings h4,
+.mha-camera-popup-settings-hint {
+  margin: 0;
+}
+
+.mha-camera-popup-settings-heading span,
+.mha-camera-popup-settings-hint,
+.mha-camera-popup-settings-field > span,
+.mha-camera-popup-settings-field small {
+  color: var(--mha-text-secondary);
+}
+
+.mha-camera-popup-settings-heading span {
+  font-size: .74rem;
+}
+
+.mha-camera-popup-speed-row .mha-camera-popup-speed-slider {
+  min-inline-size: 0;
+  block-size: 3rem;
+  flex: 1 1 auto;
+}
+
+.mha-camera-popup-speed-row output {
+  min-inline-size: 3.5rem;
+  color: var(--mha-text-secondary);
+  font-size: .76rem;
+  text-align: end;
+}
+
+.mha-camera-popup-settings-hint {
+  font-size: .76rem;
+  line-height: 1.35;
+}
+
+.mha-camera-popup-settings-presets {
+  min-block-size: 0;
+  display: grid;
+  gap: .7rem;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.mha-camera-popup-preset-config {
+  display: grid;
+  grid-template-columns: 4rem minmax(0, 1fr) minmax(0, 1fr);
+  align-items: end;
+  gap: .55rem;
+}
+
+.mha-camera-popup-preset-config > strong {
+  align-self: center;
+  overflow: hidden;
+  font-size: .76rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mha-camera-popup-settings-field {
+  min-inline-size: 0;
+  display: grid;
+  gap: .28rem;
+  font-size: .7rem;
+}
+
+.mha-camera-popup-settings-field .mha-widget-config-control {
+  min-inline-size: 0;
+}
+
+.mha-camera-popup-settings-actions {
+  justify-content: flex-end;
+  padding-block-start: .25rem;
+}
+
+@media (max-width: 767px) and (orientation: portrait) {
+  .mha-camera-control-popup-sheet {
+    block-size: min(43rem, calc(100dvh - var(--mha-statusbar-reserved-top, 0px)));
+    inline-size: auto;
+    gap: .65rem;
+  }
+
+  .mha-camera-popup-direction-pad {
+    inline-size: 8.25rem;
+    inset-block-end: 4.25rem;
+  }
+
+  .mha-camera-popup-presets {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    inline-size: min(16rem, calc(100% - 10.5rem));
+    inset-inline-start: auto;
+  }
+
+  .mha-camera-popup-preset {
+    min-block-size: 2.25rem;
+  }
+
+  .mha-camera-popup-preset-config {
+    grid-template-columns: 3.5rem minmax(0, 1fr);
+  }
+
+  .mha-camera-popup-preset-config .mha-camera-popup-settings-field:last-child {
+    grid-column: 2;
+  }
+}

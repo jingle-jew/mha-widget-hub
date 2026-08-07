@@ -59,6 +59,52 @@ test("hidden HA updates do no render work and reconcile exactly once when visibl
   assert.deepEqual(counts(), { componentUpdates: 1, screensaverUpdates: 4 });
 });
 
+test("covered HA updates keep visible overlay components live and defer dashboard reconciliation", () => {
+  const updates = [];
+  const stateRef = { value: "covered" };
+  const overlay = {
+    dataset: { runtimeScope: "overlay" },
+    __mhaUpdateFromHass: () => updates.push("overlay"),
+  };
+  const dashboard = {
+    dataset: {},
+    __mhaUpdateFromHass: () => updates.push("dashboard"),
+  };
+  bindComponentHassContract(overlay, { kind: "camera", entityId: "camera.front" });
+  bindComponentHassContract(dashboard, { kind: "toggle", entityId: "light.kitchen" });
+  const cameraState = { state: "streaming", attributes: {} };
+  const lightState = { state: "on", attributes: {} };
+  const host = {
+    _hass: { states: { "camera.front": cameraState, "light.kitchen": lightState } },
+    _lastRoutedHass: null,
+    _hassReconcilePending: false,
+    _getActivityCoordinator: () => ({ read: () => stateRef.value }),
+    shadowRoot: { querySelectorAll: () => [dashboard, overlay] },
+    _screensaverCoordinator: {
+      requestNowBarAreas() {},
+      requestNowBarCalendarEvents() {},
+    },
+    _syncScreensaverDom() {},
+  };
+
+  const lifecycle = createBootLifecycleCoordinator(host);
+  const covered = lifecycle.updateFromHass();
+  assert.equal(covered.deferred, true);
+  assert.equal(host._hassReconcilePending, true);
+  assert.deepEqual(updates, ["overlay"]);
+
+  host._hass = { states: { "camera.front": cameraState, "light.kitchen": lightState } };
+  const unchangedCovered = lifecycle.updateFromHass();
+  assert.equal(unchangedCovered.updateCount, 0);
+  assert.deepEqual(updates, ["overlay"]);
+
+  stateRef.value = "active";
+  const active = lifecycle.updateFromHass();
+  assert.equal(active.updateCount, 2);
+  assert.equal(host._hassReconcilePending, false);
+  assert.deepEqual(updates, ["overlay", "dashboard", "overlay"]);
+});
+
 test("user activity wakes the screensaver before runtime coverage is reconciled", () => {
   const calls = [];
   handleRuntimeUserActivity({

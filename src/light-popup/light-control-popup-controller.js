@@ -43,6 +43,7 @@ function syncHostSurfaceState(root) {
   if (!host) return;
   const open = Boolean(root.querySelector?.([
     '.mha-light-control-popup[data-open="true"]:not([hidden])',
+    '.mha-camera-control-popup[data-open="true"]:not([hidden])',
     '.mha-widget-manager-panel[data-open="true"]:not([hidden])',
     'section.mha-page-creator[data-open="true"]:not([hidden])',
     '.mha-settings-panel[data-open="true"]:not([hidden])',

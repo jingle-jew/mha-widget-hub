@@ -114,10 +114,12 @@ export function routeHassUpdate({
   previousHass,
   nextHass,
   force = false,
+  componentFilter,
 } = {}) {
   const changedEntityIds = force ? null : collectChangedEntityIds(previousHass, nextHass);
   let updateCount = 0;
   root?.querySelectorAll?.("[data-widget-component]")?.forEach((component) => {
+    if (typeof componentFilter === "function" && !componentFilter(component)) return;
     if (!shouldUpdateComponent(component, nextHass, changedEntityIds, { force })) return;
     component.__mhaUpdateFromHass(nextHass);
     updateCount += 1;

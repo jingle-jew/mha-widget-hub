@@ -16,6 +16,8 @@ export function handleRuntimeUserActivity(host, activityCoordinator) {
 }
 
 export function createBootLifecycleCoordinator(host) {
+  let lastOverlayRoutedHass = host._lastRoutedHass;
+
   function hasMountedApp() {
     if (Object.hasOwn(host, "_hasMountedApp") && typeof host._hasMountedApp === "function") {
       return host._hasMountedApp();
@@ -86,6 +88,17 @@ export function createBootLifecycleCoordinator(host) {
     let result = { changedEntityIds: new Set(), updateCount: 0, deferred: false };
     if (activityState === "covered") {
       host._hassReconcilePending = true;
+      result = {
+        ...routeHassUpdate({
+          root: host.shadowRoot,
+          previousHass: lastOverlayRoutedHass || host._lastRoutedHass,
+          nextHass: host._hass,
+          force,
+          componentFilter: component => component?.dataset?.runtimeScope === "overlay",
+        }),
+        deferred: true,
+      };
+      lastOverlayRoutedHass = host._hass;
     } else {
       const forceReconcile = force || host._hassReconcilePending;
       result = routeHassUpdate({
@@ -95,6 +108,7 @@ export function createBootLifecycleCoordinator(host) {
         force: forceReconcile,
       });
       host._lastRoutedHass = host._hass;
+      lastOverlayRoutedHass = host._hass;
       host._hassReconcilePending = false;
     }
     host._screensaverCoordinator.requestNowBarAreas();

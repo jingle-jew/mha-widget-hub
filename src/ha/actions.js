@@ -64,11 +64,11 @@ export async function callHomeAssistantService(hass, serviceCall) {
   }
 
   try {
-    await hass.callService(
-      serviceCall.domain,
-      serviceCall.service,
-      serviceCall.data || {},
-    );
+    const args = [serviceCall.domain, serviceCall.service, serviceCall.data || {}];
+    if (serviceCall.target && typeof serviceCall.target === "object") {
+      args.push(serviceCall.target);
+    }
+    await hass.callService(...args);
     return true;
   } catch (error) {
     console.error("[mha-widget-hub] Home Assistant service call failed", error);

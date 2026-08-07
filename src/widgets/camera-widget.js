@@ -7,10 +7,12 @@ import {
   createCameraConfigDraft,
   renderCameraConfigFields,
 } from "../widget-config/camera-config.js";
+import { normalizeCameraPopupConfig } from "../camera-popup/camera-popup-config.js";
+import { openCameraControlPopup } from "../camera-popup/camera-control-popup-controller.js";
 
 export const CAMERA_WIDGET_KIND = "camera";
 
-const CAMERA_REFRESH_INTERVALS = Object.freeze([0, 1000, 3000, 5000]);
+const CAMERA_REFRESH_INTERVALS = Object.freeze([1000, 3000, 5000]);
 const DEFAULT_CAMERA_REFRESH_INTERVAL = 5000;
 
 export function createCameraRefreshController({
@@ -179,7 +181,12 @@ function buildCameraModel(hass, widget = {}) {
   };
 }
 
-export function createCameraWidgetContent(widget = {}, { hass, preview = false } = {}) {
+export function createCameraWidgetContent(widget = {}, {
+  hass,
+  preview = false,
+  interactive = true,
+  updateWidgetConfig,
+} = {}) {
   const root = document.createElement("div");
   root.className = "mha-weather-radar mha-camera-widget";
   root.dataset.widgetComponent = "camera";
@@ -190,7 +197,7 @@ export function createCameraWidgetContent(widget = {}, { hass, preview = false }
   if (!preview) {
     viewport.tabIndex = 0;
     viewport.setAttribute("role", "button");
-    viewport.setAttribute("aria-label", t("widgets.camera.refreshNow", "Refresh camera image"));
+    viewport.setAttribute("aria-label", t("widgets.camera.openLive", "Open live camera"));
   }
 
   const image = document.createElement("img");
@@ -226,19 +233,26 @@ export function createCameraWidgetContent(widget = {}, { hass, preview = false }
   });
   refreshController.setViewportVisible(preview);
 
-  function requestManualRefresh() {
-    if (preview) return;
-    refreshController.refreshNow();
+  function openPopup() {
+    if (preview || !interactive) return;
+    openCameraControlPopup({
+      anchor: viewport,
+      widget,
+      hass: context.hass,
+      updateWidgetConfig,
+    });
   }
 
-  viewport.addEventListener("click", requestManualRefresh);
+  const context = { hass };
+  viewport.addEventListener("click", openPopup);
   viewport.addEventListener("keydown", (event) => {
     if (!["Enter", " "].includes(event.key)) return;
     event.preventDefault();
-    requestManualRefresh();
+    openPopup();
   });
 
   function applyModel(nextHass) {
+    context.hass = nextHass;
     const model = buildCameraModel(nextHass, widget);
     root.dataset.entityId = model.entityId;
     if (model.imageUrl) {
@@ -265,7 +279,12 @@ export function createCameraWidgetContent(widget = {}, { hass, preview = false }
 }
 
 export const CAMERA_WIDGET_CONTENT_RENDERER = Object.freeze({
-  render: ({ widget, hass, preview }) => createCameraWidgetContent(widget, { hass, preview }),
+  render: ({ widget, hass, preview, interactive, updateWidgetConfig }) => createCameraWidgetContent(widget, {
+    hass,
+    preview,
+    interactive,
+    updateWidgetConfig,
+  }),
 });
 
 export const CAMERA_WIDGET_CONFIG_MANIFEST = Object.freeze({
@@ -316,6 +335,7 @@ export const CAMERA_WIDGET_DEFINITION = Object.freeze({
       label: String(widget.label || widget.title || "Camera"),
       title: String(widget.title || widget.label || "Camera"),
       refreshInterval: normalizeCameraRefreshInterval(widget.refreshInterval),
+      cameraPopup: normalizeCameraPopupConfig(widget.cameraPopup),
     }),
   }),
   shell: Object.freeze({ configureMode: "config" }),

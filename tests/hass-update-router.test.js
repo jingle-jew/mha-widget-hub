@@ -81,3 +81,25 @@ test("component-specific render signatures are preserved by the widget contract"
   bindComponentHassContract(component, { kind: "media", entityId: "media_player.office" });
   assert.equal(component.__mhaGetHassRenderSignature, signature);
 });
+
+test("component filtering can route covered-overlay updates without touching the dashboard", () => {
+  const calls = [];
+  const overlay = {
+    dataset: { runtimeScope: "overlay" },
+    __mhaUpdateFromHass: () => calls.push("overlay"),
+  };
+  const dashboard = {
+    dataset: {},
+    __mhaUpdateFromHass: () => calls.push("dashboard"),
+  };
+
+  const result = routeHassUpdate({
+    root: createRoot([dashboard, overlay]),
+    previousHass: null,
+    nextHass: createHass(),
+    componentFilter: component => component.dataset.runtimeScope === "overlay",
+  });
+
+  assert.equal(result.updateCount, 1);
+  assert.deepEqual(calls, ["overlay"]);
+});

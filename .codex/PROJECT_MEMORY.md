@@ -286,6 +286,38 @@ appartiennent à `AGENTS.md`.
   rester dans la grille CSS pilotée par `data-orientation`, sans créer une
   seconde implémentation JavaScript.
 
+### 2026-08-06 — Ouvrir la caméra dans un popup PTZ extensible
+
+- **Statut :** confirmé par le code et les tests statiques; validation visuelle et
+  matérielle encore requise.
+- **Décision :** un tap/clic sur l'image du widget caméra ouvre un popup portalisé
+  ayant la même géométrie externe tablette/desktop que le popup lumière. Le clic
+  ne rafraîchit plus manuellement l'image et l'ancien intervalle `0` (« au clic »)
+  est migré vers `5000 ms`. Le popup privilégie le composant natif
+  `ha-camera-stream`, superpose les huit directions PTZ, les huit presets dont
+  Home et un bouton de réglages pour la vitesse et les libellés/tokens. Toutes
+  les commandes passent par `camera-ptz-adapter.js`, avec des adaptateurs
+  `esee_cloud`, ONVIF et des actions custom configurables et templatisées.
+- **Pourquoi :** le flux et les commandes PTZ forment une interaction dédiée qui
+  ne doit ni détourner le contrat de rafraîchissement périodique du petit widget,
+  ni disperser les particularités des intégrations dans le rendu du popup.
+- **Conséquence :** ajouter une intégration PTZ doit étendre l'adaptateur plutôt
+  que le contrôleur visuel. Les surfaces caméra et lumière partagent désormais
+  le calcul d'état portalisé via `src/panels/widget-surface-state.js`, afin de
+  préserver le gel du dashboard sans introduire de cycle avec le registry des
+  widgets. Un lecteur caméra natif monté dans le Shadow DOM du panneau custom doit
+  recevoir explicitement les contextes HA (`hassApi`, `hassConnection`,
+  `hassConfig`, `hassInternationalization`); lui affecter seulement une propriété
+  `hass` laisse les versions récentes sur leur poster. Le popup interroge donc les
+  capacités, monte directement `ha-web-rtc-player` en priorité ou `ha-hls-player`,
+  et ne place ce lecteur devant le fallback qu'après l'événement confirmant une
+  piste vidéo. Le fallback `camera_proxy_stream` doit conserver le token signé de
+  l'entité et un mécanisme de reconnexion. Enfin, lorsque le runtime est `covered`,
+  router les mises à jour vers les composants `runtimeScope="overlay"` avec leur
+  propre baseline tout en différant la réconciliation du dashboard. Tester
+  manuellement le flux et chaque commande avec le matériel réel avant de considérer
+  la compatibilité eSee Cloud/ONVIF comme validée de bout en bout.
+
 ### 2026-07-15 — Faire du mouvement une signature visuelle MHA
 
 - **Statut :** confirmé.
