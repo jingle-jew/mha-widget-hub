@@ -316,7 +316,10 @@ appartiennent à `AGENTS.md`.
   router les mises à jour vers les composants `runtimeScope="overlay"` avec leur
   propre baseline tout en différant la réconciliation du dashboard. Tester
   manuellement le flux et chaque commande avec le matériel réel avant de considérer
-  la compatibilité eSee Cloud/ONVIF comme validée de bout en bout.
+  la compatibilité eSee Cloud/ONVIF comme validée de bout en bout. Les glyphes PTZ
+  doivent rester dans le catalogue Tabler embarqué : `arrow-right` n'y existe pas,
+  donc la direction droite réutilise `arrow-left` avec une rotation de 180 degrés
+  afin d'éviter le glyphe de fallback.
 
 ### 2026-07-15 — Faire du mouvement une signature visuelle MHA
 

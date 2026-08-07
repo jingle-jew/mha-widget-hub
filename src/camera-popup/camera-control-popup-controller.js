@@ -16,12 +16,12 @@ import {
 import { normalizeCameraPopupConfig } from "./camera-popup-config.js";
 import { createCameraPopupSettingsView } from "./camera-popup-settings-view.js";
 
-const DIRECTION_LAYOUT = Object.freeze([
+export const CAMERA_PTZ_DIRECTION_LAYOUT = Object.freeze([
   ["up_left", "arrow-up", -45],
   ["up", "arrow-up", 0],
   ["up_right", "arrow-up", 45],
   ["left", "arrow-left", 0],
-  ["right", "arrow-right", 0],
+  ["right", "arrow-left", 180],
   ["down_left", "arrow-down", 45],
   ["down", "arrow-down", 0],
   ["down_right", "arrow-down", -45],
@@ -259,7 +259,7 @@ function createDirectionPad(onCommand) {
   const pad = document.createElement("div");
   pad.className = "mha-camera-popup-direction-pad";
   pad.setAttribute("aria-label", t("cameraPopup.directionControls", "PTZ direction controls"));
-  DIRECTION_LAYOUT.forEach(([command, icon, rotation]) => {
+  CAMERA_PTZ_DIRECTION_LAYOUT.forEach(([command, icon, rotation]) => {
     const button = createOverlayButton({
       label: t(`cameraPopup.commands.${command}`, command.replaceAll("_", " ")),
       icon,

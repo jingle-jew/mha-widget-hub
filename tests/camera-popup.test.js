@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  CAMERA_PTZ_DIRECTION_LAYOUT,
   buildCameraProxyStreamUrl,
   resolveCameraContextValue,
   resolveCameraStreamPlayerType,
@@ -16,6 +17,16 @@ import {
   runCameraPtzCommand,
 } from "../src/ha/camera-ptz-adapter.js";
 import { CAMERA_WIDGET_DEFINITION } from "../src/widgets/camera-widget.js";
+import { resolveTablerIconName } from "../src/ui/tabler-icons.js";
+
+test("camera popup PTZ directions only use available glyphs and mirror left for right", () => {
+  const right = CAMERA_PTZ_DIRECTION_LAYOUT.find(([command]) => command === "right");
+
+  assert.deepEqual(right, ["right", "arrow-left", 180]);
+  CAMERA_PTZ_DIRECTION_LAYOUT.forEach(([, icon]) => {
+    assert.notEqual(resolveTablerIconName(icon), "layout-grid");
+  });
+});
 
 test("camera popup stream fallback carries the HA camera token and a restart nonce", () => {
   const url = buildCameraProxyStreamUrl(
