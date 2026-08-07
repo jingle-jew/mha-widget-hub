@@ -50,13 +50,19 @@ function getDirectionalAxes(command) {
 }
 
 function buildEseeServiceCall({ entityId, command, speed, preset }) {
-  if (command === "preset") {
-    const presetNumber = Number(preset);
+  if (command === "preset" || command === "set_preset") {
+    const presetNumber = command === "set_preset" && String(preset).toLowerCase() === "home"
+      ? 0
+      : Number(preset);
     if (!Number.isInteger(presetNumber) || presetNumber < 0 || presetNumber > 255) return null;
     return {
       domain: "esee_cloud",
       service: "ptz",
-      data: { entity_id: entityId, command: "GOTO_PRESET", preset: presetNumber },
+      data: {
+        entity_id: entityId,
+        command: command === "set_preset" ? "SET_PRESET" : "GOTO_PRESET",
+        preset: presetNumber,
+      },
     };
   }
   return {
@@ -72,6 +78,7 @@ function buildEseeServiceCall({ entityId, command, speed, preset }) {
 }
 
 function buildOnvifServiceCall({ entityId, command, speed, preset }) {
+  if (command === "set_preset") return null;
   if (command === "home" || command === "preset") {
     return {
       domain: "onvif",
@@ -152,6 +159,7 @@ export function buildCameraPtzServiceCall(hass, {
     ...CAMERA_PTZ_DIRECTIONS,
     "home",
     "preset",
+    "set_preset",
   ].includes(normalizedCommand)) return null;
 
   const normalized = normalizeCameraPopupConfig(popupConfig);

@@ -19,6 +19,7 @@ const CUSTOM_COMMAND_KEYS = Object.freeze([
   "down_right",
   "home",
   "preset",
+  "set_preset",
 ]);
 
 function clamp(value, min, max, fallback) {
@@ -115,6 +116,15 @@ export function getCameraPtzCustomActionExample() {
       service: "ptz",
       data: {
         entity_id: "{{entity_id}}",
+        preset: "{{preset}}",
+      },
+    },
+    set_preset: {
+      domain: "my_camera",
+      service: "ptz",
+      data: {
+        entity_id: "{{entity_id}}",
+        command: "SET_PRESET",
         preset: "{{preset}}",
       },
     },

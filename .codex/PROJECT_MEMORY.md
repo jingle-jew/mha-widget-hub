@@ -319,7 +319,12 @@ appartiennent à `AGENTS.md`.
   la compatibilité eSee Cloud/ONVIF comme validée de bout en bout. Les glyphes PTZ
   doivent rester dans le catalogue Tabler embarqué : `arrow-right` n'y existe pas,
   donc la direction droite réutilise `arrow-left` avec une rotation de 180 degrés
-  afin d'éviter le glyphe de fallback.
+  afin d'éviter le glyphe de fallback. Un clic court sur un preset le rappelle;
+  un appui de 600 ms l'enregistre et supprime uniquement le clic terminal de ce
+  geste. Esee Cloud utilise `SET_PRESET`, tandis qu'une intégration custom doit
+  fournir l'action `set_preset`. L'action officielle `onvif.ptz` ne sait pas
+  créer de preset : le popup doit le signaler explicitement plutôt que d'envoyer
+  une commande invalide.
 
 ### 2026-07-15 — Faire du mouvement une signature visuelle MHA
 

@@ -11,6 +11,7 @@ import {
   normalizeCameraPopupConfig,
   normalizeCameraPtzCustomActions,
 } from "../src/camera-popup/camera-popup-config.js";
+import { wireCameraPresetLongPress } from "../src/camera-popup/camera-preset-long-press.js";
 import {
   buildCameraPtzServiceCall,
   resolveCameraPtzProvider,
@@ -166,6 +167,22 @@ test("Esee Cloud adapter maps diagonal, home, and numbered preset commands", () 
     command: "GOTO_PRESET",
     preset: 4,
   });
+  assert.deepEqual(buildCameraPtzServiceCall(hass, {
+    entityId: "camera.front",
+    popupConfig,
+    command: "set_preset",
+    preset: "4",
+  })?.data, {
+    entity_id: "camera.front",
+    command: "SET_PRESET",
+    preset: 4,
+  });
+  assert.equal(buildCameraPtzServiceCall(hass, {
+    entityId: "camera.front",
+    popupConfig,
+    command: "set_preset",
+    preset: "home",
+  })?.data.preset, 0);
 });
 
 test("ONVIF adapter combines pan and tilt and supports preset tokens", () => {
@@ -200,6 +217,12 @@ test("ONVIF adapter combines pan and tilt and supports preset tokens", () => {
     speed: 0.4,
   });
   assert.deepEqual(presetCall?.target, { entity_id: "camera.front" });
+  assert.equal(buildCameraPtzServiceCall(hass, {
+    entityId: "camera.front",
+    popupConfig,
+    command: "set_preset",
+    preset: "Door",
+  }), null);
 });
 
 test("custom PTZ actions interpolate typed command variables before calling HA", async () => {
@@ -212,6 +235,14 @@ test("custom PTZ actions interpolate typed command variables before calling HA",
         direction: "{{command}}",
         speed: "{{speed}}",
         nested: { label: "move-{{command}}" },
+      },
+    },
+    set_preset: {
+      domain: "custom_camera",
+      service: "save_preset",
+      data: {
+        entity_id: "{{entity_id}}",
+        preset: "{{preset}}",
       },
     },
   });
@@ -230,4 +261,102 @@ test("custom PTZ actions interpolate typed command variables before calling HA",
     speed: 0.35,
     nested: { label: "move-left" },
   }]]);
+
+  await runCameraPtzCommand(hass, {
+    entityId: "camera.front",
+    popupConfig: { ptz: { provider: "custom", speed: 0.35, customActions } },
+    command: "set_preset",
+    preset: "door",
+  });
+  assert.deepEqual(calls[1], ["custom_camera", "save_preset", {
+    entity_id: "camera.front",
+    preset: "door",
+  }]);
+});
+
+test("preset long press saves once and suppresses only its trailing recall click", () => {
+  const listeners = new Map();
+  const button = {
+    dataset: {},
+    disabled: false,
+    addEventListener(type, listener, capture = false) {
+      listeners.set(`${type}:${capture}`, listener);
+    },
+    removeEventListener(type, _listener, capture = false) {
+      listeners.delete(`${type}:${capture}`);
+    },
+    setPointerCapture() {},
+  };
+  const previousSetTimeout = globalThis.setTimeout;
+  const previousClearTimeout = globalThis.clearTimeout;
+  const timers = new Map();
+  let nextTimerId = 1;
+  globalThis.setTimeout = (callback) => {
+    const id = nextTimerId;
+    nextTimerId += 1;
+    timers.set(id, callback);
+    return id;
+  };
+  globalThis.clearTimeout = id => timers.delete(id);
+  let saveCalls = 0;
+
+  try {
+    const destroy = wireCameraPresetLongPress(button, {
+      onLongPress: () => { saveCalls += 1; },
+    });
+    listeners.get("pointerdown:false")?.({
+      pointerId: 7,
+      button: 0,
+      isPrimary: true,
+      clientX: 10,
+      clientY: 12,
+    });
+    assert.equal(button.dataset.longPressActive, "true");
+    const longPressTimer = timers.get(1);
+    timers.delete(1);
+    longPressTimer?.();
+    assert.equal(saveCalls, 1);
+    assert.equal(button.dataset.longPressActive, undefined);
+
+    listeners.get("pointerup:false")?.({ pointerId: 7, type: "pointerup" });
+    const suppressed = [];
+    listeners.get("click:true")?.({
+      preventDefault: () => suppressed.push("preventDefault"),
+      stopPropagation: () => suppressed.push("stopPropagation"),
+      stopImmediatePropagation: () => suppressed.push("stopImmediatePropagation"),
+    });
+    assert.deepEqual(suppressed, [
+      "preventDefault",
+      "stopPropagation",
+      "stopImmediatePropagation",
+    ]);
+
+    listeners.get("pointerdown:false")?.({
+      pointerId: 8,
+      button: 0,
+      isPrimary: true,
+      clientX: 10,
+      clientY: 12,
+    });
+    listeners.get("pointerup:false")?.({ pointerId: 8, type: "pointerup" });
+    const shortClick = [];
+    listeners.get("click:true")?.({ preventDefault: () => shortClick.push("blocked") });
+    assert.deepEqual(shortClick, []);
+    assert.equal(saveCalls, 1);
+
+    listeners.get("pointerdown:false")?.({
+      pointerId: 9,
+      button: 0,
+      isPrimary: true,
+      clientX: 10,
+      clientY: 12,
+    });
+    listeners.get("pointermove:false")?.({ pointerId: 9, clientX: 40, clientY: 12 });
+    assert.equal(button.dataset.longPressActive, undefined);
+    assert.equal(saveCalls, 1);
+    destroy();
+  } finally {
+    globalThis.setTimeout = previousSetTimeout;
+    globalThis.clearTimeout = previousClearTimeout;
+  }
 });

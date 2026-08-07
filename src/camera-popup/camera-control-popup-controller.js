@@ -1,6 +1,10 @@
 import { destroyDomSubtree } from "../core/dom-lifecycle.js";
 import { getEntityState, isEntityAvailable } from "../ha/entity.js";
-import { resolveCameraPtzProvider, runCameraPtzCommand } from "../ha/camera-ptz-adapter.js";
+import {
+  buildCameraPtzServiceCall,
+  resolveCameraPtzProvider,
+  runCameraPtzCommand,
+} from "../ha/camera-ptz-adapter.js";
 import { t } from "../i18n/index.js";
 import {
   applyPanelSurfaceContract,
@@ -15,6 +19,7 @@ import {
 } from "../panels/widget-surface-state.js";
 import { normalizeCameraPopupConfig } from "./camera-popup-config.js";
 import { createCameraPopupSettingsView } from "./camera-popup-settings-view.js";
+import { wireCameraPresetLongPress } from "./camera-preset-long-press.js";
 
 export const CAMERA_PTZ_DIRECTION_LAYOUT = Object.freeze([
   ["up_left", "arrow-up", -45],
@@ -272,7 +277,7 @@ function createDirectionPad(onCommand) {
   return pad;
 }
 
-function createPresetBar(config, onPreset) {
+function createPresetBar(config, { onPreset, onSavePreset } = {}) {
   const bar = document.createElement("div");
   bar.className = "mha-camera-popup-presets";
   bar.setAttribute("aria-label", t("cameraPopup.presets", "PTZ presets"));
@@ -284,12 +289,21 @@ function createPresetBar(config, onPreset) {
     button.disabled = disabledPreset;
     button.dataset.disabledPreset = String(disabledPreset);
     button.textContent = preset.label;
-    button.title = preset.label;
+    const actionLabel = t(
+      "cameraPopup.presetActionHint",
+      "{label}: click to recall, long press to save",
+      { label: preset.label },
+    );
+    button.title = actionLabel;
+    button.setAttribute("aria-label", actionLabel);
     button.onclick = (event) => {
       event.preventDefault();
       event.stopPropagation();
-      onPreset(preset);
+      onPreset?.(preset);
     };
+    button.__mhaDestroy = wireCameraPresetLongPress(button, {
+      onLongPress: () => onSavePreset?.(preset, button),
+    });
     bar.append(button);
   });
   return bar;
@@ -321,6 +335,8 @@ export function openCameraControlPopup({
   let settingsView = null;
   let streamSurface = null;
   let presetBar = null;
+  let presetFeedbackTimer = 0;
+  let presetFeedbackButton = null;
 
   const close = () => {
     if (!root.isConnected) return;
@@ -358,6 +374,11 @@ export function openCameraControlPopup({
   const body = document.createElement("div");
   body.className = "mha-camera-control-popup-body";
   streamSurface = createStreamSurface(context);
+  const presetFeedback = document.createElement("div");
+  presetFeedback.className = "mha-camera-popup-preset-feedback";
+  presetFeedback.setAttribute("role", "status");
+  presetFeedback.setAttribute("aria-live", "polite");
+  presetFeedback.dataset.visible = "false";
 
   const syncProviderState = () => {
     const provider = resolveCameraPtzProvider(
@@ -376,8 +397,8 @@ export function openCameraControlPopup({
 
   const runCommand = (command, preset) => {
     syncProviderState();
-    if (root.dataset.ptzAvailable !== "true") return;
-    runCameraPtzCommand(context.hass, {
+    if (root.dataset.ptzAvailable !== "true") return Promise.resolve(false);
+    return runCameraPtzCommand(context.hass, {
       entityId,
       popupConfig: context.config,
       command,
@@ -385,10 +406,63 @@ export function openCameraControlPopup({
     });
   };
 
-  const directionPad = createDirectionPad(command => runCommand(command));
-  presetBar = createPresetBar(context.config, (preset) => {
-    runCommand(preset.home ? "home" : "preset", preset.value);
+  const showPresetFeedback = (message, state, button) => {
+    if (presetFeedbackTimer) globalThis.clearTimeout?.(presetFeedbackTimer);
+    if (presetFeedbackButton && presetFeedbackButton !== button) {
+      delete presetFeedbackButton.dataset.presetSaveState;
+    }
+    presetFeedbackButton = button || null;
+    if (presetFeedbackButton) presetFeedbackButton.dataset.presetSaveState = state;
+    presetFeedback.textContent = message;
+    presetFeedback.dataset.state = state;
+    presetFeedback.dataset.visible = "true";
+    presetFeedbackTimer = globalThis.setTimeout?.(() => {
+      presetFeedback.dataset.visible = "false";
+      delete presetFeedback.dataset.state;
+      if (presetFeedbackButton) delete presetFeedbackButton.dataset.presetSaveState;
+      presetFeedbackButton = null;
+      presetFeedbackTimer = 0;
+    }, 2400);
+  };
+
+  const savePreset = async (preset, button) => {
+    syncProviderState();
+    const provider = root.dataset.ptzProvider || "unavailable";
+    const commandContext = {
+      entityId,
+      popupConfig: context.config,
+      command: "set_preset",
+      preset: preset.value,
+    };
+    if (!buildCameraPtzServiceCall(context.hass, commandContext)) {
+      showPresetFeedback(t(
+        "cameraPopup.presetSaveUnsupported",
+        "{provider} does not provide a preset save action.",
+        { provider: t(`cameraPopup.providers.${provider}`, provider) },
+      ), "unsupported", button);
+      return false;
+    }
+    showPresetFeedback(t(
+      "cameraPopup.presetSaving",
+      "Saving {label}…",
+      { label: preset.label },
+    ), "saving", button);
+    const saved = await runCommand("set_preset", preset.value);
+    showPresetFeedback(t(
+      saved ? "cameraPopup.presetSaved" : "cameraPopup.presetSaveFailed",
+      saved ? "{label} saved." : "Could not save {label}.",
+      { label: preset.label },
+    ), saved ? "saved" : "error", button);
+    return saved;
+  };
+
+  const createCurrentPresetBar = () => createPresetBar(context.config, {
+    onPreset: (preset) => runCommand(preset.home ? "home" : "preset", preset.value),
+    onSavePreset: savePreset,
   });
+
+  const directionPad = createDirectionPad(command => runCommand(command));
+  presetBar = createCurrentPresetBar();
   const gear = createOverlayButton({
     label: t("cameraPopup.openSettings", "Open PTZ settings"),
     icon: "settings",
@@ -412,9 +486,8 @@ export function openCameraControlPopup({
       onSave: (nextConfig) => {
         context.config = normalizeCameraPopupConfig(nextConfig);
         updateWidgetConfig?.({ cameraPopup: context.config });
-        const nextPresetBar = createPresetBar(context.config, (preset) => {
-          runCommand(preset.home ? "home" : "preset", preset.value);
-        });
+        const nextPresetBar = createCurrentPresetBar();
+        destroyDomSubtree(presetBar);
         presetBar.replaceWith(nextPresetBar);
         presetBar = nextPresetBar;
         syncProviderState();
@@ -426,7 +499,7 @@ export function openCameraControlPopup({
     settingsView.querySelector?.("input")?.focus?.({ preventScroll: true });
   }
 
-  body.append(streamSurface, gear, directionPad, presetBar);
+  body.append(streamSurface, presetFeedback, gear, directionPad, presetBar);
   sheet.append(body);
   syncProviderState();
 
@@ -444,6 +517,7 @@ export function openCameraControlPopup({
     syncProviderState();
   };
   root.__mhaDestroy = () => {
+    if (presetFeedbackTimer) globalThis.clearTimeout?.(presetFeedbackTimer);
     root.removeEventListener("keydown", onKeyDown);
     delete root.__mhaUpdateFromHass;
     delete root.__mhaDestroy;
