@@ -6,7 +6,8 @@ export const CAMERA_PTZ_PROVIDERS = Object.freeze([
 ]);
 
 const DEFAULT_SPEED = 0.5;
-const PRESET_COUNT = 8;
+export const CAMERA_PTZ_NUMBERED_PRESET_COUNT = 8;
+const PRESET_COUNT = CAMERA_PTZ_NUMBERED_PRESET_COUNT + 1;
 const CUSTOM_COMMAND_KEYS = Object.freeze([
   "move",
   "up",

@@ -261,7 +261,45 @@ function createStreamSurface(context) {
   return surface;
 }
 
-function createDirectionPad(onCommand) {
+export function partitionCameraPtzPresets(config) {
+  const presets = Array.isArray(config?.ptz?.presets) ? config.ptz.presets : [];
+  return {
+    home: presets.find(preset => preset?.home) || null,
+    numbered: presets.filter(preset => !preset?.home),
+  };
+}
+
+function createPresetButton(preset, {
+  className = "mha-camera-popup-preset",
+  onPreset,
+  onSavePreset,
+} = {}) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = className;
+  const disabledPreset = !preset?.enabled || !preset?.value;
+  button.disabled = disabledPreset;
+  button.dataset.disabledPreset = String(disabledPreset);
+  button.textContent = preset?.label || t("cameraPopup.home", "Home");
+  const actionLabel = t(
+    "cameraPopup.presetActionHint",
+    "{label}: click to recall, long press to save",
+    { label: button.textContent },
+  );
+  button.title = actionLabel;
+  button.setAttribute("aria-label", actionLabel);
+  button.onclick = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    onPreset?.(preset);
+  };
+  button.__mhaDestroy = wireCameraPresetLongPress(button, {
+    onLongPress: () => onSavePreset?.(preset, button),
+  });
+  return button;
+}
+
+function createDirectionPad({ homePreset, onCommand, onPreset, onSavePreset } = {}) {
   const pad = document.createElement("div");
   pad.className = "mha-camera-popup-direction-pad";
   pad.setAttribute("aria-label", t("cameraPopup.directionControls", "PTZ direction controls"));
@@ -275,6 +313,14 @@ function createDirectionPad(onCommand) {
     button.style.setProperty("--mha-camera-ptz-icon-rotation", `${rotation}deg`);
     pad.append(button);
   });
+  if (homePreset) {
+    const homeButton = createPresetButton(homePreset, {
+      className: "mha-camera-popup-overlay-button mha-camera-popup-preset mha-camera-popup-home",
+      onPreset,
+      onSavePreset,
+    });
+    pad.append(homeButton);
+  }
   return pad;
 }
 
@@ -282,30 +328,8 @@ function createPresetBar(config, { onPreset, onSavePreset } = {}) {
   const bar = document.createElement("div");
   bar.className = "mha-camera-popup-presets";
   bar.setAttribute("aria-label", t("cameraPopup.presets", "PTZ presets"));
-  config.ptz.presets.forEach((preset) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "mha-camera-popup-preset";
-    const disabledPreset = !preset.enabled || !preset.value;
-    button.disabled = disabledPreset;
-    button.dataset.disabledPreset = String(disabledPreset);
-    button.textContent = preset.label;
-    const actionLabel = t(
-      "cameraPopup.presetActionHint",
-      "{label}: click to recall, long press to save",
-      { label: preset.label },
-    );
-    button.title = actionLabel;
-    button.setAttribute("aria-label", actionLabel);
-    button.onclick = (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      onPreset?.(preset);
-    };
-    button.__mhaDestroy = wireCameraPresetLongPress(button, {
-      onLongPress: () => onSavePreset?.(preset, button),
-    });
-    bar.append(button);
+  partitionCameraPtzPresets(config).numbered.forEach((preset) => {
+    bar.append(createPresetButton(preset, { onPreset, onSavePreset }));
   });
   return bar;
 }
@@ -335,6 +359,7 @@ export function openCameraControlPopup({
   };
   let settingsView = null;
   let streamSurface = null;
+  let directionPad = null;
   let presetBar = null;
   let presetFeedbackTimer = 0;
   let presetFeedbackButton = null;
@@ -461,11 +486,18 @@ export function openCameraControlPopup({
   };
 
   const createCurrentPresetBar = () => createPresetBar(context.config, {
-    onPreset: (preset) => runCommand(preset.home ? "home" : "preset", preset.value),
+    onPreset: (preset) => runCommand("preset", preset.value),
     onSavePreset: savePreset,
   });
 
-  const directionPad = createDirectionPad(command => runCommand(command));
+  const createCurrentDirectionPad = () => createDirectionPad({
+    homePreset: partitionCameraPtzPresets(context.config).home,
+    onCommand: command => runCommand(command),
+    onPreset: preset => runCommand("home", preset.value),
+    onSavePreset: savePreset,
+  });
+
+  directionPad = createCurrentDirectionPad();
   presetBar = createCurrentPresetBar();
   const gear = createOverlayButton({
     label: t("cameraPopup.openSettings", "Open PTZ settings"),
@@ -490,9 +522,13 @@ export function openCameraControlPopup({
       onSave: (nextConfig) => {
         context.config = normalizeCameraPopupConfig(nextConfig);
         updateWidgetConfig?.({ cameraPopup: context.config });
+        const nextDirectionPad = createCurrentDirectionPad();
         const nextPresetBar = createCurrentPresetBar();
+        destroyDomSubtree(directionPad);
         destroyDomSubtree(presetBar);
+        directionPad.replaceWith(nextDirectionPad);
         presetBar.replaceWith(nextPresetBar);
+        directionPad = nextDirectionPad;
         presetBar = nextPresetBar;
         syncProviderState();
         toggleSettings(false);

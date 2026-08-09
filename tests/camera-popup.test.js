@@ -4,10 +4,12 @@ import test from "node:test";
 import {
   CAMERA_PTZ_DIRECTION_LAYOUT,
   buildCameraProxyStreamUrl,
+  partitionCameraPtzPresets,
   resolveCameraContextValue,
   resolveCameraStreamPlayerType,
 } from "../src/camera-popup/camera-control-popup-controller.js";
 import {
+  CAMERA_PTZ_NUMBERED_PRESET_COUNT,
   normalizeCameraPopupConfig,
   normalizeCameraPtzCustomActions,
 } from "../src/camera-popup/camera-popup-config.js";
@@ -78,7 +80,7 @@ test("camera popup prefers a confirmed WebRTC player and falls back to HLS", () 
   assert.equal(resolveCameraStreamPlayerType(capabilities, registry), "");
 });
 
-test("camera popup configuration keeps one home slot and seven PTZ preset slots", () => {
+test("camera popup keeps Home in the PTZ pad and exposes numbered presets 1 through 8", () => {
   const config = normalizeCameraPopupConfig({
     ptz: {
       provider: "onvif",
@@ -92,7 +94,7 @@ test("camera popup configuration keeps one home slot and seven PTZ preset slots"
 
   assert.equal(config.ptz.provider, "onvif");
   assert.equal(config.ptz.speed, 1);
-  assert.equal(config.ptz.presets.length, 8);
+  assert.equal(config.ptz.presets.length, CAMERA_PTZ_NUMBERED_PRESET_COUNT + 1);
   assert.deepEqual(config.ptz.presets[0], {
     id: "home",
     label: "Maison",
@@ -101,7 +103,18 @@ test("camera popup configuration keeps one home slot and seven PTZ preset slots"
     home: true,
   });
   assert.equal(config.ptz.presets[1].label, "Porte");
-  assert.equal(config.ptz.presets[7].value, "7");
+  const { home, numbered } = partitionCameraPtzPresets(config);
+  assert.equal(home, config.ptz.presets[0]);
+  assert.deepEqual(numbered.map(preset => preset.value), [
+    "door-token",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+  ]);
 });
 
 test("legacy click-only camera refresh migrates to the five-second interval", () => {

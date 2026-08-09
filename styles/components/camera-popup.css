@@ -146,6 +146,15 @@
 .mha-camera-popup-direction--down { grid-area: 3 / 2; }
 .mha-camera-popup-direction--down-right { grid-area: 3 / 3; }
 
+.mha-camera-popup-preset.mha-camera-popup-home {
+  grid-area: 2 / 2;
+  min-inline-size: 0;
+  min-block-size: 0;
+  padding: .2rem;
+  border-radius: clamp(.65rem, 1.2vw, .9rem);
+  font-size: clamp(.62rem, 1.1vw, .72rem);
+}
+
 .mha-camera-popup-presets {
   position: absolute;
   z-index: 4;

@@ -1,6 +1,6 @@
 # Mémoire persistante — MHA Widget Hub
 
-Dernière consolidation : 2026-07-29
+Dernière consolidation : 2026-08-07
 
 Ce fichier contient les connaissances durables qui seraient coûteuses à redécouvrir.
 Le code et les tests actuels restent la source de vérité. Les instructions de travail
@@ -294,8 +294,9 @@ appartiennent à `AGENTS.md`.
   ayant la même géométrie externe tablette/desktop que le popup lumière. Le clic
   ne rafraîchit plus manuellement l'image et l'ancien intervalle `0` (« au clic »)
   est migré vers `5000 ms`. Le popup privilégie le composant natif
-  `ha-camera-stream`, superpose les huit directions PTZ, les huit presets dont
-  Home et un bouton de réglages pour la vitesse et les libellés/tokens. Toutes
+  `ha-camera-stream`, superpose les huit directions PTZ autour du bouton Home
+  (preset 0), place les huit presets numérotés 1 à 8 dans la barre inférieure et
+  conserve un bouton de réglages pour la vitesse et les libellés/tokens. Toutes
   les commandes passent par `camera-ptz-adapter.js`, avec des adaptateurs
   `esee_cloud`, ONVIF et des actions custom configurables et templatisées.
 - **Pourquoi :** le flux et les commandes PTZ forment une interaction dédiée qui
@@ -321,11 +322,13 @@ appartiennent à `AGENTS.md`.
   donc la direction droite réutilise `arrow-left` avec une rotation de 180 degrés
   afin d'éviter le glyphe de fallback. Un clic court sur un preset le rappelle;
   un appui de 600 ms l'enregistre et supprime uniquement le clic terminal de ce
-  geste. Esee Cloud utilise `SET_PRESET`, tandis qu'une intégration custom doit
-  fournir l'action `set_preset`. L'action officielle `onvif.ptz` ne sait pas
-  créer de preset : le popup doit le signaler explicitement plutôt que d'envoyer
-  une commande invalide. Les confirmations et messages système transitoires ne
-  doivent pas recréer un overlay local : utiliser
+  geste, y compris sur Home au centre. La normalisation conserve les anciens
+  emplacements Home et 1 à 7, puis ajoute le preset 8 par défaut. Esee Cloud
+  utilise `SET_PRESET`, tandis qu'une intégration custom doit fournir l'action
+  `set_preset`. L'action officielle `onvif.ptz` ne sait pas créer de preset : le
+  popup doit le signaler explicitement plutôt que d'envoyer une commande
+  invalide. Les confirmations et messages système transitoires ne doivent pas
+  recréer un overlay local : utiliser
   `src/system/system-message-popup.js`, ses variantes `confirmation`, `info`,
   `warning` et `error`, ainsi que la surface globale `--mha-surface-toast`.
 
